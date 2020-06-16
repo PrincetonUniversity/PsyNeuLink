@@ -83,13 +83,13 @@ assert True
 #                                  SHOW AND RUN MODEL
 # *********************************************************************************************
 # model.show_graph(show_controller=True,
-#                  show_nested={'show_node_structure':False,
+#                  show_nested=DIRECT,
+#                  show_nested_args={'show_node_structure':False,
 #                               'show_cim':True},
-#                  # show_nested=ALL,
 #                  show_node_structure=ALL,
 #                  show_cim=False)
 # model.show_graph(show_node_structure=ALL)
-model.show_graph(show_nested=ALL, show_node_structure=ALL, show_cim=True)
+model.show_graph(show_nested=DIRECT, show_node_structure=ALL, show_cim=True)
 
 
 num_trials = 2

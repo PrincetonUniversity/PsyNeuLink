@@ -21,6 +21,7 @@ from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.keywords import \
     INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, RESET, COMBINE, RESULT, GREATER_THAN
 from psyneulink.core.globals.utilities import UtilitiesError, set_global_seed
+from psyneulink.core.globals.parameters import ParameterError
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import TimeScale
 
@@ -191,7 +192,7 @@ class TestTransferMechanismNoise:
         )
         T.reset_stateful_function_when = Never()
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[-0.71562799,  0.01034782,  0.90104733,  0.95869664]])
+        assert np.allclose(val, [[-1.56404341, -0.51529709, -2.55352727, 0.30284592]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -207,8 +208,7 @@ class TestTransferMechanismNoise:
         )
         T.reset_stateful_function_when = Never()
         val = T.execute([0, 0, 0, 0])
-        expected = [-1.5640434149388383, -3.013204030356897, -1.225036779097983,
-       1.3093711955796925]
+        expected = [0.6202001216069017, 0.840166034615641, 0.7279826246296707, -1.5678942459349325]
         assert np.allclose(np.asfarray(val[0]), expected)
 
     @pytest.mark.mechanism
@@ -290,7 +290,7 @@ class TestDistributionFunctions:
         )
 
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[-0.71562799,  0.01034782,  0.90104733,  0.95869664]])
+        assert np.allclose(val, [[-1.56404341, -0.51529709, -2.55352727, 0.30284592]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -322,7 +322,7 @@ class TestDistributionFunctions:
             integrator_mode=True,
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.87558564, 2.38719447, 0.7025651 , 0.33105989]])
+        assert np.allclose(val, [[0.54571315, 0.29964231, 0.71595475, 0.51908319]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -365,7 +365,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.58338204, 0.90811289, 0.50468686, 0.28183784]])
+        assert np.allclose(val, [[0.42057158, 0.25891675, 0.51127472, 0.40493414]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -380,7 +380,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.87558564, 2.38719447, 0.7025651 , 0.33105989]])
+        assert np.allclose(val, [[0.54571315, 0.29964231, 0.71595475, 0.51908319]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -395,7 +395,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.41203028, 0.40277101, 1.0678432 , 0.34512569]])
+        assert np.allclose(val, [[0.11902672, 0.73955962, 8.38161237, 0.49600183]])
 
 
 class TestTransferMechanismFunctions:
@@ -724,7 +724,7 @@ class TestTransferMechanismIntegratorFunctionParams:
 
     def test_transfer_mech_array_assignments_wrong_size_fct_rate(self):
 
-        with pytest.raises(TransferError) as error_text:
+        with pytest.raises(FunctionError) as error_text:
             T = TransferMechanism(
                     name='T',
                     default_variable=[0 for i in range(VECTOR_SIZE)],
@@ -732,8 +732,8 @@ class TestTransferMechanismIntegratorFunctionParams:
                     integrator_function=AdaptiveIntegrator(rate=[i / 10 for i in range(VECTOR_SIZE + 1)])
             )
         assert (
-            "integration_rate' arg for" in str(error_text.value)
-            and "must be either an int or float, or have the same shape as its variable" in str(error_text.value)
+            "The following parameters with len>1 specified" in str(error_text.value)
+            and "don't have the same length as its 'default_variable' (4): ['rate']." in str(error_text.value)
         )
 
     # INITIAL_VALUE / INITALIZER TESTS -------------------------------------------------------
@@ -862,31 +862,28 @@ class TestTransferMechanismIntegratorFunctionParams:
 
     def test_transfer_mech_array_assignment_wrong_size_integrator_fct_default_variable(self):
 
-        with pytest.raises(TransferError) as error_text:
+        with pytest.raises(ParameterError) as error_text:
             T = TransferMechanism(
                     name='T',
                     default_variable=[0 for i in range(VECTOR_SIZE)],
                     integrator_mode=True,
                     integrator_function=AdaptiveIntegrator(default_variable=[0 for i in range(VECTOR_SIZE + 1)])
             )
-        error_msg_a = 'The length (5) of the \'variable\' or one of the parameters specified for '
-        error_msg_b = 'the integrator_function of T doesn\'t match the size (4) of the '
-        error_msg_c = 'innermost dimension (axis 0) of its \'variable\' (i.e., the length of its items .'
-        assert (error_msg in str(error_text.value) for error_msg in {error_msg_a, error_msg_b, error_msg_c})
+        assert 'Variable shape incompatibility between (TransferMechanism T) and its integrator_function Parameter' in str(error_text.value)
 
     def test_transfer_mech_array_assignment_wrong_size_integrator_fct_param(self):
 
-        with pytest.raises(TransferError) as error_text:
+        with pytest.raises(FunctionError) as error_text:
             T = TransferMechanism(
                     name='T',
                     default_variable=[0 for i in range(VECTOR_SIZE)],
                     integrator_mode=True,
                     integrator_function=AdaptiveIntegrator(rate=[0 for i in range(VECTOR_SIZE + 1)])
             )
-        error_msg_a = 'The length (5) of the \'variable\' or one of the parameters specified for '
-        error_msg_b = 'the integrator_function of T doesn\'t match the size (4) of the '
-        error_msg_c = 'innermost dimension (axis 0) of its \'variable\' (i.e., the length of its items .'
-        assert (error_msg in str(error_text.value) for error_msg in {error_msg_a, error_msg_b, error_msg_c})
+        assert (
+            "The following parameters with len>1 specified" in str(error_text.value)
+            and "don't have the same length as its 'default_variable' (4): ['rate']." in str(error_text.value)
+        )
 
     # FIX: CAN'T RUN THIS YET:  CRASHES W/O ERROR MESSAGE SINCE DEFAULT_VARIABLE OF FCT DOESN'T MATCH ITS INITIALIZER
     # # def test_transfer_mech_array_assignments_wrong_size_fct_initlzr(self, benchmark, mode):
@@ -1017,7 +1014,7 @@ class TestTransferMechanismIntegratorFunctionParams:
     # def test_transfer_mech_array_assignments_wrong_size_fct_noise(self, benchmark, mode):
     def test_transfer_mech_array_assignments_wrong_size_fct_noise(self):
 
-        with pytest.raises(MechanismError) as error_text:
+        with pytest.raises(FunctionError) as error_text:
             T = TransferMechanism(
                     name='T',
                     default_variable=[0 for i in range(VECTOR_SIZE)],
@@ -1550,7 +1547,7 @@ class TestTransferMechanismMultipleInputPorts:
             default_variable=[[0.0, 0.0], [0.0, 0.0]]
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
-        assert np.allclose(val, [[3.60569184,  3.6136458], [9.00036006, 14.09938081]])
+        assert np.allclose(val, [[1.6136458, 7.00036006], [12.09938081, 7.56874402]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -1693,7 +1690,7 @@ class TestIntegratorMode:
                               integration_rate=0.1,
                               noise=0.0)
         C = Composition(pathways=[T])
-        
+
         T.reset_stateful_function_when = Never()
 
         assert np.allclose(T.integrator_function.previous_value, 0.5)
@@ -1966,20 +1963,34 @@ class TestOnResumeIntegratorMode:
         # Trial 1: 0.5*0.5 + 0.5*2.0 = 1.25 * 1.0 = 1.25
         assert np.allclose(T.parameters.value.get(C), [[1.25]])
 
-    def test_termination_measures(self):
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.benchmark(group="TransferMechanism")
+    @pytest.mark.parametrize('bin_execute', ['Python',
+                                             # 'LLVM' mode is not supported
+                                             # the comparison values and checks
+                                             # are not synced between binary
+                                             # and Python structures
+                                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                             pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                            ])
+    def test_termination_measures(self, bin_execute):
         stim_input = ProcessingMechanism(size=2, name='Stim Input')
         stim_percept = TransferMechanism(name='Stimulus', size=2, function=Logistic)
         instruction_input = ProcessingMechanism(size=2, function=Linear(slope=10))
         attention = LCAMechanism(name='Attention', size=2, function=Logistic,
-                                     leak=8, competition=8, self_excitation=0, noise=0, time_step_size=.1,
-                                     termination_threshold=3,
-                                     termination_measure = TimeScale.TRIAL)
+                                 leak=8, competition=8, self_excitation=0,
+                                 noise=0, time_step_size=.1,
+                                 termination_threshold=3,
+                                 termination_measure=TimeScale.TRIAL)
         decision = TransferMechanism(name='Decision', size=2,
-                                         integrator_mode=True,
-                                         execute_until_finished=False,
-                                         termination_threshold=0.65,
-                                         termination_measure=max,
-                                         termination_comparison_op=GREATER_THAN)
+                                     integrator_mode=True,
+                                     execute_until_finished=False,
+                                     termination_threshold=0.65,
+                                     termination_measure=max,
+                                     termination_comparison_op=GREATER_THAN)
         response = ProcessingMechanism(size=2, name='Response')
 
         comp = Composition()
@@ -1987,13 +1998,14 @@ class TestOnResumeIntegratorMode:
         comp.add_linear_processing_pathway([instruction_input, attention, stim_percept])
         inputs = {stim_input: [[1, 1], [1, 1]],
                   instruction_input: [[1, -1], [-1, 1]]}
-        result = comp.run(inputs=inputs)
+        result = comp.run(inputs=inputs, bin_execute=bin_execute)
 
         assert np.allclose(result, [[0.43636140750487973, 0.47074475219780554]])
-        assert decision.num_executions.time_step == 1
-        assert decision.num_executions.pass_ == 2
-        assert decision.num_executions.trial== 1
-        assert decision.num_executions.run == 2
+        if bin_execute == 'Python':
+            assert decision.num_executions.time_step == 1
+            assert decision.num_executions.pass_ == 2
+            assert decision.num_executions.trial== 1
+            assert decision.num_executions.run == 2
 
 
 class TestClip:

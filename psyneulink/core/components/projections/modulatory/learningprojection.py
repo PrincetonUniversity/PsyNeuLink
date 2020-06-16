@@ -426,8 +426,8 @@ class LearningProjection(ModulatoryProjection_Base):
         """
         value = Parameter(np.array([0]), read_only=True, aliases=['weight_change_matrix'], pnl_internal=True)
         function = Parameter(Linear, stateful=False, loggable=False)
-        error_function = Parameter(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
-        learning_function = Parameter(BackPropagation, stateful=False, loggable=False)
+        error_function = Parameter(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False, reference=True)
+        learning_function = Parameter(BackPropagation, stateful=False, loggable=False, reference=True)
         learning_rate = Parameter(None, modulable=True)
         learning_signal = Parameter(None, read_only=True,
                                     getter=_learning_signal_getter,

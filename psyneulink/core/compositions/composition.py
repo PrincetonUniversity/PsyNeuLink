@@ -49,7 +49,6 @@ Contents
      - `Composition_Execution_Context`
      - `Composition_Reset`
      - `Composition_Compilation`
-  * `Composition_Visualization`
   * `Composition_Examples`
      - `Composition_Examples_Creation`
      - `Composition_Examples_Run`
@@ -59,7 +58,7 @@ Contents
      - `Composition_Examples_Cycles_Feedback`
      - `Composition_Examples_Execution_Context`
      - `Composition_Examples_Reset`
-     - `Composition_Examples_Visualization`
+     - `ShowGraph_Examples_Visualization`
   * `Composition_Class_Reference`
 
 .. _Composition_Overview:
@@ -252,7 +251,7 @@ Composition's structure is stored in its `graph <Composition.graph>` attribute, 
 its Nodes and the dependencies determined by its Projections.  There are no restrictions on the structure of the
 graph, which can be `acyclic or cyclic <Composition_Acyclic_Cyclic>`, and/or hierarchical (i.e., contain one or more
 `nested Compositions <Composition_Nested>`) as described below. A Composition's `graph <Composition.graph>` can be
-displayed  using the `show_graph <Composition.show_graph>` method (see `Composition_Visualization`).
+displayed using the Compositon's `show_graph <ShowGraph.show_graph>` method (see `ShowGraph_show_graph_Method`).
 
 .. _Composition_Acyclic_Cyclic:
 
@@ -1586,25 +1585,21 @@ GPU thread, and therefore does not produce any performance benefits over running
 `this <https://github.com/PrincetonUniversity/PsyNeuLink/projects/1>`_ for progress extending support of parallization
 in compiled modes).
 
+COMMENT:
 .. _Composition_Visualization:
 
 Visualizing a Composition
 -------------------------
 
-COMMENT:
+XCOMMENTX:
     XXX - ADD EXAMPLE OF NESTED COMPOSITION
     XXX - ADD DISCUSSION OF show_controller AND show_learning
-COMMENT
+XCOMMENTX
 
-The `show_graph <Composition.show_graph>` method generates a display of the graph structure of `Nodes
+The `show_graph <ShowGraph_show_graph_Method>` method generates a display of the graph structure of `Nodes
 <Composition_Nodes>` and `Projections <Projection>` in the Composition (based on the Composition's `graph
 <Composition.graph>`).
-
-By default, Nodes are shown as ovals labeled by their `names <Registry_Naming>`, with the Composition's `INPUT`
-Nodes shown in green, its `OUTPUT` Nodes shown in red, any that are both (i.e., are `SINGLETON`\\s) shown in brown,
-and Projections shown as unlabeled arrows, as illustrated for the Composition in the `examples
-<Composition_Examples_Visualization>`.
-
+COMMENT
 
 .. _Composition_Examples:
 
@@ -2322,93 +2317,6 @@ Example 4) Schedule resets for both Mechanisms to custom values, to occur at dif
     >>> print(B.value)
     >>> # [[0.75]]
 
-.. _Composition_Examples_Visualization:
-
-*Visualizing a Composition*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-.. _Composition_show_graph_basic_figure:
-
-+-----------------------------------------------------------+----------------------------------------------------------+
-| >>> from psyneulink import *                              | .. figure:: _static/Composition_show_graph_basic_fig.svg |
-| >>> a = ProcessingMechanism(                              |                                                          |
-|               name='A',                                   |                                                          |
-| ...           size=3,                                     |                                                          |
-| ...           output_ports=[RESULT, MEAN]                 |                                                          |
-| ...           )                                           |                                                          |
-| >>> b = ProcessingMechanism(                              |                                                          |
-| ...           name='B',                                   |                                                          |
-| ...           size=5                                      |                                                          |
-| ...           )                                           |                                                          |
-| >>> c = ProcessingMechanism(                              |                                                          |
-| ...           name='C',                                   |                                                          |
-| ...           size=2,                                     |                                                          |
-| ...           function=Logistic(gain=pnl.CONTROL)         |                                                          |
-| ...           )                                           |                                                          |
-| >>> comp = Composition(                                   |                                                          |
-| ...           name='Comp',                                |                                                          |
-| ...           enable_controller=True                      |                                                          |
-| ...           )                                           |                                                          |
-| >>> comp.add_linear_processing_pathway([a,c])             |                                                          |
-| >>> comp.add_linear_processing_pathway([b,c])             |                                                          |
-| >>> ctlr = OptimizationControlMechanism(                  |                                                          |
-| ...            name='Controller',                         |                                                          |
-| ...            monitor_for_control=[(pnl.MEAN, a)],       |                                                          |
-| ...            control_signals=(GAIN, c),                 |                                                          |
-| ...            agent_rep=comp                             |                                                          |
-| ...            )                                          |                                                          |
-| >>> comp.add_controller(ctlr)                             |                                                          |
-+-----------------------------------------------------------+----------------------------------------------------------+
-
-Note that the Composition's `controller <Composition.controller>` is not shown by default.  However this
-can be shown, along with other information, using options in the Composition's `show_graph <Composition.show_graph>`
-method.  The figure below shows several examples.
-
-.. _Composition_show_graph_options_figure:
-
-**Output of show_graph using different options**
-
-.. figure:: _static/Composition_show_graph_options_fig.svg
-   :alt: Composition graph examples
-   :scale: 150 %
-
-   Displays of the Composition in the `example above <Composition_show_graph_basic_figure>`, generated using various
-   options of its `show_graph <Composition.show_graph>` method. **Panel A** shows the graph with its Projections labeled
-   and Component dimensions displayed.  **Panel B** shows the `controller <Composition.controller>` for the
-   Composition and its associated `ObjectiveMechanism` using the **show_controller** option (controller-related
-   Components are displayed in blue by default).  **Panel C** adds the Composition's `CompositionInterfaceMechanisms
-   <CompositionInterfaceMechanism>` using the **show_cim** option. **Panel D** shows a detailed view of the Mechanisms
-   using the **show_node_structure** option, that includes their `Ports <Port>` and their `roles <NodeRole>` in the
-   Composition. **Panel E** shows an even more detailed view using **show_node_structure** as well as **show_cim**.
-
-If a Composition has one ore more Compositions nested as Nodes within it, these can be shown using the
-**show_nested** option. For example, the pathway in the script below contains a sequence of Mechanisms
-and nested Compositions in an outer Composition, ``comp``:
-
-.. _Composition_show_graph_show_nested_figure:
-
-+------------------------------------------------------+---------------------------------------------------------------+
-| >>> mech_stim = ProcessingMechanism(name='STIMULUS') |.. figure:: _static/Composition_show_graph_show_nested_fig.svg |
-| >>> mech_A1 = ProcessingMechanism(name='A1')         |                                                               |
-| >>> mech_B1 = ProcessingMechanism(name='B1')         |                                                               |
-| >>> comp1 = Composition(name='comp1')                |                                                               |
-| >>> comp1.add_linear_processing_pathway([mech_A1,    |                                                               |
-| ...                                      mech_B1])   |                                                               |
-| >>> mech_A2 = ProcessingMechanism(name='A2')         |                                                               |
-| >>> mech_B2 = ProcessingMechanism(name='B2')         |                                                               |
-| >>> comp2 = Composition(name='comp2')                |                                                               |
-| >>> comp2.add_linear_processing_pathway([mech_A2,    |                                                               |
-| ...                                      mech_B2])   |                                                               |
-| >>> mech_resp = ProcessingMechanism(name='RESPONSE') |                                                               |
-| >>> comp = Composition()                             |                                                               |
-| >>> comp.add_linear_processing_pathway([mech_stim,   |                                                               |
-| ...                                     comp1, comp2,|                                                               |
-| ...                                     mech_resp])  |                                                               |
-| >>> comp.show_graph(show_nested=True)                |                                                               |
-+------------------------------------------------------+---------------------------------------------------------------+
-
-
 .. _Composition_Class_Reference:
 
 Class Reference
@@ -2435,6 +2343,7 @@ from inspect import isgenerator, isgeneratorfunction
 from enum import Enum
 
 from psyneulink.core import llvm as pnlvm
+from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.interfacefunctions import InterfacePortMap
@@ -2467,14 +2376,14 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
     COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, \
-    FEEDBACK, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LABELS, \
-    LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    FEEDBACK, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, INSET, \
+    LABELS, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
-    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, \
+    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
-    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, ROLES, \
-    SAMPLE, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
+    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, \
+    ROLES, SAMPLE, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
@@ -2496,27 +2405,8 @@ from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativ
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [
-    'Composition', 'CompositionError', 'CompositionRegistry', 'DURATION', 'DIRECT', 'EdgeType', 'EXECUTION_SET',
-    'get_compositions', 'INITIAL_FRAME', 'MECH_FUNCTION_PARAMS', 'MOVIE_DIR', 'MOVIE_NAME',
-    'NodeRole', 'NUM_TRIALS', 'NUM_RUNS', 'PORT_FUNCTION_PARAMS',
-    'SAVE_IMAGES', 'SHOW', 'SHOW_CIM', 'SHOW_CONTROLLER', 'SHOW_LEARNING', 'UNIT',
-]
-
-
-# show_graph animation options
-NUM_TRIALS = 'num_trials'
-NUM_RUNS = 'num_Runs'
-UNIT = 'unit'
-DURATION = 'duration'
-MOVIE_DIR = 'movie_dir'
-MOVIE_NAME = 'movie_name'
-SAVE_IMAGES = 'save_images'
-SHOW = 'show'
-INITIAL_FRAME = 'INITIAL_FRAME'
-EXECUTION_SET = 'EXECUTION_SET'
-SHOW_CIM = 'show_cim'
-SHOW_CONTROLLER = 'show_controller'
-SHOW_LEARNING = 'show_learning'
+    'Composition', 'CompositionError', 'CompositionRegistry', 'EdgeType', 'get_compositions', 'NodeRole'
+    ]
 
 
 logger = logging.getLogger(__name__)
@@ -3047,12 +2937,6 @@ class NodeRole(Enum):
     OUTPUT = 12
     TERMINAL = 13
 
-# Options for show_node_structure argument of show_graph()
-MECH_FUNCTION_PARAMS = "MECHANISM_FUNCTION_PARAMS"
-PORT_FUNCTION_PARAMS = "PORT_FUNCTION_PARAMS"
-DIRECT = "direct_to_cim"
-
-
 class Composition(Composition_Base, metaclass=ComponentsMeta):
     """
     Composition(                           \
@@ -3065,6 +2949,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         controller_mode=AFTER,             \
         controller_condition=Always,       \
         retain_old_simulation_data=None,   \
+        show_graph_attributes=None,        \
         name=None,                         \
         prefs=Composition.classPreference  \
         )
@@ -3105,6 +2990,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     controller_condition: Condition : default Always
         specifies when the Composition's `controller <Composition.controller>` is executed in a trial.
+
+    retain_old_simulation_data : bool : default False
+        specifies whether or not to retain Parameter values generated during `simulations
+        <OptimizationControlMechanism_Execution>` of the Composition (see `retain_old_simulation_data
+        <Composition.retain_old_simulation_data>` for additional details).
+
+    show_graph_attributes : dict : None
+        specifies features of how the Composition is displayed when its `show_graph <ShowGraph.show_graph>` method
+        is called or **animate** is specified in a call to its `run <Composition.run>` method  (see `ShowGraph` for
+        list of attributes and their values).
 
     name : str : default see `name <Composition.name>`
         specifies the name of the Composition.
@@ -3156,15 +3051,41 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Compositions) intercolated with the `Projection <Projection>` between each pair of nodes.
 
     input_CIM : `CompositionInterfaceMechanism`
-        mediates input values for the INPUT nodes of the Composition. If the Composition is nested, then the
-        input_CIM and its InputPorts serve as proxies for the Composition itself for afferent projections.
+        mediates input values for the `INPUT` `Nodes <Composition_Nodes>` of the Composition. If the Composition is
+        `nested <Composition_Nested>`, then the input_CIM and its `InputPorts <InputPort> serve as proxies for the
+        Composition itself for its afferent `PathwayProjections <PathwayProjection>`.
 
     input_CIM_ports : dict
-        a dictionary in which keys are InputPorts of INPUT Nodes in a composition, and values are lists
-        containing two items: the corresponding InputPort and OutputPort on the input_CIM.
+        a dictionary in which the key of each entry is the `InputPort` of an `INPUT` `Node <Composition_Nodes>` in
+        the Composition, and its value is a list containing two items:
+        
+        - the `InputPort` of the `input_CIM <Composition.input_CIM>` that receives the input destined for that `INPUT`
+          Node -- either from the `input <Composition_Execution_Inputs>` specified for the Node in a call to one of the
+          Composition's `execution methods <Composition_Execution_Methods>`, or from a `MappingProjection` from a
+          Node in an `enclosing Composition <Composition_Nested>` that has specified the `INPUT` Node as its `receiver
+          <Projection_Base.receiver>`;
+        
+        - the `OutputPort` of the `input_CIM <Composition.input_CIM>` that sends a `MappingProjection` to the
+          `InputPort` of the `INPUT` Node.
+
+    parameter_CIM : `CompositionInterfaceMechanism`
+        mediates modulatory values for all `Nodes <Composition_Nodes>` of the Composition. If the Composition is
+        `nested <Composition_Nested>`, then the parameter_CIM and its `InputPorts <InputPort>` serve as proxies for
+        the Composition itself for its afferent `ModulatoryProjections <ModulatoryProjection>`.
+
+    parameter_CIM_ports : dict
+        a dictionary in which keys are `ParameterPorts <ParameterPort>` of `Nodes <Composition_Nodes>` in the
+        Composition, and values are lists containing two items:
+
+        - the `InputPort` of the `parameter_CIM <Composition.parameter_CIM>` that receives a `MappingProjection` from
+          a `ModulatorySignal` of a `ModulatoryMechanism` in the `enclosing Composition <Composition_Nested>`;
+
+        - the `OutputPort` of the parameter_CIM that sends a `ModulatoryProjection` to the `ParameterPort` of the Node
+          in the Composition with the parameter to be modulated.
 
     afferents : ContentAddressableList[`Projection <Projection>`]
-        a list of all of the `Projections <Projection>` to the Composition's `input_CIM`.
+        a list of all of the `Projections <Projection>` to either the Composition's `input_CIM` (`PathwayProjections
+        <PathwayProjection>` and `ModulatoryProjections <ModulatoryProjection>`).
 
     external_input_ports : list[InputPort]
         a list of the InputPorts of the Composition's `input_CIM <Composition.input_CIM>`;  these receive input
@@ -3185,8 +3106,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         output_CIM and its OutputPorts serve as proxies for Composition itself in terms of efferent projections.
 
     output_CIM_ports : dict
-        a dictionary in which keys are OutputPorts of OUTPUT Nodes in a composition, and values are lists
-        containing two items: the corresponding InputPort and OutputPort on the input_CIM.
+        a dictionary in which the key of each entry is the `OutputPort` of an `OUTPUT` `Node <Composition_Nodes>` in
+        the Composition, and its value is a list containing two items:
+        
+        - the `InputPort` of the output_CIM that receives a `MappingProjection` from the `OutputPort` of the `OUTPUT`
+          Node;
+        
+        - the `OutputPort` of the `output_CIM <Composition.output_CIM>` that is either recorded in the `results
+          <Composition.results>` attrribute of the Composition, or sends a `MappingProjection` to a Node in the
+          `enclosing Composition <Composition_Nested>` that has specified the `OUTPUT` Node as its `sender
+          <Projection_Base.sender>`.
 
     efferents : ContentAddressableList[`Projection <Projection>`]
         a list of all of the `Projections <Projection>` from the Composition's `output_CIM`.
@@ -3255,12 +3184,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Composition's Nodes when one or more is a `nested Composition <Composition_Nested>`.
 
     simulation_results : list[list[list]]
-        a list of the `results <Composition.results>` for executions of the Composition when it is executed using
-        its `evaluate <Composition.evaluate>` method.
+        a list of the `results <Composition.results>` for `simulations <OptimizationControlMechanism_Execution>`
+        of the Composition when it is executed using its `evaluate <Composition.evaluate>` method by an
+        `OptimizationControlMechanism`.
 
     retain_old_simulation_data : bool
-        if True, all Parameter values generated during simulations will be saved for later inspection;
-        if False, simulation values will be deleted unless otherwise specified by individual Parameters
+        if True, all `Parameter` values generated during `simulations <OptimizationControlMechanism_Execution>` are saved;
+        if False, simulation values are deleted unless otherwise specified by individual Parameters.
 
     input_specification : None or dict or list or generator or function
         stores the `inputs` for executions of the Composition when it is executed using its `run <Composition.run>`
@@ -3340,6 +3270,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
             controller_condition:Condition=Always(),
             retain_old_simulation_data=None,
+            show_graph_attributes=None,
             name=None,
             prefs=None,
             **param_defaults
@@ -3366,16 +3297,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # 'env' attr required for dynamic inputs generated by gym forager env
         self.env = None
 
+        self.input_CIM_ports = {}
+        self.parameter_CIM_ports = {}
+        self.output_CIM_ports = {}
+
         # Interface Mechanisms
         self.input_CIM = CompositionInterfaceMechanism(name=self.name + " Input_CIM",
-                                                       composition=self)
-        self.output_CIM = CompositionInterfaceMechanism(name=self.name + " Output_CIM",
-                                                        composition=self)
+                                                       composition=self,
+                                                       port_map=self.input_CIM_ports)
         self.parameter_CIM = CompositionInterfaceMechanism(name=self.name + " Parameter_CIM",
-                                                        composition=self)
-        self.input_CIM_ports = {}
-        self.output_CIM_ports = {}
-        self.parameter_CIM_ports = {}
+                                                        composition=self,
+                                                       port_map=self.parameter_CIM_ports)
+        self.output_CIM = CompositionInterfaceMechanism(name=self.name + " Output_CIM",
+                                                        composition=self,
+                                                        port_map=self.output_CIM_ports)
 
         self.shadows = {}
 
@@ -3397,10 +3332,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.nodes_to_roles = collections.OrderedDict()
 
         self.cycle_vertices = set()
-        # # MODIFIED 5/19/20 OLD:
-        # self.feedback_senders = set()
-        # self.feedback_receivers = set()
-        # MODIFIED 5/19/20 END
 
         self._initialize_parameters(
             **param_defaults,
@@ -3454,6 +3385,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
         self._analyze_graph(context=Context(source=ContextFlags.COMPOSITION))
+
+        show_graph_attributes = show_graph_attributes or {}
+        self._show_graph = ShowGraph(self, **show_graph_attributes)
 
     @property
     def graph_processing(self):
@@ -3612,6 +3546,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             node._analyze_graph(context = context)
         except AttributeError:
             pass
+
+        # # MODIFIED 6/13/20 NEW:
+        # if any(n is node for nested_comp in self.nodes if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
+        #     return
+        # MODIFIED 6/13/20 END
 
         node._check_for_composition(context=context)
 
@@ -3776,8 +3715,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
         if not isinstance(nodes, list):
-            raise CompositionError(f"Arg for 'add_nodes' method of '{self.name}' {Composition.__name__} "
-                                   f"must be a list of nodes or (node, required_roles) tuples")
+            # raise CompositionError(f"Arg for 'add_nodes' method of '{self.name}' {Composition.__name__} "
+            #                        f"must be a list of nodes or (node, required_roles) tuples")
+            nodes = convert_to_list(nodes)
         for node in nodes:
             if isinstance(node, (Mechanism, Composition)):
                 self.add_node(node, required_roles, context)
@@ -4480,6 +4420,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                      name= INPUT_CIM_NAME + "_" + node.name + "_" + input_port.name,
                                                      context=context)
 
+                    # MODIFIED 6/13/20 NEW:
+                    if NodeRole.TARGET in self.get_roles_by_node(node):
+                        interface_input_port.parameters.require_projection_in_composition.set(False, override=True)
+                    # MODIFIED 6/13/20 END
+
                     # add port to the input CIM
                     self.input_CIM.add_ports([interface_input_port],
                                              context=context)
@@ -4659,7 +4604,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Enforce order of ports to same as node_order
             # Get node port mappings for cim
-            node_port_to_cim_port_tuples_mapping = getattr(self, f'{type}_CIM_ports')
+            node_port_to_cim_port_tuples_mapping = cim.port_map
             # Create lists of tuples of (cim_input_port, cim_output_port, index), in which indices are for
             # nodes within self.nodes (cim_node_indices) and ports wihin nodes (cim_port_within_node_indices
             cim_node_indices = []
@@ -5036,7 +4981,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             existing_projections = self._check_for_existing_projections(projection, sender=sender, receiver=receiver)
 
-        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # # FIX: JDC HACK 6/13/19 to deal with projection from user-specified INPUT node added to the Composition
+        # #      that projects directly to the Target node of a nested Composition
+        # # If receiver_mechanism is a Target Node in a nested Composition
+        # if any((n is receiver_mechanism and receiver_mechanism in nested_comp.get_nodes_by_role(NodeRole.TARGET))
+        #        for nested_comp in self.nodes if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
+        #     # cim_target_input_port = receiver_mechanism.afferents[0].sender.owner.port_map[receiver.input_port][0]
+        #     cim = next((proj.sender.owner for proj in receiver_mechanism.afferents
+        #                 if isinstance(proj.sender.owner, CompositionInterfaceMechanism)), None)
+        #     assert cim, f'PROGRAM ERROR: Target mechanisms {receiver_mechanism.name} ' \
+        #                 f'does not receive projection from input_CIM'
+        #     cim_target_input_port = cim.port_map[receiver.input_port][0]
+        #     projection.receiver._remove_projection_to_port(projection)
+        #     # self.remove_projection(projection)
+        #     projection = MappingProjection(sender=sender, receiver=cim_target_input_port)
+        #     receiver_mechanism = cim
+        #     receiver = cim_target_input_port
+
+        # FIX: KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
         if (sender_mechanism != self.input_CIM
                 and receiver_mechanism != self.output_CIM
@@ -5054,8 +5016,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except CompositionError as c:
                 raise CompositionError(f"{c.args[0]} to {self.name}.")
 
-        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-        # Add autoassociative learning mechanism + related projections to composition as processing components
         if not existing_projections:
             self._validate_projection(projection,
                                       sender, receiver,
@@ -5070,7 +5030,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projection._activate_for_compositions(comp)
 
         # Note: do all of the following even if Projection is a existing_projections,
-        #   as these conditions shoud apply to the exisiting one (and it won't hurt to try again if they do)
+        #   as these conditions should apply to the exisiting one (and it won't hurt to try again if they do)
 
         # Create "shadow" projections to any input ports that are meant to shadow this projection's receiver
         # (note: do this even if there is a duplciate and they are not allowed, as still want to shadow that projection)
@@ -5088,6 +5048,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return projection
 
+    def _add_projection(self, projection):
+        self.projections.append(projection)
+
     def remove_projection(self, projection):
         # step 1 - remove Vertex from Graph
         if projection in [vertex.component for vertex in self.graph.vertices]:
@@ -5098,9 +5061,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.projections.remove(projection)
 
         # step 3 - TBI? remove Projection from afferents & efferents lists of any node
-
-    def _add_projection(self, projection):
-        self.projections.append(projection)
 
     def _validate_projection(self,
                              projection,
@@ -7333,7 +7293,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             animate = False
             buffer_animate_state = self._animate
 
-        context.add_flag(ContextFlags.SIMULATION)
+        context.add_flag(ContextFlags.SIMULATION_MODE)
         context.remove_flag(ContextFlags.CONTROL)
         results = self.run(inputs=inputs,
                  context=context,
@@ -7343,8 +7303,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                  bin_execute=execution_mode,
                  skip_initialization=True,
                  )
-        context.remove_flag(ContextFlags.SIMULATION)
-        context.add_flag(ContextFlags.CONTROL)
+        context.remove_flag(ContextFlags.SIMULATION_MODE)
+        context.execution_phase = ContextFlags.CONTROL
         if buffer_animate_state:
             self._animate = buffer_animate_state
 
@@ -7371,1483 +7331,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             return net_outcome
 
-    # ******************************************************************************************************************
-    #                                                SHOW_GRAPH
-    # ******************************************************************************************************************
-
-    @tc.typecheck
-    @handle_external_context(execution_id=NotImplemented, source=ContextFlags.COMPOSITION)
-    def show_graph(self,
-                   show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
-                                                            PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
-                   show_nested:tc.optional(tc.any(bool,dict,tc.enum(ALL)))=ALL,
-                   show_controller:tc.any(bool, tc.enum(AGENT_REP))=True,
-                   show_cim:bool=False,
-                   show_learning:bool=False,
-                   show_headers:bool=True,
-                   show_types:bool=False,
-                   show_dimensions:bool=False,
-                   show_projection_labels:bool=False,
-                   direction:tc.enum('BT', 'TB', 'LR', 'RL')='BT',
-                   # active_items:tc.optional(list)=None,
-                   active_items=None,
-                   active_color=BOLD,
-                   input_color='green',
-                   output_color='red',
-                   input_and_output_color='brown',
-                   # feedback_color='yellow',
-                   controller_color='blue',
-                   learning_color='orange',
-                   composition_color='pink',
-                   control_projection_arrow='box',
-                   feedback_shape = 'septagon',
-                   cycle_shape = 'doublecircle',
-                   cim_shape='square',
-                   output_fmt:tc.optional(tc.enum('pdf','gv','jupyter','gif'))='pdf',
-                   context=None,
-                   **kwargs):
-        """
-        show_graph(                           \
-           show_node_structure=False,         \
-           show_nested=ALL,                   \
-           show_controller=True,              \
-           show_cim=False,                    \
-           show_learning=False,               \
-           show_headers=True,                 \
-           show_types=False,                  \
-           show_dimensions=False,             \
-           show_projection_labels=False,      \
-           direction='BT',                    \
-           active_items=None,                 \
-           active_color=BOLD,                 \
-           input_color='green',               \
-           output_color='red',                \
-           input_and_output_color='brown',    \
-           controller_color='blue',           \
-           composition_color='pink',          \
-           feedback_shape = 'septagon',       \
-           cycle_shape = 'doublecircle',      \
-           cim_shape='square',                \
-           output_fmt='pdf',                  \
-           context=None)
-
-        Show graphical display of Components in a Composition's graph.
-
-        .. note::
-           This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
-           (standard with PsyNeuLink pip install)
-
-        See `Visualizing a Composition <Composition_Visualization>` for details and examples.
-
-        Arguments
-        ---------
-
-        show_node_structure : bool, VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS, PORT_FUNCTION_PARAMS, ROLES, \
-        or ALL : default False
-            show a detailed representation of each `Mechanism <Mechanism>` in the graph, including its `Ports <Port>`;
-            can have any of the following settings alone or in a list:
-
-            * `True` -- show Ports of Mechanism, but not information about the `value
-              <Component.value>` or `function <Component.function>` of the Mechanism or its Ports.
-
-            * *VALUES* -- show the `value <Mechanism_Base.value>` of the Mechanism and the `value
-              <Port_Base.value>` of each of its Ports.
-
-            * *LABELS* -- show the `value <Mechanism_Base.value>` of the Mechanism and the `value
-              <Port_Base.value>` of each of its Ports, using any labels for the values of InputPorts and
-              OutputPorts specified in the Mechanism's `input_labels_dict <Mechanism.input_labels_dict>` and
-              `output_labels_dict <Mechanism.output_labels_dict>`, respectively.
-
-            * *FUNCTIONS* -- show the `function <Mechanism_Base.function>` of the Mechanism and the `function
-              <Port_Base.function>` of its InputPorts and OutputPorts.
-
-            * *MECH_FUNCTION_PARAMS_* -- show the parameters of the `function <Mechanism_Base.function>` for each
-              Mechanism in the Composition (only applies if *FUNCTIONS* is True).
-
-            * *PORT_FUNCTION_PARAMS_* -- show the parameters of the `function <Mechanism_Base.function>` for each
-              Port of each Mechanism in the Composition (only applies if *FUNCTIONS* is True).
-
-            * *ROLES* -- show the `role <NodeRole>` of the Mechanism in the Composition
-              (but not any of the other information;  use *ALL* to show ROLES with other information).
-
-            * *ALL* -- shows the role, `function <Component.function>`, and `value <Component.value>` of the
-              Mechanisms in the `Composition` and their `Ports <Port>` (using labels for
-              the values, if specified -- see above), including parameters for all functions.
-
-        show_nested : bool | dict : default ALL
-            specifies whether any nested Composition(s) are shown in details as inset graphs.  A dict can be used to
-            specify any of the arguments allowed for show_graph to be used for the nested Composition(s);  *ALL*
-            passes all arguments specified for the main Composition to the nested one(s);  True uses the default
-            values of show_graph args for the nested Composition(s).
-
-        show_controller :  bool or AGENT_REP : default True
-            specifies whether or not to show the Composition's `controller <Composition.controller>` and associated
-            `objective_mechanism <ControlMechanism.objective_mechanism>` if it has one.  If the controller is an
-            OptimizationControlMechanism and it has an `agent_rep <OptimizationControlMechanism>`, then specifying
-            *AGENT_REP* will also show that.  All control-related items are displayed in the color specified for
-            **controller_color**.
-
-        show_cim : bool or DIRECT : default False
-            specifies whether or not to show the Composition's `input_CIM <Composition.input_CIM>`, `parameter_CIM
-            <Composition.parameter_CIM>`, and `output_CIM <Composition.output_CIM>` `CompositionInterfaceMechanisms
-            <CompositionInterfaceMechanism>` (CIMs).  If **show_node_structure** is specified (see above) and their
-            are `nested Compositions <Composition_Nested>`, then specifying **show_cim** as True or *DIRECT* determines
-            how projections are shown between an enclosing Composition and the CIMs of the nested one:  if specified
-            as *DIRECT*, then those Projections are connected directly to the relevvant `Ports <Port>` of the nested
-            Composition's CIMs; if True, then the nested Composition is rendered separated from its enclosing one,
-            without showing direct Projections from one to the other.
-
-        show_learning : bool or ALL : default False
-            specifies whether or not to show the `learning components <Composition_Learning_Components>` of the
-            `Composition`; they will all be displayed in the color specified for **learning_color**.
-            Projections that receive a `LearningProjection` will be shown as a diamond-shaped node.
-            If set to *ALL*, all Projections associated with learning will be shown:  the LearningProjections
-            as well as from `ProcessingMechanisms <ProcessingMechanism>` to `LearningMechanisms <LearningMechanism>`
-            that convey error and activation information;  if set to `True`, only the LearningPojections are shown.
-
-        show_projection_labels : bool : default False
-            specifies whether or not to show names of projections.
-
-        show_headers : bool : default True
-            specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
-            **show_node_structure** is specified (see above).
-
-        show_types : bool : default False
-            specifies whether or not to show type (class) of `Mechanism <Mechanism>` in each node label.
-
-        show_dimensions : bool : default False
-            specifies whether or not to show dimensions for the `variable <Component.variable>` and `value
-            <Component.value>` of each Component in the graph (and/or MappingProjections when show_learning
-            is `True`);  can have the following settings:
-
-            * *MECHANISMS* -- shows `Mechanism <Mechanism>` input and output dimensions.  Input dimensions are shown
-              in parentheses below the name of the Mechanism; each number represents the dimension of the `variable
-              <InputPort.variable>` for each `InputPort` of the Mechanism; Output dimensions are shown above
-              the name of the Mechanism; each number represents the dimension for `value <OutputPort.value>` of each
-              of `OutputPort` of the Mechanism.
-
-            * *PROJECTIONS* -- shows `MappingProjection` `matrix <MappingProjection.matrix>` dimensions.  Each is
-              shown in (<dim>x<dim>...) format;  for standard 2x2 "weight" matrix, the first entry is the number of
-              rows (input dimension) and the second the number of columns (output dimension).
-
-            * *ALL* -- eqivalent to `True`; shows dimensions for both Mechanisms and Projections (see above for
-              formats).
-
-        direction : keyword : default 'BT'
-            'BT': bottom to top; 'TB': top to bottom; 'LR': left to right; and 'RL`: right to left.
-
-        active_items : List[Component] : default None
-            specifies one or more items in the graph to display in the color specified by *active_color**.
-
-        active_color : keyword : default 'yellow'
-            specifies how to highlight the item(s) specified in *active_items**:  either a color recognized
-            by GraphViz, or the keyword *BOLD*.
-
-        input_color : keyword : default 'green',
-            specifies the display color for `INPUT <NodeRole.INPUT>` Nodes in the Composition
-
-        output_color : keyword : default 'red',
-            specifies the display color for `OUTPUT` Nodes in the Composition
-
-        input_and_output_color : keyword : default 'brown'
-            specifies the display color of nodes that are both an `INPUT <NodeRole.INPUT>` and an `OUTPUT
-            <NodeRole.OUTPUT>` Node in the Composition
-
-        COMMENT:
-        feedback_color : keyword : default 'yellow'
-            specifies the display color of nodes that are assigned the `NodeRole` `FEEDBACK_SENDER`.
-        COMMENT
-
-        controller_color : keyword : default 'blue'
-            specifies the color in which the controller components are displayed
-
-        learning_color : keyword : default 'orange'
-            specifies the color in which the learning components are displayed
-
-        composition_color : keyword : default 'brown'
-            specifies the display color of nodes that represent nested Compositions.
-
-        feedback_shape : keyword : default 'septagon'
-            specifies the display shape of nodes that are assigned the `NodeRole` `FEEDBACK_SENDER`.
-
-        cycle_shape : keyword : default 'doublecircle'
-            specifies the display shape of nodes that are assigned the `NodeRole` `CYCLE`.
-
-        cim_shape : default 'square'
-            specifies the display color input_CIM and output_CIM nodes
-
-        output_fmt : keyword or None : default 'pdf'
-            'pdf': generate and open a pdf with the visualization;
-            'jupyter': return the object (for working in jupyter/ipython notebooks);
-            'gv': return graphviz object
-            'gif': return gif used for animation
-            None : return None
-
-        Returns
-        -------
-
-        `pdf` or Graphviz graph object :
-            PDF: (placed in current directory) if :keyword:`output_fmt` arg is 'pdf';
-            Graphviz graph object if :keyword:`output_fmt` arg is 'gv' or 'jupyter';
-            gif if :keyword:`output_fmt` arg is 'gif'.
-
-        """
-
-        # HELPER METHODS ----------------------------------------------------------------------
-
-        tc.typecheck
-        _locals = locals().copy()
-
-        def _assign_processing_components(g, rcvr, show_nested):
-            """Assign nodes to graph"""
-
-            # DEAL WITH NESTED COMPOSITION
-
-            # User passed args for nested Composition
-            if isinstance(rcvr, Composition) and show_nested:
-                output_fmt_arg = {'output_fmt':'gv'}
-                if isinstance(show_nested, dict):
-                    args = show_nested
-                    args.update(output_fmt_arg)
-                elif show_nested == ALL:
-                    # Pass args from main call to show_graph to call for nested Composition
-                    args = dict({k:_locals[k] for k in list(inspect.signature(self.show_graph).parameters)})
-                    args.update(output_fmt_arg)
-                    if kwargs:
-                        args['kwargs'] = kwargs
-                    else:
-                        del  args['kwargs']
-                else:
-                    # Use default args for nested Composition
-                    args = output_fmt_arg
-                nested_comp_graph = rcvr.show_graph(**args)
-                nested_comp_graph.name = "cluster_" + rcvr.name
-                rcvr_label = rcvr.name
-                # if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
-                #     nested_comp_graph.attr(color=feedback_color)
-                if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
-                        rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
-                    nested_comp_graph.attr(color=input_and_output_color)
-                elif rcvr in self.get_nodes_by_role(NodeRole.INPUT):
-                    nested_comp_graph.attr(color=input_color)
-                elif rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
-                    nested_comp_graph.attr(color=output_color)
-                nested_comp_graph.attr(label=rcvr_label)
-                g.subgraph(nested_comp_graph)
-
-            # DEAL WITH LEARNING
-            # If rcvr is a learning component and not an INPUT node,
-            #    break and handle in _assign_learning_components()
-            #    (node: this allows TARGET node for learning to remain marked as an INPUT node)
-            if (NodeRole.LEARNING in self.nodes_to_roles[rcvr]
-                    and not NodeRole.INPUT in self.nodes_to_roles[rcvr]):
-                return
-
-            # DEAL WITH CONTROLLER's OBJECTIVEMECHANIMS
-            # If rcvr is ObjectiveMechanism for Composition's controller,
-            #    break and handle in _assign_control_components()
-            if (isinstance(rcvr, ObjectiveMechanism)
-                    and self.controller
-                    and rcvr is self.controller.objective_mechanism):
-                return
-
-            # IMPLEMENT RECEIVER NODE:
-            #    set rcvr shape, color, and penwidth based on node type
-            else:
-                rcvr_rank = 'same'
-
-                # SET SPECIAL SHAPES
-
-                # Cycle or Feedback Node
-                if rcvr in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER):
-                    node_shape = feedback_shape
-                elif rcvr in self.get_nodes_by_role(NodeRole.CYCLE):
-                    node_shape = cycle_shape
-                else:
-                    node_shape = mechanism_shape
-
-                # SET STROKE AND COLOR
-                #    Based on Input, Output, Composition and/or Active
-
-                # Get condition if any associated with rcvr
-                if rcvr in self.scheduler.conditions:
-                    condition = self.scheduler.conditions[rcvr]
-                else:
-                    condition = None
-
-                # Input and Output Node
-                if rcvr in self.get_nodes_by_role(NodeRole.INPUT) and \
-                        rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
-                    if rcvr in active_items:
-                        if active_color == BOLD:
-                            rcvr_color = input_and_output_color
-                        else:
-                            rcvr_color = active_color
-                        rcvr_penwidth = str(bold_width + active_thicker_by)
-                        self.active_item_rendered = True
-                    else:
-                        rcvr_color = input_and_output_color
-                        rcvr_penwidth = str(bold_width)
-
-                # Input Node
-                elif rcvr in self.get_nodes_by_role(NodeRole.INPUT):
-                    if rcvr in active_items:
-                        if active_color == BOLD:
-                            rcvr_color = input_color
-                        else:
-                            rcvr_color = active_color
-                        rcvr_penwidth = str(bold_width + active_thicker_by)
-                        self.active_item_rendered = True
-                    else:
-                        rcvr_color = input_color
-                        rcvr_penwidth = str(bold_width)
-                    rcvr_rank = input_rank
-
-                # Output Node
-                elif rcvr in self.get_nodes_by_role(NodeRole.OUTPUT):
-                    if rcvr in active_items:
-                        if active_color == BOLD:
-                            rcvr_color = output_color
-                        else:
-                            rcvr_color = active_color
-                        rcvr_penwidth = str(bold_width + active_thicker_by)
-                        self.active_item_rendered = True
-                    else:
-                        rcvr_color = output_color
-                        rcvr_penwidth = str(bold_width)
-                    rcvr_rank = output_rank
-
-                # Composition
-                elif isinstance(rcvr, Composition):
-                    node_shape = composition_shape
-                    if rcvr in active_items:
-                        if active_color == BOLD:
-                            rcvr_color = composition_color
-                        else:
-                            rcvr_color = active_color
-                        rcvr_penwidth = str(bold_width + active_thicker_by)
-                        self.active_item_rendered = True
-                    else:
-                        rcvr_color = composition_color
-                        rcvr_penwidth = str(bold_width)
-
-                elif rcvr in active_items:
-                    if active_color == BOLD:
-                        rcvr_color = default_node_color
-                    else:
-                        rcvr_color = active_color
-                    rcvr_penwidth = str(default_width + active_thicker_by)
-                    self.active_item_rendered = True
-
-                else:
-                    rcvr_color = default_node_color
-                    rcvr_penwidth = str(default_width)
-
-                # Implement rcvr node
-                rcvr_label = self._get_graph_node_label(rcvr,
-                                                        show_types,
-                                                        show_dimensions)
-
-                # Don't show Node for nested Composition if Projections are being shown directly to it
-                #    (since Projections will be shown to its Components)
-                if isinstance(rcvr, Composition) and (show_nested is DIRECT or show_cim is DIRECT):
-                    return
-
-                elif show_node_structure and isinstance(rcvr, Mechanism):
-                    g.node(rcvr_label,
-                           rcvr._show_structure(**node_struct_args, node_border=rcvr_penwidth, condition=condition),
-                           shape=struct_shape,
-                           color=rcvr_color,
-                           rank=rcvr_rank,
-                           penwidth=rcvr_penwidth)
-                else:
-                    g.node(rcvr_label,
-                           shape=node_shape,
-                           color=rcvr_color,
-                           rank=rcvr_rank,
-                           penwidth=rcvr_penwidth)
-
-            # Implement sender edges
-            sndrs = processing_graph[rcvr]
-            _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
-
-        def _assign_cim_components(g, cims):
-
-            cim_rank = 'same'
-
-            for cim in cims:
-
-                cim_penwidth = str(default_width)
-
-                # ASSIGN CIM NODE ****************************************************************
-
-                # Assign color
-                # Also take opportunity to verify that cim is input_CIM, parameter_CIM or output_CIM
-                if cim is self.input_CIM:
-                    if cim in active_items:
-                        if active_color == BOLD:
-                            cim_color = input_color
-                        else:
-                            cim_color = active_color
-                        cim_penwidth = str(default_width + active_thicker_by)
-                        self.active_item_rendered = True
-                    else:
-                        cim_color = input_color
-                    compact_cim = not cim.afferents or show_cim is not DIRECT
-
-                elif cim is self.parameter_CIM:
-                    # Unlike input_CIM and output_CIM, parameter_CIM may not be used
-                    if not (cim.afferents or cim.efferents):
-                        continue
-                    if cim in active_items:
-                        if active_color == BOLD:
-                            cim_color = controller_color
-                        else:
-                            cim_color = active_color
-                        cim_penwidth = str(default_width + active_thicker_by)
-                        self.active_item_rendered = True
-                    else:
-                        cim_color = controller_color
-                    compact_cim = not cim.afferents or show_cim is not DIRECT
-
-                elif cim is self.output_CIM:
-                    if cim in active_items:
-                        if active_color == BOLD:
-                            cim_color = output_color
-                        else:
-                            cim_color = active_color
-                        cim_penwidth = str(default_width + active_thicker_by)
-                        self.active_item_rendered = True
-                    else:
-                        cim_color = output_color
-                    compact_cim = not cim.efferents or show_cim is not DIRECT
-
-                else:
-                    assert False, \
-                        f'PROGRAM ERROR: _assign_cim_components called with node ' \
-                        f'that is not input_CIM, parameter_CIM, or output_CIM'
-
-                # Assign lablel
-                cim_label = self._get_graph_node_label(cim, show_types, show_dimensions)
-                if show_node_structure:
-                    g.node(cim_label,
-                           cim._show_structure(**node_struct_args,
-                                               node_border=cim_penwidth,
-                                               compact_cim=compact_cim),
-                           shape=struct_shape,
-                           color=cim_color,
-                           rank=cim_rank,
-                           penwidth=cim_penwidth)
-
-                else:
-                    g.node(cim_label,
-                           shape=cim_shape,
-                           color=cim_color,
-                           rank=cim_rank,
-                           penwidth=cim_penwidth)
-
-                # ASSIGN CIM PROJECTIONS ****************************************************************
-
-                # INPUT_CIM -----------------------------------------------------------------------------
-
-                # Projections from input_CIM to INPUT nodes
-                if cim is self.input_CIM:
-                    for output_port in self.input_CIM.output_ports:
-                        projs = output_port.efferents
-                        for proj in projs:
-
-                            # Get label for Node that receives the input (rcvr_label)
-                            rcvr_input_node_proj = proj.receiver
-                            if (isinstance(rcvr_input_node_proj.owner, CompositionInterfaceMechanism)
-                                    and not show_cim is DIRECT):
-                                rcvr_input_node_proj_owner = rcvr_input_node_proj.owner.composition
-                            else:
-                                rcvr_input_node_proj_owner = rcvr_input_node_proj.owner
-
-                            if rcvr_input_node_proj_owner is self.controller:
-                                # Projections to contoller are handled under _assign_controller_components
-                                continue
-                            # Validate the Projection is to an INPUT node or a node that is shadowing one
-                            if ((rcvr_input_node_proj_owner in self.nodes_to_roles and
-                                 not NodeRole.INPUT in self.nodes_to_roles[rcvr_input_node_proj_owner])
-                                    and (proj.receiver.shadow_inputs in self.nodes_to_roles and
-                                         not NodeRole.INPUT in self.nodes_to_roles[proj.receiver.shadow_inputs])):
-                                raise CompositionError(f"Projection from input_CIM of {self.name} to node "
-                                                       f"{rcvr_input_node_proj_owner} that is not an "
-                                                       f"{NodeRole.INPUT.name} node or shadowing its "
-                                                       f"{NodeRole.INPUT.name.lower()}.")
-                            rcvr_label = self._get_graph_node_label(rcvr_input_node_proj_owner,
-                                                                    show_types, show_dimensions)
-                            # Construct edge name
-                            if show_node_structure:
-                                # Get label for CIM's port as edge's sender
-                                sndr_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
-                                if (isinstance(rcvr_input_node_proj_owner, Composition)
-                                        and show_cim is not DIRECT):
-                                    rcvr_input_node_proj_label = rcvr_label
-                                else:
-                                    # Need to use direct reference to proj.receiver rather than rcvr_input_node_proj
-                                    #    since could be Composition, which does not have a get_port_name attribute
-                                    rcvr_input_node_proj_label = \
-                                        f"{rcvr_label}:{InputPort.__name__}-{proj.receiver.name}"
-                                    # rcvr_input_node_proj_label = \
-                                    #     f"{rcvr_label}:" \
-                                    #     f"{rcvr_input_node_proj_owner._get_port_name(rcvr_input_node_proj)}"
-                            else:
-                                sndr_cim_proj_label = cim_label
-                                rcvr_input_node_proj_label = rcvr_label
-
-                            # Render Projection
-                            if any(item in active_items for item in {proj, proj.receiver.owner}):
-                                if active_color == BOLD:
-                                    proj_color = default_node_color
-                                else:
-                                    proj_color = active_color
-                                proj_width = str(default_width + active_thicker_by)
-                                self.active_item_rendered = True
-                            else:
-                                proj_color = default_node_color
-                                proj_width = str(default_width)
-                            if show_projection_labels:
-                                label = self._get_graph_node_label(proj, show_types, show_dimensions)
-                            else:
-                                label = ''
-                            g.edge(sndr_cim_proj_label, rcvr_input_node_proj_label, label=label,
-                               color=proj_color, penwidth=proj_width)
-
-                # PARAMETER_CIM -------------------------------------------------------------------------
-
-                # Projections from parameter_CIM to Nodes that are being modulated
-                if cim is self.parameter_CIM:
-                    for output_port in self.parameter_CIM.output_ports:
-                        projs = output_port.efferents
-                        for proj in projs:
-
-                            # Get label for Node that receives modulation (modulated_mech_label)
-                            rcvr_modulated_mech_proj = proj.receiver
-                            if (isinstance(rcvr_modulated_mech_proj.owner, CompositionInterfaceMechanism)
-                                    and not show_cim is DIRECT):
-                                rcvr_modulated_mech_proj_owner = rcvr_modulated_mech_proj.owner.composition
-                            else:
-                                rcvr_modulated_mech_proj_owner = rcvr_modulated_mech_proj.owner
-
-                            if rcvr_modulated_mech_proj_owner is self.controller:
-                                # Projections to contoller are handled under _assign_controller_components
-                                # Note: at present controllers are not modulable; here for possible future condition(s)
-                                continue
-                            rcvr_label = self._get_graph_node_label(rcvr_modulated_mech_proj_owner,
-                                                                              show_types,
-                                                                              show_dimensions)
-                            # Construct edge name
-                            if show_node_structure:
-                                # Get label for CIM's port as edge's sender
-                                sndr_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
-                                if (isinstance(rcvr_modulated_mech_proj_owner, Composition)
-                                        and not show_cim is not DIRECT):
-                                    rcvr_modulated_mec_proj_label = rcvr_label
-                                else:
-                                    # Need to use direct reference to proj.receiver rather than rcvr_modulated_mec_proj
-                                    #    since could be Composition, which does not have a get_port_name attribute
-                                    rcvr_modulated_mec_proj_label = \
-                                        f"{rcvr_label}:{ParameterPort.__name__}-{proj.receiver.name}"
-                                    # rcvr_modulated_mec_proj_label = \
-                                    #     f"{rcvr_label}:" \
-                                    #     f"{rcvr_input_node_proj_owner._get_port_name(rcvr_modulated_mec_proj)}"
-                            else:
-                                sndr_cim_proj_label = cim_label
-                                rcvr_modulated_mec_proj_label = rcvr_label
-
-                            # Render Projection
-                            if any(item in active_items for item in {proj, proj.receiver.owner}):
-                                if active_color == BOLD:
-                                    proj_color = controller_color
-                                else:
-                                    proj_color = active_color
-                                proj_width = str(default_width + active_thicker_by)
-                                self.active_item_rendered = True
-                            else:
-                                proj_color = controller_color
-                                proj_width = str(default_width)
-                            if show_projection_labels:
-                                label = self._get_graph_node_label(proj, show_types, show_dimensions)
-                            else:
-                                label = ''
-                            g.edge(sndr_cim_proj_label, rcvr_modulated_mec_proj_label, label=label,
-                                   color=proj_color, penwidth=proj_width)
-
-                # OUTPUT_CIM ----------------------------------------------------------------------------
-
-                # Projections from OUTPUT nodes to output_CIM
-                if cim is self.output_CIM:
-                    # Construct edge name
-                    for input_port in self.output_CIM.input_ports:
-                        projs = input_port.path_afferents
-                        for proj in projs:
-
-                            sndr_output_node_proj = proj.sender
-                            if (isinstance(sndr_output_node_proj.owner, CompositionInterfaceMechanism)
-                                    and not show_cim is DIRECT):
-                                sndr_output_node_proj_owner = sndr_output_node_proj.owner.composition
-                            else:
-                                sndr_output_node_proj_owner = sndr_output_node_proj.owner
-
-                            # Validate the Projection is from an OUTPUT node
-                            if ((sndr_output_node_proj_owner in self.nodes_to_roles and
-                                 not NodeRole.OUTPUT in self.nodes_to_roles[sndr_output_node_proj_owner])):
-                                raise CompositionError(f"Projection to output_CIM of {self.name} "
-                                                       f"from node {sndr_output_node_proj_owner} that is not "
-                                                       f"an {NodeRole.OUTPUT} node.")
-                            sndr_label = self._get_graph_node_label(sndr_output_node_proj_owner,
-                                                                    show_types, show_dimensions)
-                            # Construct edge name
-                            if show_node_structure:
-                                # Get label of CIM's port as edge's receiver
-                                rcvr_cim_proj_label = f"{cim_label}:{InputPort.__name__}-{proj.receiver.name}"
-                                if (isinstance(sndr_output_node_proj_owner, Composition)
-                                        and show_cim is not DIRECT):
-                                    sndr_output_node_proj_label = sndr_label
-                                else:
-                                    # Need to use direct reference to proj.sender rather than sndr_output_node_proj
-                                    #    since could be Composition, which does not have a get_port_name attribute
-                                    sndr_output_node_proj_label = \
-                                        f"{sndr_label}:{OutputPort.__name__}-{proj.sender.name}"
-                                    # sndr_output_node_proj_label = \
-                                    #     f"{sndr_label}:" \
-                                    #     f"{sndr_output_node_proj_owner._get_port_name(sndr_output_node_proj)}"
-                            else:
-                                sndr_output_node_proj_label = sndr_label
-                                rcvr_cim_proj_label = cim_label
-
-                            # Render Projection
-                            if any(item in active_items for item in {proj, proj.receiver.owner}):
-                                if active_color == BOLD:
-                                    proj_color = default_node_color
-                                else:
-                                    proj_color = active_color
-                                proj_width = str(default_width + active_thicker_by)
-                                self.active_item_rendered = True
-                            else:
-                                proj_color = default_node_color
-                                proj_width = str(default_width)
-                            if show_projection_labels:
-                                label = self._get_graph_node_label(proj, show_types, show_dimensions)
-                            else:
-                                label = ''
-                            g.edge(sndr_output_node_proj_label, rcvr_cim_proj_label, label=label,
-                                   color=proj_color, penwidth=proj_width)
-
-        def _assign_controller_components(g):
-            """Assign control nodes and edges to graph"""
-
-            controller = self.controller
-            if controller is None:
-                # Only warn if there is no controller *and* no ControlProjections from an outer Composition
-                if not self.parameter_CIM.output_ports:
-                    warnings.warn(f"{self.name} has not been assigned a \'controller\', "
-                                  f"so \'show_controller\' option in call to its show_graph() method will be ignored.")
-                return
-
-            if controller in active_items:
-                if active_color == BOLD:
-                    ctlr_color = controller_color
-                else:
-                    ctlr_color = active_color
-                ctlr_width = str(default_width + active_thicker_by)
-                self.active_item_rendered = True
-            else:
-                ctlr_color = controller_color
-                ctlr_width = str(default_width)
-
-            # Assign controller node
-            node_shape = mechanism_shape
-            ctlr_label = self._get_graph_node_label(controller, show_types, show_dimensions)
-            if show_node_structure:
-                g.node(ctlr_label,
-                       controller._show_structure(**node_struct_args, node_border=ctlr_width,
-                                                 condition=self.controller_condition),
-                       shape=struct_shape,
-                       color=ctlr_color,
-                       penwidth=ctlr_width,
-                       rank=control_rank
-                       )
-            else:
-                g.node(ctlr_label,
-                        color=ctlr_color, penwidth=ctlr_width, shape=node_shape,
-                        rank=control_rank)
-
-            # outgoing edges (from controller to ProcessingMechanisms)
-            for control_signal in controller.control_signals:
-                for ctl_proj in control_signal.efferents:
-
-                    # Skip ControlProjections not in the Composition
-                    if ctl_proj not in self.projections:
-                        continue
-
-                    # Construct edge name  ---------------------------------------------------
-
-                    # Get receiver label for ControlProjection as base for edge's receiver label
-                    # First get label for receiver's owner node (Mechanism or nested Composition), used below
-                    ctl_proj_rcvr = ctl_proj.receiver
-                    # Use Composition if receiver is a parameter_CIM and show_cim is *not* DIRECT
-                    if (isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism)
-                            and show_cim is not DIRECT):
-                        ctl_proj_rcvr_owner = ctl_proj_rcvr.owner.composition
-                    # In all other cases, use Port (either ParameterPort of a Mech, or parameter_CIM for nested comp)
-                    else:
-                        ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
-                    rcvr_label = self._get_graph_node_label(ctl_proj_rcvr_owner, show_types, show_dimensions)
-
-                    # Get sender and receiver labels for edge
-                    if show_node_structure:
-                        # Get label controller's port as edge's sender
-                        ctl_proj_sndr_label = ctlr_label + ':' + controller._get_port_name(control_signal)
-                        # Get label for edge's receiver:
-                        # Use Composition if receiver is a parameter_CIM and show_cim is *not* DIRECT
-                        if (isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism)
-                                and show_cim is not DIRECT):
-                            ctl_proj_rcvr_label = rcvr_label
-                        # Otherwise, use receiver's Port (ParameterPort of a Mech, or parameter_CIM for nested comp)
-                        else:
-                            ctl_proj_rcvr_label = rcvr_label + ':' + ctl_proj_rcvr_owner._get_port_name(ctl_proj_rcvr)
-                    else:
-                        ctl_proj_sndr_label = ctlr_label
-                        ctl_proj_rcvr_label = rcvr_label
-
-                    # MODIFIED 5/30/20 END
-
-                    # Assign colors, penwidth and label displayed for ControlProjection ---------------------
-                    if controller in active_items:
-                        if active_color == BOLD:
-                            ctl_proj_color = controller_color
-                        else:
-                            ctl_proj_color = active_color
-                        ctl_proj_width = str(default_width + active_thicker_by)
-                        self.active_item_rendered = True
-                    else:
-                        ctl_proj_color = controller_color
-                        ctl_proj_width = str(default_width)
-                    if show_projection_labels:
-                        edge_label = ctl_proj.name
-                    else:
-                        edge_label = ''
-
-                    # Construct edge -----------------------------------------------------------------------
-                    g.edge(ctl_proj_sndr_label,
-                           ctl_proj_rcvr_label,
-                           label=edge_label,
-                           color=ctl_proj_color,
-                           penwidth=ctl_proj_width
-                           )
-
-            # If controller has objective_mechanism, assign its node and Projections
-            if controller.objective_mechanism:
-                # get projection from ObjectiveMechanism to ControlMechanism
-                objmech_ctlr_proj = controller.input_port.path_afferents[0]
-                if controller in active_items:
-                    if active_color == BOLD:
-                        objmech_ctlr_proj_color = controller_color
-                    else:
-                        objmech_ctlr_proj_color = active_color
-                    objmech_ctlr_proj_width = str(default_width + active_thicker_by)
-                    self.active_item_rendered = True
-                else:
-                    objmech_ctlr_proj_color = controller_color
-                    objmech_ctlr_proj_width = str(default_width)
-
-                # get ObjectiveMechanism
-                objmech = objmech_ctlr_proj.sender.owner
-                if objmech in active_items:
-                    if active_color == BOLD:
-                        objmech_color = controller_color
-                    else:
-                        objmech_color = active_color
-                    objmech_width = str(default_width + active_thicker_by)
-                    self.active_item_rendered = True
-                else:
-                    objmech_color = controller_color
-                    objmech_width = str(default_width)
-
-                objmech_label = self._get_graph_node_label(objmech, show_types, show_dimensions)
-                if show_node_structure:
-                    if objmech in self.scheduler.conditions:
-                        condition = self.scheduler.conditions[objmech]
-                    else:
-                        condition = None
-                    g.node(objmech_label,
-                           objmech._show_structure(**node_struct_args, node_border=ctlr_width, condition=condition),
-                           shape=struct_shape,
-                           color=objmech_color,
-                           penwidth=ctlr_width,
-                           rank=control_rank
-                           )
-                else:
-                    g.node(objmech_label,
-                            color=objmech_color, penwidth=objmech_width, shape=node_shape,
-                            rank=control_rank)
-
-                # objmech to controller edge
-                if show_projection_labels:
-                    edge_label = objmech_ctlr_proj.name
-                else:
-                    edge_label = ''
-                if show_node_structure:
-                    obj_to_ctrl_label = objmech_label + ':' + objmech._get_port_name(objmech_ctlr_proj.sender)
-                    ctlr_from_obj_label = ctlr_label + ':' + objmech._get_port_name(objmech_ctlr_proj.receiver)
-                else:
-                    obj_to_ctrl_label = objmech_label
-                    ctlr_from_obj_label = ctlr_label
-                g.edge(obj_to_ctrl_label, ctlr_from_obj_label, label=edge_label,
-                       color=objmech_ctlr_proj_color, penwidth=objmech_ctlr_proj_width)
-
-                # incoming edges (from monitored mechs to objective mechanism)
-                for input_port in objmech.input_ports:
-                    for projection in input_port.path_afferents:
-                        if objmech in active_items:
-                            if active_color == BOLD:
-                                proj_color = controller_color
-                            else:
-                                proj_color = active_color
-                            proj_width = str(default_width + active_thicker_by)
-                            self.active_item_rendered = True
-                        else:
-                            proj_color = controller_color
-                            proj_width = str(default_width)
-                        if show_node_structure:
-                            sndr_proj_label = self._get_graph_node_label(projection.sender.owner,
-                                                                         show_types,
-                                                                         show_dimensions) + \
-                                              ':' + objmech._get_port_name(projection.sender)
-                            objmech_proj_label = objmech_label + ':' + objmech._get_port_name(input_port)
-                        else:
-                            sndr_proj_label = self._get_graph_node_label(projection.sender.owner,
-                                                                         show_types,
-                                                                         show_dimensions)
-                            objmech_proj_label = self._get_graph_node_label(objmech,
-                                                                            show_types,
-                                                                            show_dimensions)
-                        if show_projection_labels:
-                            edge_label = projection.name
-                        else:
-                            edge_label = ''
-                        g.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
-                               color=proj_color, penwidth=proj_width)
-
-            # If controller has an agent_rep, assign its node and edges (not Projections per se)
-            if hasattr(controller, 'agent_rep') and controller.agent_rep and show_controller==AGENT_REP :
-                # get agent_rep
-                agent_rep = controller.agent_rep
-                # controller is active, treat
-                if controller in active_items:
-                    if active_color == BOLD:
-                        agent_rep_color = controller_color
-                    else:
-                        agent_rep_color = active_color
-                    agent_rep_width = str(default_width + active_thicker_by)
-                    self.active_item_rendered = True
-                else:
-                    agent_rep_color = controller_color
-                    agent_rep_width = str(default_width)
-
-                # agent_rep node
-                agent_rep_label = self._get_graph_node_label(agent_rep, show_types, show_dimensions)
-                g.node(agent_rep_label,
-                        color=agent_rep_color, penwidth=agent_rep_width, shape=agent_rep_shape,
-                        rank=control_rank)
-
-                # agent_rep <-> controller edges
-                g.edge(agent_rep_label, ctlr_label, color=agent_rep_color, penwidth=agent_rep_width)
-                g.edge(ctlr_label, agent_rep_label, color=agent_rep_color, penwidth=agent_rep_width)
-
-            # get any other incoming edges to controller (i.e., other than from ObjectiveMechanism)
-            senders = set()
-            for i in controller.input_ports[1:]:
-                for p in i.path_afferents:
-                    senders.add(p.sender.owner)
-            _assign_incoming_edges(g, controller, ctlr_label, senders, proj_color=ctl_proj_color)
-
-        def _assign_learning_components(g):
-            """Assign learning nodes and edges to graph"""
-
-            # Get learning_components, with exception of INPUT (i.e. TARGET) nodes
-            #    (i.e., allow TARGET node to continue to be marked as an INPUT node)
-            learning_components = [node for node in self.learning_components
-                                   if not NodeRole.INPUT in self.nodes_to_roles[node]]
-            # learning_components.extend([node for node in self.nodes if
-            #                             NodeRole.AUTOASSOCIATIVE_LEARNING in
-            #                             self.nodes_to_roles[node]])
-
-            for rcvr in learning_components:
-                # if rcvr is Projection, skip (handled in _assign_processing_components)
-                if isinstance(rcvr, MappingProjection):
-                    return
-
-                # Get rcvr info
-                rcvr_label = self._get_graph_node_label(rcvr, show_types, show_dimensions)
-                if rcvr in active_items:
-                    if active_color == BOLD:
-                        rcvr_color = learning_color
-                    else:
-                        rcvr_color = active_color
-                    rcvr_width = str(default_width + active_thicker_by)
-                    self.active_item_rendered = True
-                else:
-                    rcvr_color = learning_color
-                    rcvr_width = str(default_width)
-
-                # rcvr is a LearningMechanism or ObjectiveMechanism (ComparatorMechanism)
-                # Implement node for Mechanism
-                if show_node_structure:
-                    g.node(rcvr_label,
-                            rcvr._show_structure(**node_struct_args),
-                            rank=learning_rank, color=rcvr_color, penwidth=rcvr_width)
-                else:
-                    g.node(rcvr_label,
-                            color=rcvr_color, penwidth=rcvr_width,
-                            rank=learning_rank, shape=mechanism_shape)
-
-                # Implement sender edges
-                sndrs = processing_graph[rcvr]
-                _assign_incoming_edges(g, rcvr, rcvr_label, sndrs)
-
-        def _render_projection_as_node(g, proj, label,
-                                       proj_color, proj_width,
-                                       sndr_label=None,
-                                       rcvr_label=None):
-
-            proj_receiver = proj.receiver.owner
-
-            # Node for Projection
-            g.node(label, shape=learning_projection_shape, color=proj_color, penwidth=proj_width)
-
-            # FIX: ??
-            if proj_receiver in active_items:
-                # edge_color = proj_color
-                # edge_width = str(proj_width)
-                if active_color == BOLD:
-                    edge_color = proj_color
-                else:
-                    edge_color = active_color
-                edge_width = str(default_width + active_thicker_by)
-            else:
-                edge_color = default_node_color
-                edge_width = str(default_width)
-
-            # Edges to and from Projection node
-            if sndr_label:
-                G.edge(sndr_label, label, arrowhead='none',
-                       color=edge_color, penwidth=edge_width)
-            if rcvr_label:
-                G.edge(label, rcvr_label,
-                       color=edge_color, penwidth=edge_width)
-
-            # LearningProjection(s) to node
-            # if proj in active_items or (proj_learning_in_execution_phase and proj_receiver in active_items):
-            if proj in active_items:
-                if active_color == BOLD:
-                    learning_proj_color = learning_color
-                else:
-                    learning_proj_color = active_color
-                learning_proj_width = str(default_width + active_thicker_by)
-                self.active_item_rendered = True
-            else:
-                learning_proj_color = learning_color
-                learning_proj_width = str(default_width)
-            sndrs = proj._parameter_ports['matrix'].mod_afferents # GET ALL LearningProjections to proj
-            for sndr in sndrs:
-                sndr_label = self._get_graph_node_label(sndr.sender.owner, show_types, show_dimensions)
-                rcvr_label = self._get_graph_node_label(proj, show_types, show_dimensions)
-                if show_projection_labels:
-                    edge_label = proj._parameter_ports['matrix'].mod_afferents[0].name
-                else:
-                    edge_label = ''
-                if show_node_structure:
-                    G.edge(sndr_label + ':' + OutputPort.__name__ + '-' + 'LearningSignal',
-                           rcvr_label,
-                           label=edge_label,
-                           color=learning_proj_color, penwidth=learning_proj_width)
-                else:
-                    G.edge(sndr_label, rcvr_label, label = edge_label,
-                           color=learning_proj_color, penwidth=learning_proj_width)
-            return True
-
-        @tc.typecheck
-        def _assign_incoming_edges(g, rcvr, rcvr_label, senders, proj_color=None, proj_arrow=None):
-
-            proj_color = proj_color or default_node_color
-            proj_arrow = default_projection_arrow
-
-            for sndr in senders:
-
-                # Set sndr info
-                sndr_label = self._get_graph_node_label(sndr, show_types, show_dimensions)
-
-                # Iterate through all Projections from all OutputPorts of sndr
-                for output_port in sndr.output_ports:
-                    for proj in output_port.efferents:
-
-                        # Skip Projections not in the Composition
-                        if proj not in self.projections:
-                            continue
-
-                        # Skip any projections to ObjectiveMechanism for controller
-                        #   (those are handled in _assign_control_components)
-                        if (self.controller and
-                                proj.receiver.owner in {self.controller, self.controller.objective_mechanism}):
-                            continue
-
-                        # Only consider Projections to the rcvr
-                        if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
-                                or (isinstance(rcvr, Composition) and proj.receiver.owner is rcvr.input_CIM)):
-
-                            if show_node_structure and isinstance(sndr, Mechanism) and isinstance(rcvr, Mechanism):
-                                sndr_proj_label = f'{sndr_label}:{sndr._get_port_name(proj.sender)}'
-                                proc_mech_rcvr_label = f'{rcvr_label}:{rcvr._get_port_name(proj.receiver)}'
-                            else:
-                                sndr_proj_label = sndr_label
-                                proc_mech_rcvr_label = rcvr_label
-
-                            try:
-                                has_learning = proj.has_learning_projection is not None
-                            except AttributeError:
-                                has_learning = None
-
-                            edge_label = self._get_graph_node_label(proj, show_types, show_dimensions)
-                            is_learning_component = rcvr in self.learning_components or sndr in self.learning_components
-
-                            # Check if Projection or its receiver is active
-                            if any(item in active_items for item in {proj, proj.receiver.owner}):
-                                if active_color == BOLD:
-                                    # if (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
-                                    if is_learning_component:
-                                        proj_color = learning_color
-                                    else:
-                                        pass
-                                else:
-                                    proj_color = active_color
-                                proj_width = str(default_width + active_thicker_by)
-                                self.active_item_rendered = True
-
-                            # Projection to or from a LearningMechanism
-                            elif (NodeRole.LEARNING in self.nodes_to_roles[rcvr]):
-                                proj_color = learning_color
-                                proj_width = str(default_width)
-
-                            else:
-                                proj_width = str(default_width)
-                            proc_mech_label = edge_label
-
-                            # Render Projection as edge
-
-                            if show_learning and has_learning:
-                                # Render Projection as node
-                                #    (do it here rather than in _assign_learning_components,
-                                #     as it needs afferent and efferent edges to other nodes)
-                                # IMPLEMENTATION NOTE: Projections can't yet use structured nodes:
-                                deferred = not _render_projection_as_node(g=g, proj=proj,
-                                                                          label=proc_mech_label,
-                                                                          rcvr_label=proc_mech_rcvr_label,
-                                                                          sndr_label=sndr_proj_label,
-                                                                          proj_color=proj_color,
-                                                                          proj_width=proj_width)
-                                # Deferred if it is the last Mechanism in a learning Pathway
-                                # (see _render_projection_as_node)
-                                if deferred:
-                                    continue
-
-                            else:
-                                from psyneulink.core.components.projections.modulatory.controlprojection \
-                                    import ControlProjection
-                                if isinstance(proj, ControlProjection):
-                                    arrowhead=control_projection_arrow
-                                else:
-                                    arrowhead=proj_arrow
-                                if show_projection_labels:
-                                    label = proc_mech_label
-                                else:
-                                    label = ''
-                                g.edge(sndr_proj_label, proc_mech_rcvr_label,
-                                       label=label,
-                                       color=proj_color,
-                                       penwidth=proj_width,
-                                       arrowhead=arrowhead)
-
-        # SETUP AND CONSTANTS -----------------------------------------------------------------
-
-        INITIAL_FRAME = "INITIAL_FRAME"
-
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.default_execution_id
-
-        # For backward compatibility
-        if 'show_model_based_optimizer' in kwargs:
-            show_controller = kwargs['show_model_based_optimizer']
-            del kwargs['show_model_based_optimizer']
-        if kwargs:
-            raise CompositionError(f'Unrecognized argument(s) in call to show_graph method '
-                                   f'of {Composition.__name__} {repr(self.name)}: {", ".join(kwargs.keys())}')
-
-        if show_dimensions == True:
-            show_dimensions = ALL
-
-        active_items = active_items or []
-        if active_items:
-            active_items = convert_to_list(active_items)
-            if (self.scheduler.get_clock(context).time.run >= self._animate_num_runs or
-                    self.scheduler.get_clock(context).time.trial >= self._animate_num_trials):
-                return
-
-            for item in active_items:
-                if not isinstance(item, Component) and item is not INITIAL_FRAME:
-                    raise CompositionError(
-                        "PROGRAM ERROR: Item ({}) specified in {} argument for {} method of {} is not a {}".
-                        format(item, repr('active_items'), repr('show_graph'), self.name, Component.__name__))
-
-        self.active_item_rendered = False
-
-        # Argument values used to call Mechanism._show_structure()
-        if isinstance(show_node_structure, (list, tuple, set)):
-            node_struct_args = {'composition': self,
-                                'show_roles': any(key in show_node_structure for key in {ROLES, ALL}),
-                                'show_conditions': any(key in show_node_structure for key in {CONDITIONS, ALL}),
-                                'show_functions': any(key in show_node_structure for key in {FUNCTIONS, ALL}),
-                                'show_mech_function_params': any(key in show_node_structure
-                                                                 for key in {MECH_FUNCTION_PARAMS, ALL}),
-                                'show_port_function_params': any(key in show_node_structure
-                                                                  for key in {PORT_FUNCTION_PARAMS, ALL}),
-                                'show_values': any(key in show_node_structure for key in {VALUES, ALL}),
-                                'use_labels': any(key in show_node_structure for key in {LABELS, ALL}),
-                                'show_headers': show_headers,
-                                'output_fmt': 'struct',
-                                'context':context}
-        else:
-            node_struct_args = {'composition': self,
-                                'show_roles': show_node_structure in {ROLES, ALL},
-                                'show_conditions': show_node_structure in {CONDITIONS, ALL},
-                                'show_functions': show_node_structure in {FUNCTIONS, ALL},
-                                'show_mech_function_params': show_node_structure in {MECH_FUNCTION_PARAMS, ALL},
-                                'show_port_function_params': show_node_structure in {PORT_FUNCTION_PARAMS, ALL},
-                                'show_values': show_node_structure in {VALUES, LABELS, ALL},
-                                'use_labels': show_node_structure in {LABELS, ALL},
-                                'show_headers': show_headers,
-                                'output_fmt': 'struct',
-                                'context': context}
-
-        # DEFAULT ATTRIBUTES ----------------------------------------------------------------
-
-        default_node_color = 'black'
-        mechanism_shape = 'oval'
-        learning_projection_shape = 'diamond'
-        struct_shape = 'plaintext' # assumes use of html
-        cim_shape = 'rectangle'
-        composition_shape = 'rectangle'
-        agent_rep_shape = 'egg'
-        default_projection_arrow = 'normal'
-
-        bold_width = 3
-        default_width = 1
-        active_thicker_by = 2
-
-        input_rank = 'source'
-        control_rank = 'min'
-        learning_rank = 'min'
-        output_rank = 'max'
-
-        # BUILD GRAPH ------------------------------------------------------------------------
-
-        import graphviz as gv
-
-        G = gv.Digraph(
-            name=self.name,
-            engine="dot",
-            node_attr={
-                'fontsize': '12',
-                'fontname': 'arial',
-                'shape': 'record',
-                'color': default_node_color,
-                'penwidth': str(default_width),
-            },
-            edge_attr={
-                'fontsize': '10',
-                'fontname': 'arial'
-            },
-            graph_attr={
-                "rankdir": direction,
-                'overlap': "False"
-            },
-        )
-
-        # get all Nodes
-        # FIX: call to _analyze_graph in nested calls to show_graph cause trouble
-        if output_fmt != 'gv':
-            self._analyze_graph(context=context)
-        processing_graph = self.graph_processing.dependency_dict
-        rcvrs = list(processing_graph.keys())
-
-        for r in rcvrs:
-            _assign_processing_components(G, r, show_nested)
-
-        # Add cim Components to graph if show_cim
-        if show_cim:
-            _assign_cim_components(G, [self.input_CIM, self.parameter_CIM, self.output_CIM])
-
-        # Add controller-related Components to graph if show_controller
-        if show_controller:
-            _assign_controller_components(G)
-
-        # Add learning-related Components to graph if show_learning
-        if show_learning:
-            _assign_learning_components(G)
-
-        # FIX 5/28/20:  RELEGATE REMAINDER OF show_graph TO THIS METHOD:
-        # _generate_output(G)
-        #
-        # def _generate_output(G):
-
-        # Sort nodes for display
-        # FIX 5/28/20:  ADD HANDLING OF NEST COMP:  SEARCH FOR 'subgraph cluster_'
-        def get_index_of_node_in_G_body(node, node_type:tc.enum(MECHANISM, PROJECTION, BOTH)):
-            """Get index of node in G.body"""
-            for i, item in enumerate(G.body):
-                if node.name + ' ' in item:  # Space needed to filter out node.name that is a substring of another name
-                    if node_type in {MECHANISM, BOTH}:
-                        if not '->' in item:
-                            return i
-                    elif node_type in {PROJECTION, BOTH}:
-                        if '->' in item:
-                            return i
-                    else:
-                        assert False, f'PROGRAM ERROR: node_type not specified or illegal ({node_type})'
-
-        for node in self.nodes:
-            if isinstance(node, Composition):
-                continue
-            roles = self.get_roles_by_node(node)
-            # Put INPUT node(s) first
-            if NodeRole.INPUT in roles:
-                i = get_index_of_node_in_G_body(node, MECHANISM)
-                if i is not None:
-                    G.body.insert(0,G.body.pop(i))
-            # Put OUTPUT node(s) last (except for ControlMechanisms)
-            if NodeRole.OUTPUT in roles:
-                i = get_index_of_node_in_G_body(node, MECHANISM)
-                if i is not None:
-                    G.body.insert(len(G.body),G.body.pop(i))
-            # Put ControlMechanism(s) last
-            if isinstance(node, ControlMechanism):
-                i = get_index_of_node_in_G_body(node, MECHANISM)
-                if i is not None:
-                    G.body.insert(len(G.body),G.body.pop(i))
-
-        for proj in self.projections:
-            # Put ControlProjection(s) last (along with ControlMechanis(s))
-            if isinstance(proj, ControlProjection):
-                i = get_index_of_node_in_G_body(node, PROJECTION)
-                if i is not None:
-                    G.body.insert(len(G.body),G.body.pop(i))
-
-        if self.controller and show_controller:
-            i = get_index_of_node_in_G_body(self.controller, MECHANISM)
-            G.body.insert(len(G.body),G.body.pop(i))
-
-        # GENERATE OUTPUT ---------------------------------------------------------------------
-
-        # Show as pdf
-        try:
-            if output_fmt == 'pdf':
-                # G.format = 'svg'
-                G.view(self.name.replace(" ", "-"), cleanup=True, directory='show_graph OUTPUT/PDFS')
-
-            # Generate images for animation
-            elif output_fmt == 'gif':
-                if self.active_item_rendered or INITIAL_FRAME in active_items:
-                    self._generate_gifs(G, active_items, context)
-
-            # Return graph to show in jupyter
-            elif output_fmt == 'jupyter':
-                return G
-
-            elif output_fmt == 'gv':
-                return G
-
-            elif not output_fmt:
-                return None
-
-            else:
-                raise CompositionError(f"Bad arg in call to {self.name}.show_graph: '{output_fmt}'.")
-
-        except CompositionError as e:
-            raise CompositionError(str(e.error_value))
-
-        except:
-            raise CompositionError(f"Problem displaying graph for {self.name}")
-
-    def _get_graph_node_label(self, item, show_types=None, show_dimensions=None):
-
-        if not isinstance(item, (Mechanism, Composition, Projection)):
-            raise CompositionError("Unrecognized node type ({}) in graph for {}".format(item, self.name))
-
-        name = item.name
-
-        if show_types:
-            name = item.name + '\n(' + item.__class__.__name__ + ')'
-
-        if show_dimensions in {ALL, MECHANISMS} and isinstance(item, Mechanism):
-            input_str = "in ({})".format(",".join(str(input_port.socket_width)
-                                                  for input_port in item.input_ports))
-            output_str = "out ({})".format(",".join(str(len(np.atleast_1d(output_port.value)))
-                                                    for output_port in item.output_ports))
-            return f"{output_str}\n{name}\n{input_str}"
-        if show_dimensions in {ALL, PROJECTIONS} and isinstance(item, Projection):
-            # MappingProjections use matrix
-            if isinstance(item, MappingProjection):
-                value = np.array(item.matrix)
-                dim_string = "({})".format("x".join([str(i) for i in value.shape]))
-                return "{}\n{}".format(item.name, dim_string)
-            # ModulatoryProjections use value
-            else:
-                value = np.array(item.value)
-                dim_string = "({})".format(len(value))
-                return "{}\n{}".format(item.name, dim_string)
-
-        if isinstance(item, CompositionInterfaceMechanism):
-            name = name.replace('Input_CIM','INPUT')
-            name = name.replace('Parameter_CIM', 'CONTROL')
-            name = name.replace('Output_CIM', 'OUTPUT')
-
-        return name
-
-    def _set_up_animation(self, context):
-
-        self._component_animation_execution_count = None
-
-        if isinstance(self._animate, dict):
-            # Assign directory for animation files
-            from psyneulink._version import root_dir
-            default_dir = root_dir + '/../show_graph output/GIFs/' + self.name # + " gifs"
-            # try:
-            #     rmtree(self._animate_directory)
-            # except:
-            #     pass
-            self._animate_unit = self._animate.pop(UNIT, EXECUTION_SET)
-            self._image_duration = self._animate.pop(DURATION, 0.75)
-            self._animate_num_runs = self._animate.pop(NUM_RUNS, 1)
-            self._animate_num_trials = self._animate.pop(NUM_TRIALS, 1)
-            self._animate_simulations = self._animate.pop(SIMULATIONS, False)
-            self._movie_filename = self._animate.pop(MOVIE_NAME, self.name + ' movie') + '.gif'
-            self._animation_directory = self._animate.pop(MOVIE_DIR, default_dir)
-            self._save_images = self._animate.pop(SAVE_IMAGES, False)
-            self._show_animation = self._animate.pop(SHOW, False)
-            if not self._animate_unit in {COMPONENT, EXECUTION_SET}:
-                raise CompositionError(f"{repr(UNIT)} entry of {repr('animate')} argument for {self.name} method "
-                                       f"of {repr('run')} ({self._animate_unit}) "
-                                       f"must be {repr(COMPONENT)} or {repr(EXECUTION_SET)}.")
-            if not isinstance(self._image_duration, (int, float)):
-                raise CompositionError(f"{repr(DURATION)} entry of {repr('animate')} argument for {repr('run')} method "
-                                       f"of {self.name} ({self._image_duration}) must be an int or a float.")
-            if not isinstance(self._animate_num_runs, int):
-                raise CompositionError(f"{repr(NUM_RUNS)} entry of {repr('animate')} argument for {repr('show_graph')} "
-                                       f"method of {self.name} ({self._animate_num_runs}) must an integer.")
-            if not isinstance(self._animate_num_trials, int):
-                raise CompositionError(f"{repr(NUM_TRIALS)} entry of {repr('animate')} argument for "
-                                       f"{repr('show_graph')} method of {self.name} ({self._animate_num_trials}) "
-                                       f"must an integer.")
-            if not isinstance(self._animate_simulations, bool):
-                raise CompositionError(f"{repr(SIMULATIONS)} entry of {repr('animate')} argument for "
-                                       f"{repr('show_graph')} method of {self.name} ({self._animate_num_trials}) "
-                                       f"must a boolean.")
-            if not isinstance(self._animation_directory, str):
-                raise CompositionError(f"{repr(MOVIE_DIR)} entry of {repr('animate')} argument for {repr('run')} "
-                                       f"method of {self.name} ({self._animation_directory}) must be a string.")
-            if not isinstance(self._movie_filename, str):
-                raise CompositionError(f"{repr(MOVIE_NAME)} entry of {repr('animate')} argument for {repr('run')} "
-                                       f"method of {self.name} ({self._movie_filename}) must be a string.")
-            if not isinstance(self._save_images, bool):
-                raise CompositionError(f"{repr(SAVE_IMAGES)} entry of {repr('animate')} argument for {repr('run')}"
-                                       f"method of {self.name} ({self._save_images}) must be a boolean")
-            if not isinstance(self._show_animation, bool):
-                raise CompositionError(f"{repr(SHOW)} entry of {repr('animate')} argument for {repr('run')} "
-                                       f"method of {self.name} ({self._show_animation}) must be a boolean.")
-        elif self._animate:
-            # self._animate should now be False or a dict
-            raise CompositionError("{} argument for {} method of {} ({}) must be a boolean or "
-                                   "a dictionary of argument specifications for its {} method".
-                                   format(repr('animate'), repr('run'), self.name, self._animate, repr('show_graph')))
-
-    def _animate_execution(self, active_items, context):
-        if self._component_animation_execution_count is None:
-            self._component_animation_execution_count = 0
-        else:
-            self._component_animation_execution_count += 1
-        self.show_graph(active_items=active_items,
-                        **self._animate,
-                        output_fmt='gif',
-                        context=context,
-                        )
-
-    def _generate_gifs(self, G, active_items, context):
-
-        def create_phase_string(phase):
-            return f'%16s' % phase + ' - '
-
-        def create_time_string(time, spec):
-            if spec == 'TIME':
-                r = time.run
-                t = time.trial
-                p = time.pass_
-                ts = time.time_step
-            else:
-                r = t = p = ts = '__'
-            return f"Time(run: %2s, " % r + f"trial: %2s, " % t + f"pass: %2s, " % p + f"time_step: %2s)" % ts
-
-        G.format = 'gif'
-        execution_phase = context.execution_phase
-        time = self.scheduler.get_clock(context).time
-        run_num = time.run
-        trial_num = time.trial
-
-        if INITIAL_FRAME in active_items:
-            phase_string = create_phase_string('Initializing')
-            time_string = create_time_string(time, 'BLANKS')
-
-        elif ContextFlags.PROCESSING in execution_phase:
-            phase_string = create_phase_string('Processing Phase')
-            time_string = create_time_string(time, 'TIME')
-        # elif ContextFlags.LEARNING in execution_phase:
-        #     time = self.scheduler_learning.get_clock(context).time
-        #     time_string = "Time(run: {}, trial: {}, pass: {}, time_step: {}". \
-        #         format(run_num, time.trial, time.pass_, time.time_step)
-        #     phase_string = 'Learning Phase - '
-
-        elif ContextFlags.CONTROL in execution_phase:
-            phase_string = create_phase_string('Control Phase')
-            time_string = create_time_string(time, 'TIME')
-
-        else:
-            raise CompositionError(
-                f"PROGRAM ERROR:  Unrecognized phase during execution of {self.name}: {execution_phase.name}")
-
-        label = f'\n{self.name}\n{phase_string}{time_string}\n'
-        G.attr(label=label)
-        G.attr(labelloc='b')
-        G.attr(fontname='Monaco')
-        G.attr(fontsize='14')
-        index = repr(self._component_animation_execution_count)
-        image_filename = '-'.join([repr(run_num), repr(trial_num), index])
-        image_file = self._animation_directory + '/' + image_filename + '.gif'
-        G.render(filename=image_filename,
-                 directory=self._animation_directory,
-                 cleanup=True,
-                 # view=True
-                 )
-        # Append gif to self._animation
-        image = Image.open(image_file)
-        # TBI?
-        # if not self._save_images:
-        #     remove(image_file)
-        if not hasattr(self, '_animation'):
-            self._animation = [image]
-        else:
-            self._animation.append(image)
 
     def _infer_target_nodes(self, targets: dict):
         """
@@ -9477,16 +7960,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             COMMENT
 
         animate : dict or bool : default False
-            specifies use of the `show_graph <Composition.show_graph>` method to generate a gif movie showing the
-            sequence of Components executed in a run.  A dict can be specified containing options to pass to
-            the `show_graph <Composition.show_graph>` method;  each key must be a legal argument for the `show_graph
-            <Composition.show_graph>` method, and its value a specification for that argument.  The entries listed
-            below can also be included in the dict to specify parameters of the animation.  If the **animate**
-            argument is specified simply as `True`, defaults are used for all arguments of `show_graph
-            <Composition.show_graph>` and the options below:
+            specifies use of the `show_graph <ShowGraph.show_graph>` method to generate a gif movie showing the
+            sequence of Components executed in a run (see `example <BasicsAndPrimer_Stroop_Example_Animation_Figure>`).
+            A dict can be specified containing options to pass to the `show_graph <ShowGraph.show_graph>` method;
+            each key must be a legal argument for the `show_graph <ShowGraph.show_graph>` method, and its value a
+            specification for that argument.  The entries listed below can also be included in the dict to specify
+            parameters of the animation.  If the **animate** argument is specified simply as `True`, defaults are
+            used for all arguments of `show_graph <ShowGraph.show_graph>` and the options below:
 
             * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\\ *EXECUTION_SET*\\ ) -- specifies which Components
-              to treat as active in each call to `show_graph <Composition.show_graph>`. *COMPONENT* generates an
+              to treat as active in each call to `show_graph <ShowGraph.show_graph>`. *COMPONENT* generates an
               image for the execution of each Component.  *EXECUTION_SET* generates an image for each `execution_set
               <Component.execution_sets>`, showing all of the Components in that set as active.
 
@@ -9521,7 +8004,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             .. note::
                as when setting the `log_condition <Parameter.log_condition>` directly, a value of `True` will
-               correspond to the `EXECUTION LogCondition <LogCondition.EXECUTION>`.
+               correspond to the `EXECUTION` `LogCondition <LogCondition.EXECUTION>`.
 
         scheduler : Scheduler : default None
             the scheduler object that owns the conditions that will instruct the execution of the Composition.
@@ -9530,14 +8013,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         bin_execute : bool or Enum[LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun] : default Python
             specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
             False is the same as ``Python``;  True tries LLVM compilation modes, in order of power, progressively
-            reverting less powerful modes (in the order of the options listed), and to Python if no compilation
+            reverting to less powerful modes (in the order of the options listed), and to Python if no compilation
             mode succeeds (see `Composition_Compilation` for explanation of modes). PTX modes are used for
             CUDA compilation.
 
-        context : `Context.execution_id>` : default `default_execution_id`
+        context : `execution_id <Context.execution_id>` : default `default_execution_id`
             context in which the `Composition` will be executed;  set to self.default_execution_id ifunspecified.
 
-        base_context : `Context.execution_id>` : Context(execution_id=None)
+        base_context : `execution_id <Context.execution_id>` : Context(execution_id=None)
             the context corresponding to the execution context from which this execution will be initialized,
             if values currently do not exist for **context**
 
@@ -9547,7 +8030,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         --------
 
         This figure shows an animation of the Composition in the XXX example script, with
-        the show_graph **show_learning** argument specified as *ALL*:
+        the `show_graph <ShowGraph.show_graph>` **show_learning** argument specified as *ALL*:
 
         .. _Composition_XXX_movie:
 
@@ -9555,8 +8038,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            :alt: Animation of Composition in XXX example script
            :scale: 50 %
 
-        This figure shows an animation of the Composition in the XXX example script, with
-        the show_graph **show_control** argument specified as *ALL* and *UNIT* specified as *EXECUTION_SET*:
+        This figure shows an animation of the Composition in the XXX example script, with the `show_graph
+        <ShowGraph.show_graph>` **show_control** argument specified as *ALL* and *UNIT* specified as *EXECUTION_SET*:
 
         .. _Composition_XXX_movie:
 
@@ -9571,7 +8054,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         2d list of values of OUTPUT Nodes at end of last trial : list[list]
           each item in the list is the `output_values <Mechanism_Base.output_values>` for an `OUTPUT` `Node
           <Composition_Nodes>` of the Composition, listed in the order listed in `get_nodes_by_role
-          <Composition.get_nodes_by_role>`\(`NodeRole`\.OUTPUT).
+          <Composition.get_nodes_by_role>`\(`NodeRole.OUTPUT <OUTPUT>`).
 
           .. note::
             The `results <Composition.results>` attribute of the Compositon contains a list of the outputs for all
@@ -9659,7 +8142,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
                 node.reset_stateful_function_when = reset_stateful_functions_when[node]
 
-        if ContextFlags.SIMULATION not in context.execution_phase:
+        if ContextFlags.SIMULATION_MODE not in context.runmode:
             try:
                 self.parameters.input_specification._set(copy(inputs), context)
             except:
@@ -9667,12 +8150,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # DS 1/7/20: Check to see if any Components are still in deferred init. If so, attempt to initialize them.
         # If they can not be initialized, raise a warning.
-        if ContextFlags.SIMULATION not in context.execution_phase:
+        if ContextFlags.SIMULATION_MODE not in context.runmode:
             self._check_projection_initialization_status()
 
         # MODIFIED 8/27/19 OLD:
         # try:
-        #     if ContextFlags.SIMULATION not in context.execution_phase:
+        #     if ContextFlags.SIMULATION_MODE not in context.runmode:
         #         self._analyze_graph()
         # except AttributeError:
         #     # if context is None, it has not been created for this context yet, so it is not
@@ -9690,7 +8173,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._analyze_graph(context=context)
         # Then call _analyze graph with scheduler actually being used (passed in or default)
         try:
-            if ContextFlags.SIMULATION not in context.execution_phase:
+            if ContextFlags.SIMULATION_MODE not in context.runmode:
                 if not skip_analyze_graph:
                     self._analyze_graph(scheduler=scheduler, context=context)
         except AttributeError:
@@ -9738,13 +8221,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # called repeatedly (this init is repeated in Composition.execute)
         # initialize from base context but don't overwrite any values already set for this context
         if (not skip_initialization
-            and (context is None or ContextFlags.SIMULATION not in context.execution_phase)):
+            and (context is None or ContextFlags.SIMULATION_MODE not in context.runmode)):
             self._initialize_from_context(context, base_context, override=False)
 
         context.composition = self
 
         is_simulation = (context is not None and
-                         ContextFlags.SIMULATION in context.execution_phase)
+                         ContextFlags.SIMULATION_MODE in context.runmode)
 
         if (bin_execute is True or str(bin_execute).endswith('Run')):
             # There's no mode to run simulations.
@@ -9828,7 +8311,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 result_copy = trial_output
 
-            if ContextFlags.SIMULATION not in context.execution_phase:
+            if ContextFlags.SIMULATION_MODE not in context.runmode:
                 results.append(result_copy)
                 self.parameters.results._set(results, context)
 
@@ -9902,23 +8385,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Arguments
             ---------
 
-            inputs: { `Mechanism <Mechanism>` or `Composition <Composition>` : list }
-                a dictionary containing a key-value pair for each node in the composition that receives inputs from
-                the user. There are several equally valid ways that this dict could be structured:
-                1. For each pair, the key is the node (Mechanism or Composition) and the value is an input,
-                the shape of which must match the node's default variable. This is identical to the input dict in
-                `the run method <Composition.run>`;
-                2. A dict with keys 'inputs', 'targets', and 'epochs'. The `inputs` key stores a dict that is the same
-                same structure as input specification (1) of learn. The `targets` and `epochs` keys should contain
-                values of the same shape as `targets <Composition.learn>` and `epochs <Composition.learn>`.
+            inputs: {`Node <Composition_Nodes>`:list }
+                a dictionary containing a key-value pair for each `Node <Composition_Nodes>` (Mechanism or Composition)
+                in the composition that receives inputs from the user. There are several equally valid ways that this
+                dict can be structured:
 
-            targets: { `Mechanism <Mechanism>` or `Composition <Composition>` : list }
-                a dictionary containing a key-value pair for each Node <Composition_Nodes>` in the Composition that
+                1. For each pair, the key is the  and the value is an input, the shape of which must match the Node's
+                   default variable. This is identical to the input dict in the `run <Composition.run>` method
+                   (see `Input Dictionary <Composition_Input_Dictionary>` for additional details).
+
+                2. A dict with keys 'inputs', 'targets', and 'epochs'. The `inputs` key stores a dict that is the same
+                   same structure as input specification (1) of learn. The `targets` and `epochs` keys should contain
+                   values of the same shape as `targets <Composition.learn>` and `epochs <Composition.learn>`.
+
+            targets: {`Node <Composition_Nodes>`:list }
+                a dictionary containing a key-value pair for each `Node <Composition_Nodes>` in the Composition that
                 receives target values as input to the Composition for training `learning pathways
-                <Composition_Learning_Pathway>` The key of each entry can be either the `TARGET_MECHANISM
+                <Composition_Learning_Pathway>`. The key of each entry can be either the `TARGET_MECHANISM
                 <Composition_Learning_Components>` for a learning pathway or the final Node in that Pathway, and
                 the value is the target value used for that Node on each trial (see `target inputs
-                <Composition_Target_Inputs>` for additonal details concerning the formatting of targets).
+                <Composition_Target_Inputs>` for additional details concerning the formatting of targets).
 
             num_trials : int (default=None)
                 typically, the composition will infer the number of trials from the length of its input specification.
@@ -9972,6 +8458,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._analyze_graph()
 
+        # Temporary check to ensure that nested compositions don't have stranded target Mechanisms.
+        # This should be taken out once we automatically instantiate Mechs to project to nested target Mechs.
+        nc = self._get_nested_compositions()
+        for comp in nc:
+            nc_targets = [path.target for path in comp.pathways if path.target]
+            for target in nc_targets:
+                target_mech_input_cim_input_port = comp.input_CIM.port_map.get(target.input_port)[0]
+                if not target_mech_input_cim_input_port.path_afferents:
+                    raise CompositionError(
+                        f'Target mechanism {target.name} of nested Composition {comp.name} is not being projected to '
+                        f'from its enclosing Composition {self.name}. For a call to {self.name}.learn, {target.name} '
+                        f'must have an afferent projection with a target value so that an error term may be computed. '
+                        f'A reference to {target.name}, with which you can create the needed projection, can be found '
+                        f'as the target attribute of the relevant pathway in {comp.name}.pathways. '
+                    )
+
         learning_results = runner.run_learning(
             inputs=inputs,
             targets=targets,
@@ -10009,25 +8511,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             bin_execute=False,
             ):
         """
-            Passes inputs to any Nodes receiving inputs directly from the user (via the "inputs" argument) then
-            coordinates with the Scheduler to execute sets of nodes that are eligible to execute until
-            termination conditions are met.
+            Passes inputs to any `Nodes <Composition_Nodes>` receiving inputs directly from the user (via the "inputs"
+            argument) then coordinates with the `Scheduler` to execute sets of Nodes that are eligible to execute until
+            `termination conditions <Scheduler_Termination_Conditions>` are met.
 
             Arguments
             ---------
 
-            inputs: { `Mechanism <Mechanism>` or `Composition <Composition>` : list } : default None
-                a dictionary containing a key-value pair for each node in the composition that receives inputs from
-                the user. For each pair, the key is the Node <Compositon_Nodes>` (A `Mechanism <Mechanism>` or
-                `Composition`) and the value is an input, the shape of which must match the Node's default variable.
-                if **inputs** is not specified, the `default_variable <Component_Variable>` for each `INPUT` Node
-                is used as its input;  see
+            inputs: { `Node <Composition_Nodes>`: list } : default None
+                a dictionary containing a key-value pair for each `Node <Composition_Nodes>` in the Composition that
+                receives inputs from the user. For each pair, the key is the `Node <Composition_Nodes>` (a `Mechanism
+                <Mechanism>` or `Composition`) and the value is an input, the shape of which must match the Node's
+                default variable. If **inputs** is not specified, the `default_variable <Component_Variable>` for
+                each `INPUT` Node is used as its input (see `Input Formats <Composition_Execution_Inputs>` for
+                additional details).
 
             clamp_input : SOFT_CLAMP : default SOFT_CLAMP
 
             runtime_params : Dict[Node: Dict[Parameter: Tuple(Value, Condition)]] : default None
                 specifies alternate parameter values to be used only during this `EXECUTION` when the specified
-                `Condition` is met. See `Run_Runtime_Parameters` for more details and examples of valid dictionaries.
+                `Condition` is met (see `Composition_Runtime_Params` for more details and examples of valid
+                dictionaries).
 
             skip_initialization :  : default False
                 COMMENT:
@@ -10038,10 +8542,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 the scheduler object that owns the conditions that will instruct the execution of the Composition
                 If not specified, the Composition will use its automatically generated scheduler.
 
-            context : `Context.execution_id>` : default `default_execution_id`
+            context : `execution_id <Context.execution_id>` : default `default_execution_id`
                 `execution context <Composition_Execution_Context>` in which the `Composition` will be executed.
 
-            base_context : `Context.execution_id>` : Context(execution_id=None)
+            base_context : `execution_id <Context.execution_id>` : Context(execution_id=None)
                 the context corresponding to the `execution context <Composition_Execution_Context>` from which this
                 execution will be initialized, if values currently do not exist for **context**.
 
@@ -10127,7 +8631,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 not skip_initialization
                 and not nested
                 or context is None
-                and context.execution_phase is not ContextFlags.SIMULATION
+                and context.execution_phase is not ContextFlags.SIMULATION_MODE
             ):
                 self._initialize_from_context(context, base_context, override=False)
                 context.composition = self
@@ -10137,7 +8641,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # but still after the context has been initialized
         if bin_execute:
             is_simulation = (context is not None and
-                             ContextFlags.SIMULATION in context.execution_phase)
+                             ContextFlags.SIMULATION_MODE in context.runmode)
             # Try running in Exec mode first
             if (bin_execute is True or str(bin_execute).endswith('Exec')):
                 # There's no mode to execute simulations.
@@ -10233,7 +8737,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # method to properly validate input for those nodes.
         # -DS
 
-        context.add_flag(ContextFlags.PROCESSING)
+        context.execution_phase = ContextFlags.PROCESSING
         if inputs is not None:
             inputs = self._validate_execution_inputs(inputs)
             build_CIM_input = self._build_variable_for_input_CIM(inputs)
@@ -10246,7 +8750,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             assert not nested or len(self.parameter_CIM.afferents) == 0
         elif nested:
             # check that inputs are specified - autodiff does not in some cases
-            if ContextFlags.SIMULATION in context.execution_phase and inputs is not None:
+            if ContextFlags.SIMULATION_MODE in context.runmode and inputs is not None:
                 self.input_CIM.execute(build_CIM_input, context=context)
             else:
                 assert inputs is None, "Ignoring composition input!"
@@ -10297,12 +8801,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX: SHOULD SET CONTEXT AS CONTROL HERE AND RESET AT END (AS DONE FOR animation BELOW)
             if (
                     self.initialization_status != ContextFlags.INITIALIZING
-                    and ContextFlags.SIMULATION not in context.execution_phase
+                    and ContextFlags.SIMULATION_MODE not in context.runmode
             ):
                 if self.controller and not bin_execute:
                     # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                     # FIX: END REMOVE
-                    context.add_flag(ContextFlags.PROCESSING)
+                    context.execution_phase = ContextFlags.PROCESSING
                     self.controller.execute(context=context)
 
                 if bin_execute:
@@ -10311,7 +8815,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 context.remove_flag(ContextFlags.PROCESSING)
 
                 # Animate controller (before execution)
-                context.add_flag(ContextFlags.CONTROL)
+                context.execution_phase = ContextFlags.CONTROL
                 if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self._animate_execution(self.controller, context)
                 context.remove_flag(ContextFlags.CONTROL)
@@ -10320,7 +8824,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # PREPROCESS (get inputs, call_before_pass, animate first frame) ----------------------------------
 
-        context.add_flag(ContextFlags.PROCESSING)
+        context.execution_phase = ContextFlags.PROCESSING
 
         if call_before_pass:
             call_with_pruned_args(call_before_pass, context=context)
@@ -10377,7 +8881,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if self._animate is not False and self._animate_unit == EXECUTION_SET:
-                context.add_flag(ContextFlags.PROCESSING)
+                context.execution_phase = ContextFlags.PROCESSING
                 self._animate_execution(next_execution_set, context)
 
             # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
@@ -10417,7 +8921,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                                  context))
 
                     # (Re)set context.execution_phase to PROCESSING by default
-                    context.add_flag(ContextFlags.PROCESSING)
+                    context.execution_phase = ContextFlags.PROCESSING
 
                     # Set to LEARNING if Mechanism receives any PathwayProjections that are being learned
                     #   for which learning_enabled == True or ONLINE (i.e., not False or AFTER)
@@ -10491,9 +8995,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Pass outer context to nested Composition
                     context.composition = node
-                    if ContextFlags.SIMULATION in context.execution_phase:
+                    if ContextFlags.SIMULATION_MODE in context.runmode:
                         is_simulating = True
-                        context.remove_flag(ContextFlags.SIMULATION)
+                        context.remove_flag(ContextFlags.SIMULATION_MODE)
                     else:
                         is_simulating = False
 
@@ -10510,7 +9014,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         _comp_ex.insert_node_output(node, ret)
 
                     if is_simulating:
-                        context.add_flag(ContextFlags.SIMULATION)
+                        context.add_flag(ContextFlags.SIMULATION_MODE)
 
                     context.composition = self
 
@@ -10552,7 +9056,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #Update matrix parameter of PathwayProjections being learned with learning_enabled==AFTER
         from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
         if self._is_learning(context) and not isinstance(self, AutodiffComposition):
-            context.add_flag(ContextFlags.LEARNING)
+            context.execution_phase = ContextFlags.LEARNING
             for projection in [p for p in self.projections if
                                hasattr(p, 'has_learning_projection') and p.has_learning_projection]:
                 matrix_parameter_port = projection.parameter_ports[MATRIX]
@@ -10580,9 +9084,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # control phase
             if (
                     self.initialization_status != ContextFlags.INITIALIZING
-                    and ContextFlags.SIMULATION not in context.execution_phase
+                    and ContextFlags.SIMULATION_MODE not in context.runmode
             ):
-                context.add_flag(ContextFlags.CONTROL)
+                context.execution_phase = ContextFlags.CONTROL
                 if self.controller and not bin_execute:
                     self.controller.execute(context=context)
 
@@ -10608,9 +9112,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _comp_ex.execute_node(self.output_CIM)
             return _comp_ex.extract_node_output(self.output_CIM)
 
-        context.add_flag(ContextFlags.PROCESSING)
+        context.execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(context=context)
-        context.remove_flag(ContextFlags.PROCESSING)
+        context.execution_phase = ContextFlags.IDLE
 
         output_values = []
         for port in self.output_CIM.output_ports:
@@ -11187,6 +9691,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         yield self.parameter_CIM
         if self.controller:
             yield self.controller
+
+    def show_graph(self, **kwargs):
+        return self._show_graph(**kwargs)
+
+    def _set_up_animation(self, context):
+        self._show_graph._set_up_animation(context)
+
+    def _animate_execution(self, active_items, context):
+        self._show_graph._animate_execution(active_items, context)
 
 
 def get_compositions():

@@ -82,8 +82,8 @@ class TestBuffer():
         B.execute([4, 5, 6])
         B.execute([7, 8, 9])
         val = B.execute([10,11,12])
-        assert np.allclose(deque(np.atleast_1d([[ 4.10105279, 5.34507377, 6.02430687],
-                                                [ 7.00103478, 8.09010473, 9.09586966],
+        assert np.allclose(deque(np.atleast_1d([[4.02430687, 4.91927251, 5.95087965],
+                                                [7.09586966, 7.91823773, 8.86077491],
                                                 [10, 11, 12]])), val)
         benchmark(B.execute, [1, 2, 3])
 

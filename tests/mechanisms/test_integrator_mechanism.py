@@ -1096,8 +1096,8 @@ class TestIntegratorNoise:
 
         val2 = float(I.execute(0))
 
-        np.testing.assert_allclose(val, 10.302846)
-        np.testing.assert_allclose(val2, 4.306823)
+        np.testing.assert_allclose(val, 9.306822898004032)
+        np.testing.assert_allclose(val2, 6.000180029830552)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1112,7 +1112,7 @@ class TestIntegratorNoise:
 
         val = I.execute([10, 10, 10, 10])[0]
 
-        np.testing.assert_allclose(val, [8.607749, 10.660535, 11.108879,  9.084011])
+        np.testing.assert_allclose(val, [10.66053518, 11.10887925, 9.0840107, 10.30157835])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1126,7 +1126,7 @@ class TestIntegratorNoise:
 
         val = float(I.execute(10))
 
-        np.testing.assert_allclose(val, 0.3028459185822786)
+        np.testing.assert_allclose(val, -0.6931771019959673)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1140,7 +1140,7 @@ class TestIntegratorNoise:
         )
 
         val = I.execute([10, 10, 10, 10])[0]
-        np.testing.assert_allclose(val, [-1.39225086, 0.66053518, 1.10887925, -0.9159893])
+        np.testing.assert_allclose(val, [0.66053518, 1.10887925, -0.9159893, 0.30157835])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1154,7 +1154,7 @@ class TestIntegratorNoise:
 
         val = float(I.execute(10))
 
-        np.testing.assert_allclose(val, 10.302846)
+        np.testing.assert_allclose(val, 9.306822898004032)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -1169,7 +1169,7 @@ class TestIntegratorNoise:
 
         val = I.execute([10, 10, 10, 10])[0]
 
-        np.testing.assert_allclose(val, [8.607749, 10.660535, 11.108879,  9.084011])
+        np.testing.assert_allclose(val, [10.66053518, 11.10887925, 9.0840107, 10.30157835])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism

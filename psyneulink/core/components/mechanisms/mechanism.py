@@ -2194,7 +2194,7 @@ class Mechanism_Base(Mechanism):
         pass
 
     @handle_external_context(execution_id=NotImplemented)
-    def reset(self, *args, context=None):
+    def reset(self, *args, force=False, context=None):
         """Reset `value <Mechanism_Base.value>` if Mechanisms is stateful.
 
         If the mechanism's `function <Mechanism.function>` is an `IntegratorFunction`, or if the mechanism has and
@@ -2259,7 +2259,14 @@ class Mechanism_Base(Mechanism):
         # (1) reset it, (2) run the primary function with the new "previous_value" as input
         # (3) update value, (4) update output ports
         elif hasattr(self, "integrator_function"):
-            if isinstance(self.integrator_function, IntegratorFunction):
+            if not isinstance(self.integrator_function, IntegratorFunction):
+                raise MechanismError(
+                    f"Resetting '{self.name}' is not allowed because its integrator_function "
+                    f"is not an IntegratorFunction type function, therefore the Mechanism "
+                    f"does not have an integrator to reset."
+                )
+
+            if self.parameters.integrator_mode._get(context) or force:
                 new_input = self.integrator_function.reset(*args, context=context)[0]
                 self.parameters.value._set(
                     self.function.execute(variable=new_input, context=context),
@@ -2268,19 +2275,13 @@ class Mechanism_Base(Mechanism):
                 )
                 self._update_output_ports(context=context)
 
-            elif self.integrator_function is None or isinstance(self.integrator_function, type):
-                if hasattr(self, "integrator_mode"):
+            elif hasattr(self, "integrator_mode"):
                     raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
                                          f"is not stateful; it does not have an integrator to reset. "
                                          f"If it should be stateful, try setting the integrator_mode argument to True.")
-                else:
-                    raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
-                                         f"is not stateful; it does not have an integrator to reset.")
-
             else:
-                raise MechanismError(f"Resetting '{self.name}' is not allowed because its integrator_function "
-                                     f"is not an IntegratorFunction type function, therefore the Mechanism "
-                                     f"does not have an integrator to reset.")
+                raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
+                                     f"is not stateful; it does not have an integrator to reset.")
         else:
             raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism is not stateful; "
                                  f"it does not have an accumulator to reset.")
@@ -2930,8 +2931,10 @@ class Mechanism_Base(Mechanism):
             input_ptr = builder.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
             if input_ptr.type != data_ptr.type:
                 port = self.output_ports[i]
-                warnings.warn("Shape mismatch: {port} parsed value does not match output port: mech value: "
-                              "{self.defaults.value} spec: {port._variable_spec} parsed {port.defaults.variable}.")
+                warnings.warn("Shape mismatch: {} parsed value does not match "
+                              "output port: mech value: {} spec: {} parsed {}.".format(
+                              port, self.defaults.value, port._variable_spec,
+                              port.defaults.variable))
                 input_ptr = builder.gep(input_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
             b.store(b.load(data_ptr), input_ptr)
             return b

@@ -841,6 +841,7 @@ class GradientOptimization(OptimizationFunction):
         annealing_function = Parameter(None, stateful=False, loggable=False)
         convergence_threshold = Parameter(.001, modulable=True)
         max_iterations = Parameter(1000, modulable=True)
+        search_space = Parameter([SampleIterator([0, 0])], stateful=False, loggable=False)
 
         direction = ASCENT
         convergence_criterion = Parameter(VALUE, pnl_internal=True)

@@ -736,7 +736,7 @@ class DefaultAllocationFunction(Function_Base):
         result = np.array([variable[0]] * num_ctl_sigs)
         return self.convert_output_type(result)
 
-    def reset(self, *args, context=None):
+    def reset(self, *args, force=False, context=None):
         # Override Component.reset which requires that the Component is stateful
         pass
 
@@ -1507,7 +1507,22 @@ class ControlMechanism(ModulatoryMechanism_Base):
         from psyneulink.core.components.ports.port import _instantiate_port
         from psyneulink.core.components.projections.projection import ProjectionError
 
-        allocation_parameter_default = self.parameters.control_allocation.default_value
+        try:
+            # set the default by implicit shape defined by one of the
+            # allocation_samples if possible
+            try:
+                allocation_parameter_default = control_signal_spec._init_args['allocation_samples'][0]
+            except AttributeError:
+                allocation_parameter_default = control_signal_spec['allocation_samples'][0]
+
+            # several tests depend on the default value being 1
+            # tests/composition/test_control.py::TestControlSpecification::test_deferred_init
+            # tests/composition/test_control.py::TestModelBasedOptimizationControlMechanisms::test_evc
+            # tests/composition/test_control.py::TestModelBasedOptimizationControlMechanisms::test_laming_validation_specify_control_signals
+            # tests/composition/test_control.py::TestModelBasedOptimizationControlMechanisms::test_stateful_mechanism_in_simulation
+            allocation_parameter_default = np.ones(np.asarray(allocation_parameter_default).shape)
+        except (KeyError, IndexError, TypeError):
+            allocation_parameter_default = self.parameters.control_allocation.default_value
 
         control_signal = _instantiate_port(port_type=ControlSignal,
                                                owner=self,
@@ -1680,7 +1695,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         based on specified `control_allocation <ControlMechanism.control_allocation>`
         (used by controller of a Composition in simulations)
         """
-        value = [np.atleast_1d(a) for a in control_allocation]
+        value = [a for a in control_allocation]
         self.parameters.value._set(value, context)
         self._update_output_ports(runtime_params, context)
 

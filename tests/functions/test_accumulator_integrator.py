@@ -152,7 +152,7 @@ class TestAccumulator():
         A()
         A()
         val = A()
-        assert np.allclose([[-0.43300219]], val)
+        assert np.allclose([[-0.34591555]], val)
 
     def test_accumulator_standalone_noise_function_in_array(self):
         A = AccumulatorIntegrator(noise=[10, NormalDist(standard_deviation=0.1), 20])

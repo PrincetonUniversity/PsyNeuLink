@@ -568,13 +568,11 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         # if not self.integrator_function:
         if self.initialization_status == ContextFlags.INITIALIZING:
-            self.integrator_function = LeakyCompetingIntegrator(
-                function_variable,
-                initializer=initial_value,
-                noise=noise,
-                time_step_size=time_step_size,
-                leak=leak,
-                owner=self)
+            self.integrator_function.parameters.initializer._set(initial_value, context)
+            self.integrator_function.parameters.previous_value._set(initial_value, context)
+            self.integrator_function.parameters.noise._set(noise, context)
+            self.integrator_function.parameters.time_step_size._set(time_step_size, context)
+            self.integrator_function.parameters.leak._set(leak, context)
 
         current_input = self.integrator_function._execute(
             function_variable,

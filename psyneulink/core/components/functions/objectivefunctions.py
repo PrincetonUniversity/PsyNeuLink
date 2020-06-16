@@ -28,8 +28,7 @@ import types
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
-from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base
-from psyneulink.core.components.functions.transferfunctions import get_matrix
+from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base, get_matrix
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CORRELATION, COSINE, CROSS_ENTROPY, \
@@ -241,7 +240,7 @@ class Stability(ObjectiveFunction):
         )
 
         # MODIFIED 6/12/19 NEW: [JDC]
-        self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
+        self._variable_shape_flexibility = DefaultsFlexibility.FLEXIBLE
         # MODIFIED 6/12/19 END
 
     def _validate_variable(self, variable, context=None):

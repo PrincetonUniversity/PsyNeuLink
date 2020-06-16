@@ -242,7 +242,7 @@ class GatingProjection(ModulatoryProjection_Base):
     def __init__(self,
                  sender=None,
                  receiver=None,
-                 function=Linear(params={FUNCTION_OUTPUT_TYPE:FunctionOutputType.RAW_NUMBER}),
+                 function=None,
                  weight=None,
                  exponent=None,
                  gating_signal_params:tc.optional(dict)=None,
