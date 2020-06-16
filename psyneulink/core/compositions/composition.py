@@ -5864,7 +5864,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     learning_function:LearningFunction,
                                     loss_function=None,
                                     learning_rate:tc.any(int,float)=0.05,
-                                    error_function=LinearCombination(),
+                                    error_function=LinearCombination,
                                     # # MODIFIED 5/25/20 OLD:
                                     # learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
                                     # MODIFIED 5/25/20 NEW:

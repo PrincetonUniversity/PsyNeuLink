@@ -10,11 +10,6 @@ import psyneulink as pnl
 # Define Variables ----------------------------------------------------------------------------------------------------
 import psyneulink.core.components.functions.transferfunctions
 
-print("\n***********************************************************************************************************"
-      "\nWARNING:  THIS SCRIPT RUNS BUT DOES NOT PRODUCE CORRECT RESULTS BECAUSE"
-      "\n          THE CALLS TO Log.clear_entries(delete_entry=False) RELY ON DEPRECATED FUNCTIONALITY"
-      "\n***********************************************************************************************************\n")
-
 rate = 0.1          # modified from the original code from 0.01 to 0.1
 inhibition = -2.0   # lateral inhibition
 bias = 4.0          # bias is positive since Logistic equation has - sing already implemented
@@ -274,8 +269,8 @@ words_hidden_layer.set_log_conditions('value')
 
 
 def pass_threshold(response_layer, thresh):
-    results1 = response_layer.output_ports.values[0][0]  # red response
-    results2 = response_layer.output_ports.values[0][1]  # green response
+    results1 = response_layer.get_output_values(Bidirectional_Stroop)[0][0]  # red response
+    results2 = response_layer.get_output_values(Bidirectional_Stroop)[0][1]  # green response
     if results1 >= thresh or results2 >= thresh:
         return True
     return False
@@ -365,12 +360,10 @@ for cond in range(conditions):
     response_all2.append(rrr.shape[0])
 
     # Clear log & reset ----------------------------------------------------------------------------------------
-    # # MODIFIED 6/15/20 OLD:
-    # response_layer.log.clear_entries(delete_entry=False)
-    # colors_hidden_layer.log.clear_entries(delete_entry=False)
-    # words_hidden_layer.log.clear_entries(delete_entry=False)
-    # task_layer.log.clear_entries(delete_entry=False)
-    # MODIFIED 6/15/20 END
+    response_layer.log.clear_entries()
+    colors_hidden_layer.log.clear_entries()
+    words_hidden_layer.log.clear_entries()
+    task_layer.log.clear_entries()
     colors_hidden_layer.reset([[0, 0, 0]])
     words_hidden_layer.reset([[0, 0, 0]])
     response_layer.reset([[0, 0]])
@@ -418,12 +411,10 @@ for cond in range(conditions):
     response_all4.append(rrr2.shape[0])
 
     # Clear log & reset ----------------------------------------------------------------------------------------
-    # # MODIFIED 6/15/20 OLD:
-    # response_layer.log.clear_entries(delete_entry=False)
-    # colors_hidden_layer.log.clear_entries(delete_entry=False)
-    # words_hidden_layer.log.clear_entries(delete_entry=False)
-    # task_layer.log.clear_entries(delete_entry=False)
-    # MODIFIED 6/15/20 END
+    response_layer.log.clear_entries()
+    colors_hidden_layer.log.clear_entries()
+    words_hidden_layer.log.clear_entries()
+    task_layer.log.clear_entries()
     colors_hidden_layer.reset([[0, 0, 0]])
     words_hidden_layer.reset([[0, 0, 0]])
     response_layer.reset([[0, 0]])
@@ -456,9 +447,3 @@ plt.legend(['color naming', 'word reading'])
 plt.xticks(np.arange(3), ('control', 'incongruent', 'congruent'))
 plt.ylabel('reaction time in ms')
 plt.show()
-
-print("\n***********************************************************************************************************"
-      "\nWARNING:  THIS SCRIPT RUNS BUT DOES NOT PRODUCE CORRECT RESULTS BECAUSE"
-      "\n          THE CALLS TO Log.clear_entries(delete_entry=False) RELY ON DEPRECATED FUNCTIONALITY"
-      "\n***********************************************************************************************************\n")
-
