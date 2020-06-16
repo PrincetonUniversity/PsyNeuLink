@@ -853,7 +853,7 @@ class ShowGraph():
                                     ENCLOSING_G:g,
                                     NESTING_LEVEL:nesting_level + 1})
                 # Get subgraph for nested Composition
-                nested_comp_graph = rcvr.show_graph(**nested_args)
+                nested_comp_graph = rcvr._show_graph.show_graph(**nested_args)
 
                 nested_comp_graph.name = "cluster_" + rcvr.name
                 rcvr_label = rcvr.name
