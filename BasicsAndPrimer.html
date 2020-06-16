@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Primer &mdash; PsyNeuLink 0.8.0.0 documentation</title>
+  <title>Basics and Primer &mdash; PsyNeuLink 0.8.0.0+65.ga5fcabf documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.0.0
+                  0.8.0.0+65
                 </div>
               
             
@@ -234,8 +234,8 @@ of Components at different time scales (e.g., a recurrent network that needs tim
 information to a decision layer).</p>
 <p><strong>Mechanisms and Projections</strong></p>
 <p>Mechanisms and Projections fall into two broad categories:  <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a>
-<em>directly transmit</em> and possibly <em>transform</em> information, and are linked by <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a> that transmit the information between them. <em>ModulatoryMechanisms &lt;ModulatoryMechanism&gt;` *modify</em>
-or <em>modulate</em> the transmission and transformation of information, by way of <code class="xref any docutils literal"><span class="pre">ModulatoryProjections</span></code> to the Components they modulate.  PsyNeuLink provides a library of Components of
+<em>directly transmit</em> and possibly <em>transform</em> information, and are linked by <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a> that transmit the information between them. <em>ModulatoryMechanisms &lt;ModulatoryMechanism&gt;`
+*modify</em> or <em>modulate</em> the transmission and transformation of information, by way of <code class="xref any docutils literal"><span class="pre">ModulatoryProjections</span></code> to the Components they modulate.  PsyNeuLink provides a library of Components of
 each type.  For example, there is a variety of ProcessingMechanisms that can be used to transform, integrate, and
 evaluate information in various ways (e.g., to implement layers of a feedforward or recurrent neural network, or a
 drift diffusion decision process); and there are <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanisms</span></a>, including
@@ -288,9 +288,9 @@ with an appropriately-sized input array, for example:</p>
 <span class="o">&gt;&gt;</span> <span class="n">array</span><span class="p">([[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.92414182</span><span class="p">,</span> <span class="mf">0.99998154</span><span class="p">,</span> <span class="mf">0.88079708</span><span class="p">,</span> <span class="mf">0.9994998</span> <span class="p">]])</span>
 </pre></div>
 </div>
-<p>The Composition connects the Mechanisms into a pathway that form a graph, which can be shown using its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method:</p>
+<p>The Composition connects the Mechanisms into a pathway that form a graph, which can be shown using its <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method:</p>
 <div class="figure" id="id3">
-<span id="basicsandprimer-simple-pathway-example-figure"></span><a class="reference internal image-reference" href="_static/BasicsAndPrimer_SimplePathway_fig.svg"><img alt="_static/BasicsAndPrimer_SimplePathway_fig.svg" src="_static/BasicsAndPrimer_SimplePathway_fig.svg" width="30%" /></a>
+<span id="basicsandprimer-simple-pathway-example-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_SimplePathway_fig.svg"><img alt="_images/BasicsAndPrimer_SimplePathway_fig.svg" src="_images/BasicsAndPrimer_SimplePathway_fig.svg" width="30%" /></a>
 <p class="caption"><span class="caption-text"><strong>Composition Graph.</strong>  Representation of the graph of the simple Composition in the example above.  Note that the
 Input Mechanism for the Composition is colored green (to designate it is an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal"><span class="pre">INPUT</span></code></a> node), and its output
 Mechanism is colored Red (to designate it at a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> node).</span></p>
@@ -387,11 +387,11 @@ drift diffusion (DDM) decision mechanism responsible for determining the respons
 <span class="n">Stroop_model</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">(</span><span class="n">decision_pathway</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>This is a simplified version the model described in <a class="reference external" href="https://www.researchgate.net/publication/20956134_Cohen_JD_McClelland_JL_Dunbar_K_On_the_control_of_automatic_processes_a_parallel_distributed_processing_account_of_the_Stroop_effect_Psychol_Rev_97_332-361">Cohen et al. (1990)</a>,
-a more complete version of which can be found in the <a class="reference external" href="https://princetonuniversity.github.io/PsyNeuLink/Library.html">PsyNeuLink Library</a> at <code class="xref any docutils literal"><span class="pre">Stroop</span> <span class="pre">Model</span></code>.  The figure belows shows the model using the
-Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method.</p>
+<p>This is a simplified version the model described in <a class="reference external" href="https://www.researchgate.net/publication/20956134_Cohen_JD_McClelland_JL_Dunbar_K_On_the_control_of_automatic_processes_a_parallel_distributed_processing_account_of_the_Stroop_effect_Psychol_Rev_97_332-361">Cohen et al. (1990)</a>
+.</p>
+<p>The figure belows shows the model using the Composition’s <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method.</p>
 <div class="figure" id="id4">
-<span id="basicsandprimer-simple-stroop-example-figure"></span><a class="reference internal image-reference" href="_static/BasicsAndPrimer_Stroop_Model.svg"><img alt="_static/BasicsAndPrimer_Stroop_Model.svg" src="_static/BasicsAndPrimer_Stroop_Model.svg" width="50%" /></a>
+<span id="basicsandprimer-simple-stroop-example-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_Stroop_Model.svg"><img alt="_images/BasicsAndPrimer_Stroop_Model.svg" src="_images/BasicsAndPrimer_Stroop_Model.svg" width="100%" /></a>
 <p class="caption"><span class="caption-text"><strong>Stroop Model.</strong> Representation of the Composition in the example above.</span></p>
 </div>
 <p>Running the model is as simple as generating some inputs and then providing them to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>
@@ -425,7 +425,7 @@ a non-zero <a class="reference internal" href="DistributionFunctions.html#psyneu
 <span id="basicsandprimer-dynamics-of-execution"></span><h3>Dynamics of Execution<a class="headerlink" href="#dynamics-of-execution" title="Permalink to this headline">¶</a></h3>
 <p>One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
 different time scales.  By default, each Mechanism executes once per pass through the Composition, in the order
-determined by the projections between them (and shown in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method.  In the
+determined by the projections between them (and shown in the <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method.  In the
 <code class="docutils literal"><span class="pre">Stroop_model</span></code> above, the <code class="docutils literal"><span class="pre">decision</span></code> Mechanism executes once per pass, just after the <code class="docutils literal"><span class="pre">ouput</span></code> Mechanism.  The
 <code class="docutils literal"><span class="pre">decision</span></code> Mechanism is a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a>.  This uses <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical"><code class="xref any py py-class docutils literal"><span class="pre">DriftDiffusionAnalytical</span></code></a> as its default <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>,
 which computes an analytic solution to the distribution of responses using the DDM integration process, and returns
@@ -462,7 +462,7 @@ creating one or more <a class="reference internal" href="Condition.html"><span c
 in each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>), its behavior relative to one or more other Components (e.g., how many times it
 should wait for another Mechanism to execute before it does so), or even arbitrary functions (e.g., a convergence
 criterion for the settling of a recurrent network). For example, the following implements a version of the model above
-that uses a leaky competing accumulator <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/11488378">https://www.ncbi.nlm.nih.gov/pubmed/11488378</a> (<a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a>) for the
+that uses a <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/11488378">leaky competing accumulator</a> (<a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a>) for the
 <code class="docutils literal"><span class="pre">task</span></code> Mechanism.  The latter settles for a specified number of executions before the color and word hidden layers
 execute, simulating a situation in which the task instruction is processed before processing the color or word stimuli:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="c1"># Modify consruction of task Mechanism:</span>
@@ -557,9 +557,9 @@ the <strong>control_signals</strong> argument specifies the parameters of the Me
 <code class="docutils literal"><span class="pre">output</span></code> Mechanism, and use the <a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Energy" title="psyneulink.core.components.functions.objectivefunctions.Energy"><code class="xref any py py-class docutils literal"><span class="pre">Energy</span></code></a> Function to evaluate it.  PsyNeuLink automatically constructs the
 MappingProjections from <code class="docutils literal"><span class="pre">output</span></code> to the ObjectiveMechanism, and from the latter to the ControlMechanism.  The latter
 is then added to the <code class="docutils literal"><span class="pre">Stroop_model</span></code> as its <code class="xref any docutils literal"><span class="pre">controller</span></code> in its constructor.
-The result is shown in the figure below, using the <strong>show_controller</strong> option of the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method:</p>
+The result is shown in the figure below, using the <strong>show_controller</strong> option of the Composition’s <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method:</p>
 <div class="figure" id="id5">
-<span id="basicsandprimer-stroop-example-with-control-figure"></span><a class="reference internal image-reference" href="_static/BasicsAndPrimer_Stroop_Model_Control.svg"><img alt="_static/BasicsAndPrimer_Stroop_Model_Control.svg" src="_static/BasicsAndPrimer_Stroop_Model_Control.svg" width="50%" /></a>
+<span id="basicsandprimer-stroop-example-with-control-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_Stroop_Model_Control.svg"><img alt="_images/BasicsAndPrimer_Stroop_Model_Control.svg" src="_images/BasicsAndPrimer_Stroop_Model_Control.svg" width="50%" /></a>
 <p class="caption"><span class="caption-text"><strong>Stroop Model with Controller.</strong> Representation of the Composition with the <code class="docutils literal"><span class="pre">control</span></code> Mechanism added, generated
 by a call to <code class="docutils literal"><span class="pre">Stroop_model.show_graph(show_controller)</span></code>.</span></p>
 </div>
@@ -577,7 +577,7 @@ the next time it executes (i.e., on the next <a class="reference internal" href=
 at the end of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>.  The <strong>animate</strong> argument of the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method can be
 used to generate an animation of the Composition’s execution, as shown below:</p>
 <div class="figure" id="id6">
-<a class="reference internal image-reference" href="_static/BasicsAndPrimer_Stroop_Model_movie.gif"><img alt="_static/BasicsAndPrimer_Stroop_Model_movie.gif" src="_static/BasicsAndPrimer_Stroop_Model_movie.gif" style="width: 75%;" /></a>
+<span id="basicsandprimer-stroop-example-animation-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_Stroop_Model_movie.gif"><img alt="_images/BasicsAndPrimer_Stroop_Model_movie.gif" src="_images/BasicsAndPrimer_Stroop_Model_movie.gif" style="width: 75%;" /></a>
 <p class="caption"><span class="caption-text"><strong>Animation of Stroop Model with Controller.</strong> Generated by a call to <code class="docutils literal"><span class="pre">Stroop_model.show_graph(show_controller)</span>
 <span class="pre">with</span> <span class="pre">``animate={&quot;show_controller&quot;:True}</span></code> in call to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a>.</span></p>
 </div>
@@ -632,7 +632,8 @@ color task and generates the correct response. A more elaborate example of this 
 internal simulations to optimize the amount of control to optimize some criterion (e.g,. maximize the
 <a class="reference external" href="https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478">expected value of control</a> (see XXX EVC
 script), or to implement <a class="reference external" href="https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478">model-based learning</a>
-(see XXX LVOC script).</p>
+(see XXX LVOC script).
+.. FIX: ADD LINKS TO SCRIPTS ABOVE</p>
 </div>
 <div class="section" id="parameters">
 <span id="basicsandprimer-parameters"></span><h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h3>
@@ -840,10 +841,10 @@ a simple three-layered neural network that learns to compute the X-OR operation:
                      <span class="n">target</span><span class="p">:</span><span class="n">xor_inputs</span><span class="p">[</span><span class="s1">&#39;targets&#39;</span><span class="p">]})</span>
 </pre></div>
 </div>
-<p>Calling the Composition’s <code class="docutils literal"><span class="pre">show_graph</span></code> with <code class="docutils literal"><span class="pre">show_learning=True</span></code> shows the network along with all of the learning
-components created by the call to <code class="docutils literal"><span class="pre">add_backpropagation_pathway</span></code>:</p>
+<p>Calling the Composition’s <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> with <code class="docutils literal"><span class="pre">show_learning=True</span></code> shows the network along with
+all of the learning components created by the call to <code class="docutils literal"><span class="pre">add_backpropagation_pathway</span></code>:</p>
 <div class="figure" id="id7">
-<span id="basicsandprimer-xor-model-figure"></span><a class="reference internal image-reference" href="_static/BasicsAndPrimer_XOR_Model_fig.svg"><img alt="_static/BasicsAndPrimer_XOR_Model_fig.svg" src="_static/BasicsAndPrimer_XOR_Model_fig.svg" width="100%" /></a>
+<span id="basicsandprimer-xor-model-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_XOR_Model_fig.svg"><img alt="_images/BasicsAndPrimer_XOR_Model_fig.svg" src="_images/BasicsAndPrimer_XOR_Model_fig.svg" width="100%" /></a>
 <p class="caption"><span class="caption-text"><strong>XOR Model.</strong>  Items in orange are learning components implemented by the call to <code class="docutils literal"><span class="pre">add_backpropagation_pathway</span></code>;
 diamonds represent MappingProjections, shown as nodes so that the <a class="reference internal" href="LearningProjections.html"><span class="doc">Learning Projections</span></a> to them can be shown.</span></p>
 </div>
@@ -900,7 +901,7 @@ For example, the following implements a network for learning semantic representa
 </div>
 <p>The figure below shows this network with all of its <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">learning components</span></a>:</p>
 <div class="figure" id="id8">
-<span id="basicsandprimer-rumelhart-network-figure"></span><a class="reference internal image-reference" href="_static/BasicsAndPrimer_Rumelhart_Network.svg"><img alt="_static/BasicsAndPrimer_Rumelhart_Network.svg" src="_static/BasicsAndPrimer_Rumelhart_Network.svg" width="75%" /></a>
+<span id="basicsandprimer-rumelhart-network-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_Rumelhart_Network.svg"><img alt="_images/BasicsAndPrimer_Rumelhart_Network.svg" src="_images/BasicsAndPrimer_Rumelhart_Network.svg" width="75%" /></a>
 <p class="caption"><span class="caption-text"><strong>Rumelhart Semantic Network.</strong>  Items in orange are learning components implemented by the calls to
 <code class="docutils literal"><span class="pre">add_backpropagation_pathway</span></code>; diamonds represent MappingProjections, shown as nodes so that the
 <a class="reference internal" href="LearningProjections.html"><span class="doc">Learning Projections</span></a> to them can be shown.</span></p>
@@ -1045,7 +1046,7 @@ a more detailed description of PsyNeuLink’s organization and capabilities.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.0.0',
+               VERSION:'0.8.0.0+65.ga5fcabf',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

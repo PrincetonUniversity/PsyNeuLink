@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanism &mdash; PsyNeuLink 0.8.0.0 documentation</title>
+  <title>Mechanism &mdash; PsyNeuLink 0.8.0.0+65.ga5fcabf documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.0.0
+                  0.8.0.0+65
                 </div>
               
             
@@ -816,7 +816,7 @@ label, then its numeric value is used instead.</p>
 </ul>
 </div></blockquote>
 <p>Labels may be used to visualize the input and outputs of Mechanisms in a Composition with the <strong>show_structure</strong> option
-of the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.show_graph" title="psyneulink.core.compositions.composition.Composition.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method with the keyword <strong>LABELS</strong>.</p>
+of the Composition’s <code class="xref any docutils literal"><span class="pre">show_graph</span></code> method with the keyword <strong>LABELS</strong>.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">C</span><span class="o">.</span><span class="n">show_graph</span><span class="p">(</span><span class="n">show_mechanism_structure</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">LABELS</span><span class="p">)</span>  
 </pre></div>
 </div>
@@ -1506,7 +1506,7 @@ Port specification(s) can be an Port object or the name of one.</td>
 
 <dl class="method">
 <dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset">
-<code class="descname">reset</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset" title="Permalink to this definition">¶</a></dt>
+<code class="descname">reset</code><span class="sig-paren">(</span><em>*args</em>, <em>force=False</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reset <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> if Mechanisms is stateful.</p>
 <p>If the mechanism’s <code class="xref any docutils literal"><span class="pre">function</span></code> is an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal"><span class="pre">IntegratorFunction</span></code></a>, or if the mechanism has and
 <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a> (see <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>), this method
@@ -1656,7 +1656,7 @@ as well as other reinitialization steps that the reset method may carry out.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.0.0',
+               VERSION:'0.8.0.0+65.ga5fcabf',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

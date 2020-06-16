@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Context &mdash; PsyNeuLink 0.8.0.0 documentation</title>
+  <title>Context &mdash; PsyNeuLink 0.8.0.0+65.ga5fcabf documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.0.0
+                  0.8.0.0+65
                 </div>
               
             
@@ -251,7 +251,7 @@ information as the string returned by the <a class="reference internal" href="#p
 <span id="context-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.globals.context.Context">
-<em class="property">class </em><code class="descclassname">psyneulink.core.globals.context.</code><code class="descname">Context</code><span class="sig-paren">(</span><em>owner=None</em>, <em>composition=None</em>, <em>flags=None</em>, <em>execution_phase=&lt;ContextFlags.IDLE: 262144&gt;</em>, <em>source=&lt;ContextFlags.NONE: 2097152&gt;</em>, <em>runmode=&lt;ContextFlags.DEFAULT_MODE: 524288&gt;</em>, <em>execution_id=None</em>, <em>string=''</em>, <em>time=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.context.Context" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.context.</code><code class="descname">Context</code><span class="sig-paren">(</span><em>owner=None</em>, <em>composition=None</em>, <em>flags=None</em>, <em>execution_phase=&lt;ContextFlags.IDLE: 1024&gt;</em>, <em>source=&lt;ContextFlags.NONE: 262144&gt;</em>, <em>runmode=&lt;ContextFlags.DEFAULT_MODE: 524288&gt;</em>, <em>execution_id=None</em>, <em>string=''</em>, <em>time=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.context.Context" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used to indicate the state of initialization and phase of execution of a Component, as well as the source of
 call of a method;  also used to specify and identify <a class="reference internal" href="Log.html#log-conditions"><span class="std std-ref">conditions</span></a> for <a class="reference internal" href="Log.html"><span class="doc">logging</span></a>.</p>
 <dl class="attribute">
@@ -286,7 +286,6 @@ one or more of the following flags can be set:</p>
 <li><code class="xref any docutils literal"><span class="pre">PROCESSING</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">LEARNING</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">CONTROL</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">SIMULATION</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">IDLE</span></code></li>
 </ul>
 </div></blockquote>
@@ -349,7 +348,7 @@ Also used to specify the context in which a value of the Component or its attrib
 
 <dl class="function">
 <dt id="psyneulink.core.globals.context.handle_external_context">
-<code class="descclassname">psyneulink.core.globals.context.</code><code class="descname">handle_external_context</code><span class="sig-paren">(</span><em>source=&lt;ContextFlags.COMMAND_LINE: 1024&gt;</em>, <em>execution_phase=&lt;ContextFlags.IDLE: 262144&gt;</em>, <em>execution_id=None</em>, <em>**context_kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.context.handle_external_context" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">psyneulink.core.globals.context.</code><code class="descname">handle_external_context</code><span class="sig-paren">(</span><em>source=&lt;ContextFlags.COMMAND_LINE: 2048&gt;</em>, <em>execution_phase=&lt;ContextFlags.IDLE: 1024&gt;</em>, <em>execution_id=None</em>, <em>**context_kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.context.handle_external_context" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -434,7 +433,7 @@ Context is not specified</li>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.0.0',
+               VERSION:'0.8.0.0+65.ga5fcabf',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
