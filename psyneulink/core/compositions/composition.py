@@ -9692,8 +9692,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.controller:
             yield self.controller
 
-    def show_graph(self, **kwargs):
-        return self._show_graph(**kwargs)
+    def show_graph(self,
+                   show_node_structure=False,
+                   show_nested=NESTED,
+                   show_nested_args=ALL,
+                   show_cim=False,
+                   show_controller=True,
+                   show_learning=False,
+                   show_headers=True,
+                   show_types=False,
+                   show_dimensions=False,
+                   show_projection_labels=False,
+                   active_items=None,
+                   output_fmt='pdf',
+                   context=None):
+        return self._show_graph(show_node_structure=show_node_structure,
+                                show_nested=show_nested,
+                                show_nested_args=show_nested_args,
+                                show_cim=show_cim,
+                                show_controller=show_controller,
+                                show_learning=show_learning,
+                                show_headers=show_headers,
+                                show_types=show_types,
+                                show_dimensions=show_dimensions,
+                                show_projection_labels=show_projection_labels,
+                                active_items=active_items,
+                                output_fmt=output_fmt,
+                                context=context)
 
     def _set_up_animation(self, context):
         self._show_graph._set_up_animation(context)
