@@ -47,6 +47,56 @@ be modified by assigning a dictionary of attribute:values pairs to the **show_gr
 Composition's constructor.  These are listed as the arguments for the ShowGraph object (used to display the graph)
 in the `class reference <ShowGraph_Class_Reference>` below.
 
+COMMENT:
+
+The following are the default attribute used to display different types of `Components <Component>` and their `roles
+<NodeRole>` within a Composition:
+
+FIX: MAKE FIGURE THAT HAS ALL THE VARIOUS TYPES USING CORRESPONDING NAMES
+Input Node
+Singleton Node
+Output Node
+LearningMechanism
+ControlMechanism
+Controller
+Nested Composition
+
+
+Shapes
+~~~~~~
+
+`Nested Compositions <Composition_Nested>`: square
+
+`Mechanism`:
+  - default: oval
+  - `CYCLE`: doublecircle
+  - `FEEDBACK_SENDER`: octagon
+  - `CONTROLLER`: doubleoctagon
+
+Projection:
+  - default: arrow
+  - `ControlProjection`: box
+  - `MappingProjection` that receives a `LearningProjection` when **show_learning** is True:  diamond
+
+Colors
+~~~~~~
+
+Nodes
+^^^^^
+  - `INPUT`: green
+  - `OUTPUT`: red
+  - `SINGLETON`: brown
+
+Component-types
+^^^^^^^^^^^^^^^
+
+Control-related compoments:  blue
+Controller-related: purple
+Learning-related components: orange
+
+Active items (when **animate**=True in `run <Composition.run>`): **BOLD**
+
+COMMENT
 
 .. _ShowGraph_Examples_Visualization:
 

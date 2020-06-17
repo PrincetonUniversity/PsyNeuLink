@@ -9,6 +9,8 @@
 #
 # *****************************************  USER-DEFINED FUNCTION  ****************************************************
 
+import ctypes
+import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import ComponentError
@@ -20,6 +22,8 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences import is_pref_set
 from psyneulink.core.globals.utilities import iscompatible
+
+from psyneulink.core import llvm as pnlvm
 
 __all__ = ['UserDefinedFunction']
 
@@ -540,4 +544,64 @@ class UserDefinedFunction(Function_Base):
             value = self.custom_function(variable, **call_params)
 
         return self.convert_output_type(value)
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state,
+                                arg_in, arg_out, *, tags:frozenset):
+
+        # Instantiate needed ctypes
+        arg_in_ct = pnlvm._convert_llvm_ir_to_ctype(arg_in.type.pointee)
+        params_ct = pnlvm._convert_llvm_ir_to_ctype(params.type.pointee)
+        state_ct = pnlvm._convert_llvm_ir_to_ctype(state.type.pointee)
+        arg_out_ct = pnlvm._convert_llvm_ir_to_ctype(arg_out.type.pointee)
+        wrapper_ct = ctypes.CFUNCTYPE(None,
+                                      ctypes.POINTER(params_ct),
+                                      ctypes.POINTER(state_ct),
+                                      ctypes.POINTER(arg_in_ct),
+                                      ctypes.POINTER(arg_out_ct))
+
+        # we don't support passing any stateful params
+        for i, p in enumerate(self.llvm_state_ids):
+            assert p not in self.cust_fct_params
+
+        def _carr_to_list(carr):
+            try:
+                return [_carr_to_list(x) for x in carr]
+            except TypeError:
+                return carr
+
+        def _assign_to_carr(carr, vals):
+            assert len(carr) == len(vals)
+            for i, x in enumerate(vals):
+                try:
+                    carr[i] = x
+                except TypeError:
+                    _assign_to_carr(carr[i], x)
+
+        def _wrapper(params, state, arg_in, arg_out):
+            variable = _carr_to_list(arg_in.contents)
+
+            llvm_params = {}
+            for i, p in enumerate(self.llvm_param_ids):
+                if p in self.cust_fct_params:
+                    field_name = params.contents._fields_[i][0]
+                    val = getattr(params.contents, field_name)
+                    llvm_params[p] = val
+
+            if self.context_arg:
+                # FIXME: We can't get the context
+                #        and do not support runtime params
+                llvm_params[CONTEXT] = None
+                llvm_params[PARAMS] = None
+
+            value = self.custom_function(np.asfarray(variable), **llvm_params)
+            _assign_to_carr(arg_out.contents, np.atleast_2d(value))
+
+        builder.function.__wrapper_f = wrapper_ct(_wrapper)
+        # To get the right callback pointer, we need to cast to void*
+        wrapper_address = ctypes.cast(builder.function.__wrapper_f, ctypes.c_void_p)
+        # Direct pointer constants don't work
+        wrapper_ptr = builder.inttoptr(pnlvm.ir.IntType(64)(wrapper_address.value), builder.function.type)
+        builder.call(wrapper_ptr, [params, state, arg_in, arg_out])
+
+        return builder
 

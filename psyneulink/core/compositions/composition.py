@@ -3813,7 +3813,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         node_role_pair = (node, role)
         if node_role_pair not in self.required_node_roles:
             self.required_node_roles.append(node_role_pair)
-        node_role_pairs = [item for item in self.excluded_node_roles if item[0] is node and item[1 is role]]
+        node_role_pairs = [item for item in self.excluded_node_roles if item[0] is node and item[1] is role]
         for item in node_role_pairs:
             self.excluded_node_roles.remove(item)
 
@@ -5851,7 +5851,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     learning_function:LearningFunction,
                                     loss_function=None,
                                     learning_rate:tc.any(int,float)=0.05,
-                                    error_function=LinearCombination(),
+                                    error_function=LinearCombination,
                                     # # MODIFIED 5/25/20 OLD:
                                     # learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
                                     # MODIFIED 5/25/20 NEW:
@@ -8457,6 +8457,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # context.execution_phase=ContextFlags.PREPARING
 
         self._analyze_graph()
+
+        # Temporary check to ensure that nested compositions don't have stranded target Mechanisms.
+        # This should be taken out once we automatically instantiate Mechs to project to nested target Mechs.
+        nc = self._get_nested_compositions()
+        for comp in nc:
+            nc_targets = [path.target for path in comp.pathways if path.target]
+            for target in nc_targets:
+                target_mech_input_cim_input_port = comp.input_CIM.port_map.get(target.input_port)[0]
+                if not target_mech_input_cim_input_port.path_afferents:
+                    raise CompositionError(
+                        f'Target mechanism {target.name} of nested Composition {comp.name} is not being projected to '
+                        f'from its enclosing Composition {self.name}. For a call to {self.name}.learn, {target.name} '
+                        f'must have an afferent projection with a target value so that an error term may be computed. '
+                        f'A reference to {target.name}, with which you can create the needed projection, can be found '
+                        f'as the target attribute of the relevant pathway in {comp.name}.pathways. '
+                    )
 
         learning_results = runner.run_learning(
             inputs=inputs,
