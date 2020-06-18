@@ -252,7 +252,8 @@ INITIAL_FRAME = 'INITIAL_FRAME'
 EXECUTION_SET = 'EXECUTION_SET'
 
 # Values for nested Compositions (passed from level to level)
-ENCLOSING_G = 'enclosing_g'
+ENCLOSING_COMP = 'enclosing_comp' # enclosing composition
+ENCLOSING_G = 'enclosing_g'       # graphviz object for enclosing composition
 NESTING_LEVEL = 'nesting_level'
 NUM_NESTING_LEVELS = 'num_nesting_levels'
 
@@ -618,6 +619,7 @@ class ShowGraph():
             context.execution_id = composition.default_execution_id
 
         # Args not specified by user but used in calls to show_graph for nested Compositions
+        enclosing_comp = kwargs.pop(ENCLOSING_COMP,None)
         enclosing_g = kwargs.pop(ENCLOSING_G,None)
         nesting_level = kwargs.pop(NESTING_LEVEL,None)
         self.num_nesting_levels = kwargs.pop(NUM_NESTING_LEVELS,None)
@@ -674,7 +676,7 @@ class ShowGraph():
         # For outermost Composition:
         # - initialize nesting level
         # - set num_nesting_levels
-        if enclosing_g is None:
+        if enclosing_comp is None:
             # initialize nesing_level
             nesting_level = 0
             # show_nested specified number of nested levels to show, so set to that
@@ -756,8 +758,8 @@ class ShowGraph():
 
             self._assign_processing_components(G,
                                                rcvr,
-                                               composition,
                                                processing_graph,
+                                               enclosing_comp,
                                                enclosing_g,
                                                nesting_level,
                                                active_items,
@@ -775,6 +777,7 @@ class ShowGraph():
         if show_cim:
             self._assign_cim_components(G,
                                         [composition.input_CIM, composition.parameter_CIM, composition.output_CIM],
+                                        enclosing_comp,
                                         enclosing_g,
                                         active_items,
                                         show_nested,
@@ -825,8 +828,8 @@ class ShowGraph():
     def _assign_processing_components(self,
                                       g,
                                       rcvr,
-                                      composition,
                                       processing_graph,
+                                      enclosing_comp,
                                       enclosing_g,
                                       nesting_level,
                                       active_items,
@@ -850,6 +853,7 @@ class ShowGraph():
             if show_nested:
                 nested_args.update({OUTPUT_FMT:'gv',
                                     # 'composition': rcvr,
+                                    ENCLOSING_COMP:composition,
                                     ENCLOSING_G:g,
                                     NESTING_LEVEL:nesting_level + 1})
                 # Get subgraph for nested Composition
@@ -1034,11 +1038,13 @@ class ShowGraph():
                                     show_dimensions,
                                     show_node_structure,
                                     show_projection_labels,
+                                    enclosing_comp=enclosing_comp,
                                     enclosing_g=enclosing_g)
 
     def _assign_cim_components(self,
                                g,
                                cims,
+                               enclosing_comp,
                                enclosing_g,
                                active_items,
                                show_nested,
@@ -1973,6 +1979,7 @@ class ShowGraph():
                                show_projection_labels,
                                proj_color=None,
                                proj_arrow=None,
+                               enclosing_comp=None,
                                enclosing_g=None):
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
@@ -2042,12 +2049,13 @@ class ShowGraph():
                                 continue
                             assert num_afferents==1, f"PROGRAM ERROR: {sender} of {composition.name} " \
                                                      f"doesn't have exactly one afferent Projection."
+                            # Get node from enclosing Comopsition that is source of sender
                             sndr = sender.port_map[proj.receiver][0].path_afferents[0].sender.owner
                             # Skip:
-                            # - cims as sources (handled in _assign_cim_compmoents)
+                            # - cims as sources (handled in _assign_cim_componoents)
                             # - controller (handled in _assign_controller_components)
                             if (isinstance(sndr, CompositionInterfaceMechanism)
-                                    or self._is_composition_controller(sndr)):
+                                    or self._is_composition_controller(sndr ,enclosing_comp)):
                                 continue
                             if sender is composition.parameter_CIM:
                                 proj_color = self.control_color
@@ -2303,18 +2311,25 @@ class ShowGraph():
         except:
             raise ShowGraphError(f"Problem displaying graph for {composition.name}")
 
-    def _is_composition_controller(self, mech):
+    def _is_composition_controller(self, mech, comp=None):
         # FIX 6/12/20: REPLACE WITH TEST FOR NodeRole.CONTROLLER ONCE THAT IS IMPLEMENTED
-        return isinstance(mech, ControlMechanism) and hasattr(mech, 'composition') and mech.composition
+        # return isinstance(mech, ControlMechanism) and hasattr(mech, 'composition') and mech.composition
+        comp = comp or self.composition
+        from psyneulink.core.compositions.composition import NodeRole, CompositionError
+        try:
+            return (isinstance(mech, ControlMechanism) and NodeRole.CONTROLLER in comp.get_roles_by_node(mech))
+        except (CompositionError):
+            return False
 
-    def _trace_senders_for_controller(self, proj):
+    def _trace_senders_for_controller(self, proj, comp=None):
         """Check whether source sender of a ControlProjection is (at any level of nesting) a Composition controller."""
         owner = proj.sender.owner
-        if self._is_composition_controller(owner):
+        comp = comp or self.composition
+        if self._is_composition_controller(owner, comp):
             return True
         if isinstance(owner, CompositionInterfaceMechanism):
             sender_proj = next(v[0] for k,v in owner.port_map.items() if v[1] is proj.sender).path_afferents[0]
-            return self._trace_senders_for_controller(sender_proj)
+            return self._trace_senders_for_controller(sender_proj, owner.composition)
         return False
 
     def _get_graph_node_label(self, composition, item, show_types=None, show_dimensions=None):
