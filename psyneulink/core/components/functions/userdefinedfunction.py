@@ -596,9 +596,9 @@ class UserDefinedFunction(Function_Base):
             value = self.custom_function(np.asfarray(variable), **llvm_params)
             _assign_to_carr(arg_out.contents, np.atleast_2d(value))
 
-        builder.function.__wrapper_f = wrapper_ct(_wrapper)
+        self.__wrapper_f = wrapper_ct(_wrapper)
         # To get the right callback pointer, we need to cast to void*
-        wrapper_address = ctypes.cast(builder.function.__wrapper_f, ctypes.c_void_p)
+        wrapper_address = ctypes.cast(self.__wrapper_f, ctypes.c_void_p)
         # Direct pointer constants don't work
         wrapper_ptr = builder.inttoptr(pnlvm.ir.IntType(64)(wrapper_address.value), builder.function.type)
         builder.call(wrapper_ptr, [params, state, arg_in, arg_out])
