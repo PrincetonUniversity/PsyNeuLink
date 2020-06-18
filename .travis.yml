@@ -12,6 +12,7 @@ dist: bionic
 
 arch:
   - amd64
+  - arm64
   - ppc64le
 
 stages:
@@ -20,6 +21,24 @@ stages:
 
 jobs:
   include:
+    - script: true
+      after_script: true
+      before_cache: true
+      stage: precache
+      env: PYTHON=3.8
+      arch: arm64
+    - script: true
+      after_script: true
+      before_cache: true
+      stage: precache
+      env: PYTHON=3.7
+      arch: arm64
+    - script: true
+      after_script: true
+      before_cache: true
+      stage: precache
+      env: PYTHON=3.6
+      arch: arm64
     - script: true
       after_script: true
       before_cache: true
