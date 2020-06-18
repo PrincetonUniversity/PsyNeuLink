@@ -1074,7 +1074,6 @@ class TestCustomCombinationFunction:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    @pytest.mark.benchmark(group="IntegratorMechanism")
     @pytest.mark.parametrize('mode', ['Python',
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
@@ -1123,7 +1122,6 @@ class TestCustomCombinationFunction:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    @pytest.mark.benchmark(group="IntegratorMechanism")
     @pytest.mark.parametrize('mode', ['Python',
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
@@ -1171,7 +1169,6 @@ class TestCustomCombinationFunction:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    @pytest.mark.benchmark(group="IntegratorMechanism")
     @pytest.mark.parametrize('mode', ['Python',
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
