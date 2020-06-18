@@ -2921,20 +2921,21 @@ class NodeRole(enum.Enum):
         This role cannot be modified programmatically.
 
     """
-    ORIGIN = 0
-    INPUT = 1
-    SINGLETON = 2
-    INTERNAL = 3
-    CYCLE = 4
-    FEEDBACK_SENDER = 5
-    FEEDBACK_RECEIVER = 6
-    CONTROL_OBJECTIVE = 7
-    CONTROLLER_OBJECTIVE = 8
-    LEARNING = 9
-    TARGET = 10
-    LEARNING_OBJECTIVE = 11
-    OUTPUT = 12
-    TERMINAL = 13
+    ORIGIN = enum.auto()
+    INPUT = enum.auto()
+    SINGLETON = enum.auto()
+    INTERNAL = enum.auto()
+    CYCLE = enum.auto()
+    FEEDBACK_SENDER = enum.auto()
+    FEEDBACK_RECEIVER = enum.auto()
+    CONTROL_OBJECTIVE = enum.auto()
+    CONTROLLER_OBJECTIVE = enum.auto()
+    LEARNING = enum.auto()
+    TARGET = enum.auto()
+    LEARNING_OBJECTIVE = enum.auto()
+    OUTPUT = enum.auto()
+    TERMINAL = enum.auto()
+
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
     """
