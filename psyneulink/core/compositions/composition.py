@@ -2875,11 +2875,9 @@ class NodeRole(Enum):
         A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a `ControlMechanism` other
         than the Composition's `controller <Composition.controller>` (if it has one).
 
-    COMMENT:
     CONTROLLER
         A `Node <Composition_Nodes>` that is the `controller <Composition.controller>` of a Composition.
         This role cannot be modified programmatically.
-    COMMENT
 
     CONTROLLER_OBJECTIVE
         A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a Composition's `controller
@@ -2939,7 +2937,7 @@ class NodeRole(Enum):
     FEEDBACK_SENDER = 5
     FEEDBACK_RECEIVER = 6
     CONTROL_OBJECTIVE = 7
-    # CONTROLLER = 8
+    CONTROLLER = 8
     CONTROLLER_OBJECTIVE = 9
     LEARNING = 10
     TARGET = 11
@@ -3900,10 +3898,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             List[`Mechanisms <Mechanism>` and/or `Compositions <Composition>`] :
                 list of `NodeRoles <NodeRole>` assigned to **node**.
         """
+
+        # Controller is assigned only NodeRole.CONTROLLER
+        if node is self.controller:
+            return {NodeRole.CONTROLLER}
+
         try:
             return self.nodes_to_roles[node]
         except KeyError:
-            raise CompositionError('Node {0} not found in {1}.nodes_to_roles'.format(node, self))
+            raise CompositionError(f"Node {node} not found in {self.nodes_to_roles}.")
 
     def get_nodes_by_role(self, role):
         """
@@ -3925,6 +3928,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         if role is None or role not in NodeRole:
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
+
+        if role is NodeRole.CONTROLLER and self.controller:
+            return [self.controller]
 
         try:
             return [node for node in self.nodes if role in self.nodes_to_roles[node]]
@@ -6917,9 +6923,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         It also assigns a `ControlSignal` for any `Parameter` of a `Mechanism` `specified for control
         <ParameterPort_Value_Specification>`, and a `ControlProjection` to its correponding `ParameterPort`.
 
-        COMMENT:
         The ControlMechanism is assigned the `NodeRole` `CONTROLLER`.
-        COMMENT
 
         """
 
@@ -6965,6 +6969,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         controller.composition = self
         self.controller = controller
+        # Having controller in nodes is not currently supported (due to special handling of scheduling/execution);
+        #    its NodeRole assignment is handled directly by the get_nodes_by_role and get_roles_by_node methods.
         # self._add_node_role(controller, NodeRole.CONTROLLER)
 
         # ADD AUX_COMPONENTS RELEVANT TO CONTROLLER
