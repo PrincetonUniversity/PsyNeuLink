@@ -2340,7 +2340,6 @@ import typecheck as tc
 from PIL import Image
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
-from enum import Enum
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET
@@ -2823,7 +2822,7 @@ class Graph(object):
         return dict((v.component,set(d.component for d in v.parents)) for v in self.vertices)
 
 
-class NodeRole(Enum):
+class NodeRole(enum.Enum):
     """Roles assigned to `Nodes <Composition_Nodes>` of a `Composition`.
 
     Attributes
@@ -2984,7 +2983,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Composition is executed.  Set to True by default if **controller** specified;  if set to False,
         the `controller <Composition.controller>` is ignored when the Composition is executed.
 
-    controller_mode: Enum[BEOFRE|AFTER] : default AFTER
+    controller_mode: enum.Enum[BEOFRE|AFTER] : default AFTER
         specifies whether the controller is executed before or after the rest of the Composition
         in each trial.  Must be either the keyword *BEFORE* or *AFTER*.
 
@@ -7914,7 +7913,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         skip_initialization : bool : default False
 
-        clamp_input : Enum[SOFT_CLAMP|HARD_CLAMP|PULSE_CLAMP|NO_CLAMP] : default SOFT_CLAMP
+        clamp_input : enum.Enum[SOFT_CLAMP|HARD_CLAMP|PULSE_CLAMP|NO_CLAMP] : default SOFT_CLAMP
             specifies how inputs are handled for the Composition's `INPUT` `Nodes <Composition_Nodes>`.
 
             COMMENT:
@@ -8010,7 +8009,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             the scheduler object that owns the conditions that will instruct the execution of the Composition.
             If not specified, the Composition will use its automatically generated scheduler.
 
-        bin_execute : bool or Enum[LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun] : default Python
+        bin_execute : bool or enum.Enum[LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun] : default Python
             specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
             False is the same as ``Python``;  True tries LLVM compilation modes, in order of power, progressively
             reverting to less powerful modes (in the order of the options listed), and to Python if no compilation
@@ -8565,7 +8564,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 called after each `PASS` is executed
                 passed the current *context* (but it is not necessary for your callable to take).
 
-            bin_execute : bool or Enum[LLVM|LLVMexec|Python|PTXExec] : default Python
+            bin_execute : bool or enum.Enum[LLVM|LLVMexec|Python|PTXExec] : default Python
                 specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
                 see **bin_execute** argument of `run <Composition.run>` method for additional details.
 
