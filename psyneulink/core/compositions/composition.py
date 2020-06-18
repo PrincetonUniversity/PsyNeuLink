@@ -2871,6 +2871,10 @@ class NodeRole(enum.Enum):
         A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a `ControlMechanism` other
         than the Composition's `controller <Composition.controller>` (if it has one).
 
+    CONTROLLER
+        A `Node <Composition_Nodes>` that is the `controller <Composition.controller>` of a Composition.
+        This role cannot be modified programmatically.
+
     CONTROLLER_OBJECTIVE
         A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a Composition's `controller
         <Composition.controller>`.
@@ -6909,6 +6913,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         It also assigns a `ControlSignal` for any `Parameter` of a `Mechanism` `specified for control
         <ParameterPort_Value_Specification>`, and a `ControlProjection` to its correponding `ParameterPort`.
+
+        The ControlMechanism is assigned the `NodeRole` `CONTROLLER`.
 
         """
 
