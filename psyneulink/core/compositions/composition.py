@@ -2929,6 +2929,7 @@ class NodeRole(enum.Enum):
     FEEDBACK_SENDER = enum.auto()
     FEEDBACK_RECEIVER = enum.auto()
     CONTROL_OBJECTIVE = enum.auto()
+    CONTROLLER = enum.auto()
     CONTROLLER_OBJECTIVE = enum.auto()
     LEARNING = enum.auto()
     TARGET = enum.auto()
@@ -4275,6 +4276,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node, role in self.excluded_node_roles:
                 if role in self.get_roles_by_node(node):
                     self._remove_node_role(node, role)
+
+        # Manual override to avoid INPUT/OUTPUT setting, which would cause
+        # CIMs to be created, which is not correct for controllers
+        if self.controller is not None:
+            self.nodes_to_roles[self.controller] = {NodeRole.CONTROLLER}
 
     def _set_node_roles(self, node, roles):
         self._clear_node_roles(node)
