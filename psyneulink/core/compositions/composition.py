@@ -3917,7 +3917,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
         try:
-            return [node for node in self.nodes if role in self.nodes_to_roles[node]]
+            return [node for node in self.nodes_to_roles if role in self.nodes_to_roles[node]]
 
         except KeyError as e:
             raise CompositionError('Node missing from {0}.nodes_to_roles: {1}'.format(self, e))
