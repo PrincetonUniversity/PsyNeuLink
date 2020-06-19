@@ -253,7 +253,6 @@ EXECUTION_SET = 'EXECUTION_SET'
 
 # Values for nested Compositions (passed from level to level)
 ENCLOSING_COMP = 'enclosing_comp' # enclosing composition
-ENCLOSING_G = 'enclosing_g'       # graphviz object for enclosing composition
 NESTING_LEVEL = 'nesting_level'
 NUM_NESTING_LEVELS = 'num_nesting_levels'
 
@@ -620,10 +619,10 @@ class ShowGraph():
 
         # Args not specified by user but used in calls to show_graph for nested Compositions
         enclosing_comp = kwargs.pop(ENCLOSING_COMP,None)
-        enclosing_g = kwargs.pop(ENCLOSING_G,None)
         nesting_level = kwargs.pop(NESTING_LEVEL,None)
         self.num_nesting_levels = kwargs.pop(NUM_NESTING_LEVELS,None)
 
+        enclosing_g = enclosing_comp._show_graph.G if enclosing_comp else None
         processing_graph = composition.graph_processing.dependency_dict
 
         # Validate active_items  ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -760,7 +759,6 @@ class ShowGraph():
                                                rcvr,
                                                processing_graph,
                                                enclosing_comp,
-                                               enclosing_g,
                                                nesting_level,
                                                active_items,
                                                show_nested,
@@ -778,7 +776,6 @@ class ShowGraph():
             self._assign_cim_components(G,
                                         [composition.input_CIM, composition.parameter_CIM, composition.output_CIM],
                                         enclosing_comp,
-                                        enclosing_g,
                                         active_items,
                                         show_nested,
                                         show_types,
@@ -805,7 +802,7 @@ class ShowGraph():
         if show_learning:
             self._assign_learning_components(G,
                                              processing_graph,
-                                             enclosing_g,
+                                             enclosing_comp,
                                              active_items,
                                              show_nested,
                                              show_cim,
@@ -830,7 +827,6 @@ class ShowGraph():
                                       rcvr,
                                       processing_graph,
                                       enclosing_comp,
-                                      enclosing_g,
                                       nesting_level,
                                       active_items,
                                       show_nested,
@@ -847,6 +843,7 @@ class ShowGraph():
         from psyneulink.core.compositions.composition import Composition, NodeRole
 
         composition = self.composition
+        enclosing_g = enclosing_comp._show_graph.G if enclosing_comp else None
 
         # User passed attrs for nested Composition
         if isinstance(rcvr, Composition):
@@ -854,7 +851,6 @@ class ShowGraph():
                 nested_args.update({OUTPUT_FMT:'gv',
                                     # 'composition': rcvr,
                                     ENCLOSING_COMP:composition,
-                                    ENCLOSING_G:g,
                                     NESTING_LEVEL:nesting_level + 1})
                 # Get subgraph for nested Composition
                 nested_comp_graph = rcvr._show_graph.show_graph(**nested_args)
@@ -1038,14 +1034,12 @@ class ShowGraph():
                                     show_dimensions,
                                     show_node_structure,
                                     show_projection_labels,
-                                    enclosing_comp=enclosing_comp,
-                                    enclosing_g=enclosing_g)
+                                    enclosing_comp=enclosing_comp)
 
     def _assign_cim_components(self,
                                g,
                                cims,
                                enclosing_comp,
-                               enclosing_g,
                                active_items,
                                show_nested,
                                show_types,
@@ -1056,6 +1050,7 @@ class ShowGraph():
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
         composition = self.composition
+        enclosing_g = enclosing_comp._show_graph.G if enclosing_comp else None
 
         cim_rank = 'same'
 
@@ -1803,13 +1798,12 @@ class ShowGraph():
                                     show_dimensions,
                                     show_node_structure,
                                     show_projection_labels,
-                                    proj_color=ctl_proj_color,
-                                    enclosing_g=None)
+                                    proj_color=ctl_proj_color)
 
     def _assign_learning_components(self,
                                     g,
                                     processing_graph,
-                                    enclosing_g,
+                                    enclosing_comp,
                                     active_items,
                                     show_nested,
                                     show_cim,
@@ -1823,6 +1817,7 @@ class ShowGraph():
 
         from psyneulink.core.compositions.composition import NodeRole
         composition = self.composition
+        enclosing_g = enclosing_comp._show_graph.G if enclosing_comp else None
 
         # Get learning_components, with exception of INPUT (i.e. TARGET) nodes
         #    (i.e., allow TARGET node to continue to be marked as an INPUT node)
@@ -1892,7 +1887,7 @@ class ShowGraph():
                                         show_dimensions,
                                         show_node_structure,
                                         show_projection_labels,
-                                        enclosing_g=enclosing_g)
+                                        enclosing_comp=enclosing_comp)
 
     def _render_projection_as_node(self,
                                    g,
@@ -1979,11 +1974,11 @@ class ShowGraph():
                                show_projection_labels,
                                proj_color=None,
                                proj_arrow=None,
-                               enclosing_comp=None,
-                               enclosing_g=None):
+                               enclosing_comp=None):
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
         composition = self.composition
+        enclosing_g = enclosing_comp._show_graph.G if enclosing_comp else None
 
         proj_color_default = proj_color or self.default_node_color
         proj_arrow_default = proj_arrow or self.default_projection_arrow
