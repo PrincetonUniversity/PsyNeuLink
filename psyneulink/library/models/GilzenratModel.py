@@ -4,11 +4,21 @@ This implements a model of Locus Coeruleus / Norepinephrine (LC/NE) function des
 and electrophysiological data (from LC recordings) in non-human primates.
 
 """
-import numpy as np
-import psyneulink as pnl
+import argparse
 import sys
 
-from matplotlib import pyplot as plt
+import numpy as np
+import psyneulink as pnl
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
+parser.add_argument(
+    '--noise-stddev',
+    type=float,
+    help='Standard deviation of Gaussian noise distributions (default: 0.22, Gilzenrat et al. (2002))',
+    default=0.22
+)
+args = parser.parse_args()
 
 # Define Variables ----------------------------------------------------------------------------------------------------
 
@@ -28,7 +38,7 @@ a = 0.50        # Parameter describing shape of the FitzHugh–Nagumo cubic null
 d = 0.50        # Baseline level of intrinsic, uncorrelated LC activity
 G = 0.50        # Base level of gain applied to decision and response units
 k = 3.00        # Scaling factor for transforming NE release (u) to gain (g) on potentiated units
-SD = 0.1        # Standard deviation of Gaussian noise distributions | NOTE: 0.22 in Gilzenrat paper
+SD = args.noise_stddev  # Standard deviation of Gaussian noise distributions | NOTE: 0.22 in Gilzenrat paper
 tau_v = 0.05    # Time constant for fast LC excitation variable v | NOTE: tau_v is misstated in the Gilzenrat paper(0.5)
 tau_u = 5.00    # Time constant for slow LC recovery variable (‘NE release’) u
 dt = 0.02       # Time step size for numerical integration
@@ -213,57 +223,58 @@ task.run(
     num_trials=trials,
     call_after_trial=record_trial
 )
-print('\nModel run, generating plots...')
 
 # Plot results of all units into one figure ---------------------------------------------------------------------------
+if args.enable_plot:
+    import matplotlib.pyplot as plt
 
+    print('\nModel run, generating plots...')
 
-# Create x axis "t" for plotting
-t = np.arange(0.0, 20.02, 0.02)
+    # Create x axis "t" for plotting
+    t = np.arange(0.0, 20.02, 0.02)
 
-# Plot target unit, distraction unit, response unit, h(v), and u using the values that were recorded after each trial
-plt.plot(
-    t,
-    decision_layer_target_values,
-    label="target unit",
-    color='green'
-)
-plt.plot(
-    t,
-    decision_layer_distractor_values,
-    label="distraction unit",
-    color='red'
-)
-plt.plot(
-    t,
-    response_layer_values,
-    label="response unit",
-    color='magenta'
-)
-plt.plot(
-    t,
-    LC_results_h_of_v,
-    label="h(v)",
-    color='b'
-)
-plt.plot(
-    t,
-    LC_results_u,
-    label="u",
-    color='black'
-)
+    # Plot target unit, distraction unit, response unit, h(v), and u using the values that were recorded after each trial
+    plt.plot(
+        t,
+        decision_layer_target_values,
+        label="target unit",
+        color='green'
+    )
+    plt.plot(
+        t,
+        decision_layer_distractor_values,
+        label="distraction unit",
+        color='red'
+    )
+    plt.plot(
+        t,
+        response_layer_values,
+        label="response unit",
+        color='magenta'
+    )
+    plt.plot(
+        t,
+        LC_results_h_of_v,
+        label="h(v)",
+        color='b'
+    )
+    plt.plot(
+        t,
+        LC_results_u,
+        label="u",
+        color='black'
+    )
 
-plt.xlabel('Time')
-plt.ylabel('Activation')
-plt.legend(loc='upper left')
-plt.xlim((0.0, 20.0))
-plt.ylim((-0.2, 1.2))
-x_values = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
-plt.xticks(x_values)
-plt.title('GILZENRAT 2002 PsyNeuLink', fontweight='bold')
+    plt.xlabel('Time')
+    plt.ylabel('Activation')
+    plt.legend(loc='upper left')
+    plt.xlim((0.0, 20.0))
+    plt.ylim((-0.2, 1.2))
+    x_values = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+    plt.xticks(x_values)
+    plt.title('GILZENRAT 2002 PsyNeuLink', fontweight='bold')
 
+    plt.show()
 
-plt.show()
-
-task.show_graph()
-print('\nPlots generated')
+    task.show_graph()
+    print('\nPlots generated')

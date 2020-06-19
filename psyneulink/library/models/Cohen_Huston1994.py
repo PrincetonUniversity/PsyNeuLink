@@ -1,4 +1,5 @@
-import matplotlib.pyplot as plt
+import argparse
+
 import numpy as np
 import psyneulink as pnl
 
@@ -6,6 +7,10 @@ import psyneulink as pnl
 # models for understanding attention and performance. In C. Umilta & M. Moscovitch(Eds.),
 # AttentionandperformanceXV(pp.453-456). Cam- bridge, MA: MIT Press.
 # The model aims to capute top-down effects of selective attention and the bottom-up effects of attentional capture.
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
+args = parser.parse_args()
 
 # Define Variables ----------------------------------------------------------------------------------------------------
 rate = 0.1          # modified from the original code from 0.01 to 0.1
@@ -420,28 +425,31 @@ for cond in range(conditions):
     print('response_all: ', response_all)
 
 
-# Plot results --------------------------------------------------------------------------------------------------------
-# First, plot response layer activity for whole run
-plt.figure()
-# color naming plot
-plt.plot(response_all[0])
-plt.plot(response_all[1])
-plt.plot(response_all[2])
-# word reading plot
-plt.plot(response_all3[0])
-plt.plot(response_all3[1])
-plt.plot(response_all3[2])
-plt.show()
-# Second, plot regression plot
-# regression
-reg = np.dot(response_all2, 5) + 115
-reg2 = np.dot(response_all4, 5) + 115
-plt.figure()
+if args.enable_plot:
+    import matplotlib.pyplot as plt
 
-plt.plot(reg, '-s')  # plot color naming
-plt.plot(reg2, '-or')  # plot word reading
-plt.title('GRAIN MODEL with bidirectional weights')
-plt.legend(['color naming', 'word reading'])
-plt.xticks(np.arange(3), ('control', 'incongruent', 'congruent'))
-plt.ylabel('reaction time in ms')
-plt.show()
+    # Plot results --------------------------------------------------------------------------------------------------------
+    # First, plot response layer activity for whole run
+    plt.figure()
+    # color naming plot
+    plt.plot(response_all[0])
+    plt.plot(response_all[1])
+    plt.plot(response_all[2])
+    # word reading plot
+    plt.plot(response_all3[0])
+    plt.plot(response_all3[1])
+    plt.plot(response_all3[2])
+    plt.show()
+    # Second, plot regression plot
+    # regression
+    reg = np.dot(response_all2, 5) + 115
+    reg2 = np.dot(response_all4, 5) + 115
+    plt.figure()
+
+    plt.plot(reg, '-s')  # plot color naming
+    plt.plot(reg2, '-or')  # plot word reading
+    plt.title('GRAIN MODEL with bidirectional weights')
+    plt.legend(['color naming', 'word reading'])
+    plt.xticks(np.arange(3), ('control', 'incongruent', 'congruent'))
+    plt.ylabel('reaction time in ms')
+    plt.show()

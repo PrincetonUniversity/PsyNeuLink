@@ -1,10 +1,13 @@
 # Import all dependencies.
-# Note: Please import matplotlib before importing any psyneulink dependencies.
-import numpy as np
+import argparse
 
-from matplotlib import pyplot as plt
-# from scipy.special import erfinv # need to import this to make us of the UniformToNormalDist function.
+import numpy as np
 import psyneulink as pnl
+# from scipy.special import erfinv # need to import this to make us of the UniformToNormalDist function.
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
+args = parser.parse_args()
 
 # --------------------------------- Global Variables ----------------------------------------
 # Now, we set the global variables, weights and initial values as in the paper.
@@ -224,20 +227,23 @@ for i in range(trials):
     LC_results_hv[i] = h_v(LC_results_v[i], C, d)
 
 
-# Plot the Figure 3 from the paper
-t = np.linspace(0, trials, trials)            # Create array for x axis with same length then LC_results_v
-fig = plt.figure()                          # Instantiate figure
-ax = plt.gca()                              # Get current axis for plotting
-ax2 = ax.twinx()                            # Create twin axis with a different y-axis on the right side of the figure
-ax.plot(t, LC_results_hv, label="h(v)")      # Plot h(v)
-ax2.plot(t, LC_results_w, label="w", color='red')  # Plot w
-h1, l1 = ax.get_legend_handles_labels()
-h2, l2 = ax2.get_legend_handles_labels()
-ax.legend(h1 + h2, l1 + l2, loc=2)          # Create legend on one side
-ax.set_xlabel('Time (ms)')                  # Set x axis lable
-ax.set_ylabel('LC Activity')                # Set left y axis label
-ax2.set_ylabel('NE Output')                 # Set right y axis label
-plt.title('Nieuwenhuis 2005 PsyNeuLink Lag 2 without noise', fontweight='bold')  # Set title
-ax.set_ylim((-0.2, 1.0))                     # Set left y axis limits
-ax2.set_ylim((0.0, 0.4))                    # Set right y axis limits
-plt.show()
+if args.enable_plot:
+    import matplotlib.pyplot as plt
+
+    # Plot the Figure 3 from the paper
+    t = np.linspace(0, trials, trials)            # Create array for x axis with same length then LC_results_v
+    fig = plt.figure()                          # Instantiate figure
+    ax = plt.gca()                              # Get current axis for plotting
+    ax2 = ax.twinx()                            # Create twin axis with a different y-axis on the right side of the figure
+    ax.plot(t, LC_results_hv, label="h(v)")      # Plot h(v)
+    ax2.plot(t, LC_results_w, label="w", color='red')  # Plot w
+    h1, l1 = ax.get_legend_handles_labels()
+    h2, l2 = ax2.get_legend_handles_labels()
+    ax.legend(h1 + h2, l1 + l2, loc=2)          # Create legend on one side
+    ax.set_xlabel('Time (ms)')                  # Set x axis lable
+    ax.set_ylabel('LC Activity')                # Set left y axis label
+    ax2.set_ylabel('NE Output')                 # Set right y axis label
+    plt.title('Nieuwenhuis 2005 PsyNeuLink Lag 2 without noise', fontweight='bold')  # Set title
+    ax.set_ylim((-0.2, 1.0))                     # Set left y axis limits
+    ax2.set_ylim((0.0, 0.4))                    # Set right y axis limits
+    plt.show()

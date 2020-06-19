@@ -1,6 +1,11 @@
-import matplotlib.pyplot as plt
+import argparse
+
 import numpy as np
 import psyneulink as pnl
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
+args = parser.parse_args()
 
 # This implements the horse race Figure shown in Cohen & Huston (1994).
 # Note that noise is turned off and each stimulus is only showed once for each stimulus onset asynchrony.
@@ -335,18 +340,21 @@ for cond in range(conditions):
         task_layer.reset([[0, 0]], context=Bidirectional_Stroop)
 
 # Plotting ------------------------------------------------------------------------------------------------------------
-#compute regression for model
-reg = np.dot(response_all, 2) + 123
-plt.figure()
-# plt.plot(response_all[0:9])
-# plt.plot(response_all[9:18])
-# plt.plot(response_all[18:27])
+if args.enable_plot:
+    import matplotlib.pyplot as plt
 
-stimulus_onset_asynchrony = np.linspace(-400,400,9)
-plt.plot(stimulus_onset_asynchrony, reg[0:9], '-^')
-plt.plot(stimulus_onset_asynchrony, reg[9:18], '-s')
-plt.plot(stimulus_onset_asynchrony, reg[18:27], '-o')
-plt.title('stimulus onset asynchrony - horse race model ')
-plt.legend(['congruent', 'incongruent', 'neutral'])
-plt.ylabel('reaction time in ms')
-plt.show()
+    # compute regression for model
+    reg = np.dot(response_all, 2) + 123
+    plt.figure()
+    # plt.plot(response_all[0:9])
+    # plt.plot(response_all[9:18])
+    # plt.plot(response_all[18:27])
+
+    stimulus_onset_asynchrony = np.linspace(-400, 400, 9)
+    plt.plot(stimulus_onset_asynchrony, reg[0:9], '-^')
+    plt.plot(stimulus_onset_asynchrony, reg[9:18], '-s')
+    plt.plot(stimulus_onset_asynchrony, reg[18:27], '-o')
+    plt.title('stimulus onset asynchrony - horse race model ')
+    plt.legend(['congruent', 'incongruent', 'neutral'])
+    plt.ylabel('reaction time in ms')
+    plt.show()

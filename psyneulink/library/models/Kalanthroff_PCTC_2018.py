@@ -1,6 +1,11 @@
-import matplotlib.pyplot as plt
+import argparse
+
 import numpy as np
 import psyneulink as pnl
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
+args = parser.parse_args()
 
 # Implements the Kalanthroff, Davelaar, Henik, Goldfarb & Usher model: Task Conflict and Proactive Control:
 # A Computational Theory of the Stroop Task. Psychol Rev. 2018 Jan;125(1):59-82. doi: 10.1037/rev0000083.
@@ -491,65 +496,67 @@ rr = r[PCTC.name]['SPECIAL_LOGISTIC']
 rrr_incong = rr.reshape(n_incon, 2)
 
 # Plotting ------------------------------------------------------------------------------------------------------------
-# Set up plot structure
-fig, axes = plt.subplots(nrows=3, ncols=4, sharey=True, sharex=True)
-axes[0, 0].set_ylabel('Congruent')
-axes[1, 0].set_ylabel('Neutral')
-axes[2, 0].set_ylabel('Incongruent')
+if args.enable_plot:
+    import matplotlib.pyplot as plt
 
-axes[0, 0].set_title('Task demand units', fontsize=9)
-axes[0, 1].set_title('Response units', fontsize=9)
-axes[0, 2].set_title('Color feature map', fontsize=9)
-axes[0, 3].set_title('Word feature map', fontsize=9)
-plt.setp(
-    axes,
-    xticks=[0, 400, 780],
-    yticks=[0, 0.4, 0.79],
-    yticklabels=['0', '0.4', '0.8'],
-    xticklabels=['0', '400', '800']
-)
+    # Set up plot structure
+    fig, axes = plt.subplots(nrows=3, ncols=4, sharey=True, sharex=True)
+    axes[0, 0].set_ylabel('Congruent')
+    axes[1, 0].set_ylabel('Neutral')
+    axes[2, 0].set_ylabel('Incongruent')
 
-# Plot congruent output --------------------------
-axes[0, 0].plot(ttt_cong[settle:, 0], 'c')
-axes[0, 0].plot(ttt_cong[settle:, 1], 'k')
-axes[0, 0].plot(conflict_con, 'r')
+    axes[0, 0].set_title('Task demand units', fontsize=9)
+    axes[0, 1].set_title('Response units', fontsize=9)
+    axes[0, 2].set_title('Color feature map', fontsize=9)
+    axes[0, 3].set_title('Word feature map', fontsize=9)
+    plt.setp(
+        axes,
+        xticks=[0, 400, 780],
+        yticks=[0, 0.4, 0.79],
+        yticklabels=['0', '0.4', '0.8'],
+        xticklabels=['0', '400', '800']
+    )
 
-axes[0, 1].plot(rrr_cong[settle:, 0], 'b')
-axes[0, 1].plot(rrr_cong[settle:, 1], 'g')
-axes[0, 1].plot([0, n_con - settle], [threshold, threshold], 'k')
-axes[0, 2].plot(ccc_cong[settle:, 0], 'b')
-axes[0, 2].plot(ccc_cong[settle:, 1], 'g')
+    # Plot congruent output --------------------------
+    axes[0, 0].plot(ttt_cong[settle:, 0], 'c')
+    axes[0, 0].plot(ttt_cong[settle:, 1], 'k')
+    axes[0, 0].plot(conflict_con, 'r')
 
-axes[0, 3].plot(www_cong[settle:, 0], 'b')
-axes[0, 3].plot(www_cong[settle:, 1], 'g')
+    axes[0, 1].plot(rrr_cong[settle:, 0], 'b')
+    axes[0, 1].plot(rrr_cong[settle:, 1], 'g')
+    axes[0, 1].plot([0, n_con - settle], [threshold, threshold], 'k')
+    axes[0, 2].plot(ccc_cong[settle:, 0], 'b')
+    axes[0, 2].plot(ccc_cong[settle:, 1], 'g')
 
-# Plot neutral output --------------------------
-axes[1, 0].plot(ttt_neutral[settle:, 0], 'c')
-axes[1, 0].plot(ttt_neutral[settle:, 1], 'k')
-axes[1, 0].plot(conflict_neutral, 'r')
+    axes[0, 3].plot(www_cong[settle:, 0], 'b')
+    axes[0, 3].plot(www_cong[settle:, 1], 'g')
 
-axes[1, 1].plot(rrr_neutral[settle:, 0], 'b')
-axes[1, 1].plot(rrr_neutral[settle:, 1], 'g')
-axes[1, 1].plot([0, n_neutral - settle], [threshold, threshold], 'k')
-axes[1, 2].plot(ccc_neutral[settle:, 0], 'b')
-axes[1, 2].plot(ccc_neutral[settle:, 1], 'g')
+    # Plot neutral output --------------------------
+    axes[1, 0].plot(ttt_neutral[settle:, 0], 'c')
+    axes[1, 0].plot(ttt_neutral[settle:, 1], 'k')
+    axes[1, 0].plot(conflict_neutral, 'r')
 
+    axes[1, 1].plot(rrr_neutral[settle:, 0], 'b')
+    axes[1, 1].plot(rrr_neutral[settle:, 1], 'g')
+    axes[1, 1].plot([0, n_neutral - settle], [threshold, threshold], 'k')
+    axes[1, 2].plot(ccc_neutral[settle:, 0], 'b')
+    axes[1, 2].plot(ccc_neutral[settle:, 1], 'g')
 
-axes[1, 3].plot(www_neutral[settle:, 0], 'b')
-axes[1, 3].plot(www_neutral[settle:, 1], 'g')
+    axes[1, 3].plot(www_neutral[settle:, 0], 'b')
+    axes[1, 3].plot(www_neutral[settle:, 1], 'g')
 
-# Plot incongruent output --------------------------
-axes[2, 0].plot(ttt_incong[settle:, 0], 'c')
-axes[2, 0].plot(ttt_incong[settle:, 1], 'k')
-axes[2, 0].plot(conflict_incon, 'r')
+    # Plot incongruent output --------------------------
+    axes[2, 0].plot(ttt_incong[settle:, 0], 'c')
+    axes[2, 0].plot(ttt_incong[settle:, 1], 'k')
+    axes[2, 0].plot(conflict_incon, 'r')
 
-axes[2, 1].plot(rrr_incong[settle:, 0], 'b')
-axes[2, 1].plot(rrr_incong[settle:, 1], 'g')
-axes[2, 1].plot([0, n_incon - settle], [threshold, threshold], 'k')
-axes[2, 2].plot(ccc_incong[settle:, 0], 'b')
-axes[2, 2].plot(ccc_incong[settle:, 1], 'g')
+    axes[2, 1].plot(rrr_incong[settle:, 0], 'b')
+    axes[2, 1].plot(rrr_incong[settle:, 1], 'g')
+    axes[2, 1].plot([0, n_incon - settle], [threshold, threshold], 'k')
+    axes[2, 2].plot(ccc_incong[settle:, 0], 'b')
+    axes[2, 2].plot(ccc_incong[settle:, 1], 'g')
 
-axes[2, 3].plot(www_incong[settle:, 0], 'b')
-axes[2, 3].plot(www_incong[settle:, 1], 'g')
+    axes[2, 3].plot(www_incong[settle:, 0], 'b')
+    axes[2, 3].plot(www_incong[settle:, 1], 'g')
 
-plt.show()
+    plt.show()
