@@ -3813,7 +3813,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         node_role_pair = (node, role)
         if node_role_pair not in self.required_node_roles:
             self.required_node_roles.append(node_role_pair)
-        node_role_pairs = [item for item in self.excluded_node_roles if item[0] is node and item[1 is role]]
+        node_role_pairs = [item for item in self.excluded_node_roles if item[0] is node and item[1] is role]
         for item in node_role_pairs:
             self.excluded_node_roles.remove(item)
 
@@ -4981,7 +4981,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             existing_projections = self._check_for_existing_projections(projection, sender=sender, receiver=receiver)
 
-        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
+        # # FIX: JDC HACK 6/13/19 to deal with projection from user-specified INPUT node added to the Composition
+        # #      that projects directly to the Target node of a nested Composition
+        # # If receiver_mechanism is a Target Node in a nested Composition
+        # if any((n is receiver_mechanism and receiver_mechanism in nested_comp.get_nodes_by_role(NodeRole.TARGET))
+        #        for nested_comp in self.nodes if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
+        #     # cim_target_input_port = receiver_mechanism.afferents[0].sender.owner.port_map[receiver.input_port][0]
+        #     cim = next((proj.sender.owner for proj in receiver_mechanism.afferents
+        #                 if isinstance(proj.sender.owner, CompositionInterfaceMechanism)), None)
+        #     assert cim, f'PROGRAM ERROR: Target mechanisms {receiver_mechanism.name} ' \
+        #                 f'does not receive projection from input_CIM'
+        #     cim_target_input_port = cim.port_map[receiver.input_port][0]
+        #     projection.receiver._remove_projection_to_port(projection)
+        #     # self.remove_projection(projection)
+        #     projection = MappingProjection(sender=sender, receiver=cim_target_input_port)
+        #     receiver_mechanism = cim
+        #     receiver = cim_target_input_port
+
+        # FIX: KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
         # Add autoassociative learning mechanism + related projections to composition as processing components
         if (sender_mechanism != self.input_CIM
                 and receiver_mechanism != self.output_CIM
@@ -4999,8 +5016,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except CompositionError as c:
                 raise CompositionError(f"{c.args[0]} to {self.name}.")
 
-        # KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-        # Add autoassociative learning mechanism + related projections to composition as processing components
         if not existing_projections:
             self._validate_projection(projection,
                                       sender, receiver,
@@ -5015,7 +5030,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projection._activate_for_compositions(comp)
 
         # Note: do all of the following even if Projection is a existing_projections,
-        #   as these conditions shoud apply to the exisiting one (and it won't hurt to try again if they do)
+        #   as these conditions should apply to the exisiting one (and it won't hurt to try again if they do)
 
         # Create "shadow" projections to any input ports that are meant to shadow this projection's receiver
         # (note: do this even if there is a duplciate and they are not allowed, as still want to shadow that projection)
@@ -5033,6 +5048,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return projection
 
+    def _add_projection(self, projection):
+        self.projections.append(projection)
+
     def remove_projection(self, projection):
         # step 1 - remove Vertex from Graph
         if projection in [vertex.component for vertex in self.graph.vertices]:
@@ -5043,9 +5061,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.projections.remove(projection)
 
         # step 3 - TBI? remove Projection from afferents & efferents lists of any node
-
-    def _add_projection(self, projection):
-        self.projections.append(projection)
 
     def _validate_projection(self,
                              projection,
@@ -5836,7 +5851,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     learning_function:LearningFunction,
                                     loss_function=None,
                                     learning_rate:tc.any(int,float)=0.05,
-                                    error_function=LinearCombination(),
+                                    error_function=LinearCombination,
                                     # # MODIFIED 5/25/20 OLD:
                                     # learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
                                     # MODIFIED 5/25/20 NEW:
@@ -8443,6 +8458,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._analyze_graph()
 
+        # Temporary check to ensure that nested compositions don't have stranded target Mechanisms.
+        # This should be taken out once we automatically instantiate Mechs to project to nested target Mechs.
+        nc = self._get_nested_compositions()
+        for comp in nc:
+            nc_targets = [path.target for path in comp.pathways if path.target]
+            for target in nc_targets:
+                target_mech_input_cim_input_port = comp.input_CIM.port_map.get(target.input_port)[0]
+                if not target_mech_input_cim_input_port.path_afferents:
+                    raise CompositionError(
+                        f'Target mechanism {target.name} of nested Composition {comp.name} is not being projected to '
+                        f'from its enclosing Composition {self.name}. For a call to {self.name}.learn, {target.name} '
+                        f'must have an afferent projection with a target value so that an error term may be computed. '
+                        f'A reference to {target.name}, with which you can create the needed projection, can be found '
+                        f'as the target attribute of the relevant pathway in {comp.name}.pathways. '
+                    )
+
         learning_results = runner.run_learning(
             inputs=inputs,
             targets=targets,
@@ -9661,9 +9692,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.controller:
             yield self.controller
 
-    def show_graph(self, **kwargs):
-        from psyneulink.core.compositions.showgraph import ShowGraph
-        return self._show_graph(**kwargs)
+    def show_graph(self,
+                   show_node_structure=False,
+                   show_nested=NESTED,
+                   show_nested_args=ALL,
+                   show_cim=False,
+                   show_controller=True,
+                   show_learning=False,
+                   show_headers=True,
+                   show_types=False,
+                   show_dimensions=False,
+                   show_projection_labels=False,
+                   active_items=None,
+                   output_fmt='pdf',
+                   context=None):
+        return self._show_graph(show_node_structure=show_node_structure,
+                                show_nested=show_nested,
+                                show_nested_args=show_nested_args,
+                                show_cim=show_cim,
+                                show_controller=show_controller,
+                                show_learning=show_learning,
+                                show_headers=show_headers,
+                                show_types=show_types,
+                                show_dimensions=show_dimensions,
+                                show_projection_labels=show_projection_labels,
+                                active_items=active_items,
+                                output_fmt=output_fmt,
+                                context=context)
 
     def _set_up_animation(self, context):
         self._show_graph._set_up_animation(context)

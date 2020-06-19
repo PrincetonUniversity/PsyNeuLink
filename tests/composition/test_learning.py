@@ -1752,6 +1752,28 @@ class TestNestedLearning:
         # This run should not error, as we are no longer in learning mode (and hence, we shouldn't need the target mech inputs)
         outer.run(inputs={mnet: inputs})
 
+    def test_stranded_nested_target_mech_error(self):
+        ia = pnl.ProcessingMechanism(name='ia')
+        ib = pnl.ProcessingMechanism(name='ib')
+        oa = pnl.ProcessingMechanism(name='oa')
+        ot = pnl.ProcessingMechanism(name='ot')
+
+        inner_comp = pnl.Composition(name='inner_comp', nodes=[ia, ib])
+        inner_comp_learning_pathway = inner_comp.add_backpropagation_learning_pathway([ia, ib], learning_rate=0.005)
+        inner_comp_target = inner_comp_learning_pathway.target
+        outer_comp = pnl.Composition(name='outer_comp', nodes=[oa, ot, inner_comp])
+        outer_comp.add_projection(pnl.MappingProjection(), sender=oa, receiver=ia)
+
+        try:
+            outer_comp.learn({oa: 1, ot: 1})
+        except CompositionError as e:
+            assert e.error_value == (
+                   f'Target mechanism {inner_comp_target.name} of nested Composition {inner_comp.name} is not being projected to '
+                    f'from its enclosing Composition {outer_comp.name}. For a call to {outer_comp.name}.learn, {inner_comp_target.name} '
+                    f'must have an afferent projection with a target value so that an error term may be computed. '
+                    f'A reference to {inner_comp_target.name}, with which you can create the needed projection, can be found '
+                    f'as the target attribute of the relevant pathway in {inner_comp.name}.pathways. '
+            )
 
 class TestBackProp:
 
@@ -1876,7 +1898,7 @@ class TestBackProp:
         input_dictionary = {backprop_pathway.target: [[0., 0., 1.]],
                             input_layer: [[-1., 30.]]}
 
-        comp.show_graph(show_learning=True)
+        # comp.show_graph(show_learning=True)
 
         comp.learn(inputs=input_dictionary,
                  num_trials=10)

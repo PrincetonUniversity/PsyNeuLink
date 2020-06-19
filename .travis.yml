@@ -12,6 +12,7 @@ dist: bionic
 
 arch:
   - amd64
+  - arm64
   - ppc64le
 
 stages:
@@ -22,19 +23,31 @@ jobs:
   include:
     - script: true
       after_script: true
-      before_cache: true
+      stage: precache
+      env: PYTHON=3.8
+      arch: arm64
+    - script: true
+      after_script: true
+      stage: precache
+      env: PYTHON=3.7
+      arch: arm64
+    - script: true
+      after_script: true
+      stage: precache
+      env: PYTHON=3.6
+      arch: arm64
+    - script: true
+      after_script: true
       stage: precache
       env: PYTHON=3.8
       arch: ppc64le
     - script: true
       after_script: true
-      before_cache: true
       stage: precache
       env: PYTHON=3.7
       arch: ppc64le
     - script: true
       after_script: true
-      before_cache: true
       stage: precache
       env: PYTHON=3.6
       arch: ppc64le
@@ -98,15 +111,13 @@ before_install:
 before_cache:
   - pip cache info
   - |
-    for P in `pip list | tail -n+3 | sed 's/  */,/'`; do
-      PKG=`echo $P | cut -f1 -d,`
-      CUR_VER=`echo $P |cut -f2 -d,`
-      IN_CACHE=`pip cache list $PKG | grep -o '[^ ]*.whl'`
-      for PIC in $IN_CACHE; do
-        if echo $PIC | grep -qv $CUR_VER; then
-           pip cache remove -v `echo $PIC | sed 's/.whl//'`
-        fi
-      done
+    INSTALLED=`pip list | sed 's/-/_/g' | sed 's/  */-/' | tail -n+3`
+    CACHED=`pip cache list | cut -f 2,3 -d- | tail -n+3`
+    for P in $CACHED; do
+      # Remove cached and not installed
+      if [ `echo $INSTALLED | grep -o $P | wc -l` == "0" ] ; then
+        pip cache remove -v $P
+      fi
     done
   - pip cache info
 
