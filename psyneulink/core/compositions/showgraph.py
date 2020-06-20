@@ -2324,7 +2324,6 @@ class ShowGraph():
             return True
         if isinstance(owner, CompositionInterfaceMechanism):
             sender_proj = next(v[0] for k,v in owner.port_map.items() if v[1] is proj.sender).path_afferents[0]
-            # return self._trace_senders_for_controller(sender_proj, owner.composition)
             return self._trace_senders_for_controller(sender_proj, comp)
         return False
 
