@@ -165,10 +165,10 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_same_as_val_size
     em.function.duplicate_keys = False
     stim = 'A'
 
-    with pytest.warns(UserWarning) as warning_msg:
+    text = r'More than one item matched key \(\[1 2 3\]\) in memory for ContentAddressableMemory'
+    with pytest.warns(UserWarning, match=text):
         retrieved = em.execute(stimuli[stim])
-    warning_txt = warning_msg[0].message.args[0]
-    assert 'More than one item matched key ([1 2 3]) in memory for ContentAddressableMemory' in str(warning_txt)
+
     retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
     assert retrieved_key == [None]
     assert retrieved[0] == [0, 0, 0]
@@ -215,10 +215,10 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_diff_from_val_si
     em.function.duplicate_keys = False
     stim = 'A'
 
-    with pytest.warns(UserWarning) as warning_msg:
+    text = r'More than one item matched key \(\[1 2 3\]\) in memory for ContentAddressableMemory'
+    with pytest.warns(UserWarning, match=text):
         retrieved = em.execute(stimuli[stim])
-    warning_txt = warning_msg[0].message.args[0]
-    assert 'More than one item matched key ([1 2 3]) in memory for ContentAddressableMemory' in str(warning_txt)
+
     retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
     assert retrieved_key == [None]
     assert retrieved[0] == [0, 0, 0]
@@ -264,10 +264,10 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_same_as_val_s
     em.function.duplicate_keys = False
     stim = 'A'
 
-    with pytest.warns(UserWarning) as warning_msg:
+    text = r'More than one item matched key \(\[1 2 3\]\) in memory for ContentAddressableMemory'
+    with pytest.warns(UserWarning, match=text):
         retrieved = em.execute(stimuli[stim])
-    warning_txt = warning_msg[0].message.args[0]
-    assert 'More than one item matched key ([1 2 3]) in memory for ContentAddressableMemory' in str(warning_txt)
+
     retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
     assert retrieved_key == [None]
     assert retrieved[0] == [0, 0, 0]
@@ -313,11 +313,10 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_diff_from_val
     em.function.duplicate_keys = False
     stim = 'A'
 
-    with pytest.warns(UserWarning) as warning_msg:
+    text = r'More than one item matched key \(\[1 2 3\]\) in memory for ContentAddressableMemory'
+    with pytest.warns(UserWarning, match=text):
         retrieved = em.execute(stimuli[stim])
-    warning_txt = warning_msg[0].message.args[0]
 
-    assert 'More than one item matched key ([1 2 3]) in memory for ContentAddressableMemory' in str(warning_txt)
     retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
     assert retrieved_key == [None]
     assert retrieved[0] == [0, 0, 0]
@@ -363,8 +362,8 @@ def test_ContentAddressableMemory_without_assoc():
 
 def test_ContentAddressableMemory_with_duplicate_entry_in_initializer_warning():
 
-    warning_text = ''
-    with pytest.warns(UserWarning) as warning_msg:
+    regexp = r'Attempt to initialize memory of ContentAddressableMemory with an entry \([[1 2 3]'
+    with pytest.warns(UserWarning, match=regexp):
         em = EpisodicMemoryMechanism(
                 name='EPISODIC MEMORY MECH',
                 content_size=3,
@@ -377,8 +376,6 @@ def test_ContentAddressableMemory_with_duplicate_entry_in_initializer_warning():
                         retrieval_prob = 1.0
                 )
         )
-    warning_txt = warning_msg[0].message.args[0]
-    assert 'Attempt to initialize memory of ContentAddressableMemory with an entry ([[1 2 3]' in warning_txt
     assert np.allclose(em.memory, np.array([[[1, 2, 3], [4, 5, 6]]]))
 
 def test_ContentAddressableMemory_add_and_delete_from_memory():
