@@ -3899,10 +3899,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 list of `NodeRoles <NodeRole>` assigned to **node**.
         """
 
-        # Controller is assigned only NodeRole.CONTROLLER
-        if node is self.controller:
-            return {NodeRole.CONTROLLER}
-
         try:
             return self.nodes_to_roles[node]
         except KeyError:
@@ -3928,9 +3924,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         if role is None or role not in NodeRole:
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
-
-        if role is NodeRole.CONTROLLER and self.controller:
-            return [self.controller]
 
         try:
             return [node for node in self.nodes if role in self.nodes_to_roles[node]]
@@ -4291,6 +4284,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node, role in self.excluded_node_roles:
                 if role in self.get_roles_by_node(node):
                     self._remove_node_role(node, role)
+
+        if self.controller is not None:
+            self.nodes_to_roles[self.controller] = {NodeRole.CONTROLLER}
 
     def _set_node_roles(self, node, roles):
         self._clear_node_roles(node)
