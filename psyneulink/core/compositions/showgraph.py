@@ -1073,7 +1073,7 @@ class ShowGraph():
                 # But if any Projection to it is from a controller, use controller_color
                 for input_port in cim.input_ports:
                     for proj in input_port.path_afferents:
-                        if self._trace_senders_for_controller(proj):
+                        if self._trace_senders_for_controller(proj, enclosing_comp):
                             cim_type_color = self.controller_color
             elif cim is composition.output_CIM:
                 cim_type_color = self.output_color
@@ -1348,7 +1348,7 @@ class ShowGraph():
                             rcvr_modulated_mec_proj_label = rcvr_label
 
                         # Render Projection
-                        if self._trace_senders_for_controller(proj):
+                        if self._trace_senders_for_controller(proj, enclosing_comp):
                             ctl_proj_color = self.controller_color
                         else:
                             ctl_proj_color = self.control_color
@@ -2324,7 +2324,8 @@ class ShowGraph():
             return True
         if isinstance(owner, CompositionInterfaceMechanism):
             sender_proj = next(v[0] for k,v in owner.port_map.items() if v[1] is proj.sender).path_afferents[0]
-            return self._trace_senders_for_controller(sender_proj, owner.composition)
+            # return self._trace_senders_for_controller(sender_proj, owner.composition)
+            return self._trace_senders_for_controller(sender_proj, comp)
         return False
 
     def _get_graph_node_label(self, composition, item, show_types=None, show_dimensions=None):
