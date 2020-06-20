@@ -1472,6 +1472,52 @@ class GridSearch(OptimizationFunction):
             val[0] = [0.0] * len(self.search_space)
         return ctx.convert_python_struct_to_llvm_ir((val[0], val[1]))
 
+    def _gen_llvm_select_min(self, ctx, builder, params, state, min_sample_ptr, sample_ptr,
+                             min_value_ptr, value_ptr, opt_count_ptr):
+        random_state = pnlvm.helpers.get_state_ptr(builder, self, state,
+                                         self.parameters.random_state.name)
+        select_random_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                              self.parameters.select_randomly_from_optimal_values.name)
+
+        select_random_val = builder.load(select_random_ptr)
+        select_random = builder.fcmp_ordered("!=", select_random_val,
+                                             select_random_val.type(0))
+        replace_ptr = builder.alloca(pnlvm.ir.IntType(1))
+
+
+        value = builder.load(value_ptr)
+        min_value = builder.load(min_value_ptr)
+        # KDM 8/22/19: nonstateful direction here - OK?
+        direction = "<" if self.direction == MINIMIZE else ">"
+        replace = builder.fcmp_unordered(direction, value, min_value)
+        builder.store(replace, replace_ptr)
+
+        # Python does "is_close" check first.
+        # This implements reservoir sampling
+        with builder.if_then(select_random):
+            close = pnlvm.helpers.is_close(builder, value, min_value)
+            with builder.if_else(close) as (tb, eb):
+                with tb:
+                    opt_count = builder.load(opt_count_ptr)
+                    opt_count = builder.fadd(opt_count, opt_count.type(1))
+                    prob = builder.fdiv(opt_count.type(1), opt_count)
+                    # reuse opt_count location. it will be overwritten later anyway
+                    res_ptr = opt_count_ptr
+                    rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
+                    builder.call(rand_f, [random_state, res_ptr])
+                    res = builder.load(res_ptr)
+                    builder.store(opt_count, opt_count_ptr)
+                    replace = builder.fcmp_ordered("<", res, prob)
+                    builder.store(replace, replace_ptr)
+                with eb:
+                    # we need to reset the counter if we are replacing with new best value
+                    with builder.if_then(builder.load(replace_ptr)):
+                        builder.store(opt_count_ptr.type.pointee(1), opt_count_ptr)
+
+        with builder.if_then(builder.load(replace_ptr)):
+            builder.store(builder.load(value_ptr), min_value_ptr)
+            builder.store(builder.load(sample_ptr), min_sample_ptr)
+
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         ocm = getattr(self.objective_function, '__self__', None)
         if ocm is not None:
@@ -1491,20 +1537,12 @@ class GridSearch(OptimizationFunction):
         sample_ptr = builder.alloca(sample_t)
         value_ptr = builder.alloca(value_t)
 
-        random_state = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                         self.parameters.random_state.name)
         obj_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
                                           self.parameters.objective_function.name)
         obj_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                           self.parameters.objective_function.name)
         search_space_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                              self.parameters.search_space.name)
-        select_random_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                              self.parameters.select_randomly_from_optimal_values.name)
-
-        select_random_val = builder.load(select_random_ptr)
-        select_random = builder.fcmp_ordered("!=", select_random_val,
-                                             select_random_val.type(0))
 
         opt_count_ptr = builder.alloca(ctx.float_ty)
         builder.store(opt_count_ptr.type.pointee(0), opt_count_ptr)
@@ -1545,39 +1583,9 @@ class GridSearch(OptimizationFunction):
                               value_ptr] + extra_args)
 
             # Check if smaller than current best.
-            # This will also set 'replace' if min_value is NaN.
-            value = b.load(value_ptr)
-            min_value = b.load(min_value_ptr)
-            # KDM 8/22/19: nonstateful direction here - OK?
-            direction = "<" if self.direction == MINIMIZE else ">"
-            replace = b.fcmp_unordered(direction, value, min_value)
-            b.store(replace, replace_ptr)
-
-            # Python does "is_close" check first.
-            # This implements reservoir sampling
-            with b.if_then(select_random):
-                close = pnlvm.helpers.is_close(b, value, min_value)
-                with b.if_else(close) as (tb, eb):
-                    with tb:
-                        opt_count = b.load(opt_count_ptr)
-                        opt_count = b.fadd(opt_count, opt_count.type(1))
-                        prob = b.fdiv(opt_count.type(1), opt_count)
-                        # reuse opt_count location. it will be overwritten later anyway
-                        res_ptr = opt_count_ptr
-                        rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
-                        b.call(rand_f, [random_state, res_ptr])
-                        res = b.load(res_ptr)
-                        b.store(opt_count, opt_count_ptr)
-                        replace = b.fcmp_ordered("<", res, prob)
-                        b.store(replace, replace_ptr)
-                    with eb:
-                        # we need to reset the counter if we are replacing with new best value
-                        with b.if_then(b.load(replace_ptr)):
-                            b.store(opt_count_ptr.type.pointee(1), opt_count_ptr)
-
-            with b.if_then(b.load(replace_ptr)):
-                b.store(b.load(value_ptr), min_value_ptr)
-                b.store(b.load(sample_ptr), min_sample_ptr)
+            self._gen_llvm_select_min(ctx, b, params, state, min_sample_ptr,
+                                      sample_ptr, min_value_ptr, value_ptr,
+                                      opt_count_ptr)
 
             builder = b
 
