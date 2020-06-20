@@ -4286,7 +4286,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._remove_node_role(node, role)
 
         if self.controller is not None:
-            self.nodes_to_roles[self.controller] = {NodeRole.CONTROLLER}
+                    self.nodes_to_roles[self.controller] = {NodeRole.CONTROLLER}
 
     def _set_node_roles(self, node, roles):
         self._clear_node_roles(node)

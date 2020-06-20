@@ -814,6 +814,7 @@ class ShowGraph():
                                              show_projection_labels)
 
         return self._generate_output(G,
+                                     enclosing_comp,
                                      active_items,
                                      show_controller,
                                      output_fmt,
@@ -1268,9 +1269,10 @@ class ShowGraph():
                             f"PROGRAM ERROR: parameter_CIM of {composition.name} recieves a Projection " \
                             f"from a Node from other than a {ControlMechanism.__name__}."
                         # Skip Projections from controller (handled in _assign_controller_components)
-                        # if self._is_composition_controller(owner):  # FIX: 6/11/20 - REPLACE AFTER TESTS
-                        if (hasattr(ctl_mech_output_port_owner, 'composition')
-                                and ctl_mech_output_port_owner.composition):
+                        # FIX: 6/20/20 FIRST LINE GENERATES TOO MANY PROJECTIONS TO CIM
+                        # FIX: 6/20/20 SECOND LINE SCREWS UP PROJECTION FROM PARAMETER_CIM TO NESTED NODE
+                        # if self._is_composition_controller(ctl_mech_output_port_owner):
+                        if self._is_composition_controller(ctl_mech_output_port_owner, enclosing_comp):
                             continue
                         # Skip if there is no outer Composition (enclosing_g),
                         #    or Projections acorss nested Compositions are not being shown (show_nested=INSET)
@@ -1305,8 +1307,8 @@ class ShowGraph():
                             label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
                         else:
                             label = ''
-                        enclosing_g.edge(sndr_output_node_proj_label, rcvr_cim_proj_label, label=label,
-                                         color=proj_color, penwidth=proj_width)
+                        enclosing_g.edge(sndr_output_node_proj_label, rcvr_cim_proj_label,
+                                         label=label, color=proj_color, penwidth=proj_width)
 
                 # Projections from parameter_CIM to Nodes that are being modulated
                 for output_port in composition.parameter_CIM.output_ports:
@@ -2200,6 +2202,7 @@ class ShowGraph():
 
     def _generate_output(self,
                          G,
+                         enclosing_comp,
                          active_items,
                          show_controller,
                          output_fmt,
@@ -2250,7 +2253,9 @@ class ShowGraph():
 
         for proj in composition.projections:
             # Put ControlProjection(s) last, except for controller of Composition (see below)
-            if isinstance(proj, ControlProjection) and self._is_composition_controller(proj.sender.owner):
+            # if isinstance(proj, ControlProjection) and self._is_composition_controller(proj.sender.owner):
+            if isinstance(proj, ControlProjection) and self._is_composition_controller(proj.sender.owner,
+                                                                                       enclosing_comp):
                 i = get_index_of_node_in_G_body(proj, PROJECTION)
                 if i is not None:
                     G.body.insert(len(G.body),G.body.pop(i))
@@ -2306,15 +2311,18 @@ class ShowGraph():
         except:
             raise ShowGraphError(f"Problem displaying graph for {composition.name}")
 
-    def _is_composition_controller(self, mech, comp=None):
+    def _is_composition_controller(self, mech, enclosing_comp=None):
         # FIX 6/12/20: REPLACE WITH TEST FOR NodeRole.CONTROLLER ONCE THAT IS IMPLEMENTED
         # return isinstance(mech, ControlMechanism) and hasattr(mech, 'composition') and mech.composition
-        comp = comp or self.composition
-        from psyneulink.core.compositions.composition import NodeRole, CompositionError
-        try:
-            return (isinstance(mech, ControlMechanism) and NodeRole.CONTROLLER in comp.get_roles_by_node(mech))
-        except (CompositionError):
+        from psyneulink.core.compositions.composition import NodeRole
+        if not isinstance(mech, ControlMechanism):
             return False
+        for comp in [self.composition, enclosing_comp]:
+            if not comp:
+                continue
+            if mech in comp._all_nodes and NodeRole.CONTROLLER in comp.get_roles_by_node(mech):
+                return True
+        return False
 
     def _trace_senders_for_controller(self, proj, comp=None):
         """Check whether source sender of a ControlProjection is (at any level of nesting) a Composition controller."""
