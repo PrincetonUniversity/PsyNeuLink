@@ -1482,13 +1482,17 @@ class GridSearch(OptimizationFunction):
         select_random_val = builder.load(select_random_ptr)
         select_random = builder.fcmp_ordered("!=", select_random_val,
                                              select_random_val.type(0))
-        replace_ptr = builder.alloca(pnlvm.ir.IntType(1))
 
+        rand_out_ptr = builder.alloca(ctx.float_ty)
 
-        value = builder.load(value_ptr)
-        min_value = builder.load(min_value_ptr)
         # KDM 8/22/19: nonstateful direction here - OK?
         direction = "<" if self.direction == MINIMIZE else ">"
+        replace_ptr = builder.alloca(pnlvm.ir.IntType(1))
+
+        # Check the value against current min
+        value = builder.load(value_ptr)
+        min_value = builder.load(min_value_ptr)
+
         replace = builder.fcmp_unordered(direction, value, min_value)
         builder.store(replace, replace_ptr)
 
@@ -1500,17 +1504,17 @@ class GridSearch(OptimizationFunction):
                 with tb:
                     opt_count = builder.load(opt_count_ptr)
                     opt_count = builder.fadd(opt_count, opt_count.type(1))
-                    prob = builder.fdiv(opt_count.type(1), opt_count)
-                    # reuse opt_count location. it will be overwritten later anyway
-                    res_ptr = opt_count_ptr
-                    rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
-                    builder.call(rand_f, [random_state, res_ptr])
-                    res = builder.load(res_ptr)
                     builder.store(opt_count, opt_count_ptr)
-                    replace = builder.fcmp_ordered("<", res, prob)
+
+                    # Roll a dice to see if we should replace the current min
+                    prob = builder.fdiv(opt_count.type(1), opt_count)
+                    rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
+                    builder.call(rand_f, [random_state, rand_out_ptr])
+                    rand_out = builder.load(rand_out_ptr)
+                    replace = builder.fcmp_ordered("<", rand_out, prob)
                     builder.store(replace, replace_ptr)
                 with eb:
-                    # we need to reset the counter if we are replacing with new best value
+                    # Reset the counter if we are replacing with new best value
                     with builder.if_then(builder.load(replace_ptr)):
                         builder.store(opt_count_ptr.type.pointee(1), opt_count_ptr)
 
