@@ -128,16 +128,9 @@ class TestContrastiveHebbian:
                 matrix=[[0,-.5],[-.5,0]]
         )
 
-        with pytest.warns(UserWarning) as record:
+        regexp = r"Learning cannot be enabled for .* because it has no LearningMechanism"
+        with pytest.warns(UserWarning, match=regexp):
             m.learning_enabled = True
-
-        correct_message_found = False
-        for warning in record:
-            if ("Learning cannot be enabled" in str(warning.message) and
-                    "because it has no LearningMechanism" in str(warning.message)):
-                correct_message_found = True
-                break
-        assert correct_message_found
 
         m.configure_learning()
         m.reset_stateful_function_when=pnl.Never()

@@ -1,4 +1,4 @@
-import collections
+from collections.abc import Iterable
 import numpy as np
 import pytest
 
@@ -21,7 +21,7 @@ def test_convert_all_elements_to_np_array(arr, expected):
     # no current numpy methods can test this
     def check_equality_recursive(arr, expected):
         if (
-            not isinstance(arr, collections.Iterable)
+            not isinstance(arr, Iterable)
             or (isinstance(arr, np.ndarray) and arr.ndim == 0)
         ):
             assert arr == expected
