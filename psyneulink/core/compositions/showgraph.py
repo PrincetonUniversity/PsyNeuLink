@@ -1116,7 +1116,7 @@ class ShowGraph():
                        rank=cim_rank,
                        penwidth=cim_penwidth)
 
-            # FIX 6/2/20:  THIS CAN BE CONDENSED (ABSTACTED INTO GENERIC FUNCTION TAKING cim-SPECIFIC PARAMETERS)
+            # FIX 6/2/20:  THIS CAN BE CONDENSED (ABSTRACTED INTO GENERIC FUNCTION TAKING cim-SPECIFIC PARAMETERS)
             # ASSIGN CIM PROJECTIONS ****************************************************************
 
             # INPUT_CIM -----------------------------------------------------------------------------
@@ -1212,7 +1212,7 @@ class ShowGraph():
                         # Construct edge name
                         if show_node_structure:
                             # Get label for CIM's port as edge's sender
-                            sndr_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
+                            sndr_input_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
                             if (isinstance(rcvr_input_node_proj_owner, Composition)
                                     and show_nested is not NESTED):
                                 rcvr_input_node_proj_label = rcvr_label
@@ -1225,7 +1225,7 @@ class ShowGraph():
                                 #     f"{rcvr_label}:" \
                                 #     f"{rcvr_input_node_proj_owner._get_port_name(rcvr_input_node_proj)}"
                         else:
-                            sndr_cim_proj_label = cim_label
+                            sndr_input_cim_proj_label = cim_label
                             rcvr_input_node_proj_label = rcvr_label
 
                         # Render Projection
@@ -1243,12 +1243,12 @@ class ShowGraph():
                             label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
                         else:
                             label = ''
-                        g.edge(sndr_cim_proj_label, rcvr_input_node_proj_label, label=label,
+                        g.edge(sndr_input_cim_proj_label, rcvr_input_node_proj_label, label=label,
                            color=proj_color, penwidth=proj_width)
 
             # PARAMETER_CIM -------------------------------------------------------------------------
 
-            if cim is composition.parameter_CIM:
+            elif cim is composition.parameter_CIM:
 
                 # Projections from ControlMechanism(s) in enclosing Composition to parameter_CIM
                 # (other than from controller;  that is handled in _assign_controller_compoents)
@@ -1269,9 +1269,6 @@ class ShowGraph():
                             f"PROGRAM ERROR: parameter_CIM of {composition.name} recieves a Projection " \
                             f"from a Node from other than a {ControlMechanism.__name__}."
                         # Skip Projections from controller (handled in _assign_controller_components)
-                        # FIX: 6/20/20 FIRST LINE GENERATES TOO MANY PROJECTIONS TO CIM
-                        # FIX: 6/20/20 SECOND LINE SCREWS UP PROJECTION FROM PARAMETER_CIM TO NESTED NODE
-                        # if self._is_composition_controller(ctl_mech_output_port_owner):
                         if self._is_composition_controller(ctl_mech_output_port_owner, enclosing_comp):
                             continue
                         # Skip if there is no outer Composition (enclosing_g),
@@ -1288,7 +1285,6 @@ class ShowGraph():
                                 f"{sndr_label}:{OutputPort.__name__}-{proj.sender.name}"
                             # Get label for CIM's InputPort as edge's receiver
                             rcvr_param_cim_proj_label = f"{cim_label}:{InputPort.__name__}-{proj.receiver.name}"
-                            # rcvr_param_cim_proj_label = cim_label + ':' + cim._get_port_name(proj.receiver)
                         else:
                             sndr_ctl_sig_proj_label = sndr_label
                             rcvr_param_cim_proj_label = cim_label
@@ -1308,6 +1304,7 @@ class ShowGraph():
                             label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
                         else:
                             label = ''
+
                         enclosing_g.edge(sndr_ctl_sig_proj_label, rcvr_param_cim_proj_label,
                                          label=label, color=proj_color, penwidth=proj_width)
 
@@ -1334,7 +1331,7 @@ class ShowGraph():
                         # Construct edge name
                         if show_node_structure:
                             # Get label for CIM's port as edge's sender
-                            sndr_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
+                            sndr_param_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
                             if (isinstance(rcvr_modulated_mech_proj_owner, Composition)
                                     and not show_nested is not NESTED):
                                 rcvr_modulated_mec_proj_label = rcvr_label
@@ -1347,7 +1344,7 @@ class ShowGraph():
                                 #     f"{rcvr_label}:" \
                                 #     f"{rcvr_input_node_proj_owner._get_port_name(rcvr_modulated_mech_proj)}"
                         else:
-                            sndr_cim_proj_label = cim_label
+                            sndr_param_cim_proj_label = cim_label
                             rcvr_modulated_mec_proj_label = rcvr_label
 
                         # Render Projection
@@ -1369,12 +1366,12 @@ class ShowGraph():
                             label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
                         else:
                             label = ''
-                        g.edge(sndr_cim_proj_label, rcvr_modulated_mec_proj_label, label=label,
+                        g.edge(sndr_param_cim_proj_label, rcvr_modulated_mec_proj_label, label=label,
                                color=proj_color, arrowhead=self.control_projection_arrow, penwidth=proj_width)
 
             # OUTPUT_CIM ----------------------------------------------------------------------------
 
-            if cim is composition.output_CIM:
+            elif cim is composition.output_CIM:
 
                 # Projections from OUTPUT nodes to output_CIM
                 for input_port in composition.output_CIM.input_ports:
@@ -1456,7 +1453,7 @@ class ShowGraph():
                         # Construct edge name
                         if show_node_structure:
                             # Get label of CIM's port as edge's receiver
-                            sndr_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
+                            sndr_output_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
                             if (isinstance(rcvr_node_input_port_owner, Composition)
                                     and show_nested is not NESTED):
                                 rcvr_input_node_proj_label = rcvr_label
@@ -1470,7 +1467,7 @@ class ShowGraph():
                                 #     f"{sndr_output_node_proj_owner._get_port_name(sndr_output_node_proj)}"
                         else:
                             rcvr_input_node_proj_label = rcvr_label
-                            sndr_cim_proj_label = cim_label
+                            sndr_output_cim_proj_label = cim_label
 
                         # Render Projection
                         if any(item in active_items for item in {proj, proj.sender.owner}):
@@ -1487,7 +1484,7 @@ class ShowGraph():
                             label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
                         else:
                             label = ''
-                        enclosing_g.edge(sndr_cim_proj_label, rcvr_input_node_proj_label, label=label,
+                        enclosing_g.edge(sndr_output_cim_proj_label, rcvr_input_node_proj_label, label=label,
                                          color=proj_color, penwidth=proj_width)
 
     def _assign_controller_components(self,
