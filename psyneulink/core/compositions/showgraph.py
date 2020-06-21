@@ -1284,13 +1284,14 @@ class ShowGraph():
                         # Construct edge name
                         if show_node_structure:
                             # Get label for ctl_mech's OutputPrt as edge's sender
-                            sndr_output_node_proj_label = \
+                            sndr_ctl_sig_proj_label = \
                                 f"{sndr_label}:{OutputPort.__name__}-{proj.sender.name}"
                             # Get label for CIM's InputPort as edge's receiver
-                            rcvr_cim_proj_label = f"{cim_label}:{InputPort.__name__}-{proj.receiver.name}"
+                            rcvr_param_cim_proj_label = f"{cim_label}:{InputPort.__name__}-{proj.receiver.name}"
+                            # rcvr_param_cim_proj_label = cim_label + ':' + cim._get_port_name(proj.receiver)
                         else:
-                            sndr_output_node_proj_label = sndr_label
-                            rcvr_cim_proj_label = cim_label
+                            sndr_ctl_sig_proj_label = sndr_label
+                            rcvr_param_cim_proj_label = cim_label
 
                         # Render Projection
                         if any(item in active_items for item in {proj, proj.sender.owner}):
@@ -1307,7 +1308,7 @@ class ShowGraph():
                             label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
                         else:
                             label = ''
-                        enclosing_g.edge(sndr_output_node_proj_label, rcvr_cim_proj_label,
+                        enclosing_g.edge(sndr_ctl_sig_proj_label, rcvr_param_cim_proj_label,
                                          label=label, color=proj_color, penwidth=proj_width)
 
                 # Projections from parameter_CIM to Nodes that are being modulated
@@ -1338,13 +1339,13 @@ class ShowGraph():
                                     and not show_nested is not NESTED):
                                 rcvr_modulated_mec_proj_label = rcvr_label
                             else:
-                                # Need to use direct reference to proj.receiver rather than rcvr_modulated_mec_proj
+                                # Need to use direct reference to proj.receiver rather than rcvr_modulated_mech_proj
                                 #    since could be Composition, which does not have a get_port_name attribute
                                 rcvr_modulated_mec_proj_label = \
                                     f"{rcvr_label}:{ParameterPort.__name__}-{proj.receiver.name}"
                                 # rcvr_modulated_mec_proj_label = \
                                 #     f"{rcvr_label}:" \
-                                #     f"{rcvr_input_node_proj_owner._get_port_name(rcvr_modulated_mec_proj)}"
+                                #     f"{rcvr_input_node_proj_owner._get_port_name(rcvr_modulated_mech_proj)}"
                         else:
                             sndr_cim_proj_label = cim_label
                             rcvr_modulated_mec_proj_label = rcvr_label
