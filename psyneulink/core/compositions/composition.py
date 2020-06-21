@@ -3128,6 +3128,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     efferents : ContentAddressableList[`Projection <Projection>`]
         a list of all of the `Projections <Projection>` from the Composition's `output_CIM`.
 
+    cims : list
+        a list containing references to the Composition's `input_CIM <Composition.input_CIM>`,
+        `parameter_CIM <Composition.parameter_CIM>`, and `output_CIM <Composition.output_CIM>`.
+
     env : Gym Forager Environment : default: None
         stores a Gym Forager Environment so that the Composition may interact with this environment within a
         single call to `run <Composition.run>`.
@@ -3319,6 +3323,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.output_CIM = CompositionInterfaceMechanism(name=self.name + " Output_CIM",
                                                         composition=self,
                                                         port_map=self.output_CIM_ports)
+        self.cims = [self.input_CIM, self.parameter_CIM, self.output_CIM]
 
         self.shadows = {}
 

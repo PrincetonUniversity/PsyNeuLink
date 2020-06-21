@@ -774,7 +774,6 @@ class ShowGraph():
         # Add cim Components to graph if show_cim
         if show_cim:
             self._assign_cim_components(G,
-                                        [composition.input_CIM, composition.parameter_CIM, composition.output_CIM],
                                         enclosing_comp,
                                         active_items,
                                         show_nested,
@@ -1039,7 +1038,6 @@ class ShowGraph():
 
     def _assign_cim_components(self,
                                g,
-                               cims,
                                enclosing_comp,
                                active_items,
                                show_nested,
@@ -1055,7 +1053,26 @@ class ShowGraph():
 
         cim_rank = 'same'
 
-        for cim in cims:
+        def _render_projection(proj, gv, sndr_label, rcvr_label,
+                               proj_color=self.default_node_color,
+                               arrowhead=self.default_projection_arrow):
+            if any(item in active_items for item in {proj, proj.sender.owner}):
+                if self.active_color == BOLD:
+                    color = proj_color
+                else:
+                    color = self.active_color
+                proj_width = str(self.default_width + self.active_thicker_by)
+                composition.active_item_rendered = True
+            else:
+                color = proj_color
+                proj_width = str(self.default_width)
+            if show_projection_labels:
+                label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
+            else:
+                label = ''
+            gv.edge(sndr_label, rcvr_label, label=label, color=color, penwidth=proj_width, arrowhead=arrowhead)
+
+        for cim in composition.cims:
 
             # Skip cim if it is not doing anything
             if not (cim.afferents or cim.efferents):
@@ -1162,23 +1179,7 @@ class ShowGraph():
                             sndr_output_node_proj_label = sndr_label
 
                         # Render Projection
-                        if any(item in active_items for item in {proj, proj.sender.owner}):
-                            if self.active_color == BOLD:
-                                proj_color = self.default_node_color
-                            else:
-                                proj_color = self.active_color
-                            proj_width = str(self.default_width + self.active_thicker_by)
-                            composition.active_item_rendered = True
-                        else:
-                            proj_color = self.default_node_color
-                            proj_width = str(self.default_width)
-                        if show_projection_labels:
-                            label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
-                        else:
-                            label = ''
-
-                        enclosing_g.edge(sndr_output_node_proj_label, rcvr_cim_proj_label, label=label,
-                                         color=proj_color, penwidth=proj_width)
+                        _render_projection(proj, enclosing_g, sndr_output_node_proj_label, rcvr_cim_proj_label)
 
                 # Projections from input_CIM to INPUT nodes
                 for output_port in composition.input_CIM.output_ports:
@@ -1229,22 +1230,7 @@ class ShowGraph():
                             rcvr_input_node_proj_label = rcvr_label
 
                         # Render Projection
-                        if any(item in active_items for item in {proj, proj.receiver.owner}):
-                            if self.active_color == BOLD:
-                                proj_color = self.default_node_color
-                            else:
-                                proj_color = self.active_color
-                            proj_width = str(self.default_width + self.active_thicker_by)
-                            composition.active_item_rendered = True
-                        else:
-                            proj_color = self.default_node_color
-                            proj_width = str(self.default_width)
-                        if show_projection_labels:
-                            label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
-                        else:
-                            label = ''
-                        g.edge(sndr_input_cim_proj_label, rcvr_input_node_proj_label, label=label,
-                           color=proj_color, penwidth=proj_width)
+                        _render_projection(proj, g, sndr_input_cim_proj_label, rcvr_input_node_proj_label)
 
             # PARAMETER_CIM -------------------------------------------------------------------------
 
@@ -1290,23 +1276,8 @@ class ShowGraph():
                             rcvr_param_cim_proj_label = cim_label
 
                         # Render Projection
-                        if any(item in active_items for item in {proj, proj.sender.owner}):
-                            if self.active_color == BOLD:
-                                proj_color = self.control_color
-                            else:
-                                proj_color = self.active_color
-                            proj_width = str(self.default_width + self.active_thicker_by)
-                            composition.active_item_rendered = True
-                        else:
-                            proj_color = self.control_color
-                            proj_width = str(self.default_width)
-                        if show_projection_labels:
-                            label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
-                        else:
-                            label = ''
-
-                        enclosing_g.edge(sndr_ctl_sig_proj_label, rcvr_param_cim_proj_label,
-                                         label=label, color=proj_color, penwidth=proj_width)
+                        _render_projection(proj, enclosing_g, sndr_ctl_sig_proj_label, rcvr_param_cim_proj_label,
+                                           self.control_color)
 
                 # Projections from parameter_CIM to Nodes that are being modulated
                 for output_port in composition.parameter_CIM.output_ports:
@@ -1352,22 +1323,10 @@ class ShowGraph():
                             ctl_proj_color = self.controller_color
                         else:
                             ctl_proj_color = self.control_color
-                        if any(item in active_items for item in {proj, proj.receiver.owner}):
-                            if self.active_color == BOLD:
-                                proj_color = ctl_proj_color
-                            else:
-                                proj_color = self.active_color
-                            proj_width = str(self.default_width + self.active_thicker_by)
-                            composition.active_item_rendered = True
-                        else:
-                            proj_color = ctl_proj_color
-                            proj_width = str(self.default_width)
-                        if show_projection_labels:
-                            label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
-                        else:
-                            label = ''
-                        g.edge(sndr_param_cim_proj_label, rcvr_modulated_mec_proj_label, label=label,
-                               color=proj_color, arrowhead=self.control_projection_arrow, penwidth=proj_width)
+
+                        _render_projection(proj, g, sndr_param_cim_proj_label, rcvr_modulated_mec_proj_label,
+                                           proj_color=ctl_proj_color, arrowhead=self.control_projection_arrow)
+
 
             # OUTPUT_CIM ----------------------------------------------------------------------------
 
@@ -1415,22 +1374,7 @@ class ShowGraph():
                             rcvr_cim_proj_label = cim_label
 
                         # Render Projection
-                        if any(item in active_items for item in {proj, proj.receiver.owner}):
-                            if self.active_color == BOLD:
-                                proj_color = self.default_node_color
-                            else:
-                                proj_color = self.active_color
-                            proj_width = str(self.default_width + self.active_thicker_by)
-                            composition.active_item_rendered = True
-                        else:
-                            proj_color = self.default_node_color
-                            proj_width = str(self.default_width)
-                        if show_projection_labels:
-                            label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
-                        else:
-                            label = ''
-                        g.edge(sndr_output_node_proj_label, rcvr_cim_proj_label, label=label,
-                               color=proj_color, penwidth=proj_width)
+                        _render_projection(proj, g, sndr_output_node_proj_label, rcvr_cim_proj_label)
 
                 # Projections from output_CIM to Node(s) in enclosing Composition
                 for output_port in composition.output_CIM.output_ports:
@@ -1470,22 +1414,8 @@ class ShowGraph():
                             sndr_output_cim_proj_label = cim_label
 
                         # Render Projection
-                        if any(item in active_items for item in {proj, proj.sender.owner}):
-                            if self.active_color == BOLD:
-                                proj_color = self.default_node_color
-                            else:
-                                proj_color = self.active_color
-                            proj_width = str(self.default_width + self.active_thicker_by)
-                            composition.active_item_rendered = True
-                        else:
-                            proj_color = self.default_node_color
-                            proj_width = str(self.default_width)
-                        if show_projection_labels:
-                            label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
-                        else:
-                            label = ''
-                        enclosing_g.edge(sndr_output_cim_proj_label, rcvr_input_node_proj_label, label=label,
-                                         color=proj_color, penwidth=proj_width)
+                        _render_projection(proj, enclosing_g, sndr_output_cim_proj_label, rcvr_input_node_proj_label)
+
 
     def _assign_controller_components(self,
                                       g,
