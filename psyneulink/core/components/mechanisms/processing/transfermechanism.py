@@ -1645,7 +1645,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     params, state, arg_in)
 
             mf_in, builder = self._gen_llvm_invoke_function(
-                    ctx, builder, self.integrator_function, if_params, if_state, ip_out)
+                    ctx, builder, self.integrator_function, if_params, if_state, ip_out, tags=tags)
         else:
             mf_in = ip_out
 
@@ -1654,7 +1654,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         mf_params, builder = self._gen_llvm_param_ports_for_obj(
                 self.function, mf_param_ptr, ctx, builder, params, state, arg_in)
 
-        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, mf_in)
+        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, mf_in, tags=tags)
 
         # FIXME: Convert to runtime instead of compile time
         clip = self.parameters.clip.get()

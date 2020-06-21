@@ -836,9 +836,9 @@ class LCControlMechanism(ControlMechanism):
 
         return gain_t, output_values[0], output_values[1], output_values[2]
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, *, tags:frozenset):
         assert function is self.function
-        mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable)
+        mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable, tags=tags)
 
         # prepend gain type (matches output[1] type)
         gain_ty = mf_out.type.pointee.elements[1]
