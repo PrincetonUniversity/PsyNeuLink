@@ -151,9 +151,9 @@ class CUDAExecution:
 
 class FuncExecution(CUDAExecution):
 
-    def __init__(self, component, execution_ids=[None]):
+    def __init__(self, component, execution_ids=[None], *, tags=frozenset()):
         super().__init__()
-        self._bin_func = pnlvm.LLVMBinaryFunction.from_obj(component)
+        self._bin_func = pnlvm.LLVMBinaryFunction.from_obj(component, tags=tags)
         self._execution_contexts = [
             Context(execution_id=eid) for eid in execution_ids
         ]

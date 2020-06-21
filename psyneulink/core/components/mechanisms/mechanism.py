@@ -2967,7 +2967,7 @@ class Mechanism_Base(Mechanism):
                 self.function, f_params_ptr, ctx, builder, params, state, arg_in)
 
         f_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
-        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, f_params, f_state, ip_output)
+        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, f_params, f_state, ip_output, tags=tags)
 
         # Update execution counter
         exec_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "execution_count")
@@ -3030,7 +3030,7 @@ class Mechanism_Base(Mechanism):
                                                     return_type=pnlvm.ir.IntType(1))
         iparams, istate, iin, iout = internal_builder.function.args[:4]
         internal_builder, is_finished = self._gen_llvm_function_internal(ctx, internal_builder,
-                                                                         iparams, istate, iin, iout)
+                                                                         iparams, istate, iin, iout, tags=tags)
         internal_builder.ret(is_finished)
 
         # Call Internal Function

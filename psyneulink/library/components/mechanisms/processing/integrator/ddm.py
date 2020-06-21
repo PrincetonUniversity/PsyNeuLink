@@ -1078,8 +1078,8 @@ class DDM(ProcessingMechanism):
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
             return return_value
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable):
-        mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable)
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, *, tags:frozenset):
+        mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable, tags=tags)
 
         mech_out_ty = ctx.convert_python_struct_to_llvm_ir(self.defaults.value)
         mech_out = builder.alloca(mech_out_ty)
