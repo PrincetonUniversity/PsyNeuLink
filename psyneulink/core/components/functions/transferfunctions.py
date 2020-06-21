@@ -1511,7 +1511,11 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         gain = self._get_current_function_param(GAIN, context)
         leak = self._get_current_function_param(LEAK, context)
 
-        return gain if input > 0 else gain * leak
+        input = np.asarray(input).copy()
+        input[input>0] = gain
+        input[input<=0] = gain * leak
+
+        return input
 
 
 # **********************************************************************************************************************
