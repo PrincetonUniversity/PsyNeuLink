@@ -1345,14 +1345,16 @@ class GridSearch(OptimizationFunction):
         self.grid = itertools.product(*[s for s in self.search_space])
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
-        try:
+        if "select_min" in tags:
+            return self._gen_llvm_select_min_function(ctx=ctx, tags=tags)
+        if self._is_composition_optimize():
             # self.objective_function may be bound method of
             # an OptimizationControlMechanism
             ocm = self.objective_function.__self__
             extra_args = [ctx.get_param_struct_type(ocm.agent_rep).as_pointer(),
                           ctx.get_state_struct_type(ocm.agent_rep).as_pointer(),
                           ctx.get_data_struct_type(ocm.agent_rep).as_pointer()]
-        except AttributeError:
+        else:
             extra_args = []
 
         f = super()._gen_llvm_function(ctx=ctx, extra_args=extra_args, tags=tags)
@@ -1387,7 +1389,7 @@ class GridSearch(OptimizationFunction):
 
         return ids
 
-    def _get_search_dim(self, ctx, d):
+    def _get_search_dim_type(self, ctx, d):
         if isinstance(d.generator, list):
             # Make sure we only generate float values
             return ctx.convert_python_struct_to_llvm_ir([float(x) for x in d.generator])
@@ -1397,7 +1399,7 @@ class GridSearch(OptimizationFunction):
 
     def _get_param_struct_type(self, ctx):
         param_struct = ctx.get_param_struct_type(super())
-        search_space = (self._get_search_dim(ctx, d) for d in self.search_space)
+        search_space = (self._get_search_dim_type(ctx, d) for d in self.search_space)
         search_space_struct = pnlvm.ir.LiteralStructType(search_space)
 
         if self._is_composition_optimize():
@@ -1472,12 +1474,38 @@ class GridSearch(OptimizationFunction):
             val[0] = [0.0] * len(self.search_space)
         return ctx.convert_python_struct_to_llvm_ir((val[0], val[1]))
 
-    def _gen_llvm_select_min(self, ctx, builder, params, state, min_sample_ptr, sample_ptr,
-                             min_value_ptr, value_ptr, opt_count_ptr):
+    def _gen_llvm_select_min_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
+        assert "select_min" in tags
+        ocm = getattr(self.objective_function, '__self__', None)
+        if ocm is not None:
+            assert ocm.function is self
+            obj_func = ctx.import_llvm_function(ocm, tags=tags.union({"evaluate"}))
+            sample_t = ocm._get_evaluate_alloc_struct_type(ctx)
+            value_t = ocm._get_evaluate_output_struct_type(ctx)
+        else:
+            obj_func = ctx.import_llvm_function(self.objective_function)
+            sample_t = obj_func.args[2].type.pointee
+            value_t = obj_func.args[3].type.pointee
+
+        args = [ctx.get_param_struct_type(self).as_pointer(),
+                ctx.get_state_struct_type(self).as_pointer(),
+                sample_t.as_pointer(),
+                sample_t.as_pointer(),
+                value_t.as_pointer(),
+                value_t.as_pointer(),
+                ctx.float_ty.as_pointer()]
+        builder = ctx.create_llvm_function(args, self, tags=tags,
+                                           return_type=pnlvm.ir.VoidType())
+
+        params, state, min_sample_ptr, sample_ptr, min_value_ptr, value_ptr, opt_count_ptr = builder.function.args
+        for p in builder.function.args:
+            p.attributes.add('noalias')
+            p.attributes.add('nonnull')
+
         random_state = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                         self.parameters.random_state.name)
+                                                   self.parameters.random_state.name)
         select_random_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                              self.parameters.select_randomly_from_optimal_values.name)
+                                                        self.parameters.select_randomly_from_optimal_values.name)
 
         select_random_val = builder.load(select_random_ptr)
         select_random = builder.fcmp_ordered("!=", select_random_val,
@@ -1522,6 +1550,9 @@ class GridSearch(OptimizationFunction):
             builder.store(builder.load(value_ptr), min_value_ptr)
             builder.store(builder.load(sample_ptr), min_sample_ptr)
 
+        builder.ret_void()
+        return builder.function
+
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         ocm = getattr(self.objective_function, '__self__', None)
         if ocm is not None:
@@ -1557,6 +1588,8 @@ class GridSearch(OptimizationFunction):
         # in the first iteration
         builder.store(min_value_ptr.type.pointee("NaN"), min_value_ptr)
 
+        select_min_f = ctx.import_llvm_function(self, tags=tags.union({"select_min"}))
+
         b = builder
         with contextlib.ExitStack() as stack:
             for i in range(len(search_space_ptr.type.pointee)):
@@ -1587,9 +1620,8 @@ class GridSearch(OptimizationFunction):
                               value_ptr] + extra_args)
 
             # Check if smaller than current best.
-            self._gen_llvm_select_min(ctx, b, params, state, min_sample_ptr,
-                                      sample_ptr, min_value_ptr, value_ptr,
-                                      opt_count_ptr)
+            b.call(select_min_f, [params, state, min_sample_ptr, sample_ptr,
+                                  min_value_ptr, value_ptr, opt_count_ptr])
 
             builder = b
 
