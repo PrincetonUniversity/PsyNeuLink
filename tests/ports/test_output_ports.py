@@ -11,7 +11,6 @@ class TestOutputPorts:
 
     @pytest.mark.mechanism
     @pytest.mark.lca_mechanism
-    @pytest.mark.benchmark(group="LCAMechanism")
     @pytest.mark.parametrize('mode', ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
@@ -49,7 +48,6 @@ class TestOutputPorts:
 
     @pytest.mark.mechanism
     @pytest.mark.lca_mechanism
-    @pytest.mark.benchmark(group="LCAMechanism")
     @pytest.mark.parametrize('mode', ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
