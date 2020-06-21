@@ -112,12 +112,12 @@ class PytorchModelCreator(torch.nn.Module):
                 for (proj_idx, proj) in enumerate(component.afferents):
                     input_ptr = builder.gep(
                         variable, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(proj_idx)])
-                    proj_output = proj._gen_execute_llvm(ctx, builder, state, params, data)
+                    proj_output = proj._gen_llvm_execute(ctx, builder, state, params, data)
                     # store in input ports struct
                     builder.store(builder.load(proj_output), input_ptr)
                     # HACK: Add to z_values struct
                     gen_inject_vec_add(ctx, builder, proj_output, z_values[component], z_values[component])
-                component._gen_execute_llvm(ctx, builder, state, params, variable, data)
+                component._gen_llvm_execute(ctx, builder, state, params, variable, data)
 
         return z_values
 
@@ -136,7 +136,7 @@ class PytorchModelCreator(torch.nn.Module):
             if isinstance(a.type, pnlvm.ir.PointerType):
                 a.attributes.add('noalias')
 
-        context, params, data, optim_struct = llvm_func.args
+        state, params, data, optim_struct = llvm_func.args
         model_input = builder.gep(data, [ctx.int32_ty(0),
                                          ctx.int32_ty(0),
                                          ctx.int32_ty(self._composition._get_node_index(self._composition.input_CIM))])
@@ -149,7 +149,7 @@ class PytorchModelCreator(torch.nn.Module):
 
         # 2) call forward computation
         z_values = self._gen_llvm_forward_function_body(
-            ctx, builder, context, params, model_input, data)
+            ctx, builder, state, params, model_input, data)
         
         # 3) compute errors
         loss_fn = ctx.import_llvm_function(loss)
@@ -162,7 +162,7 @@ class PytorchModelCreator(torch.nn.Module):
                 if node._mechanism in input_nodes:
                     continue
                 node_z_value = z_values[node]
-                activation_func_derivative = node._gen_execute_derivative_func_llvm(ctx, builder, node_z_value)
+                activation_func_derivative = node._gen_llvm_execute_derivative_func(ctx, builder, state, params, node_z_value)
                 error_val = builder.alloca(z_values[node].type.pointee)
                 error_dict[node] = error_val
 

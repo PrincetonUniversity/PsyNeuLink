@@ -41,80 +41,6 @@ def pytorch_function_creator(function, device, context=None):
     else:
         raise Exception(f"Function {function} is not currently supported in AutodiffCompositions!")
 
-def bin_function_derivative_creator(ctx, node, context=None):
-    """
-    Returns the compiled derivative version of a PsyNeuLink node
-    TODO: Add functionality for derivitives into base PsyNeuLink Functions, and move this functionality there
-    """
-    # first try to get cached func
-    name = node.name + "_" + node.function.name + "_derivative"
-    try:
-        llvm_func = ctx.import_llvm_function(name)
-        return llvm_func
-    except Exception as e:
-        pass
-
-    # args: 1) ptr to input vector
-    #       2) sizeof vector
-    #       3) ptr to output vector
-    float_ptr_ty = ctx.float_ty.as_pointer()
-    args = [float_ptr_ty, ctx.int32_ty, float_ptr_ty]
-    builder = ctx.create_llvm_function(args, node, name)
-    llvm_func = builder.function
-
-    input_vector, dim, output_vector = llvm_func.args
-
-    def get_fct_param_value(param_name):
-        val = node.function._get_current_function_param(
-            param_name, context)
-        if val is None:
-            val = node.function._get_current_function_param(
-                param_name, None)
-        return ctx.float_ty(val[0])
-
-    if isinstance(node.function, Linear):  # f(x) = mx + b, f'(x) = m
-        slope = get_fct_param_value('slope')
-
-        def modify_value(x):
-            return slope
-
-    elif isinstance(node.function, Logistic):  # f'(x) = f(x)(1-f(x))
-        gain = pnlvm.helpers.fneg(builder, get_fct_param_value('gain'))
-        bias = get_fct_param_value('bias')
-        offset = get_fct_param_value('offset')
-        one = ctx.float_ty(1)
-        exp = ctx.import_llvm_function("__pnl_builtin_exp")
-
-        def modify_value(x):
-            arg = builder.fadd(x, bias)
-            arg = builder.fmul(gain, arg)
-            arg = builder.fadd(arg, offset)
-
-            f_x = builder.call(exp, [arg])
-            f_x = builder.fadd(one, f_x)
-            f_x = builder.fdiv(one, f_x)
-
-            ret = builder.fsub(one, f_x)
-            ret = builder.fmul(f_x, ret)
-            return ret
-
-    else:
-        raise Exception(
-            f"Function type {node.function} is currently unsupported by compiled execution!")
-
-    # do computations
-    with pnlvm.helpers.for_loop_zero_inc(builder, dim, "derivative_loop") as (builder, iterator):
-        val_ptr = builder.gep(input_vector, [iterator])
-        val = builder.load(val_ptr)
-        val = modify_value(val)
-        output_location = builder.gep(output_vector, [iterator])
-        builder.store(val, output_location)
-
-    builder.ret_void()
-
-    return llvm_func
-
-
 class PytorchMechanismWrapper():
     """
     An interpretation of a mechanism as an equivalent pytorch object
@@ -152,7 +78,7 @@ class PytorchMechanismWrapper():
 
         return self.value
 
-    def _gen_execute_llvm(self, ctx, builder, state, params, mech_input, data):
+    def _gen_llvm_execute(self, ctx, builder, state, params, mech_input, data):
         mech_func = ctx.import_llvm_function(self._mechanism)
 
         mech_param = builder.gep(params, [ctx.int32_ty(0),
@@ -182,10 +108,32 @@ class PytorchMechanismWrapper():
             self._mechanism.output_port.parameters.value._set(detached_value, self._context)
             self._mechanism.parameters.value._set(detached_value, self._context)
 
-    def _gen_execute_derivative_func_llvm(self, ctx, builder, mech_input):
-        derivative_func = ctx.import_llvm_function(
-                    bin_function_derivative_creator(ctx, self._mechanism, context=self._context).name)
-        return gen_inject_unary_function_call(ctx, builder, derivative_func, mech_input)
+    def _gen_llvm_execute_derivative_func(self, ctx, builder, state, params, arg_in):
+        # psyneulink functions expect a 2d input, where index 0 is the vector
+        fun = ctx.import_llvm_function(self._mechanism.function, tags=frozenset({"derivative"}))
+        fun_input_ty = fun.args[2].type.pointee
+
+        mech_input = builder.alloca(fun_input_ty)
+        mech_input_ptr = builder.gep(mech_input, [ctx.int32_ty(0),
+                                                  ctx.int32_ty(0)])
+        builder.store(builder.load(arg_in), mech_input_ptr)
+
+        mech_params = builder.gep(params, [ctx.int32_ty(0),
+                                           ctx.int32_ty(0),
+                                           ctx.int32_ty(self._idx)])
+
+        mech_state = builder.gep(state, [ctx.int32_ty(0),
+                                         ctx.int32_ty(0),
+                                         ctx.int32_ty(self._idx)])
+
+        f_params_ptr = pnlvm.helpers.get_param_ptr(builder, self._mechanism, mech_params, "function")
+        f_params, builder = self._mechanism._gen_llvm_param_ports_for_obj(
+                self._mechanism.function, f_params_ptr, ctx, builder, mech_params, mech_state, mech_input)
+        f_state = pnlvm.helpers.get_state_ptr(builder, self._mechanism, mech_state, "function")
+
+        output, _ = self._mechanism._gen_llvm_invoke_function(ctx, builder, self._mechanism.function, f_params, f_state, mech_input, tags=frozenset({"derivative"}))
+        return builder.gep(output, [ctx.int32_ty(0),
+                                    ctx.int32_ty(0)])
 
     def __repr__(self):
         return "PytorchWrapper for: " +self._mechanism.__repr__()
@@ -237,7 +185,7 @@ class PytorchProjectionWrapper():
 
         return proj_matrix
 
-    def _gen_execute_llvm(self, ctx, builder, state, params, data):
+    def _gen_llvm_execute(self, ctx, builder, state, params, data):
         proj_matrix = self._extract_llvm_matrix(ctx, builder, params)
 
         input_vec = builder.gep(data, [ctx.int32_ty(0),
