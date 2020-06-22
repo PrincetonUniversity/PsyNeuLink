@@ -6779,6 +6779,33 @@ class TestNodeRoles:
         # Validate that TERMINAL is LearningMechanism that Projects to first MappingProjection in learning_pathway
         (comp.get_nodes_by_role(NodeRole.TERMINAL))[0].efferents[0].receiver.owner.sender.owner == A
 
+    def test_controller_role(self):
+        comp = Composition()
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        comp.add_linear_processing_pathway([A, B])
+        comp.add_controller(
+            controller=pnl.OptimizationControlMechanism(
+                agent_rep=comp,
+                features=[A.input_port],
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    function=pnl.LinearCombination(
+                        operation=pnl.PRODUCT),
+                    monitor=[A]
+                ),
+                function=pnl.GridSearch(),
+                control_signals=[
+                    {
+                        PROJECTIONS: ("slope", B),
+                        ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+                    }
+                ]
+            )
+        )
+
+        assert comp.get_nodes_by_role(NodeRole.CONTROLLER) == [comp.controller]
+        assert comp.nodes_to_roles[comp.controller] == {NodeRole.CONTROLLER}
+
 
 class TestMisc:
 
