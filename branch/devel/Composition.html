@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.8.1.0+16.ga0dafef documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.8.1.0+22.gb6bb40e documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0+16
+                  0.8.1.0+22
                 </div>
               
             
@@ -2234,7 +2234,7 @@ unless they are explicitly assigned a <code class="xref any docutils literal"><s
 <li><strong>enable_controller</strong> (<em>bool : default None</em>) – specifies whether the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is executed when the
 Composition is executed.  Set to True by default if <strong>controller</strong> specified;  if set to False,
 the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is ignored when the Composition is executed.</li>
-<li><strong>controller_mode</strong> (<em>Enum</em><em>[</em><em>BEOFRE|AFTER</em><em>] </em><em>: default AFTER</em>) – specifies whether the controller is executed before or after the rest of the Composition
+<li><strong>controller_mode</strong> (<em>enum.Enum</em><em>[</em><em>BEOFRE|AFTER</em><em>] </em><em>: default AFTER</em>) – specifies whether the controller is executed before or after the rest of the Composition
 in each trial.  Must be either the keyword <em>BEFORE</em> or <em>AFTER</em>.</li>
 <li><strong>controller_condition</strong> (<em>Condition : default Always</em>) – specifies when the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is executed in a trial.</li>
 <li><strong>retain_old_simulation_data</strong> (<em>bool : default False</em>) – specifies whether or not to retain Parameter values generated during <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulations</span></a> of the Composition (see <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.retain_old_simulation_data" title="psyneulink.core.compositions.composition.Composition.retain_old_simulation_data"><code class="xref any py py-attr docutils literal"><span class="pre">retain_old_simulation_data</span></code></a> for additional details).</li>
@@ -2588,6 +2588,7 @@ allows subclasses of ControlMechanism that can use this (such as <a class="refer
 separate from the one used by the <a class="reference internal" href="#composition-execution-methods"><span class="std std-ref">execution method</span></a> called by the user) to
 evaluate the influence of parameters on performance.</p>
 <p>It also assigns a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> for any <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> <a class="reference internal" href="ParameterPort.html#parameterport-value-specification"><span class="std std-ref">specified for control</span></a>, and a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to its correponding <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a>.</p>
+<p>The ControlMechanism is assigned the <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">NodeRole</span></code></a> <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.CONTROLLER" title="psyneulink.core.compositions.composition.NodeRole.CONTROLLER"><code class="xref any py py-attr docutils literal"><span class="pre">CONTROLLER</span></code></a>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -3008,7 +3009,7 @@ passed the current <em>context</em> (but it is not necessary for your callable t
 passed the current <em>context</em> (but it is not necessary for your callable to take).</li>
 <li><strong>call_after_pass</strong> (<em>callable : default None</em>) – called after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">PASS</span></code></a> is executed
 passed the current <em>context</em> (but it is not necessary for your callable to take).</li>
-<li><strong>bin_execute</strong> (<em>bool</em><em> or </em><em>Enum</em><em>[</em><em>LLVM|LLVMexec|Python|PTXExec</em><em>] </em><em>: default Python</em>) – specifies whether to run using the Python interpreter or a <a class="reference internal" href="#composition-compilation"><span class="std std-ref">compiled mode</span></a>.
+<li><strong>bin_execute</strong> (<em>bool</em><em> or </em><em>enum.Enum</em><em>[</em><em>LLVM|LLVMexec|Python|PTXExec</em><em>] </em><em>: default Python</em>) – specifies whether to run using the Python interpreter or a <a class="reference internal" href="#composition-compilation"><span class="std std-ref">compiled mode</span></a>.
 see <strong>bin_execute</strong> argument of <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method for additional details.</li>
 </ul>
 </td>
@@ -3248,7 +3249,7 @@ beginning of the run, using the provided values.
 <li><strong>reset_stateful_functions_when</strong> (<em>Condition : default Never</em><em>(</em><em>)</em>) – sets the reset_stateful_function_when condition for all nodes in the Composition that currently have their
 reset_stateful_function_when condition set to <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Never" title="psyneulink.core.scheduling.condition.Never"><code class="xref any py py-class docutils literal"><span class="pre">Never</span></code></a> for the duration of the run.</li>
 <li><strong>skip_initialization</strong> (<em>bool : default False</em>) – </li>
-<li><strong>clamp_input</strong> (<em>Enum</em><em>[</em><em>SOFT_CLAMP|HARD_CLAMP|PULSE_CLAMP|NO_CLAMP</em><em>] </em><em>: default SOFT_CLAMP</em>) – specifies how inputs are handled for the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a>.</li>
+<li><strong>clamp_input</strong> (<em>enum.Enum</em><em>[</em><em>SOFT_CLAMP|HARD_CLAMP|PULSE_CLAMP|NO_CLAMP</em><em>] </em><em>: default SOFT_CLAMP</em>) – specifies how inputs are handled for the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a>.</li>
 <li><strong>runtime_params</strong> (<em>Dict</em><em>[</em><em>Node: Dict</em><em>[</em><em>Parameter: Tuple</em><em>(</em><em>Value</em><em>, </em><a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><em>Condition</em></a><em>)</em><em>]</em><em>] </em><em>: default None</em>) – nested dictionary of (value, <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>) tuples for parameters of Nodes (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or
 <a class="reference internal" href="#"><span class="doc">Compositions</span></a> of the Composition; specifies alternate parameter values to be used only
 during this <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a> when the specified <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> is met (see <a class="reference internal" href="#composition-runtime-params"><span class="std std-ref">Runtime Parameters</span></a> for
@@ -3305,7 +3306,7 @@ correspond to the <code class="xref any docutils literal"><span class="pre">EXEC
 </li>
 <li><strong>scheduler</strong> (<em>Scheduler : default None</em>) – the scheduler object that owns the conditions that will instruct the execution of the Composition.
 If not specified, the Composition will use its automatically generated scheduler.</li>
-<li><strong>bin_execute</strong> (<em>bool</em><em> or </em><em>Enum</em><em>[</em><em>LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun</em><em>] </em><em>: default Python</em>) – specifies whether to run using the Python interpreter or a <a class="reference internal" href="#composition-compilation"><span class="std std-ref">compiled mode</span></a>.
+<li><strong>bin_execute</strong> (<em>bool</em><em> or </em><em>enum.Enum</em><em>[</em><em>LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun</em><em>] </em><em>: default Python</em>) – specifies whether to run using the Python interpreter or a <a class="reference internal" href="#composition-compilation"><span class="std std-ref">compiled mode</span></a>.
 False is the same as <code class="docutils literal"><span class="pre">Python</span></code>;  True tries LLVM compilation modes, in order of power, progressively
 reverting to less powerful modes (in the order of the options listed), and to Python if no compilation
 mode succeeds (see <a class="reference internal" href="#composition-compilation"><span class="std std-ref">Compilation</span></a> for explanation of modes). PTX modes are used for
@@ -3432,6 +3433,13 @@ modified directly, but is modified if the feedback status` of the Projection is 
 <code class="descname">CONTROL_OBJECTIVE</code><a class="headerlink" href="#psyneulink.core.compositions.composition.NodeRole.CONTROL_OBJECTIVE" title="Permalink to this definition">¶</a></dt>
 <dd><p>A <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Node</span></a> that is an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> associated with a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> other
 than the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> (if it has one).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.compositions.composition.NodeRole.CONTROLLER">
+<code class="descname">CONTROLLER</code><a class="headerlink" href="#psyneulink.core.compositions.composition.NodeRole.CONTROLLER" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Node</span></a> that is the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> of a Composition.
+This role cannot be modified programmatically.</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -3617,7 +3625,7 @@ This role cannot be modified programmatically.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0+16.ga0dafef',
+               VERSION:'0.8.1.0+22.gb6bb40e',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
