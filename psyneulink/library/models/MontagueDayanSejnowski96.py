@@ -3,13 +3,9 @@ This implements a model of mesolimbic dopamine cell activity during monkey
 conditioning as found in `Montague, Dayan, and Sejnowski (1996) in PsyNeuLink
 <http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf>`_
 """
-import matplotlib
-# matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import numpy as np
 import psyneulink as pnl
-
-from mpl_toolkits import mplot3d # needed for 3d plotting
 
 
 def build_stimulus_dictionary(sample_mechanism, target_mechanism, no_reward_trials):
@@ -85,10 +81,10 @@ def figure_5a():
     pathway = [sample_mechanism, sample_to_action_selection, action_selection]
 
     # Add Learning Components to the Composition
-    learning_related_components = comp.add_td_learning_pathway(pathway, learning_rate=0.3)
+    learning_related_components = comp.add_td_learning_pathway(pathway, learning_rate=0.3).learning_components
 
     # Unpack Relevant Learning Components
-    prediction_error_mechanism = learning_related_components[pnl.OBJECTIVE_MECHANISM, ]
+    prediction_error_mechanism = learning_related_components[pnl.OBJECTIVE_MECHANISM]
     target_mechanism = learning_related_components[pnl.TARGET_MECHANISM]
 
     # Create Log
@@ -99,8 +95,7 @@ def figure_5a():
     inputs = build_stimulus_dictionary(sample_mechanism, target_mechanism, no_reward_trials)
 
     # Run Composition
-    comp.run(inputs=inputs)
-    # comp.show_graph()
+    comp.learn(inputs=inputs)
 
     # Get Delta Values from Log
     delta_vals = prediction_error_mechanism.log.nparray_dictionary()[composition_name][pnl.VALUE]
@@ -146,10 +141,10 @@ def figure_5b():
     pathway = [sample_mechanism, sample_to_action_selection, action_selection]
 
     # Add Learning Components to the Composition
-    learning_related_components = comp.add_td_learning_pathway(pathway, learning_rate=0.3)
+    learning_related_components = comp.add_td_learning_pathway(pathway, learning_rate=0.3).learning_components
 
     # Unpack Relevant Learning Components
-    prediction_error_mechanism = learning_related_components[pnl.OBJECTIVE_MECHANISM, ]
+    prediction_error_mechanism = learning_related_components[pnl.OBJECTIVE_MECHANISM]
     target_mechanism = learning_related_components[pnl.TARGET_MECHANISM]
 
     # Create Log
@@ -161,8 +156,7 @@ def figure_5b():
     inputs = build_stimulus_dictionary(sample_mechanism, target_mechanism, no_reward_trials)
 
     # Run Composition
-    comp.run(inputs=inputs)
-    # comp.show_graph()
+    comp.learn(inputs=inputs)
 
     # Get Delta Values from Log
     delta_vals = prediction_error_mechanism.log.nparray_dictionary()[composition_name][pnl.VALUE]
@@ -173,11 +167,12 @@ def figure_5b():
         x_vals, y_vals = np.meshgrid(np.arange(120), np.arange(40, 60, step=1))
         d_vals = np.array([d[0][40:60] for d in delta_vals]).transpose()
         ax.plot_surface(x_vals, y_vals, d_vals)
-        ax.invert_yaxis()
-        ax.invert_yaxis()
         ax.set_xlabel("Trial")
         ax.set_ylabel("Timestep")
         ax.set_zlabel("∂")
+        ax.set_ylim(y_vals.max(), y_vals.min())
+        ax.set_xlim(0, 120)
+        ax.set_zlim(-1, 1)
         ax.set_title("Montague et. al. (1996) -- Figure 5B")
         plt.show()
 
@@ -209,10 +204,10 @@ def figure_5c():
     pathway = [sample_mechanism, sample_to_action_selection, action_selection]
 
     # Add Learning Components to the Composition
-    learning_related_components = comp.add_td_learning_pathway(pathway, learning_rate=0.3)
+    learning_related_components = comp.add_td_learning_pathway(pathway, learning_rate=0.3).learning_components
 
     # Unpack Relevant Learning Components
-    prediction_error_mechanism = learning_related_components[pnl.OBJECTIVE_MECHANISM, ]
+    prediction_error_mechanism = learning_related_components[pnl.OBJECTIVE_MECHANISM]
     target_mechanism = learning_related_components[pnl.TARGET_MECHANISM]
 
     # Create Log
@@ -222,8 +217,7 @@ def figure_5c():
     inputs = build_stimulus_dictionary_figure_5c(sample_mechanism, target_mechanism)
 
     # Run Composition
-    comp.run(inputs=inputs)
-    # comp.show_graph()
+    comp.learn(inputs=inputs)
 
     # Get Delta Values from Log
     delta_vals = prediction_error_mechanism.log.nparray_dictionary()[composition_name][pnl.VALUE]
@@ -234,7 +228,9 @@ def figure_5c():
         x_vals, y_vals = np.meshgrid(np.arange(150), np.arange(40, 60, step=1))
         d_vals = np.array([d[0][40:60] for d in delta_vals]).transpose()
         ax.plot_surface(x_vals, y_vals, d_vals)
-        ax.invert_yaxis()
+        ax.set_ylim(y_vals.max(), y_vals.min())
+        ax.set_xlim(0, 140)
+        ax.set_zlim(-1, 1)
         ax.set_xlabel("Trial")
         ax.set_ylabel("Timestep")
         ax.set_zlabel("∂")

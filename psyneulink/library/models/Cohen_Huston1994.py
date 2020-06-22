@@ -8,8 +8,6 @@ import psyneulink as pnl
 # The model aims to capute top-down effects of selective attention and the bottom-up effects of attentional capture.
 
 # Define Variables ----------------------------------------------------------------------------------------------------
-import psyneulink.core.components.functions.transferfunctions
-
 rate = 0.1          # modified from the original code from 0.01 to 0.1
 inhibition = -2.0   # lateral inhibition
 bias = 4.0          # bias is positive since Logistic equation has - sing already implemented
@@ -20,59 +18,59 @@ settle_trials = 50  # cycles until model settles
 #   Linear input units, colors: ('red', 'green'), words: ('RED','GREEN')
 colors_input_layer = pnl.TransferMechanism(
     size=3,
-    function=psyneulink.core.components.functions.transferfunctions.Linear,
+    function=pnl.Linear,
     name='COLORS_INPUT'
 )
 
 words_input_layer = pnl.TransferMechanism(
     size=3,
-    function=psyneulink.core.components.functions.transferfunctions.Linear,
+    function=pnl.Linear,
     name='WORDS_INPUT'
 )
 
 task_input_layer = pnl.TransferMechanism(
     size=2,
-    function=psyneulink.core.components.functions.transferfunctions.Linear,
+    function=pnl.Linear,
     name='TASK_INPUT'
 )
 
 #   Task layer, tasks: ('name the color', 'read the word')
 task_layer = pnl.RecurrentTransferMechanism(
     size=2,
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(),
-    hetero=-2,
+    function=pnl.Logistic(),
+    hetero=inhibition,
     integrator_mode=True,
-    integration_rate=0.1,
+    integration_rate=rate,
     name='TASK'
 )
 
 #   Hidden layer units, colors: ('red','green') words: ('RED','GREEN')
 colors_hidden_layer = pnl.RecurrentTransferMechanism(
     size=3,
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=4.0),
+    function=pnl.Logistic(x_0=bias),
     integrator_mode=True,
-    hetero=-2.0,
-    # noise=pnl.NormalDist(mean=0.0, standard_deviation=.0).function,
-    integration_rate=0.1,  # cohen-huston text says 0.01
+    hetero=inhibition,
+    # noise=pnl.NormalDist(mean=0.0, standard_deviation=.0),
+    integration_rate=rate,  # cohen-huston text says 0.01
     name='COLORS HIDDEN'
 )
 
 words_hidden_layer = pnl.RecurrentTransferMechanism(
     size=3,
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=4.0),
-    hetero=-2,
+    function=pnl.Logistic(x_0=bias),
+    hetero=inhibition,
     integrator_mode=True,
-    # noise=pnl.NormalDist(mean=0.0, standard_deviation=.05).function,
-    integration_rate=0.1,
+    # noise=pnl.NormalDist(mean=0.0, standard_deviation=.05),
+    integration_rate=rate,
     name='WORDS HIDDEN'
 )
 #   Response layer, responses: ('red', 'green'): RecurrentTransferMechanism for self inhibition matrix
 response_layer = pnl.RecurrentTransferMechanism(
     size=2,
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(),
-    hetero=-2.0,
+    function=pnl.Logistic(),
+    hetero=inhibition,
     integrator_mode=True,
-    integration_rate=0.1,
+    integration_rate=rate,
     name='RESPONSE'
 )
 

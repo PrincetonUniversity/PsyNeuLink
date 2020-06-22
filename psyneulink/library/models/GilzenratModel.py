@@ -13,9 +13,6 @@ from matplotlib import pyplot as plt
 # Define Variables ----------------------------------------------------------------------------------------------------
 
 # Weights & Biases:
-import psyneulink.core.components.functions.distributionfunctions
-import psyneulink.core.components.functions.transferfunctions
-
 b_decision = 0.00   # Bias on decision units (not biased)
 b_response = 2.00   # Bias on response unit --- NOTE: Gilzenrat has negative signs in his logistic equation
 w_XiIi = 1.00       # Connection weight from input units I1 and I2 to respective decision units X1 and X2
@@ -68,8 +65,8 @@ decision_layer = pnl.LCAMechanism(
     competition=w_XiXj,
     #  Recurrent matrix: [  w_XiXi   -w_XiXj ]
     #                    [ -w_XiXj    w_XiXi ]
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=b_decision),
-    noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(standard_deviation=SD).function,
+    function=pnl.Logistic(x_0=b_decision),
+    noise=pnl.NormalDist(standard_deviation=SD),
     integrator_mode=True,
     name='DECISION LAYER'
 )
@@ -83,8 +80,8 @@ response_layer = pnl.LCAMechanism(
     self_excitation=w_X3X3,
     #  Recurrent matrix: [w_X3X3]
     #  Competition param does not apply because there is only one unit
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=b_response),
-    noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(standard_deviation=SD).function,
+    function=pnl.Logistic(x_0=b_response),
+    noise=pnl.NormalDist(standard_deviation=SD),
     integrator_mode=True,
     name='RESPONSE'
 )
@@ -103,7 +100,7 @@ output_weights = np.array([
     [0.00]
 ])
 
-decision_process = pnl.Process(
+decision_pathway = pnl.Pathway(
     pathway=[
         input_layer,
         input_weights,
@@ -117,48 +114,47 @@ decision_process = pnl.Process(
 # Monitor decision layer in order to modulate gain --------------------------------------------------------------------
 
 LC = pnl.LCControlMechanism(
-        integration_method="EULER",
-        threshold_FitzHughNagumo=a,
-        uncorrelated_activity_FitzHughNagumo=d,
-        base_level_gain=G,
-        scaling_factor_gain=k,
-        time_step_size_FitzHughNagumo=dt,
-        mode_FitzHughNagumo=C,
-        time_constant_v_FitzHughNagumo=tau_v,
-        time_constant_w_FitzHughNagumo=tau_u,
-        a_v_FitzHughNagumo=-1.0,
-        b_v_FitzHughNagumo=1.0,
-        c_v_FitzHughNagumo=1.0,
-        d_v_FitzHughNagumo=0.0,
-        e_v_FitzHughNagumo=-1.0,
-        f_v_FitzHughNagumo=1.0,
-        a_w_FitzHughNagumo=1.0,
-        b_w_FitzHughNagumo=-1.0,
-        c_w_FitzHughNagumo=0.0,
-        t_0_FitzHughNagumo=0.0,
-        initial_v_FitzHughNagumo=initial_v,
-        initial_w_FitzHughNagumo=initial_u,
-        objective_mechanism=pnl.ObjectiveMechanism(
-                function=psyneulink.core.components.functions.transferfunctions.Linear,
-                monitored_output_ports=[(
-                    decision_layer,
-                    None,
-                    None,
-                    np.array([
-                        [w_vX1],
-                        [0.0]]
-                    )
-                )],
-                name='LC ObjectiveMechanism'
-        ),
-        modulated_mechanisms=[decision_layer, response_layer],  # Modulate gain of decision & response layers
-        name='LC'
+    integration_method="EULER",
+    threshold_FitzHughNagumo=a,
+    uncorrelated_activity_FitzHughNagumo=d,
+    base_level_gain=G,
+    scaling_factor_gain=k,
+    time_step_size_FitzHughNagumo=dt,
+    mode_FitzHughNagumo=C,
+    time_constant_v_FitzHughNagumo=tau_v,
+    time_constant_w_FitzHughNagumo=tau_u,
+    a_v_FitzHughNagumo=-1.0,
+    b_v_FitzHughNagumo=1.0,
+    c_v_FitzHughNagumo=1.0,
+    d_v_FitzHughNagumo=0.0,
+    e_v_FitzHughNagumo=-1.0,
+    f_v_FitzHughNagumo=1.0,
+    a_w_FitzHughNagumo=1.0,
+    b_w_FitzHughNagumo=-1.0,
+    c_w_FitzHughNagumo=0.0,
+    t_0_FitzHughNagumo=0.0,
+    initial_v_FitzHughNagumo=initial_v,
+    initial_w_FitzHughNagumo=initial_u,
+    objective_mechanism=pnl.ObjectiveMechanism(
+        function=pnl.Linear,
+        monitor=[(
+            decision_layer,
+            None,
+            None,
+            np.array([
+                [w_vX1],
+                [0.0]]
+            )
+        )],
+        name='LC ObjectiveMechanism'
+    ),
+    modulated_mechanisms=[decision_layer, response_layer],  # Modulate gain of decision & response layers
+    name='LC'
 )
 
-LC_process = pnl.Process(pathway=[LC])
-
-task = pnl.System(processes=[decision_process, LC_process],
-                  reinitialize_mechanisms_when=pnl.Never())
+task = pnl.Composition()
+task.add_linear_processing_pathway(decision_pathway)
+task.add_node(LC)
 
 # This displays a diagram of the System
 # task.show_graph()
@@ -269,5 +265,5 @@ plt.title('GILZENRAT 2002 PsyNeuLink', fontweight='bold')
 
 plt.show()
 
-task.show()
+task.show_graph()
 print('\nPlots generated')

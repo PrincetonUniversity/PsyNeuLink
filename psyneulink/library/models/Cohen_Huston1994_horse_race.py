@@ -6,8 +6,6 @@ import psyneulink as pnl
 # Note that noise is turned off and each stimulus is only showed once for each stimulus onset asynchrony.
 
 # Define Variables ----------------------------------------------------------------------------------------------------
-import psyneulink.core.components.functions.transferfunctions
-
 rate = 0.1          # The integration rate was changed from 0.01 to 0.1
 inhibition = -2.0   # Mutual inhibition across each layer
 bias = 4.0          # bias for hidden layer units
@@ -27,20 +25,20 @@ terminate5 = 240
 # Create mechanisms ---------------------------------------------------------------------------------------------------
 #   Linear input units, colors: ('red', 'green'), words: ('RED','GREEN')
 colors_input_layer = pnl.TransferMechanism(size=3,
-                                           function=psyneulink.core.components.functions.transferfunctions.Linear,
+                                           function=pnl.Linear,
                                            name='COLORS_INPUT')
 
 words_input_layer = pnl.TransferMechanism(size=3,
-                                          function=psyneulink.core.components.functions.transferfunctions.Linear,
+                                          function=pnl.Linear,
                                           name='WORDS_INPUT')
 
 task_input_layer = pnl.TransferMechanism(size=2,
-                                         function=psyneulink.core.components.functions.transferfunctions.Linear,
+                                         function=pnl.Linear,
                                          name='TASK_INPUT')
 
 #   Task layer, tasks: ('name the color', 'read the word')
 task_layer = pnl.RecurrentTransferMechanism(size=2,
-                                            function=psyneulink.core.components.functions.transferfunctions.Logistic(),
+                                            function=pnl.Logistic(),
                                             hetero=-2,
                                             integrator_mode=True,
                                             integration_rate=0.1,
@@ -48,24 +46,24 @@ task_layer = pnl.RecurrentTransferMechanism(size=2,
 
 #   Hidden layer units, colors: ('red','green') words: ('RED','GREEN')
 colors_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
-                                                     function=psyneulink.core.components.functions.transferfunctions
+                                                     function=pnl
                                                      .Logistic(x_0=4.0),
                                                      integrator_mode=True,
                                                      hetero=-2.0,
-                                                     # noise=pnl.NormalDist(mean=0.0, standard_deviation=.0).function,
+                                                     # noise=pnl.NormalDist(mean=0.0, standard_deviation=.0),
                                                      integration_rate=0.1,  # cohen-huston text says 0.01
                                                      name='COLORS HIDDEN')
 
 words_hidden_layer = pnl.RecurrentTransferMechanism(size=3,
-                                                    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=4.0),
+                                                    function=pnl.Logistic(x_0=4.0),
                                                     hetero=-2,
                                                     integrator_mode=True,
-                                                    # noise=pnl.NormalDist(mean=0.0, standard_deviation=.05).function,
+                                                    # noise=pnl.NormalDist(mean=0.0, standard_deviation=.05),
                                                     integration_rate=0.1,
                                                     name='WORDS HIDDEN')
 #   Response layer, responses: ('red', 'green'): RecurrentTransferMechanism for self inhibition matrix
 response_layer = pnl.RecurrentTransferMechanism(size=2,
-                                                function=psyneulink.core.components.functions.transferfunctions.Logistic(),
+                                                function=pnl.Logistic(),
                                                 hetero=-2.0,
                                                 integrator_mode=True,
                                                 integration_rate=0.1,
@@ -117,55 +115,63 @@ color_response_weights = pnl.MappingProjection(matrix=np.array([[1.5, 0.0],
 word_response_weights  = pnl.MappingProjection(matrix=np.array([[2.5, 0.0],
                                                                 [0.0, 2.5],
                                                                 [0.0, 0.0]]))
-#
+
+Bidirectional_Stroop = pnl.Composition(name='FEEDFORWARD_STROOP_SYSTEM')
+
 # Create pathways -----------------------------------------------------------------------------------------------------
-color_response_process = pnl.Process(pathway=[colors_input_layer,
-                                              color_input_weights,
-                                              colors_hidden_layer,
-                                              color_response_weights,
-                                              response_layer,
-                                              response_color_weights,
-                                              colors_hidden_layer],
-                                     name='COLORS_RESPONSE_PROCESS')
+Bidirectional_Stroop.add_linear_processing_pathway(
+    pathway=[
+        colors_input_layer,
+        color_input_weights,
+        colors_hidden_layer,
+        color_response_weights,
+        response_layer,
+        response_color_weights,
+        colors_hidden_layer
+    ],
+    name='COLORS_RESPONSE_PROCESS'
+)
 
-word_response_process = pnl.Process(pathway=[words_input_layer,
-                                             word_input_weights,
-                                             words_hidden_layer,
-                                             word_response_weights,
-                                             response_layer,
-                                             response_word_weights,
-                                             words_hidden_layer],
-                                     name='WORDS_RESPONSE_PROCESS')
+Bidirectional_Stroop.add_linear_processing_pathway(
+    pathway=[
+        words_input_layer,
+        word_input_weights,
+        words_hidden_layer,
+        word_response_weights,
+        response_layer,
+        response_word_weights,
+        words_hidden_layer
+    ],
+    name='WORDS_RESPONSE_PROCESS'
+)
 
-task_color_response_process = pnl.Process(pathway=[task_input_layer,
-                                                   task_input_weights,
-                                                   task_layer,
-                                                   task_color_weights,
-                                                   colors_hidden_layer,
-                                                   color_task_weights,
-                                                   task_layer])
+Bidirectional_Stroop.add_linear_processing_pathway(
+    pathway=[
+        task_input_layer,
+        task_input_weights,
+        task_layer,
+        task_color_weights,
+        colors_hidden_layer,
+        color_task_weights,
+        task_layer
+    ]
+)
 
-task_word_response_process = pnl.Process(pathway=[task_input_layer,
-                                                  task_layer,
-                                                  task_word_weights,
-                                                  words_hidden_layer,
-                                                  word_task_weights,
-                                                  task_layer])
-
-# Create system -------------------------------------------------------------------------------------------------------
-Bidirectional_Stroop = pnl.System(processes=[color_response_process,
-                                                   word_response_process,
-                                                   task_color_response_process,
-                                                   task_word_response_process],
-
-                                  reinitialize_mechanisms_when=pnl.Never(),
-                                  name='FEEDFORWARD_STROOP_SYSTEM')
+Bidirectional_Stroop.add_linear_processing_pathway(
+    pathway=[
+        task_input_layer,
+        task_layer,
+        task_word_weights,
+        words_hidden_layer,
+        word_task_weights,
+        task_layer
+    ]
+)
 
 # LOGGING:
 colors_hidden_layer.set_log_conditions('value')
 words_hidden_layer.set_log_conditions('value')
 
-Bidirectional_Stroop.show()
 # Bidirectional_Stroop.show_graph(show_dimensions=pnl.ALL)#,show_mechanism_structure=pnl.VALUES) # Uncomment to show graph of the system
 
 # Create threshold function -------------------------------------------------------------------------------------------

@@ -8,8 +8,6 @@ import psyneulink as pnl
 # #https://www.ncbi.nlm.nih.gov/pubmed/29035077
 
 # Define Variables ----------------------------------------------------------------------------------------------------
-import psyneulink.core.components.functions.transferfunctions
-
 Lambda = 0.03            # PsyNeuLink has Euler integration constant reversed (1-0.97)
 pc_high = 0.15           # High proactive control from Figure 6 in Paper
 pc_low = 0.025           # Low proactive control from Figure 6 in Paper
@@ -24,25 +22,25 @@ settle = 200    # Number of trials until Composition settles
 # 4 Input layers for color, word, task & bias
 colors_input_layer = pnl.TransferMechanism(
     size=2,
-    function=psyneulink.core.components.functions.transferfunctions.Linear,
+    function=pnl.Linear,
     name='COLORS_INPUT'
 )
 
 words_input_layer = pnl.TransferMechanism(
     size=2,
-    function=psyneulink.core.components.functions.transferfunctions.Linear,
+    function=pnl.Linear,
     name='WORDS_INPUT'
 )
 
 task_input_layer = pnl.TransferMechanism(
     size=2,
-    function=psyneulink.core.components.functions.transferfunctions.Linear,
+    function=pnl.Linear,
     name='PROACTIVE_CONTROL'
 )
 
 bias_input = pnl.TransferMechanism(
     size=2,
-    function=psyneulink.core.components.functions.transferfunctions.Linear,
+    function=pnl.Linear,
     name='BIAS'
 )
 
@@ -68,7 +66,7 @@ def my_conflict_function(variable):
 # Create color feature layer, word feature layer, task demand layer and response layer
 color_feature_layer = pnl.RecurrentTransferMechanism(
     size=2,                     # Define unit size
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=4, x_0=1),       # to 4 & bias to 1
+    function=pnl.Logistic(gain=4, x_0=1),       # to 4 & bias to 1
     integrator_mode=True,       # Set IntegratorFunction mode to True
     integration_rate=Lambda,    # smoothing factor ==  integration rate
     hetero=inhibition,          # Inhibition among units within a layer
@@ -82,7 +80,7 @@ color_feature_layer = pnl.RecurrentTransferMechanism(
 # The word_feature_layer is set up as the color_feature_layer
 word_feature_layer = pnl.RecurrentTransferMechanism(
     size=2,                     # Define unit size
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=4, x_0=1),            # to 4 & bias to 1
+    function=pnl.Logistic(gain=4, x_0=1),            # to 4 & bias to 1
     integrator_mode=True,   # Set IntegratorFunction mode to True
     integration_rate=Lambda,  # smoothing factor ==  integration rate
     hetero=inhibition,      # Inhibition among units within a layer
@@ -97,7 +95,7 @@ word_feature_layer = pnl.RecurrentTransferMechanism(
 # The response_layer is set up as the color_feature_layer & the word_feature_layer
 response_layer = pnl.RecurrentTransferMechanism(
     size=2,                         # Define unit size
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=4, x_0=1),           # to 4 & bias to 1
+    function=pnl.Logistic(gain=4, x_0=1),           # to 4 & bias to 1
     integrator_mode=True,           # Set IntegratorFunction mode to True
     integration_rate=Lambda,        # smoothing factor ==  integration rate
     hetero=inhibition,              # Inhibition among units within a layer
@@ -113,7 +111,7 @@ response_layer = pnl.RecurrentTransferMechanism(
 # and a differnet inhibition weight on the hetero
 task_demand_layer = pnl.RecurrentTransferMechanism(
     size=2,                      # Define unit size
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=4, x_0=1),            # to 4 & bias to 1
+    function=pnl.Logistic(gain=4, x_0=1),            # to 4 & bias to 1
     integrator_mode=True,   # Set IntegratorFunction mode to True
     integration_rate=Lambda,  # smoothing factor ==  integration rate
     hetero=inhibition_task,  # Inhibition among units within a layer

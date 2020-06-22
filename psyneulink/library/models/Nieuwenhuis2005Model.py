@@ -10,8 +10,6 @@ import psyneulink as pnl
 # Now, we set the global variables, weights and initial values as in the paper.
 # WATCH OUT !!! In the paper the weight "Mutual inhibition among response units" is not defined, but needs to be set to
 # 0 in order to reproduce the paper.
-import psyneulink.core.components.functions.transferfunctions
-
 SD = 0.15       # noise determined by standard deviation (SD)
 a = 0.50        # Parameter describing shape of the FitzHugh–Nagumo cubic nullcline for the fast excitation variable v
 d = 0.5         # Uncorrelated Activity
@@ -64,7 +62,7 @@ decision_layer = pnl.LCAMechanism(
     leak=1.0,                         # Sets off diagonals to negative values
     self_excitation=selfdwt,           # Set diagonals to self excitate
     competition=inhwt,                 # Set off diagonals to inhibit
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=decbias),   # Set the Logistic function with bias = decbias
+    function=pnl.Logistic(x_0=decbias),   # Set the Logistic function with bias = decbias
     # noise=pnl.UniformToNormalDist(standard_deviation = SD).function, # The UniformToNormalDist function will
     integrator_mode=True,               # set the noise with a seed generator that is compatible with
     name='DECISION LAYER'               # MATLAB random seed generator 22 (rsg=22)
@@ -84,7 +82,7 @@ response_layer = pnl.LCAMechanism(
     leak=1.0,                                     # Sets off diagonals to negative values
     self_excitation=selfrwt,                       # Set diagonals to self excitate
     competition=respinhwt,                         # Set off diagonals to inhibit
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=respbias),          # Set the Logistic function with bias = decbias
+    function=pnl.Logistic(x_0=respbias),          # Set the Logistic function with bias = decbias
     # noise=pnl.UniformToNormalDist(standard_deviation = SD).function,
     integrator_mode=True,
     name='RESPONSE LAYER'
@@ -109,7 +107,7 @@ output_weights = np.array([
     [0.0, 0.0]
 ])
 
-decision_process = pnl.Process(
+decision_pathway = pnl.Pathway(
     pathway=[
         input_layer,
         input_weights,
@@ -117,7 +115,7 @@ decision_process = pnl.Process(
         output_weights,
         response_layer
     ],
-    name='DECISION PROCESS'
+    name='DECISION PATHWAY'
 )
 
 # Abstracted LC to modulate gain --------------------------------------------------------------------
@@ -146,8 +144,8 @@ LC = pnl.LCControlMechanism(
     initial_v_FitzHughNagumo=initial_v,          # Initialize v
     initial_w_FitzHughNagumo=initial_w,          # Initialize w
     objective_mechanism=pnl.ObjectiveMechanism(
-        function=psyneulink.core.components.functions.transferfunctions.Linear,
-        monitored_output_ports=[(
+        function=pnl.Linear,
+        monitor=[(
             decision_layer,  # Project output of T1 and T2 but not distractor from decision layer to LC
             np.array([[lcwt], [lcwt], [0.0]])
         )],
@@ -165,11 +163,9 @@ LC.set_log_conditions('value')
 for output_port in LC.output_ports:
     output_port.value *= G + k * initial_w
 
-LC_process = pnl.Process(pathway=[LC])
-
-# Now, we specify the processes of the System, which in this case is just the decision_process
-task = pnl.System(processes=[decision_process, LC_process],
-                  reinitialize_mechanisms_when=pnl.Never(),)
+task = pnl.Composition()
+task.add_linear_processing_pathway(decision_pathway)
+task.add_node(LC)
 
 # Create Stimulus -----------------------------------------------------------------------------------------------------
 
@@ -201,7 +197,8 @@ time = np.concatenate((stimulus_T1, stimulus_T2, stimulus_T3, stimulus_T4, stimu
 stim_list_dict = {input_layer: time}
 
 # show the system
-task.show()
+# task.show_graph()
+
 # run the system
 task.run(stim_list_dict, num_trials=trials)
 
@@ -212,10 +209,10 @@ task.run(stim_list_dict, num_trials=trials)
 LC_results = LC.log.nparray()[1][1]        # get logged results
 LC_results_w = np.zeros([trials])          # get LC_results_w
 for i in range(trials):
-    LC_results_w[i] = LC_results[4][i + 1][3][0][0]
+    LC_results_w[i] = LC_results[4][i + 1][2][0][0]
 LC_results_v = np.zeros([trials])          # get LC_results_v
 for i in range(trials):
-    LC_results_v[i] = LC_results[4][i + 1][2][0][0]
+    LC_results_v[i] = LC_results[4][i + 1][1][0][0]
 
 
 def h_v(v, C, d):                   # Compute h(v)
