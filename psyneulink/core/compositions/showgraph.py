@@ -1066,10 +1066,12 @@ class ShowGraph():
             else:
                 color = proj_color
                 proj_width = str(self.default_width)
+
             if show_projection_labels:
                 label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
             else:
                 label = ''
+
             gv.edge(sndr_label, rcvr_label, label=label, color=color, penwidth=proj_width, arrowhead=arrowhead)
 
         for cim in composition.cims:
@@ -1343,7 +1345,6 @@ class ShowGraph():
                             sndr_output_node_proj_owner = sndr_output_node_proj.owner.composition
                         else:
                             sndr_output_node_proj_owner = sndr_output_node_proj.owner
-
                         # Validate the Projection is from an OUTPUT node
                         if ((sndr_output_node_proj_owner in composition.nodes_to_roles and
                              not NodeRole.OUTPUT in composition.nodes_to_roles[sndr_output_node_proj_owner])):
@@ -1354,10 +1355,11 @@ class ShowGraph():
                         sndr_label = self._get_graph_node_label(composition,
                                                                 sndr_output_node_proj_owner,
                                                                 show_types, show_dimensions)
+
                         # Construct edge name
                         if show_node_structure:
                             # Get label of CIM's port as edge's receiver
-                            rcvr_cim_proj_label = f"{cim_label}:{InputPort.__name__}-{proj.receiver.name}"
+                            rcvr_output_cim_proj_label = f"{cim_label}:{InputPort.__name__}-{proj.receiver.name}"
                             if (isinstance(sndr_output_node_proj_owner, Composition)
                                     and show_nested is not NESTED):
                                 sndr_output_node_proj_label = sndr_label
@@ -1371,10 +1373,10 @@ class ShowGraph():
                                 #     f"{sndr_output_node_proj_owner._get_port_name(sndr_output_node_proj)}"
                         else:
                             sndr_output_node_proj_label = sndr_label
-                            rcvr_cim_proj_label = cim_label
+                            rcvr_output_cim_proj_label = cim_label
 
                         # Render Projection
-                        _render_projection(proj, g, sndr_output_node_proj_label, rcvr_cim_proj_label)
+                        _render_projection(proj, g, sndr_output_node_proj_label, rcvr_output_cim_proj_label)
 
                 # Projections from output_CIM to Node(s) in enclosing Composition
                 for output_port in composition.output_CIM.output_ports:
@@ -1394,6 +1396,7 @@ class ShowGraph():
                         rcvr_label = self._get_graph_node_label(composition,
                                                                 rcvr_node_input_port_owner,
                                                                 show_types, show_dimensions)
+
                         # Construct edge name
                         if show_node_structure:
                             # Get label of CIM's port as edge's receiver
@@ -2064,7 +2067,11 @@ class ShowGraph():
                                                  or sndr in composition.learning_components)
                         if isinstance(sender, ControlMechanism):
                             proj_color = self.control_color
-                            proj_arrowhead = self.control_projection_arrow
+                            if (not isinstance(rcvr, Composition)
+                                    or (not show_cim and
+                                        (show_nested is not NESTED)
+                                        or (show_nested is False))):
+                                proj_arrowhead = self.control_projection_arrow
                         # Check if Projection or its receiver is active
                         if any(item in active_items for item in {proj, proj.receiver.owner}):
                             if self.active_color == BOLD:
