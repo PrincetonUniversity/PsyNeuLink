@@ -1637,10 +1637,26 @@ class GridSearch(OptimizationFunction):
 
     def _run_cuda_grid(self, ocm, variable, context):
         assert ocm is ocm.agent_rep.controller
+        # Map allocations to values
         comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
-        ct_alloc, ct_res = comp_exec.cuda_evaluate(variable, self.search_space)
+        ct_alloc, ct_values = comp_exec.cuda_evaluate(variable, self.search_space)
 
-        return ct_alloc, ct_res
+        # Reduce array of values to min/max
+        # select_min params are:
+        # params, state, min_sample_ptr, sample_ptr, min_value_ptr, value_ptr, opt_count_ptr, count
+        bin_func = pnlvm.LLVMBinaryFunction.from_obj(self, tags=frozenset({"select_min"}))
+        ct_param = bin_func.byref_arg_types[0](*self._get_param_initializer(context))
+        ct_state = bin_func.byref_arg_types[1](*self._get_state_initializer(context))
+        ct_opt_sample = bin_func.byref_arg_types[2](float("NaN"))
+        ct_opt_value = bin_func.byref_arg_types[4]()
+        ct_opt_count = bin_func.byref_arg_types[6](0)
+        assert len(ct_values) == len(ct_alloc)
+        ct_count = bin_func.c_func.argtypes[7](len(ct_alloc))
+
+        bin_func(ct_param, ct_state, ct_opt_sample, ct_alloc, ct_opt_value,
+                 ct_values, ct_opt_count, ct_count)
+
+        return ct_opt_sample, ct_opt_value, ct_alloc, ct_values
 
     def _function(self,
                  variable=None,
@@ -1770,7 +1786,9 @@ class GridSearch(OptimizationFunction):
             ocm = self.objective_function.__self__ if self._is_composition_optimize() else None
             if ocm is not None and \
                ocm.parameters.comp_execution_mode._get(context).startswith("PTX"):
-                    all_samples, all_values = self._run_cuda_grid(ocm, variable, context)
+                    opt_sample, opt_value, all_samples, all_values = self._run_cuda_grid(ocm, variable, context)
+                    value_optimal = opt_value
+                    sample_optimal = opt_sample
             else:
                 last_sample, last_value, all_samples, all_values = super()._function(
                     variable=variable,
@@ -1778,28 +1796,28 @@ class GridSearch(OptimizationFunction):
                     params=params,
                 )
 
-            optimal_value_count = 1
-            value_sample_pairs = zip(all_values, all_samples)
-            value_optimal, sample_optimal = next(value_sample_pairs)
+                optimal_value_count = 1
+                value_sample_pairs = zip(all_values, all_samples)
+                value_optimal, sample_optimal = next(value_sample_pairs)
 
-            select_randomly = self.parameters.select_randomly_from_optimal_values._get(context)
-            for value, sample in value_sample_pairs:
-                if select_randomly and np.allclose(value, value_optimal):
-                    optimal_value_count += 1
+                select_randomly = self.parameters.select_randomly_from_optimal_values._get(context)
+                for value, sample in value_sample_pairs:
+                    if select_randomly and np.allclose(value, value_optimal):
+                        optimal_value_count += 1
 
-                    # swap with probability = 1/optimal_value_count in order to achieve
-                    # uniformly random selection from identical outcomes
-                    probability = 1 / optimal_value_count
-                    random_state = self._get_current_function_param("random_state", context)
-                    random_value = random_state.rand()
+                        # swap with probability = 1/optimal_value_count in order to achieve
+                        # uniformly random selection from identical outcomes
+                        probability = 1 / optimal_value_count
+                        random_state = self._get_current_function_param("random_state", context)
+                        random_value = random_state.rand()
 
-                    if random_value < probability:
+                        if random_value < probability:
+                            value_optimal, sample_optimal = value, sample
+
+                    elif (value > value_optimal and direction == MAXIMIZE) or \
+                            (value < value_optimal and direction == MINIMIZE):
                         value_optimal, sample_optimal = value, sample
-
-                elif (value > value_optimal and direction == MAXIMIZE) or \
-                        (value < value_optimal and direction == MINIMIZE):
-                    value_optimal, sample_optimal = value, sample
-                    optimal_value_count = 1
+                        optimal_value_count = 1
 
             if self._return_samples:
                 return_all_samples = all_samples
