@@ -103,8 +103,7 @@ class TestBuffer():
                 assert np.allclose(v, e)
         benchmark(B.execute, [1, 2, 3])
 
-    @pytest.mark.benchmark(group="BufferFunction")
-    def test_buffer_standalone_noise_function_invocation(self, benchmark):
+    def test_buffer_standalone_noise_function_invocation(self):
         class CallCount:
             def __init__(self):
                 self.count = 0

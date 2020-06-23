@@ -506,25 +506,18 @@ class TestConnectCompositionsViaCIMS:
 
         comp = Composition()
         mech = ProcessingMechanism()
+        comp.add_node(mech)
         warning_text = ('You are attempting to add custom ports to a CIM, which can result in unpredictable behavior '
                         'and is therefore recommended against. If suitable, you should instead add ports to the '
-                        'mechanism(s) that project to or are projected to from the CIM.')
-        warning_fired = False
-        comp.add_node(mech)
-        with pytest.warns(UserWarning) as w:
+                       r'mechanism\(s\) that project to or are projected to from the CIM.')
+        with pytest.warns(UserWarning, match=warning_text):
             comp.input_CIM.add_ports(OutputPort())
-            # confirm that warning fired and that its text is correct
-            for warn in w:
-                if warn.message.args[0] == warning_text:
-                    warning_fired = True
-            assert warning_fired
-            warning_fired = False
+
+        with pytest.warns(None) as w:
             comp._analyze_graph()
             comp.run({mech: [[1]]})
-            for warn in w[1:]:
-                if warn.message.args[0] == warning_text:
-                    warning_fired = True
-            assert not warning_fired
+
+        assert len(w) == 0
 
     def test_user_added_ports(self):
 
