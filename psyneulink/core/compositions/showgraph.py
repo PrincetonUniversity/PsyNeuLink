@@ -1375,6 +1375,7 @@ class ShowGraph():
                             sndr_output_node_proj_label = sndr_label
                             rcvr_output_cim_proj_label = cim_label
 
+                        # FIX 6/23/20 PROBLEM POINT:
                         # Render Projection
                         _render_projection(g, proj, sndr_output_node_proj_label, rcvr_output_cim_proj_label)
 
