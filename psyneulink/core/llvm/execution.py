@@ -632,7 +632,7 @@ class CompExecution(CUDAExecution):
 
         # There are 8 arguments to evaluate:
         # param, state, allocations, results, output, input, comp_params, comp_state, comp_data
-        # all but #2 and #3 are shared _gen_llvm_evaluate_function
+        # all but #2 and #3 are shared
         ct_param = bin_func.byref_arg_types[0](*ocm._get_evaluate_param_initializer(context))
         ct_state = bin_func.byref_arg_types[1](*ocm._get_evaluate_state_initializer(context))
         # FIXME: Make sure the dtype matches _gen_llvm_evaluate_function
