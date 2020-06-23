@@ -731,8 +731,12 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
 
         """
-        return self._get_current_function_param(RATE, context) * input + self._get_current_function_param(BIAS, context)
+        from math import e
+        rate = self._get_current_function_param(RATE, context)
+        scale = self._get_current_function_param(SCALE, context)
+        bias = self._get_current_function_param(BIAS, context)
 
+        return rate * scale * e**(rate * input + bias)
 
 # **********************************************************************************************************************
 #                                                   Logistic
