@@ -1053,7 +1053,7 @@ class ShowGraph():
 
         cim_rank = 'same'
 
-        def _render_projection(proj, gv, sndr_label, rcvr_label,
+        def _render_projection(_g, proj, sndr_label, rcvr_label,
                                proj_color=self.default_node_color,
                                arrowhead=self.default_projection_arrow):
             if any(item in active_items for item in {proj, proj.sender.owner}):
@@ -1072,7 +1072,7 @@ class ShowGraph():
             else:
                 label = ''
 
-            gv.edge(sndr_label, rcvr_label, label=label, color=color, penwidth=proj_width, arrowhead=arrowhead)
+            _g.edge(sndr_label, rcvr_label, label=label, color=color, penwidth=proj_width, arrowhead=arrowhead)
 
         for cim in composition.cims:
 
@@ -1181,7 +1181,7 @@ class ShowGraph():
                             sndr_output_node_proj_label = sndr_label
 
                         # Render Projection
-                        _render_projection(proj, enclosing_g, sndr_output_node_proj_label, rcvr_cim_proj_label)
+                        _render_projection(enclosing_g, proj, sndr_output_node_proj_label, rcvr_cim_proj_label)
 
                 # Projections from input_CIM to INPUT nodes
                 for output_port in composition.input_CIM.output_ports:
@@ -1232,7 +1232,7 @@ class ShowGraph():
                             rcvr_input_node_proj_label = rcvr_label
 
                         # Render Projection
-                        _render_projection(proj, g, sndr_input_cim_proj_label, rcvr_input_node_proj_label)
+                        _render_projection(g, proj, sndr_input_cim_proj_label, rcvr_input_node_proj_label)
 
             # PARAMETER_CIM -------------------------------------------------------------------------
 
@@ -1260,7 +1260,7 @@ class ShowGraph():
                         if self._is_composition_controller(ctl_mech_output_port_owner, enclosing_comp):
                             continue
                         # Skip if there is no outer Composition (enclosing_g),
-                        #    or Projections acorss nested Compositions are not being shown (show_nested=INSET)
+                        #    or Projections across nested Compositions are not being shown (show_nested=INSET)
                         if not enclosing_g or show_nested is INSET:
                             continue
                         sndr_label = self._get_graph_node_label(composition,
@@ -1278,7 +1278,7 @@ class ShowGraph():
                             rcvr_param_cim_proj_label = cim_label
 
                         # Render Projection
-                        _render_projection(proj, enclosing_g, sndr_ctl_sig_proj_label, rcvr_param_cim_proj_label,
+                        _render_projection(enclosing_g, proj, sndr_ctl_sig_proj_label, rcvr_param_cim_proj_label,
                                            self.control_color)
 
                 # Projections from parameter_CIM to Nodes that are being modulated
@@ -1326,7 +1326,7 @@ class ShowGraph():
                         else:
                             ctl_proj_color = self.control_color
 
-                        _render_projection(proj, g, sndr_param_cim_proj_label, rcvr_modulated_mec_proj_label,
+                        _render_projection(g, proj, sndr_param_cim_proj_label, rcvr_modulated_mec_proj_label,
                                            proj_color=ctl_proj_color, arrowhead=self.control_projection_arrow)
 
 
@@ -1376,7 +1376,7 @@ class ShowGraph():
                             rcvr_output_cim_proj_label = cim_label
 
                         # Render Projection
-                        _render_projection(proj, g, sndr_output_node_proj_label, rcvr_output_cim_proj_label)
+                        _render_projection(g, proj, sndr_output_node_proj_label, rcvr_output_cim_proj_label)
 
                 # Projections from output_CIM to Node(s) in enclosing Composition
                 for output_port in composition.output_CIM.output_ports:
@@ -1417,7 +1417,7 @@ class ShowGraph():
                             sndr_output_cim_proj_label = cim_label
 
                         # Render Projection
-                        _render_projection(proj, enclosing_g, sndr_output_cim_proj_label, rcvr_input_node_proj_label)
+                        _render_projection(enclosing_g, proj, sndr_output_cim_proj_label, rcvr_input_node_proj_label)
 
 
     def _assign_controller_components(self,
