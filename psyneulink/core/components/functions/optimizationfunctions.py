@@ -1492,12 +1492,13 @@ class GridSearch(OptimizationFunction):
                 sample_t.as_pointer(),
                 value_t.as_pointer(),
                 value_t.as_pointer(),
-                ctx.float_ty.as_pointer()]
+                ctx.float_ty.as_pointer(),
+                ctx.int32_ty]
         builder = ctx.create_llvm_function(args, self, tags=tags,
                                            return_type=pnlvm.ir.VoidType())
 
-        params, state, min_sample_ptr, sample_ptr, min_value_ptr, value_ptr, opt_count_ptr = builder.function.args
-        for p in builder.function.args:
+        params, state, min_sample_ptr, samples_ptr, min_value_ptr, values_ptr, opt_count_ptr, count = builder.function.args
+        for p in builder.function.args[:-1]:
             p.attributes.add('noalias')
             p.attributes.add('nonnull')
 
@@ -1517,37 +1518,40 @@ class GridSearch(OptimizationFunction):
         replace_ptr = builder.alloca(pnlvm.ir.IntType(1))
 
         # Check the value against current min
-        value = builder.load(value_ptr)
-        min_value = builder.load(min_value_ptr)
+        with pnlvm.helpers.for_loop_zero_inc(builder, count, "compare_loop") as (b, idx):
+            value_ptr = b.gep(values_ptr, [idx])
+            sample_ptr = b.gep(samples_ptr, [idx])
+            value = b.load(value_ptr)
+            min_value = b.load(min_value_ptr)
 
-        replace = builder.fcmp_unordered(direction, value, min_value)
-        builder.store(replace, replace_ptr)
+            replace = b.fcmp_unordered(direction, value, min_value)
+            b.store(replace, replace_ptr)
 
-        # Python does "is_close" check first.
-        # This implements reservoir sampling
-        with builder.if_then(select_random):
-            close = pnlvm.helpers.is_close(builder, value, min_value)
-            with builder.if_else(close) as (tb, eb):
-                with tb:
-                    opt_count = builder.load(opt_count_ptr)
-                    opt_count = builder.fadd(opt_count, opt_count.type(1))
-                    builder.store(opt_count, opt_count_ptr)
+            # Python does "is_close" check first.
+            # This implements reservoir sampling
+            with b.if_then(select_random):
+                close = pnlvm.helpers.is_close(b, value, min_value)
+                with b.if_else(close) as (tb, eb):
+                    with tb:
+                        opt_count = b.load(opt_count_ptr)
+                        opt_count = b.fadd(opt_count, opt_count.type(1))
+                        b.store(opt_count, opt_count_ptr)
 
-                    # Roll a dice to see if we should replace the current min
-                    prob = builder.fdiv(opt_count.type(1), opt_count)
-                    rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
-                    builder.call(rand_f, [random_state, rand_out_ptr])
-                    rand_out = builder.load(rand_out_ptr)
-                    replace = builder.fcmp_ordered("<", rand_out, prob)
-                    builder.store(replace, replace_ptr)
-                with eb:
-                    # Reset the counter if we are replacing with new best value
-                    with builder.if_then(builder.load(replace_ptr)):
-                        builder.store(opt_count_ptr.type.pointee(1), opt_count_ptr)
+                        # Roll a dice to see if we should replace the current min
+                        prob = b.fdiv(opt_count.type(1), opt_count)
+                        rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
+                        b.call(rand_f, [random_state, rand_out_ptr])
+                        rand_out = b.load(rand_out_ptr)
+                        replace = b.fcmp_ordered("<", rand_out, prob)
+                        b.store(replace, replace_ptr)
+                    with eb:
+                        # Reset the counter if we are replacing with new best value
+                        with b.if_then(b.load(replace_ptr)):
+                            b.store(opt_count_ptr.type.pointee(1), opt_count_ptr)
 
-        with builder.if_then(builder.load(replace_ptr)):
-            builder.store(builder.load(value_ptr), min_value_ptr)
-            builder.store(builder.load(sample_ptr), min_sample_ptr)
+            with b.if_then(b.load(replace_ptr)):
+                b.store(b.load(value_ptr), min_value_ptr)
+                b.store(b.load(sample_ptr), min_sample_ptr)
 
         builder.ret_void()
         return builder.function
@@ -1619,7 +1623,8 @@ class GridSearch(OptimizationFunction):
             # Check if smaller than current best.
             select_min_f = ctx.import_llvm_function(self, tags=tags.union({"select_min"}))
             b.call(select_min_f, [params, state, min_sample_ptr, sample_ptr,
-                                  min_value_ptr, value_ptr, opt_count_ptr])
+                                  min_value_ptr, value_ptr, opt_count_ptr,
+                                  ctx.int32_ty(1)])
 
             builder = b
 
