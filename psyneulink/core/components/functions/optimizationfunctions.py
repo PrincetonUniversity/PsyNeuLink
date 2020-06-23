@@ -1633,7 +1633,9 @@ class GridSearch(OptimizationFunction):
     def _run_cuda_grid(self, ocm, variable, context):
         assert ocm is ocm.agent_rep.controller
         comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
-        return comp_exec.cuda_evaluate(variable, self.search_space)
+        ct_alloc, ct_res = comp_exec.cuda_evaluate(variable, self.search_space)
+
+        return ct_alloc, ct_res
 
     def _function(self,
                  variable=None,
