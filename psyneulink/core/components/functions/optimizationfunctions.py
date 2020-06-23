@@ -1479,7 +1479,6 @@ class GridSearch(OptimizationFunction):
         ocm = getattr(self.objective_function, '__self__', None)
         if ocm is not None:
             assert ocm.function is self
-            obj_func = ctx.import_llvm_function(ocm, tags=tags.union({"evaluate"}))
             sample_t = ocm._get_evaluate_alloc_struct_type(ctx)
             value_t = ocm._get_evaluate_output_struct_type(ctx)
         else:
@@ -1573,11 +1572,11 @@ class GridSearch(OptimizationFunction):
         value_ptr = builder.alloca(value_t)
 
         obj_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                          self.parameters.objective_function.name)
+                                                    self.parameters.objective_function.name)
         obj_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                          self.parameters.objective_function.name)
+                                                    self.parameters.objective_function.name)
         search_space_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                             self.parameters.search_space.name)
+                                                       self.parameters.search_space.name)
 
         opt_count_ptr = builder.alloca(ctx.float_ty)
         builder.store(opt_count_ptr.type.pointee(0), opt_count_ptr)
@@ -1587,8 +1586,6 @@ class GridSearch(OptimizationFunction):
         # operands is a NaN. This makes sure we always set min_*
         # in the first iteration
         builder.store(min_value_ptr.type.pointee("NaN"), min_value_ptr)
-
-        select_min_f = ctx.import_llvm_function(self, tags=tags.union({"select_min"}))
 
         b = builder
         with contextlib.ExitStack() as stack:
@@ -1620,6 +1617,7 @@ class GridSearch(OptimizationFunction):
                               value_ptr] + extra_args)
 
             # Check if smaller than current best.
+            select_min_f = ctx.import_llvm_function(self, tags=tags.union({"select_min"}))
             b.call(select_min_f, [params, state, min_sample_ptr, sample_ptr,
                                   min_value_ptr, value_ptr, opt_count_ptr])
 
