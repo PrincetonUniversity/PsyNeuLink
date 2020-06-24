@@ -142,7 +142,7 @@ agent_comp.enable_model_based_optimizer = True
 
 if SHOW_GRAPH:
     # agent_comp.show_graph(show_mechanism_structure='ALL')
-    agent_comp.show_graph(show_model_based_optimizer=True)
+    agent_comp.show_graph(show_controller=True)
 
 
 # *********************************************************************************************************************
