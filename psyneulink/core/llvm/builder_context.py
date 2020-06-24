@@ -324,7 +324,10 @@ def _gen_cuda_kernel_wrapper_module(function):
 
     decl_f = ir.Function(module, function.type.pointee, function.name)
     assert decl_f.is_declaration
-    kernel_func = ir.Function(module, function.type.pointee, function.name + "_cuda_kernel")
+
+    wrapper_type = ir.FunctionType(ir.VoidType(), (*function.type.pointee.args,
+                                                   ir.IntType(32)))
+    kernel_func = ir.Function(module, wrapper_type, function.name + "_cuda_kernel")
     block = kernel_func.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
 
@@ -336,8 +339,13 @@ def _gen_cuda_kernel_wrapper_module(function):
     global_id = builder.mul(builder.call(ctaid_x_f, []), builder.call(ntid_x_f, []))
     global_id = builder.add(global_id, builder.call(tid_x_f, []))
 
-    # Index all pointer arguments
-    args = list(kernel_func.args)
+    # Check global id and exit if we're over
+    should_quit = builder.icmp_unsigned(">=", global_id, kernel_func.args[-1])
+    with builder.if_then(should_quit):
+        builder.ret_void()
+
+    # Index all pointer arguments. Ignore the thread count argument
+    args = list(kernel_func.args)[:-1]
     indexed_args = []
 
     is_grid_evaluate = len(args) == 8
