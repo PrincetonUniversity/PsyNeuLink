@@ -27,7 +27,7 @@ ocomp = Composition(name='COMPOSITION',
                         control=(SLOPE, internal_mech))
                     )
 
-ocomp.show_graph(show_nesed=NESTED,
+ocomp.show_graph(show_nested=NESTED,
                  show_learning=True,
                  # show_cim=True
                  )
