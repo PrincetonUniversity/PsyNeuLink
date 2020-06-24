@@ -190,7 +190,6 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.ports.outputport import PRIMARY
 from psyneulink.core.globals.keywords import \
