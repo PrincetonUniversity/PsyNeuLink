@@ -368,8 +368,11 @@ window.scrollToAnchor = {
 
         match = document.getElementById(href.slice(1));
         if(match) {
+          console.log(match)
+          if ($(match.querySelector('.anchorjs-link')).hasClass('dev-mode-link')){
+            $(document.querySelector('.switch-ctrl input')).prop('checked', true).trigger('change')
+          };
           var anchorOffset = $(match).offset().top - this.getFixedOffset();
-          console.log($(match).offset().top, this.getFixedOffset())
           $('html, body').scrollTop(anchorOffset);
 
           // Add the state to history as-per normal anchor links
@@ -707,6 +710,84 @@ function ThemeNav () {
         this.navBar = $('div.psyneulink-side-scroll:first');
         this.win = $(window);
 
+        // Add dev mode tag to all relevant sections
+        document.querySelectorAll(
+            '.technical-note'
+        ).forEach(
+            function (t) {
+                t.classList.add('dev-mode-contingent');
+                t.querySelectorAll('.anchorjs-link').forEach(
+                    function (anchor) {
+                        anchor.classList.add('dev-mode-link');
+                    }
+                )
+            }
+        );
+        // set display status for methods
+        document.querySelectorAll(
+            '#class-reference .method'
+        ).forEach(
+            function (m) {
+                if (m.querySelector('code').textContent[0] === '_') {
+                    m.classList.add('dev-mode-contingent');
+                    m.querySelectorAll('.anchorjs-link').forEach(
+                        function (anchor) {
+                            anchor.classList.add('dev-mode-link');
+                        }
+                    )
+                }
+            }
+        );
+        // set display status for attributes
+        document.querySelectorAll(
+            '#class-reference .attribute'
+        ).forEach(
+            function (m) {
+                if (m.querySelector('code').textContent[0] === '_') {
+                    m.classList.add('dev-mode-contingent');
+                    m.querySelectorAll('.anchorjs-link').forEach(
+                        function (anchor) {
+                            anchor.classList.add('dev-mode-link');
+                        }
+                    )
+                }
+            }
+        );
+
+        // Setup dev mode
+        function devMode_set(newStatus) {
+            localStorage.setItem('dev-mode-enabled', newStatus);
+            displaySetting = newStatus ? 'inherit' : 'none'
+            // set display status for technical notes
+            document.querySelectorAll(
+                '.dev-mode-contingent'
+            ).forEach(
+                function (e) {
+                    e.style.display = displaySetting
+                }
+            );
+        }
+        function devMode_toggle(){
+            devMode_set($(this).is(':checked'))
+        }
+        var devMode = (localStorage.getItem('dev-mode-enabled') == 'true');
+        devMode_set(devMode);
+        var switch_html =
+            "            <label class=\"switch\">\n" +
+            "              <div class=\"switch-txt\">\n" +
+            "                Dev Mode\n" +
+            "              </div>\n" +
+            "              <div class=\"switch-ctrl\">\n" +
+            `                <input type=\"checkbox\" ${devMode?'checked':''}>\n` +
+            "                <span class=\"slider round\"></span>\n" +
+            "              </div>\n" +
+            "            </label>";
+
+        var div = document.createElement('div');
+        div.innerHTML = switch_html.trim();
+        $(div.querySelector('input')).change(devMode_toggle);
+        document.querySelector('.psyneulink-dev-mode-toggle').appendChild(div.firstChild)
+
         // Set up javascript UX bits
         $(document)
             // Shift nav in mobile when clicking the menu.
@@ -788,7 +869,7 @@ function ThemeNav () {
                     span.style.position = 'relative';
                 }
             }
-        )
+        );
     };
 
     nav.reset = function () {
@@ -877,7 +958,6 @@ if (typeof(window) != 'undefined') {
         StickyNav: module.exports.ThemeNav,
     };
 }
-
 
 // requestAnimationFrame polyfill by Erik Möller. fixes from Paul Irish and Tino Zijdel
 // https://gist.github.com/paulirish/1579671
