@@ -6,4 +6,5 @@ EVCAuxiliary
 
 .. automodule:: psyneulink.library.components.mechanisms.modulatory.control.evc.evcauxiliary
    :members:
+   :private-members:
    :exclude-members: random, LinearCombination, EVCAuxiliaryFunction, Parameters

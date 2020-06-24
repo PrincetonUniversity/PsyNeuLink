@@ -176,8 +176,8 @@ stabilityFlexibility.enable_model_based_optimizer = True
 # stabilityFlexibility.show_graph(show_node_structure=[pnl.FUNCTIONS,
 # 													 pnl.PORT_FUNCTION_PARAMS,
 # 													 pnl.MECH_FUNCTION_PARAMS],
-# 								show_model_based_optimizer=True)
-stabilityFlexibility.show_graph(show_node_structure=pnl.ALL, show_model_based_optimizer=True, show_cim=True)
+# 								show_controller=True)
+stabilityFlexibility.show_graph(show_node_structure=pnl.ALL, show_controller=True, show_cim=True)
 
 
 # print("Beginning of Run")

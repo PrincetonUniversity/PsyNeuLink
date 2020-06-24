@@ -48,8 +48,8 @@ def report_trial(system):
     B_value.append(B.parameters.value.get(system))
     LC_value.append(LC.parameters.value.get(system))
 
-S.show_graph(show_model_based_optimizer=True)
-# S.show_graph(show_model_based_optimizer=True, show_node_structure=ALL)
+S.show_graph(show_controller=True)
+# S.show_graph(show_controller=True, show_node_structure=ALL)
 
 # result = S.run(inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},
 #               call_after_trial=functools.partial(report_trial, S))

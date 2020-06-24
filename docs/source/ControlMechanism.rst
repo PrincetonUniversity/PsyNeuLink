@@ -13,4 +13,5 @@ ControlMechanism
 
 .. automodule:: psyneulink.core.components.mechanisms.modulatory.control.controlmechanism
    :members:
+   :private-members:
    :exclude-members: Linear, random, Parameters, control_signals

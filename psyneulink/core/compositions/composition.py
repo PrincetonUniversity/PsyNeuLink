@@ -344,9 +344,9 @@ graph.
 
 .. _Composition_Graph_Projection_Vertices:
 .. technical_note::
-   Because Projections are not strictly edges, they are assigned to `vertices <Graph.vertices>` in the Composition's
-   `graph <Composition.graph>`, along with its Nodes.  The actual edges are implicit in the dependencies determined
-   by the Projections, and listed in the graph's `dependency_dict <Graph.dependency_dict>`.
+    Because Projections are not strictly edges, they are assigned to `vertices <Graph.vertices>` in the Composition's
+    `graph <Composition.graph>`, along with its Nodes.  The actual edges are implicit in the dependencies determined
+    by the Projections, and listed in the graph's `dependency_dict <Graph.dependency_dict>`.
 
 Although individual Projections are directed, pairs of Nodes can be connected with Projections in each direction
 (forming a local `cycle <Composition_Cycle>`), and the `AutoAssociativeProjection` class of Projection can even
@@ -355,10 +355,10 @@ connect a Node with itself.  Projections can also connect the Node(s) of a Compo
 
 .. _Composition_Projections_to_CIMs:
 .. technical_note::
-   Although Projections can be specified to and from Nodes within a nested Composition, these are actually implemented
-   as Projections to or from the nested Composition's `input_CIM <Composition.input_CIM>`,`parameter_CIM
-   <Composition.parameter_CIM>` or `output_CIM <Composition.output_CIM>`, respectively; those, in turn, send or receive
-   Projections to the specified Nodes within the nested Composition.
+    Although Projections can be specified to and from Nodes within a nested Composition, these are actually implemented
+    as Projections to or from the nested Composition's `input_CIM <Composition.input_CIM>`,`parameter_CIM
+    <Composition.parameter_CIM>` or `output_CIM <Composition.output_CIM>`, respectively; those, in turn, send or receive
+    Projections to the specified Nodes within the nested Composition.
 
 Subsets of Nodes connected by Projections are often defined as a `Pathway <Pathway>`, as decribed in the next section.
 
@@ -7931,9 +7931,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 of Mechanisms that have stateful functions. If a node's reset_stateful_function_when condition is set to
                 Never, but they are listed in the reset_stateful_functions_to dict, then they will be reset once at the
                 beginning of the run, using the provided values.
-                ..technical_note::
-                    These values are used to seed the stateful attributes of Mechanisms with StatefulFunctions, thus
-                    effectively starting Integration at a user-specified point for a call to run.
 
         reset_stateful_functions_when :  Condition : default Never()
             sets the reset_stateful_function_when condition for all nodes in the Composition that currently have their
