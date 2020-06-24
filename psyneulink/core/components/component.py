@@ -1233,6 +1233,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             newone.defaults._owner = newone
             newone._compilation_data._owner = newone
 
+        # by copying, this instance is no longer "inherent" to a single
+        # 'import psyneulink' call
+        newone._is_pnl_inherent = False
+
         return newone
 
     # ------------------------------------------------------------------------------------------------------------------

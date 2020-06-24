@@ -20,11 +20,11 @@ of the Composition and, optionally, any `nested Compositions <Composition_Nested
 <Composition_Nodes>` of the Composition is represented as a node in the graph, and `Projections <Projection>` between
 them as edges.
 
-.. technical_note:
-   Every Composition is assigned a `ShowGraph` object, that is implemented in the free-standing showgraph.py module.
-   The `show_graph <Compositoin.show_graph>` method of a Composition directly calls the `show_graph
-   <ShowGraph.show_graph>` method of its `ShowGraph` object, as do all links to documentation concerning
-   `show_graph`.
+.. technical_note::
+    Every Composition is assigned a `ShowGraph` object, that is implemented in the free-standing showgraph.py module.
+    The `show_graph <Compositoin.show_graph>` method of a Composition directly calls the `show_graph
+    <ShowGraph.show_graph>` method of its `ShowGraph` object, as do all links to documentation concerning
+    `show_graph`.
 
 By default, all nodes within a Composition, including any `Compositions nested <Composition_Nested>` within it, are
 shown, each displayed as an oval (if the node is a `Mechanism`) or a rectangle (if it is a nested Composition),
@@ -853,7 +853,7 @@ class ShowGraph():
                                     ENCLOSING_G:g,
                                     NESTING_LEVEL:nesting_level + 1})
                 # Get subgraph for nested Composition
-                nested_comp_graph = rcvr.show_graph(**nested_args)
+                nested_comp_graph = rcvr._show_graph.show_graph(**nested_args)
 
                 nested_comp_graph.name = "cluster_" + rcvr.name
                 rcvr_label = rcvr.name

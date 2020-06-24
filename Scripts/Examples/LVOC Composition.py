@@ -15,7 +15,7 @@ lvoc = OptimizationControlMechanism(agent_rep=RegressionCFA,
 c.add_node(lvoc)
 input_dict = {m1: [[1], [1]], m2: [1]}
 
-c.show_graph(model_based_optimizer_color=True)
+c.show_graph(show_controller=True)
 
 # c.run(inputs=input_dict)
 

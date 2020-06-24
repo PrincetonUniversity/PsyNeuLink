@@ -344,9 +344,9 @@ graph.
 
 .. _Composition_Graph_Projection_Vertices:
 .. technical_note::
-   Because Projections are not strictly edges, they are assigned to `vertices <Graph.vertices>` in the Composition's
-   `graph <Composition.graph>`, along with its Nodes.  The actual edges are implicit in the dependencies determined
-   by the Projections, and listed in the graph's `dependency_dict <Graph.dependency_dict>`.
+    Because Projections are not strictly edges, they are assigned to `vertices <Graph.vertices>` in the Composition's
+    `graph <Composition.graph>`, along with its Nodes.  The actual edges are implicit in the dependencies determined
+    by the Projections, and listed in the graph's `dependency_dict <Graph.dependency_dict>`.
 
 Although individual Projections are directed, pairs of Nodes can be connected with Projections in each direction
 (forming a local `cycle <Composition_Cycle>`), and the `AutoAssociativeProjection` class of Projection can even
@@ -355,10 +355,10 @@ connect a Node with itself.  Projections can also connect the Node(s) of a Compo
 
 .. _Composition_Projections_to_CIMs:
 .. technical_note::
-   Although Projections can be specified to and from Nodes within a nested Composition, these are actually implemented
-   as Projections to or from the nested Composition's `input_CIM <Composition.input_CIM>`,`parameter_CIM
-   <Composition.parameter_CIM>` or `output_CIM <Composition.output_CIM>`, respectively; those, in turn, send or receive
-   Projections to the specified Nodes within the nested Composition.
+    Although Projections can be specified to and from Nodes within a nested Composition, these are actually implemented
+    as Projections to or from the nested Composition's `input_CIM <Composition.input_CIM>`,`parameter_CIM
+    <Composition.parameter_CIM>` or `output_CIM <Composition.output_CIM>`, respectively; those, in turn, send or receive
+    Projections to the specified Nodes within the nested Composition.
 
 Subsets of Nodes connected by Projections are often defined as a `Pathway <Pathway>`, as decribed in the next section.
 
@@ -2340,7 +2340,6 @@ import typecheck as tc
 from PIL import Image
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
-from enum import Enum
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET
@@ -2823,7 +2822,7 @@ class Graph(object):
         return dict((v.component,set(d.component for d in v.parents)) for v in self.vertices)
 
 
-class NodeRole(Enum):
+class NodeRole(enum.Enum):
     """Roles assigned to `Nodes <Composition_Nodes>` of a `Composition`.
 
     Attributes
@@ -2871,6 +2870,10 @@ class NodeRole(Enum):
     CONTROL_OBJECTIVE
         A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a `ControlMechanism` other
         than the Composition's `controller <Composition.controller>` (if it has one).
+
+    CONTROLLER
+        A `Node <Composition_Nodes>` that is the `controller <Composition.controller>` of a Composition.
+        This role cannot be modified programmatically.
 
     CONTROLLER_OBJECTIVE
         A `Node <Composition_Nodes>` that is an `ObjectiveMechanism` associated with a Composition's `controller
@@ -2922,20 +2925,22 @@ class NodeRole(Enum):
         This role cannot be modified programmatically.
 
     """
-    ORIGIN = 0
-    INPUT = 1
-    SINGLETON = 2
-    INTERNAL = 3
-    CYCLE = 4
-    FEEDBACK_SENDER = 5
-    FEEDBACK_RECEIVER = 6
-    CONTROL_OBJECTIVE = 7
-    CONTROLLER_OBJECTIVE = 8
-    LEARNING = 9
-    TARGET = 10
-    LEARNING_OBJECTIVE = 11
-    OUTPUT = 12
-    TERMINAL = 13
+    ORIGIN = enum.auto()
+    INPUT = enum.auto()
+    SINGLETON = enum.auto()
+    INTERNAL = enum.auto()
+    CYCLE = enum.auto()
+    FEEDBACK_SENDER = enum.auto()
+    FEEDBACK_RECEIVER = enum.auto()
+    CONTROL_OBJECTIVE = enum.auto()
+    CONTROLLER = enum.auto()
+    CONTROLLER_OBJECTIVE = enum.auto()
+    LEARNING = enum.auto()
+    TARGET = enum.auto()
+    LEARNING_OBJECTIVE = enum.auto()
+    OUTPUT = enum.auto()
+    TERMINAL = enum.auto()
+
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
     """
@@ -2984,7 +2989,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Composition is executed.  Set to True by default if **controller** specified;  if set to False,
         the `controller <Composition.controller>` is ignored when the Composition is executed.
 
-    controller_mode: Enum[BEOFRE|AFTER] : default AFTER
+    controller_mode: enum.Enum[BEOFRE|AFTER] : default AFTER
         specifies whether the controller is executed before or after the rest of the Composition
         in each trial.  Must be either the keyword *BEFORE* or *AFTER*.
 
@@ -3813,7 +3818,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         node_role_pair = (node, role)
         if node_role_pair not in self.required_node_roles:
             self.required_node_roles.append(node_role_pair)
-        node_role_pairs = [item for item in self.excluded_node_roles if item[0] is node and item[1 is role]]
+        node_role_pairs = [item for item in self.excluded_node_roles if item[0] is node and item[1] is role]
         for item in node_role_pairs:
             self.excluded_node_roles.remove(item)
 
@@ -3917,7 +3922,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
 
         try:
-            return [node for node in self.nodes if role in self.nodes_to_roles[node]]
+            return [node for node in self.nodes_to_roles if role in self.nodes_to_roles[node]]
 
         except KeyError as e:
             raise CompositionError('Node missing from {0}.nodes_to_roles: {1}'.format(self, e))
@@ -4275,6 +4280,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node, role in self.excluded_node_roles:
                 if role in self.get_roles_by_node(node):
                     self._remove_node_role(node, role)
+
+        # Manual override to avoid INPUT/OUTPUT setting, which would cause
+        # CIMs to be created, which is not correct for controllers
+        if self.controller is not None:
+            self.nodes_to_roles[self.controller] = {NodeRole.CONTROLLER}
 
     def _set_node_roles(self, node, roles):
         self._clear_node_roles(node)
@@ -5851,7 +5861,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     learning_function:LearningFunction,
                                     loss_function=None,
                                     learning_rate:tc.any(int,float)=0.05,
-                                    error_function=LinearCombination(),
+                                    error_function=LinearCombination,
                                     # # MODIFIED 5/25/20 OLD:
                                     # learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
                                     # MODIFIED 5/25/20 NEW:
@@ -6904,6 +6914,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         It also assigns a `ControlSignal` for any `Parameter` of a `Mechanism` `specified for control
         <ParameterPort_Value_Specification>`, and a `ControlProjection` to its correponding `ParameterPort`.
 
+        The ControlMechanism is assigned the `NodeRole` `CONTROLLER`.
+
         """
 
         if not isinstance(controller, ControlMechanism):
@@ -7904,9 +7916,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 of Mechanisms that have stateful functions. If a node's reset_stateful_function_when condition is set to
                 Never, but they are listed in the reset_stateful_functions_to dict, then they will be reset once at the
                 beginning of the run, using the provided values.
-                ..technical_note::
-                    These values are used to seed the stateful attributes of Mechanisms with StatefulFunctions, thus
-                    effectively starting Integration at a user-specified point for a call to run.
 
         reset_stateful_functions_when :  Condition : default Never()
             sets the reset_stateful_function_when condition for all nodes in the Composition that currently have their
@@ -7914,7 +7923,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         skip_initialization : bool : default False
 
-        clamp_input : Enum[SOFT_CLAMP|HARD_CLAMP|PULSE_CLAMP|NO_CLAMP] : default SOFT_CLAMP
+        clamp_input : enum.Enum[SOFT_CLAMP|HARD_CLAMP|PULSE_CLAMP|NO_CLAMP] : default SOFT_CLAMP
             specifies how inputs are handled for the Composition's `INPUT` `Nodes <Composition_Nodes>`.
 
             COMMENT:
@@ -8010,7 +8019,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             the scheduler object that owns the conditions that will instruct the execution of the Composition.
             If not specified, the Composition will use its automatically generated scheduler.
 
-        bin_execute : bool or Enum[LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun] : default Python
+        bin_execute : bool or enum.Enum[LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun] : default Python
             specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
             False is the same as ``Python``;  True tries LLVM compilation modes, in order of power, progressively
             reverting to less powerful modes (in the order of the options listed), and to Python if no compilation
@@ -8565,7 +8574,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 called after each `PASS` is executed
                 passed the current *context* (but it is not necessary for your callable to take).
 
-            bin_execute : bool or Enum[LLVM|LLVMexec|Python|PTXExec] : default Python
+            bin_execute : bool or enum.Enum[LLVM|LLVMexec|Python|PTXExec] : default Python
                 specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
                 see **bin_execute** argument of `run <Composition.run>` method for additional details.
 
@@ -9692,8 +9701,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.controller:
             yield self.controller
 
-    def show_graph(self, **kwargs):
-        return self._show_graph(**kwargs)
+    def show_graph(self,
+                   show_node_structure=False,
+                   show_nested=NESTED,
+                   show_nested_args=ALL,
+                   show_cim=False,
+                   show_controller=True,
+                   show_learning=False,
+                   show_headers=True,
+                   show_types=False,
+                   show_dimensions=False,
+                   show_projection_labels=False,
+                   active_items=None,
+                   output_fmt='pdf',
+                   context=None):
+        return self._show_graph(show_node_structure=show_node_structure,
+                                show_nested=show_nested,
+                                show_nested_args=show_nested_args,
+                                show_cim=show_cim,
+                                show_controller=show_controller,
+                                show_learning=show_learning,
+                                show_headers=show_headers,
+                                show_types=show_types,
+                                show_dimensions=show_dimensions,
+                                show_projection_labels=show_projection_labels,
+                                active_items=active_items,
+                                output_fmt=output_fmt,
+                                context=context)
 
     def _set_up_animation(self, context):
         self._show_graph._set_up_animation(context)

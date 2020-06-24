@@ -328,7 +328,6 @@ def test_DDM_noise(mode, benchmark, noise, expected):
 # ------------------------------------------------------------------------------------------------
 @pytest.mark.ddm_mechanism
 @pytest.mark.mechanism
-@pytest.mark.benchmark(group="DDM")
 @pytest.mark.parametrize("noise", [
     2, NormalDist(),
     ], ids=["int", "functions"])
@@ -354,7 +353,6 @@ def test_DDM_noise_invalid(noise):
 # ------------------------------------------------------------------------------------------------
 @pytest.mark.ddm_mechanism
 @pytest.mark.mechanism
-@pytest.mark.benchmark(group="DDM")
 @pytest.mark.parametrize("stim", [
     10, 10.0, [10],
     ], ids=["int", "float", "list"])

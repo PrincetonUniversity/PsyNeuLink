@@ -670,11 +670,13 @@ class TestCompositionPathwayAdditionMethods:
         B = ProcessingMechanism(name='B')
         p = Pathway(pathway=([A,B], Reinforcement), name='P')
         c = Composition()
-        with pytest.warns(UserWarning) as w:
+
+        regexp = "LearningFunction found in specification of 'pathway' arg for "\
+                 "add_linear_procesing_pathway method .*"\
+                r"Reinforcement'>; it will be ignored"
+        with pytest.warns(UserWarning, match=regexp):
             c.add_linear_processing_pathway(pathway=p)
-        assert ("LearningFunction found in specification of 'pathway' arg for " in w[0].message.args[0] and
-                "add_linear_procesing_pathway method" in w[0].message.args[0] and
-                "Reinforcement'>; it will be ignored" in w[0].message.args[0])
+
         assert set(c.get_roles_by_node(A)) == {NodeRole.INPUT, NodeRole.ORIGIN}
         assert set(c.get_roles_by_node(B)) == {NodeRole.OUTPUT, NodeRole.TERMINAL}
         assert set(c.pathways['P'].roles) == {PathwayRole.INPUT,
@@ -840,12 +842,10 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_linear_processing_pathway(pathway=[A,P,B])
 
-        with pytest.warns(UserWarning) as w:
+        regexp = "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method .*"\
+                f"already exists in {comp.name}"
+        with pytest.warns(UserWarning, match=regexp):
             comp.add_linear_processing_pathway(pathway=[A,P,B])
-
-        warn_text = w[0].message.args[0]
-        assert "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method" in warn_text
-        assert f"already exists in {comp.name}" in warn_text
 
     def test_add_processing_pathway_inferred_duplicate_warning(self):
         A = TransferMechanism()
@@ -854,12 +854,10 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_linear_processing_pathway(pathway=[A,B,C])
 
-        with pytest.warns(UserWarning) as w:
+        regexp = "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method .*"\
+                f"has same Nodes in same order as one already in {comp.name}"
+        with pytest.warns(UserWarning, match=regexp):
             comp.add_linear_processing_pathway(pathway=[A,B,C])
-
-        warn_text = w[0].message.args[0]
-        assert "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method" in warn_text
-        assert f"has same Nodes in same order as one already in {comp.name}" in warn_text
 
     def test_add_processing_pathway_subset_duplicate_warning(self):
         A = TransferMechanism()
@@ -868,12 +866,10 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_linear_processing_pathway(pathway=[A,B,C])
 
-        with pytest.warns(UserWarning) as w:
+        regexp = "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method .*"\
+                f"has same Nodes in same order as one already in {comp.name}"
+        with pytest.warns(UserWarning, match=regexp):
             comp.add_linear_processing_pathway(pathway=[A,B])
-
-        warn_text = w[0].message.args[0]
-        assert "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method" in warn_text
-        assert f"has same Nodes in same order as one already in {comp.name}" in  warn_text
 
     def test_add_backpropagation_pathway_exact_duplicate_warning(self):
         A = TransferMechanism()
@@ -882,12 +878,10 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_backpropagation_learning_pathway(pathway=[A,P,B])
 
-        with pytest.warns(UserWarning) as w:
+        regexp = "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method .*"\
+                f"already exists in {comp.name}"
+        with pytest.warns(UserWarning, match=regexp):
             comp.add_backpropagation_learning_pathway(pathway=[A,P,B])
-
-        warn_text = w[0].message.args[0]
-        assert "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method" in warn_text
-        assert f"already exists in {comp.name}" in warn_text
 
     def test_add_backpropagation_pathway_inferred_duplicate_warning(self):
         A = TransferMechanism()
@@ -896,12 +890,10 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
 
-        with pytest.warns(UserWarning) as w:
+        regexp = "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method .*"\
+               f"has same Nodes in same order as one already in {comp.name}"
+        with pytest.warns(UserWarning, match=regexp):
             comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-
-        warn_text = w[0].message.args[0]
-        assert "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method" in warn_text
-        assert f"has same Nodes in same order as one already in {comp.name}" in warn_text
 
     def test_add_backpropagation_pathway_contiguous_subset_duplicate_warning(self):
         A = TransferMechanism()
@@ -910,12 +902,10 @@ class TestDuplicatePathwayWarnings:
         comp = Composition()
         comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
 
-        with pytest.warns(UserWarning) as w:
+        regexp = "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method .*"\
+                 f"has same Nodes in same order as one already in {comp.name}"
+        with pytest.warns(UserWarning, match=regexp):
             comp.add_backpropagation_learning_pathway(pathway=[A,B])
-
-        warn_text = w[0].message.args[0]
-        assert "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method" in warn_text
-        assert f"has same Nodes in same order as one already in {comp.name}" in warn_text
 
     def test_add_processing_pathway_non_contiguous_subset_is_OK(self):
         A = TransferMechanism()
@@ -5901,9 +5891,11 @@ class TestProperties:
                                       pytest.param('PTXExec', marks=(pytest.mark.xfail, pytest.mark.llvm))])
     def test_llvm_fallback(self, mode):
         comp = Composition()
-        def myFunc(variable, params, context):
+        # FIXME: using num_executions is a hack. The name collides with
+        #        a stateful param of every component and thus it's not supported
+        def myFunc(variable, params, context, num_executions):
             return variable * 2
-        U = UserDefinedFunction(custom_function=myFunc, default_variable=[[0, 0], [0, 0]])
+        U = UserDefinedFunction(custom_function=myFunc, default_variable=[[0, 0], [0, 0]], num_executions=0)
         A = TransferMechanism(name="composition-pytests-A",
                               default_variable=[[1.0, 2.0], [3.0, 4.0]],
                               function=U)
@@ -6167,17 +6159,9 @@ class TestInitialize:
         err = f"A value is specified for {A.name} of {a_Composition.name} in the 'initialize_cycle_values' " \
               f"argument of call to run, but it is neither part of a cycle nor a FEEDBACK_SENDER. " \
               f"Its value will be overwritten when the node first executes, and therefore not used."
-        with pytest.warns(UserWarning) as w:
-            a_Composition.run(
-                inputs={
-                    A:[1]
-                },
-                initialize_cycle_values={
-                    A:[1]
-                }
-            )
-            warning_triggered = err in [warn.message.args[0] for warn in w]
-            assert warning_triggered
+        with pytest.warns(UserWarning, match=err):
+            a_Composition.run(inputs={A:[1]},
+                              initialize_cycle_values={A:[1]})
 
 
 class TestResetValues:
@@ -6794,6 +6778,33 @@ class TestNodeRoles:
         assert any([isinstance(proj.receiver.owner, LearningMechanism) for proj in objective.efferents])
         # Validate that TERMINAL is LearningMechanism that Projects to first MappingProjection in learning_pathway
         (comp.get_nodes_by_role(NodeRole.TERMINAL))[0].efferents[0].receiver.owner.sender.owner == A
+
+    def test_controller_role(self):
+        comp = Composition()
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        comp.add_linear_processing_pathway([A, B])
+        comp.add_controller(
+            controller=pnl.OptimizationControlMechanism(
+                agent_rep=comp,
+                features=[A.input_port],
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    function=pnl.LinearCombination(
+                        operation=pnl.PRODUCT),
+                    monitor=[A]
+                ),
+                function=pnl.GridSearch(),
+                control_signals=[
+                    {
+                        PROJECTIONS: ("slope", B),
+                        ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+                    }
+                ]
+            )
+        )
+
+        assert comp.get_nodes_by_role(NodeRole.CONTROLLER) == [comp.controller]
+        assert comp.nodes_to_roles[comp.controller] == {NodeRole.CONTROLLER}
 
 
 class TestMisc:
