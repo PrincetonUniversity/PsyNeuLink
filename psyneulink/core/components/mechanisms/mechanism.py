@@ -2306,8 +2306,9 @@ class Mechanism_Base(Mechanism):
                 ):
         """Carry out a single `execution <Mechanism_Execution>` of the Mechanism.
 
-        .. technical_note:
+        .. technical_note::
             Execution sequence:
+
             * Handle initialization if `initialization_status <Compoonent.initialization_status> is
               *ContextFlags.INITIALIZING*
             * Assign any `Port-specific runtime params <_Mechanism_Runtime_Port_and_Projection_Param_Specification>`
