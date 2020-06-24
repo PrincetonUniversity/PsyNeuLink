@@ -3213,57 +3213,58 @@ class Mechanism_Base(Mechanism):
             for use in a GraphViz node specification.
 
         Example HTML for structure:
+            .. parsed-literal::
 
-        <<table border="1" cellborder="0" cellspacing="0" bgcolor="tan">          <- MAIN TABLE
+                <<table border="1" cellborder="0" cellspacing="0" bgcolor="tan">          <- MAIN TABLE
 
-        <tr>                                                                      <- BEGIN OutputPorts
-            <td colspan="2"><table border="0" cellborder="0" BGCOLOR="bisque">    <- OutputPorts OUTER TABLE
-                <tr>
-                    <td colspan="1"><b>OutputPorts</b></td>                      <- OutputPorts HEADER
-                </tr>
-                <tr>
-                    <td><table border="0" cellborder="1">                         <- OutputPort CELLS TABLE
+                <tr>                                                                      <- BEGIN OutputPorts
+                    <td colspan="2"><table border="0" cellborder="0" BGCOLOR="bisque">    <- OutputPorts OUTER TABLE
                         <tr>
-                            <td port="OutputPortPort1">OutputPort 1<br/><i>function 1</i><br/><i>=value</i></td>
-                            <td port="OutputPortPort2">OutputPort 2<br/><i>function 2</i><br/><i>=value</i></td>
+                            <td colspan="1"><b>OutputPorts</b></td>                      <- OutputPorts HEADER
+                        </tr>
+                        <tr>
+                            <td><table border="0" cellborder="1">                         <- OutputPort CELLS TABLE
+                                <tr>
+                                    <td port="OutputPortPort1">OutputPort 1<br/><i>function 1</i><br/><i>=value</i></td>
+                                    <td port="OutputPortPort2">OutputPort 2<br/><i>function 2</i><br/><i>=value</i></td>
+                                </tr>
+                            </table></td>
                         </tr>
                     </table></td>
                 </tr>
-            </table></td>
-        </tr>
 
-        <tr>                                                                      <- BEGIN MECHANISM & ParameterPorts
-            <td port="Mech name"><b>Mech name</b><br/><i>Roles</i></td>           <- MECHANISM CELL (OUTERMOST TABLE)
-            <td><table border="0" cellborder="0" BGCOLOR="bisque">                <- ParameterPorts OUTER TABLE
-                <tr>
-                    <td><b>ParameterPorts</b></td>                               <- ParameterPorts HEADER
-                </tr>
-                <tr>
-                    <td><table border="0" cellborder="1">                         <- ParameterPort CELLS TABLE
-                        <tr><td port="ParamPort1">Param 1<br/><i>function 1</i><br/><i>= value</i></td></tr>
-                        <tr><td port="ParamPort1">Param 2<br/><i>function 2</i><br/><i>= value</i></td></tr>
-                    </table></td>
-                </tr>
-            </table></td>
-        </tr>
-
-        <tr>                                                                      <- BEGIN InputPorts
-            <td colspan="2"><table border="0" cellborder="0" BGCOLOR="bisque">    <- InputPortS OUTER TABLE
-                <tr>
-                    <td colspan="1"><b>InputPorts</b></td>                       <- InputPorts HEADER
-                </tr>
-                <tr>
-                    <td><table border="0" cellborder="1">                         <- InputPort CELLS TABLE
+                <tr>                                                                      <- BEGIN MECHANISM & ParameterPorts
+                    <td port="Mech name"><b>Mech name</b><br/><i>Roles</i></td>           <- MECHANISM CELL (OUTERMOST TABLE)
+                    <td><table border="0" cellborder="0" BGCOLOR="bisque">                <- ParameterPorts OUTER TABLE
                         <tr>
-                            <td port="InputPortPort1">InputPort 1<br/><i>function 1</i><br/><i>= value</i></td>
-                            <td port="InputPortPort2">InputPort 2<br/><i>function 2</i><br/><i>= value</i></td>
+                            <td><b>ParameterPorts</b></td>                               <- ParameterPorts HEADER
+                        </tr>
+                        <tr>
+                            <td><table border="0" cellborder="1">                         <- ParameterPort CELLS TABLE
+                                <tr><td port="ParamPort1">Param 1<br/><i>function 1</i><br/><i>= value</i></td></tr>
+                                <tr><td port="ParamPort1">Param 2<br/><i>function 2</i><br/><i>= value</i></td></tr>
+                            </table></td>
                         </tr>
                     </table></td>
                 </tr>
-            </table></td>
-        </tr>
 
-        </table>>
+                <tr>                                                                      <- BEGIN InputPorts
+                    <td colspan="2"><table border="0" cellborder="0" BGCOLOR="bisque">    <- InputPortS OUTER TABLE
+                        <tr>
+                            <td colspan="1"><b>InputPorts</b></td>                       <- InputPorts HEADER
+                        </tr>
+                        <tr>
+                            <td><table border="0" cellborder="1">                         <- InputPort CELLS TABLE
+                                <tr>
+                                    <td port="InputPortPort1">InputPort 1<br/><i>function 1</i><br/><i>= value</i></td>
+                                    <td port="InputPortPort2">InputPort 2<br/><i>function 2</i><br/><i>= value</i></td>
+                                </tr>
+                            </table></td>
+                        </tr>
+                    </table></td>
+                </tr>
+
+                </table>>
 
         """
 
@@ -3689,19 +3690,20 @@ class Mechanism_Base(Mechanism):
 
         Returns
         -------
-
-        dict in the form
-        {INPUT_PORTS:
-                {(int) port_index:
-                        {{label_1: value_1},
-                         {label_2: value_2}}
-                },
-        OUTPUT_PORTS:
-        {(int) port_index:
-                        {{label_1: value_1},
-                         {label_2: value_2}}
-                }
-        }
+            dict
+                .. parsed-literal::
+                    {
+                        INPUT_PORTS:
+                                {(int) port_index:
+                                        {{label_1: value_1},
+                                         {label_2: value_2}}
+                                },
+                        OUTPUT_PORTS:
+                                {(int) port_index:
+                                        {{label_1: value_1},
+                                         {label_2: value_2}}
+                                }
+                    }
 
         """
         input_labels = self._get_standardized_label_dict(INPUT)
@@ -3724,13 +3726,14 @@ class Mechanism_Base(Mechanism):
 
         Returns
         -------
-        dict in the form
-        {INPUT_PORTS/OUTPUT_PORTS:
-                {(int) port_index:
-                        {{label_1: value_1},
-                         {label_2: value_2}}
+        dict
+            .. parsed-literal::
+                {INPUT_PORTS/OUTPUT_PORTS:
+                        {(int) port_index:
+                                {{label_1: value_1},
+                                 {label_2: value_2}}
+                        }
                 }
-        }
         """
         if label_type == INPUT:
             label_dict = self.input_labels_dict
