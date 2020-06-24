@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.8.1.0+25.g6f6e61b documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.8.1.0+31.gee24569 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0+25
+                  0.8.1.0+31
                 </div>
               
             
@@ -688,6 +688,363 @@ one and only one of the following flags is always set:</p>
 </div></blockquote>
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.core.components.component.Component._check_args">
+<code class="descname">_check_args</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>context=None</em>, <em>target_set=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._check_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>validate variable and params, instantiate variable (if necessary) and assign any runtime params.</p>
+<p>Called by functions to validate variable and params
+Validation can be suppressed by turning parameter_validation attribute off
+target_set is a params dictionary to which params should be assigned;</p>
+<p>Does the following:
+- instantiate variable (if missing or callable)
+- validate variable if PARAM_VALIDATION is set
+- resets leftover runtime params back to original values (only if execute method was called directly)
+- sets runtime params
+- validate params if PARAM_VALIDATION is set</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> – (anything but a dict) - variable to validate</li>
+<li><strong>params</strong> – (dict) - params to validate</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Target_set:</th><td class="field-body"><p class="first">(dict) - set to which params should be assigned</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.component.Component._check_for_composition">
+<code class="descname">_check_for_composition</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._check_for_composition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Allow Component to check whether it or its attributes are suitable for inclusion in a Composition
+Called by Composition.add_node.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.component.Component._deferred_init">
+<code class="descname">_deferred_init</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._deferred_init" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use in subclasses that require deferred initialization</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.component.Component._dependent_components">
+<code class="descname">_dependent_components</code><a class="headerlink" href="#psyneulink.core.components.component.Component._dependent_components" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a set of Components that will be executed if this Component is executed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.component.Component._get_param_value_from_tuple">
+<code class="descname">_get_param_value_from_tuple</code><span class="sig-paren">(</span><em>param_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._get_param_value_from_tuple" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns param value (first item) of a (value, projection) tuple;</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.component.Component._handle_default_variable">
+<code class="descname">_handle_default_variable</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._handle_default_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds whether default_variable can be determined using <strong>default_variable</strong> and <strong>size</strong>
+arguments.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<li><em>a default variable if possible</em></li>
+<li><em>None otherwise</em></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.component.Component._handle_size">
+<code class="descname">_handle_size</code><span class="sig-paren">(</span><em>size</em>, <em>variable</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._handle_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>If variable is None, _handle_size tries to infer variable based on the <strong>size</strong> argument to the
+__init__() function. This method is overwritten in subclasses like Mechanism and Port.
+If self is a Mechanism, it converts variable to a 2D array, (for a Mechanism, variable[i] represents
+the input from the i-th InputPort). If self is a Port, variable is a 1D array and size is a length-1 1D
+array. It performs some validations on size and variable as well. This function is overridden in Port.py.
+If size is NotImplemented (usually in the case of Projections/Functions), then this function passes without
+doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.component.Component._instantiate_defaults">
+<code class="descname">_instantiate_defaults</code><span class="sig-paren">(</span><em>variable=None</em>, <em>request_set=None</em>, <em>assign_missing=True</em>, <em>target_set=None</em>, <em>default_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._instantiate_defaults" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate variable and/or param defaults in requested set and assign values to params in target set</p>
+<blockquote>
+<div><p>Variable can be any type other than a dictionary (reserved for use as params)
+request_set must contain a dict of params to be assigned to target_set
+If assign_missing option is set, then any params defined for the class</p>
+<blockquote>
+<div>but not included in the requested set are assigned values from the default_set;
+if request_set is None, then all values in the target_set are assigned from the default_set</div></blockquote>
+<dl class="docutils">
+<dt>Class defaults can not be passed as target_set</dt>
+<dd><dl class="first last docutils">
+<dt>IMPLEMENTATION NOTE:  for now, treating class defaults as hard coded;</dt>
+<dd>could be changed in the future simply by commenting out code below</dd>
+</dl>
+</dd>
+<dt>If not context:  instantiates function and any ports specified in request set</dt>
+<dd>(if they have changed from the previous value(s))</dd>
+</dl>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> – (anything but a dict (variable) - value to assign as defaults.variable</li>
+<li><strong>request_set</strong> – (dict) - params to be assigned</li>
+<li><strong>assign_missing</strong> – (bool) - controls whether missing params are set to default_set values (default: False)</li>
+<li><strong>target_set</strong> – (dict) - param set to which assignments should be made</li>
+<li><strong>default_set</strong> – (dict) - values used for params missing from request_set (only if assign_missing is True)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.component.Component._instantiate_function">
+<code class="descname">_instantiate_function</code><span class="sig-paren">(</span><em>function</em>, <em>function_params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._instantiate_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate function defined in &lt;subclass&gt;.function or &lt;subclass&gt;.function</p>
+<p>Instantiate params[FUNCTION] if present, and assign it to self.function</p>
+<dl class="docutils">
+<dt>If params[FUNCTION] is present and valid,</dt>
+<dd>it is assigned as the function’s execute method, overriding any direct implementation of self.function</dd>
+<dt>If FUNCTION IS in params:</dt>
+<dd><ul class="first last simple">
+<li>if it is a Function object, it is simply assigned to self.function;</li>
+<li><dl class="first docutils">
+<dt>if it is a Function class reference:</dt>
+<dd>it is instantiated using self.defaults.variable and, if present, params[FUNCTION_PARAMS]</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt>If FUNCTION IS NOT in params:</dt>
+<dd><ul class="first last simple">
+<li>if self.function IS implemented, it is assigned to params[FUNCTION]</li>
+<li>if self.function IS NOT implemented: program error (should have been caught in _validate_function)</li>
+</ul>
+</dd>
+<dt>Upon successful completion:</dt>
+<dd><ul class="first last simple">
+<li>self._function === self.function</li>
+<li><dl class="first docutils">
+<dt>self.execute should always return the output of self.function in the first item of its output array;</dt>
+<dd>this is done by Function.execute;  any subclass override should do the same, so that…</dd>
+</dl>
+</li>
+<li>value is value[0] returned by self.execute</li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.component.Component._instantiate_parameter_classes">
+<code class="descname">_instantiate_parameter_classes</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._instantiate_parameter_classes" title="Permalink to this definition">¶</a></dt>
+<dd><p>An optional method that will take any Parameter values in
+<strong>context</strong> that are classes/types, and instantiate them.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.component.Component._model_spec_parameter_blacklist">
+<code class="descname">_model_spec_parameter_blacklist</code><a class="headerlink" href="#psyneulink.core.components.component.Component._model_spec_parameter_blacklist" title="Permalink to this definition">¶</a></dt>
+<dd><p>A set of Parameter names that should not be added to the generated
+constructor string</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.component.Component._parameter_components">
+<code class="descname">_parameter_components</code><a class="headerlink" href="#psyneulink.core.components.component.Component._parameter_components" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a set of Components that are values of this object’s
+Parameters</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.component.Component._parse_arg_generic">
+<code class="descname">_parse_arg_generic</code><span class="sig-paren">(</span><em>arg_val</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._parse_arg_generic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Argument parser for any argument that does not have a specialized parser</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.component.Component._parse_arg_variable">
+<code class="descname">_parse_arg_variable</code><span class="sig-paren">(</span><em>variable</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._parse_arg_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transforms <strong>variable</strong> into a form that Components expect. Used to allow
+users to pass input in convenient forms, like a single float when a list
+for input ports is expected</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">The transformed <strong>input</strong></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.component.Component._parse_function_variable">
+<code class="descname">_parse_function_variable</code><span class="sig-paren">(</span><em>variable</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._parse_function_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses the <strong>variable</strong> passed in to a Component into a function_variable that can be used with the
+Function associated with this Component</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.component.Component._set_multiple_parameter_values">
+<code class="descname">_set_multiple_parameter_values</code><span class="sig-paren">(</span><em>context</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._set_multiple_parameter_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unnecessary, but can simplify multiple parameter assignments at once
+For every kwarg k, v pair, will attempt to set self.parameters.&lt;k&gt; to v for context</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.component.Component._validate">
+<code class="descname">_validate</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Eventually should contain all validation methods, occurs at end of Component.__init__</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.component.Component._validate_and_assign_runtime_params">
+<code class="descname">_validate_and_assign_runtime_params</code><span class="sig-paren">(</span><em>runtime_params</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._validate_and_assign_runtime_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate runtime_params, cache for reset, and assign values</p>
+<p>Check that all params belong either to Component or its function (raise error if any are found that don’t)
+Cache params to reset in _runtime_params_reset</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.component.Component._validate_function">
+<code class="descname">_validate_function</code><span class="sig-paren">(</span><em>function</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._validate_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that either params[FUNCTION] and/or self.execute are implemented</p>
+<p># FROM _validate_params:
+# It also checks FUNCTION:
+#     if it is specified and is a type reference (rather than an instance),
+#     it instantiates the reference (using FUNCTION_PARAMS if present)
+#     and puts a reference to the instance in target_set[FUNCTION]
+#
+This checks for an execute method in function
+If a specification is not present or valid:</p>
+<blockquote>
+<div><ul class="simple">
+<li>it checks self.execute and, if present, kwExecute is assigned to it</li>
+<li>if self.execute is not present or valid, an exception is raised</li>
+</ul>
+</div></blockquote>
+<dl class="docutils">
+<dt>When completed, there is guaranteed to be a valid method in self.function and/or self.execute;</dt>
+<dd>otherwise, an exception is raised</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li>no new assignments (to FUNCTION or self.execute) are made here, except:</li>
+<li>if FUNCTION is missing, it is assigned to self.execute (if it is present)</li>
+<li>no instantiations are done here;</li>
+<li><dl class="first docutils">
+<dt>any assignment(s) to and/or instantiation(s) of self.execute and/or params[FUNCTION]</dt>
+<dd>is/are carried out in _instantiate_function</dd>
+</dl>
+</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.component.Component._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate params and assign validated values to targets,</p>
+<p>This performs top-level type validation of params</p>
+<p>This can be overridden by a subclass to perform more detailed checking (e.g., range, recursive, etc.)
+It is called only if the parameter_validation attribute is <code class="xref any docutils literal"><span class="pre">True</span></code> (which it is by default)</p>
+<dl class="docutils">
+<dt>IMPLEMENTATION NOTES:</dt>
+<dd><ul class="first last simple">
+<li>future versions should add recursive and content (e.g., range) checking</li>
+<li>should method return validated param set?</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>(</strong><strong>request_set</strong><strong>) </strong><strong>- set of params to be validated</strong> (<em>dict</em>) – </li>
+<li><strong>(</strong><strong>target_set</strong><strong>) </strong><strong>- repository of params that have been validated</strong> (<em>dict</em>) – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return none:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.component.Component._validate_variable">
+<code class="descname">_validate_variable</code><span class="sig-paren">(</span><em>variable</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate variable and return validated variable</p>
+<p>Convert self.class_defaults.variable specification and variable (if specified) to list of 1D np.ndarrays:</p>
+<p>VARIABLE SPECIFICATION:                                        ENCODING:
+Simple value variable:                                         0 -&gt; [array([0])]
+Single state array (vector) variable:                         [0, 1] -&gt; [array([0, 1])]
+Multiple port variables, each with a single value variable:  [[0], [0]] -&gt; [array[0], array[0]]</p>
+<dl class="docutils">
+<dt>Perform top-level type validation of variable against the self.class_defaults.variable;</dt>
+<dd>if the type is OK, the value is returned (which should be used by the function)</dd>
+</dl>
+<p>This can be overridden by a subclass to perform more detailed checking (e.g., range, recursive, etc.)
+It is called only if the parameter_validation attribute is <code class="xref any docutils literal"><span class="pre">True</span></code> (which it is by default)</p>
+<dl class="docutils">
+<dt>IMPLEMENTATION NOTES:</dt>
+<dd><ul class="first last simple">
+<li>future versions should add hierarchical/recursive content (e.g., range) checking</li>
+<li>add request/target pattern?? (as per _validate_params) and return validated variable?</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> – (anything other than a dictionary) - variable to be validated:</li>
+<li><strong>context</strong> – (str)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Return variable:</th></tr>
+<tr class="field-even field"><td>&#160;</td><td class="field-body"><p class="first last">validated variable</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="psyneulink.core.components.component.Component.function_parameters">
 <code class="descname">function_parameters</code><a class="headerlink" href="#psyneulink.core.components.component.Component.function_parameters" title="Permalink to this definition">¶</a></dt>
@@ -858,7 +1215,7 @@ may change during runtime</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0+25.g6f6e61b',
+               VERSION:'0.8.1.0+31.gee24569',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

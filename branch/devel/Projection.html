@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Projection &mdash; PsyNeuLink 0.8.1.0+25.g6f6e61b documentation</title>
+  <title>Projection &mdash; PsyNeuLink 0.8.1.0+31.gee24569 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0+25
+                  0.8.1.0+31
                 </div>
               
             
@@ -429,10 +429,10 @@ automatically created when a <a class="reference internal" href="Composition.htm
 Projection to be created before its <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> have
 been created (e.g., before them in a script), by calling its constructor without specifying its <strong>sender</strong> or
 <strong>receiver</strong> arguments. However, for the Projection to be operational, initialization must be completed by calling
-its <code class="xref any docutils literal"><span class="pre">_deferred_init</span></code> method.  Under most conditions this occurs automatically (e.g., when the projection is assigned
+its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component._deferred_init" title="psyneulink.core.components.component.Component._deferred_init"><code class="xref any py py-meth docutils literal"><span class="pre">_deferred_init</span></code></a> method.  Under most conditions this occurs automatically (e.g., when the projection is assigned
 to a type of Component that expects to be the <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> or <a class="reference internal" href="#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>
 for that type of Projection); these conditions are described in the section on <em>Deferred Initialization</em> for each type
-of Projection.  Otherwise, the  Projection’s <code class="xref any docutils literal"><span class="pre">_deferred_init</span></code> method must be called explicitly, once the missing
+of Projection.  Otherwise, the  Projection’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component._deferred_init" title="psyneulink.core.components.component.Component._deferred_init"><code class="xref any py py-meth docutils literal"><span class="pre">_deferred_init</span></code></a> method must be called explicitly, once the missing
 attribute assignments have been made.</p>
 </div>
 </div>
@@ -657,6 +657,103 @@ same base name (see <a class="reference internal" href="Registry.html#registry-n
 constructor, a default name is assigned by the subclass (see subclass for details)</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.core.components.projections.projection.Projection_Base._delete_projection">
+<code class="descname">_delete_projection</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.projection.Projection_Base._delete_projection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete Projection, its entries in receiver and sender Ports, and in ProjectionRegistry</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.projections.projection.Projection_Base._instantiate_receiver">
+<code class="descname">_instantiate_receiver</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.projection.Projection_Base._instantiate_receiver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call receiver’s owner to add projection to its afferents list</p>
+<p>Notes:
+* Assume that subclasses implement this method in which they:</p>
+<blockquote>
+<div><ul class="simple">
+<li>test whether self.receiver is a Mechanism and, if so, replace with Port appropriate for projection</li>
+<li>calls this method (as super) to assign projection to the Mechanism</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>Constraint that self.value is compatible with receiver.input_port.value</dt>
+<dd>is evaluated and enforced in _instantiate_function, since that may need to be modified (see below)</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Verification that projection has not already been assigned to receiver is handled by _add_projection_to;</dt>
+<dd>if it has, a warning is issued and the assignment request is ignored</dd>
+</dl>
+</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>context</strong> – (str)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.projections.projection.Projection_Base._instantiate_sender">
+<code class="descname">_instantiate_sender</code><span class="sig-paren">(</span><em>sender</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.projection.Projection_Base._instantiate_sender" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign self.sender to OutputPort of sender</p>
+<p>Assume self.sender has been assigned in _validate_params, from either sender arg or PROJECTION_SENDER
+Validate, and assign projection to sender’s efferents attribute</p>
+<p>If self.sender is a Mechanism, re-assign it to &lt;Mechanism&gt;.output_port
+If self.sender is a Port class reference, validate that it is a OutputPort
+Assign projection to sender’s efferents attribute</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.projections.projection.Projection_Base._model_spec_parameter_blacklist">
+<code class="descname">_model_spec_parameter_blacklist</code><a class="headerlink" href="#psyneulink.core.components.projections.projection.Projection_Base._model_spec_parameter_blacklist" title="Permalink to this definition">¶</a></dt>
+<dd><p>A set of Parameter names that should not be added to the generated
+constructor string</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.projections.projection.Projection_Base._projection_added">
+<code class="descname">_projection_added</code><span class="sig-paren">(</span><em>projection</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.projection.Projection_Base._projection_added" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stub that can be overidden by subclasses that need to know when a projection is added to the Projection</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.projections.projection.Projection_Base._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.projection.Projection_Base._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate PROJECTION_SENDER and/or sender arg (current self.sender), and assign one of them as self.sender</p>
+<p>Check:
+- that PROJECTION_SENDER is a Mechanism or Port
+- if it is different from .projection_sender, use it
+- if it is the same or is invalid, check if sender arg was provided to __init__ and is valid
+- if sender arg is valid use it (if PROJECTION_SENDER can’t be used);
+- if both were not provided, use .projection_sender
+- otherwise, if one was not provided and the other is invalid, generate error
+- when done, sender is assigned to self.sender</p>
+<p>Note: check here only for sender’s type, NOT content (e.g., length, etc.); that is done in _instantiate_sender</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request_set</strong> – </li>
+<li><strong>target_set</strong> – </li>
+<li><strong>context</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="attribute">
 <dt>
 <code class="descname">parameter_ports</code></dt>
@@ -739,7 +836,7 @@ constructor, a default name is assigned by the subclass (see subclass for detail
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0+25.g6f6e61b',
+               VERSION:'0.8.1.0+31.gee24569',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

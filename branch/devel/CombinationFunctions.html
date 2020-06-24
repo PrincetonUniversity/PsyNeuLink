@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CombinationFunctions &mdash; PsyNeuLink 0.8.1.0+25.g6f6e61b documentation</title>
+  <title>CombinationFunctions &mdash; PsyNeuLink 0.8.1.0+31.gee24569 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0+25
+                  0.8.1.0+31
                 </div>
               
             
@@ -281,6 +281,57 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 details).</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Concatenate._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Concatenate._function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use numpy hstack to concatenate items in outer dimension (axis 0) of variable.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>list</em><em> or </em><em>np.array : default class_defaults.variable</em>) – a list or np.array of numeric values.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Concatenated array of items in variable</strong> – in an array that is one dimension less than <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Concatenate._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Concatenate._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate scale and offset parameters</p>
+<p>Check that SCALE and OFFSET are scalars.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Concatenate._validate_variable">
+<code class="descname">_validate_variable</code><span class="sig-paren">(</span><em>variable</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Concatenate._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insure that list or array is 1d and that all elements are numeric</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> – </li>
+<li><strong>context</strong> – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -378,6 +429,53 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 for details).</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Rearrange._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange._function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rearrange items in outer dimension (axis 0) of variable according to <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange.arrangement" title="psyneulink.core.components.functions.combinationfunctions.Rearrange.arrangement"><code class="xref any py py-attr docutils literal"><span class="pre">arrangement</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>list</em><em> or </em><em>np.array : default class_defaults.variable</em>) – a list or np.array of numeric values.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Rearranged items of outer dimension (axis 0) of **variable**</strong> – in a 2d array.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Rearrange._instantiate_attributes_before_function">
+<code class="descname">_instantiate_attributes_before_function</code><span class="sig-paren">(</span><em>function=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange._instantiate_attributes_before_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insure all items of arrangement are tuples and compatibility with default_variable</p>
+<p>If arrangement is specified, convert all items to tuples
+If default_variable is NOT specified, assign with length in outer dimension = max index in arragnement
+If default_variable IS _user_specified, compatiblility with arrangement is checked in _validate_params</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Rearrange._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate arrangement, scale and offset parameters</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Rearrange._validate_variable">
+<code class="descname">_validate_variable</code><span class="sig-paren">(</span><em>variable</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insure that all elements are numeric and that list or array is at least 2d</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -466,6 +564,62 @@ assigned by FunctionRegistry (see <a class="reference internal" href="Registry.h
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
 for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Reduce._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Reduce._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>list</em><em> or </em><em>np.array : default class_defaults.variable</em>) – a list or np.array of numeric values.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Sum or product of arrays in variable</strong> – in an array that is one dimension less than <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Reduce._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Reduce._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate weghts, exponents, scale and offset parameters</p>
+<p>Check that WEIGHTS and EXPONENTS are lists or np.arrays of numbers with length equal to variable.
+Check that SCALE and OFFSET are scalars.</p>
+<dl class="docutils">
+<dt>Note: the checks of compatibility with variable are only performed for validation calls during execution</dt>
+<dd>(i.e., from check_args(), since during initialization or COMMAND_LINE assignment,
+a parameter may be re-assigned before variable assigned during is known</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.Reduce._validate_variable">
+<code class="descname">_validate_variable</code><span class="sig-paren">(</span><em>variable</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Reduce._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insure that list or array is 1d and that all elements are numeric</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> – </li>
+<li><strong>context</strong> – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -577,6 +731,62 @@ assigned by FunctionRegistry (see <a class="reference internal" href="Registry.h
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
 for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.LinearCombination._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>1d</em><em> or </em><em>2d np.array : default class_defaults.variable</em>) – a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>combined array</strong> – the result of linearly combining the arrays in <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.variable" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">1d array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.LinearCombination._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate weghts, exponents, scale and offset parameters</p>
+<p>Check that WEIGHTS and EXPONENTS are lists or np.arrays of numbers with length equal to variable
+Check that SCALE and OFFSET are either scalars or np.arrays of numbers with length and shape equal to variable</p>
+<dl class="docutils">
+<dt>Note: the checks of compatibility with variable are only performed for validation calls during execution</dt>
+<dd>(i.e., from check_args(), since during initialization or COMMAND_LINE assignment,
+a parameter may be re-assigned before variable assigned during is known</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.LinearCombination._validate_variable">
+<code class="descname">_validate_variable</code><span class="sig-paren">(</span><em>variable</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insure that all items of list or np.ndarray in variable are of the same length</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> – </li>
+<li><strong>context</strong> – </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -693,6 +903,50 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 for details).</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.CombineMeans._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.CombineMeans._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>1d</em><em> or </em><em>2d np.array : default class_defaults.variable</em>) – a single numeric array, or multiple arrays to be combined; if it is 2d, all arrays must have the same length.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>combined means</strong> – the result of taking the means of each array in <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.CombineMeans.variable" title="psyneulink.core.components.functions.combinationfunctions.CombineMeans.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and combining them.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.CombineMeans._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.CombineMeans._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate weights, exponents, scale and offset parameters</p>
+<p>Check that WEIGHTS and EXPONENTS are lists or np.arrays of numbers with length equal to variable
+Check that SCALE and OFFSET are either scalars or np.arrays of numbers with length and shape equal to variable</p>
+<dl class="docutils">
+<dt>Note: the checks of compatibility with variable are only performed for validation calls during execution</dt>
+<dd>(i.e., from check_args(), since during initialization or COMMAND_LINE assignment,
+a parameter may be re-assigned before variable assigned during is known</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.CombineMeans._validate_variable">
+<code class="descname">_validate_variable</code><span class="sig-paren">(</span><em>variable</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.CombineMeans._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insure that all items of variable are numeric</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -702,6 +956,88 @@ for details).</p>
 <p><code class="xref any docutils literal"><span class="pre">function</span></code> returns the prediction error using arrays in <code class="xref any docutils literal"><span class="pre">variable</span></code>:</p>
 <div class="math">
 \[\delta(t) = r(t) + \gamma sample(t) - sample(t - 1)\]</div>
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>2d np.array : default class_defaults.variable</em>) – a 2d array representing the sample and target values to be used to
+calculate the temporal difference delta values. Both arrays must
+have the same length</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword</em><em>, </em><em>param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that
+specifies the parameters for the function. Values specified for
+parameters in the dictionary override any assigned to those
+parameters in arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>delta values</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">1d np.array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks that WEIGHTS is a list or np.array of numbers with length equal
+to variable.</p>
+<p>Note: the checks of compatibility with variable are only performed for
+validation calls during execution (i.e. from <code class="xref any docutils literal"><span class="pre">check_args()</span></code>), since
+during initialization or COMMAND_LINE assignment, a parameter may be
+re-assigned before variable assigned during is known</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request_set</strong> – </li>
+<li><strong>target_set</strong> – </li>
+<li><strong>context</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">None</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction._validate_variable">
+<code class="descname">_validate_variable</code><span class="sig-paren">(</span><em>variable</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insure that all items of variable are numeric</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> – </li>
+<li><strong>context</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">variable if all items are numeric</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -762,7 +1098,7 @@ for details).</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0+25.g6f6e61b',
+               VERSION:'0.8.1.0+31.gee24569',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

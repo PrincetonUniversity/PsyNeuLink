@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DistributionFunctions &mdash; PsyNeuLink 0.8.1.0+25.g6f6e61b documentation</title>
+  <title>DistributionFunctions &mdash; PsyNeuLink 0.8.1.0+31.gee24569 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0+25
+                  0.8.1.0+31
                 </div>
               
             
@@ -764,6 +764,64 @@ will be RT = non-decision-time in these cases.</li>
 </dd></dl>
 
 <dl class="method">
+<dt id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical._function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return: terminal value of decision variable (equal to threshold), mean accuracy (error rate; ER) and mean
+response time (RT)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>2d array</em>) – ignored.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Decision variable, mean ER, mean RT</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">(float, float, float)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical._compute_conditional_rt_moments">
+<em class="property">static </em><code class="descname">_compute_conditional_rt_moments</code><span class="sig-paren">(</span><em>noise</em>, <em>threshold</em>, <em>starting_point</em>, <em>t0</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical._compute_conditional_rt_moments" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is a helper function for computing the conditional decison time moments for the DDM.
+It is based completely off of MatlabDDMFunctionsddm_metrics_cond_Mat.m.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>drift_rate</strong> – The drift rate of the DDM</li>
+<li><strong>noise</strong> – The diffusion rate.</li>
+<li><strong>threshold</strong> – The symmetric threshold of the DDM</li>
+<li><strong>starting_point</strong> – The initial condition.</li>
+<li><strong>t0</strong> – The non decision time.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A dictionary containing the following key value pairs:
+mean_rt_plus: The mean RT of positive responses.
+mean_rt_minus: The mean RT of negative responses.
+var_rt_plus: The variance of RT of positive responses.
+var_rt_minus: The variance of RT of negative responses.
+skew_rt_plus: The skew of RT of positive responses.
+skew_rt_minus: The skew of RT of negative responses.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.derivative">
 <code class="descname">derivative</code><span class="sig-paren">(</span><em>output=None</em>, <em>input=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.derivative" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the derivative of <span class="math">\(\frac{1}{reward rate}\)</span> with respect to the threshold (<strong>output</strong> arg)
@@ -857,7 +915,7 @@ and drift_rate (<strong>input</strong> arg).  Reward rate (<span class="math">\(
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0+25.g6f6e61b',
+               VERSION:'0.8.1.0+31.gee24569',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

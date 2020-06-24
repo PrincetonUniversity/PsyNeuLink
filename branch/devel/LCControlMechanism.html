@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCControlMechanism &mdash; PsyNeuLink 0.8.1.0+25.g6f6e61b documentation</title>
+  <title>LCControlMechanism &mdash; PsyNeuLink 0.8.1.0+31.gee24569 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.1.0+25
+                  0.8.1.0+31
                 </div>
               
             
@@ -660,6 +660,32 @@ applies to each of the mechanisms it modulates</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._execute">
+<code class="descname">_execute</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>runtime_params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates LCControlMechanism’s ControlSignal based on input and mode parameter value</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._instantiate_output_ports">
+<code class="descname">_instantiate_output_ports</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._instantiate_output_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate ControlSignals and assign ControlProjections to Mechanisms in self.modulated_mechanisms</p>
+<dl class="docutils">
+<dt>If <strong>modulated_mechanisms</strong> argument of constructor was specified as <em>ALL</em>, assign all ProcessingMechanisms</dt>
+<dd>in Compositions to which LCControlMechanism belongs to self.modulated_mechanisms.</dd>
+<dt>Instantiate ControlSignal with Projection to the ParameterPort for the multiplicative_param of every</dt>
+<dd>Mechanism listed in self.modulated_mechanisms.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate modulated_mechanisms argument.</p>
+<p>Validate that <strong>modulated_mechanisms</strong> is either a Composition or a list of eligible Mechanisms .
+Eligible Mechanisms are ones with a <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base"><code class="xref any py py-class docutils literal"><span class="pre">function</span></code></a> that has a multiplicative_param.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.add_modulated_mechanisms">
 <code class="descname">add_modulated_mechanisms</code><span class="sig-paren">(</span><em>mechanisms</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.add_modulated_mechanisms" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add ControlProjections to the specified Mechanisms.</p>
@@ -767,7 +793,7 @@ and the <a class="reference internal" href="Functions.html#function-modulatory-p
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0+25.g6f6e61b',
+               VERSION:'0.8.1.0+31.gee24569',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

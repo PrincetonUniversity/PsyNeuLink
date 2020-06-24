@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Functions &mdash; PsyNeuLink 0.8.1.0+25.g6f6e61b documentation</title>
+  <title>Functions &mdash; PsyNeuLink 0.8.1.0+31.gee24569 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0+25
+                  0.8.1.0+31
                 </div>
               
             
@@ -353,6 +353,13 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 for details).</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.core.components.functions.function.Function_Base._validate_parameter_spec">
+<code class="descname">_validate_parameter_spec</code><span class="sig-paren">(</span><em>param</em>, <em>param_name</em>, <em>numeric_only=True</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._validate_parameter_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates function param
+Replace direct call to parameter_spec in tc, which seems to not get called by Function __init__()’s</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -421,6 +428,88 @@ for details).</p>
 <dt id="psyneulink.core.components.functions.function.ArgumentTherapy.Manner">
 <em class="property">class </em><code class="descname">Manner</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.Manner" title="Permalink to this definition">¶</a></dt>
 <dd><p>An enumeration.</p>
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.function.ArgumentTherapy.Manner._member_type_">
+<code class="descname">_member_type_</code><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.Manner._member_type_" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.function.ArgumentTherapy._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy._function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a boolean that is (or tends to be) the same as or opposite the one passed in.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>boolean : default class_defaults.variable</em>) – an assertion to which a therapeutic response is made.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>therapeutic response</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">boolean</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.function.ArgumentTherapy._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates variable and /or params and assigns to targets</p>
+<p>This overrides the class method, to perform more detailed type checking
+See explanation in class method.
+Note: this method (or the class version) is called only if the parameter_validation attribute is <code class="xref any docutils literal"><span class="pre">True</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request_set</strong> – (dict) - params to be validated</li>
+<li><strong>target_set</strong> – (dict) - destination of validated params</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return none:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.function.ArgumentTherapy._validate_variable">
+<code class="descname">_validate_variable</code><span class="sig-paren">(</span><em>variable</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates variable and returns validated value</p>
+<p>This overrides the class method, to perform more detailed type checking
+See explanation in class method.
+Note: this method (or the class version) is called only if the parameter_validation attribute is <code class="xref any docutils literal"><span class="pre">True</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> – (anything but a dict) - variable to be validated:</li>
+<li><strong>context</strong> – (str)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Return variable:</th></tr>
+<tr class="field-even field"><td>&#160;</td><td class="field-body"><ul class="first last simple">
+<li>validated</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -492,7 +581,7 @@ for details).</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0+25.g6f6e61b',
+               VERSION:'0.8.1.0+31.gee24569',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

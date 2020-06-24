@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Contributors Guide &mdash; PsyNeuLink 0.8.1.0+25.g6f6e61b documentation</title>
+  <title>Contributors Guide &mdash; PsyNeuLink 0.8.1.0+31.gee24569 documentation</title>
   
 
   
@@ -96,7 +96,7 @@
               
               
                 <div class="version">
-                  0.8.1.0+25
+                  0.8.1.0+31
                 </div>
               
             
@@ -268,7 +268,7 @@
 <div class="section" id="components-overview">
 <span id="id5"></span><h2>Components Overview<a class="headerlink" href="#components-overview" title="Permalink to this headline">¶</a></h2>
 <p>Most PsyNeuLink objects are <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>. All <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a>, <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>, and <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> are subclasses of Component. These subclasses use and override many functions from the Component class, so they are initialized and executed in similar ways.</p>
-<p>The subclasses of Component should override Component’s functions to implement their own functionality. However, function overrides must call the overridden function using <code class="xref any docutils literal"><span class="pre">super()</span></code>, while passing the same arguments. For example, to instantiate a Projection’s receiver after instantiating its function, the Projection_Base class overrides the <code class="xref any docutils literal"><span class="pre">_instantiate_attributes_after_function</span></code> as follows:</p>
+<p>The subclasses of Component should override Component’s functions to implement their own functionality. However, function overrides must call the overridden function using <code class="xref any docutils literal"><span class="pre">super()</span></code>, while passing the same arguments. For example, to instantiate a Projection’s receiver after instantiating its function, the Projection_Base class overrides the <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_attributes_after_function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_attributes_after_function"><code class="xref any py py-meth docutils literal"><span class="pre">_instantiate_attributes_after_function</span></code></a> as follows:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Projection_Base</span><span class="p">(</span><span class="n">Projection</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">_instantiate_attributes_after_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_instantiate_receiver</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">)</span>
@@ -364,7 +364,7 @@
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0+25.g6f6e61b',
+               VERSION:'0.8.1.0+31.gee24569',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

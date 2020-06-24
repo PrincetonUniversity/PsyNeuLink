@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlProjection &mdash; PsyNeuLink 0.8.1.0+25.g6f6e61b documentation</title>
+  <title>ControlProjection &mdash; PsyNeuLink 0.8.1.0+31.gee24569 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0+25
+                  0.8.1.0+31
                 </div>
               
             
@@ -335,6 +335,54 @@ to a ParameterPort).</p>
 <dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">ControlMechanism</span></code></p>
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection._instantiate_sender">
+<code class="descname">_instantiate_sender</code><span class="sig-paren">(</span><em>sender</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection._instantiate_sender" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if DefaultController is being assigned and if so configure it for the requested ControlProjection</p>
+<p>If self.sender is a Mechanism, re-assign to &lt;Mechanism&gt;.outputPort
+Insure that sender.value = self.defaults.variable</p>
+<dl class="docutils">
+<dt>This method overrides the corresponding method of Projection, before calling it, to check if the</dt>
+<dd>DefaultController is being assigned as sender and, if so:
+- creates projection-dedicated inputPort and outputPort in DefaultController
+- puts them in DefaultController’s input_ports and outputPorts attributes
+- lengthens variable of DefaultController to accommodate the ControlProjection
+- updates value of the DefaultController (in response to the new variable)</dd>
+</dl>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li>the default function of the DefaultControlMechanism simply maps the inputPort value to the outputPort</li>
+<li>the params arg is assumed to be a dictionary of params for the ControlSignal of the ControlMechanism</li>
+</ul>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection._instantiate_receiver">
+<code class="descname">_instantiate_receiver</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection._instantiate_receiver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle situation in which self.receiver was specified as a Mechanism (rather than Port)</p>
+<dl class="docutils">
+<dt>Overrides Projection._instantiate_receiver, to require that if the receiver is specified as a Mechanism, then:</dt>
+<dd>the receiver Mechanism must have one and only one ParameterPort;
+otherwise, passes control to Projection_Base._instantiate_receiver for validation</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -403,7 +451,7 @@ to a ParameterPort).</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0+25.g6f6e61b',
+               VERSION:'0.8.1.0+31.gee24569',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

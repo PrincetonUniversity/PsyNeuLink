@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanism &mdash; PsyNeuLink 0.8.1.0+25.g6f6e61b documentation</title>
+  <title>Mechanism &mdash; PsyNeuLink 0.8.1.0+31.gee24569 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0+25
+                  0.8.1.0+31
                 </div>
               
             
@@ -449,7 +449,7 @@ when the Mechanism is created.  InputPorts and OutputPorts (but not ParameterPor
 for a Mechanism, or added to an existing Mechanism using its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports"><code class="xref any py py-meth docutils literal"><span class="pre">add_ports</span></code></a> method, as
 described <a class="reference internal" href="#mechanism-port-specification"><span class="std std-ref">above</span></a>).</p>
 <p id="mechanism-figure">The three types of Ports are shown schematically in the figure below, and described briefly in the following sections.</p>
-<div class="figure align-left" id="id8">
+<div class="figure align-left" id="id10">
 <a class="reference internal image-reference" href="_images/Mechanism_Ports_fig.svg"><img alt="Mechanism Ports" src="_images/Mechanism_Ports_fig.svg" /></a>
 <p class="caption"><span class="caption-text"><strong>Schematic of a Mechanism showing its three types of Ports</strong> (<a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>, <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> and <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>).
 Every Mechanism has at least one (<a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary</span></a>) InputPort and one (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>) OutputPort, but can have additional ports of each type.  It also has one
@@ -1306,6 +1306,387 @@ while still indexing multiple uses of the same base name within a Mechanism.</di
 </dd></dl>
 
 <dl class="method">
+<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._add_projection_from_mechanism">
+<code class="descname">_add_projection_from_mechanism</code><span class="sig-paren">(</span><em>receiver</em>, <em>port</em>, <em>projection</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._add_projection_from_mechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add projection to specified port</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._get_port_value_labels">
+<code class="descname">_get_port_value_labels</code><span class="sig-paren">(</span><em>port_type</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._get_port_value_labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return list of labels for the value of each Port of specified port_type.
+If the labels_dict has subdicts (one for each Port), get label for the value of each Port from its subdict.
+If the labels dict does not have subdicts, then use the same dict for the only (or all) Port(s)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._get_standardized_label_dict">
+<code class="descname">_get_standardized_label_dict</code><span class="sig-paren">(</span><em>label_type</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._get_standardized_label_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses input or output label dicts into a standardized form</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>port_type</strong> (<em>(</em><em>str</em><em>)</em>) – </li>
+<li><strong>port_type</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">{</span><span class="n">INPUT_PORTS</span><span class="o">/</span><span class="n">OUTPUT_PORTS</span><span class="p">:</span>
+        <span class="p">{(</span><span class="nb">int</span><span class="p">)</span> <span class="n">port_index</span><span class="p">:</span>
+                <span class="p">{{</span><span class="n">label_1</span><span class="p">:</span> <span class="n">value_1</span><span class="p">},</span>
+                 <span class="p">{</span><span class="n">label_2</span><span class="p">:</span> <span class="n">value_2</span><span class="p">}}</span>
+        <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dict</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._get_standardized_label_dicts">
+<code class="descname">_get_standardized_label_dicts</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._get_standardized_label_dicts" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets dict of Mechanism’s input and output port labels in a standardized form</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><div class="highlight-default"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="n">INPUT_PORTS</span><span class="p">:</span>
+            <span class="p">{(</span><span class="nb">int</span><span class="p">)</span> <span class="n">port_index</span><span class="p">:</span>
+                    <span class="p">{{</span><span class="n">label_1</span><span class="p">:</span> <span class="n">value_1</span><span class="p">},</span>
+                     <span class="p">{</span><span class="n">label_2</span><span class="p">:</span> <span class="n">value_2</span><span class="p">}}</span>
+            <span class="p">},</span>
+    <span class="n">OUTPUT_PORTS</span><span class="p">:</span>
+            <span class="p">{(</span><span class="nb">int</span><span class="p">)</span> <span class="n">port_index</span><span class="p">:</span>
+                    <span class="p">{{</span><span class="n">label_1</span><span class="p">:</span> <span class="n">value_1</span><span class="p">},</span>
+                     <span class="p">{</span><span class="n">label_2</span><span class="p">:</span> <span class="n">value_2</span><span class="p">}}</span>
+            <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._handle_arg_input_ports">
+<code class="descname">_handle_arg_input_ports</code><span class="sig-paren">(</span><em>input_ports</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._handle_arg_input_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes user-inputted argument <strong>input_ports</strong> and returns an defaults.variable-like
+object that it represents</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<li><em>A, B where</em></li>
+<li><em>A is an defaults.variable-like object</em></li>
+<li><em>B is True if **input_ports*</em> contained an explicit variable specification, False otherwise*</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._handle_default_variable">
+<code class="descname">_handle_default_variable</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>input_ports=None</em>, <em>function=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._handle_default_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Finds whether default_variable can be determined using <strong>default_variable</strong> and <strong>size</strong>
+arguments.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<li><em>a default variable if possible</em></li>
+<li><em>None otherwise</em></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._instantiate_function">
+<code class="descname">_instantiate_function</code><span class="sig-paren">(</span><em>function</em>, <em>function_params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._instantiate_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign weights and exponents if specified in input_ports</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._instantiate_input_ports">
+<code class="descname">_instantiate_input_ports</code><span class="sig-paren">(</span><em>input_ports=None</em>, <em>reference_value=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._instantiate_input_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call Port._instantiate_input_ports to instantiate orderedDict of InputPort(s)</p>
+<dl class="docutils">
+<dt>This is a stub, implemented to allow Mechanism subclasses to override _instantiate_input_ports</dt>
+<dd>or process InputPorts before and/or after call to _instantiate_input_ports</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._instantiate_output_ports">
+<code class="descname">_instantiate_output_ports</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._instantiate_output_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call Port._instantiate_output_ports to instantiate orderedDict of OutputPort(s)</p>
+<dl class="docutils">
+<dt>This is a stub, implemented to allow Mechanism subclasses to override _instantiate_output_ports</dt>
+<dd>or process InputPorts before and/or after call to _instantiate_output_ports</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._instantiate_parameter_ports">
+<code class="descname">_instantiate_parameter_ports</code><span class="sig-paren">(</span><em>function=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._instantiate_parameter_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call Port._instantiate_parameter_ports to instantiate a ParameterPort
+for each parameter with modulable=True</p>
+<dl class="docutils">
+<dt>This is a stub, implemented to allow Mechanism subclasses to override _instantiate_parameter_ports</dt>
+<dd>or process InputPorts before and/or after call to _instantiate_parameter_ports
+:param function:</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._parse_runtime_params">
+<code class="descname">_parse_runtime_params</code><span class="sig-paren">(</span><em>runtime_params</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._parse_runtime_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Move Port param specifications and nested Project-specific specifications into sub-dicts.</p>
+<p>Move any specifications for Port types into type-specific sub-dicts
+For each type-specific sub-dict,</p>
+<blockquote>
+<div><ul class="simple">
+<li>move any specifications for individual Ports into PORT_SPECIFIC sub-dict</li>
+<li>move any specifications for Projection types into type-specific subdicts</li>
+<li>move any specifications for individual Projections into PORT_SPECIFIC sub-dict</li>
+</ul>
+</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>dict</strong> – dict containing three sub-dicts, one for each of the three Port types, of the following form:<dl class="docutils">
+<dt>{‘&lt;Port type&gt;_PARAMS’: parameter of Port type or its function <span class="classifier-delimiter">:</span> <span class="classifier">value,</span></dt>
+<dd>’PORT_SPECIFIC_PARAMS’ : {&lt;Port or Port name&gt; : {parameter : value}}
+‘&lt;Projection type&gt;_PARAMS’ : {parameter of Projection type or its function : value},
+‘PROJECTION_SPECIFIC_PARAMS’ : {&lt;Projection or name&gt; : {parameter : value}}}</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">{port_param_keyword : Port type-specific dict}</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._projection_added">
+<code class="descname">_projection_added</code><span class="sig-paren">(</span><em>projection</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._projection_added" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stub that can be overidden by subclasses that need to know when a projection is added to the Mechanism</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._show_structure">
+<code class="descname">_show_structure</code><span class="sig-paren">(</span><em>show_functions=False</em>, <em>show_mech_function_params=False</em>, <em>show_port_function_params=False</em>, <em>show_values=False</em>, <em>use_labels=False</em>, <em>show_headers=False</em>, <em>show_roles=False</em>, <em>show_conditions=False</em>, <em>composition=None</em>, <em>compact_cim=False</em>, <em>condition=None</em>, <em>node_border='1'</em>, <em>output_fmt='pdf'</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._show_structure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a detailed display of a the structure of a Mechanism.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This method relies on <a class="reference external" href="http://www.graphviz.org">graphviz</a>, which must be installed and imported
+(standard with PsyNeuLink pip install)</p>
+</div>
+<p>Displays the structure of a Mechanism using html table format and shape=’plaintext’.
+This method is called by <code class="xref any docutils literal"><span class="pre">Composition.show_graph</span></code> if its <strong>show_mechanism_structure</strong> argument is specified as
+<code class="xref any docutils literal"><span class="pre">True</span></code> when it is called.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>show_functions</strong> (<em>bool : default False</em>) – show the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism and each of its Ports.</li>
+<li><strong>show_mech_function_params</strong> (<em>bool : default False</em>) – show the parameters of the Mechanism’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> if <strong>show_functions</strong> is True.</li>
+<li><strong>show_port_function_params</strong> (<em>bool : default False</em>) – show parameters for the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism’s Ports if <strong>show_functions</strong> is
+True).</li>
+<li><strong>show_values</strong> (<em>bool : default False</em>) – show the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and each of its Ports (prefixed by “=”).</li>
+<li><strong>use_labels</strong> (<em>bool : default False</em>) – use labels for values if <strong>show_values</strong> is <code class="xref any docutils literal"><span class="pre">True</span></code>; labels must be specified in the <code class="xref any docutils literal"><span class="pre">input_labels_dict</span></code> (for InputPort values) and <code class="xref any docutils literal"><span class="pre">output_labels_dict</span></code> (for OutputPort values), otherwise the value is used.</li>
+<li><strong>show_headers</strong> (<em>bool : default False</em>) – <p>show the Mechanism, InputPort, ParameterPort and OutputPort headers.</p>
+<p><strong>composition</strong> argument (if <strong>composition</strong> is not specified, show_roles is ignored).</p>
+</li>
+<li><strong>show_conditions</strong> (<em>bool : default False</em>) – show the <a class="reference internal" href="Condition.html"><span class="doc">conditions</span></a> used by <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> to determine whether/when to execute each Mechanism
+(if <strong>composition</strong> is not specified, show_conditions is ignored).</li>
+<li><strong>composition</strong> (<em>Composition : default None</em>) – specifies the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> (to which the Mechanism must belong) for which to show its role (see <strong>roles</strong>);
+if this is not specified, the <strong>show_roles</strong> argument is ignored.</li>
+<li><strong>compact_cim</strong> (<em>bool : default False</em>) – specifies whether to suppress InputPort fields for input_CIM and OutputPort fields for output_CIM</li>
+<li><strong>output_fmt</strong> (<em>keyword : default 'pdf'</em>) – <p>‘pdf’: generate and open a pdf with the visualization;</p>
+<p>’jupyter’: return the object (ideal for working in jupyter/ipython notebooks)</p>
+<p>’struct’: return a string that specifies the structure of the Mechanism using html table format
+for use in a GraphViz node specification.</p>
+</li>
+<li><strong>HTML for structure</strong> (<em>Example</em>) – <div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">&lt;&lt;</span><span class="n">table</span> <span class="n">border</span><span class="o">=</span><span class="s2">&quot;1&quot;</span> <span class="n">cellborder</span><span class="o">=</span><span class="s2">&quot;0&quot;</span> <span class="n">cellspacing</span><span class="o">=</span><span class="s2">&quot;0&quot;</span> <span class="n">bgcolor</span><span class="o">=</span><span class="s2">&quot;tan&quot;</span><span class="o">&gt;</span>          <span class="o">&lt;-</span> <span class="n">MAIN</span> <span class="n">TABLE</span>
+
+<span class="o">&lt;</span><span class="n">tr</span><span class="o">&gt;</span>                                                                      <span class="o">&lt;-</span> <span class="n">BEGIN</span> <span class="n">OutputPorts</span>
+    <span class="o">&lt;</span><span class="n">td</span> <span class="n">colspan</span><span class="o">=</span><span class="s2">&quot;2&quot;</span><span class="o">&gt;&lt;</span><span class="n">table</span> <span class="n">border</span><span class="o">=</span><span class="s2">&quot;0&quot;</span> <span class="n">cellborder</span><span class="o">=</span><span class="s2">&quot;0&quot;</span> <span class="n">BGCOLOR</span><span class="o">=</span><span class="s2">&quot;bisque&quot;</span><span class="o">&gt;</span>    <span class="o">&lt;-</span> <span class="n">OutputPorts</span> <span class="n">OUTER</span> <span class="n">TABLE</span>
+        <span class="o">&lt;</span><span class="n">tr</span><span class="o">&gt;</span>
+            <span class="o">&lt;</span><span class="n">td</span> <span class="n">colspan</span><span class="o">=</span><span class="s2">&quot;1&quot;</span><span class="o">&gt;&lt;</span><span class="n">b</span><span class="o">&gt;</span><span class="n">OutputPorts</span><span class="o">&lt;/</span><span class="n">b</span><span class="o">&gt;&lt;/</span><span class="n">td</span><span class="o">&gt;</span>                      <span class="o">&lt;-</span> <span class="n">OutputPorts</span> <span class="n">HEADER</span>
+        <span class="o">&lt;/</span><span class="n">tr</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="n">tr</span><span class="o">&gt;</span>
+            <span class="o">&lt;</span><span class="n">td</span><span class="o">&gt;&lt;</span><span class="n">table</span> <span class="n">border</span><span class="o">=</span><span class="s2">&quot;0&quot;</span> <span class="n">cellborder</span><span class="o">=</span><span class="s2">&quot;1&quot;</span><span class="o">&gt;</span>                         <span class="o">&lt;-</span> <span class="n">OutputPort</span> <span class="n">CELLS</span> <span class="n">TABLE</span>
+                <span class="o">&lt;</span><span class="n">tr</span><span class="o">&gt;</span>
+                    <span class="o">&lt;</span><span class="n">td</span> <span class="n">port</span><span class="o">=</span><span class="s2">&quot;OutputPortPort1&quot;</span><span class="o">&gt;</span><span class="n">OutputPort</span> <span class="mi">1</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;&lt;</span><span class="n">i</span><span class="o">&gt;</span><span class="n">function</span> <span class="mi">1</span><span class="o">&lt;/</span><span class="n">i</span><span class="o">&gt;&lt;</span><span class="n">br</span><span class="o">/&gt;&lt;</span><span class="n">i</span><span class="o">&gt;=</span><span class="n">value</span><span class="o">&lt;/</span><span class="n">i</span><span class="o">&gt;&lt;/</span><span class="n">td</span><span class="o">&gt;</span>
+                    <span class="o">&lt;</span><span class="n">td</span> <span class="n">port</span><span class="o">=</span><span class="s2">&quot;OutputPortPort2&quot;</span><span class="o">&gt;</span><span class="n">OutputPort</span> <span class="mi">2</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;&lt;</span><span class="n">i</span><span class="o">&gt;</span><span class="n">function</span> <span class="mi">2</span><span class="o">&lt;/</span><span class="n">i</span><span class="o">&gt;&lt;</span><span class="n">br</span><span class="o">/&gt;&lt;</span><span class="n">i</span><span class="o">&gt;=</span><span class="n">value</span><span class="o">&lt;/</span><span class="n">i</span><span class="o">&gt;&lt;/</span><span class="n">td</span><span class="o">&gt;</span>
+                <span class="o">&lt;/</span><span class="n">tr</span><span class="o">&gt;</span>
+            <span class="o">&lt;/</span><span class="n">table</span><span class="o">&gt;&lt;/</span><span class="n">td</span><span class="o">&gt;</span>
+        <span class="o">&lt;/</span><span class="n">tr</span><span class="o">&gt;</span>
+    <span class="o">&lt;/</span><span class="n">table</span><span class="o">&gt;&lt;/</span><span class="n">td</span><span class="o">&gt;</span>
+<span class="o">&lt;/</span><span class="n">tr</span><span class="o">&gt;</span>
+
+<span class="o">&lt;</span><span class="n">tr</span><span class="o">&gt;</span>                                                                      <span class="o">&lt;-</span> <span class="n">BEGIN</span> <span class="n">MECHANISM</span> <span class="o">&amp;</span> <span class="n">ParameterPorts</span>
+    <span class="o">&lt;</span><span class="n">td</span> <span class="n">port</span><span class="o">=</span><span class="s2">&quot;Mech name&quot;</span><span class="o">&gt;&lt;</span><span class="n">b</span><span class="o">&gt;</span><span class="n">Mech</span> <span class="n">name</span><span class="o">&lt;/</span><span class="n">b</span><span class="o">&gt;&lt;</span><span class="n">br</span><span class="o">/&gt;&lt;</span><span class="n">i</span><span class="o">&gt;</span><span class="n">Roles</span><span class="o">&lt;/</span><span class="n">i</span><span class="o">&gt;&lt;/</span><span class="n">td</span><span class="o">&gt;</span>           <span class="o">&lt;-</span> <span class="n">MECHANISM</span> <span class="n">CELL</span> <span class="p">(</span><span class="n">OUTERMOST</span> <span class="n">TABLE</span><span class="p">)</span>
+    <span class="o">&lt;</span><span class="n">td</span><span class="o">&gt;&lt;</span><span class="n">table</span> <span class="n">border</span><span class="o">=</span><span class="s2">&quot;0&quot;</span> <span class="n">cellborder</span><span class="o">=</span><span class="s2">&quot;0&quot;</span> <span class="n">BGCOLOR</span><span class="o">=</span><span class="s2">&quot;bisque&quot;</span><span class="o">&gt;</span>                <span class="o">&lt;-</span> <span class="n">ParameterPorts</span> <span class="n">OUTER</span> <span class="n">TABLE</span>
+        <span class="o">&lt;</span><span class="n">tr</span><span class="o">&gt;</span>
+            <span class="o">&lt;</span><span class="n">td</span><span class="o">&gt;&lt;</span><span class="n">b</span><span class="o">&gt;</span><span class="n">ParameterPorts</span><span class="o">&lt;/</span><span class="n">b</span><span class="o">&gt;&lt;/</span><span class="n">td</span><span class="o">&gt;</span>                               <span class="o">&lt;-</span> <span class="n">ParameterPorts</span> <span class="n">HEADER</span>
+        <span class="o">&lt;/</span><span class="n">tr</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="n">tr</span><span class="o">&gt;</span>
+            <span class="o">&lt;</span><span class="n">td</span><span class="o">&gt;&lt;</span><span class="n">table</span> <span class="n">border</span><span class="o">=</span><span class="s2">&quot;0&quot;</span> <span class="n">cellborder</span><span class="o">=</span><span class="s2">&quot;1&quot;</span><span class="o">&gt;</span>                         <span class="o">&lt;-</span> <span class="n">ParameterPort</span> <span class="n">CELLS</span> <span class="n">TABLE</span>
+                <span class="o">&lt;</span><span class="n">tr</span><span class="o">&gt;&lt;</span><span class="n">td</span> <span class="n">port</span><span class="o">=</span><span class="s2">&quot;ParamPort1&quot;</span><span class="o">&gt;</span><span class="n">Param</span> <span class="mi">1</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;&lt;</span><span class="n">i</span><span class="o">&gt;</span><span class="n">function</span> <span class="mi">1</span><span class="o">&lt;/</span><span class="n">i</span><span class="o">&gt;&lt;</span><span class="n">br</span><span class="o">/&gt;&lt;</span><span class="n">i</span><span class="o">&gt;=</span> <span class="n">value</span><span class="o">&lt;/</span><span class="n">i</span><span class="o">&gt;&lt;/</span><span class="n">td</span><span class="o">&gt;&lt;/</span><span class="n">tr</span><span class="o">&gt;</span>
+                <span class="o">&lt;</span><span class="n">tr</span><span class="o">&gt;&lt;</span><span class="n">td</span> <span class="n">port</span><span class="o">=</span><span class="s2">&quot;ParamPort1&quot;</span><span class="o">&gt;</span><span class="n">Param</span> <span class="mi">2</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;&lt;</span><span class="n">i</span><span class="o">&gt;</span><span class="n">function</span> <span class="mi">2</span><span class="o">&lt;/</span><span class="n">i</span><span class="o">&gt;&lt;</span><span class="n">br</span><span class="o">/&gt;&lt;</span><span class="n">i</span><span class="o">&gt;=</span> <span class="n">value</span><span class="o">&lt;/</span><span class="n">i</span><span class="o">&gt;&lt;/</span><span class="n">td</span><span class="o">&gt;&lt;/</span><span class="n">tr</span><span class="o">&gt;</span>
+            <span class="o">&lt;/</span><span class="n">table</span><span class="o">&gt;&lt;/</span><span class="n">td</span><span class="o">&gt;</span>
+        <span class="o">&lt;/</span><span class="n">tr</span><span class="o">&gt;</span>
+    <span class="o">&lt;/</span><span class="n">table</span><span class="o">&gt;&lt;/</span><span class="n">td</span><span class="o">&gt;</span>
+<span class="o">&lt;/</span><span class="n">tr</span><span class="o">&gt;</span>
+
+<span class="o">&lt;</span><span class="n">tr</span><span class="o">&gt;</span>                                                                      <span class="o">&lt;-</span> <span class="n">BEGIN</span> <span class="n">InputPorts</span>
+    <span class="o">&lt;</span><span class="n">td</span> <span class="n">colspan</span><span class="o">=</span><span class="s2">&quot;2&quot;</span><span class="o">&gt;&lt;</span><span class="n">table</span> <span class="n">border</span><span class="o">=</span><span class="s2">&quot;0&quot;</span> <span class="n">cellborder</span><span class="o">=</span><span class="s2">&quot;0&quot;</span> <span class="n">BGCOLOR</span><span class="o">=</span><span class="s2">&quot;bisque&quot;</span><span class="o">&gt;</span>    <span class="o">&lt;-</span> <span class="n">InputPortS</span> <span class="n">OUTER</span> <span class="n">TABLE</span>
+        <span class="o">&lt;</span><span class="n">tr</span><span class="o">&gt;</span>
+            <span class="o">&lt;</span><span class="n">td</span> <span class="n">colspan</span><span class="o">=</span><span class="s2">&quot;1&quot;</span><span class="o">&gt;&lt;</span><span class="n">b</span><span class="o">&gt;</span><span class="n">InputPorts</span><span class="o">&lt;/</span><span class="n">b</span><span class="o">&gt;&lt;/</span><span class="n">td</span><span class="o">&gt;</span>                       <span class="o">&lt;-</span> <span class="n">InputPorts</span> <span class="n">HEADER</span>
+        <span class="o">&lt;/</span><span class="n">tr</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="n">tr</span><span class="o">&gt;</span>
+            <span class="o">&lt;</span><span class="n">td</span><span class="o">&gt;&lt;</span><span class="n">table</span> <span class="n">border</span><span class="o">=</span><span class="s2">&quot;0&quot;</span> <span class="n">cellborder</span><span class="o">=</span><span class="s2">&quot;1&quot;</span><span class="o">&gt;</span>                         <span class="o">&lt;-</span> <span class="n">InputPort</span> <span class="n">CELLS</span> <span class="n">TABLE</span>
+                <span class="o">&lt;</span><span class="n">tr</span><span class="o">&gt;</span>
+                    <span class="o">&lt;</span><span class="n">td</span> <span class="n">port</span><span class="o">=</span><span class="s2">&quot;InputPortPort1&quot;</span><span class="o">&gt;</span><span class="n">InputPort</span> <span class="mi">1</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;&lt;</span><span class="n">i</span><span class="o">&gt;</span><span class="n">function</span> <span class="mi">1</span><span class="o">&lt;/</span><span class="n">i</span><span class="o">&gt;&lt;</span><span class="n">br</span><span class="o">/&gt;&lt;</span><span class="n">i</span><span class="o">&gt;=</span> <span class="n">value</span><span class="o">&lt;/</span><span class="n">i</span><span class="o">&gt;&lt;/</span><span class="n">td</span><span class="o">&gt;</span>
+                    <span class="o">&lt;</span><span class="n">td</span> <span class="n">port</span><span class="o">=</span><span class="s2">&quot;InputPortPort2&quot;</span><span class="o">&gt;</span><span class="n">InputPort</span> <span class="mi">2</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;&lt;</span><span class="n">i</span><span class="o">&gt;</span><span class="n">function</span> <span class="mi">2</span><span class="o">&lt;/</span><span class="n">i</span><span class="o">&gt;&lt;</span><span class="n">br</span><span class="o">/&gt;&lt;</span><span class="n">i</span><span class="o">&gt;=</span> <span class="n">value</span><span class="o">&lt;/</span><span class="n">i</span><span class="o">&gt;&lt;/</span><span class="n">td</span><span class="o">&gt;</span>
+                <span class="o">&lt;/</span><span class="n">tr</span><span class="o">&gt;</span>
+            <span class="o">&lt;/</span><span class="n">table</span><span class="o">&gt;&lt;/</span><span class="n">td</span><span class="o">&gt;</span>
+        <span class="o">&lt;/</span><span class="n">tr</span><span class="o">&gt;</span>
+    <span class="o">&lt;/</span><span class="n">table</span><span class="o">&gt;&lt;/</span><span class="n">td</span><span class="o">&gt;</span>
+<span class="o">&lt;/</span><span class="n">tr</span><span class="o">&gt;</span>
+
+<span class="o">&lt;/</span><span class="n">table</span><span class="o">&gt;&gt;</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._update_input_ports">
+<code class="descname">_update_input_ports</code><span class="sig-paren">(</span><em>runtime_input_port_params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._update_input_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update value for each InputPort in self.input_ports:</p>
+<p>Call execute method for all (MappingProjection) Projections in Port.path_afferents
+Aggregate results (using InputPort execute method)
+Update InputPort.value</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._update_output_ports">
+<code class="descname">_update_output_ports</code><span class="sig-paren">(</span><em>runtime_output_port_params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._update_output_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute function for each OutputPort and assign result of each to corresponding item of self.output_values</p>
+<p>owner_value arg can be used to override existing (or absent) value of owner as variable for OutputPorts
+and assign a specified (set of) value(s).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>validate TimeScale, INPUT_PORTS, FUNCTION_PARAMS, OUTPUT_PORTS and MONITOR_FOR_CONTROL</p>
+<dl class="docutils">
+<dt>Go through target_set params (populated by Component._validate_params) and validate values for:</dt>
+<dd><ul class="first last">
+<li><dl class="first docutils">
+<dt>INPUT_PORTS:</dt>
+<dd><p class="first last">&lt;MechanismsInputPort or Projection object or class,
+specification dict for one, 2-item tuple, or numeric value(s)&gt;;
+if it is missing or not one of the above types, it is set to self.defaults.variable</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>FUNCTION_PARAMS:  &lt;dict&gt;, every entry of which must be one of the following:</dt>
+<dd><p class="first last">ParameterPort or Projection object or class, specification dict for one, 2-item tuple, or numeric
+value(s);
+if invalid, default is assigned</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>OUTPUT_PORTS:</dt>
+<dd><p class="first">&lt;MechanismsOutputPort object or class, specification dict, or numeric value(s);
+if it is missing or not one of the above types, it is set to None here;</p>
+<blockquote>
+<div><p>and then to default value of value (output of execute method) in instantiate_output_port
+(since execute method must be instantiated before self.defaults.value is known)</p>
+</div></blockquote>
+<p class="last">if OUTPUT_PORTS is a list or OrderedDict, it is passed along (to instantiate_output_ports)
+if it is a OutputPort class ref, object or specification dict, it is placed in a list</p>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>MONITORED_PORTS:</dt>
+<dd><p class="first last">** DOCUMENT</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<p>Note: PARAMETER_PORTS are validated separately – ** DOCUMENT WHY</p>
+<dl class="docutils">
+<dt>TBI - Generalize to go through all params, reading from each its type (from a registry),</dt>
+<dd>and calling on corresponding subclass to get default values (if param not found)
+(as PROJECTION_TYPE and PROJECTION_SENDER are currently handled)</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._validate_variable">
+<code class="descname">_validate_variable</code><span class="sig-paren">(</span><em>variable</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert variable to 2D np.array: one 1D value for each InputPort</p>
+<p># VARIABLE SPECIFICATION:                                        ENCODING:
+# Simple value variable:                                         0 -&gt; [array([0])]
+# Single port array (vector) variable:                         [0, 1] -&gt; [array([0, 1])
+# Multiple port variables, each with a single value variable:  [[0], [0]] -&gt; [array[0], array[0]]</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> – </li>
+<li><strong>context</strong> – </li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports">
 <code class="descname">add_ports</code><span class="sig-paren">(</span><em>ports</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add one or more <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> to the Mechanism.  Only <a class="reference internal" href="InputPort.html"><span class="doc">InputPorts</span></a> and <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a> can be added; <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPorts</span></a> cannot be added to a Mechanism after it has
@@ -1356,6 +1737,41 @@ specifying the class or keyword for InputPort or OutputPort).</li>
 <dt id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute">
 <code class="descname">execute</code><span class="sig-paren">(</span><em>input=None</em>, <em>context=None</em>, <em>runtime_params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Carry out a single <a class="reference internal" href="#mechanism-execution"><span class="std std-ref">execution</span></a> of the Mechanism.</p>
+<div class="technical-note docutils container">
+<p>Execution sequence:</p>
+<ul>
+<li><p class="first">Handle initialization if <a href="#id8"><span class="problematic" id="id9">`</span></a>initialization_status &lt;Compoonent.initialization_status&gt; is
+<em>ContextFlags.INITIALIZING</em></p>
+</li>
+<li><p class="first">Assign any <code class="xref any docutils literal"><span class="pre">Port-specific</span> <span class="pre">runtime</span> <span class="pre">params</span></code>
+to corresponding <code class="xref any docutils literal"><span class="pre">runtime_params</span></code> dict.</p>
+</li>
+<li><p class="first">While <code class="xref any docutils literal"><span class="pre">is_finished</span></code> from <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">InputPorts</span></code></a> and</p>
+<blockquote>
+<div><p><code class="xref any docutils literal"><span class="pre">runtime_params</span></code>.</p>
+</div></blockquote>
+<ul>
+<li><p class="first">update <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal"><span class="pre">input_ports</span></code></a></p>
+</li>
+<li><p class="first">update <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_ports"><code class="xref any py py-attr docutils literal"><span class="pre">parameter_ports</span></code></a></p>
+</li>
+<li><p class="first">execute Mechanism (calling _execute method) and set <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> parameter</p>
+</li>
+<li><p class="first">update <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">output_ports</span></code></a>
+Note:</p>
+<blockquote>
+<div><p>&gt; if execution is occurring as part of initialization, each output_port is reset to 0
+&gt; otherwise, their values are left as is until the next update</p>
+</div></blockquote>
+</li>
+<li><p class="first">update <a class="reference internal" href="Component.html#component-num-executions"><span class="std std-ref">num_executions</span></a> and check <code class="xref any docutils literal"><span class="pre">max_executions</span></code></p>
+</li>
+</ul>
+</li>
+<li><p class="first">Report execution (if reportOutputPref is set)</p>
+</li>
+</ul>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1656,7 +2072,7 @@ as well as other reinitialization steps that the reset method may carry out.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0+25.g6f6e61b',
+               VERSION:'0.8.1.0+31.gee24569',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

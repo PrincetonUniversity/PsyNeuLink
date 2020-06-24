@@ -6,4 +6,5 @@ StatefulFunction
 
 .. automodule:: psyneulink.core.components.functions.statefulfunctions.statefulfunction
    :members:
+   :private-members:
    :exclude-members: Parameters

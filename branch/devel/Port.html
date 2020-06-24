@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Port &mdash; PsyNeuLink 0.8.1.0+25.g6f6e61b documentation</title>
+  <title>Port &mdash; PsyNeuLink 0.8.1.0+31.gee24569 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0+25
+                  0.8.1.0+31
                 </div>
               
             
@@ -854,6 +854,22 @@ See <a class="reference internal" href="Component.html#component-class-reference
 by calling the constructor for a <a class="reference internal" href="#port-subtypes"><span class="std std-ref">subclass</span></a>, or by using any of the other methods for <a class="reference internal" href="#port-specification"><span class="std std-ref">specifying
 a Port</span></a>.</p>
 </div>
+<div class="technical-note docutils container">
+<div class="section" id="portregistry">
+<h3>PortRegistry<a class="headerlink" href="#portregistry" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>Used by .__init__.py to assign default Projection types to each Port subclass</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">All Ports that belong to a given owner are registered in the owner’s _portRegistry, which maintains a
+dict for each Port type that it uses, a count for all instances of that type, and a dictionary of those
+instances;  <strong>none</strong> of these are registered in the PortRegistry This. is so that the same name can be
+used for instances of a Port type by different owners without adding index suffixes for that name across
+owners, while still indexing multiple uses of the same base name within an owner</p>
+</div>
+</div></blockquote>
+</div>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -962,6 +978,246 @@ otherwise same as <code class="xref any docutils literal"><span class="pre">name
 a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a> for details).</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.core.components.ports.port.Port_Base._execute_afferent_projections">
+<code class="descname">_execute_afferent_projections</code><span class="sig-paren">(</span><em>projection_params</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base._execute_afferent_projections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute all afferent Projections for Port</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>mod_params</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict or OVERRIDE</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.port.Port_Base._get_combined_mod_val">
+<code class="descname">_get_combined_mod_val</code><span class="sig-paren">(</span><em>mod_param_name</em>, <em>values</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base._get_combined_mod_val" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combine the modulatory values received by ModulatoryProjections to mod_param_name
+Uses function specified by modulation_combination_function attribute of param,
+or MULTIPLICATIVE if not specified</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.port.Port_Base._get_modulated_param">
+<code class="descname">_get_modulated_param</code><span class="sig-paren">(</span><em>mod_proj</em>, <em>receiver=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base._get_modulated_param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return modulation specification from ModulatoryProjection, and name and value of param modulated.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="psyneulink.core.components.ports.port.Port_Base._get_port_function_value">
+<em class="property">static </em><code class="descname">_get_port_function_value</code><span class="sig-paren">(</span><em>function</em>, <em>variable</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base._get_port_function_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute the function of a Port and return its value
+# FIX: CONSIDER INTEGRATING THIS INTO _EXECUTE FOR PORT?</p>
+<p>This is a stub, that a Port subclass can override to treat its function in a Port-specific manner.
+Used primarily during validation, when the function may not have been fully instantiated yet
+(e.g., InputPort must sometimes embed its variable in a list– see InputPort._get_port_function_value).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.port.Port_Base._get_variable_from_projections">
+<code class="descname">_get_variable_from_projections</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base._get_variable_from_projections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a variable to be used for self.execute when the variable passed in is None</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.port.Port_Base._handle_size">
+<code class="descname">_handle_size</code><span class="sig-paren">(</span><em>size</em>, <em>variable</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base._handle_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Overwrites the parent method in Component.py, because the variable of a Port
+is generally 1D, rather than 2D as in the case of Mechanisms</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.port.Port_Base._instantiate_projection_from_port">
+<code class="descname">_instantiate_projection_from_port</code><span class="sig-paren">(</span><em>projection_spec</em>, <em>receiver=None</em>, <em>feedback=False</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base._instantiate_projection_from_port" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate outgoing projection from a Port and assign it to self.efferents</p>
+<dl class="docutils">
+<dt>Instantiate Projections specified in projection_list and, for each:</dt>
+<dd><ul class="first last simple">
+<li>insure its self.value is compatible with the projection’s function variable</li>
+<li>place it in self.efferents:</li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p># LIST VERSION:
+# If receivers is not specified, they must be assigned to projection specs in projection_list
+# Calls _parse_connection_specs() to parse projection_list into a list of ProjectionTuples;
+#    _parse_connection_specs, in turn, calls _parse_projection_spec for each spec in projection_list,
+#    which returns either a Projection object or Projection specification dictionary for each spec;
+#    that is placed in projection_spec entry of ProjectionTuple (Port, weight, exponent, projection_spec).</p>
+<dl class="docutils">
+<dt>Calls _parse_connection_specs() to parse projection into a ProjectionTuple;</dt>
+<dd>_parse_connection_specs, in turn, calls _parse_projection_spec for the projection_spec,
+which returns either a Projection object or Projection specification dictionary for the spec;
+that is placed in projection_spec entry of ProjectionTuple (Port, weight, exponent, projection_spec).</dd>
+<dt>When the Projection is instantiated, it assigns itself to</dt>
+<dd>its self.path_afferents or .mod_afferents attribute (in Projection_Base._instantiate_receiver) and
+its sender’s .efferents attribute (in Projection_Base._instantiate_sender);
+so, need to test for prior assignment to avoid duplicates.</dd>
+</dl>
+<p>Returns instantiated Projection</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.port.Port_Base._instantiate_projections">
+<code class="descname">_instantiate_projections</code><span class="sig-paren">(</span><em>projections</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base._instantiate_projections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement any Projection(s) to/from Port specified in PROJECTIONS entry of params arg</p>
+<p>Must be implemented by subclasss, to handle interpretation of projection specification(s)
+in a class-appropriate manner:</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>PathwayProjections:</dt>
+<dd>InputPort: _instantiate_projections_to_port (.path_afferents)
+ParameterPort: disallowed
+OutputPort: _instantiate_projections_from_port (.efferents)
+ModulatorySignal: disallowed</dd>
+<dt>ModulatoryProjections:</dt>
+<dd>InputPort, OutputPort and ParameterPort:  _instantiate_projections_to_port (mod_afferents)
+ModulatorySignal: _instantiate_projections_from_port (.efferents)</dd>
+</dl>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.port.Port_Base._instantiate_projections_to_port">
+<code class="descname">_instantiate_projections_to_port</code><span class="sig-paren">(</span><em>projections</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base._instantiate_projections_to_port" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate projections to a Port and assign them to self.path_afferents</p>
+<p>Parses specifications in projection_list into ProjectionTuples</p>
+<dl class="docutils">
+<dt>For projection_spec in ProjectionTuple:</dt>
+<dd><ul class="first last simple">
+<li>if it is a Projection specifiction dicionatry, instantiate it</li>
+<li>assign self as receiver</li>
+<li>assign sender</li>
+<li>if deferred_init and sender is instantiated, complete initialization</li>
+<li>assign to path_afferents or mod_afferents</li>
+<li>if specs fail, instantiates a default Projection of type specified by self.projection_type</li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<dl class="docutils">
+<dt>Calls _parse_connection_specs() to parse projection_list into a list of ProjectionTuples;</dt>
+<dd>_parse_connection_specs, in turn, calls _parse_projection_spec for each spec in projection_list,
+which returns either a Projection object or Projection specification dictionary for each spec;
+that is placed in projection_spec entry of ProjectionTuple (Port, weight, exponent, projection_spec).</dd>
+<dt>When the Projection is instantiated, it assigns itself to</dt>
+<dd>its receiver’s .path_afferents attribute (in Projection_Base._instantiate_receiver) and
+its sender’s .efferents attribute (in Projection_Base._instantiate_sender);
+so, need to test for prior assignment to avoid duplicates.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.port.Port_Base._parse_port_specific_specs">
+<code class="descname">_parse_port_specific_specs</code><span class="sig-paren">(</span><em>owner</em>, <em>port_dict</em>, <em>port_specific_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base._parse_port_specific_specs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse parameters in Port specification tuple specific to each subclass</p>
+<p>Called by _parse_port_spec()
+port_dict contains standard args for Port constructor passed to _parse_port_spec
+port_specific_spec is either a:</p>
+<blockquote>
+<div><blockquote>
+<div><ul class="simple">
+<li>tuple containing a specification for the Port and/or Projections to/from it</li>
+<li>a dict containing port-specific parameters to be processed</li>
+</ul>
+</div></blockquote>
+<p>Returns two values:
+- port_spec:  specification for the Port;</p>
+<blockquote>
+<div><ul class="simple">
+<li>can be None (this is usually the case when port_specific_spec
+is a tuple specifying a Projection that will be used to specify the port)</li>
+<li>if a value is returned, that is used by _parse_port_spec in a recursive call to
+parse the specified value as the Port specification</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>params: port-specific parameters that will be included in the PARAMS entry of the Port specification dict</li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.port.Port_Base._remove_projection_from_port">
+<code class="descname">_remove_projection_from_port</code><span class="sig-paren">(</span><em>projection</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base._remove_projection_from_port" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove Projection entry from Port.efferents.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.port.Port_Base._remove_projection_to_port">
+<code class="descname">_remove_projection_to_port</code><span class="sig-paren">(</span><em>projection</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base._remove_projection_to_port" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove Projection entry from Port.path_afferents and reshape variable accordingly.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.port.Port_Base._update">
+<code class="descname">_update</code><span class="sig-paren">(</span><em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base._update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update each projection, combine them, and assign return result</p>
+<dl class="docutils">
+<dt>Assign any runtime_params specified for Port, its function, and any of its afferent projections;</dt>
+<dd><ul class="first last simple">
+<li>assumes that type-specific sub-dicts have been created for each Projection type for which there are params</li>
+<li>and that specifications for individual Projections have been put in their own PROJECTION-SPECIFIC sub-dict</li>
+<li>specifications for individual Projections are removed from that as used (for check by Mechanism at end)</li>
+</ul>
+</dd>
+</dl>
+<p>Call _update for each projection in self.path_afferents (passing specified params)
+Note: only update LearningSignals if context == LEARNING; otherwise, just get their value
+Call self.function (default: LinearCombination function) to combine their values
+Returns combined values of projections, modulated by any mod_afferents</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.port.Port_Base._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>validate projection specification(s)</p>
+<p>Call super (Component._validate_params()
+Validate following params:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="first docutils">
+<dt>PROJECTIONS:  &lt;entry or list of entries&gt;; each entry must be one of the following:</dt>
+<dd><ul class="first last">
+<li>Projection object</li>
+<li>Projection class</li>
+<li><dl class="first docutils">
+<dt>specification dict, with the following entries:</dt>
+<dd><ul class="first last">
+<li>PROJECTION_TYPE:&lt;Projection class&gt; - must be a subclass of Projection</li>
+<li>PROJECTION_PARAMS:&lt;dict&gt; - must be dict of params for PROJECTION_TYPE</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p># IMPLEMENTATION NOTE: TBI - When learning projection is implemented
+# + FUNCTION_PARAMS:  &lt;dict&gt;, every entry of which must be one of the following:
+#     ParameterPort, projection, 2-item tuple or value</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.port.Port_Base._validate_variable">
+<code class="descname">_validate_variable</code><span class="sig-paren">(</span><em>variable</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate variable and return validated variable</p>
+<p>Sets self.base_value = self.value = variable
+Insures that it is a number of list or tuple of numbers</p>
+<p>This overrides the class method, to perform more detailed type checking
+See explanation in class method.
+Note:  this method (or the class version) is called only if the parameter_validation attribute is True</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt>
 <code class="descname">full_name</code></dt>
@@ -1044,7 +1300,7 @@ a default is assigned using <code class="xref any docutils literal"><span class=
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0+25.g6f6e61b',
+               VERSION:'0.8.1.0+31.gee24569',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
