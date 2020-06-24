@@ -11168,7 +11168,7 @@ article.psyneulink-article ul {
   margin-left: 10px;
   position: relative;
   width: 60px;
-  height: 17px;
+  height: 16px;
   top: 3px;
 }
 
@@ -11244,4 +11244,8 @@ input:checked + .slider:before {
   .psyneulink-left-menu ul{
     margin: 1.25rem 0.625rem 1.875rem 0;
   }
+}
+
+#psyneulink-side-scroll-right {
+  overflow: hidden;
 }
