@@ -22,4 +22,5 @@ Composition
 |
 .. automodule:: psyneulink.core.compositions.composition
    :members: Composition, NodeRole
+   :private-members:
    :exclude-members: Parameters, show_structure, CompositionError

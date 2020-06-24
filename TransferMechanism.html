@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0.8.1.0 documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0.8.1.0+32.gf03564f documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0
+                  0.8.1.0+32
                 </div>
               
             
@@ -116,7 +116,6 @@
 
             
           </div>
-
           
             
             
@@ -134,10 +133,11 @@
 
             
           
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
         </div>
       </div>
     </nav>
-
     <div class="psyneulink-container">
       <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
         <div class="psyneulink-breadcrumbs-wrapper">
@@ -920,6 +920,82 @@ TransferMechanism is complete if <a class="reference internal" href="Component.h
 </tbody>
 </table>
 <dl class="method">
+<dt id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._execute">
+<code class="descname">_execute</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>runtime_params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute TransferMechanism function and return transform of input</p>
+<dl class="docutils">
+<dt>Execute TransferMechanism function on input, and assign to output_values:</dt>
+<dd><ul class="first last simple">
+<li>Activation value for all units</li>
+<li>Mean of the activation values across units</li>
+<li>Variance of the activation values across units</li>
+</ul>
+</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">value of input transformed by TransferMechanism function in outputPort[TransferOuput.RESULT].value
+mean of items in RESULT outputPort[TransferOuput.MEAN].value
+variance of items in RESULT outputPort[TransferOuput.VARIANCE].value</td>
+</tr>
+</tbody>
+</table>
+<p>Arguments:</p>
+<p># CONFIRM:
+variable (float): set to self.value (= self.input_value)
+- params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:</p>
+<blockquote>
+<div><ul class="simple">
+<li>NOISE (float)</li>
+<li>INTEGRATION_RATE (float)</li>
+<li>RANGE ([float, float])</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>context (str)</li>
+</ul>
+<dl class="docutils">
+<dt>Returns the following values in self.value (2D np.array) and in</dt>
+<dd>the value of the corresponding outputPort in the self.output_ports list:
+- activation value (float)
+- mean activation value (float)
+- standard deviation of activation values (float)</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>self</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>:param variable (float)
+:param params: (dict)
+:param context: (str)
+:rtype self.outputPort.value: (number)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._instantiate_attributes_after_function">
+<code class="descname">_instantiate_attributes_after_function</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._instantiate_attributes_after_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine numberr of items expected by termination_measure</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._report_mechanism_execution">
+<code class="descname">_report_mechanism_execution</code><span class="sig-paren">(</span><em>input</em>, <em>params</em>, <em>output</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._report_mechanism_execution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override super to report previous_input rather than input, and selected params</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate FUNCTION and Mechanism params</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.is_finished">
 <code class="descname">is_finished</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.is_finished" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns True when value of Mechanism reaches threhsold or if threshold is None.</p>
@@ -1005,7 +1081,7 @@ TransferMechanism is complete if <a class="reference internal" href="Component.h
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0',
+               VERSION:'0.8.1.0+32.gf03564f',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

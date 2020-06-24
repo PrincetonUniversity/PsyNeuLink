@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputPort &mdash; PsyNeuLink 0.8.1.0 documentation</title>
+  <title>InputPort &mdash; PsyNeuLink 0.8.1.0+32.gf03564f documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0
+                  0.8.1.0+32
                 </div>
               
             
@@ -116,7 +116,6 @@
 
             
           </div>
-
           
             
             
@@ -134,10 +133,11 @@
 
             
           
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
         </div>
       </div>
     </nav>
-
     <div class="psyneulink-container">
       <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
         <div class="psyneulink-breadcrumbs-wrapper">
@@ -705,6 +705,124 @@ InputPorts (see <a class="reference internal" href="Mechanism.html#mechanism-def
 is created (see <a class="reference internal" href="Port.html#port-naming-note"><span class="std std-ref">note</span></a>).</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.core.components.ports.inputport.InputPort._assign_variable_from_projection">
+<code class="descname">_assign_variable_from_projection</code><span class="sig-paren">(</span><em>variable</em>, <em>size</em>, <em>projections</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort._assign_variable_from_projection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign variable to value of Projection in projections</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.inputport.InputPort._check_for_duplicate_projections">
+<code class="descname">_check_for_duplicate_projections</code><span class="sig-paren">(</span><em>projection</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort._check_for_duplicate_projections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if projection is redundant with one in path_afferents of InputPort</p>
+<p>Check for any instantiated projection in path_afferents with the same sender as projection
+or one in deferred_init status with sender specification that is the same type as projection.</p>
+<p>Returns redundant Projection if found, otherwise False.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="psyneulink.core.components.ports.inputport.InputPort._get_port_function_value">
+<em class="property">static </em><code class="descname">_get_port_function_value</code><span class="sig-paren">(</span><em>function</em>, <em>variable</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort._get_port_function_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Put InputPort’s variable in a list if its function is LinearCombination and variable is &gt;=2d</p>
+<p>InputPort variable must be embedded in a list so that LinearCombination (its default function)
+returns a variable that is &gt;=2d intact (rather than as arrays to be combined);
+this is normally done in port._update() (and in Port._instantiate-function), but that
+can’t be called by _parse_port_spec since the InputPort itself may not yet have been instantiated.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.inputport.InputPort._get_variable_from_projections">
+<code class="descname">_get_variable_from_projections</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort._get_variable_from_projections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call self.function with self._path_proj_values</p>
+<p>If variable is None there are no active PathwayProjections in the Composition being run,
+return None so that it is ignored in execute method (i.e., not combined with base_value)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.inputport.InputPort._instantiate_function">
+<code class="descname">_instantiate_function</code><span class="sig-paren">(</span><em>function</em>, <em>function_params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort._instantiate_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>If combine option was specified in constructor, assign as operation argument of LinearCombination function</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.inputport.InputPort._instantiate_projections">
+<code class="descname">_instantiate_projections</code><span class="sig-paren">(</span><em>projections</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort._instantiate_projections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate Projections specified in PROJECTIONS entry of params arg of Port’s constructor</p>
+<dl class="docutils">
+<dt>Call _instantiate_projections_to_port to assign:</dt>
+<dd>PathwayProjections to .path_afferents
+ModulatoryProjections to .mod_afferents</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.inputport.InputPort._parse_port_specific_specs">
+<code class="descname">_parse_port_specific_specs</code><span class="sig-paren">(</span><em>owner</em>, <em>port_dict</em>, <em>port_specific_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort._parse_port_specific_specs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get weights, exponents and/or any connections specified in an InputPort specification tuple</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>Tuple specification can be:</dt>
+<dd>(port_spec, connections)
+(port_spec, weights, exponents, connections)</dd>
+</dl>
+<p>See Port._parse_port_specific_spec for additional info.</p>
+</div></blockquote>
+<dl class="docutils">
+<dt>.</dt>
+<dd><dl class="first last docutils">
+<dt>Returns:</dt>
+<dd><ul class="first last simple">
+<li>port_spec:  1st item of tuple if it is a numeric value;  otherwise None</li>
+<li>params dict with WEIGHT, EXPONENT and/or PROJECTIONS entries if any of these was specified.</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.inputport.InputPort._parse_self_port_type_spec">
+<code class="descname">_parse_self_port_type_spec</code><span class="sig-paren">(</span><em>owner</em>, <em>input_port</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort._parse_self_port_type_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return InputPort specification dictionary with projections that shadow inputs to input_port</p>
+<p>Called by _parse_port_spec if InputPort specified for a Mechanism belongs to a different Mechanism</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="psyneulink.core.components.ports.inputport.InputPort._port_spec_allows_override_variable">
+<em class="property">static </em><code class="descname">_port_spec_allows_override_variable</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort._port_spec_allows_override_variable" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<li><em>True - if **spec*</em> outlines a spec for creating an InputPort whose variable can be* – overridden by a default_variable or size argument</li>
+<li><em>False - otherwise</em></li>
+<li><strong>ex</strong> (<em>specifying an InputPort with a Mechanism allows overriding</em>)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.inputport.InputPort._validate_against_reference_value">
+<code class="descname">_validate_against_reference_value</code><span class="sig-paren">(</span><em>reference_value</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort._validate_against_reference_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate that Port.value is compatible with reference_value</p>
+<p>reference_value is the item of the owner Mechanism’s variable to which the InputPort is assigned</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.inputport.InputPort._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate weights and exponents</p>
+<dl class="docutils">
+<dt>This needs to be done here</dt>
+<dd>(so that they can be ignored if not specified here or in the function)</dd>
+</dl>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="psyneulink.core.components.ports.inputport.InputPort.projection_type">
 <code class="descname">projection_type</code><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort.projection_type" title="Permalink to this definition">¶</a></dt>
@@ -790,7 +908,7 @@ is created (see <a class="reference internal" href="Port.html#port-naming-note">
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0',
+               VERSION:'0.8.1.0+32.gf03564f',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

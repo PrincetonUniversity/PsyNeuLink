@@ -13,3 +13,4 @@ CompositionFunctionApproximator
 
 .. automodule:: psyneulink.core.compositions.compositionfunctionapproximator
    :members:
+   :private-members:

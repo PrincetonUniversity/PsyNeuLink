@@ -18,5 +18,6 @@ Mechanism
 |
 .. automodule:: psyneulink.core.components.mechanisms.mechanism
    :members:
+   :private-members:
    :exclude-members: MechParamsDict, MechanismError, MonitoredOutputPortsOption, random, Parameters, _input_port_variables_getter
 

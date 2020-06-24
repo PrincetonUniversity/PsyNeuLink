@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlMechanism &mdash; PsyNeuLink 0.8.1.0 documentation</title>
+  <title>ControlMechanism &mdash; PsyNeuLink 0.8.1.0+32.gf03564f documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0
+                  0.8.1.0+32
                 </div>
               
             
@@ -116,7 +116,6 @@
 
             
           </div>
-
           
             
             
@@ -134,10 +133,11 @@
 
             
           
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
         </div>
       </div>
     </nav>
-
     <div class="psyneulink-container">
       <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
         <div class="psyneulink-breadcrumbs-wrapper">
@@ -760,6 +760,96 @@ unless they are <a class="reference internal" href="ControlSignal.html#controlsi
 </dd></dl>
 
 <dl class="method">
+<dt id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._activate_projections_for_compositions">
+<code class="descname">_activate_projections_for_compositions</code><span class="sig-paren">(</span><em>composition=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._activate_projections_for_compositions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Activate eligible Projections to or from Nodes in Composition.
+If Projection is to or from a node NOT (yet) in the Composition,
+assign it the node’s aux_components attribute but do not activate it.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._apply_control_allocation">
+<code class="descname">_apply_control_allocation</code><span class="sig-paren">(</span><em>control_allocation</em>, <em>runtime_params</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._apply_control_allocation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update values to <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal"><span class="pre">control_signals</span></code></a>
+based on specified <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>
+(used by controller of a Composition in simulations)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._check_for_duplicates">
+<code class="descname">_check_for_duplicates</code><span class="sig-paren">(</span><em>control_signal</em>, <em>control_signals</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._check_for_duplicates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that control_signal is not a duplicate of one already instantiated for the ControlMechanism</p>
+<dl class="docutils">
+<dt>Can happen if control of parameter is specified in constructor for a Mechanism</dt>
+<dd>and also in the ControlMechanism’s <strong>control</strong> arg</dd>
+</dl>
+<p>control_signals arg passed in to allow override by subclasses</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_control_signal">
+<code class="descname">_instantiate_control_signal</code><span class="sig-paren">(</span><em>control_signal</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_control_signal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse and instantiate ControlSignal (or subclass relevant to ControlMechanism subclass)</p>
+<dl class="docutils">
+<dt>Temporarily assign variable to default allocation value to avoid chicken-and-egg problem:</dt>
+<dd>value, output_ports and control_signals haven’t been expanded yet to accomodate the new
+ControlSignal; reassign control_signal.variable to actual OWNER_VALUE below,
+once value has been expanded</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_control_signal_type">
+<code class="descname">_instantiate_control_signal_type</code><span class="sig-paren">(</span><em>control_signal_spec</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_control_signal_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate actual ControlSignal, or subclass if overridden</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_control_signals">
+<code class="descname">_instantiate_control_signals</code><span class="sig-paren">(</span><em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_control_signals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclassess can override for class-specific implementation (see OptimiziationControlMechanism for example)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_objective_mechanism">
+<code class="descname">_instantiate_objective_mechanism</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_objective_mechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p># FIX: ??THIS SHOULD BE IN OR MOVED TO ObjectiveMechanism
+Assign InputPort to ObjectiveMechanism for each OutputPort to be monitored;</p>
+<blockquote>
+<div><p>uses _instantiate_monitoring_input_port and _instantiate_control_mechanism_input_port to do so.
+For each item in self.monitored_output_ports:
+- if it is a OutputPort, call _instantiate_monitoring_input_port()
+- if it is a Mechanism, call _instantiate_monitoring_input_port for relevant Mechanism_Base.output_ports</p>
+<blockquote>
+<div>(determined by whether it is a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal"><span class="pre">TERMINAL</span></code></a> Mechanism and/or MonitoredOutputPortsOption specification)</div></blockquote>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>each InputPort is assigned a name with the following format:</dt>
+<dd>‘&lt;name of Mechanism that owns the monitoredOutputPort&gt;_&lt;name of monitoredOutputPort&gt;_Monitor’</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>Notes:
+* self.monitored_output_ports is a list, each item of which is a Mechanism_Base.output_port from which a</p>
+<blockquote>
+<div>Projection will be instantiated to a corresponding InputPort of the ControlMechanism</div></blockquote>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>self.input_ports is the usual ordered dict of ports,</dt>
+<dd>each of which receives a Projection from a corresponding OutputPort in self.monitored_output_ports</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate SYSTEM, monitor_for_control, CONTROL_SIGNALS and GATING_SIGNALS</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.add_to_monitor">
 <code class="descname">add_to_monitor</code><span class="sig-paren">(</span><em>monitor_specs</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.add_to_monitor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate OutputPorts to be monitored by ControlMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a>.</p>
@@ -883,7 +973,7 @@ and returns the same allocation for each of its <a class="reference internal" hr
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0',
+               VERSION:'0.8.1.0+32.gf03564f',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

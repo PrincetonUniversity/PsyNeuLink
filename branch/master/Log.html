@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.8.1.0 documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.8.1.0+32.gf03564f documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0
+                  0.8.1.0+32
                 </div>
               
             
@@ -116,7 +116,6 @@
 
             
           </div>
-
           
             
             
@@ -134,10 +133,11 @@
 
             
           
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
         </div>
       </div>
     </nav>
-
     <div class="psyneulink-container">
       <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
         <div class="psyneulink-breadcrumbs-wrapper">
@@ -457,6 +457,32 @@ of a Component, and the value is its currently assigned <a class="reference inte
 </dd></dl>
 
 <dl class="method">
+<dt id="psyneulink.core.globals.log.Log._alias_owner_name">
+<code class="descname">_alias_owner_name</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log._alias_owner_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias name of owner Component to VALUE in loggable_items and logged_items
+Component’s actual name is preserved and used in log_entries (i.e., as entered by _log_value)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.globals.log.Log._dealias_owner_name">
+<code class="descname">_dealias_owner_name</code><span class="sig-paren">(</span><em>name</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log._dealias_owner_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>De-alias VALUE to name of owner</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.globals.log.Log._log_value">
+<code class="descname">_log_value</code><span class="sig-paren">(</span><em>value</em>, <em>time=None</em>, <em>condition=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log._log_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add LogEntry to an entry in the Log</p>
+<p>If <strong>value</strong> is a LogEntry, it is assigned to the entry
+If <strong>condition</strong> is specified, it is used to determine whether the value is logged; <strong>time</strong> must be passed.
+Otherwise, the Component’s <code class="xref any docutils literal"><span class="pre">log_pref</span></code> attribute is used to determine whether value is
+logged.
+If <strong>value</strong> is specified, that is the value logged; otherwise the owner’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a></p>
+<blockquote>
+<div>attribute is logged.</div></blockquote>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.core.globals.log.Log.clear_entries">
 <code class="descname">clear_entries</code><span class="sig-paren">(</span><em>entries='all'</em>, <em>delete_entry=True</em>, <em>confirm=False</em>, <em>contexts=NotImplemented</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.clear_entries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clear one or more entries either by deleting the entry or just removing its data.</p>
@@ -750,6 +776,28 @@ For convenience, the name of a LogCondition can be used in place of its full spe
 <p class="last">The values of LogCondition are subset of (and directly reference) the ContextFlags bitwise enum,
 with the exception of TRIAL and RUN, which are bit-shifted to follow the ContextFlags.SIMULATION_MODE value.</p>
 </div>
+<dl class="method">
+<dt id="psyneulink.core.globals.log.LogCondition._generate_next_value_">
+<code class="descname">_generate_next_value_</code><span class="sig-paren">(</span><em>start</em>, <em>count</em>, <em>last_values</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition._generate_next_value_" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the next value when not given.</p>
+<p>name: the name of the member
+start: the initital start value or None
+count: the number of existing members
+last_value: the last value assigned or None</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="psyneulink.core.globals.log.LogCondition._get_log_condition_string">
+<em class="property">classmethod </em><code class="descname">_get_log_condition_string</code><span class="sig-paren">(</span><em>string=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition._get_log_condition_string" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return string with the names of all flags that are set in <strong>condition</strong>, prepended by <strong>string</strong></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.globals.log.LogCondition._member_type_">
+<code class="descname">_member_type_</code><a class="headerlink" href="#psyneulink.core.globals.log.LogCondition._member_type_" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">int</span></code></p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -818,7 +866,7 @@ with the exception of TRIAL and RUN, which are bit-shifted to follow the Context
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0',
+               VERSION:'0.8.1.0+32.gf03564f',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

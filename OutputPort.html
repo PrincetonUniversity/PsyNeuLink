@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OutputPort &mdash; PsyNeuLink 0.8.1.0 documentation</title>
+  <title>OutputPort &mdash; PsyNeuLink 0.8.1.0+32.gf03564f documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0
+                  0.8.1.0+32
                 </div>
               
             
@@ -116,7 +116,6 @@
 
             
           </div>
-
           
             
             
@@ -134,10 +133,11 @@
 
             
           
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
         </div>
       </div>
     </nav>
-
     <div class="psyneulink-container">
       <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
         <div class="psyneulink-breadcrumbs-wrapper">
@@ -741,6 +741,75 @@ OutputPorts specified, as well as any that are added to the Mechanism once it is
 
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.core.components.ports.outputport.OutputPort._check_for_duplicate_projections">
+<code class="descname">_check_for_duplicate_projections</code><span class="sig-paren">(</span><em>projection</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._check_for_duplicate_projections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if projection is redundant with one in efferents of OutputPort</p>
+<p>Check for any instantiated projection in efferents with the same receiver as projection
+or one in deferred_init status with receiver specification that is the same type as projection.</p>
+<p>Returns redundant Projection if found, otherwise False.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.outputport.OutputPort._instantiate_attributes_before_function">
+<code class="descname">_instantiate_attributes_before_function</code><span class="sig-paren">(</span><em>function=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._instantiate_attributes_before_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate default variable if it is None or numeric
+:param function:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.outputport.OutputPort._instantiate_projections">
+<code class="descname">_instantiate_projections</code><span class="sig-paren">(</span><em>projections</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._instantiate_projections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate Projections specified in PROJECTIONS entry of params arg of Port’s constructor</p>
+<dl class="docutils">
+<dt>Assume specification in projections as ModulatoryProjection if it is a:</dt>
+<dd>ModulatoryProjection
+ModulatorySignal
+ModulatoryMechanism</dd>
+</dl>
+<p>Call _instantiate_projections_to_port to assign ModulatoryProjections to .mod_afferents</p>
+<dl class="docutils">
+<dt>Assume all remaining specifications in projections are for outgoing MappingProjections;</dt>
+<dd>these should be either Mechanisms, Ports or MappingProjections to one of those</dd>
+</dl>
+<p>Call _instantiate_projections_from_port to assign MappingProjections to .efferents</p>
+<p>Store result of function as self.function_value
+function_value is converted to returned value by assign function</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.outputport.OutputPort._parse_port_specific_specs">
+<code class="descname">_parse_port_specific_specs</code><span class="sig-paren">(</span><em>owner</em>, <em>port_dict</em>, <em>port_specific_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._parse_port_specific_specs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get variable spec and/or connections specified in an OutputPort specification tuple</p>
+<dl class="docutils">
+<dt>Tuple specification can be:</dt>
+<dd>(port_spec, connections)
+(port_spec, variable spec, connections)</dd>
+</dl>
+<p>See Port._parse_port_specific_spec for additional info.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">1st item of tuple
+- params dict with VARIABLE and/or PROJECTIONS entries if either of them was specified</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><ul class="simple">
+<li>port_spec</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.outputport.OutputPort._validate_against_reference_value">
+<code class="descname">_validate_against_reference_value</code><span class="sig-paren">(</span><em>reference_value</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._validate_against_reference_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate that Port.variable is compatible with the reference_value</p>
+<p>reference_value is the value of the Mechanism to which the OutputPort is assigned</p>
+</dd></dl>
+
 <dl class="attribute">
 <dt id="psyneulink.core.components.ports.outputport.OutputPort.owner_value_index">
 <code class="descname">owner_value_index</code><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.owner_value_index" title="Permalink to this definition">¶</a></dt>
@@ -916,7 +985,7 @@ ignoring any VARIABLE entries previously specified for individual OutputPorts;</
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0',
+               VERSION:'0.8.1.0+32.gf03564f',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

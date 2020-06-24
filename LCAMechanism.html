@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCAMechanism &mdash; PsyNeuLink 0.8.1.0 documentation</title>
+  <title>LCAMechanism &mdash; PsyNeuLink 0.8.1.0+32.gf03564f documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.1.0
+                  0.8.1.0+32
                 </div>
               
             
@@ -118,7 +118,6 @@
 
             
           </div>
-
           
             
             
@@ -136,10 +135,11 @@
 
             
           
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
         </div>
       </div>
     </nav>
-
     <div class="psyneulink-container">
       <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
         <div class="psyneulink-breadcrumbs-wrapper">
@@ -416,6 +416,16 @@ and the average of all of the other elements.</dd>
 </tr>
 </tbody>
 </table>
+<dl class="method">
+<dt id="psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism._parse_threshold_args">
+<code class="descname">_parse_threshold_args</code><span class="sig-paren">(</span><em>kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.lcamechanism.LCAMechanism._parse_threshold_args" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements convenience arguments threshold and threshold_criterion</p>
+<p>These are translated into the appropriate specifications for the termination_threshold, termination_measure,
+and termination_comparison_op for TransferMechanism.</p>
+<p>Note:  specifying (threshold and termination_threshold) and/or (threshold and
+threshold_criterion and termination_measure) causes an error.</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -494,7 +504,7 @@ and the average of all of the other elements.</dd>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0',
+               VERSION:'0.8.1.0+32.gf03564f',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

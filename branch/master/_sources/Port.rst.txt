@@ -15,5 +15,6 @@ Port
 
 .. automodule:: psyneulink.core.components.ports.port
    :members:
+   :private-members:
    :exclude-members: random, update, Parameters
 

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningProjection &mdash; PsyNeuLink 0.8.1.0 documentation</title>
+  <title>LearningProjection &mdash; PsyNeuLink 0.8.1.0+32.gf03564f documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0
+                  0.8.1.0+32
                 </div>
               
             
@@ -116,7 +116,6 @@
 
             
           </div>
-
           
             
             
@@ -134,10 +133,11 @@
 
             
           
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
         </div>
       </div>
     </nav>
-
     <div class="psyneulink-container">
       <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
         <div class="psyneulink-breadcrumbs-wrapper">
@@ -454,6 +454,43 @@ LearningProjection’s <a class="reference internal" href="#psyneulink.core.comp
 <dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">LearningMechanism</span></code></p>
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate sender and receiver</p>
+<p>Insure <a class="reference internal" href="#"><span class="doc">sender</span></a> is a LearningMechanism or the OutputPort of one.
+Insure <a class="reference internal" href="#"><span class="doc">receiver</span></a> is a MappingProjection or the matrix ParameterPort of one.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._instantiate_sender">
+<code class="descname">_instantiate_sender</code><span class="sig-paren">(</span><em>sender</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._instantiate_sender" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate LearningMechanism</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._instantiate_receiver">
+<code class="descname">_instantiate_receiver</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._instantiate_receiver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate that receiver has been assigned and is compatible with the output of function</p>
+<p>Set learning_enabled to value of receiver if it was not otherwise specified in the constructor</p>
+<p>Notes:
+* _validate_params verifies that receiver is a parameterPort for the matrix parameter of a MappingProjection.
+* _super()._instantiate_receiver verifies that the projection has not already been assigned to the receiver.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._execute">
+<code class="descname">_execute</code><span class="sig-paren">(</span><em>variable</em>, <em>context=None</em>, <em>runtime_params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._execute" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(2D np.array) self.weight_change_matrix</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -528,7 +565,7 @@ LearningProjection’s <a class="reference internal" href="#psyneulink.core.comp
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0',
+               VERSION:'0.8.1.0+32.gf03564f',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

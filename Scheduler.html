@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0.8.1.0 documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0.8.1.0+32.gf03564f documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0
+                  0.8.1.0+32
                 </div>
               
             
@@ -116,7 +116,6 @@
 
             
           </div>
-
           
             
             
@@ -134,10 +133,11 @@
 
             
           
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
         </div>
       </div>
     </nav>
-
     <div class="psyneulink-container">
       <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
         <div class="psyneulink-breadcrumbs-wrapper">
@@ -485,6 +485,25 @@ For example, <code class="xref any docutils literal"><span class="pre">times[Tim
 </dd></dl>
 
 <dl class="method">
+<dt id="psyneulink.core.scheduling.scheduler.Scheduler._init_counts">
+<code class="descname">_init_counts</code><span class="sig-paren">(</span><em>execution_id=None</em>, <em>base_execution_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler._init_counts" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
+<dt id="psyneulink.core.scheduling.scheduler.Scheduler.execution_id">
+<code class="descname">execution_id</code><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.execution_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>the execution_id to initialize counts for
+default : self.default_execution_id</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.scheduling.scheduler.Scheduler.base_execution_id">
+<code class="descname">base_execution_id</code><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.base_execution_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>if specified, the counts for execution_id will be copied from the counts of base_execution_id
+default : None</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.core.scheduling.scheduler.Scheduler.add_condition">
 <code class="descname">add_condition</code><span class="sig-paren">(</span><em>owner</em>, <em>condition</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.add_condition" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> to the Scheduler. If <strong>owner</strong> already has a Condition, it is overwritten
@@ -615,7 +634,7 @@ terminate the execution of the specified <a class="reference internal" href="Tim
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0',
+               VERSION:'0.8.1.0+32.gf03564f',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

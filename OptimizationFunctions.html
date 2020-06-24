@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationFunctions &mdash; PsyNeuLink 0.8.1.0 documentation</title>
+  <title>OptimizationFunctions &mdash; PsyNeuLink 0.8.1.0+32.gf03564f documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0
+                  0.8.1.0+32
                 </div>
               
             
@@ -116,7 +116,6 @@
 
             
           </div>
-
           
             
             
@@ -134,10 +133,11 @@
 
             
           
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
         </div>
       </div>
     </nav>
-
     <div class="psyneulink-container">
       <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
         <div class="psyneulink-breadcrumbs-wrapper">
@@ -364,6 +364,32 @@ to iterate; if exceeded, a warning is issued and the function returns the last s
 </dd></dl>
 
 <dl class="method">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction._function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find the sample that yields the optimal value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>.</p>
+<p>See <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a> for details.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>optimal sample, optimal value, saved_samples, saved_values</strong> – first array contains sample that yields the optimal value of the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>, and second array contains the value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for that sample.  If <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_samples" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_samples"><code class="xref any py py-attr docutils literal"><span class="pre">save_samples</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, first list contains all the values sampled in the order
+they were evaluated; otherwise it is empty.  If <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_values" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.save_values"><code class="xref any py py-attr docutils literal"><span class="pre">save_values</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>,
+second list contains the values returned by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>
+for all the samples in the order they were evaluated; otherwise it is empty.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">array, array, list, list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction._report_value">
+<code class="descname">_report_value</code><span class="sig-paren">(</span><em>new_value</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction._report_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Report value returned by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for sample.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.reset">
 <code class="descname">reset</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reset parameters of the OptimizationFunction</p>
@@ -569,6 +595,30 @@ iterate; if exceeded, a warning is issued and the function returns the last samp
 process</span></a></p>
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization._function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the sample that yields the optimal value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>, and possibly all samples evaluated and their corresponding values.</p>
+<p>Optimal value is defined by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.direction" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.direction"><code class="xref any py py-attr docutils literal"><span class="pre">direction</span></code></a>:
+- if <em>ASCENT</em>, returns greatest value
+- if <em>DESCENT</em>, returns least value</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>optimal sample, optimal value, saved_samples, saved_values</strong> – first array contains sample that yields the highest or lowest value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>, depending on <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.direction" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.direction"><code class="xref any py py-attr docutils literal"><span class="pre">direction</span></code></a>,
+and the second array contains the value of the function for that sample.
+If <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.save_samples" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.save_samples"><code class="xref any py py-attr docutils literal"><span class="pre">save_samples</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, first list contains all the values
+sampled in the order they were evaluated; otherwise it is empty.  If <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.save_values" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.save_values"><code class="xref any py py-attr docutils literal"><span class="pre">save_values</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, second list contains the values returned by
+<a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for all the samples in the order they were
+evaluated; otherwise it is empty.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">ndarray, list, list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -677,6 +727,45 @@ and evaluated by the  <a class="reference internal" href="#psyneulink.core.compo
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch.save_values">
 <code class="descname">save_values</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.save_values" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>bool</em> – determines whether or not to save and return the value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for all samples evaluated in the <a class="reference internal" href="#gridsearch-procedure"><span class="std std-ref">optimization process</span></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch._function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the sample that yields the optimal value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>,
+and possibly all samples evaluated and their corresponding values.</p>
+<p>Optimal value is defined by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.direction" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.direction"><code class="xref any py py-attr docutils literal"><span class="pre">direction</span></code></a>:
+- if <em>MAXIMIZE</em>, returns greatest value
+- if <em>MINIMIZE</em>, returns least value</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>optimal sample, optimal value, saved_samples, saved_values</strong> – first array contains sample that yields the highest or lowest value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>, depending on <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.direction" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.direction"><code class="xref any py py-attr docutils literal"><span class="pre">direction</span></code></a>, and the
+second array contains the value of the function for that sample. If <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.save_samples" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.save_samples"><code class="xref any py py-attr docutils literal"><span class="pre">save_samples</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, first list contains all the values sampled in the order they were
+evaluated; otherwise it is empty.  If <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.save_values" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.save_values"><code class="xref any py py-attr docutils literal"><span class="pre">save_values</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, second list
+contains the values returned by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for all the samples
+in the order they were evaluated; otherwise it is empty.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">ndarray, list, list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch._grid_complete">
+<code class="descname">_grid_complete</code><span class="sig-paren">(</span><em>variable</em>, <em>value</em>, <em>iteration</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch._grid_complete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return False when search of grid is complete
+This is assigned as the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_termination_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_termination_function"><code class="xref any py py-attr docutils literal"><span class="pre">search_termination_function</span></code></a>
+of the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction"><code class="xref any py py-class docutils literal"><span class="pre">OptimizationFunction</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch._traverse_grid">
+<code class="descname">_traverse_grid</code><span class="sig-paren">(</span><em>variable</em>, <em>sample_num</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch._traverse_grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get next sample from grid.
+This is assigned as the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function"><code class="xref any py py-attr docutils literal"><span class="pre">search_function</span></code></a> of the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction"><code class="xref any py py-class docutils literal"><span class="pre">OptimizationFunction</span></code></a>.</p>
 </dd></dl>
 
 <dl class="method">
@@ -792,6 +881,42 @@ completes, this should be identical to <a class="reference internal" href="#psyn
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_values">
 <code class="descname">save_values</code><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_values" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>bool</em> – determines whether or not to save and return the value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for all samples evaluated in the <a class="reference internal" href="#gaussianprocess-procedure"><span class="std std-ref">optimization process</span></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess._function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the sample that yields the optimal value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>,
+and possibly all samples evaluated and their corresponding values.</p>
+<p>Optimal value is defined by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.direction" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.direction"><code class="xref any py py-attr docutils literal"><span class="pre">direction</span></code></a>:
+- if <em>MAXIMIZE</em>, returns greatest value
+- if <em>MINIMIZE</em>, returns least value</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>optimal sample, optimal value, saved_samples, saved_values</strong> – first array contains sample that yields the highest or lowest value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a>, depending on <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.direction" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.direction"><code class="xref any py py-attr docutils literal"><span class="pre">direction</span></code></a>, and the
+second array contains the value of the function for that sample. If <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_samples" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_samples"><code class="xref any py py-attr docutils literal"><span class="pre">save_samples</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, first list contains all the values sampled in the order they were
+evaluated; otherwise it is empty.  If <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_values" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.save_values"><code class="xref any py py-attr docutils literal"><span class="pre">save_values</span></code></a> is <code class="xref any docutils literal"><span class="pre">True</span></code>, second list
+contains the values returned by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.objective_function"><code class="xref any py py-attr docutils literal"><span class="pre">objective_function</span></code></a> for all the
+samples in the order they were evaluated; otherwise it is empty.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">ndarray, list, list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess._gaussian_process_sample">
+<code class="descname">_gaussian_process_sample</code><span class="sig-paren">(</span><em>variable</em>, <em>sample_num</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess._gaussian_process_sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Draw and return sample from search_space.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.optimizationfunctions.GaussianProcess._gaussian_process_satisfied">
+<code class="descname">_gaussian_process_satisfied</code><span class="sig-paren">(</span><em>variable</em>, <em>value</em>, <em>iteration</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess._gaussian_process_satisfied" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine whether search should be terminated;  return <code class="xref any docutils literal"><span class="pre">True</span></code> if so, <code class="xref any docutils literal"><span class="pre">False</span></code> if not.</p>
 </dd></dl>
 
 </dd></dl>
@@ -919,7 +1044,7 @@ deterministic function.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0',
+               VERSION:'0.8.1.0+32.gf03564f',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

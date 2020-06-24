@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DDM &mdash; PsyNeuLink 0.8.1.0 documentation</title>
+  <title>DDM &mdash; PsyNeuLink 0.8.1.0+32.gf03564f documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.1.0
+                  0.8.1.0+32
                 </div>
               
             
@@ -118,7 +118,6 @@
 
             
           </div>
-
           
             
             
@@ -136,10 +135,11 @@
 
             
           
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
         </div>
       </div>
     </nav>
-
     <div class="psyneulink-container">
       <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
         <div class="psyneulink-breadcrumbs-wrapper">
@@ -379,7 +379,7 @@ ISSN 0022-2496,
 <span id="ddm-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM">
-<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.integrator.ddm.</code><code class="descname">DDM</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>input_format=None</em>, <em>function=(DriftDiffusionAnalytical Drift Diffusion Analytical Function-1)</em>, <em>input_ports=None</em>, <em>output_ports=('DECISION_VARIABLE'</em>, <em>'RESPONSE_TIME')</em>, <em>seed=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.integrator.ddm.</code><code class="descname">DDM</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>input_format=None</em>, <em>function=None</em>, <em>input_ports=None</em>, <em>output_ports=('DECISION_VARIABLE'</em>, <em>'RESPONSE_TIME')</em>, <em>seed=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements a drift diffusion process (also known as the <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2474742/">Diffusion Decision Model</a>, either by calculating an <a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic solution</span></a> or carrying out <a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">step-wise numerical integration</span></a>.
 See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for additional arguments and attributes.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -646,6 +646,68 @@ towards a specified threshold</p>
 </table>
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM._validate_variable">
+<code class="descname">_validate_variable</code><span class="sig-paren">(</span><em>variable</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensures that input to DDM is a single value.
+Remove when MULTIPROCESS DDM is implemented.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM._execute">
+<code class="descname">_execute</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>runtime_params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM._execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute DDM function (currently only trial-level, analytic solution)
+Execute DDM and estimate outcome or calculate trajectory of decision variable
+Currently implements only trial-level DDM (analytic solution) and returns:</p>
+<blockquote>
+<div><ul class="simple">
+<li>stochastically estimated decion outcome (convert mean ER into value between 1 and -1)</li>
+<li>mean ER</li>
+<li>mean RT</li>
+<li>mean, variance, and skew of RT for correct (posititive threshold) responses</li>
+<li>mean, variance, and skew of RT for incorrect (negative threshold) responses</li>
+</ul>
+</div></blockquote>
+<p>Return current decision variable (self.outputPort.value) and other output values (self.output_ports[].value
+Arguments:
+# CONFIRM:
+variable (float): set to self.value (= self.input_value)
+- params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:</p>
+<blockquote>
+<div><ul class="simple">
+<li>DRIFT_RATE (float)</li>
+<li>THRESHOLD (float)</li>
+<li>kwDDM_Bias (float)</li>
+<li>NON_DECISION_TIME (float)</li>
+<li>NOISE (float)</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>context (str)</li>
+</ul>
+<dl class="docutils">
+<dt>Returns the following values in self.value (2D np.array) and in</dt>
+<dd>the value of the corresponding outputPort in the self.output_ports dict:
+- decision variable (float)
+- mean error rate (float)
+- mean RT (float)
+- mean, variance, and skew of RT for correct (posititive threshold) responses
+- mean, variance, and skew of RT for incorrect (negative threshold) responses</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>self</strong> – </td>
+</tr>
+</tbody>
+</table>
+<p>:param variable (float)
+:param params: (dict)
+:param context: (str)
+:rtype self.outputPort.value: (number)</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -729,7 +791,7 @@ towards a specified threshold</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0',
+               VERSION:'0.8.1.0+32.gf03564f',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

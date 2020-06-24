@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningFunctions &mdash; PsyNeuLink 0.8.1.0 documentation</title>
+  <title>LearningFunctions &mdash; PsyNeuLink 0.8.1.0+32.gf03564f documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0
+                  0.8.1.0+32
                 </div>
               
             
@@ -116,7 +116,6 @@
 
             
           </div>
-
           
             
             
@@ -134,10 +133,11 @@
 
             
           
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
         </div>
       </div>
     </nav>
-
     <div class="psyneulink-container">
       <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
         <div class="psyneulink-breadcrumbs-wrapper">
@@ -431,6 +431,38 @@ to their initial (_0) values, and assign current (_n) values to the priors</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>2d</em><em> or </em><em>3d array : default class_defaults.variable</em>) – <dl class="docutils">
+<dt>If it is a 2d array, the first item must be a 1d array of scalar predictors,</dt>
+<dd>and the second must be a 1d array containing the dependent variable to be predicted by the predictors.</dd>
+<dt>If it is a 3d array, the first item in the outermost dimension must be a 2d array containing one or more</dt>
+<dd>1d arrays of scalar predictors, and the second item must be a 2d array containing 1d arrays
+each of which contains a scalar dependent variable for the corresponding predictor vector.</dd>
+</dl>
+</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>sample weights</strong> – array of weights drawn from updated weight distributions.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">1d array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.sample_weights">
 <code class="descname">sample_weights</code><span class="sig-paren">(</span><em>gamma_shape_n</em>, <em>gamma_size_n</em>, <em>mu_n</em>, <em>Lambda_n</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.sample_weights" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw a sample of prediction weights from the distributions parameterized by <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_n" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_n"><code class="xref any py py-attr docutils literal"><span class="pre">mu_n</span></code></a>,
@@ -522,6 +554,39 @@ input array (variable &lt;Kohonen.variable&gt;`[0])) using <code class="xref any
 <dd><p><em>PreferenceSet or specification dict : default Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate learning_rate</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>array</em><em> or </em><em>List</em><em>[</em><em>1d array</em><em>, </em><em>1d array</em><em>, </em><em>2d array</em><em>] </em><em>: default class_defaults.variable</em>) – input pattern, array of activation values, and matrix used to calculate the weights changes.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the function.
+Values specified for parameters in the dictionary override any assigned to those parameters in arguments
+of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>weight change matrix</strong> – matrix of weight changes scaled by difference of the current weights from the input pattern in
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[0] and the distance of each element from the one with the weights most
+similar to that input pattern.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -593,6 +658,38 @@ returned by the function.</p>
 <dt id="psyneulink.core.components.functions.learningfunctions.Hebbian.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : default Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate learning_rate</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>List</em><em>[</em><em>number</em><em>] or </em><em>1d array : default class_defaults.variable</em>) – array of activity values, the pairwise products of which are used to generate a weight change matrix.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the function.
+Values specified for parameters in the dictionary override any assigned to those parameters in arguments
+of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>weight change matrix</strong> – matrix of weight changes generated by the <a class="reference internal" href="#hebbian-learning-rule"><span class="std std-ref">Hebbian Learning rule</span></a>,
+with all diagonal elements = 0 (i.e., hollow matix).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d array</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -671,6 +768,37 @@ returned by the function.</p>
 <dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : default Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate learning_rate</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>List</em><em>[</em><em>number</em><em>] or </em><em>1d np.array : default class_defaults.variable</em>) – array of activity values, the pairwise products of which are used to generate a weight change matrix.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the function.
+Values specified for parameters in the dictionary override any assigned to those parameters in arguments
+of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>weight change matrix</strong> – matrix of weight changes generated by the <a class="reference internal" href="#contrastivehebbian-learning-rule"><span class="std std-ref">ContrastiveHeabbian learning rule</span></a>, with all diagonal elements = 0 (i.e., hollow matix).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">2d array</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -798,6 +926,46 @@ then the <code class="xref any docutils literal"><span class="pre">learning_rate
 <dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.prefs">
 <code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>PreferenceSet or specification dict : default Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate learning_rate</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>List</em><em> or </em><em>2d np.array</em><em> [</em><em>length 3 in axis 0</em><em>] </em><em>: default class_defaults.variable</em>) – <p>must have three items that are (in order):</p>
+<blockquote>
+<div><ul>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_input" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a> (not used);</li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> (1d array with only one non-zero value);</li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> (1d array with a single scalar element);</li>
+</ul>
+</div></blockquote>
+<p>(see <a class="reference internal" href="#reinforcement-note"><span class="std std-ref">note</span></a> above).</p>
+</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>error array</strong> – Both 1d arrays are the same, with a single non-zero error term (see <a class="reference internal" href="#reinforcement-note"><span class="std std-ref">note</span></a> above).</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[1d array, 1d array]</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -939,6 +1107,68 @@ the system to which it belongs is used. If all are <code class="xref any docutil
 <dd><p><em>PreferenceSet or specification dict : default Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate learning_rate and error_matrix params</p>
+<dl class="docutils">
+<dt><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_matrix" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_matrix"><code class="xref any py py-attr docutils literal"><span class="pre">error_matrix</span></code></a> argument must be one of the following</dt>
+<dd><ul class="first last simple">
+<li>2d list, np.ndarray or np.matrix</li>
+<li>ParameterPort for one of the above</li>
+<li>MappingProjection with a parameterPorts[MATRIX] for one of the above</li>
+</ul>
+</dd>
+</dl>
+<p>Parse error_matrix specification and insure it is compatible with error_signal and activation_output</p>
+<dl class="docutils">
+<dt>Insure that the length of the error_signal matches the number of cols (receiver elements) of error_matrix</dt>
+<dd>(since it will be dot-producted to generate the weighted error signal)</dd>
+<dt>Insure that length of activation_output matches the number of rows (sender elements) of error_matrix</dt>
+<dd>(since it will be compared against the <em>result</em> of the dot product of the error_matrix and error_signal</dd>
+<dt>Note: error_matrix is left in the form in which it was specified so that, if it is a ParameterPort</dt>
+<dd>or MappingProjection, its current value can be accessed at runtime (i.e., it can be used as a “pointer”)</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>error_matrix=None</em>, <em>params=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation._function" title="Permalink to this definition">¶</a></dt>
+<dd><div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Both variable and error_matrix must be specified for the function to execute.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>List</em><em> or </em><em>2d array</em><em> [</em><em>length 3 in axis 0</em><em>]</em>) – must have three items that are the values for (in order):
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input"><code class="xref any py py-attr docutils literal"><span class="pre">activation_input</span></code></a> (1d array),
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> (1d array),
+<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> (1d array).</li>
+<li><strong>error_matrix</strong> (<em>List</em><em>, </em><em>2d array</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort" title="psyneulink.core.components.ports.parameterport.ParameterPort"><em>ParameterPort</em></a><em>, or </em><a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection"><em>MappingProjection</em></a>) – matrix of weights that were used to generate the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> (3rd item
+of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.variable" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> from <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a>;
+its dimensions must be the length of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> (rows) x
+length of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> (cols).</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>weight change matrix, weighted error signal</strong> – the modifications to make to the matrix, <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal"><span class="pre">error_signal</span></code></a> weighted by the
+contribution made by each element of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal"><span class="pre">activation_output</span></code></a> as a
+function of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_matrix" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_matrix"><code class="xref any py py-attr docutils literal"><span class="pre">error_matrix</span></code></a>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">List[2d array, 1d array]</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -1002,7 +1232,7 @@ the system to which it belongs is used. If all are <code class="xref any docutil
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0',
+               VERSION:'0.8.1.0+32.gf03564f',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

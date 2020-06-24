@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutoAssociativeLearningMechanism &mdash; PsyNeuLink 0.8.1.0 documentation</title>
+  <title>AutoAssociativeLearningMechanism &mdash; PsyNeuLink 0.8.1.0+32.gf03564f documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.1.0
+                  0.8.1.0+32
                 </div>
               
             
@@ -118,7 +118,6 @@
 
             
           </div>
-
           
             
             
@@ -136,10 +135,11 @@
 
             
           
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
         </div>
       </div>
     </nav>
-
     <div class="psyneulink-container">
       <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
         <div class="psyneulink-breadcrumbs-wrapper">
@@ -408,6 +408,34 @@ listed in the <a class="reference internal" href="#psyneulink.library.components
 of any additional (user-specified) OutputPorts.</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism._validate_variable">
+<code class="descname">_validate_variable</code><span class="sig-paren">(</span><em>variable</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate that variable has only one item: activation_input.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism._execute">
+<code class="descname">_execute</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>runtime_params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism._execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute AutoAssociativeLearningMechanism. function and return learning_signal</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(2D np.array) self.learning_signal</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism._update_output_ports">
+<code class="descname">_update_output_ports</code><span class="sig-paren">(</span><em>runtime_params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism._update_output_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the weights for the AutoAssociativeProjection for which this is the AutoAssociativeLearningMechanism</p>
+<p>Must do this here, so it occurs after LearningMechanism’s OutputPort has been updated.
+This insures that weights are updated within the same trial in which they have been learned</p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -482,7 +510,7 @@ of any additional (user-specified) OutputPorts.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0',
+               VERSION:'0.8.1.0+32.gf03564f',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.8.1.0 documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.8.1.0+32.gf03564f documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0
+                  0.8.1.0+32
                 </div>
               
             
@@ -116,7 +116,6 @@
 
             
           </div>
-
           
             
             
@@ -134,10 +133,11 @@
 
             
           
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
         </div>
       </div>
     </nav>
-
     <div class="psyneulink-container">
       <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
         <div class="psyneulink-breadcrumbs-wrapper">
@@ -526,6 +526,74 @@ evaluations will simply execute in the original <code class="xref any docutils l
 </dd></dl>
 
 <dl class="method">
+<dt id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._execute">
+<code class="descname">_execute</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>runtime_params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Find control_allocation that optimizes result of <code class="xref any docutils literal"><span class="pre">agent_rep.evaluate</span></code>  .</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._initialize_composition_function_approximator">
+<code class="descname">_initialize_composition_function_approximator</code><span class="sig-paren">(</span><em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._initialize_composition_function_approximator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize CompositionFunctionApproximator</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._instantiate_attributes_after_function">
+<code class="descname">_instantiate_attributes_after_function</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._instantiate_attributes_after_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate OptimizationControlMechanism’s OptimizatonFunction attributes</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._instantiate_control_signals">
+<code class="descname">_instantiate_control_signals</code><span class="sig-paren">(</span><em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._instantiate_control_signals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Size control_allocation and assign modulatory_signals
+Set size of control_allocadtion equal to number of modulatory_signals.
+Assign each modulatory_signal sequentially to corresponding item of control_allocation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._instantiate_input_ports">
+<code class="descname">_instantiate_input_ports</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._instantiate_input_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate input_ports for Projections from features and objective_mechanism.</p>
+<p>Inserts InputPort specification for Projection from ObjectiveMechanism as first item in list of
+InputPort specifications generated in _parse_feature_specs from the <strong>features</strong> and
+<strong>feature_function</strong> arguments of the OptimizationControlMechanism constructor.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._instantiate_output_ports">
+<code class="descname">_instantiate_output_ports</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._instantiate_output_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign CostFunctions.DEFAULTS as default for cost_option of ControlSignals.
+OptimizationControlMechanism requires use of at least one of the cost options</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._parse_feature_specs">
+<code class="descname">_parse_feature_specs</code><span class="sig-paren">(</span><em>input_ports</em>, <em>feature_function</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._parse_feature_specs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse entries of features into InputPort spec dictionaries
+Set INTERNAL_ONLY entry of params dict of InputPort spec dictionary to True</p>
+<blockquote>
+<div>(so that inputs to Composition are not required if the specified state is on an INPUT Mechanism)</div></blockquote>
+<p>Assign functions specified in <strong>feature_function</strong> to InputPorts for all features
+Return list of InputPort specification dictionaries</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._update_input_ports">
+<code class="descname">_update_input_ports</code><span class="sig-paren">(</span><em>runtime_params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._update_input_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update value for each InputPort in self.input_ports:</p>
+<p>Call execute method for all (MappingProjection) Projections in Port.path_afferents
+Aggregate results (using InputPort execute method)
+Update InputPort.value</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Insure that specification of ObjectiveMechanism has projections to it</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.add_features">
 <code class="descname">add_features</code><span class="sig-paren">(</span><em>features</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.add_features" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add InputPorts and Projections to OptimizationControlMechanism for features used to
@@ -622,7 +690,7 @@ and specified <a class="reference internal" href="ControlMechanism.html#psyneuli
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0',
+               VERSION:'0.8.1.0+32.gf03564f',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

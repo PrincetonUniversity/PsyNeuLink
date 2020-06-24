@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.8.1.0 documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.8.1.0+32.gf03564f documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0
+                  0.8.1.0+32
                 </div>
               
             
@@ -116,7 +116,6 @@
 
             
           </div>
-
           
             
             
@@ -134,10 +133,11 @@
 
             
           
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
         </div>
       </div>
     </nav>
-
     <div class="psyneulink-container">
       <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
         <div class="psyneulink-breadcrumbs-wrapper">
@@ -286,6 +286,32 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 for details).</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.core.components.functions.transferfunctions.Identity._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Identity._function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return: <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Identity.variable" title="psyneulink.core.components.functions.transferfunctions.Identity.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>number</em><em> or </em><em>np.array : default class_defaults.variable</em>) – a single value or array to be returned.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>variable</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or np.array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -362,6 +388,31 @@ assigned by FunctionRegistry (see <a class="reference internal" href="Registry.h
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
 for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.transferfunctions.Linear._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Linear._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – a single value or array to be transformed.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>linear transformation of variable</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or array</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -473,6 +524,31 @@ assigned by FunctionRegistry (see <a class="reference internal" href="Registry.h
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
 for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.transferfunctions.Exponential._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Exponential._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – a single value or array to be exponentiated.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Exponential transformation of variable</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or array</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -607,6 +683,31 @@ assigned by FunctionRegistry (see <a class="reference internal" href="Registry.h
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
 for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.transferfunctions.Logistic._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Logistic._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – a single value or array to be transformed.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Logistic transformation of variable</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or array</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -746,6 +847,31 @@ for details).</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="psyneulink.core.components.functions.transferfunctions.Tanh._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Tanh._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – a single value or array to be transformed.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>hyperbolic tangent of variable</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.core.components.functions.transferfunctions.Tanh.derivative">
 <code class="descname">derivative</code><span class="sig-paren">(</span><em>input</em>, <em>output=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Tanh.derivative" title="Permalink to this definition">¶</a></dt>
 <dd><p>Derivative of <code class="xref any docutils literal"><span class="pre">function</span></code> at <strong>input</strong>.</p>
@@ -848,6 +974,31 @@ assigned by FunctionRegistry (see <a class="reference internal" href="Registry.h
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
 for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.transferfunctions.ReLU._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.ReLU._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – a single value or array to be transformed.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>ReLU transformation of variable</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or array</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -955,6 +1106,31 @@ assigned by FunctionRegistry (see <a class="reference internal" href="Registry.h
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
 for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.transferfunctions.Gaussian._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Gaussian._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – a single value or array to be transformed.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Gaussian transformation of variable</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or array</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -1070,6 +1246,31 @@ constructor, a default is assigned using <code class="xref any docutils literal"
 for details).</p>
 </dd></dl>
 
+<dl class="method">
+<dt id="psyneulink.core.components.functions.transferfunctions.GaussianDistort._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.GaussianDistort._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – a single value or array to be transformed.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>Sample from Gaussian distribution for each element of variable</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -1175,6 +1376,31 @@ for details).</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="psyneulink.core.components.functions.transferfunctions.SoftMax._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>1d array : default class_defaults.variable</em>) – an array to be transformed.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>SoftMax transformation of variable</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.core.components.functions.transferfunctions.SoftMax.derivative">
 <code class="descname">derivative</code><span class="sig-paren">(</span><em>output</em>, <em>input=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax.derivative" title="Permalink to this definition">¶</a></dt>
 <dd><table class="docutils field-list" frame="void" rules="none">
@@ -1277,6 +1503,54 @@ assigned by FunctionRegistry (see <a class="reference internal" href="Registry.h
 <dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
 constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code>
 for details).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.transferfunctions.LinearMatrix._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>list</em><em> or </em><em>1d array</em>) – array to be transformed;  length must equal the number of rows of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>dot product of variable and matrix</strong> – length of the array returned equals the number of columns of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>.</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">1d array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.transferfunctions.LinearMatrix._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.LinearMatrix._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate params and assign to targets</p>
+<p>This overrides the class method, to perform more detailed type checking (see explanation in class method).
+Note: this method (or the class version) is called only if the parameter_validation attribute is <code class="xref any docutils literal"><span class="pre">True</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request_set</strong> – (dict) - params to be validated</li>
+<li><strong>target_set</strong> – (dict) - destination of validated params</li>
+<li><strong>context</strong> – (str)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return none:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
@@ -1553,6 +1827,49 @@ arguments of the constructor.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>params=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – a single value or array to be transformed.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the function.
+Values specified for parameters in the dictionary override any assigned to those parameters in arguments
+of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>transformation of variable using `transfer_fct &lt;TransferWithCostss.transfer_fct&gt;`</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">number or array</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts._instantiate_attributes_before_function">
+<code class="descname">_instantiate_attributes_before_function</code><span class="sig-paren">(</span><em>function=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts._instantiate_attributes_before_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate <a class="reference internal" href="#transferwithcosts-cost-functions"><span class="std std-ref">cost functions</span></a> specified in <code class="xref any docutils literal"><span class="pre">enabled_cost_functions</span></code>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts._instantiate_cost_functions">
+<code class="descname">_instantiate_cost_functions</code><span class="sig-paren">(</span><em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts._instantiate_cost_functions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate cost functions and the multiplicative and additive modulatory parameters for them.</p>
+<p>Parse specification of cost functions to enable
+Instantiate cost functions specified in construtor arguments, and enable ones in enabled_cost_functions
+Assign default value for multipicative and additive parameters for each, from the values of those parameters</p>
+<blockquote>
+<div>on the respective cost functions just instantiated.</div></blockquote>
+<p>Initialize intensity_cost</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.assign_costs">
 <code class="descname">assign_costs</code><span class="sig-paren">(</span><em>cost_functions</em>, <em>execution_context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.assign_costs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assigns specified functions; all others are disabled.</p>
@@ -1676,6 +1993,12 @@ based on its integral (i.e., it accumulated value over multiple executions).</p>
 <dd><p>assign default set of cost functions as <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.CostFunctions.INTENSITY" title="psyneulink.core.components.functions.transferfunctions.CostFunctions.INTENSITY"><code class="xref any py py-attr docutils literal"><span class="pre">INTENSITY</span></code></a>).</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.transferfunctions.CostFunctions._member_type_">
+<code class="descname">_member_type_</code><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.CostFunctions._member_type_" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">int</span></code></p>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -1736,7 +2059,7 @@ based on its integral (i.e., it accumulated value over multiple executions).</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0',
+               VERSION:'0.8.1.0+32.gf03564f',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.8.1.0 documentation</title>
+  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.8.1.0+32.gf03564f documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0
+                  0.8.1.0+32
                 </div>
               
             
@@ -116,7 +116,6 @@
 
             
           </div>
-
           
             
             
@@ -134,10 +133,11 @@
 
             
           
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
         </div>
       </div>
     </nav>
-
     <div class="psyneulink-container">
       <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
         <div class="psyneulink-breadcrumbs-wrapper">
@@ -527,6 +527,41 @@ ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.core.comp
 </dd></dl>
 
 <dl class="method">
+<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_attributes_after_function">
+<code class="descname">_instantiate_attributes_after_function</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_attributes_after_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign InputPort weights and exponents to ObjectiveMechanism’s function</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_function_weights_and_exponents">
+<code class="descname">_instantiate_function_weights_and_exponents</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_function_weights_and_exponents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign weights and exponents to ObjectiveMechanism’s function if it has those attributes</p>
+<p>For each, only make assignment if one or more entries in it has been assigned a value
+If any one value has been assigned, assign default value (1) to all other elements</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_input_ports">
+<code class="descname">_instantiate_input_ports</code><span class="sig-paren">(</span><em>monitor_specs=None</em>, <em>reference_value=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_input_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate InputPorts specified in <strong>input_ports</strong> argument of constructor or each OutputPort
+specified in monitor_specs</p>
+<dl class="docutils">
+<dt>Called during initialization as well as by _add_to_monitor(),</dt>
+<dd>so must distinguish between initialization and adding to instantiated input_ports.</dd>
+<dt>During initialization, uses <strong>input_ports</strong> as specification of InputPorts to instantiate;</dt>
+<dd>if none are specified, instantiates a default InputPort</dd>
+<dt>Otherwise, uses monitor_specs as specification of InputPorts to instantiate;</dt>
+<dd>these will replace any existing InputPorts (including a default one)</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate <strong>role</strong>, <strong>monitor</strong>, amd <strong>input_ports</strong> arguments</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.add_to_monitor">
 <code class="descname">add_to_monitor</code><span class="sig-paren">(</span><em>monitor_specs</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.add_to_monitor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a> to be monitored by the ObjectiveMechanism.</p>
@@ -614,7 +649,7 @@ If the item is a Mechanism, its <a class="reference internal" href="OutputPort.h
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0',
+               VERSION:'0.8.1.0+32.gf03564f',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

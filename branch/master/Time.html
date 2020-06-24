@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Time &mdash; PsyNeuLink 0.8.1.0 documentation</title>
+  <title>Time &mdash; PsyNeuLink 0.8.1.0+32.gf03564f documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.1.0
+                  0.8.1.0+32
                 </div>
               
             
@@ -116,7 +116,6 @@
 
             
           </div>
-
           
             
             
@@ -134,10 +133,11 @@
 
             
           
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
         </div>
       </div>
     </nav>
-
     <div class="psyneulink-container">
       <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
         <div class="psyneulink-breadcrumbs-wrapper">
@@ -269,6 +269,12 @@ consisting of one or more <a class="reference internal" href="#psyneulink.core.s
 </table>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="psyneulink.core.scheduling.time.TimeScale._member_type_">
+<code class="descname">_member_type_</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale._member_type_" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -279,6 +285,12 @@ consisting of one or more <a class="reference internal" href="#psyneulink.core.s
 <dt id="psyneulink.core.scheduling.time.Clock.history">
 <code class="descname">history</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock.history" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="#psyneulink.core.scheduling.time.TimeHistoryTree" title="psyneulink.core.scheduling.time.TimeHistoryTree"><code class="xref any py py-class docutils literal"><span class="pre">TimeHistoryTree</span></code></a> – a root <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeHistoryTree" title="psyneulink.core.scheduling.time.TimeHistoryTree"><code class="xref any py py-class docutils literal"><span class="pre">TimeHistoryTree</span></code></a> associated with this Clock</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.scheduling.time.Clock._increment_time">
+<code class="descname">_increment_time</code><span class="sig-paren">(</span><em>time_scale</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock._increment_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeHistoryTree.increment_time" title="psyneulink.core.scheduling.time.TimeHistoryTree.increment_time"><code class="xref any py py-meth docutils literal"><span class="pre">self.history.increment_time</span></code></a></p>
 </dd></dl>
 
 <dl class="method">
@@ -377,6 +389,52 @@ should be returned</li>
 <dt id="psyneulink.core.scheduling.time.Time.time_step">
 <code class="descname">time_step</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Time.time_step" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>int : 0</em> – the <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a> value</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.scheduling.time.Time._get_by_time_scale">
+<code class="descname">_get_by_time_scale</code><span class="sig-paren">(</span><em>time_scale</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Time._get_by_time_scale" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_scale</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a>) – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>this Time’s value of a TimeScale by the TimeScale enum, rather             than by attribute</strong></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.scheduling.time.Time._set_by_time_scale">
+<code class="descname">_set_by_time_scale</code><span class="sig-paren">(</span><em>time_scale</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Time._set_by_time_scale" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_scale</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a>) – </td>
+</tr>
+</tbody>
+</table>
+<p>Sets this Time’s value of a <strong>time_scale</strong> by the TimeScale enum,
+rather than by attribute</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.scheduling.time.Time._increment_by_time_scale">
+<code class="descname">_increment_by_time_scale</code><span class="sig-paren">(</span><em>time_scale</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Time._increment_by_time_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increments the value of <strong>time_scale</strong> in this Time by one</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.scheduling.time.Time._reset_by_time_scale">
+<code class="descname">_reset_by_time_scale</code><span class="sig-paren">(</span><em>time_scale</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Time._reset_by_time_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets all the times for the time scale scope up to <strong>time_scale</strong>
+e.g. _reset_by_time_scale(TimeScale.TRIAL) will set the values for
+TimeScale.PASS and TimeScale.TIME_STEP to 0</p>
 </dd></dl>
 
 </dd></dl>
@@ -561,7 +619,7 @@ a root (i.e. <strong>time_scale</strong> is <a class="reference internal" href="
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.1.0',
+               VERSION:'0.8.1.0+32.gf03564f',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
