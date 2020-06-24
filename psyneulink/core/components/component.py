@@ -976,7 +976,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 return variable
 
             try:
-                return np.asarray(variable)
+                return convert_to_np_array(variable)
             except ValueError:
                 return convert_all_elements_to_np_array(variable)
 
@@ -1507,7 +1507,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     variable = []
                     for s in size:
                         variable.append(np.zeros(s))
-                    variable = np.array(variable)
+                    variable = convert_to_np_array(variable)
+                # TODO: fix bare except
                 except:
                     raise ComponentError("variable (possibly default_variable) was not specified, but PsyNeuLink "
                                          "was unable to infer variable from the size argument, {}. size should be"

@@ -413,6 +413,7 @@ from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, \
     OPTIMIZATION_CONTROL_MECHANISM, OBJECTIVE_MECHANISM, OUTCOME, PRODUCT, PARAMS, \
     CONTROL, AUTO_ASSIGN_MATRIX
+from psyneulink.core.globals.utilities import convert_to_np_array
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.context import handle_external_context
@@ -873,7 +874,7 @@ class OptimizationControlMechanism(ControlMechanism):
             port = self.input_ports[i]
             port._update(params=runtime_params, context=context)
             port_values.append(port.parameters.value._get(context))
-        return np.array(port_values)
+        return convert_to_np_array(port_values)
         # # MODIFIED 5/8/20 NEW:
         # input_port_values = super()._update_input_ports(runtime_params, context)
         # port_values.append(input_port_values)

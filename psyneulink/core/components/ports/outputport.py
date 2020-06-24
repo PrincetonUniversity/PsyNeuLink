@@ -638,7 +638,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    is_numeric, iscompatible, make_readonly_property, recursive_update, ContentAddressableList
+    convert_to_np_array, is_numeric, iscompatible, make_readonly_property, recursive_update, ContentAddressableList
 
 __all__ = [
     'OutputPort', 'OutputPortError', 'PRIMARY', 'SEQUENTIAL', 'StandardOutputPorts', 'StandardOutputPortsError',
@@ -1350,7 +1350,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
                     for item in owner_value))):
         pass
     else:
-        converted_to_2d = np.atleast_2d(owner.value)
+        converted_to_2d = convert_to_np_array(owner.value, dimension=2)
         # If owner_value is a list of heterogenous elements, use as is
         if converted_to_2d.dtype == object:
             owner_value = owner.defaults.value

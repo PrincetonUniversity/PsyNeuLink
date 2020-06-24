@@ -886,9 +886,6 @@ def convert_to_np_array(value, dimension=None):
                 else:
                     raise
 
-    if value is None:
-        return None
-
     value = safe_create_np_array(value)
 
     if dimension == 1:

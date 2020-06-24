@@ -2627,7 +2627,8 @@ def _instantiate_port(port_type:_is_port_class,           # Port's type
             port_spec_dict[REFERENCE_VALUE] = port_spec_dict[VARIABLE]
 
     #  Convert reference_value to np.array to match port_variable (which, as output of function, will be an np.array)
-    port_spec_dict[REFERENCE_VALUE] = convert_to_np_array(port_spec_dict[REFERENCE_VALUE],1)
+    if port_spec_dict[REFERENCE_VALUE] is not None:
+        port_spec_dict[REFERENCE_VALUE] = convert_to_np_array(port_spec_dict[REFERENCE_VALUE], 1)
 
     # INSTANTIATE PORT:
 

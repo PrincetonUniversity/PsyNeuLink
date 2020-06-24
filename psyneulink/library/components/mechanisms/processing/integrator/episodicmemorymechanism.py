@@ -106,6 +106,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTEXT, NAME, OWNER_VALUE, SIZE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.utilities import convert_to_np_array
 
 __all__ = ['EpisodicMemoryMechanism', 'CONTENT_INPUT', 'ASSOC_INPUT', 'CONTENT_OUTPUT', 'ASSOC_OUTPUT']
 
@@ -302,7 +303,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
         # If assoc has not been specified, add empty list to call to function (which expects two items in its variable)
         if len(variable) != 2:
-            return np.array([variable[0],[]])
+            return convert_to_np_array([variable[0],[]])
         else:
             return variable
 
