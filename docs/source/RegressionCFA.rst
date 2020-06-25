@@ -6,3 +6,4 @@ RegressionCFA
 
 .. automodule:: psyneulink.library.compositions.regressioncfa
    :members:
+   :private-members:
