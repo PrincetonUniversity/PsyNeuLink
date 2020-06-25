@@ -189,11 +189,11 @@ agent_comp.controller_mode = BEFORE
 if SHOW_GRAPH == 'SIMPLE':
     agent_comp.show_graph(show_cim=True)
 if SHOW_GRAPH == 'CONTROL':
-    agent_comp.show_graph(show_model_based_optimizer=True, show_cim=True)
+    agent_comp.show_graph(show_controller=True, show_cim=True)
 if SHOW_GRAPH == 'NODE STRUCTURE':
-    agent_comp.show_graph(show_model_based_optimizer=True, show_node_structure=True, show_cim=True)
+    agent_comp.show_graph(show_controller=True, show_node_structure=True, show_cim=True)
 if SHOW_GRAPH == 'FULL':
-    agent_comp.show_graph(show_model_based_optimizer=True,
+    agent_comp.show_graph(show_controller=True,
                           show_cim=True,
                           show_node_structure=ALL,
                           show_headers=True,

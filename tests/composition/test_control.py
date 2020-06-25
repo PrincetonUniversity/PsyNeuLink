@@ -267,24 +267,17 @@ class TestControlSpecification:
                 ])
         )
 
-        with pytest.warns(UserWarning) as w:
+        text = 'The controller of ocomp has been specified to project to deferred, but deferred is ' \
+               'not in ocomp or any of its nested Compositions. This projection will be deactivated ' \
+               'until deferred is added to ocomp in a compatible way.'
+        with pytest.warns(UserWarning, match=text):
             # ocomp.show_graph(show_controller=True, show_cim=True)
             # results = ocomp.run([5])
-            result = ocomp.run({
-                initial_node_a: [1]
-            })
+            result = ocomp.run({initial_node_a: [1]})
 
             # result = 5, the input (1) multiplied by the value of the ControlSignal projecting to Node "ia"
             # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
             # Control Signal "deferred_node": disabled
-            warning_triggered = False
-            for warn in w:
-                if warn.message.args[0] == 'The controller of ocomp has been specified to project to deferred, but deferred is ' \
-                                   'not in ocomp or any of its nested Compositions. This projection will be deactivated ' \
-                                   'until deferred is added to ocomp in a compatible way.':
-                    warning_triggered = True
-                    break
-            assert warning_triggered
 
         assert result == [[5]]
 
@@ -331,20 +324,13 @@ class TestControlSpecification:
                 ])
         )
 
-        with pytest.warns(UserWarning) as w:
-            result = ocomp.run({
-                initial_node: [1]
-            })
-            warning_triggered = False
-            for warn in w:
-                if warn.message.args[0] == 'The controller of ocomp has a specification that includes the ' \
-                                           'Mechanism oController Objective Mechanism, but oController ' \
-                                           'Objective Mechanism is not in ocomp or any of its nested Compositions. ' \
-                                           'This Mechanism will be deactivated until oController Objective Mechanism is ' \
-                                           'added to ocomp or one of its nested Compositions in a compatible way.':
-                    warning_triggered = True
-                    break
-            assert warning_triggered
+        text = 'The controller of ocomp has a specification that includes the '\
+               'Mechanism oController Objective Mechanism, but oController '\
+               'Objective Mechanism is not in ocomp or any of its nested Compositions. '\
+               'This Mechanism will be deactivated until oController Objective Mechanism is '\
+               'added to ocomp or one of its nested Compositions in a compatible way.'
+        with pytest.warns(UserWarning, match=text):
+            result = ocomp.run({initial_node: [1]})
 
         assert result == [[1]]
         # result = 1, the input (1) multiplied by the first value in the SearchSpace of the ControlSignal projecting to
@@ -359,9 +345,7 @@ class TestControlSpecification:
         ocomp.add_linear_processing_pathway([initial_node, deferred_node])
 
         # The objective mechanism's aux components are now all legal, so it will be activated on the following run
-        result = ocomp.run({
-            initial_node: [[1]]
-        })
+        result = ocomp.run({initial_node: [[1]]})
         assert result == [[5]]
         # result = 5, the input (1) multiplied by the value of the ControlSignal projecting to Node "ia"
         # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
