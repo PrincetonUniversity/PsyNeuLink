@@ -413,9 +413,12 @@ the Composition, and provides the result to the `controller <Composition.control
 
 A `controller <Composition.controller>` can be assigned either by specifying it in the **controller** argument of the
 Composition's constructor, or using its `add_controller <Composition.add_controller>` method.
+COMMENT:
+The Node is assigned the `NodeRole` `CONTROLLER`.
+COMMENT
 
 COMMENT:
-TBI FOR COMPOSITION
+TBI FOR COMPOSITION˚
 CONTROLLER CAN BE SPECIFIED BY AS True, BY CLASS (E.G., OCM), OR CONSTRUCTOR
 IF TRUE, CLASS OR BY CONSTRUCTOR WITHOUT OBJECTIVE_MECHANISM SPEC, A DEFAULT IS OBJ_MECH IS CREATED
 IF A DEFAULT OBJ MECH IS CREATED, OR NEITHER OBJ_MECH NOR OCM HAVE MONITOR FOR CONTROL SPECIFIED, THEN
@@ -3125,6 +3128,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     efferents : ContentAddressableList[`Projection <Projection>`]
         a list of all of the `Projections <Projection>` from the Composition's `output_CIM`.
 
+    cims : list
+        a list containing references to the Composition's `input_CIM <Composition.input_CIM>`,
+        `parameter_CIM <Composition.parameter_CIM>`, and `output_CIM <Composition.output_CIM>`.
+
     env : Gym Forager Environment : default: None
         stores a Gym Forager Environment so that the Composition may interact with this environment within a
         single call to `run <Composition.run>`.
@@ -3316,6 +3323,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.output_CIM = CompositionInterfaceMechanism(name=self.name + " Output_CIM",
                                                         composition=self,
                                                         port_map=self.output_CIM_ports)
+        self.cims = [self.input_CIM, self.parameter_CIM, self.output_CIM]
 
         self.shadows = {}
 
@@ -3895,10 +3903,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             List[`Mechanisms <Mechanism>` and/or `Compositions <Composition>`] :
                 list of `NodeRoles <NodeRole>` assigned to **node**.
         """
+
         try:
             return self.nodes_to_roles[node]
         except KeyError:
-            raise CompositionError('Node {0} not found in {1}.nodes_to_roles'.format(node, self))
+            raise CompositionError(f"Node {node} not found in {self.nodes_to_roles}.")
 
     def get_nodes_by_role(self, role):
         """
@@ -4298,7 +4307,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _add_node_role(self, node, role):
         if role not in NodeRole:
             raise CompositionError('Invalid NodeRole: {0}'.format(role))
-        self.nodes_to_roles[node].add(role)
+        try:
+            self.nodes_to_roles[node].add(role)
+        except KeyError:
+            raise CompositionError(f"Attempt to assign {role} to '{node.name}' that is not a Node in {self.name}.")
 
     def _remove_node_role(self, node, role):
         if role not in NodeRole:
@@ -6960,6 +6972,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         controller.composition = self
         self.controller = controller
+        # Having controller in nodes is not currently supported (due to special handling of scheduling/execution);
+        #    its NodeRole assignment is handled directly by the get_nodes_by_role and get_roles_by_node methods.
+        # self._add_node_role(controller, NodeRole.CONTROLLER)
 
         # ADD AUX_COMPONENTS RELEVANT TO CONTROLLER
 
