@@ -1,6 +1,6 @@
 require=(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 window.utilities = {
-  OFFSET_HEIGHT_PADDING: 20,
+  OFFSET_HEIGHT_PADDING: 10,
 
   scrollTop: function() {
     var supportPageOffset = window.pageXOffset !== undefined;
@@ -298,6 +298,10 @@ window.mobileTOC = {
 
 },{}],7:[function(require,module,exports){
 window.psyneulinkAnchors = {
+  offsetHeightPx: function() {
+    return utilities.headersHeight() + utilities.OFFSET_HEIGHT_PADDING;
+  },
+
   bind: function() {
     // Replace Sphinx-generated anchors with anchorjs ones
     $(".headerlink").text("");
@@ -361,19 +365,16 @@ window.scrollToAnchor = {
        */
       scrollIfAnchor: function(href, pushToHistory) {
         var match, anchorOffset;
-
         if(!this.ANCHOR_REGEX.test(href)) {
           return false;
         }
 
         match = document.getElementById(href.slice(1));
         if(match) {
-          console.log(match)
-          if ($(match.querySelector('.anchorjs-link')).hasClass('dev-mode-link')){
+          if ($(match).hasClass('dev-mode-link')){
             $(document.querySelector('.switch-ctrl input')).prop('checked', true).trigger('change')
           };
-          var anchorOffset = $(match).offset().top - this.getFixedOffset();
-          $('html, body').scrollTop(anchorOffset);
+          $('html, body').scrollTop($(match).offset().top);
 
           // Add the state to history as-per normal anchor links
           if(HISTORY_SUPPORT && pushToHistory) {
@@ -786,7 +787,42 @@ function ThemeNav () {
         var div = document.createElement('div');
         div.innerHTML = switch_html.trim();
         $(div.querySelector('input')).change(devMode_toggle);
-        document.querySelector('.psyneulink-dev-mode-toggle').appendChild(div.firstChild)
+        document.querySelector('.psyneulink-dev-mode-toggle').appendChild(div.firstChild);
+
+        function adjust_hashes(h, offset=0){
+            var dev_mode_link = false;
+            var h_parent = h.parentNode;
+            var new_element = document.createElement('div');
+            if ($(h.querySelector('.anchorjs-link')).hasClass('dev-mode-link')){
+              dev_mode_link = true;
+            }
+            $(new_element).addClass('hash_adjust');
+            if (dev_mode_link){$(new_element).addClass('dev-mode-link');}
+            $(new_element).attr('id', $(h).attr('id'));
+            $(new_element).css("position", "relative");
+            $(new_element).css("top", `${offset}px`);
+            h_parent.insertBefore(new_element, h)
+            var section_link = h.querySelector('span');
+            if (section_link){
+                var new_element = document.createElement('div');
+                $(new_element).addClass('hash_adjust');
+                if (dev_mode_link){$(new_element).addClass('dev-mode-link');}
+                $(new_element).attr('id', $(section_link).attr('id'));
+                $(new_element).css("position", "relative");
+                $(new_element).css("top", `${offset}px`);
+                h_parent.insertBefore(new_element, h)
+            }
+        }
+
+        document.querySelectorAll('.psyneulink-container dt').forEach(
+            (h) => {
+                adjust_hashes(h, -(utilities.headersHeight() + utilities.OFFSET_HEIGHT_PADDING))
+            });
+
+        document.querySelectorAll('.psyneulink-container .section').forEach(
+            (h) => {
+                adjust_hashes(h, -(utilities.headersHeight()))
+            });
 
         // Set up javascript UX bits
         $(document)
