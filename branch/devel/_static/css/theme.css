@@ -11121,6 +11121,7 @@ a:hover {
 #core .simple,
 #core ul,
 #core li,
+#core dl.first.docutils,
 #contributors li,
 #contributors-guide ul.simple li,
 #table-of-contents li,
