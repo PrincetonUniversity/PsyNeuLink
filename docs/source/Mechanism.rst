@@ -13,6 +13,7 @@ Mechanism
     |
 
 .. container:: related
+
     *Related*
 
     .. toctree::
