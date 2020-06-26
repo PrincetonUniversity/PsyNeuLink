@@ -11110,14 +11110,19 @@ a:hover {
   margin-bottom: 0px
 }
 
+#basics-and-primer .simple li,
+#basics-and-primer .first .last,
+#basics-and-primer .simple p,
+#basics-and-primer .simple ul,
+#basics-and-primer .first .last,
 #welcome-to-psyneulink-logo .simple li,
 #welcome-to-logo .simple li,
-#basics-and-sampler .simple li,
-#basics-and-sampler .simple p,
-#basics-and-sampler .simple ul,
 #quick-reference #sections li,
+#core .simple,
+#core ul,
 #core li,
 #contributors li,
+#contributors-guide ul.simple li,
 #table-of-contents li,
 #indices-and-tables li,
 .wy-menu-vertical li,
