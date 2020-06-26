@@ -883,7 +883,11 @@ def convert_to_np_array(value, dimension):
         value = np.array(value)
         # if value.dtype==object and len(value) == 2:
         # Array is made up of non-uniform elements, so treat as 2d array and pass
-        if value.dtype==object:
+        if (
+            value.ndim > 0
+            and value.dtype == object
+            and any([safe_len(x) > 1 for x in value])
+        ):
             pass
         else:
             value = np.atleast_2d(value)
