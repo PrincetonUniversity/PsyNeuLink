@@ -1,21 +1,25 @@
 Mechanism
 =========
 
-*Subclasses:*
+.. container:: subclasses
 
-.. toctree::
-   :maxdepth: 1
+    *Subclasses*
 
-   ProcessingMechanism
-   ModulatoryMechanism
-|
-*Related*
+    .. toctree::
+       :maxdepth: 1
 
-.. toctree::
-   :maxdepth: 1
+       ProcessingMechanism
+       ModulatoryMechanism
+    |
 
-   Port
-|
+.. container:: related
+    *Related*
+
+    .. toctree::
+       :maxdepth: 1
+
+       Port
+
 .. automodule:: psyneulink.core.components.mechanisms.mechanism
    :members:
    :private-members:

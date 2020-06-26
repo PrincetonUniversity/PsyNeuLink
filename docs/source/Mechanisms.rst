@@ -4,6 +4,7 @@ Mechanisms
 .. toctree::
    :maxdepth: 3
 
-   *Subclasses:*
+.. container:: subclasses
+   *Subclasses*
    ProcessingMechanisms
    ModulatoryMechanisms
