@@ -1637,9 +1637,12 @@ class GridSearch(OptimizationFunction):
 
     def _run_cuda_grid(self, ocm, variable, context):
         assert ocm is ocm.agent_rep.controller
+        # Compiled evaluate expects the same variable as mech function
+        new_variable = [ip.parameters.value.get(context) for ip in ocm.input_ports]
         # Map allocations to values
         comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
-        ct_alloc, ct_values = comp_exec.cuda_evaluate(variable, self.search_space)
+        ct_alloc, ct_values = comp_exec.cuda_evaluate(np.atleast_2d(new_variable),
+                                                      self.search_space)
 
         # Reduce array of values to min/max
         # select_min params are:
