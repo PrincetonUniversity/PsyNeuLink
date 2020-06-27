@@ -6,4 +6,5 @@ SelectionFunctions
 
 .. automodule:: psyneulink.core.components.functions.selectionfunctions
    :members:
+   :private-members:
    :exclude-members: Parameters

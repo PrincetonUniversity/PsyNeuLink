@@ -1182,7 +1182,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         distances = [self.distance_function([query_key, list(m)]) for m in _memory[KEYS]]
 
         # Get the best-match(es) in memory based on selection_function and return as non-zero value(s) in an array
-        selection_array = self.selection_function(distances)
+        selection_array = self.selection_function(distances, context=context)
         indices_of_selected_items = np.flatnonzero(selection_array)
 
         # Single key identified

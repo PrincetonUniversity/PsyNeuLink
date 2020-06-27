@@ -260,84 +260,89 @@ class TestProjectionSpecificationFormats:
             assert R.parameter_ports[pnl.GAIN].mod_afferents[0].name in \
                    'ControlProjection for RecurrentTransferMechanism-{}[gain]'.format(i)
 
-    def test_formats_for_gating_specification_of_input_and_output_ports(self):
+    gating_spec_list = [
+        pnl.GATING,
+        pnl.CONTROL,
+        pnl.GATING_SIGNAL,
+        pnl.CONTROL_SIGNAL,
+        pnl.GATING_PROJECTION,
+        pnl.CONTROL_PROJECTION,
+        pnl.GatingSignal,
+        pnl.ControlSignal,
+        pnl.GatingSignal(),
+        pnl.ControlSignal(),
+        pnl.GatingProjection,
+        "GP_OBJECT",
+        pnl.GatingMechanism,
+        pnl.ControlMechanism,
+        pnl.GatingMechanism(),
+        pnl.ControlMechanism(),
+        (0.3, pnl.GATING),
+        (0.3, pnl.CONTROL),
+        (0.3, pnl.GATING_SIGNAL),
+        (0.3, pnl.CONTROL_SIGNAL),
+        (0.3, pnl.GATING_PROJECTION),
+        (0.3, pnl.CONTROL_PROJECTION),
+        (0.3, pnl.GatingSignal),
+        (0.3, pnl.ControlSignal),
+        (0.3, pnl.GatingSignal()),
+        (0.3, pnl.ControlSignal()),
+        (0.3, pnl.GatingProjection),
+        (0.3, pnl.ControlProjection),
+        (0.3, "GP_OBJECT"),
+        (0.3, pnl.GatingMechanism),
+        (0.3, pnl.ControlMechanism),
+        (0.3, pnl.GatingMechanism()),
+        (0.3, pnl.ControlMechanism())
+    ]
 
-        gating_spec_list = [
-            pnl.GATING,
-            pnl.CONTROL,
-            pnl.GATING_SIGNAL,
-            pnl.CONTROL_SIGNAL,
-            pnl.GATING_PROJECTION,
-            pnl.CONTROL_PROJECTION,
-            pnl.GatingSignal,
-            pnl.ControlSignal,
-            pnl.GatingSignal(),
-            pnl.ControlSignal(),
-            pnl.GatingProjection,
-            "GP_OBJECT",
-            pnl.GatingMechanism,
-            pnl.ControlMechanism,
-            pnl.GatingMechanism(),
-            pnl.ControlMechanism(),
-            (0.3, pnl.GATING),
-            (0.3, pnl.CONTROL),
-            (0.3, pnl.GATING_SIGNAL),
-            (0.3, pnl.CONTROL_SIGNAL),
-            (0.3, pnl.GATING_PROJECTION),
-            (0.3, pnl.CONTROL_PROJECTION),
-            (0.3, pnl.GatingSignal),
-            (0.3, pnl.ControlSignal),
-            (0.3, pnl.GatingSignal()),
-            (0.3, pnl.ControlSignal()),
-            (0.3, pnl.GatingProjection),
-            (0.3, pnl.ControlProjection),
-            (0.3, "GP_OBJECT"),
-            (0.3, pnl.GatingMechanism),
-            (0.3, pnl.ControlMechanism),
-            (0.3, pnl.GatingMechanism()),
-            (0.3, pnl.ControlMechanism())
-        ]
-        for i, gating_tuple in enumerate([j for j in zip(gating_spec_list, reversed(gating_spec_list))]):
-            G_IN, G_OUT = gating_tuple
+    @pytest.mark.parametrize(
+        'input_port, output_port',
+        [(inp, outp) for inp, outp in [j for j in zip(gating_spec_list, reversed(gating_spec_list))]]
+    )
+    def test_formats_for_gating_specification_of_input_and_output_ports(self, input_port, output_port):
+        G_IN, G_OUT = input_port, output_port
 
-            # This shenanigans is to avoid assigning the same instantiated ControlProjection more than once
-            if G_IN == 'GP_OBJECT':
-                G_IN = pnl.GatingProjection()
-            elif isinstance(G_IN, tuple) and G_IN[1] == 'GP_OBJECT':
-                G_IN = (G_IN[0], pnl.GatingProjection())
-            if G_OUT == 'GP_OBJECT':
-                G_OUT = pnl.GatingProjection()
-            elif isinstance(G_OUT, tuple) and G_OUT[1] == 'GP_OBJECT':
-                G_OUT = (G_OUT[0], pnl.GatingProjection())
+        # This shenanigans is to avoid assigning the same instantiated ControlProjection more than once
+        if G_IN == 'GP_OBJECT':
+            G_IN = pnl.GatingProjection()
+        elif isinstance(G_IN, tuple) and G_IN[1] == 'GP_OBJECT':
+            G_IN = (G_IN[0], pnl.GatingProjection())
+        if G_OUT == 'GP_OBJECT':
+            G_OUT = pnl.GatingProjection()
+        elif isinstance(G_OUT, tuple) and G_OUT[1] == 'GP_OBJECT':
+            G_OUT = (G_OUT[0], pnl.GatingProjection())
 
-            if isinstance(G_IN, tuple):
-                IN_NAME = G_IN[1]
-            else:
-                IN_NAME = G_IN
-            IN_CONTROL = pnl.CONTROL in repr(IN_NAME).split(".")[-1].upper()
-            if isinstance(G_OUT, tuple):
-                OUT_NAME = G_OUT[1]
-            else:
-                OUT_NAME = G_OUT
-            OUT_CONTROL = pnl.CONTROL in repr(OUT_NAME).split(".")[-1].upper()
+        if isinstance(G_IN, tuple):
+            IN_NAME = G_IN[1]
+        else:
+            IN_NAME = G_IN
+        IN_CONTROL = pnl.CONTROL in repr(IN_NAME).split(".")[-1].upper()
+        if isinstance(G_OUT, tuple):
+            OUT_NAME = G_OUT[1]
+        else:
+            OUT_NAME = G_OUT
+        OUT_CONTROL = pnl.CONTROL in repr(OUT_NAME).split(".")[-1].upper()
 
-            T = pnl.TransferMechanism(name='T-GATING-{}'.format(i),
-                                      input_ports=[G_IN],
-                                      output_ports=[G_OUT])
+        T = pnl.TransferMechanism(
+            name='T-GATING',
+            input_ports=[G_IN],
+            output_ports=[G_OUT]
+        )
 
-            if IN_CONTROL:
-                assert T.input_ports[0].mod_afferents[0].name in \
-                       'ControlProjection for T-GATING-{}[InputPort-0]'.format(i)
-            else:
-                assert T.input_ports[0].mod_afferents[0].name in \
-                       'GatingProjection for T-GATING-{}[InputPort-0]'.format(i)
+        if IN_CONTROL:
+            assert T.input_ports[0].mod_afferents[0].name in \
+                    'ControlProjection for T-GATING[InputPort-0]'
+        else:
+            assert T.input_ports[0].mod_afferents[0].name in \
+                    'GatingProjection for T-GATING[InputPort-0]'
 
-            if OUT_CONTROL:
-                assert T.output_ports[0].mod_afferents[0].name in \
-                       'ControlProjection for T-GATING-{}[OutputPort-0]'.format(i)
-            else:
-                assert T.output_ports[0].mod_afferents[0].name in \
-                       'GatingProjection for T-GATING-{}[OutputPort-0]'.format(i)
+        if OUT_CONTROL:
+            assert T.output_ports[0].mod_afferents[0].name in \
+                    'ControlProjection for T-GATING[OutputPort-0]'
+        else:
+            assert T.output_ports[0].mod_afferents[0].name in \
+                    'GatingProjection for T-GATING[OutputPort-0]'
 
         # with pytest.raises(pnl.ProjectionError) as error_text:
         #     T1 = pnl.ProcessingMechanism(name='T1', input_ports=[pnl.ControlMechanism()])

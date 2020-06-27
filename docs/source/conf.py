@@ -22,6 +22,9 @@ import sys
 sys.path.insert(0, os.path.abspath('../../'))
 # adding this path alone so that Run/Environment module can go in the dropdown underneath Scheduling
 sys.path.insert(0, os.path.abspath('../../psyneulink/globals/'))
+# adding this path to enable enable technical_note sphinx extension
+sys.path.insert(0, os.path.abspath('./_ext'))
+
 import psyneulink._version
 # -- General configuration ------------------------------------------------
 
@@ -36,7 +39,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
-    'sphinx_autodoc_typehints'
+    'sphinx_autodoc_typehints',
+    'technical_note'
     # 'sphinx.ext.imgmath'
 ]
 

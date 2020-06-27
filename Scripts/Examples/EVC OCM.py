@@ -51,6 +51,6 @@ stim_list_dict = {
     reward: [20, 20]
 }
 
-comp.show_graph(show_model_based_optimizer=True, show_node_structure=ALL)
-# comp.show_graph(show_model_based_optimizer=True)
+comp.show_graph(show_controller=True, show_node_structure=ALL)
+# comp.show_graph(show_controller=True)
 # comp.run(inputs=stim_list_dict)
