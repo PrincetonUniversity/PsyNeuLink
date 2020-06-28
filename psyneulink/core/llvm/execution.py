@@ -635,8 +635,8 @@ class CompExecution(CUDAExecution):
         # all but #2 and #3 are shared
         ct_param = bin_func.byref_arg_types[0](*ocm._get_evaluate_param_initializer(context))
         ct_state = bin_func.byref_arg_types[1](*ocm._get_evaluate_state_initializer(context))
-        # FIXME: Make sure the dtype matches _gen_llvm_evaluate_function
-        allocations = np.atleast_2d([*itertools.product(*search_space)])
+        # Make sure the dtype matches _gen_llvm_evaluate_function
+        allocations = np.asfarray(np.atleast_2d([*itertools.product(*search_space)]))
         ct_allocations = allocations.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[2] * len(allocations)))
         out_ty = bin_func.byref_arg_types[3] * len(allocations)
         ct_in = variable.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[4]))
