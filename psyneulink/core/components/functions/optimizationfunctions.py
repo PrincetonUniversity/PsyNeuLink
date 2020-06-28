@@ -1584,7 +1584,6 @@ class GridSearch(OptimizationFunction):
 
         opt_count_ptr = builder.alloca(ctx.float_ty)
         builder.store(opt_count_ptr.type.pointee(0), opt_count_ptr)
-        replace_ptr = builder.alloca(pnlvm.ir.IntType(1))
 
         # Use NaN here. fcmp_unordered below returns true if one of the
         # operands is a NaN. This makes sure we always set min_*
