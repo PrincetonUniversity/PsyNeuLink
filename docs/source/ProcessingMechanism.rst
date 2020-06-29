@@ -3,14 +3,16 @@ ProcessingMechanism
 
 .. _ProcessingMechanism_Subtypes:
 
-*Subclasses*
+.. container:: subclasses
 
-.. toctree::
-   :maxdepth: 1
+    *Subclasses*
 
-   TransferMechanism
-   IntegratorMechanism
-   ObjectiveMechanism
+    .. toctree::
+       :maxdepth: 1
+
+       TransferMechanism
+       IntegratorMechanism
+       ObjectiveMechanism
 
 .. automodule:: psyneulink.core.components.mechanisms.processing.processingmechanism
    :members:
