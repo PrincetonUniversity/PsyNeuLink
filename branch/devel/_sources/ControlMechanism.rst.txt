@@ -3,13 +3,15 @@ ControlMechanism
 
 .. _ControlMechanism_Subtypes:
 
-*Subclasses*
+.. container:: subclasses
 
-.. toctree::
-   :maxdepth: 1
+    *Subclasses*
 
-   GatingMechanism
-   OptimzationControlMechanism
+    .. toctree::
+       :maxdepth: 1
+
+       GatingMechanism
+       OptimizationControlMechanism
 
 .. automodule:: psyneulink.core.components.mechanisms.modulatory.control.controlmechanism
    :members:

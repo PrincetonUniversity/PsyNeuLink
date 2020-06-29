@@ -6,7 +6,9 @@ PathwayProjections
 .. toctree::
    :maxdepth: 1
 
-   *Subclasses:*
-   MappingProjection
-   MaskedMappingProjection
-   AutoAssociativeProjection
+.. container:: subclasses
+
+       *Subclasses*
+       MappingProjection
+       MaskedMappingProjection
+       AutoAssociativeProjection

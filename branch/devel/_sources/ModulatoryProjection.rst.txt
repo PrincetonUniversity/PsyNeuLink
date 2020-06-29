@@ -3,14 +3,16 @@ ModulatoryProjection
 
 .. _ModulatoryProjection_Subtypes:
 
-*Subclasses*
+.. container:: subclasses
 
-.. toctree::
-   :maxdepth: 1
+    *Subclasses*
 
-   LearningProjection
-   ControlProjection
-   GatingProjection
+    .. toctree::
+       :maxdepth: 1
+
+       LearningProjection
+       ControlProjection
+       GatingProjection
 
 .. automodule:: psyneulink.core.components.projections.modulatory.modulatoryprojection
    :members: ModulatoryProjection_Base
