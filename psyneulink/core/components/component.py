@@ -1396,10 +1396,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 p.attributes.add('noalias')
 
         if "reset" in tags:
-            builder = self._gen_llvm_function_reset(ctx, builder,
-                                                           params, state,
-                                                           arg_in, arg_out,
-                                                           tags=tags)
+            builder = self._gen_llvm_function_reset(ctx, builder, params, state,
+                                                    arg_in, arg_out, tags=tags)
         else:
             builder = self._gen_llvm_function_body(ctx, builder, params, state,
                                                    arg_in, arg_out, tags=tags)
