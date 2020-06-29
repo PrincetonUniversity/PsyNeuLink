@@ -11141,7 +11141,13 @@ a:hover {
 .section #sections dl,
 .section #sections ul,
 .section #sections ol,
-.section #core ul
+.section #core ul,
+.subclasses.docutils.container p,
+.subclasses.docutils.container ul.simple,
+.subclasses.docutils.container ul.simple li,
+.related.docutils.container p,
+.related.docutils.container ul.simple,
+.related.docutils.container ul.simple li
 {
     margin-top:0px;
     margin-bottom:0px;

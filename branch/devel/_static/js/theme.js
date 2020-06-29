@@ -374,8 +374,8 @@ window.scrollToAnchor = {
           if ($(match).hasClass('dev-mode-link')){
             $(document.querySelector('.switch-ctrl input')).prop('checked', true).trigger('change')
           };
-          $('html, body').scrollTop($(match).offset().top).trigger('scroll');
-
+          $('html, body').scrollTop($(match).offset().top);
+          $('html, body').trigger('scroll');
           // Add the state to history as-per normal anchor links
           if(HISTORY_SUPPORT && pushToHistory) {
             history.pushState({}, document.title, location.pathname + href);
