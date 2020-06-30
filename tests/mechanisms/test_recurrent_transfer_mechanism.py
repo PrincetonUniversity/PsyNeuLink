@@ -473,7 +473,7 @@ class TestRecurrentTransferMechanismMatrix:
         assert "must be the same as its variable" in str(error_text.value)
 
     def test_recurrent_mech_matrix_strings(self):
-        with pytest.raises(UtilitiesError) as error_text:
+        with pytest.raises(RecurrentTransferError) as error_text:
             R = RecurrentTransferMechanism(
                 name='R',
                 size=4,
