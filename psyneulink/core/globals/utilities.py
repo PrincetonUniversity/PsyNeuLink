@@ -889,8 +889,6 @@ def convert_to_np_array(value, dimension):
             value = np.atleast_2d(value)
     else:
         raise UtilitiesError("dimensions param ({0}) must be 1 or 2".format(dimension))
-    if 'U' in repr(value.dtype):
-        raise UtilitiesError("{0} has non-numeric entries".format(value))
     return value
 
 
