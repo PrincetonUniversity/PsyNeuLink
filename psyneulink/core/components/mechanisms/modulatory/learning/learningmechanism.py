@@ -511,7 +511,8 @@ These assignments cause the value of the LearningProjection to be added to the p
 ParameterPort, thus incrementing the weights by an amount specified by the LearningMechanism's `learning_signal
 <LearningMechanism.learning_signal>`. Note, that the changes to the `matrix
 <MappingProjection.MappingProjection.matrix>` parameter itself do not take effect until the next time the
-`learned_projection` is executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
+`learned_projection` is executed (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of
+"lazy" updating).
 
 A LearningMechanism's `function <LearningMechanism.function>` also computes an `error_signal
 <LearningMechanism.error_signal>` that is assigned as the `value <OutputPort.value>` of its *ERROR_SIGNAL*
@@ -867,7 +868,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         end of each `TRIAL <TimeScale.TRIAL>` of execution of the Composition to which the LearningMechanism belongs.
 
         .. note::
-           the `learning_abled <LearningMechanism.learning_enabled>` attribute of a LearningMechanism determines the
+           the `learning_enabled <LearningMechanism.learning_enabled>` attribute of a LearningMechanism determines the
            default behavior of its `learning_projections <LearningMechanism.learning_projections>`.  However, this
            can be overridden for individual `LearningProjections <LearningProjection>` by assigning their
            `learning_enabled <LearningProjection.learning_enabled>` attributes either at or after construction.

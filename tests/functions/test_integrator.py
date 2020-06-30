@@ -29,11 +29,11 @@ def SimpleIntFun(init, value, iterations, noise, rate, offset, **kwargs):
                     4.2037768,  4.03845052, 4.39892272, 4.45597924, 3.99547688]
     elif isinstance(noise, pnl.DistributionFunction):
         if "initializer" in kwargs:
-            return [4.97918455, 5.93969152, 1.40175578, 2.44777247, 2.27219373,
-                    3.49115648, 0.74116762, 3.71299288, 3.21473103, 1.17786362]
+            return [6.07047464, 1.45183492, 2.13615798, 3.22296925, 3.29867927,
+                    0.9734048, 2.54011924, 3.21213761, 1.54651058, 2.7026355, ]
         else:
-            return [4.18745951, 5.4107966,  0.83371122, 1.52217583, 2.20115767,
-                    3.40402718, 0.72094922, 2.88037304, 2.43657428, 0.30785147]
+            return [5.2787496, 0.92294, 1.56811342, 2.29737262, 3.22764321,
+                    0.8862755, 2.51990084, 2.37951776, 0.76835383, 1.83262335]
     else:
         if "initializer" in kwargs:
             return [5.53160614, 4.86244369, 3.79932695, 5.06809088, 2.1305511,
@@ -53,11 +53,11 @@ def AdaptiveIntFun(init, value, iterations, noise, rate, offset, **kwargs):
                     3.18971771, 3.06427238, 3.33778941, 3.38108243, 3.03166509]
     elif isinstance(noise, pnl.DistributionFunction):
         if "initializer" in kwargs:
-            return [3.67089771, 4.18435033, 1.30397717, 1.80024477, 1.53349296,
-                    2.26605138, 0.90036311, 2.65296649, 1.92327214, 0.87106782]
+            return [4.18870661, 1.3561085, 1.69287182, 1.94643064, 2.12581409,
+                    1.05242466, 2.05628752, 1.90164378, 1.18394637, 1.39578569]
         else:
-            return [3.35596055, 3.97396333, 1.07801699, 1.43205537, 1.50523581,
-                    2.23139257, 0.89232051, 2.32176195, 1.61373227, 0.52498915]
+            return [3.87376946, 1.14572149, 1.46691163, 1.57824123, 2.09755694,
+                    1.01776584, 2.04824492, 1.57043925, 0.8744065, 1.04970702]
     else:
         if "initializer" in kwargs:
             return [3.91143701, 3.49857235, 2.67777415, 3.51140748, 1.59096419,
@@ -98,9 +98,9 @@ def LeakyFun(init, value, iterations, noise, **kwargs):
             return [2.93867224, 2.74475902, 2.74803958, 3.06104933, 2.23711905, 2.31689203, 2.19429898, 3.07659637, 3.04734388, 2.96259823]
     elif isinstance(noise, pnl.DistributionFunction):
         if "initializer" not in kwargs:
-            return [2.23227404, 2.6077243, 1.211716, 1.41726436, 1.60300815, 1.97791233, 1.16614943, 1.84495105, 1.6989461, 1.03445751]
+            return [2.55912037, 1.24455938, 1.43417309, 1.638423, 1.91298882, 1.22700281, 1.71226825, 1.67794471, 1.20395947, 1.48326449]
         else:
-            return [2.9628102, 3.09574331, 1.73585895, 2.27132579, 1.66855415, 2.0583078, 1.18480523, 2.61322145, 2.41696261, 1.83723032]
+            return [3.28965653, 1.73257839, 1.95831604, 2.49248443, 1.97853482, 1.30739828, 1.73092406, 2.4462151, 1.92197598, 2.28603731]
     else:
         if "initializer" not in kwargs:
             return [2.39694798, 2.27976578, 1.9349721, 2.21280371, 1.5655935, 2.11241762, 1.59283164, 2.46577518, 2.09617208, 1.82765063]
@@ -165,16 +165,16 @@ def test_integrator_function_no_default_variable_and_params_len_more_than_1():
 def test_integrator_function_default_variable_len_1_but_user_specified_and_params_len_more_than_1():
     with pytest.raises(FunctionError) as error_text:
         Functions.AdaptiveIntegrator(default_variable=[1], rate=[.1, .2, .3])
-    error_msg_a = 'The length (3) of the array specified for the rate parameter'
-    error_msg_b = 'must match the length (1) of the default input ([1])'
+    error_msg_a = 'The length of the array specified for the rate parameter'
+    error_msg_b = 'must match the length of the default input'
     assert error_msg_a in str(error_text.value)
     assert error_msg_b in str(error_text.value)
 
 def test_integrator_function_default_variable_and_params_len_more_than_1_error():
     with pytest.raises(FunctionError) as error_text:
         Functions.AdaptiveIntegrator(default_variable=[0,0], rate=[.1, .2, .3])
-    error_msg_a = 'The length (3) of the array specified for the rate parameter'
-    error_msg_b = 'must match the length (2) of the default input ([0 0])'
+    error_msg_a = 'The length of the array specified for the rate parameter'
+    error_msg_b = 'must match the length of the default input'
     assert error_msg_a in str(error_text.value)
     assert error_msg_b in str(error_text.value)
 

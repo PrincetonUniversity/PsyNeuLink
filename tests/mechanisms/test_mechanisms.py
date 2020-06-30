@@ -42,6 +42,101 @@ class TestMechanism:
         assert M.function.defaults.value.shape == function_value.shape
 
 
+class TestMechanismFunctionParameters:
+    f = pnl.Linear()
+    i = pnl.SimpleIntegrator()
+    mech_1 = pnl.TransferMechanism(function=f, integrator_function=i)
+    mech_2 = pnl.TransferMechanism(function=f, integrator_function=i)
+    integrator_mechanism = pnl.IntegratorMechanism(function=i)
+
+    @pytest.mark.parametrize(
+        "f, g",
+        [
+            pytest.param(
+                mech_1.defaults.function,
+                mech_2.defaults.function,
+                id="function_defaults",
+            ),
+            pytest.param(
+                mech_1.defaults.function,
+                mech_1.parameters.function.get(),
+                id="function_default-and-value",
+            ),
+            pytest.param(
+                mech_1.defaults.function,
+                mech_2.parameters.function.get(),
+                id="function_default-and-other-value",
+            ),
+            pytest.param(
+                mech_1.defaults.integrator_function,
+                mech_2.defaults.integrator_function,
+                id="integrator_function_defaults",
+            ),
+            pytest.param(
+                mech_1.defaults.integrator_function,
+                mech_1.parameters.integrator_function.get(),
+                id="integrator_function_default-and-value",
+            ),
+            pytest.param(
+                mech_1.defaults.integrator_function,
+                mech_2.parameters.integrator_function.get(),
+                id="integrator_function_default-and-other-value",
+            ),
+        ],
+    )
+    def test_function_parameter_distinctness(self, f, g):
+        assert f is not g
+
+    @pytest.mark.parametrize(
+        "f, owner",
+        [
+            pytest.param(
+                mech_1.parameters.function.get(),
+                mech_1,
+                id='function'
+            ),
+            pytest.param(
+                integrator_mechanism.class_defaults.function,
+                integrator_mechanism.class_parameters.function,
+                id="class_default_function"
+            ),
+            pytest.param(
+                mech_1.defaults.function,
+                mech_1.parameters.function,
+                id="default_function"
+            ),
+            pytest.param(
+                mech_1.parameters.termination_measure.get(),
+                mech_1,
+                id='termination_measure'
+            ),
+            pytest.param(
+                mech_1.class_defaults.termination_measure,
+                mech_1.class_parameters.termination_measure,
+                id="class_default_termination_measure"
+            ),
+            pytest.param(
+                mech_1.defaults.termination_measure,
+                mech_1.parameters.termination_measure,
+                id="default_termination_measure"
+            ),
+        ]
+    )
+    def test_function_parameter_ownership(self, f, owner):
+        assert f.owner is owner
+
+    @pytest.mark.parametrize(
+        'param_name, function',
+        [
+            ('function', f),
+            ('integrator_function', i),
+        ]
+    )
+    def test_function_parameter_assignment(self, param_name, function):
+        # mech_1 should use the exact instances, mech_2 should have copies
+        assert getattr(self.mech_1.parameters, param_name).get() is function
+        assert getattr(self.mech_2.parameters, param_name).get() is not function
+
 class TestResetValues:
 
     def test_reset_state_integrator_mechanism(self):

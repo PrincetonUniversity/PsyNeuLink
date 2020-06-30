@@ -355,7 +355,8 @@ COMMENT
 
 .. note::
    The change in the value of a `Port <Port>` in response to a ModulatorySignal does not occur until the Mechanism to
-   which the port belongs is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
+   which the port belongs is next executed; see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of
+   "lazy" updating).
 
 COMMENT:
 
@@ -513,8 +514,8 @@ class ModulatorySignal(OutputPort):
         <Port_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
         status) until initialization is completed, at which time it is assigned its designated name.  If that is the
         name of an existing ModulatorySignal, it is appended with an indexed suffix, incremented for each Port with
-        the same base name (see `Naming`). If the name is not  specified in the **name** argument of its constructor,
-        a default name is assigned as follows; if the ModulatorySignal has:
+        the same base name (see `Registry_Naming`). If the name is not  specified in the **name** argument of its
+        constructor, a default name is assigned as follows; if the ModulatorySignal has:
 
         * no projections (which are used to name it) -- the name of its class is used, with an index that is
           incremented for each ModulatorySignal with a default named assigned to its `owner <ModulatorySignal.owner>`;

@@ -568,7 +568,7 @@ class TestInputPortSpec:
             T = TransferMechanism(input_ports=[p])
         assert re.match(
             mismatches_specified_matrix_pattern,
-            error_text.value.error_value
+            str(error_text.value)
         )
 
         with pytest.raises(FunctionError) as error_text:
@@ -577,7 +577,7 @@ class TestInputPortSpec:
             T2 = TransferMechanism(input_ports=[p2])
         assert re.match(
             mismatches_specified_matrix_pattern,
-            error_text.value.error_value
+            str(error_text.value)
         )
 
     # ------------------------------------------------------------------------------------------------

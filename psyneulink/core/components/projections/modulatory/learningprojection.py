@@ -156,19 +156,19 @@ A LearningProjection cannot be executed directly.  It's execution is determined 
 *ONLINE*, is executed when the *MATRIX* ParameterPort to which it projects is updated.  This occurs when the
 `learned_projection <LearningProjection.learned_projection>` (the `MappingProjection` to which the *MATRIX*
 ParameterPort belongs) is updated. Note that these events occur only when the ProcessingMechanism that receives the
-`learned_projection <LearningProjection.learned_projection>` is executed (see :ref:`Lazy Evaluation <LINK>` for an
-explanation of "lazy" updating).  If `learning_enabled <LearningProjection.learning_enabled>` is *AFTER*, then
-LearningProjection is executed at the end of the `TRIAL <TimeScale.TRIAL>` of the Composition to which it belongs.  When the
-LearningProjection is executed, its `function <LearningProjection.function>` gets the `learning_signal
-<LearningProjection.learning_signal>` from its `sender <LearningProjection.sender>` and conveys that to its
-`receiver <LearningProjection.receiver>`, possibly modified by a `learning_rate <LearningProjection.learning_rate>`
-if that is specified for it or its `sender <LearningProjection.sender>` (see `above
-<LearningProjection_Function_and_Learning_Rate>`).
+`learned_projection <LearningProjection.learned_projection>` is executed (see `Lazy Evaluation
+<Component_Lazy_Updating>` for an explanation of "lazy" updating).  If `learning_enabled
+<LearningProjection.learning_enabled>` is *AFTER*, then LearningProjection is executed at the end of the `TRIAL
+<TimeScale.TRIAL>` of the Composition to which it belongs.  When the LearningProjection is executed, its `function
+<LearningProjection.function>` gets the `learning_signal <LearningProjection.learning_signal>` from its `sender
+<LearningProjection.sender>` and conveys that to its `receiver <LearningProjection.receiver>`, possibly modified by
+a `learning_rate <LearningProjection.learning_rate>` if that is specified for it or its `sender
+<LearningProjection.sender>` (see `above <LearningProjection_Function_and_Learning_Rate>`).
 
 .. note::
    The changes to the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection` in response to the
    execution of a LearningProjection are not applied until the `Mechanism <Mechanism>` that receives MappingProjection
-   are next executed; see :ref:`Lazy Evaluation` for an explanation of "lazy" updating).
+   are next executed; see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
 
 .. _LearningProjection_Class_Reference:
@@ -426,8 +426,8 @@ class LearningProjection(ModulatoryProjection_Base):
         """
         value = Parameter(np.array([0]), read_only=True, aliases=['weight_change_matrix'], pnl_internal=True)
         function = Parameter(Linear, stateful=False, loggable=False)
-        error_function = Parameter(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
-        learning_function = Parameter(BackPropagation, stateful=False, loggable=False)
+        error_function = Parameter(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False, reference=True)
+        learning_function = Parameter(BackPropagation, stateful=False, loggable=False, reference=True)
         learning_rate = Parameter(None, modulable=True)
         learning_signal = Parameter(None, read_only=True,
                                     getter=_learning_signal_getter,

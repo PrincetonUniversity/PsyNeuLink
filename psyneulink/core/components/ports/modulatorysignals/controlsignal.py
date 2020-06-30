@@ -255,8 +255,8 @@ evaluate a `control_allocation <ControlMechanism.control_allocation>`, and adjus
 
 .. note::
    The changes in a parameter in response to the execution of a ControlMechanism are not applied until the Mechanism
-   with the parameter being controlled is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of
-   "lazy" updating).
+   with the parameter being controlled is next executed; see `Lazy Evaluation <Component_Lazy_Updating>` for an
+   explanation of "lazy" updating).
 
 .. _ControlSignal_Examples:
 
@@ -428,7 +428,7 @@ from psyneulink.core.globals.sampleiterator import is_sample_spec
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
+    is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType, convert_all_elements_to_np_array
 from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
 
 __all__ = ['ControlSignal', 'ControlSignalError', 'COST_OPTIONS']
@@ -777,6 +777,7 @@ class ControlSignal(ModulatorySignal):
             Linear,
             stateful=False,
             loggable=False,
+            function_parameter=True
         )
 
         value = Parameter(
@@ -794,33 +795,53 @@ class ControlSignal(ModulatorySignal):
             setter=_cost_options_setter,
             valid_types=(CostFunctions, list)
         )
-        intensity_cost = Parameter(None, read_only=True, getter=_intensity_cost_getter)
-        adjustment_cost = Parameter(0, read_only=True, getter=_adjustment_cost_getter)
-        duration_cost = Parameter(0, read_only=True, getter=_duration_cost_getter)
+        intensity_cost = Parameter(
+            None,
+            read_only=True,
+            getter=_intensity_cost_getter,
+            function_parameter=True
+        )
+        adjustment_cost = Parameter(
+            0,
+            read_only=True,
+            getter=_adjustment_cost_getter,
+            function_parameter=True
+        )
+        duration_cost = Parameter(
+            0,
+            read_only=True,
+            getter=_duration_cost_getter,
+            function_parameter=True
+        )
+
         cost = Parameter(None, read_only=True, getter=_cost_getter)
 
         intensity_cost_function = Parameter(
             Exponential,
             stateful=False,
             loggable=False,
+            function_parameter=True,
             getter=_intensity_cost_function_getter
         )
         adjustment_cost_function = Parameter(
             Linear,
             stateful=False,
             loggable=False,
+            function_parameter=True,
             getter=_adjustment_cost_function_getter
         )
         duration_cost_function = Parameter(
             SimpleIntegrator,
             stateful=False,
             loggable=False,
+            function_parameter=True,
             getter=_duration_cost_function_getter
         )
         combine_costs_function = Parameter(
             Reduce(operation=SUM),
             stateful=False,
             loggable=False,
+            function_parameter=True,
             getter=_combine_costs_function_getter
         )
         _validate_intensity_cost_function = get_validator_by_function(is_function_type)
@@ -831,6 +852,21 @@ class ControlSignal(ModulatorySignal):
         # invalid. Is it that tc.typecheck only runs if an argument is specified at
         # construction?
         # _validate_modulation = get_validator_by_function(_is_modulation_param)
+
+        def _validate_allocation_samples(self, allocation_samples):
+            try:
+                samples_as_array = convert_all_elements_to_np_array(allocation_samples)
+                first_item_type = type(allocation_samples[0])
+                first_item_shape = samples_as_array[0].shape
+
+                for i in range(1, len(allocation_samples)):
+                    if not isinstance(allocation_samples[i], first_item_type):
+                        return 'all items must have the same type'
+                    if not samples_as_array[i].shape == first_item_shape:
+                        return 'all items must have the same shape'
+            except (TypeError, IndexError):
+                # not iterable, so assume single value
+                pass
 
     portAttributes = ModulatorySignal.portAttributes | {ALLOCATION_SAMPLES,
                                                           COST_OPTIONS,

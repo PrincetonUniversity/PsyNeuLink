@@ -105,7 +105,7 @@ of any of a Composition's `Pathway addition methods <Composition_Pathway_Additio
       each item of the list must be a `Node <Composition_Nodes>` -- i.e., Mechanism or Composition, or a
       (`Mechanism <Mechanism>`, `NodeRoles <NodeRole>`) tuple -- or, optionally, a `Projection specification
       <Projection_Specification>` or a (`Projection specification <Projection_Specification>`, `feedback specification
-      <Composition_Feedback_Specification>`) tuple interposed between a pair of nodes.
+      <Composition_Feedback_Designation>`) tuple interposed between a pair of nodes.
       The list must begin and end with a node.
     ..
     * **2-item tuple**: (Pathway, `LearningFunction`) -- used to specify a `learning Pathway
@@ -356,8 +356,8 @@ class Pathway(object):
         if the Pathway is a `tempalte <Pathway_Template>` (i.e., not assigned to a Composition).
 
     name : str
-        the name of the Pathway; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by PathwayRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Pathway; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by PathwayRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
         See `note <Pathway_Name_Note>` for additional information.
 
     """

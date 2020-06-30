@@ -401,7 +401,8 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix
+from psyneulink.core.components.functions.transferfunctions import LinearMatrix
+from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, Port
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.ports.port import PortError
@@ -497,7 +498,14 @@ class DuplicateProjectionError(Exception):
 #
 
 class Projection_Base(Projection):
-    """Base class for all Projections.
+    """
+    Projection_Base(           \
+        sender=None,           \
+        function=LinearMatrix, \
+        receiver=None          \
+        )
+
+    Base class for all Projections.
 
     The arguments below can be used in the constructor for any subclass of Mechanism.
     See `Component <Component_Class_Reference>` and subclasses for additional arguments and attributes.
@@ -528,8 +536,9 @@ class Projection_Base(Projection):
         <Projection_Deferred_Initialization>`.
 
     function : TransferFunction : default LinearMatrix
-        specifies function used to convey (and potentially convert) `variable <Projection_Base.variable>` to `value
-        <Projection_Base.value>`.
+        specifies function used to convey (and potentially convert) `value <Port_Base.value>` of `sender
+        <Projection_Base.sender>` `Port` to `variable <Port_Base.variable>` of `receiver <Projection_Base.receiver>`
+        Port.
 
     receiver: InputPort or Mechanism : default None
         specifies the destination of the Projection's output.  If a `Mechanism <Mechanism>` is specified, its
@@ -578,8 +587,8 @@ class Projection_Base(Projection):
         <Projection_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
         status) until initialization is completed, at which time it is assigned its designated name.  If that is the
         name of an existing Projection, it is appended with an indexed suffix, incremented for each Projection with the
-        same base name (see `Naming`). If the name is not  specified in the **name** argument of its constructor, a
-        default name is assigned by the subclass (see subclass for details)
+        same base name (see `Registry_Naming`). If the name is not  specified in the **name** argument of its
+        constructor, a default name is assigned by the subclass (see subclass for details)
 
     """
 

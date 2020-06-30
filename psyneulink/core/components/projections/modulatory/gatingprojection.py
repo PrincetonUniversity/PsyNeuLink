@@ -80,17 +80,18 @@ Execution
 
 A GatingProjection cannot be executed directly.  It is executed when the `InputPort` or `OutputPort` to which it
 projects is updated.  Note that this only occurs when the `Mechanism <Mechanism>` to which the `Port <Port>` belongs
-is executed (see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating). When a GatingProjection is
-executed, its `function <Projection_Base.function>` gets the `gating_signal <GatingProjection.gating_signal>` from
-its `sender <GatingProjection.sender>` and conveys that to its `receiver <GatingProjection.receiver>`.  This is used
-by the `receiver <GatingProjection.receiver>` to modify the `value <Port_Base.value>` of the Port gated by the
-GatingProjection (see `ModulatorySignal_Modulation`, `InputPort Execution <InputPort_Execution>` and `OutputPort
-Execution <OutputPort_Execution>` for how modulation operates and how this applies to a InputPorts and OutputPorts).
+is executed (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating). When a
+GatingProjection is executed, its `function <Projection_Base.function>` gets the `gating_signal
+<GatingProjection.gating_signal>` from its `sender <GatingProjection.sender>` and conveys that to its `receiver
+<GatingProjection.receiver>`.  This is used by the `receiver <GatingProjection.receiver>` to modify the `value
+<Port_Base.value>` of the Port gated by the GatingProjection (see `ModulatorySignal_Modulation`, `InputPort Execution
+<InputPort_Execution>` and `OutputPort Execution <OutputPort_Execution>` for how modulation operates and how this
+applies to a InputPorts and OutputPorts).
 
 .. note::
    The changes in an InputPort or OutputPort's `value <Port_Base.value >` in response to the execution of a
    GatingProjection are not applied until the Mechanism to which the Port belongs is next executed;
-   see :ref:`Lazy Evaluation` for an explanation of "lazy" updating).
+   see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
 .. _GatingProjection_Class_Reference:
 
@@ -241,7 +242,7 @@ class GatingProjection(ModulatoryProjection_Base):
     def __init__(self,
                  sender=None,
                  receiver=None,
-                 function=Linear(params={FUNCTION_OUTPUT_TYPE:FunctionOutputType.RAW_NUMBER}),
+                 function=None,
                  weight=None,
                  exponent=None,
                  gating_signal_params:tc.optional(dict)=None,

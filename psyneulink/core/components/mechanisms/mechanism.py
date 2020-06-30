@@ -845,14 +845,14 @@ Execution
 
 When a Mechanism executes, the following sequence of actions is carried out:
 
-    - The Mechanism updates its `InputPort`(s) by executing the `function <InputPort.function>` of each.  The resulting
-      `value <InputPort.value>`\\(s) are used to assemble the Mechanism's `variable<Mechanism_Base.variable>`. Each
-      `value <InputPort.value>` is added to an outer array, such that each item of the Mechanism's `variable
+    - The Mechanism updates its `InputPort`\\(s) by executing the `function <InputPort.function>` of each.  The
+      resulting `value <InputPort.value>`\\(s) are used to assemble the Mechanism's `variable<Mechanism_Base.variable>`.
+      Each `value <InputPort.value>` is added to an outer array, such that each item of the Mechanism's `variable
       <Mechanism_Base.variable>` corresponds to an InputPort `value <InputPort.value>`.  The array is placed in
       the Mechanism's `input_values <Mechanism_Base.input_values>` attribute, and also passed as the input to the
       Mechanism's `function <Mechanism_Base.function>` after updating its `ParameterPorts <ParamterPorts>`.
 
-    - The Mechanism updates its `ParameterPort`(s) by executing each of their `functions <ParameterPort.function>`,
+    - The Mechanism updates its `ParameterPort`\\(s) by executing each of their `functions <ParameterPort.function>`,
       the results of which are assigned as the values used for the corresponding Parameters, which include those of the
       Mechanism's `function <Mechanism_Base.function>`.
 
@@ -861,9 +861,9 @@ When a Mechanism executes, the following sequence of actions is carried out:
       of its ParameterPorts. The result of the Mechanism's `function <Mechanism_Base.function>` is placed in the
       Mechanism's `value <Mechanism_Base.value>` attribute.
 
-    - The Mechanism its OutputPorts are updated based on `value <Mechanism_Base.value>`, by executing the `function
-      `OutputPort.function>` of each. The resulting `value <OUtputPort.value>` for each Outport is placed in the
-      Mechanism's `output_values <Mechanism_Base.output_values>` attribute.
+    - The Mechanism updates its `OutputPort`\\(s) are updated based on `value <Mechanism_Base.value>`, by executing the
+      `function <OutputPort.function>` of each. The resulting `value <OutputPort.value>` for each Outport is placed
+      in the Mechanism's `output_values <Mechanism_Base.output_values>` attribute.
 
 A Mechanism may be executed by calling its execute method directly:
 
@@ -978,17 +978,17 @@ or its `name <Port_Base.name>` as the key, and a dictionary containing parameter
   .. note::
 
      - If the `variable <Port_base.variable>` of a Port is specified as a runtime parameter, then its afferent
-       Projections will not be executed (see `Lazy Evaluation <LINK>`), but its `function <Port_Base.function>`
-       will be.
+       Projections will not be executed (see `Lazy Evaluation <Component_Lazy_Updating>`), but its `function
+       <Port_Base.function>` will be.
 
      - If the `value <Port_Base.value>` of a Port is specified, *neither its `afferent Projections <Port_Projections>`
        nor it `function <Port_Base.function>` will be executed.
 
      - If the `variable <Port_base.variable>` and/or `value <Port_Base.value>` is specified for *all* of the
        OutputPorts of a Mechanism, then it's function will not be executed, and the `value <Mechanism_Base.value>`
-       will retain its previous value (again in accord with Lazy Evaluation), though its OutputPorts *will* be
-       executed using the assigned values, and it's `execution_count <Component_Execution_Count>` and
-       `num_executions <Component_Num_Executions>` attributes will be incremented (since the OutputPorts --
+       will retain its previous value (again in accord with `Lazy Evaluation <Component_Lazy_Updating>), though its
+       OutputPorts *will* be executed using the assigned values, and it's `execution_count <Component_Execution_Count>`
+       and `num_executions <Component_Num_Executions>` attributes will be incremented (since the OutputPorts --
        Components of the Mechanism -- executed).
 
      - As expected, specifying `value <Port_Base.value>` supercedes any specification of `variable
@@ -1010,8 +1010,9 @@ as the key, and a dictionary containing parameter specifications as its value.
 
    .. note::
      If the `value <Projection_Base.value>` of a Projection is specified as a runtime parameter, then it will not be
-     executed (see `Lazy Evaluation <LINK>`); accordingly, specifying `value <Port_Base.value>` supercedes any
-     specification of `variable <Port_Base.variable>` or of the parameters of its `function <Projection_Base.function>.`
+     executed (see `Lazy Evaluation <Component_Lazy_Updating>`); accordingly, specifying `value <Port_Base.value>`
+     supercedes any specification of `variable <Port_Base.variable>` or of the parameters of its `function
+     <Projection_Base.function>.`
 
 COMMENT:
    FIX 5/8/20 [JDC]: EXAMPLES HERE AND ADD CORRESPONDING TESTS
@@ -1140,7 +1141,16 @@ def _input_port_variables_getter(owning_component=None, context=None):
 
 
 class Mechanism_Base(Mechanism):
-    """Base class for Mechanism.
+    """
+    Mechanism_Base(             \
+        default_variable=None,  \
+        size=None,              \
+        input_ports,            \
+        function,               \
+        output_ports,           \
+        )
+
+    Base class for Mechanism.
 
     The arguments below can be used in the constructor for any subclass of Mechanism.
     See `Component <Component_Class_Reference>` and subclasses for additional arguments and attributes.
@@ -1203,10 +1213,10 @@ class Mechanism_Base(Mechanism):
 
     default_variable : number, list or np.ndarray : default None
         specifies the input to the Mechanism to use if none is provided in a call to its `execute
-        <Mechanism_Base.execute>` method; also serves as a template to specify the
-        length of `variable <Mechanism_Base.variable>` for `function <Mechanism_Base.function>`, and the `primary
-        outputPort <OutputPort_Primary>` of the Mechanism.  If it is not specified, then a subclass-specific default
-        is assigned (usually [[0]]).
+        <Mechanism_Base.execute>` method; also serves as a template to specify the shape of the `variable
+        <InputPort.variable>` for its `InputPorts <Mechanism_InputPorts>` and the `variable <Mechanism_Base.variable>`
+        of its `function <Mechanism_Base.function>` if those are not specified.  If it is not specified, then a
+        subclass-specific default is assigned (usually [[0]]).
 
     size : int, list or np.ndarray of ints : default None
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
@@ -1218,12 +1228,13 @@ class Mechanism_Base(Mechanism):
     input_ports : str, list, dict, or np.ndarray : default None
         specifies the InputPorts for the Mechanism; if it is not specified, a single InputPort is created
         using the value of default_variable as its `variable <InputPort.variable>`;  if more than one is specified,
-        the number and, if specified, their values must be compatible with any specifications in **default_variable**
-        or **size** (see `Mechanism_InputPorts` for additional details).
+        the number and, if specified, their values must be compatible with any specifications made for
+        **default_variable** or **size** (see `Mechanism_InputPorts` for additional details).
 
     function : Function : default Linear
         specifies the function used to generate the Mechanism's `value <Mechanism_Base.value>`;
-        can be a PsyNeuLink `Function` or a `UserDefinedFunction`.
+        can be a PsyNeuLink `Function` or a `UserDefinedFunction`;  it `value <Function.value>` is used to determine
+        the shape of the `primary outputPort <OutputPort_Primary>` of the Mechanism.
 
     output_ports : str, list or np.ndarray : default None
         specifies the OutputPorts for the Mechanism; if it is not specified, a single OutputPort is created
@@ -1313,7 +1324,7 @@ class Mechanism_Base(Mechanism):
         .. note::
            the `value <Mechanism_Base.value>` of a Mechanism is not necessarily the same as its
            `output_values <Mechanism_Base.output_values>` attribute, which lists the `values <OutputPort.value>`
-           of its `OutputPorts <Mechanism_Base.outputPorts>`.
+           of its `OutputPorts <Mechanism_Base.output_ports>`.
 
     output_port : OutputPort
         `primary OutputPort <OutputPort_Primary>` for the Mechanism;  same as first entry of its `output_ports
@@ -1417,11 +1428,12 @@ class Mechanism_Base(Mechanism):
 
     name : str
         the name of the Mechanism; if it is not specified in the **name** argument of the constructor, a default is
-        assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
+        assigned by MechanismRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
+
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the Mechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
         .. _portRegistry : Registry
                registry containing dicts for each Port type (InputPort, OutputPort and ParameterPort) with instance
                dicts for the instances of each type and an instance count for each Port type in the Mechanism.
@@ -2182,7 +2194,7 @@ class Mechanism_Base(Mechanism):
         pass
 
     @handle_external_context(execution_id=NotImplemented)
-    def reset(self, *args, context=None):
+    def reset(self, *args, force=False, context=None):
         """Reset `value <Mechanism_Base.value>` if Mechanisms is stateful.
 
         If the mechanism's `function <Mechanism.function>` is an `IntegratorFunction`, or if the mechanism has and
@@ -2247,7 +2259,14 @@ class Mechanism_Base(Mechanism):
         # (1) reset it, (2) run the primary function with the new "previous_value" as input
         # (3) update value, (4) update output ports
         elif hasattr(self, "integrator_function"):
-            if isinstance(self.integrator_function, IntegratorFunction):
+            if not isinstance(self.integrator_function, IntegratorFunction):
+                raise MechanismError(
+                    f"Resetting '{self.name}' is not allowed because its integrator_function "
+                    f"is not an IntegratorFunction type function, therefore the Mechanism "
+                    f"does not have an integrator to reset."
+                )
+
+            if self.parameters.integrator_mode._get(context) or force:
                 new_input = self.integrator_function.reset(*args, context=context)[0]
                 self.parameters.value._set(
                     self.function.execute(variable=new_input, context=context),
@@ -2256,19 +2275,13 @@ class Mechanism_Base(Mechanism):
                 )
                 self._update_output_ports(context=context)
 
-            elif self.integrator_function is None or isinstance(self.integrator_function, type):
-                if hasattr(self, "integrator_mode"):
+            elif hasattr(self, "integrator_mode"):
                     raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
                                          f"is not stateful; it does not have an integrator to reset. "
                                          f"If it should be stateful, try setting the integrator_mode argument to True.")
-                else:
-                    raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
-                                         f"is not stateful; it does not have an integrator to reset.")
-
             else:
-                raise MechanismError(f"Resetting '{self.name}' is not allowed because its integrator_function "
-                                     f"is not an IntegratorFunction type function, therefore the Mechanism "
-                                     f"does not have an integrator to reset.")
+                raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
+                                     f"is not stateful; it does not have an integrator to reset.")
         else:
             raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism is not stateful; "
                                  f"it does not have an accumulator to reset.")
@@ -2293,8 +2306,9 @@ class Mechanism_Base(Mechanism):
                 ):
         """Carry out a single `execution <Mechanism_Execution>` of the Mechanism.
 
-        .. technical_note:
+        .. technical_note::
             Execution sequence:
+
             * Handle initialization if `initialization_status <Compoonent.initialization_status> is
               *ContextFlags.INITIALIZING*
             * Assign any `Port-specific runtime params <_Mechanism_Runtime_Port_and_Projection_Param_Specification>`
@@ -2329,8 +2343,6 @@ class Mechanism_Base(Mechanism):
             their `afferent Projections <Port_Projections>`), that temporarily override their values for the current
             execution, and are then restored to their previous values following execution (see
             `Mechanism_Runtime_Param_Specification` for details of specification).
-
-        .. _Mechanism_execute_context_Arg:
 
         context : Context or str : None
             the context in which the Mechanism is executed, usually specified by its `execution_id
@@ -2920,8 +2932,10 @@ class Mechanism_Base(Mechanism):
             input_ptr = builder.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
             if input_ptr.type != data_ptr.type:
                 port = self.output_ports[i]
-                warnings.warn("Shape mismatch: {port} parsed value does not match output port: mech value: "
-                              "{self.defaults.value} spec: {port._variable_spec} parsed {port.defaults.variable}.")
+                warnings.warn("Shape mismatch: {} parsed value does not match "
+                              "output port: mech value: {} spec: {} parsed {}.".format(
+                              port, self.defaults.value, port._variable_spec,
+                              port.defaults.variable))
                 input_ptr = builder.gep(input_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
             b.store(b.load(data_ptr), input_ptr)
             return b
@@ -3075,8 +3089,8 @@ class Mechanism_Base(Mechanism):
         else:
             mechanism_string = ' mechanism'
 
-        # kmantel: previous version would fail on anything but iterables of things that can be cast to floats
-        #   if you want more specific output, you can add conditional tests here
+        # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
+        #      if you want more specific output, you can add conditional tests here
         try:
             input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
         except TypeError:
@@ -3094,7 +3108,7 @@ class Mechanism_Base(Mechanism):
             for param_name in params_keys_sorted:
                 # No need to report:
                 #    function_params here, as they will be reported for the function itself below;
-                #    input_ports or output_ports, as these are not really params
+                #    input_ports or output_ports, as these are inherent in the structure
                 if param_name in {FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS}:
                     continue
                 param_is_function = False
@@ -3119,7 +3133,7 @@ class Mechanism_Base(Mechanism):
                                format(fct_param_name,
                                       str(getattr(self.function.parameters, fct_param_name)).__str__().strip("[]")))
 
-        # kmantel: previous version would fail on anything but iterables of things that can be cast to floats
+        # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #   if you want more specific output, you can add conditional tests here
         try:
             output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output]))
@@ -3199,57 +3213,58 @@ class Mechanism_Base(Mechanism):
             for use in a GraphViz node specification.
 
         Example HTML for structure:
+            .. parsed-literal::
 
-        <<table border="1" cellborder="0" cellspacing="0" bgcolor="tan">          <- MAIN TABLE
+                <<table border="1" cellborder="0" cellspacing="0" bgcolor="tan">          <- MAIN TABLE
 
-        <tr>                                                                      <- BEGIN OutputPortS
-            <td colspan="2"><table border="0" cellborder="0" BGCOLOR="bisque">    <- OutputPortS OUTER TABLE
-                <tr>
-                    <td colspan="1"><b>OutputPorts</b></td>                      <- OutputPortS HEADER
-                </tr>
-                <tr>
-                    <td><table border="0" cellborder="1">                         <- OutputPort CELLS TABLE
+                <tr>                                                                      <- BEGIN OutputPorts
+                    <td colspan="2"><table border="0" cellborder="0" BGCOLOR="bisque">    <- OutputPorts OUTER TABLE
                         <tr>
-                            <td port="OutputPortPort1">OutputPort 1<br/><i>function 1</i><br/><i>=value</i></td>
-                            <td port="OutputPortPort2">OutputPort 2<br/><i>function 2</i><br/><i>=value</i></td>
+                            <td colspan="1"><b>OutputPorts</b></td>                      <- OutputPorts HEADER
+                        </tr>
+                        <tr>
+                            <td><table border="0" cellborder="1">                         <- OutputPort CELLS TABLE
+                                <tr>
+                                    <td port="OutputPortPort1">OutputPort 1<br/><i>function 1</i><br/><i>=value</i></td>
+                                    <td port="OutputPortPort2">OutputPort 2<br/><i>function 2</i><br/><i>=value</i></td>
+                                </tr>
+                            </table></td>
                         </tr>
                     </table></td>
                 </tr>
-            </table></td>
-        </tr>
 
-        <tr>                                                                      <- BEGIN MECHANISM & ParameterPortS
-            <td port="Mech name"><b>Mech name</b><br/><i>Roles</i></td>           <- MECHANISM CELL (OUTERMOST TABLE)
-            <td><table border="0" cellborder="0" BGCOLOR="bisque">                <- ParameterPortS OUTER TABLE
-                <tr>
-                    <td><b>ParameterPorts</b></td>                               <- ParameterPortS HEADER
-                </tr>
-                <tr>
-                    <td><table border="0" cellborder="1">                         <- ParameterPort CELLS TABLE
-                        <tr><td port="ParamPort1">Param 1<br/><i>function 1</i><br/><i>= value</i></td></tr>
-                        <tr><td port="ParamPort1">Param 2<br/><i>function 2</i><br/><i>= value</i></td></tr>
-                    </table></td>
-                </tr>
-            </table></td>
-        </tr>
-
-        <tr>                                                                      <- BEGIN InputPortS
-            <td colspan="2"><table border="0" cellborder="0" BGCOLOR="bisque">    <- InputPortS OUTER TABLE
-                <tr>
-                    <td colspan="1"><b>InputPorts</b></td>                       <- InputPortS HEADER
-                </tr>
-                <tr>
-                    <td><table border="0" cellborder="1">                         <- InputPort CELLS TABLE
+                <tr>                                                                      <- BEGIN MECHANISM & ParameterPorts
+                    <td port="Mech name"><b>Mech name</b><br/><i>Roles</i></td>           <- MECHANISM CELL (OUTERMOST TABLE)
+                    <td><table border="0" cellborder="0" BGCOLOR="bisque">                <- ParameterPorts OUTER TABLE
                         <tr>
-                            <td port="InputPortPort1">InputPort 1<br/><i>function 1</i><br/><i>= value</i></td>
-                            <td port="InputPortPort2">InputPort 2<br/><i>function 2</i><br/><i>= value</i></td>
+                            <td><b>ParameterPorts</b></td>                               <- ParameterPorts HEADER
+                        </tr>
+                        <tr>
+                            <td><table border="0" cellborder="1">                         <- ParameterPort CELLS TABLE
+                                <tr><td port="ParamPort1">Param 1<br/><i>function 1</i><br/><i>= value</i></td></tr>
+                                <tr><td port="ParamPort1">Param 2<br/><i>function 2</i><br/><i>= value</i></td></tr>
+                            </table></td>
                         </tr>
                     </table></td>
                 </tr>
-            </table></td>
-        </tr>
 
-        </table>>
+                <tr>                                                                      <- BEGIN InputPorts
+                    <td colspan="2"><table border="0" cellborder="0" BGCOLOR="bisque">    <- InputPortS OUTER TABLE
+                        <tr>
+                            <td colspan="1"><b>InputPorts</b></td>                       <- InputPorts HEADER
+                        </tr>
+                        <tr>
+                            <td><table border="0" cellborder="1">                         <- InputPort CELLS TABLE
+                                <tr>
+                                    <td port="InputPortPort1">InputPort 1<br/><i>function 1</i><br/><i>= value</i></td>
+                                    <td port="InputPortPort2">InputPort 2<br/><i>function 2</i><br/><i>= value</i></td>
+                                </tr>
+                            </table></td>
+                        </tr>
+                    </table></td>
+                </tr>
+
+                </table>>
 
         """
 
@@ -3387,14 +3402,15 @@ class Mechanism_Base(Mechanism):
 
 
         # Construct InputPorts table
-        if len(self.input_ports) and (not compact_cim or self is not composition.input_CIM):
+        if (len(self.input_ports)
+                and (not compact_cim or (self is not composition.input_CIM and self is not composition.parameter_CIM))):
             input_ports_table = f'<tr>{port_table(self.input_ports, InputPort)}</tr>'
-
         else:
             input_ports_table = ''
 
         # Construct ParameterPorts table
         if len(self.parameter_ports):
+        # if len(self.parameter_ports) and (not compact_cim or self is not composition.parameter_CIM):
             parameter_ports_table = port_table(self.parameter_ports, ParameterPort)
         else:
             parameter_ports_table = ''
@@ -3496,8 +3512,8 @@ class Mechanism_Base(Mechanism):
         If the `owner <Port_Base.owner>` of a Port specified in the **ports** argument is not the same as the
         Mechanism to which it is being added an error is generated.    If the name of a specified Port is the same
         as an existing one with the same name, an index is appended to its name, and incremented for each Port
-        subsequently added with the same name (see `naming conventions <LINK>`).  If a specified Port already
-        belongs to the Mechanism, the request is ignored.
+        subsequently added with the same name (see `naming conventions <Registry_Naming>`).  If a specified Port
+        already belongs to the Mechanism, the request is ignored.
 
         .. note::
             Adding InputPorts to a Mechanism changes the size of its `variable <Mechanism_Base.variable>` attribute,
@@ -3609,13 +3625,13 @@ class Mechanism_Base(Mechanism):
 
         for port in ports:
 
-            delete_port_Projections(port.mod_afferents, port)
+            delete_port_Projections(port.mod_afferents.copy(), port)
 
             if port in self.input_ports:
                 if isinstance(port, str):
                     port = self.input_ports[port]
                 index = self.input_ports.index(port)
-                delete_port_Projections(port.path_afferents, port)
+                delete_port_Projections(port.path_afferents.copy(), port)
                 del self.input_ports[index]
                 # If port is subclass of OutputPort:
                 #    check if regsistry has category for that class, and if so, use that
@@ -3645,7 +3661,7 @@ class Mechanism_Base(Mechanism):
                     index = self.output_ports.index(port)
                 else:
                     index = self.output_ports.index(self.output_ports[port])
-                delete_port_Projections(port.efferents, port)
+                delete_port_Projections(port.efferents.copy(), port)
                 del self.output_values[index]
                 del self.output_ports[port]
                 # If port is subclass of OutputPort:
@@ -3674,19 +3690,20 @@ class Mechanism_Base(Mechanism):
 
         Returns
         -------
-
-        dict in the form
-        {INPUT_PORTS:
-                {(int) port_index:
-                        {{label_1: value_1},
-                         {label_2: value_2}}
-                },
-        OUTPUT_PORTS:
-        {(int) port_index:
-                        {{label_1: value_1},
-                         {label_2: value_2}}
-                }
-        }
+            dict
+                .. parsed-literal::
+                    {
+                        INPUT_PORTS:
+                                {(int) port_index:
+                                        {{label_1: value_1},
+                                         {label_2: value_2}}
+                                },
+                        OUTPUT_PORTS:
+                                {(int) port_index:
+                                        {{label_1: value_1},
+                                         {label_2: value_2}}
+                                }
+                    }
 
         """
         input_labels = self._get_standardized_label_dict(INPUT)
@@ -3709,13 +3726,14 @@ class Mechanism_Base(Mechanism):
 
         Returns
         -------
-        dict in the form
-        {INPUT_PORTS/OUTPUT_PORTS:
-                {(int) port_index:
-                        {{label_1: value_1},
-                         {label_2: value_2}}
+        dict
+            .. parsed-literal::
+                {INPUT_PORTS/OUTPUT_PORTS:
+                        {(int) port_index:
+                                {{label_1: value_1},
+                                 {label_2: value_2}}
+                        }
                 }
-        }
         """
         if label_type == INPUT:
             label_dict = self.input_labels_dict
@@ -3974,23 +3992,51 @@ def _is_mechanism_spec(spec):
 
 from collections import UserList
 class MechanismList(UserList):
-    """Provides access to items and their attributes in a list for an owner.
+    """Provides access to Mechanisms and their attributes in a list Mechanisms of an owner.
+    
+    Properties return dicts with item : attribute pairs.
+    Recursively process any item that itself is a MechanismList (e.g., a `Nested Composition <Composition_Nested>`.
 
     Attributes
     ----------
-    mechanisms : list of Mechanism objects
+    mechanisms : List[item]
 
-    names : list of strings
-        each item is a Mechanism.name
+    names : List[str | Dict[str:List[str]]
+        each item is an item name or a dict with one item as its key and a list of subitem names as its value.
 
-    values : list of values
-        each item is a Mechanism_Base.value
+    values : Dict[str:value]
+        each entry is an item name : value pair.
 
-    outputPortNames : list of strings
-        each item is an OutputPort.name
+    input_port_names : Dict[str:List[str]]
+        each entry is either an item name with a list of its `InputPort` `names <InputPort.name>` or, if the item is
+        a nested MechanismList, then a dict with the name of the nested item and a dict with item names and a list of
+        their InputPort names.
 
-    outputPortValues : list of values
-        each item is an OutputPort.value
+    input_port_values : Dict[str:Dict[str:value]]
+        each entry is either an item name with a dict of `InputPort` `name <InputPort.name>`:`value <InputPort.value>`
+        pairs or, if the item is a nested MechanismList, then a dict with the name of the nested item and a dict
+        with its InputPort name:value pairs.
+
+    parameter_port_names : Dict[str:List[str]]
+        each entry is either an item name with a list of its `ParameterPort` `names <ParameterPort.name>` or, if the
+        item is a nested MechanismList, then a dict with the name of the nested item and a dict with item names and a
+        list of their ParameterPort names.
+
+    parameter_port_values : Dict[str:Dict[str:value]]
+        each entry is either an item name with a dict of `ParameterPort` `name <ParameterPort.name>`:`value
+        <ParameterPort.value>` pairs or, if the item is a nested MechanismList, then a dict with the name of the
+        nested item and a dict with its ParameterPort name:value pairs.
+
+    output_port_names : Dict[str:List[str]]
+        each entry is either an item name with a list of its `OutputPort` `names <OutputPort.name>` or, if the item is
+        a nested MechanismList, then a dict with the name of the nested item and a dict with item names and a list of
+        their OutputPort names.
+
+    output_port_values : Dict[str:Dict[str:value]]
+        each entry is either an item name with a dict of `OutputPort` `name <OutputPort.name>`:`value
+        <OutputPort.value>` pairs or, if the item is a nested MechanismList, then a dict with the name of the nested
+        item and a dict with its OutputPort name:value pairs.
+
     """
 
     def __init__(self, owner, components_list:list):
@@ -4000,9 +4046,7 @@ class MechanismList(UserList):
         self.owner = owner
 
     def __getitem__(self, item):
-        """Return specified Mechanism in MechanismList
-        """
-        # return list(self.mechs[item])[MECHANISM]
+        """Return specified Mechanism in MechanismList"""
         return self.mechs[item]
 
     def __setitem__(self, key, value):
@@ -4011,48 +4055,97 @@ class MechanismList(UserList):
     def __len__(self):
         return (len(self.mechs))
 
+    def __call__(self):
+        return self.data
+
+    def _get_attributes_dict(self, mech_list_attr_name, item_attr_name, sub_attr_name=None, values_only=False):
+        """Generate dict of {item.name:item attribute value} pairs in "human readable" form.
+        Call recursively if item is itself a MechanismList.
+        """
+        ret_dict = {}
+        for item in self.mechanisms:
+            if isinstance(item, Mechanism):
+                attr_val = getattr(item, item_attr_name)
+                if isinstance(attr_val, (list, ContentAddressableList)):
+                    assert sub_attr_name, f"Need to specify sub_attr for attributs that are a list"
+                    if sub_attr_name == 'name':
+                        sub_items = []
+                        for sub_item in attr_val:
+                            sub_items.append(getattr(sub_item, sub_attr_name))
+                    else:
+                        sub_items = {}
+                        for sub_item in attr_val:
+                            sub_items[sub_item.name] = getattr(sub_item, sub_attr_name)
+                    ret_dict[item.name] = sub_items
+                elif not sub_attr_name:
+                    ret_dict[item.name] = attr_val
+                else:
+                    ret_dict[item.name] = getattr(attr_val, sub_attr_name)
+            else:
+                ret_dict[item.owner.name] = getattr(item, mech_list_attr_name)
+        if values_only:
+            # return list(ret_dict.values())
+            return [k if isinstance(v, str) else {k:v} for k,v in ret_dict.items()]
+        else:
+            return ret_dict
+
     @property
     def mechs_sorted(self):
-        """Return list of mechs sorted by Mechanism name"""
+        """Return list of Mechanisms sorted by Mechanisms' names"""
         return sorted(self.mechs, key=lambda object_item: object_item.name)
 
     @property
     def mechanisms(self):
-        """Return list of all mechanisms in MechanismList"""
+        """Return list of all Mechanisms in MechanismList"""
         return list(self)
 
     @property
     def names(self):
-        """Return names of all mechanisms in MechanismList"""
-        return list(item.name for item in self.mechanisms)
+        """Return dictwith names of all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('names', 'name', values_only=True)
 
     @property
     def values(self):
-        """Return values of all mechanisms in MechanismList"""
-        return list(item.value for item in self.mechanisms)
+        """Return dict with values of all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('values', 'value')
 
     @property
-    def outputPortNames(self):
-        """Return names of all OutputPorts for all mechanisms in MechanismList"""
-        names = []
-        for item in self.mechanisms:
-            for output_port in item.output_ports:
-                names.append(output_port.name)
-        return names
+    def input_port_names(self):
+        """Return dict with names of all OutputPorts for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('input_port_names', 'input_ports', 'name')
 
     @property
-    def outputPortValues(self):
-        """Return values of OutputPorts for all mechanisms in MechanismList"""
-        values = []
-        for item in self.mechanisms:
-            for output_port in item.output_ports:
-                values.append(output_port.value)
-        return values
+    def input_port_values(self):
+        """Return dict with values of OutputPorts for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('input_port_values', 'input_ports', 'value')
 
-    def get_output_port_values(self, context):
-        """Return values of OutputPorts for all mechanisms in MechanismList for **context**"""
-        values = []
-        for item in self.mechanisms:
-            for output_port in item.output_ports:
-                values.append(output_port.parameters.value.get(context))
-        return values
+    @property
+    def input_values(self):
+        """Return dict with input_values for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('values', 'value')
+
+    @property
+    def parameter_port_names(self):
+        """Return dict with names of all OutputPorts for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('parameter_port_names', 'parameter_ports', 'name')
+
+    @property
+    def parameter_port_values(self):
+        """Return dict with values of OutputPorts for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('parameter_port_values', 'parameter_ports', 'value')
+
+    @property
+    def output_port_names(self):
+        """Return dict with names of all OutputPorts for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('output_port_names', 'output_ports', 'name')
+
+    @property
+    def output_port_values(self):
+        """Return dict with values of OutputPorts for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('output_port_values', 'output_ports', 'value')
+
+    @property
+    def output_values(self):
+        """Return dict with output_values for all Mechanisms in MechanismList"""
+        return self._get_attributes_dict('values', 'value')
+

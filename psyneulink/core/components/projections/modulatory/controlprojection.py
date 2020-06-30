@@ -88,17 +88,17 @@ Execution
 
 A ControlProjection cannot be executed directly.  It is executed when the `ParameterPort` to which it projects is
 updated.  Note that this only occurs when the `Mechanism <Mechanism>` to which the `ParameterPort` belongs is executed
-(see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating). When a ControlProjection is executed, its
-`function <Projection_Base.function>` gets the `control_signal <ControlProjection.control_signal>` from its `sender
-<ControlProjection.sender>` and conveys that to its `receiver <ControlProjection.receiver>`.  This is used by the
-`receiver <ControlProjection.receiver>` to modify the parameter controlled by the ControlProjection (see
+(see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating). When a ControlProjection is
+executed, its `function <Projection_Base.function>` gets the `control_signal <ControlProjection.control_signal>` from
+its `sender <ControlProjection.sender>` and conveys that to its `receiver <ControlProjection.receiver>`.  This is used
+by the `receiver <ControlProjection.receiver>` to modify the parameter controlled by the ControlProjection (see
 `ModulatorySignal_Modulation` and `ParameterPort Execution <ParameterPort_Execution>` for how modulation operates and
 how this applies to a ParameterPort).
 
 .. note::
    The changes to a parameter in response to the execution of a ControlProjection are not applied until the `Mechanism
-   <Mechanism>` that receives the ControlProjection are next executed; see :ref:`Lazy Evaluation` for an explanation of
-   "lazy" updating).
+   <Mechanism>` that receives the ControlProjection are next executed; see `Lazy Evaluation <Component_Lazy_Updating>`
+   for an explanation of "lazy" updating).
 
 .. _ControlProjection_Class_Reference:
 

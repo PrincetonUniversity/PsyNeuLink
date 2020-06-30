@@ -123,3 +123,27 @@ def test_transfer_with_costs_function():
     assert np.allclose(f.adjustment_cost, 4)
     assert np.allclose(f.duration_cost, 6)
     assert np.allclose(np.float(f.combined_costs), 12.718281828459045)
+
+
+@pytest.mark.parametrize(
+    'default_variable, func_name, expected_func_variable, expected_func_value',
+    [
+        ([1, 2, 3], 'transfer_fct', [1, 2, 3], [1, 2, 3])
+    ]
+)
+def test_transfer_with_costs_shapes(
+    default_variable,
+    func_name,
+    expected_func_variable,
+    expected_func_value
+):
+    twc = Functions.TransferWithCosts(default_variable=default_variable)
+
+    np.testing.assert_array_equal(
+        getattr(twc.parameters, func_name).get().defaults.variable,
+        expected_func_variable
+    )
+    np.testing.assert_array_equal(
+        getattr(twc.parameters, func_name).get().defaults.value,
+        expected_func_value
+    )

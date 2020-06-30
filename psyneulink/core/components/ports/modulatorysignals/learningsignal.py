@@ -177,8 +177,8 @@ projects.
 
 .. note::
    The changes in a MappingProjection's matrix parameter in response to the execution of a LearningSignal are not
-   applied until the MappingProjection is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of
-   "lazy" updating).
+   applied until the MappingProjection is next executed; see `Lazy Evaluation <Component_Lazy_Updating>` for an
+   explanation of "lazy" updating).
 
 .. _LearningSignal_Class_Reference:
 
@@ -190,7 +190,6 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.ports.outputport import PRIMARY
 from psyneulink.core.globals.keywords import \
@@ -342,7 +341,7 @@ class LearningSignal(ModulatorySignal):
                  size=None,
                  index=PRIMARY,
                  assign=None,
-                 function=Linear(),
+                 function=None,
                  learning_rate: tc.optional(parameter_spec) = None,
                  modulation:tc.optional(str)=None,
                  modulates=None,

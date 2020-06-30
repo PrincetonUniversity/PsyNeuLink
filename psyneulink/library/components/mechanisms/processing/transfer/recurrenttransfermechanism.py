@@ -190,11 +190,10 @@ import warnings
 from collections.abc import Iterable
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import Function, is_function_type
+from psyneulink.core.components.functions.function import Function, get_matrix, is_function_type
 from psyneulink.core.components.functions.learningfunctions import Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Stability
-from psyneulink.core.components.functions.transferfunctions import Linear, get_matrix
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
+from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
@@ -625,7 +624,14 @@ class RecurrentTransferMechanism(TransferMechanism):
         noise = Parameter(0.0, modulable=True)
         smoothing_factor = Parameter(0.5, modulable=True)
         enable_learning = False
-        learning_function = Parameter(Hebbian, stateful=False, loggable=False)
+        # learning_function is a reference because it is used for
+        # an auxiliary learning mechanism
+        learning_function = Parameter(
+            Hebbian,
+            stateful=False,
+            loggable=False,
+            reference=True
+        )
         learning_rate = Parameter(None, setter=_recurrent_transfer_mechanism_learning_rate_setter)
         learning_condition = Parameter(None, stateful=False, loggable=False)
         has_recurrent_input_port = Parameter(None, stateful=False, loggable=False)
@@ -648,7 +654,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                  auto=None,
                  hetero=None,
                  integrator_mode=False,
-                 integrator_function=AdaptiveIntegrator,
+                 integrator_function=None,
                  initial_value=None,
                  integration_rate: is_numeric_or_none=0.5,
                  noise=0.0,
@@ -966,6 +972,11 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.recurrent_projection = self._instantiate_recurrent_projection(self,
                                                                                matrix=self.matrix,
                                                                                context=context)
+
+            # creating a recurrent_projection changes the default variable shape
+            # so we have to reshape any Paramter Functions
+            self._update_parameter_class_variables(context)
+
         self.aux_components.append(self.recurrent_projection)
 
         if self.learning_enabled:
@@ -1222,9 +1233,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         return super()._get_variable_from_input(input, context)
 
     @handle_external_context(execution_id=NotImplemented)
-    def reset(self, *args, context=None):
-        if self.parameters.integrator_mode.get(context):
-            super().reset(*args, context=context)
+    def reset(self, *args, force=False, context=None):
+        super().reset(*args, force=force, context=context)
         self.parameters.value.clear_history(context)
 
     @property

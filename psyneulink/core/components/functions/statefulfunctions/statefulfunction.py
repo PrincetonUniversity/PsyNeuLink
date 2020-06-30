@@ -30,7 +30,7 @@ from psyneulink.core.components.functions.function import Function_Base, Functio
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.globals.keywords import INITIALIZER, STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.utilities import parameter_spec, iscompatible
+from psyneulink.core.globals.utilities import parameter_spec, iscompatible, object_has_single_value
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 
@@ -150,13 +150,13 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the Function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentType = STATEFUL_FUNCTION_TYPE
@@ -262,7 +262,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism); in that
                     #       case, the StatefulFunction gets instantiated using its class_defaults.variable ([[0]]) before
                     #       the object itself, thus does not see the array specification for the input.
-                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                    if self._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
                             warnings.warn(
@@ -335,7 +335,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
             if isinstance(rate, np.ndarray) and not iscompatible(rate, self.defaults.variable):
                 if len(rate) != 1 and len(rate) != np.array(self.defaults.variable).size:
-                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                    if self._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self.defaults.variable = np.zeros_like(np.array(rate))
                         if self.verbosePref:
                             warnings.warn(
@@ -350,7 +350,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                                 self.defaults.variable,
                             )
                         self._instantiate_value()
-                        self._default_variable_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
+                        self._variable_shape_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
                     else:
                         raise FunctionError(
                             "The length of the array specified for the rate parameter of {} ({})"
@@ -375,9 +375,12 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                   and not iscompatible(np.atleast_1d(noise), self.defaults.variable) and len(noise) > 1):
                 raise FunctionError(
                     "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} "
-                    "must be specified as a float, a function, or an array of the appropriate shape ({})."
-                        .format(noise, self.defaults.variable, self.name,
-                                np.shape(np.array(self.defaults.variable))))
+                    "must be specified as a float, a function, or an array of the appropriate shape ({}).".format(
+                        noise, self.defaults.variable, self.name,
+                        np.shape(np.array(self.defaults.variable))
+                    ),
+                    component=self
+                )
             else:
                 for i in range(len(noise)):
                     if isinstance(noise[i], DistributionFunction):
@@ -408,7 +411,11 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 for j in range(len(param[i])):
                     if callable(param[i][j]):
                         param[i][j] = param[i][j]()
-            param = param.reshape(param_shape)
+            try:
+                param = param.reshape(param_shape)
+            except ValueError:
+                if object_has_single_value(param):
+                    param = np.full(param_shape, float(param))
 
         # param is one function
         elif callable(param):

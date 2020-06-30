@@ -13,7 +13,7 @@
 Contents
 --------
 
-* `Component_Overview
+* `Component_Overview`
 * `Component_Creation`
     * `Component_Deferred_Init`
 * `Component_Structure`
@@ -176,7 +176,7 @@ user once the component is constructed, with the one exception of `prefs <Compon
 .. _Component_Name:
 
 * **name** - the `name <Component.name>` attribute contains the name assigned to the Component when it was created.
-  If it was not specified, a default is assigned by the registry for subclass (see :doc:`Registry <LINK>` for
+  If it was not specified, a default is assigned by the `registry <Registry>` for subclass (see `Registry_Naming` for
   conventions used in assigning default names and handling of duplicate names).
 ..
 
@@ -185,7 +185,7 @@ user once the component is constructed, with the one exception of `prefs <Compon
 * **prefs** - the `prefs <Components.prefs>` attribute contains the `PreferenceSet` assigned to the Component when
   it was created.  If it was not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
   Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
-  preference (see `PreferenceSet <LINK>` for details).
+  preference (see `Preferences` for details).
 
 
 .. _User_Modifiable_Parameters:
@@ -249,6 +249,14 @@ COMMENT:
       * attributes include parameters, but also read-only attributes that reflect but do not determine the operation
         (e.g., EXECUTION_COUNT)
 COMMENT
+
+.. _Component_Stateful_Parameters:
+
+* **stateful_parameters** - a list containing all of the Component's `stateful parameters <Parameter_Statefulness>`.
+  COMMENT:
+     DESCRIPTION HERE
+  COMMENT
+
 
 COMMENT:
 .. _Component_Methods:
@@ -330,8 +338,30 @@ COMMENT
 Execution
 ---------
 
-Calls the :keyword:`execute` method of the subclass that, in turn, calls its :keyword:`function`.
-The following attributes control and provide information about the execution of a Component:
+A Component is executed when its `execute` method is called, which in turn calls its `function <Component_Function>`.
+
+.. _Component_Lazy_Updating:
+
+*Lazy Updating*
+~~~~~~~~~~~~~~~
+
+In general, only `Compositions <Composition>` are executed from the command line (i.e., from the console or in a
+script).  `Mechanisms <Mechanism>` can also be executed, although this is usually just for the purposes of demonstration
+or debugging, and `Functions <Function>` can only be executed if they are standalone (that is, they do not belong to
+another Component).  All other Components are executed only a Component that depends on them to do so.  This can be
+one to which a Components belongs (such as the Mechanism to which a `Port` belongs) or that otherwise requires it to
+execute (for example, a updating a `Port` requires its `afferent Projections <Port_Projections>` to `execute
+<Port_Execution>`).  This is referred to as "lazy updating", since it means that most Components don't execute unless
+and until they are required to do so.  While this reduces unecessary computation, it can sometimes be confusing. For
+example, when `learning <Composition_Learning>` occurs in a Composition, the modification to the `matrix
+<MappingProjection.matrix>` parameter of a `MappingProjection` that occurs on a given `TRIAL <TimeScale.TRIAL>`
+does not acutally appear in its `value <ParameterPort>` until the next `TRIAL <TimeScale.TRIAL>`, since it requires
+that the ParameterPort for the `matrix <MappingProjection.matrix>` be executed, which does not occur until the next
+time the MappingProjection is executed (i.e., in the next `TRIAL <TimeScale.TRIAL>`).  Therefore, in tracking the
+`value <Component.value>` of Components during execution, it is important to carefully consider the state of
+execution of the Components to which they belong or on which they depend for execution.
+
+The following attributes and methods control and provide information about the execution of a Component:
 
 .. _Component_Execution_Initialization:
 
@@ -340,34 +370,40 @@ The following attributes control and provide information about the execution of 
 
 .. _Component_Reset_Stateful_Function_When:
 
-* **reset_stateful_function_when** - contains a `Condition`; when this condition is satisfied, the Component calls its
-  `reset <Component.reset>` method. The `reset <Component.reset>` method is executed
-  without arguments, meaning that the relevant function's `initializer<IntegratorFunction.initializer>` attribute
-  (or equivalent -- initialization attributes vary among functions) is used for reinitialization. Keep in mind that
-  the `reset <Component.reset>` method and `reset_stateful_function_when <Component.reset_stateful_function_when>` attribute
-  only exist for Mechanisms that have `stateful <Parameter.stateful>` Parameters, or that have a `function
-  <Mechanism.function>` with `stateful <Parameter.stateful>` Parameters.
+* **reset_stateful_function_when** -- a `Condition` that determines when the Component's `reset <Component.reset>`
+  method is called.  The `reset <Component.reset>` method and `reset_stateful_function_when
+  <Component.reset_stateful_function_when>` attribute only exist for Mechanisms that have `stateful
+  <Parameter.stateful>` `Parameters`, or that have a `function <Mechanism_Base.function>` with `stateful
+  <Parameter.stateful>` Parameters.  When the `reset <Component.reset>` method is called, this is done without any
+  arguments, so that the relevant `initializer <IntegratorFunction.initializer>` attributes (or their equivalents
+  -- initialization attributes vary among functions) are used for reinitialization.
+  COMMENT:
+      WHAT ABOUT initializer ATTRIBUTE FOR NON-INTEGRATOR FUNCTIONS, AND FOR STATEFUL PARAMETERS ON MECHANISMS?
+      WHY IS THIS ATTRIBUTE ON COMPONENT RATHER THAN MECHANISM?
+  COMMENT
 
   .. note::
 
-        Currently, only Mechanisms reset when their reset_stateful_function_when Conditions are satisfied. Other types of
-        Components do not reset.
+     `Mechanisms` <Mechanism>` are the only type of Component that reset when the `reset_stateful_function_when
+     <Component.reset_stateful_function_when>` `Condition` is satisfied. Other Component types do not reset,
+     although `Composition` has a `reset <Composition.reset>` method that can be used to reset all of its eligible
+     Mechanisms (see `Composition_Reset`)
 
-.. _:
-Component_Execution_Termination
-*Termniation*
+.. _Component_Execution_Termination:
+
+*Termination*
 ~~~~~~~~~~~~~
 
 .. _Component_Is_Finished:
 
-* **is_finished** -- method that determines whether execution of the Component is complete for a `TRIAL
+* **is_finished()** -- method that determines whether execution of the Component is complete for a `TRIAL
   <TimeScale.TRIAL>`;  it is only used if `execute_until_finished <Component_Execute_Until_Finished>` is True.
 
 .. _Component_Execute_Until_Finished:
 
-* **execute_until_finished** -- determines whether Component executes until its `is_finished` method returns True.  If
-  it is False, then the Component executes only once per call to its `execute <Component.execute>` method,  irrespective
-  of its `is_finished` method;  if it is True then, depending on how its class implements and handles its
+* **execute_until_finished** -- determines whether the Component executes until its `is_finished` method returns True.
+  If it is False, then the Component executes only once per call to its `execute <Component.execute>` method,
+  irrespective of its `is_finished` method;  if it is True then, depending on how its class implements and handles its
   `is_finished` method, the Component may execute more than once per call to its `execute <Component.execute>` method.
 
 .. _Component_Num_Executions_Before_Finished:
@@ -461,7 +497,8 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.globals.context import Context, ContextError, ContextFlags, INITIALIZATION_STATUS_FLAGS, _get_time, handle_external_context
+from psyneulink.core.globals.context import \
+    Context, ContextError, ContextFlags, INITIALIZATION_STATUS_FLAGS, _get_time, handle_external_context
 from psyneulink.core.globals.json import JSONDumpable
 from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, EXECUTE_UNTIL_FINISHED, \
@@ -473,12 +510,16 @@ from psyneulink.core.globals.keywords import \
     RESET_STATEFUL_FUNCTION_WHEN, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.scheduling.time import Time, TimeScale
-from psyneulink.core.globals.parameters import Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
+from psyneulink.core.globals.parameters import \
+    Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceEntry, PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import ContentAddressableList, ReadOnlyOrderedDict, convert_all_elements_to_np_array, convert_to_np_array, copy_iterable_with_shared, get_deepcopy_with_shared, is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, unproxy_weakproxy, get_all_explicit_arguments, call_with_pruned_args
+from psyneulink.core.globals.utilities import \
+    ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared,\
+    is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, \
+    get_all_explicit_arguments, call_with_pruned_args
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
@@ -491,10 +532,6 @@ logger = logging.getLogger(__name__)
 component_keywords = {NAME, VARIABLE, VALUE, FUNCTION, FUNCTION_PARAMS, PARAMS, PREFS_ARG, CONTEXT}
 
 DeferredInitRegistry = {}
-
-
-def get_deepcopy_with_shared_Components(shared_keys=None):
-    return get_deepcopy_with_shared(shared_keys, (Component, ComponentsMeta))
 
 
 class ResetMode(Enum):
@@ -573,11 +610,21 @@ class ComponentLog(IntEnum):
 
 
 class ComponentError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
+    def __init__(self, message, component=None):
+        try:
+            component_str = component.name
+            try:
+                if component.owner is not None:
+                    component_str = f'{component_str} (owned by {component.owner.name})'
+            except AttributeError:
+                pass
+        except AttributeError:
+            component_str = None
 
-    def __str__(self):
-        return repr(self.error_value)
+        if component_str is not None:
+            message = f'{component_str}: {message}'
+
+        super().__init__(message)
 
 
 def make_parameter_property(name):
@@ -622,6 +669,12 @@ class ComponentsMeta(ABCMeta):
             if not hasattr(self, param.name):
                 setattr(self, param.name, make_parameter_property(param.name))
 
+            try:
+                if param.default_value.owner is None:
+                    param.default_value.owner = param
+            except AttributeError:
+                pass
+
     # consider removing this for explicitness
     # but can be useful for simplicity
     @property
@@ -630,7 +683,18 @@ class ComponentsMeta(ABCMeta):
 
 
 class Component(JSONDumpable, metaclass=ComponentsMeta):
-    """Base class for Component.
+    """
+    Component(                 \
+        default_variable=None, \
+        size=None,             \
+        params=None,           \
+        name=None,             \
+        prefs=None,            \
+        context=None           \
+    )
+
+    Base class for Component.
+
     The arguments below are ones that can be used in the constructor for any Component subclass.
 
     .. note::
@@ -694,18 +758,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     param_defaults :   :  default None,
     COMMENT
 
-    function : function : default Linear
-       specifies function used to transform `variable <Component.variable>` into `value
-       <Component.value>`;  must take an input of the same shape as `variable <Component.variable>`.
-
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that can be used to specify the parameters for
         the Component and/or a custom function and its parameters. Values specified for parameters in the dictionary
         override any assigned to those parameters in arguments of the constructor.
 
-    name : str : default see `name <Component_Name>`
-        a string used for the name of the Component;  default is assigned by relevant `Registry <LINK>` for Component
-        (see `Naming` for conventions used for default and duplicate names).
+    name : str : for default see `name <Component_Name>`
+        a string used for the name of the Component;  default is assigned by relevant `Registry` for Component
+        (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : default Component.classPreferences
         specifies the `PreferenceSet` for the Component (see `prefs <Component_Base.prefs>` for details).
@@ -749,6 +809,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     max_executions_before_finished : bool
         see `max_executions_before_finished <Component_Max_Executions_Before_Finished>`
+
+    stateful_parameters : list
+        see `stateful_parameters <Component_Stateful_Parameters>`
 
     reset_stateful_function_when : `Condition`
         see `reset_stateful_function_when <Component_reset_stateful_function_when>`
@@ -816,6 +879,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     """
         True if the class name is the class's generic type in universal model specification,
         False otherwise
+    """
+
+    _specified_variable_shape_flexibility = DefaultsFlexibility.RIGID
+    """
+        The `DefaultsFlexibility` ._variable_shape_flexibility takes on
+        when variable shape was manually specified
     """
 
     class Parameters(ParametersBase):
@@ -1043,7 +1112,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             self.defaults.variable = default_variable
             self.parameters.variable._user_specified = True
 
-        self.parameters.has_initializers._set(False, context)
+        # we must know the final variable shape before setting up parameter
+        # Functions or they will mismatch
+        self._instantiate_parameter_classes(context)
+        self._validate_subfunctions()
 
         if reset_stateful_function_when is not None:
             self.reset_stateful_function_when = reset_stateful_function_when
@@ -1144,7 +1216,15 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         return self.name < other.name
 
     def __deepcopy__(self, memo):
-        fun = get_deepcopy_with_shared_Components(self._deepcopy_shared_keys)
+        if 'no_shared' in memo and memo['no_shared']:
+            shared_types = tuple()
+        else:
+            shared_types = (Component, ComponentsMeta)
+
+        fun = get_deepcopy_with_shared(
+            self._deepcopy_shared_keys,
+            shared_types
+        )
         newone = fun(self, memo)
 
         if newone.parameters is not newone.class_parameters:
@@ -1152,6 +1232,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             newone.parameters._owner = newone
             newone.defaults._owner = newone
             newone._compilation_data._owner = newone
+
+        # by copying, this instance is no longer "inherent" to a single
+        # 'import psyneulink' call
+        newone._is_pnl_inherent = False
 
         return newone
 
@@ -1198,7 +1282,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 # Skip first element of random state (id string)
                 return x.get_state()[1:]
             elif isinstance(x, Time):
-                return [0] * 5
+                return (getattr(x, Time._time_scale_attr_map[t]) for t in TimeScale)
             try:
                 return (_convert(i) for i in x)
             except TypeError:
@@ -1207,15 +1291,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     def _get_compilation_params(self):
         # FIXME: MAGIC LIST, detect used parameters automatically
-        blacklist = {"previous_time", "previous_value", "previous_v",
+        blacklist = {# Stateful parameters
+                     "previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
-                     "num_executions_before_finished", "num_executions", "variable",
-                     "value", "saved_values", "saved_samples", "grid",
+                     "num_executions_before_finished", "num_executions",
+                     "variable", "value", "saved_values", "saved_samples",
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict",
-                     "modulated_mechanisms", "search_space",
+                     "modulated_mechanisms", "search_space", "grid",
                      "activation_derivative_fct", "input_specification",
                      # Shape mismatch
                      "costs", "auto", "hetero",
@@ -1273,23 +1358,25 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 except AttributeError:
                     pass
             # Modulated parameters change shape to array
-            if is_modulated:
+            if is_modulated and np.isscalar(param):
                 param = [param]
-            if not np.isscalar(param) and param is not None:
-                if p.name == 'matrix': # Flatten matrix
-                    param = np.asfarray(param).flatten().tolist()
-                elif isinstance(param, Component):
-                    param = param._get_param_values(context)
-                elif isinstance(param, TimeScale) and p.name == 'termination_measure': #FIXME: this is required to mask out `termination_measure` in the event it is not a pnl Function.
-                    param = []
-                elif len(param) == 1 and hasattr(param[0], '__len__'): # Remove 2d. FIXME: Remove this
-                    param = np.asfarray(param[0]).tolist()
+            elif p.name == 'matrix': # Flatten matrix
+                param = np.asfarray(param).flatten().tolist()
+            elif isinstance(param, Component):
+                param = param._get_param_values(context)
             return param
 
         return tuple(map(_get_values, self._get_compilation_params()))
 
     def _get_param_initializer(self, context):
-        return pnlvm._tupleize(self._get_param_values(context))
+        def _convert(x):
+            if isinstance(x, Enum):
+                return x.value
+            try:
+                return (_convert(i) for i in x)
+            except TypeError:
+                return x
+        return pnlvm._tupleize(_convert(self._get_param_values(context)))
 
     def _gen_llvm_function_reset(self, ctx, builder, *_, tags):
         assert "reset" in tags
@@ -1309,10 +1396,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 p.attributes.add('noalias')
 
         if "reset" in tags:
-            builder = self._gen_llvm_function_reset(ctx, builder,
-                                                           params, state,
-                                                           arg_in, arg_out,
-                                                           tags=tags)
+            builder = self._gen_llvm_function_reset(ctx, builder, params, state,
+                                                    arg_in, arg_out, tags=tags)
         else:
             builder = self._gen_llvm_function_body(ctx, builder, params, state,
                                                    arg_in, arg_out, tags=tags)
@@ -1341,9 +1426,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             if default_variable is None or default_variable is NotImplemented:
                 return None
             else:
-                self._default_variable_flexibility = DefaultsFlexibility.RIGID
+                self._variable_shape_flexibility = self._specified_variable_shape_flexibility
         else:
-            self._default_variable_flexibility = DefaultsFlexibility.RIGID
+            self._variable_shape_flexibility = self._specified_variable_shape_flexibility
 
         return convert_to_np_array(default_variable, dimension=1)
 
@@ -1361,7 +1446,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             doing anything. Be aware that if size is NotImplemented, then variable is never cast to a particular shape.
         """
         if size is not NotImplemented:
-            self._default_variable_flexibility = DefaultsFlexibility.RIGID
+            self._variable_shape_flexibility = self._specified_variable_shape_flexibility
             # region Fill in and infer variable and size if they aren't specified in args
             # if variable is None and size is None:
             #     variable = self.class_defaults.variable
@@ -1779,13 +1864,29 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                       context=context)
 
     def _initialize_parameters(self, context=None, **param_defaults):
+        from psyneulink.core.components.shellclasses import (
+            Composition_Base, Function, Mechanism, Port, Process_Base,
+            Projection, System_Base
+        )
+
+        # excludes Function
+        shared_types = (
+            Mechanism,
+            Port,
+            Projection,
+            System_Base,
+            Process_Base,
+            Composition_Base,
+            ComponentsMeta,
+            types.MethodType
+        )
         alias_names = {p.name for p in self.class_parameters if isinstance(p, ParameterAlias)}
 
         self.parameters = self.Parameters(owner=self, parent=self.class_parameters)
 
         # assign defaults based on pass in params and class defaults
         defaults = {
-            k: copy.deepcopy(v) for (k, v) in self.class_defaults.values(show_all=True).items()
+            k: v for (k, v) in self.class_defaults.values(show_all=True).items()
             if not k in alias_names
         }
 
@@ -1807,52 +1908,93 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             for p in d:
                 try:
                     parameter_obj = getattr(self.parameters, p)
-                    if parameter_obj.structural:
-                        parameter_obj.spec = d[p]
-
-                    if parameter_obj.modulable:
-                        # later, validate this
-                        try:
-                            modulable_param_parser = self.parameters._get_prefixed_method(
-                                parse=True,
-                                modulable=True
-                            )
-                            parsed = modulable_param_parser(p, d[p])
-
-                            if parsed is not d[p]:
-                                # we have a modulable param spec
-                                parameter_obj.spec = d[p]
-                                d[p] = parsed
-                                param_defaults[p] = parsed
-                        except AttributeError:
-                            pass
-
-                    d[p] = copy_parameter_value(d[p])
                 except AttributeError:
                     # p in param_defaults does not correspond to a Parameter
-                    pass
+                    continue
+
+                if parameter_obj.structural:
+                    parameter_obj.spec = d[p]
+
+                if parameter_obj.modulable:
+                    # later, validate this
+                    try:
+                        modulable_param_parser = self.parameters._get_prefixed_method(
+                            parse=True,
+                            modulable=True
+                        )
+                        parsed = modulable_param_parser(p, d[p])
+
+                        if parsed is not d[p]:
+                            # we have a modulable param spec
+                            parameter_obj.spec = d[p]
+                            d[p] = parsed
+                            param_defaults[p] = parsed
+                    except AttributeError:
+                        pass
 
             defaults.update(d)
 
+        for k in defaults:
+            defaults[k] = copy_parameter_value(
+                defaults[k],
+                shared_types=shared_types
+            )
+
         self.defaults = Defaults(owner=self, **defaults)
 
+        def _is_user_specified(parameter):
+            return (
+                parameter.name in param_defaults
+                and param_defaults[parameter.name] is not None
+            )
+
         for p in self.parameters:
+            p._user_specified = _is_user_specified(p)
+
+            if isinstance(p, ParameterAlias):
+                if p._user_specified:
+                    if _is_user_specified(p.source):
+                        if param_defaults[p.name] is not param_defaults[p.source.name]:
+                            raise ComponentError(
+                                f"Multiple values ({p.name}: {param_defaults[p.name]}"
+                                f"\t{p.source.name}: {param_defaults[p.source.name]} "
+                                f"assigned to identical Parameters. {p.name} is an alias "
+                                f"of {p.source.name}",
+                                component=self,
+                            )
+
+                    else:
+                        param_defaults[p.source.name] = param_defaults[p.name]
+
+                continue
+
             # copy spec so it is not overwritten later
             # TODO: check if this is necessary
-            if not isinstance(p.spec, (Component, ComponentsMeta)):
-                p.spec = copy_parameter_value(p.spec)
-
-            if p.name in param_defaults and param_defaults[p.name] is not None:
-                p._user_specified = True
+            p.spec = copy_parameter_value(p.spec)
 
             # set default to None context to ensure it exists
             if p.getter is None and p._get(context) is None:
-                if p.name in param_defaults and param_defaults[p.name] is not None:
+                if p._user_specified:
                     val = param_defaults[p.name]
+
+                    if isinstance(val, Function):
+                        if val.owner is not None:
+                            val = copy.deepcopy(val)
+
+                        val.owner = self
                 else:
-                    val = copy_parameter_value(p.default_value)
+                    val = copy_parameter_value(
+                        p.default_value,
+                        shared_types=shared_types
+                    )
+
+                    if isinstance(val, Function):
+                        val.owner = self
 
                 p.set(val, context=context, skip_history=True, override=True)
+
+            if isinstance(p.default_value, Function):
+                p.default_value.owner = p
 
     def _instantiate_parameter_classes(self, context=None):
         """
@@ -1867,10 +2009,66 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 val = p._get(context)
                 if (
                     p.name != FUNCTION
-                    and inspect.isclass(val)
-                    and issubclass(val, Function)
+                    and not p.reference
                 ):
-                    p._set(val(), context)
+                    if (
+                        inspect.isclass(val)
+                        and issubclass(val, Function)
+                    ):
+                        val = val()
+                        val.owner = self
+                        p._set(val, context)
+
+        self._update_parameter_class_variables(context)
+
+    def _update_parameter_class_variables(self, context=None):
+        from psyneulink.core.components.shellclasses import Function
+        for p in self.parameters:
+            if p.getter is None:
+                val = p._get(context)
+                if (
+                    p.name != FUNCTION
+                    and not p.reference
+                    and isinstance(val, Function)
+                ):
+                    try:
+                        parse_variable_method = getattr(
+                            self,
+                            f'_parse_{p.name}_variable'
+                        )
+                        function_default_variable = copy.deepcopy(
+                            parse_variable_method(self.defaults.variable)
+                        )
+                    except AttributeError:
+                        # no parsing method, assume same shape as owner
+                        function_default_variable = copy.deepcopy(
+                            self.defaults.variable
+                        )
+
+                    incompatible = False
+
+                    if function_default_variable.shape != val.defaults.variable.shape:
+                        incompatible = True
+                        if val._variable_shape_flexibility is DefaultsFlexibility.INCREASE_DIMENSION:
+                            increased_dim = np.asarray([val.defaults.variable])
+
+                            if increased_dim.shape == function_default_variable.shape:
+                                function_default_variable = increased_dim
+                                incompatible = False
+                        elif val._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
+                            incompatible = False
+
+                    if not incompatible:
+                        val._update_default_variable(
+                            function_default_variable,
+                            context
+                        )
+
+                        if isinstance(p.default_value, Function):
+                            p.default_value._update_default_variable(
+                                function_default_variable,
+                                context
+                            )
 
     @handle_external_context()
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS, context=None):
@@ -2291,6 +2489,48 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 raise ComponentError("Value of {} param for {} ({}) is not compatible with {}".
                                     format(param_name, self.name, param_value, type_name))
 
+    def _validate_subfunctions(self):
+        from psyneulink.core.components.shellclasses import Function
+
+        for p in self.parameters:
+            if (
+                p.name != FUNCTION  # has specialized validation
+                and isinstance(p.default_value, Function)
+                and not p.reference
+                and not p.function_parameter
+            ):
+                # TODO: assert it's not stateful?
+                function_variable = p.default_value.defaults.variable
+                expected_function_variable = self.defaults.variable
+
+                try:
+                    parse_variable_method = getattr(
+                        self,
+                        f'_parse_{p.name}_variable'
+                    )
+                    expected_function_variable = parse_variable_method(
+                        expected_function_variable
+                    )
+
+                except AttributeError:
+                    pass
+
+                if not function_variable.shape == expected_function_variable.shape:
+                    def _create_justified_line(k, v, error_line_len=110):
+                        return f'{k}: {v.rjust(error_line_len - len(k))}'
+
+                    raise ParameterError(
+                        f'Variable shape incompatibility between {self} and its {p.name} Parameter'
+                        + _create_justified_line(
+                            f'\n{self}.variable',
+                            f'{expected_function_variable}    (numpy.array shape: {np.asarray(expected_function_variable).shape})'
+                        )
+                        + _create_justified_line(
+                            f'\n{self}.{p.name}.variable',
+                            f'{function_variable}    (numpy.array shape: {np.asarray(function_variable).shape})'
+                        )
+                    )
+
     def _get_param_value_for_modulatory_spec(self, param_name, param_value):
         from psyneulink.core.globals.keywords import MODULATORY_SPEC_KEYWORDS
         if isinstance(param_value, str):
@@ -2459,18 +2699,18 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         # Specification is an already implemented Function
         elif isinstance(function, Function):
-            if not iscompatible(function_variable, function.defaults.variable):
+            if function_variable.shape != function.defaults.variable.shape:
                 owner_str = ''
                 if hasattr(self, 'owner') and self.owner is not None:
                     owner_str = f' of {repr(self.owner.name)}'
-                if function._default_variable_flexibility is DefaultsFlexibility.RIGID:
+                if function._variable_shape_flexibility is DefaultsFlexibility.RIGID:
                     raise ComponentError(f'Variable format ({function.defaults.variable}) of {function.name} '
                                          f'is not compatible with the variable format ({function_variable}) '
                                          f'of {repr(self.name)}{owner_str} to which it is being assigned.')
                                          # f'Make sure variable for {function.name} is 2d.')
-                elif function._default_variable_flexibility is DefaultsFlexibility.INCREASE_DIMENSION:
+                elif function._variable_shape_flexibility is DefaultsFlexibility.INCREASE_DIMENSION:
                     function_increased_dim = np.asarray([function.defaults.variable])
-                    if not iscompatible(function_variable, function_increased_dim):
+                    if function_variable.shape != function_increased_dim.shape:
                         raise ComponentError(f'Variable format ({function.defaults.variable}) of {function.name} '
                                              f'is not compatible with the variable format ({function_variable})'
                                              f' of {repr(self.name)}{owner_str} to which it is being assigned.')
@@ -2479,8 +2719,29 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             # class default functions should always be copied, otherwise anything this component
             # does with its function will propagate to anything else that wants to use
             # the default
-            if function.owner is None and not function.is_pnl_inherent:
+            if function.owner is None:
                 self.function = function
+            elif function.owner is self:
+                try:
+                    if function._is_pnl_inherent:
+                        # This will most often occur if a Function instance is
+                        # provided as a default argument in a constructor. These
+                        # should instead be added as default values for the
+                        # corresponding Parameter.
+                        # Adding the function as a default constructor argument
+                        # will lead to incorrect setting of
+                        # Parameter._user_specified
+                        warnings.warn(
+                            f'{function} is generated once during import of'
+                            ' psyneulink, and is now being reused. Please report'
+                            ' this, including the script you were using, to the'
+                            ' psyneulink developers at'
+                            ' psyneulinkhelp@princeton.edu or'
+                            ' https://github.com/PrincetonUniversity/PsyNeuLink/issues'
+                        )
+                        self.function = copy.deepcopy(function)
+                except AttributeError:
+                    self.function = function
             else:
                 self.function = copy.deepcopy(function)
 
@@ -2561,6 +2822,20 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     def _update_default_variable(self, new_default_variable, context=None):
         self.defaults.variable = copy.deepcopy(new_default_variable)
+
+        # exclude value from validation because it isn't updated until
+        # _instantiate_value is called
+        call_with_pruned_args(
+            self._validate_params,
+            variable=new_default_variable,
+            request_set={
+                k: v.default_value
+                for k, v in self.parameters.values(True).items()
+                if k not in {'value'} and not isinstance(v, ParameterAlias)
+            },
+            target_set={},
+            context=context
+        )
         self._instantiate_value(context)
 
         function_variable = self._parse_function_variable(
@@ -2571,6 +2846,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             self.function._update_default_variable(function_variable, context)
         except AttributeError:
             pass
+
+        # TODO: is it necessary to call _validate_value here?
 
     def initialize(self, context=None):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
@@ -3081,16 +3358,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         return [param.name for param in self.parameters if param.loggable and param.user]
 
     @property
-    def _default_variable_flexibility(self):
+    def _variable_shape_flexibility(self):
         try:
-            return self.__default_variable_flexibility
+            return self.__variable_shape_flexibility
         except AttributeError:
-            self.__default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
-            return self.__default_variable_flexibility
+            self.__variable_shape_flexibility = DefaultsFlexibility.FLEXIBLE
+            return self.__variable_shape_flexibility
 
-    @_default_variable_flexibility.setter
-    def _default_variable_flexibility(self, value):
-        self.__default_variable_flexibility = value
+    @_variable_shape_flexibility.setter
+    def _variable_shape_flexibility(self, value):
+        self.__variable_shape_flexibility = value
 
     @classmethod
     def get_constructor_defaults(cls):

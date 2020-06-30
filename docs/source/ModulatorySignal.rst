@@ -1,19 +1,23 @@
-Modulatory Signals
-==================
+ModulatorySignal
+================
 
 .. _ModulatorySignal_Subtypes:
 
-.. toctree::
-   :maxdepth: 1
+.. container:: subclasses
+    *Subclasses*
 
-   LearningSignal
-   ControlSignal
-   GatingSignal
+    .. toctree::
+       :maxdepth: 1
 
-.. toctree::
-   :maxdepth: 3
+       LearningSignal
+       ControlSignal
+       GatingSignal
+
+    .. toctree::
+       :maxdepth: 3
 
 .. automodule:: psyneulink.core.components.ports.modulatorysignals.modulatorysignal
    :members:
+   :private-members:
    :exclude-members: random, update, Parameters
 

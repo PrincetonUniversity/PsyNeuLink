@@ -490,6 +490,7 @@ class AutodiffComposition(Composition):
                 call_before_pass=None,
                 call_after_time_step=None,
                 call_after_pass=None,
+                reset_stateful_functions_to=None,
                 context=None,
                 base_context=Context(execution_id=None),
                 clamp_input=SOFT_CLAMP,
@@ -520,10 +521,15 @@ class AutodiffComposition(Composition):
                                             context,
                                             scheduler)
 
-            context.add_flag(ContextFlags.PROCESSING)
+            # FIX 5/28/20:
+            # context.add_flag(ContextFlags.PROCESSING)
+            execution_phase = context.execution_phase
+            context.execution_phase = ContextFlags.PROCESSING
 
             self.output_CIM.execute(output, context=context)
-            context.remove_flag(ContextFlags.PROCESSING)
+            # FIX 5/28/20:
+            context.execution_phase = execution_phase
+
 
             # note that output[-1] might not be the truly most recent value
             # HACK CW 2/5/19: the line below is a hack. In general, the output_CIM of an AutodiffComposition
@@ -538,6 +544,7 @@ class AutodiffComposition(Composition):
                                                         call_before_pass=call_before_pass,
                                                         call_after_time_step=call_after_time_step,
                                                         call_after_pass=call_after_pass,
+                                                        reset_stateful_functions_to=reset_stateful_functions_to,
                                                         context=context,
                                                         base_context=base_context,
                                                         clamp_input=clamp_input,

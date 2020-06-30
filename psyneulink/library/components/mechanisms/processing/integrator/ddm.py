@@ -60,14 +60,14 @@ or a call to the function with arguments specifying its parameters::
 COMMENT:
 .. _DDM_Input:
 **Input**.  The `default_variable` argument specifies the default value to use as the stimulus component of the
-:ref:`drift rate <DDM_Drift_Rate>` for the decision process.  It must be a single scalar value.
+`drift rate <DDM_Drift_Rate>` for the decision process.  It must be a single scalar value.
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]
 **Input**.  The ``default_variable`` argument specifies the default value to use as the stimulus component of the
-:ref:`drift rate <DDM_Drift_Rate>` for each decision process, as well as the number of decision processes implemented
+`drift rate <DDM_Drift_Rate>` for each decision process, as well as the number of decision processes implemented
 and the corresponding format of the ``input`` required by calls to its ``execute`` and ``run`` methods.  This can be a
 single scalar value or an an array (list or 1d np.array). If it is a single value (as in the first two examples above),
 a single DDM process is implemented, and the input is used as the stimulus component of the
-:ref:`drift rate <DDM_Drift_Rate>` for the process. If the input is an array (as in the third example above),
+`drift rate <DDM_Drift_Rate>` for the process. If the input is an array (as in the third example above),
 multiple parallel DDM processes are implemented all of which use the same parameters but each of which receives its
 own input (from the corresponding element of the input array) and is executed independently of the others.
 COMMENT
@@ -239,11 +239,11 @@ COMMENT:
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]
 The DDM Mechanism implements a general form of the decision process.  A DDM Mechanism assigns one **inputPort** to
 each item in the `default_variable` argument, corresponding to each of the decision processes implemented
-(see :ref:`Input <DDM_Input>` above). The decision process can be configured to execute in different modes.  The
+(see `Input <DDM_Input>` above). The decision process can be configured to execute in different modes.  The
 `function <DDM.function>` parameters is the primary determinants of how the
 decision process is executed, and what information is returned. The `function <DDM.function>` parameter specifies
 the analytical solution to use. The number of `OutputPorts <OutputPort>` is determined by the `function <DDM.function>`
-in use (see :ref:`list of output values <DDM_Results>` below).
+in use (see `list of output values <DDM_Results>` below).
 
 [TBI - average_output_ports ARGUMENT/OPTION AFTER IMPLEMENTING MULTIPROCESS DDM]
 OUTPUT MEASURE?? OUTCOME MEASURE?? RESULT?? TYPE OF RESULT??
@@ -307,7 +307,7 @@ single set of parameters that are not subject to the analytic solution (e.g., fo
 
 .. note::
    DDM handles "runtime" parameters (specified in a call to its
-   :py:meth:`execute <Mechanism_Base.exeucte>` or :py:meth:`run <Mechanism_Base.run>` methods)
+   :py:meth:`execute <Mechanism_Base.execte>` or :py:meth:`run <Mechanism_Base.run>` methods)
    differently than standard Components: runtime parameters are added to the Mechanism's current value of the
    corresponding ParameterPort (rather than overriding it);  that is, they are combined additively with the value of
    any `ControlProjection` it receives to determine the parameter's value for that execution.  The ParameterPort's
@@ -506,8 +506,8 @@ class DDM(ProcessingMechanism):
         based on the `function <DDM.function>` and/or any specifications made in the **output_ports** argument of the
         DDM's constructor (see `DDM_Output` for additional details).
 
-    output_values : List[array(float64),array(float64),array(float64),array(float64)]
-        each item is the `value <OutputPort.value> of the corresponding OutputPort in `output_ports
+    output_values : List[array(float64)]
+        each item is the `value <OutputPort.value>` of the corresponding `OutputPort` in `output_ports
         <DDM.output_ports>`.  The first two items are always the `value <OutputPort.value>`\\s of the
         `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>` OutputPorts;  additional
         ones may be included, based on the `function <DDM.function>` and any specifications made in the
@@ -739,11 +739,7 @@ class DDM(ProcessingMechanism):
                  default_variable=None,
                  size=None,
                  input_format:tc.optional(tc.enum(SCALAR, ARRAY, VECTOR))=None,
-                 function=DriftDiffusionAnalytical(drift_rate=1.0,
-                                                   starting_point=0.0,
-                                                   threshold=1.0,
-                                                   noise=0.5,
-                                                   t0=.200),
+                 function=None,
                  input_ports=None,
                  output_ports:tc.optional(tc.any(str, Iterable))=(DECISION_VARIABLE, RESPONSE_TIME),
                  seed=None,
@@ -941,7 +937,7 @@ class DDM(ProcessingMechanism):
         functions = {DriftDiffusionAnalytical,
                      DriftDiffusionIntegrator}
 
-        if FUNCTION in target_set:
+        if FUNCTION in target_set and target_set[FUNCTION] is not None:
             # If target_set[FUNCTION] is a method of a Function (e.g., being assigned in _instantiate_function),
             #   get the Function to which it belongs
             fun = target_set[FUNCTION]
@@ -1153,7 +1149,7 @@ class DDM(ProcessingMechanism):
         return mech_out, builder
 
     @handle_external_context(execution_id=NotImplemented)
-    def reset(self, *args, context=None):
+    def reset(self, *args, force=False, context=None):
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
         if context.execution_id is NotImplemented:

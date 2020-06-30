@@ -165,8 +165,8 @@ method (see `examples <Port_Create_Port_Examples>` in Port).
        <Mechanism_Add_InputPorts_Note>`).
 
 If the name of an InputPort added to a Mechanism is the same as one that already exists, its name is suffixed with a
-numerical index (incremented for each InputPort with that name; see `Naming`), and the InputPort is added to the
-list (that is, it will *not* replace ones that already exist).
+numerical index (incremented for each InputPort with that name; see `Registry_Naming`), and the InputPort is added to
+the list (that is, it will *not* replace ones that already exist).
 
 .. _InputPort_Forms_of_Specification:
 
@@ -192,8 +192,7 @@ should project to the InputPort. Each of these is described below:
       to specify an InputPort in the constructor for a Mechanism, the item of the owner Mechanism's `variable
       <Mechanism_Base.variable>` to which the InputPort is assigned is used as the format for the InputPort`s
       `variable <InputPort.variable>`; otherwise, the default for the InputPort is used.  If a string is specified,
-      it is used as the `name <InputPort.name>` of the InputPort (see `example
-      <Port_Constructor_Argument_Examples>`).
+      it is used as the `name <InputPort.name>` of the InputPort (see `example <Port_Constructor_Argument_Examples>`).
 
     .. _InputPort_Specification_by_Value:
 
@@ -370,14 +369,14 @@ starting with constraints that are given the highest precedence:
     then its format is determined by the `specification of Components that project to it
     <InputPort_Projection_Source_Specification>`:
 
-    * **More than one Component is specified with the same :ref:`value` format** -- that format is used to determine
+    * **More than one Component is specified with the same `value` format** -- that format is used to determine
       the format of the InputPort's `variable <InputPort.variable>`.
 
-    * **More than one Component is specified with different :ref:`value` formats** -- the InputPort's `variable
+    * **More than one Component is specified with different `value` formats** -- the InputPort's `variable
       <InputPort.variable>` is determined by item of the default `variable <Mechanism_Base.variable>` for
       the class of its owner Mechanism.
 
-    * **A single Component is specified** -- its :ref:`value` is used to determine the format of the InputPort's
+    * **A single Component is specified** -- its `value` is used to determine the format of the InputPort's
       `variable <InputPort.variable>`;  if the Component is a(n):
 
       * **MappingProjection** -- can be specified by its class, an existing MappingProjection, or a matrix:
@@ -666,9 +665,9 @@ class InputPort(Port_Base):
         assigned by the InputPortRegistry of the Mechanism to which the InputPort belongs.  Note that some Mechanisms
         automatically create one or more non-default InputPorts, that have pre-specified names.  However, if any
         InputPorts are specified in the **input_ports** argument of the Mechanism's constructor, those replace those
-        InputPorts (see `note <Mechanism_Default_Port_Suppression_Note>`), and `standard naming conventions <Naming>`
-        apply to the InputPorts specified, as well as any that are added to the Mechanism once it is created
-        (see `note <Port_Naming_Note>`).
+        InputPorts (see `note <Mechanism_Default_Port_Suppression_Note>`), and `standard naming conventions
+        <Registry_Naming>` apply to the InputPorts specified, as well as any that are added to the Mechanism once it
+        is created (see `note <Port_Naming_Note>`).
 
     """
 
@@ -910,9 +909,9 @@ class InputPort(Port_Base):
         self._use_1d_variable = False
         if not isinstance(self.function, CombinationFunction):
             self._use_1d_variable = True
-            self.function._default_variable_flexibility = DefaultsFlexibility.RIGID
+            self.function._variable_shape_flexibility = DefaultsFlexibility.RIGID
         else:
-            self.function._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
+            self.function._variable_shape_flexibility = DefaultsFlexibility.FLEXIBLE
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of Port's constructor

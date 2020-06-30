@@ -133,7 +133,7 @@ COMMENT
 
 Note that, in the figures above, the `ControlProjections <ControlProjection>` are designated with square "arrowheads",
 and the ControlMechanisms are shown as septagons to indicate that their ControlProjections create a feedback loop
-(see `Composition_Initial_Values_and_Feedback`;  also, see `below <ControlMechanism_Add_Linear_Processing_Pathway>`
+(see `Composition_Cycles_and_Feedback`;  also, see `below <ControlMechanism_Add_Linear_Processing_Pathway>`
 regarding specification of a ControlMechanism and associated ObjectiveMechanism in a Composition's
 `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` method).
 
@@ -482,7 +482,7 @@ a Composition for which it is not a `controller <Composition.controller>`, then 
 `Mechanism <Mechanism>`, based on its place in the Composition's `graph <Composition.graph>`.  Because
 `ControlProjections <ControlProjection>` are likely to introduce cycles (recurrent connection loops) in the
 graph, the effects of a ControlMechanism and its projections will generally not be applied in the first `TRIAL
-<TimeScale.TRIAL>` (see `Composition_Initial_Values_and_Feedback` for configuring the initialization of feedback
+<TimeScale.TRIAL>` (see `Composition_Cycles_and_Feedback` for configuring the initialization of feedback
 loops in a Composition; also see `Scheduler` for a description of additional ways in which a ControlMechanism and its
 dependents can be scheduled to execute).
 
@@ -736,7 +736,7 @@ class DefaultAllocationFunction(Function_Base):
         result = np.array([variable[0]] * num_ctl_sigs)
         return self.convert_output_type(result)
 
-    def reset(self, *args, context=None):
+    def reset(self, *args, force=False, context=None):
         # Override Component.reset which requires that the Component is stateful
         pass
 
@@ -1162,6 +1162,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             if input_ports is None:
                 return
 
+            # FIX 5/28/20:
             # TODO: uncomment this method or remove this block entirely.
             # This validation check was never being run due to an
             # unintentionally suppressed exception. Why is the default
@@ -1309,7 +1310,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
             each of which receives a Projection from a corresponding OutputPort in self.monitored_output_ports
         """
         from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-        from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism, ObjectiveMechanismError
+        from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
+            ObjectiveMechanism, ObjectiveMechanismError
         from psyneulink.core.components.ports.inputport import EXPONENT_INDEX, WEIGHT_INDEX
         from psyneulink.core.components.functions.function import FunctionError
 
@@ -1372,6 +1374,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         # Insure that ObjectiveMechanism's input_ports are not assigned projections from a Composition's input_CIM
         for input_port in self.objective_mechanism.input_ports:
             input_port.internal_only = True
+
         # Flag ObjectiveMechanism and its Projection to ControlMechanism for inclusion in Composition
         from psyneulink.core.compositions.composition import NodeRole
         self.aux_components.append((self.objective_mechanism, NodeRole.CONTROL_OBJECTIVE))
@@ -1504,7 +1507,22 @@ class ControlMechanism(ModulatoryMechanism_Base):
         from psyneulink.core.components.ports.port import _instantiate_port
         from psyneulink.core.components.projections.projection import ProjectionError
 
-        allocation_parameter_default = self.parameters.control_allocation.default_value
+        try:
+            # set the default by implicit shape defined by one of the
+            # allocation_samples if possible
+            try:
+                allocation_parameter_default = control_signal_spec._init_args['allocation_samples'][0]
+            except AttributeError:
+                allocation_parameter_default = control_signal_spec['allocation_samples'][0]
+
+            # several tests depend on the default value being 1
+            # tests/composition/test_control.py::TestControlSpecification::test_deferred_init
+            # tests/composition/test_control.py::TestModelBasedOptimizationControlMechanisms::test_evc
+            # tests/composition/test_control.py::TestModelBasedOptimizationControlMechanisms::test_laming_validation_specify_control_signals
+            # tests/composition/test_control.py::TestModelBasedOptimizationControlMechanisms::test_stateful_mechanism_in_simulation
+            allocation_parameter_default = np.ones(np.asarray(allocation_parameter_default).shape)
+        except (KeyError, IndexError, TypeError):
+            allocation_parameter_default = self.parameters.control_allocation.default_value
 
         control_signal = _instantiate_port(port_type=ControlSignal,
                                                owner=self,
@@ -1635,13 +1653,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
             self.remove_ports(ctl_sig_attribute[0])
 
     def _activate_projections_for_compositions(self, composition=None):
-        """Activate eligible Projections to or from nodes in Composition.
+        """Activate eligible Projections to or from Nodes in Composition.
         If Projection is to or from a node NOT (yet) in the Composition,
         assign it the node's aux_components attribute but do not activate it.
         """
         dependent_projections = set()
 
-        if self.objective_mechanism:
+        if self.objective_mechanism and composition and self.objective_mechanism in composition.nodes:
             # Safe to add this, as it is already in the ControlMechanism's aux_components
             #    and will therefore be added to the Composition along with the ControlMechanism
             from psyneulink.core.compositions.composition import NodeRole
@@ -1659,7 +1677,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         # ??ELIMINATE SYSTEM
         # FIX: 9/15/19 - HOW IS THIS DIFFERENT THAN objective_mechanism's AFFERENTS ABOVE?
         # assign any deferred init objective mech monitored OutputPort projections to this system
-        if self.objective_mechanism:
+        if self.objective_mechanism and composition and self.objective_mechanism in composition.nodes:
             for output_port in self.objective_mechanism.monitored_output_ports:
                 for eff in output_port.efferents:
                     dependent_projections.add(eff)
@@ -1677,7 +1695,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         based on specified `control_allocation <ControlMechanism.control_allocation>`
         (used by controller of a Composition in simulations)
         """
-        value = [np.atleast_1d(a) for a in control_allocation]
+        value = [a for a in control_allocation]
         self.parameters.value._set(value, context)
         self._update_output_ports(runtime_params, context)
 

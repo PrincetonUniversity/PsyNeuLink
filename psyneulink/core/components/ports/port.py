@@ -405,8 +405,8 @@ the Port calls its `function <Port_Base.function>` to determine its `value <Port
 
 .. note::
    The change in the value of a `Port <Port>` does not occur until the Mechanism to which the Port belongs is next
-   executed; This conforms to a "lazy evaluation" protocol (see :ref:`Lazy Evaluation <LINK>` for an explanation
-   of "lazy" updating).
+   executed; This conforms to a "lazy evaluation" protocol (see `Lazy Evaluation <Component_Lazy_Updating>` for an
+   explanation of "lazy" updating).
 
 .. _Port_Examples:
 
@@ -858,7 +858,13 @@ class PortError(Exception):
 # DOCUMENT:  INSTANTATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE PORT'S NAME + VALUE_SUFFIX
 #            THAT IS UPDATED BY THE PORT'S value setter METHOD (USED BY LOGGING OF MECHANISM ENTRIES)
 class Port_Base(Port):
-    """Base class for Port.
+    """
+    Port_Base(     \
+        owner=None \
+        )
+
+    Base class for Port.
+
     The arguments below can be used in the constructor for any subclass of Port.
     See `Component <Component_Class_Reference>` for additional arguments and attributes.
 
@@ -928,12 +934,12 @@ class Port_Base(Port):
         current value of the Port.
 
     name : str
-        the name of the Port. If the Port's `initialization has been deferred <Port_Deferred_Initialization>`,
-        it is assigned a temporary name (indicating its deferred initialization status) until initialization is
-        completed, at which time it is assigned its designated name.  If that is the name of an existing Port,
-        it is appended with an indexed suffix, incremented for each Port with the same base name (see `Naming`). If
-        the name is not  specified in the **name** argument of its constructor, a default name is assigned by the
-        subclass (see subclass for details).
+        the name of the Port. If the Port's `initialization has been deferred <Port_Deferred_Initialization>`, it is
+        assigned a temporary name (indicating its deferred initialization status) until initialization is completed,
+        at which time it is assigned its designated name.  If that is the name of an existing Port, it is appended
+        with an indexed suffix, incremented for each Port with the same base name (see `Registry_Naming`). If the name
+        is not  specified in the **name** argument of its constructor, a default name is assigned by the subclass
+        (see subclass for details).
 
         .. _Port_Naming_Note:
 
@@ -949,8 +955,7 @@ class Port_Base(Port):
 
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the Port; if it is not specified in the **prefs** argument of the constructor,
-        a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet <LINK>` for
-        details).
+        a default is assigned using `classPreferences` defined in __init__.py (see `Preferences` for details).
 
     """
 
@@ -1110,11 +1115,6 @@ class Port_Base(Port):
 
         if context.source == ContextFlags.COMMAND_LINE:
             owner.add_ports([self])
-
-    def _initialize_parameters(self, context=None, **param_defaults):
-        super()._initialize_parameters(context=context, **param_defaults)
-        # instantiate auxiliary Functions
-        self._instantiate_parameter_classes(context)
 
     def _handle_size(self, size, variable):
         """Overwrites the parent method in Component.py, because the variable of a Port
@@ -1494,10 +1494,10 @@ class Port_Base(Port):
                     self.defaults.variable = np.append(variable, np.atleast_2d(projection.defaults.value), axis=0)
 
                 # assign identical default variable to function if it can be modified
-                if self.function._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                if self.function._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                     self.function.defaults.variable = self.defaults.variable.copy()
                 elif (
-                    self.function._default_variable_flexibility is DefaultsFlexibility.INCREASE_DIMENSION
+                    self.function._variable_shape_flexibility is DefaultsFlexibility.INCREASE_DIMENSION
                     and np.array([self.function.defaults.variable]).shape == self.defaults.variable.shape
                 ):
                     self.function.defaults.variable = np.array([self.defaults.variable])

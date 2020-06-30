@@ -1013,7 +1013,9 @@ class ContentAddressableList(UserList):
     ContentAddressableList( component_type, key=None, list=None)
 
     Implements dict-like list, that can be keyed by a specified attribute of the `Compoments <Component>` in its
-    entries.
+    entries.  If called, returns list of items.
+
+    Instance is callable (with no arguments): returns list of its items.
 
     The key with which it is created is also assigned as a property of the class, that returns a list
     with the keyed attribute of its entries.  For example, the `output_ports <Mechanism_Base.output_ports>` attribute
@@ -1195,6 +1197,9 @@ class ContentAddressableList(UserList):
         except TypeError:
             key_num = self._get_key_for_item(key)
             del self.data[key_num]
+
+    def __call__(self):
+        return self.data
 
     def clear(self):
         super().clear()

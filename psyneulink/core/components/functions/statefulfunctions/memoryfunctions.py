@@ -152,13 +152,13 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = BUFFER_FUNCTION
@@ -192,6 +192,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                     :default value: 1.0
                     :type: ``float``
         """
+        variable = Parameter([], pnl_internal=True, constructor_argument='default_variable')
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         history = None
@@ -219,9 +220,6 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  params: tc.optional(dict) = None,
                  owner=None,
                  prefs: is_pref_set = None):
-
-        if default_variable is None:
-            default_variable = []
 
         super().__init__(
             default_variable=default_variable,
@@ -569,13 +567,13 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
 
     Returns
     -------
@@ -1184,7 +1182,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         distances = [self.distance_function([query_key, list(m)]) for m in _memory[KEYS]]
 
         # Get the best-match(es) in memory based on selection_function and return as non-zero value(s) in an array
-        selection_array = self.selection_function(distances)
+        selection_array = self.selection_function(distances, context=context)
         indices_of_selected_items = np.flatnonzero(selection_array)
 
         # Single key identified

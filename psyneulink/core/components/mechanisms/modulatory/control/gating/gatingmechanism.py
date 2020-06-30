@@ -154,7 +154,7 @@ Composition's `graph <Composition.graph>`.  Because `GatingProjections <GatingPr
 cycles (recurrent connection loops) in the graph, the effects of a GatingMechanism and its projections will generally
 not be applied in the first `TRIAL <TimeScale.TRIAL>` (see
 COMMENT:
-`Composition_Initial_Values_and_Feedback` and
+`Composition_Cycles_and_Feedback` and
 COMMENT
 **feedback** argument for the `add_projection <Composition.add_projection>`
 method of `Composition` for a description of how to configure the initialization of feedback loops in a Composition;
@@ -170,8 +170,8 @@ of how the value of a Port is modulated).
 
 .. note::
    A Port that receives a `GatingProjection` does not update its `value <Port_Base.value>` (and therefore does not
-   reflect the influence of its `GatingSignal`) until that Port's owner Mechanism executes
-   (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
+   reflect the influence of its `GatingSignal`) until that Port's owner Mechanism executes (see `Lazy Evaluation
+   <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
 .. _GatingMechanism_Class_Reference:
 
@@ -386,13 +386,13 @@ class GatingMechanism(ControlMechanism):
         unless they are `individually specified <GatingSignal_Specification>`.
 
     name : str
-        the name of the GatingMechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the GatingMechanism; if it is not specified in the **name** argument of the constructor, a default
+        is assigned by MechanismRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the GatingMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentType = "GatingMechanism"

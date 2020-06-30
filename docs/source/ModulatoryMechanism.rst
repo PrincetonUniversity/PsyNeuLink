@@ -1,15 +1,20 @@
-Modulatory Mechanisms
-=====================
+ModulatoryMechanism
+===================
 
 .. _ModulatoryMechanism_Subtypes:
 
-.. toctree::
-   :maxdepth: 1
+.. container:: subclasses
 
-   Control Mechanisms <ControlMechanism>
-   Learning Mechanisms <LearningMechanism>
+    *Subclasses*
+
+    .. toctree::
+       :maxdepth: 1
+
+       ControlMechanism
+       LearningMechanism
 
 .. automodule:: psyneulink.core.components.mechanisms.modulatory.modulatorymechanism
    :members:
+   :private-members:
    :exclude-members: Linear, random, Parameters
 

@@ -394,12 +394,15 @@ import typecheck as tc
 from collections.abc import Iterable
 
 from psyneulink.core.components.component import DefaultsFlexibility
-from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.function import is_function_type, FunctionError
 from psyneulink.core.components.functions.optimizationfunctions import \
-    OBJECTIVE_FUNCTION, SEARCH_SPACE, OptimizationFunction
+    OBJECTIVE_FUNCTION, SEARCH_SPACE
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.transferfunctions import CostFunctions
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
+    ObjectiveMechanism, ObjectiveMechanismError
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.ports.inputport import InputPort, _parse_shadow_inputs
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -408,7 +411,7 @@ from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, \
-    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_PORTS, PARAMS, \
+    OPTIMIZATION_CONTROL_MECHANISM, OBJECTIVE_MECHANISM, OUTCOME, PRODUCT, PARAMS, \
     CONTROL, AUTO_ASSIGN_MATRIX
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -458,16 +461,10 @@ class OptimizationControlMechanism(ControlMechanism):
         compute_net_outcome=lambda x,y:x-y)
 
     Subclass of `ControlMechanism <ControlMechanism>` that adjusts its `ControlSignals <ControlSignal>` to optimize
-    performance of the `Composition` to which it belongs
+    performance of the `Composition` to which it belongs.  See parent class for additional arguments.
 
     Arguments
     ---------
-
-    objective_mechanism : ObjectiveMechanism or List[OutputPort specification]
-        specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, or a list of the
-        `OutputPort <OutputPort>`\\s it should monitor; if a list of `OutputPort specifications
-        <ObjectiveMechanism_Monitor>` is used, a default ObjectiveMechanism is created and the list
-        is passed to its **monitored_output_ports** argument.
 
     features : Mechanism, OutputPort, Projection, dict, or list containing any of these
         specifies Components, the values of which are assigned to `feature_values
@@ -683,7 +680,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     :type:
         """
         function = Parameter(None, stateful=False, loggable=False)
-        feature_function = Parameter(None, stateful=False, loggable=False)
+        feature_function = Parameter(None, reference=True, stateful=False, loggable=False)
         search_function = Parameter(None, stateful=False, loggable=False)
         search_termination_function = Parameter(None, stateful=False, loggable=False)
         comp_execution_mode = Parameter('Python', stateful=False, loggable=False, pnl_internal=True)
@@ -721,7 +718,6 @@ class OptimizationControlMechanism(ControlMechanism):
                  search_function: tc.optional(tc.any(is_function_type)) = None,
                  search_termination_function: tc.optional(tc.any(is_function_type)) = None,
                  search_statefulness=None,
-                 params=None,
                  context=None,
                  **kwargs):
         """Implement OptimizationControlMechanism"""
@@ -753,7 +749,6 @@ class OptimizationControlMechanism(ControlMechanism):
             search_function=search_function,
             search_termination_function=search_termination_function,
             agent_rep=agent_rep,
-            params=params,
             **kwargs
         )
 
@@ -838,7 +833,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # Workaround this issue here, and explicitly allow the function's
         # default variable to be modified
         if isinstance(function, Function):
-            function._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
+            function._variable_shape_flexibility = DefaultsFlexibility.FLEXIBLE
 
         super()._instantiate_function(function, function_params, context)
 
@@ -860,32 +855,6 @@ class OptimizationControlMechanism(ControlMechanism):
         from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._initialize_composition_function_approximator(context)
-
-    def _instantiate_objective_mechanism(self, context=None):
-        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-        # differs from parent because it should not use add_to_monitor on its
-        # input_states (formerly monitor_for_control)
-
-        # Instantiate MappingProjection from ObjectiveMechanism to ControlMechanism
-        projection_from_objective = MappingProjection(sender=self.objective_mechanism,
-                                                      receiver=self,
-                                                      matrix=AUTO_ASSIGN_MATRIX,
-                                                      context=context)
-
-        # CONFIGURE FOR ASSIGNMENT TO COMPOSITION
-
-        # Insure that ObjectiveMechanism's input_ports are not assigned projections from a Composition's input_CIM
-        for input_port in self.objective_mechanism.input_ports:
-            input_port.internal_only = True
-
-        # Flag ObjectiveMechanism and its Projection to ControlMechanism for inclusion in Composition
-        from psyneulink.core.compositions.composition import NodeRole
-        self.aux_components.append((self.objective_mechanism, NodeRole.CONTROL_OBJECTIVE))
-        self.aux_components.append(projection_from_objective)
-
-        # ASSIGN ATTRIBUTES
-
-        self._objective_projection = projection_from_objective
 
     def _update_input_ports(self, runtime_params=None, context=None):
         """Update value for each InputPort in self.input_ports:
@@ -1014,12 +983,15 @@ class OptimizationControlMechanism(ControlMechanism):
             old_composition = context.composition
             context.composition = self.agent_rep
 
+            # We shouldn't get this far if execution mode is not Python
+            exec_mode = self.parameters.comp_execution_mode._get(context)
+            assert exec_mode == "Python"
             result = self.agent_rep.evaluate(self.parameters.feature_values._get(context),
                                              control_allocation,
                                              self.parameters.num_estimates._get(context),
                                              base_context=context,
                                              context=new_context,
-                                             execution_mode=self.parameters.comp_execution_mode._get(context),
+                                             execution_mode=exec_mode,
                                              return_results=return_results)
             context.composition = old_composition
 

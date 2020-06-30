@@ -242,10 +242,10 @@ InputPort's owner `Mechanism <Mechanism>` is executed. When executed, the Mappin
 updates its `matrix <MappingProjection.matrix>` parameter based on any `LearningProjection(s)` it receives (listed in
 the ParameterPort's `mod_afferents <ParameterPort.mod_afferents>` attribute). This brings into effect any changes that
 occurred due to `learning <MappingProjection_Learning>`.  Since this does not occur until the Mechanism that receives
-the MappingProjection is executed (in accord with :ref:`Lazy Evaluation <LINK>`), any changes due to learning do not
-take effect, and are not observable (e.g., through inspection of the `matrix <MappingProjection.matrix>` attribute or
-the `value <ParameterPort.value>` of its ParameterPort) until the next `TRIAL <TimeScale.TRIAL>` of execution
-(see :ref:`Lazy Evaluation` for an explanation of "lazy" updating).
+the MappingProjection is executed (in accord with `Lazy Evaluation <Component_Lazy_Updating>`), any changes due to
+learning do not take effect, and are not observable (e.g., through inspection of the `matrix <MappingProjection.matrix>`
+attribute or the `value <ParameterPort.value>` of its ParameterPort) until the next `TRIAL <TimeScale.TRIAL>` of
+execution (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
 .. _MappingProjection_Learning:
 
@@ -275,7 +275,7 @@ PsyNeuLink).  The most recent value of the matrix used by the MappingProjection 
 not reflect any changes due to learning on the current `TRIAL <TimeScale.TRIAL>` of execution; those are assigned to the
 ParameterPort's `value <ParameterPort.value>` when it executes, which does not occur until the `Mechanism
 <Mechanism>` that receives the MappingProjection is executed in the next `TRIAL <TimeScale.TRIAL>` of execution
-(see :ref:`Lazy Evaluation <LINK>` for an explanation of "lazy" updating)
+(see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
 .. _MappingProjection_Class_Reference:
 
@@ -283,6 +283,7 @@ Class Reference
 ---------------
 
 """
+import copy
 import inspect
 
 import numpy as np
@@ -290,7 +291,8 @@ import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
-from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix
+from psyneulink.core.components.functions.transferfunctions import LinearMatrix
+from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -384,7 +386,7 @@ class MappingProjection(PathwayProjection_Base):
     name : str
         the name of the MappingProjection. If the specified name is the name of an existing MappingProjection,
         it is appended with an indexed suffix, incremented for each MappingProjection with the same base name (see
-        `Naming`). If the name is not specified in the **name** argument of its constructor, a default name is
+        `Registry_Naming`). If the name is not specified in the **name** argument of its constructor, a default name is
         assigned using the following format:
         'MappingProjection from <sender Mechanism>[<OutputPort>] to <receiver Mechanism>[InputPort]'
         (for example, ``'MappingProjection from my_mech_1[OutputPort-0] to my_mech2[InputPort-0]'``).
@@ -497,16 +499,19 @@ class MappingProjection(PathwayProjection_Base):
         # FIX: UPDATE WITH MODULATION_MODS
         # FIX: MOVE THIS TO MappingProjection.__init__;
         # FIX: AS IT IS, OVER-WRITES USER ASSIGNMENT OF FUNCTION IN params dict FOR MappingProjection
-        matrix = get_matrix(self._parameter_ports[MATRIX].value)
-        initial_rate = matrix * 0.0
+        # TODO: why is this using the value not the variable? if there isn't a
+        # specific reason, it should be variable, but this affects the values
+        # tests/mechanisms/test_gating_mechanism.py::test_gating_with_composition
+        new_variable = copy.deepcopy(self._parameter_ports[MATRIX].defaults.value)
+        initial_rate = new_variable * 0.0
 
         # KDM 7/11/19: instead of simply setting the function, we need to reinstantiate to ensure
         # new defaults get set properly
         self._parameter_ports[MATRIX]._instantiate_function(
             function=AccumulatorIntegrator(
                 owner=self._parameter_ports[MATRIX],
-                default_variable=matrix,
-                initializer=matrix,
+                default_variable=new_variable,
+                initializer=new_variable,
                 # rate=initial_rate
             ),
             context=context
