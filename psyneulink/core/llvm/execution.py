@@ -619,3 +619,43 @@ class CompExecution(CUDAExecution):
         # Copy the data struct from the device
         ct_out = self.download_ctype(data_out, output_type, 'result')
         return _convert_ctype_to_python(ct_out)
+
+    def cuda_evaluate(self, variable, search_space):
+        ocm = self._composition.controller
+        assert len(self._execution_contexts) == 1
+        context = self._execution_contexts[0]
+        import itertools
+
+        bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset({"evaluate"}))
+        self.__bin_func = bin_func
+        assert len(bin_func.byref_arg_types) == 8
+
+        # There are 8 arguments to evaluate:
+        # param, state, allocations, results, output, input, comp_params, comp_state, comp_data
+        # all but #2 and #3 are shared
+        ct_param = bin_func.byref_arg_types[0](*ocm._get_evaluate_param_initializer(context))
+        ct_state = bin_func.byref_arg_types[1](*ocm._get_evaluate_state_initializer(context))
+        # Make sure the dtype matches _gen_llvm_evaluate_function
+        allocations = np.asfarray(np.atleast_2d([*itertools.product(*search_space)]))
+        ct_allocations = allocations.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[2] * len(allocations)))
+        out_ty = bin_func.byref_arg_types[3] * len(allocations)
+        ct_in = variable.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[4]))
+
+        ct_comp_param = bin_func.byref_arg_types[5](*ocm.agent_rep._get_param_initializer(context))
+        ct_comp_state = bin_func.byref_arg_types[6](*ocm.agent_rep._get_state_initializer(context))
+        ct_comp_data = bin_func.byref_arg_types[7](*ocm.agent_rep._get_data_initializer(context))
+
+        cuda_args = (self.upload_ctype(ct_param, 'params'),
+                     self.upload_ctype(ct_state, 'state'),
+                     self.upload_ctype(ct_allocations.contents, 'input'),
+                     jit_engine.pycuda.driver.mem_alloc(ctypes.sizeof(out_ty)),
+                     self.upload_ctype(ct_in.contents, 'input'),
+                     self.upload_ctype(ct_comp_param, 'params'),
+                     self.upload_ctype(ct_comp_state, 'state'),
+                     self.upload_ctype(ct_comp_data, 'data'),
+                    )
+
+        bin_func.cuda_call(*cuda_args, threads=len(allocations))
+        ct_results = self.download_ctype(cuda_args[3], out_ty, 'result')
+
+        return ct_allocations.contents, ct_results

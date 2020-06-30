@@ -3,13 +3,15 @@ ModulatoryMechanism
 
 .. _ModulatoryMechanism_Subtypes:
 
-*Subclasses*
+.. container:: subclasses
 
-.. toctree::
-   :maxdepth: 1
+    *Subclasses*
 
-   ControlMechanism
-   LearningMechanism
+    .. toctree::
+       :maxdepth: 1
+
+       ControlMechanism
+       LearningMechanism
 
 .. automodule:: psyneulink.core.components.mechanisms.modulatory.modulatorymechanism
    :members:

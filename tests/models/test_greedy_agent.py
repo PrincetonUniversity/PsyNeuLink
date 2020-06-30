@@ -120,6 +120,7 @@ def test_simplified_greedy_agent_random(benchmark, mode):
 @pytest.mark.model
 @pytest.mark.benchmark(group="Predator Prey")
 @pytest.mark.parametrize("mode", ['Python',
+     pytest.param('Python-PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
      pytest.param('LLVM', marks=[pytest.mark.llvm]),
      pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
      pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
@@ -128,10 +129,15 @@ def test_simplified_greedy_agent_random(benchmark, mode):
      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
 @pytest.mark.parametrize("samples", [[0,10],
+    pytest.param([a / 10.0 for a in range(0, 101)]),
     pytest.param([0,3,6,10], marks=pytest.mark.stress),
     pytest.param([0,2,4,6,8,10], marks=pytest.mark.stress),
-], ids=['2','4','6'])
+], ids=lambda x: len(x))
 def test_predator_prey(benchmark, mode, samples):
+    if len(samples) > 10 and mode not in {"LLVMRun", "Python-PTX"}:
+        pytest.skip("This test takes too long")
+    # OCM default mode is Python
+    mode, ocm_mode = (mode + "-Python").split('-')[0:2]
     benchmark.group = "Predator-Prey " + str(len(samples))
     obs_len = 3
     obs_coords = 2
@@ -188,7 +194,7 @@ def test_predator_prey(benchmark, mode, samples):
                                        )
     agent_comp.add_controller(ocm)
     agent_comp.enable_controller = True
-    ocm.comp_execution_mode = mode
+    ocm.comp_execution_mode = ocm_mode
 
     input_dict = {player_obs:[[1.1576537,  0.60782117]],
                   predator_obs:[[-0.03479106, -0.47666293]],

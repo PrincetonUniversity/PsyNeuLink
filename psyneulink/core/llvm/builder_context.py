@@ -324,7 +324,10 @@ def _gen_cuda_kernel_wrapper_module(function):
 
     decl_f = ir.Function(module, function.type.pointee, function.name)
     assert decl_f.is_declaration
-    kernel_func = ir.Function(module, function.type.pointee, function.name + "_cuda_kernel")
+
+    wrapper_type = ir.FunctionType(ir.VoidType(), (*function.type.pointee.args,
+                                                   ir.IntType(32)))
+    kernel_func = ir.Function(module, wrapper_type, function.name + "_cuda_kernel")
     block = kernel_func.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
 
@@ -336,27 +339,48 @@ def _gen_cuda_kernel_wrapper_module(function):
     global_id = builder.mul(builder.call(ctaid_x_f, []), builder.call(ntid_x_f, []))
     global_id = builder.add(global_id, builder.call(tid_x_f, []))
 
+    # Check global id and exit if we're over
+    should_quit = builder.icmp_unsigned(">=", global_id, kernel_func.args[-1])
+    with builder.if_then(should_quit):
+        builder.ret_void()
+
+    # Index all pointer arguments. Ignore the thread count argument
+    args = list(kernel_func.args)[:-1]
+    indexed_args = []
+
+    is_grid_evaluate = len(args) == 8
+    if is_grid_evaluate:
+        # There are 8 arguments to evaluate:
+        # param, state, allocations, output, input, comp_state, comp_param, comp_data
+        # state (#1) needs to be copied, compoition state and data are copied in evaluate
+        private_state = builder.alloca(args[0].type.pointee)
+        builder.store(builder.load(args[0]), private_state)
+        args[0] = private_state
+
     # Runs need special handling. data_in and data_out are one dimensional,
     # but hold entries for all parallel invocations.
-    is_comp_run = len(kernel_func.args) == 7
+    is_comp_run = len(args) == 7
     if is_comp_run:
-        runs_count = kernel_func.args[5]
-        input_count = kernel_func.args[6]
+        runs_count = args[5]
+        input_count = args[6]
 
-    # Index all pointer arguments
-    indexed_args = []
-    for i, arg in enumerate(kernel_func.args):
+    for i, arg in enumerate(args):
         # Don't adjust #inputs and #trials
         if isinstance(arg.type, ir.PointerType):
             offset = global_id
-            # #runs and #trials needs to be the same
-            if is_comp_run and i >= 5:
-                offset = ir.IntType(32)(0)
-            # data arrays need special handling
-            elif is_comp_run and i == 4:  # data_out
-                offset = builder.mul(global_id, builder.load(runs_count))
-            elif is_comp_run and i == 3:  # data_in
-                offset = builder.mul(global_id, builder.load(input_count))
+            if is_comp_run:
+                # #runs and #trials needs to be the same
+                if i >= 5:
+                    offset = ir.IntType(32)(0)
+                # data arrays need special handling
+                elif is_comp_run and i == 4:  # data_out
+                    offset = builder.mul(global_id, builder.load(runs_count))
+                elif is_comp_run and i == 3:  # data_in
+                    offset = builder.mul(global_id, builder.load(input_count))
+            elif is_grid_evaluate:
+                # all but #2 and #3 are shared
+                if i != 2 and i != 3:
+                    offset = ir.IntType(32)(0)
 
             arg = builder.gep(arg, [offset])
 

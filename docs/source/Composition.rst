@@ -1,25 +1,30 @@
 Composition
 ===========
 
-*Subclasses*
+.. container:: subclasses
 
-.. toctree::
-   :maxdepth: 1
+    *Subclasses*
 
-   AutodiffComposition
-   CompositionFunctionApproximator
-|
-*Related*
+    .. toctree::
+       :maxdepth: 1
 
-* `NodeRoles <NodeRole>`
+       AutodiffComposition
+       CompositionFunctionApproximator
+    |
 
-.. toctree::
-   :maxdepth: 1
+.. container:: related
 
-   Pathway
-   Scheduling
-   Visualization
-|
+    *Related*
+
+    * `NodeRoles <NodeRole>`
+
+    .. toctree::
+       :maxdepth: 1
+
+       Pathway
+       Scheduling
+       Visualization
+
 .. automodule:: psyneulink.core.compositions.composition
    :members: Composition, NodeRole
    :private-members:
