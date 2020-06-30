@@ -843,7 +843,6 @@ class ShowGraph():
         from psyneulink.core.compositions.composition import Composition, NodeRole
 
         composition = self.composition
-        enclosing_g = enclosing_comp._show_graph.G if enclosing_comp else None
 
         # User passed attrs for nested Composition
         if isinstance(rcvr, Composition):
@@ -1751,7 +1750,6 @@ class ShowGraph():
 
         from psyneulink.core.compositions.composition import NodeRole
         composition = self.composition
-        enclosing_g = enclosing_comp._show_graph.G if enclosing_comp else None
 
         # Get learning_components, with exception of INPUT (i.e. TARGET) nodes
         #    (i.e., allow TARGET node to continue to be marked as an INPUT node)
