@@ -6409,9 +6409,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         objective_mechanism = PredictionErrorMechanism(name='PredictionError',
                                                         sample={NAME: SAMPLE,
-                                                                VARIABLE: output_source.defaults.value},
+                                                                VARIABLE: np.zeros_like(output_source.output_ports[0].defaults.value)},
                                                         target={NAME: TARGET,
-                                                                VARIABLE: output_source.defaults.value},
+                                                                VARIABLE: np.zeros_like(output_source.output_ports[0].defaults.value)},
                                                         function=PredictionErrorDeltaFunction(gamma=1.0))
 
         learning_mechanism = LearningMechanism(function=TDLearning(learning_rate=learning_rate),
