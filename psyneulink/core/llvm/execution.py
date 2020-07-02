@@ -540,7 +540,7 @@ class CompExecution(CUDAExecution):
 
         assert len(inputs) == len(self._execution_contexts)
         # Extract input for each trial and execution id
-        run_inputs = ((([x] for x in self._composition._build_variable_for_input_CIM({m:inp[m][i] for m in inp.keys()})) for i in range(num_input_sets)) for inp in inputs)
+        run_inputs = ((([x] for x in self._composition._build_variable_for_input_CIM({k:v[i] for k,v in inp.items()})) for i in range(num_input_sets)) for inp in inputs)
         return c_input(*_tupleize(run_inputs))
 
     def _get_generator_run_input_struct(self, inputs, runs):
