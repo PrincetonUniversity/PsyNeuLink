@@ -8288,6 +8288,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Reset gym forager environment for the current trial
         if self.env:
             trial_output = np.atleast_2d(self.env.reset())
+        else:
+            trial_output = None
 
         # Loop over the length of the list of inputs - each input represents a TRIAL
         for trial_num in range(num_trials):
