@@ -360,7 +360,6 @@ Class Reference
 """
 import logging
 import types
-
 from collections.abc import Iterable
 
 import numpy as np
@@ -383,7 +382,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, is_same_function_spec, object_has_single_value, get_global_seed
+from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, is_same_function_spec, object_has_single_value, get_global_seed
 
 from psyneulink.core import llvm as pnlvm
 
@@ -1041,7 +1040,7 @@ class DDM(ProcessingMechanism):
             if self.initialization_status != ContextFlags.INITIALIZING:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
 
-            return np.array([result[0], [result[1]]])
+            return convert_to_np_array([result[0], [result[1]]])
 
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         else:
@@ -1120,7 +1119,7 @@ class DDM(ProcessingMechanism):
             prob_upper_thr = builder.fsub(prob_lower_thr.type(1),
                                           prob_lower_thr)
             builder.store(prob_upper_thr, dst)
-            
+
             # Load function threshold
             threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self.function,
                                                         params, THRESHOLD)
@@ -1191,7 +1190,7 @@ class DDM(ProcessingMechanism):
             )
             return True
         return False
-    
+
     def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
         # Setup pointers to internal function
         func_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, 'function')

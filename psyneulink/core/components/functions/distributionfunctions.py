@@ -35,7 +35,7 @@ from psyneulink.core.globals.keywords import \
     EXPONENTIAL_DIST_FUNCTION, GAMMA_DIST_FUNCTION, HIGH, LOW, MULTIPLICATIVE_PARAM, NOISE, NORMAL_DIST_FUNCTION, \
     SCALE, STANDARD_DEVIATION, THRESHOLD, UNIFORM_DIST_FUNCTION, WALD_DIST_FUNCTION
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
+from psyneulink.core.globals.utilities import convert_to_np_array, parameter_spec, get_global_seed
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
 from psyneulink.core.globals.parameters import Parameter
@@ -1265,9 +1265,15 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                     exp_neg2_ztilde_atilde = np.exp(-2 * ztilde * atilde)
 
                     if self.shenhav_et_al_compat_mode:
-                        exp_neg2_x0tilde_atilde = np.nanmax([1e-12, exp_neg2_x0tilde_atilde])
-                        exp_2_ztilde_atilde = np.nanmin([1e12, exp_2_ztilde_atilde])
-                        exp_neg2_ztilde_atilde = np.nanmax([1e-12, exp_neg2_ztilde_atilde])
+                        exp_neg2_x0tilde_atilde = np.nanmax(
+                            convert_to_np_array([1e-12, exp_neg2_x0tilde_atilde])
+                        )
+                        exp_2_ztilde_atilde = np.nanmin(
+                            convert_to_np_array([1e12, exp_2_ztilde_atilde])
+                        )
+                        exp_neg2_ztilde_atilde = np.nanmax(
+                            convert_to_np_array([1e-12, exp_neg2_ztilde_atilde])
+                        )
 
                     rt = ztilde * np.tanh(ztilde * atilde) + \
                          ((2 * ztilde * (1 - exp_neg2_x0tilde_atilde)) / (

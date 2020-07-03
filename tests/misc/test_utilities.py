@@ -8,7 +8,7 @@ from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, 
 @pytest.mark.parametrize(
     'arr, expected',
     [
-        ([[0], [0, 0]], np.array([np.array([0]), np.array([0, 0])])),
+        ([[0], [0, 0]], np.array([np.array([0]), np.array([0, 0])], dtype=object)),
         # should test these but numpy cannot easily create an array from them
         # [np.ones((2,2)), np.zeros((2,1))]
         # [np.array([[0]]), np.array([[[ 1.,  1.,  1.], [ 1.,  1.,  1.]]])]

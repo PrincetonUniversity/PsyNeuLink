@@ -232,14 +232,16 @@ class TestLog:
 
         result = T_1.log.nparray(entries=['mod_noise', 'RESULT'], header=False, owner_name=True)
         assert result[0] == PS.default_execution_id
-        np.testing.assert_array_equal(result[1][0],
-                                      np.array([[[0], [1], [2]],
-                                                [[ 0.], [ 0.], [ 0.]],
-                                                [[ 0.], [ 0.], [ 0.]],
-                                                [[ 0.], [ 0.], [ 0.]],
-                                                [[ 0.0], [ 0.0],[ 0.0]],
-                                                [[ 0.,  0.], [ 1.,  2.],[ 3., 4.]],
-                                                ]))
+
+        expected = [
+            [[0], [1], [2]],
+            [[0.], [0.], [0.]],
+            [[0.], [0.], [0.]],
+            [[0.], [0.], [0.]],
+            [[0.0], [0.0], [0.0]],
+            [[0., 0.], [1., 2.], [3., 4.]],
+        ]
+        assert result[1][0] == expected
 
     def test_log_initialization(self):
         T = pnl.TransferMechanism(

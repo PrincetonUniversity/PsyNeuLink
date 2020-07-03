@@ -43,7 +43,7 @@ from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EXPONENTS, LINEAR_COMBINATION_FUNCTION, MULTIPLICATIVE_PARAM, OFFSET, OPERATION, \
     PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
     PREFERENCE_SET_NAME
-from psyneulink.core.globals.utilities import is_numeric, np_array_less_than_2d, parameter_spec
+from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, np_array_less_than_2d, parameter_spec
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import \
@@ -552,7 +552,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                     for index in item:
                         stack.append(variable[index])
                     result.append(np.hstack(tuple(stack)))
-                result = np.array(result) * scale + offset
+                result = convert_to_np_array(result) * scale + offset
             except IndexError:
                 assert False, f"PROGRAM ERROR: Bad index specified in {repr(ARRANGEMENT)} arg -- " \
                     f"should have been caught in _validate_params or _instantiate_attributes_before_function"

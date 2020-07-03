@@ -585,7 +585,7 @@ class BayesGLM(LearningFunction):
 
 
         variable = self._check_args(
-            [np.atleast_2d(variable[0]), np.atleast_2d(variable[1])],
+            [convert_to_np_array(variable[0], dimension=2), convert_to_np_array(variable[1], dimension=2)],
             params,
             context,
         )
