@@ -37,7 +37,7 @@ def test_random_int(benchmark, mode):
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
         state = init_fun.byref_arg_types[0]()
         gpu_state = pnlvm.jit_engine.pycuda.driver.to_device(bytearray(state))
-        init_fun.cuda_call(gpu_state, np.int64(SEED))
+        init_fun.cuda_call(gpu_state, np.int32(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_int32')
         out = np.asarray([0], dtype=np.int64)
@@ -81,7 +81,7 @@ def test_random_float(benchmark, mode):
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
         state = init_fun.byref_arg_types[0]()
         gpu_state = pnlvm.jit_engine.pycuda.driver.to_device(bytearray(state))
-        init_fun.cuda_call(gpu_state, np.int64(SEED))
+        init_fun.cuda_call(gpu_state, np.int32(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_double')
         out = np.asfarray([0.0], dtype=np.float64)
@@ -120,7 +120,7 @@ def test_random_normal(benchmark, mode):
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
         state = init_fun.byref_arg_types[0]()
         gpu_state = pnlvm.jit_engine.pycuda.driver.to_device(bytearray(state))
-        init_fun.cuda_call(gpu_state, np.int64(SEED))
+        init_fun.cuda_call(gpu_state, np.int32(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_normal')
         out = np.asfarray([0.0], dtype=np.float64)
