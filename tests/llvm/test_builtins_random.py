@@ -35,8 +35,8 @@ def test_random_int(benchmark, mode):
             return out.value
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
-        state = init_fun.byref_arg_types[0]()
-        gpu_state = pnlvm.jit_engine.pycuda.driver.to_device(bytearray(state))
+        state_size = ctypes.sizeof(init_fun.byref_arg_types[0])
+        gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
         init_fun.cuda_call(gpu_state, np.int32(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_int32')
@@ -79,8 +79,8 @@ def test_random_float(benchmark, mode):
             return out.value
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
-        state = init_fun.byref_arg_types[0]()
-        gpu_state = pnlvm.jit_engine.pycuda.driver.to_device(bytearray(state))
+        state_size = ctypes.sizeof(init_fun.byref_arg_types[0])
+        gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
         init_fun.cuda_call(gpu_state, np.int32(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_double')
@@ -118,8 +118,8 @@ def test_random_normal(benchmark, mode):
             return out.value
     elif mode == 'PTX':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_init')
-        state = init_fun.byref_arg_types[0]()
-        gpu_state = pnlvm.jit_engine.pycuda.driver.to_device(bytearray(state))
+        state_size = ctypes.sizeof(init_fun.byref_arg_types[0])
+        gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
         init_fun.cuda_call(gpu_state, np.int32(SEED))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_mt_rand_normal')
