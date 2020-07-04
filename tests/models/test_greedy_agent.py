@@ -20,7 +20,6 @@ from psyneulink.core.globals.keywords import VARIANCE, NORMED_L0_SIMILARITY
     pytest.param('LLVM', marks=[pytest.mark.llvm]),
     pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
     pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
 def test_simplified_greedy_agent(benchmark, mode):
@@ -71,7 +70,6 @@ def test_simplified_greedy_agent(benchmark, mode):
     pytest.param('LLVM', marks=[pytest.mark.llvm]),
     pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
     pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
 def test_simplified_greedy_agent_random(benchmark, mode):
@@ -124,7 +122,6 @@ def test_simplified_greedy_agent_random(benchmark, mode):
      pytest.param('LLVM', marks=[pytest.mark.llvm]),
      pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
      pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-     pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
