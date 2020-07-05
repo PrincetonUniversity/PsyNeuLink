@@ -1639,7 +1639,7 @@ class GridSearch(OptimizationFunction):
         # Compiled evaluate expects the same variable as mech function
         new_variable = [np.asfarray(ip.parameters.value.get(context))
                         for ip in ocm.input_ports]
-        new_variable = np.atleast_2d(new_variable)
+        new_variable = np.array(new_variable, dtype=np.object)
         # Map allocations to values
         comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
         ct_alloc, ct_values = comp_exec.cuda_evaluate(new_variable,
