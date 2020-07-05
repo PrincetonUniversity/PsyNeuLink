@@ -601,7 +601,7 @@ def tensor_power(items, levels:tc.optional(range)=None, flat=False):
     levels = levels or range(1,max_levels)
     max_spec = max(list(levels))
     min_spec = min(list(levels))
-    if  max_spec > max_levels:
+    if max_spec > max_levels:
         raise UtilitiesError("range ({},{}) specified for {} arg of tensor_power() "
                              "exceeds max for items specified ({})".
                              format(min_spec, max_spec + 1, repr('levels'), max_levels + 1))

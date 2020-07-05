@@ -347,7 +347,7 @@ class AGTControlMechanism(ControlMechanism):
         self.objective_mechanism.function.short_term_bias = value
 
     @property
-    def    long_term_bias(self):
+    def long_term_bias(self):
         return self.objective_mechanism.function._long_term_bias
 
     @long_term_bias.setter
@@ -355,7 +355,7 @@ class AGTControlMechanism(ControlMechanism):
         self.objective_mechanism.function.long_term_bias = value
 
     @property
-    def    short_term_rate(self):
+    def short_term_rate(self):
         return self.objective_mechanism.function._short_term_rate
 
     @short_term_rate.setter
@@ -363,7 +363,7 @@ class AGTControlMechanism(ControlMechanism):
         self.objective_mechanism.function.short_term_rate = value
 
     @property
-    def    long_term_rate(self):
+    def long_term_rate(self):
         return self.objective_mechanism.function._long_term_rate
 
     @long_term_rate.setter

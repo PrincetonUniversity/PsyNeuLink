@@ -236,7 +236,7 @@ class PreferenceSet(object):
         # REGISTER
         # FIX: MAKE SURE THIS MAKES SENSE
 
-        from psyneulink.core.globals.registry import  register_category
+        from psyneulink.core.globals.registry import register_category
         register_category(entry=self,
                           base_class=PreferenceSet,
                           name=name,

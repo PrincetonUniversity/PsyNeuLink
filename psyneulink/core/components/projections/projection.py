@@ -1844,7 +1844,7 @@ def _validate_connection_request(
             if connectee_port is OutputPort and isinstance(projection_spec, (GatingProjection, ControlProjection)):
                 projection_socket = SENDER
             projection_socket_port = getattr(projection_spec, projection_socket)
-            if  issubclass(projection_socket_port.__class__, connect_with_ports):
+            if issubclass(projection_socket_port.__class__, connect_with_ports):
                 return True
 
         # None of the above worked, so must be incompatible

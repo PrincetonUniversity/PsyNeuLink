@@ -1178,7 +1178,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                 # Validate that the receiver of the LearningProjection (if specified)
                 #     is a MappingProjection and in the same System as self (if specified)
                 if learning_signal[PARAMS] and PROJECTIONS in learning_signal[PARAMS]:
-                    for learning_projection in  learning_signal[PARAMS][PROJECTIONS]:
+                    for learning_projection in learning_signal[PARAMS][PROJECTIONS]:
                         _validate_receiver(sender_mech=self,
                                            projection=learning_projection,
                                            expected_owner_type=MappingProjection,

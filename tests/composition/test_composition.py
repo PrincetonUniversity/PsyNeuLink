@@ -6456,7 +6456,7 @@ class TestNodeRoles:
         assert set(comp.get_nodes_by_role(NodeRole.INTERNAL)) == {B}
         assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER)) == {A}
 
-    def  test_branch(self):
+    def test_branch(self):
         a = TransferMechanism(default_variable=[0, 0])
         b = TransferMechanism()
         c = TransferMechanism()
