@@ -1579,7 +1579,7 @@ in order of their power, are:
 of the following modes in the **bin_execute** argument of a `Composition execution method
 <Composition_Execution_Methods>`:
 
-    * *PTX|PTXExec|PTXRun* -- equivalent to the LLVM counterparts but run in a single thread of a CUDA capable GPU.
+    * *PTXExec|PTXRun* -- equivalent to the LLVM counterparts but run in a single thread of a CUDA capable GPU.
 
 This requires that a working `pycuda package <https://documen.tician.de/pycuda/>`_ is
 `installed <https://wiki.tiker.net/PyCuda/Installation>`_, and that CUDA execution is explicitly enabled by setting
