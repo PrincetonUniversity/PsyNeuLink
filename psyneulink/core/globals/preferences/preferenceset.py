@@ -610,7 +610,7 @@ class PreferenceSet(object):
         # * this prevents use of LogEntry attributes not recognized by, or having different values from
         #     the LogEntry class in the owner object's module
         if (not pref_set.owner.name == DEFAULT_PREFERENCE_SET_OWNER and
-                not candidate_log_class.__module__ is pref_set.owner.__module__):
+                candidate_log_class.__module__ is not pref_set.owner.__module__):
             raise PreferenceSetError("Attempt to assign logPref setting for {0} using value ({1}) from LogEntry"
                                      " in {2} which is different than the one defined in Globals.Log"
                                      " or the module ({3}) in which the class of {0} ({4}) was declared".

@@ -1190,7 +1190,7 @@ class ShowGraph():
                         # Get label for Node that receives the input (rcvr_label)
                         rcvr_input_node_proj = proj.receiver
                         if (isinstance(rcvr_input_node_proj.owner, CompositionInterfaceMechanism)
-                                and not show_nested is NESTED):
+                                and show_nested is not NESTED):
                             rcvr_input_node_proj_owner = rcvr_input_node_proj.owner.composition
                         else:
                             rcvr_input_node_proj_owner = rcvr_input_node_proj.owner
@@ -1288,7 +1288,7 @@ class ShowGraph():
                         # Get label for Node that receives modulation (modulated_mech_label)
                         rcvr_modulated_mech_proj = proj.receiver
                         if (isinstance(rcvr_modulated_mech_proj.owner, CompositionInterfaceMechanism)
-                                and not show_nested is NESTED):
+                                and show_nested is not NESTED):
                             rcvr_modulated_mech_proj_owner = rcvr_modulated_mech_proj.owner.composition
                         else:
                             rcvr_modulated_mech_proj_owner = rcvr_modulated_mech_proj.owner
@@ -1305,7 +1305,7 @@ class ShowGraph():
                             # Get label for CIM's port as edge's sender
                             sndr_param_cim_proj_label = f"{cim_label}:{OutputPort.__name__}-{proj.sender.name}"
                             if (isinstance(rcvr_modulated_mech_proj_owner, Composition)
-                                    and not show_nested is not NESTED):
+                                    and show_nested is NESTED):
                                 rcvr_modulated_mec_proj_label = rcvr_label
                             else:
                                 # Need to use direct reference to proj.receiver rather than rcvr_modulated_mech_proj
@@ -1340,7 +1340,7 @@ class ShowGraph():
 
                         sndr_output_node_proj = proj.sender
                         if (isinstance(sndr_output_node_proj.owner, CompositionInterfaceMechanism)
-                                and not show_nested is NESTED):
+                                and show_nested is not NESTED):
                             sndr_output_node_proj_owner = sndr_output_node_proj.owner.composition
                         else:
                             sndr_output_node_proj_owner = sndr_output_node_proj.owner

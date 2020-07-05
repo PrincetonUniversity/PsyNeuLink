@@ -4028,7 +4028,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #   consideration set.  Identifying these assumes that graph_processing has been called/updated,
         #   which identifies and "breaks" cycles, and assigns FEEDBACK_SENDER to the appropriate consideration set(s).
         for node in self.nodes:
-            if not any([efferent for efferent in node.efferents if not efferent.receiver.owner is self.output_CIM]):
+            if not any([efferent for efferent in node.efferents if efferent.receiver.owner is not self.output_CIM]):
                 self._add_node_role(node, NodeRole.TERMINAL)
 
     def _determine_node_roles(self, context=None):
@@ -7600,7 +7600,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # see if the entire stimulus set provided is a valid input for the node (i.e. in the case of a call with a
             # single trial of provided input)
             node_input = self._validate_single_input(node, stimulus)
-            if not node_input is None:
+            if node_input is not None:
                 node_input = [node_input]
             else:
                 # if node_input is None, it means there are multiple trials of input in the stimulus set, so loop

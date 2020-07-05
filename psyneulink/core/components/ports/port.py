@@ -1701,7 +1701,7 @@ class Port_Base(Port):
 
             # Validate that receiver and projection_spec receiver are now the same
             receiver = proj_recvr or receiver  # If receiver was not specified, assign it receiver from projection_spec
-            if proj_recvr and receiver and not proj_recvr is receiver:
+            if proj_recvr and receiver and proj_recvr is not receiver:
                 # Note: if proj_recvr is None, it will be assigned under handling of deferred_init below
                 raise PortError("Receiver ({}) specified for Projection ({}) "
                                  "is not the same as the one specified in {} ({})".
@@ -2606,7 +2606,7 @@ def _instantiate_port(port_type:_is_port_class,           # Port's type
                              format(port.name, port.value, REFERENCE_VALUE, reference_value, owner.name))
 
         # Port has already been assigned to an owner
-        if port.owner is not None and not port.owner is owner:
+        if port.owner is not None and port.owner is not owner:
             raise PortError("Port {} does not belong to the owner for which it is specified ({})".
                              format(port.name, owner.name))
         return port
