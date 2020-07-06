@@ -516,7 +516,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import append_type_to_name, is_numeric, iscompatible, kwCompatibilityLength
+from psyneulink.core.globals.utilities import append_type_to_name, convert_to_np_array, is_numeric, iscompatible, kwCompatibilityLength
 
 __all__ = [
     'InputPort', 'InputPortError', 'port_type_keywords', 'SHADOW_INPUTS',
@@ -976,7 +976,7 @@ class InputPort(Port_Base):
         ]
 
         if len(path_proj_values) > 0:
-            return  np.asarray(path_proj_values)
+            return convert_to_np_array(path_proj_values)
         else:
             return None
 

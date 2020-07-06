@@ -1579,7 +1579,7 @@ in order of their power, are:
 of the following modes in the **bin_execute** argument of a `Composition execution method
 <Composition_Execution_Methods>`:
 
-    * *PTX|PTXExec|PTXRun* -- equivalent to the LLVM counterparts but run in a single thread of a CUDA capable GPU.
+    * *PTXExec|PTXRun* -- equivalent to the LLVM counterparts but run in a single thread of a CUDA capable GPU.
 
 This requires that a working `pycuda package <https://documen.tician.de/pycuda/>`_ is
 `installed <https://wiki.tiker.net/PyCuda/Installation>`_, and that CUDA execution is explicitly enabled by setting
@@ -2391,7 +2391,7 @@ from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, call_with_pruned_args, convert_to_list, merge_dictionaries
+    ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array, merge_dictionaries
 from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -3066,13 +3066,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     input_CIM_ports : dict
         a dictionary in which the key of each entry is the `InputPort` of an `INPUT` `Node <Composition_Nodes>` in
         the Composition, and its value is a list containing two items:
-        
+
         - the `InputPort` of the `input_CIM <Composition.input_CIM>` that receives the input destined for that `INPUT`
           Node -- either from the `input <Composition_Execution_Inputs>` specified for the Node in a call to one of the
           Composition's `execution methods <Composition_Execution_Methods>`, or from a `MappingProjection` from a
           Node in an `enclosing Composition <Composition_Nested>` that has specified the `INPUT` Node as its `receiver
           <Projection_Base.receiver>`;
-        
+
         - the `OutputPort` of the `input_CIM <Composition.input_CIM>` that sends a `MappingProjection` to the
           `InputPort` of the `INPUT` Node.
 
@@ -3116,10 +3116,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     output_CIM_ports : dict
         a dictionary in which the key of each entry is the `OutputPort` of an `OUTPUT` `Node <Composition_Nodes>` in
         the Composition, and its value is a list containing two items:
-        
+
         - the `InputPort` of the output_CIM that receives a `MappingProjection` from the `OutputPort` of the `OUTPUT`
           Node;
-        
+
         - the `OutputPort` of the `output_CIM <Composition.output_CIM>` that is either recorded in the `results
           <Composition.results>` attrribute of the Composition, or sends a `MappingProjection` to a Node in the
           `enclosing Composition <Composition_Nested>` that has specified the `OUTPUT` Node as its `sender
@@ -7197,7 +7197,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                 )
 
             # Get control signal costs
-            all_costs = self.controller.parameters.costs._get(context) + [reconfiguration_cost]
+            all_costs = convert_to_np_array(self.controller.parameters.costs._get(context) + [reconfiguration_cost])
             # Compute a total for the candidate control signal(s)
             total_cost = self.controller.combine_costs(all_costs)
         return total_cost
@@ -7564,7 +7564,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         match_type = self._input_matches_variable(input, node_variable)
         if match_type == 'homogeneous':
             # np.atleast_2d will catch any single-input ports specified without an outer list
-            _input = np.atleast_2d(input)
+            _input = convert_to_np_array(input, 2)
         elif match_type == 'heterogeneous':
             _input = input
         else:
@@ -9202,11 +9202,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return All(*cond)
 
     def _input_matches_variable(self, input_value, var):
+        var_shape = convert_to_np_array(var).shape
         # input_value ports are uniform
-        if np.shape(np.atleast_2d(input_value)) == np.shape(var):
+        if convert_to_np_array(input_value, dimension=2).shape == var_shape:
             return "homogeneous"
         # input_value ports have different lengths
-        elif len(np.shape(var)) == 1 and isinstance(var[0], (list, np.ndarray)):
+        elif len(var_shape) == 1 and isinstance(var[0], (list, np.ndarray)):
             for i in range(len(input_value)):
                 if len(input_value[i]) != len(var[i]):
                     return False

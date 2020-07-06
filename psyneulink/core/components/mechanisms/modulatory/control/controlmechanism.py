@@ -587,7 +587,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, copy_iterable_with_shared, is_iterable
+from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, convert_to_np_array, copy_iterable_with_shared, is_iterable
 
 __all__ = [
     'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry',
@@ -674,9 +674,13 @@ def validate_monitored_port_spec(owner, spec_list):
 def _control_mechanism_costs_getter(owning_component=None, context=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
     try:
-        costs = [c.compute_costs(c.parameters.value._get(context), context=context)
-                 for c in owning_component.control_signals
-                 if hasattr(c, 'compute_costs')] # GatingSignals don't have cost fcts
+        costs = [
+            convert_to_np_array(
+                c.compute_costs(c.parameters.value._get(context), context=context)
+            )
+            for c in owning_component.control_signals
+            if hasattr(c, 'compute_costs')
+        ] # GatingSignals don't have cost fcts
         return costs
 
     except TypeError:
@@ -692,8 +696,10 @@ def _net_outcome_getter(owning_component=None, context=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not included in the net_outcome
     try:
         c = owning_component
-        return c.compute_net_outcome(c.parameters.outcome._get(context),
-                                     c.combine_costs(c.parameters.costs._get(context)))
+        return c.compute_net_outcome(
+            c.parameters.outcome._get(context),
+            c.combine_costs()
+        )
     except TypeError:
         return [0]
 

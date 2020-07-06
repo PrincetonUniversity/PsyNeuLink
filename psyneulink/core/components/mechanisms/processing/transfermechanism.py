@@ -1080,6 +1080,10 @@ class TransferMechanism(ProcessingMechanism_Base):
             structural=True,
         )
 
+        def _validate_variable(self, variable):
+            if 'U' in str(variable.dtype):
+                return 'may not contain non-numeric entries'
+
         def _validate_integrator_mode(self, integrator_mode):
             if not isinstance(integrator_mode, bool):
                 return 'may only be True or False.'

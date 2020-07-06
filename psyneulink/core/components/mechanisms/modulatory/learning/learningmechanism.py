@@ -550,7 +550,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, is_numeric, parameter_spec, convert_to_list
+from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_np_array, is_numeric, parameter_spec, convert_to_list
 
 __all__ = [
     'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX',
@@ -1352,9 +1352,13 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         # Compute learning_signal for each error_signal (and corresponding error-Matrix):
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
-            function_variable = np.array([variable[ACTIVATION_INPUT_INDEX],
-                                          variable[ACTIVATION_OUTPUT_INDEX],
-                                          error_signal_input])
+            function_variable = convert_to_np_array(
+                [
+                    variable[ACTIVATION_INPUT_INDEX],
+                    variable[ACTIVATION_OUTPUT_INDEX],
+                    error_signal_input
+                ]
+            )
             learning_signal, error_signal = super()._execute(variable=function_variable,
             # MODIFIED CROSS_PATHWAYS 7/22/19 END
                                                              context=context,

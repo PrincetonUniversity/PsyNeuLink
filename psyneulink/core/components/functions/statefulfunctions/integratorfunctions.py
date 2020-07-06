@@ -44,7 +44,7 @@ from psyneulink.core.globals.keywords import \
     INCREMENT, INITIALIZER, INPUT_PORTS, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
     INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, \
     MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_PORTS, PRODUCT, \
-    RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD
+    RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, iscompatible, get_global_seed
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
@@ -1203,7 +1203,12 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         previous_value = self.get_previous_value(context)
         # MODIFIED 6/14/19 END
 
-        value = self._EWMA_filter(previous_value, rate, variable) + noise
+        try:
+            value = self._EWMA_filter(previous_value, rate, variable) + noise
+        except TypeError:
+            # TODO: this should be standardized along with the other instances
+            # of this error
+            raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
 
         adjusted_value = value + offset
 

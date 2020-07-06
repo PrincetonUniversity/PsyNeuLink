@@ -1353,9 +1353,10 @@ class Parameter(types.SimpleNamespace):
     # in the interface for user simplicity: that is, inheritable (by this Parameter's children or from its parent),
     # visible in a Parameter's repr, and easily settable by the user
     def _set_default_value(self, value):
+        value = self._parse(value)
         self._validate(value)
 
-        super().__setattr__('default_value', self._parse(value))
+        super().__setattr__('default_value', value)
 
     def _set_history_max_length(self, value):
         if value < self.history_min_length:

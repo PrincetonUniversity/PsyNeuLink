@@ -16,6 +16,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX, RESULT
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.core.globals.utilities import UtilitiesError
+from psyneulink.core.globals.parameters import ParameterError
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferError, RecurrentTransferMechanism
@@ -218,23 +219,23 @@ class TestRecurrentTransferMechanismInputs:
         np.testing.assert_allclose(val, [[10.]])
 
     def test_recurrent_mech_inputs_list_of_strings(self):
-        with pytest.raises(UtilitiesError) as error_text:
+        with pytest.raises(FunctionError) as error_text:
             R = RecurrentTransferMechanism(
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 integrator_mode=True
             )
             R.execute(["one", "two", "three", "four"])
-        assert "has non-numeric entries" in str(error_text.value)
+        assert "Unrecognized type" in str(error_text.value)
 
     def test_recurrent_mech_var_list_of_strings(self):
-        with pytest.raises(UtilitiesError) as error_text:
+        with pytest.raises(ParameterError) as error_text:
             R = RecurrentTransferMechanism(
                 name='R',
                 default_variable=['a', 'b', 'c', 'd'],
                 integrator_mode=True
             )
-        assert "has non-numeric entries" in str(error_text.value)
+        assert "non-numeric entries" in str(error_text.value)
 
     def test_recurrent_mech_inputs_mismatched_with_default_longer(self):
         with pytest.raises(MechanismError) as error_text:
@@ -473,7 +474,7 @@ class TestRecurrentTransferMechanismMatrix:
         assert "must be the same as its variable" in str(error_text.value)
 
     def test_recurrent_mech_matrix_strings(self):
-        with pytest.raises(UtilitiesError) as error_text:
+        with pytest.raises(RecurrentTransferError) as error_text:
             R = RecurrentTransferMechanism(
                 name='R',
                 size=4,

@@ -161,7 +161,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
-    get_global_seed, object_has_single_value, parameter_spec, safe_len
+    convert_to_np_array, get_global_seed, object_has_single_value, parameter_spec, safe_len
 )
 
 __all__ = [
@@ -649,7 +649,7 @@ class Function_Base(Function):
             else:
                 output_type = self.output_type
 
-        value = np.asarray(value)
+        value = convert_to_np_array(value)
 
         # Type conversion (specified by output_type):
 
@@ -1006,7 +1006,7 @@ def get_matrix(specification, rows=1, cols=1, context=None):
 
     # Matrix provided (and validated in _validate_params); convert to array
     if isinstance(specification, (list, np.matrix)):
-        specification = np.array(specification)
+        return convert_to_np_array(specification)
 
     if isinstance(specification, np.ndarray):
         if specification.ndim == 2:

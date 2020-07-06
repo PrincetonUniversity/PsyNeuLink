@@ -752,7 +752,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             try:
                 if 'U' in repr(matrix.dtype):
-                    raise RecurrentTransferMechanism("{0} has non-numeric entries".format(matrix))
+                    raise RecurrentTransferError("{0} has non-numeric entries".format(matrix))
             except AttributeError:
                 pass
 

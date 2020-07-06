@@ -38,7 +38,7 @@ from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, ContentAddressableMemory_FUNCTION, \
     MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM
-from psyneulink.core.globals.utilities import all_within_range, parameter_spec, get_global_seed
+from psyneulink.core.globals.utilities import all_within_range, convert_to_np_array, parameter_spec, get_global_seed
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -330,7 +330,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         # Apply rate and/or noise, if they are specified, to all stored items
         if len(previous_value):
-            previous_value = previous_value * rate + noise
+            previous_value = convert_to_np_array(previous_value) * rate + noise
 
         previous_value = deque(previous_value, maxlen=self.parameters.history._get(context))
 
@@ -995,7 +995,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                     warnings.warn(f"Attempt to initialize memory of {self.__class__.__name__} with an entry ({entry}) "
                                   f"that has the same key as a previous one, while 'duplicate_keys'==False; "
                                   f"that entry has been skipped")
-            return np.asarray(self._memory)
+            return convert_to_np_array(self._memory)
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         self.parameters.previous_value._set(
@@ -1125,7 +1125,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # Return 3d array with keys and vals as lists
         # IMPLEMENTATION NOTE:  if try to create np.ndarray directly, and keys and vals have same length
         #                       end up with array of arrays, rather than array of lists
-        ret_val = np.array([list(memory[0]),[]])
+        ret_val = convert_to_np_array([list(memory[0]),[]])
         ret_val[1] = list(memory[1])
         return ret_val
 
@@ -1326,7 +1326,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
     def _parse_memories(self, memories, method, context=None):
         """Parse passing of single vs. multiple memories, validate memories, and return ndarray"""
-        memories = np.array(memories)
+        memories = convert_to_np_array(memories)
         if not 1 <= memories.ndim <= 3:
             raise FunctionError(f"'memories' arg for {method} method of {self.__class__.__name__} "
                                 f"must be a 2-item list or 2d array, or a list or 3d array containing those")

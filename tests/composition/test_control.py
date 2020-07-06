@@ -1039,7 +1039,6 @@ class TestControlMechanisms:
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_control_of_mech_port(self, mode):
@@ -1604,7 +1603,6 @@ class TestModelBasedOptimizationControlMechanisms:
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_model_based_ocm_after(self, benchmark, mode):
@@ -1651,7 +1649,6 @@ class TestModelBasedOptimizationControlMechanisms:
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_model_based_ocm_before(self, benchmark, mode):
