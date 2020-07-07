@@ -140,6 +140,7 @@ def init_builtins():
 
         # Matrix/Vector
         builtins.setup_vxm(ctx)
+        builtins.setup_mxm(ctx)
         builtins.setup_vxm_transposed(ctx)
         builtins.setup_vec_add(ctx)
         builtins.setup_vec_sum(ctx)
