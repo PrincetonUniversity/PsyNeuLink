@@ -492,15 +492,15 @@ class TestModels:
             # Turn off noise
             switch_noise(mechanisms, 0)
             # Execute once per trial
-            my_Stroop.termination_PATHWAYing = {pnl.TimeScale.TRIAL: pnl.AllHaveRun()}
+            my_Stroop.termination_processing = {pnl.TimeScale.TRIAL: pnl.AllHaveRun()}
 
-        def switch_to_PATHWAYing_trial(mechanisms):
+        def switch_to_processing_trial(mechanisms):
             # Turn on accumulation
             switch_integrator_mode(mechanisms, True)
             # Turn on noise
             switch_noise(mechanisms, psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function)
             # Execute until one of the accumulators crosses the threshold
-            my_Stroop.termination_PATHWAYing = {
+            my_Stroop.termination_processing = {
                 pnl.TimeScale.TRIAL: pnl.While(
                     pass_threshold,
                     respond_red_accumulator,
@@ -511,8 +511,8 @@ class TestModels:
 
         def switch_trial_type():
             # Next trial will be a processing trial
-            if isinstance(my_Stroop.termination_PATHWAYing[pnl.TimeScale.TRIAL], pnl.AllHaveRun):
-                switch_to_PATHWAYing_trial(mechanisms_to_update)
+            if isinstance(my_Stroop.termination_processing[pnl.TimeScale.TRIAL], pnl.AllHaveRun):
+                switch_to_processing_trial(mechanisms_to_update)
             # Next trial will be an initialization trial
             else:
                 switch_to_initialization_trial(mechanisms_to_update)
@@ -525,7 +525,7 @@ class TestModels:
         switch_to_initialization_trial(mechanisms_to_update)
 
         my_Stroop.run(inputs=trial_dict(0, 1, 1, 0, 1, 0),
-                      # termination_PATHWAYing=change_termination_PATHWAYing,
+                      # termination_processing=change_termination_processing,
                       num_trials=4,
                       call_after_trial=switch_trial_type)
 
