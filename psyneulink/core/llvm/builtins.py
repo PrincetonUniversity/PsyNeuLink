@@ -68,6 +68,53 @@ def setup_vxm(ctx):
 
     builder.ret_void()
 
+def setup_mxm(ctx):
+    # Setup types
+    double_ptr_ty = ctx.float_ty.as_pointer()
+    # Arguments
+    # 1) Matrix ptr (X by Y)
+    # 2) Matrix ptr (Y by Z)
+    # 3) X dimension size
+    # 4) Y dimension size
+    # 5) Z dimension size
+    # 6) Output matrix pointer
+    builder = _setup_builtin_func_builder(ctx, "mxm", (double_ptr_ty, double_ptr_ty, ctx.int32_ty, ctx.int32_ty, ctx.int32_ty, double_ptr_ty))
+    m1, m2, x, y, z, o = builder.function.args
+
+    # zero the output matrix
+    with helpers.for_loop_zero_inc(builder, x, "zero_outer") as (b1, index_i):
+        with helpers.for_loop_zero_inc(b1, z, "zero_inner") as (b2, index_j):
+            matrix_index = b2.mul(index_i, z)
+            matrix_index = b2.add(matrix_index, index_j)
+            matrix_ptr = b2.gep(o, [matrix_index])
+            b2.store(ctx.float_ty(0), matrix_ptr)
+
+    # Multiplication
+    with helpers.for_loop_zero_inc(builder, x, "mxm_outer") as (b1, index_i):
+        with helpers.for_loop_zero_inc(b1, y, "mxm_inner") as (b2, index_j):
+            with helpers.for_loop_zero_inc(b2, z, "mxm_inner_2") as (b3, index_k):
+                # Multiplication and accumulation
+                output_index = builder.mul(index_i, z)
+                output_index = builder.add(output_index, index_k)
+                out_ptr = builder.gep(o, [output_index])
+                out_el = builder.load(out_ptr)
+
+                m1_index = builder.mul(index_i, y)
+                m1_index = builder.add(m1_index, index_j)
+                m1_ptr = builder.gep(m1, [m1_index])
+                m1_el = builder.load(m1_ptr)
+
+                m2_index = builder.mul(index_j, z)
+                m2_index = builder.add(m2_index, index_k)
+                m2_ptr = builder.gep(m2, [m2_index])
+                m2_el = builder.load(m2_ptr)
+
+                new_el = builder.fmul(m1_el, m2_el)
+                new_el = builder.fadd(new_el, out_el)
+
+                builder.store(new_el, out_ptr)
+
+    builder.ret_void()
 
 def setup_vxm_transposed(ctx):
     # Setup types
