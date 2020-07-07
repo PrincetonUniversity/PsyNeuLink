@@ -32,7 +32,7 @@ env:
 # This needs to be explicit, 'cache: pip' only works with 'language: python'
 cache:
   directories:
-    - $HOME/.cache/pip
+    - $HOME/.cache/pip/wheels
 
 addons:
   apt:
