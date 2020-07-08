@@ -67,8 +67,6 @@ jobs:
       stage: precache
       env: PYTHON=3.6
       arch: s390x
-  allow_failures:
-    - arch: ppc64le
 
 env:
   jobs:
