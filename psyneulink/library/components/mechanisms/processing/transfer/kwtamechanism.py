@@ -493,7 +493,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
             if not isinstance(k_param, numbers.Real):
                 if not (isinstance(k_param, (np.ndarray, list)) and len(k_param) == 1):
                     raise KWTAError("k-value parameter ({}) for {} must be a single number".format(k_param, self))
-            if (isinstance(ratio_param, (np.ndarray, list)) and len(ratio_param) == 1):
+            if (isinstance(k_param, (np.ndarray, list)) and len(k_param) == 1):
                 k_num = k_param[0]
             else:
                 k_num = k_param
