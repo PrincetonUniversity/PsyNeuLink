@@ -202,7 +202,7 @@ class Identity(TransferFunction):  # -------------------------------------------
                  default_variable=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
@@ -369,11 +369,11 @@ class Linear(TransferFunction):  # ---------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 slope: tc.optional(parameter_spec) = None,
-                 intercept: tc.optional(parameter_spec) = None,
+                 slope: tc.optional(tc.optional(parameter_spec)) = None,
+                 intercept: tc.optional(tc.optional(parameter_spec)) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -627,13 +627,13 @@ class Exponential(TransferFunction):  # ----------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec = 1.0,
-                 scale: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
-                 offset: parameter_spec = 0.0,
+                 rate: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
+                 bias: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -907,14 +907,14 @@ class Logistic(TransferFunction):  # -------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: parameter_spec = 1.0,
-                 x_0=0.0,
-                 bias=0.0,
-                 offset: parameter_spec = 0.0,
-                 scale: parameter_spec = 1.0,
+                 gain: tc.optional(parameter_spec) = None,
+                 x_0=None,
+                 bias=None,
+                 offset: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1213,14 +1213,14 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: parameter_spec = 1.0,
-                 x_0=0.0,
-                 bias=0.0,
-                 offset: parameter_spec = 0.0,
-                 scale: parameter_spec = 1.0,
+                 gain: tc.optional(parameter_spec) = None,
+                 x_0=None,
+                 bias=None,
+                 offset: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1479,12 +1479,12 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
-                 leak: parameter_spec = 0.0,
+                 gain: tc.optional(parameter_spec) = None,
+                 bias: tc.optional(parameter_spec) = None,
+                 leak: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1726,13 +1726,13 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 standard_deviation: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 standard_deviation: tc.optional(parameter_spec) = None,
+                 bias: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             standard_deviation=standard_deviation,
@@ -2002,14 +2002,14 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 variance: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 variance: tc.optional(parameter_spec) = None,
+                 bias: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if seed is None:
             seed = get_global_seed()
@@ -2289,12 +2289,12 @@ class SoftMax(TransferFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: parameter_spec = 1.0,
+                 gain: tc.optional(parameter_spec) = None,
                  output=None,
-                 per_item=True,
-                 params: tc.optional(dict) = None,
+                 per_item=None,
+                 params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         try:
             # needed because one_hot_function is initialized here based
@@ -2693,7 +2693,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  matrix=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         # Note: this calls _validate_variable and _validate_params which are overridden below;
         #       the latter implements the matrix if required
@@ -3811,15 +3811,15 @@ class TransferWithCosts(TransferFunction):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 transfer_fct:(is_function_type)=Linear,
+                 transfer_fct:tc.optional(is_function_type)=None,
                  enabled_cost_functions:tc.optional(tc.any(CostFunctions, list))=None,
-                 intensity_cost_fct:(is_function_type)=Exponential,
-                 adjustment_cost_fct:tc.optional(is_function_type)=Linear,
-                 duration_cost_fct:tc.optional(is_function_type)=SimpleIntegrator,
-                 combine_costs_fct:tc.optional(is_function_type)=LinearCombination,
+                 intensity_cost_fct:tc.optional(is_function_type)=None,
+                 adjustment_cost_fct:tc.optional(is_function_type)=None,
+                 duration_cost_fct:tc.optional(is_function_type)=None,
+                 combine_costs_fct:tc.optional(is_function_type)=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         # if size:
         #     if default_variable is None:

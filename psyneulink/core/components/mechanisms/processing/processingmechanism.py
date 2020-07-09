@@ -285,7 +285,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                  size=None,
                  input_ports:tc.optional(tc.any(list, dict))=None,
                  output_ports:tc.optional(tc.any(str, Iterable))=None,
-                 function=Linear,
+                 function=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

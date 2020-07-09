@@ -764,7 +764,7 @@ class InputPort(Port_Base):
                  combine:tc.optional(tc.enum(SUM,PRODUCT))=None,
                  weight=None,
                  exponent=None,
-                 internal_only:bool=False,
+                 internal_only: tc.optional(bool) = None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

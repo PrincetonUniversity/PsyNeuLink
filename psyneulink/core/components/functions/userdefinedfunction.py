@@ -384,7 +384,7 @@ class UserDefinedFunction(Function_Base):
                  default_variable=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  **kwargs):
 
         def get_cust_fct_args(custom_function):

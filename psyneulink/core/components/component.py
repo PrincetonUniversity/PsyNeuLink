@@ -3370,10 +3370,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _variable_shape_flexibility(self, value):
         self.__variable_shape_flexibility = value
 
-    @classmethod
-    def get_constructor_defaults(cls):
-        return {arg_name: arg.default for (arg_name, arg) in inspect.signature(cls.__init__).parameters.items()}
-
     @property
     def class_parameters(self):
         return self.__class__.parameters

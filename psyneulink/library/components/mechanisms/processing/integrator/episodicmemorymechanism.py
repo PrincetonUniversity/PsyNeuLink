@@ -237,8 +237,8 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         )
 
     def __init__(self,
-                 content_size:int=1,
-                 assoc_size:int=0,
+                 content_size:int=None,
+                 assoc_size:int=None,
                  function:Function=None,
                  params=None,
                  name=None,
@@ -249,10 +249,10 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         input_ports = None
         output_ports = None
 
-        if content_size != self.defaults.content_size:
+        if content_size is not None and content_size != self.defaults.content_size:
             input_ports = _generate_content_input_port_spec(content_size)
 
-        if assoc_size != self.defaults.assoc_size:
+        if assoc_size is not None and assoc_size != self.defaults.assoc_size:
             try:
                 input_ports.append({NAME: ASSOC_INPUT, SIZE: assoc_size})
             except AttributeError:

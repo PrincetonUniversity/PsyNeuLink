@@ -269,11 +269,11 @@ class AutoAssociativeProjection(MappingProjection):
                  owner=None,
                  sender=None,
                  receiver=None,
-                 matrix=DEFAULT_MATRIX,
+                 matrix=None,
                  function=None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  **kwargs
                  ):
 

@@ -246,7 +246,7 @@ class RegressionCFA(CompositionFunctionApproximator):
 
     def __init__(self,
                  name=None,
-                 update_weights=BayesGLM,
+                 update_weights=None,
                  prediction_terms:tc.optional(list)=None):
 
         self._instantiate_prediction_terms(prediction_terms)

@@ -1189,13 +1189,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                             InputPort,
                                             OutputPort,
                                             ControlSignal))=None,
-                 modulation:tc.optional(str)=MULTIPLICATIVE,
-                 combine_costs:is_function_type=np.sum,
+                 modulation:tc.optional(str)=None,
+                 combine_costs:tc.optional(is_function_type)=None,
                  compute_reconfiguration_cost:tc.optional(is_function_type)=None,
                  compute_net_outcome=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs:tc.optional(is_pref_set)=None,
                  **kwargs
                  ):
 

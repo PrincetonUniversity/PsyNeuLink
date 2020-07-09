@@ -838,7 +838,7 @@ class ControlSignal(ModulatorySignal):
             getter=_duration_cost_function_getter
         )
         combine_costs_function = Parameter(
-            Reduce(operation=SUM),
+            Reduce,
             stateful=False,
             loggable=False,
             function_parameter=True,
@@ -898,11 +898,11 @@ class ControlSignal(ModulatorySignal):
                  size=None,
                  transfer_function=None,
                  cost_options:tc.optional(tc.any(CostFunctions, list))=None,
-                 intensity_cost_function:(is_function_type)=Exponential,
-                 adjustment_cost_function:tc.optional(is_function_type)=Linear,
-                 duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
-                 combine_costs_function:tc.optional(is_function_type)=Reduce,
-                 allocation_samples=Parameters.allocation_samples.default_value,
+                 intensity_cost_function:tc.optional(is_function_type)=None,
+                 adjustment_cost_function:tc.optional(is_function_type)=None,
+                 duration_cost_function:tc.optional(is_function_type)=None,
+                 combine_costs_function:tc.optional(is_function_type)=None,
+                 allocation_samples=None,
                  modulation:tc.optional(str)=None,
                  modulates=None,
                  params=None,

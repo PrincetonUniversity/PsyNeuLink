@@ -197,11 +197,11 @@ class Concatenate(CombinationFunction):  # -------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 scale: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -416,12 +416,12 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 scale: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  arrangement:tc.optional(tc.any(int, tuple, list))=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -716,12 +716,12 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  weights=None,
                  exponents=None,
                  default_variable=None,
-                 operation: tc.enum(SUM, PRODUCT) = SUM,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 operation: tc.optional(tc.enum(SUM, PRODUCT)) = None,
+                 scale: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1151,12 +1151,12 @@ class LinearCombination(
                  # exponents: tc.optional(parameter_spec)=None,
                  weights=None,
                  exponents=None,
-                 operation: tc.enum(SUM, PRODUCT) = SUM,
+                 operation: tc.optional(tc.enum(SUM, PRODUCT)) = None,
                  scale=None,
                  offset=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1675,12 +1675,12 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                  # exponents:tc.optional(parameter_spec)=None,
                  weights=None,
                  exponents=None,
-                 operation: tc.enum(SUM, PRODUCT) = SUM,
+                 operation: tc.optional(tc.enum(SUM, PRODUCT)) = None,
                  scale=None,
                  offset=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1930,10 +1930,10 @@ class PredictionErrorDeltaFunction(CombinationFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gamma: tc.optional(float) = 1.0,
+                 gamma: tc.optional(tc.optional(float)) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1942,8 +1942,6 @@ class PredictionErrorDeltaFunction(CombinationFunction):
             owner=owner,
             prefs=prefs,
         )
-
-        self.gamma = gamma
 
     def _validate_variable(self, variable, context=None):
         """
