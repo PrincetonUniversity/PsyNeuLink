@@ -1241,7 +1241,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
         x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
         offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
-        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
