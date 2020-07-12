@@ -1328,8 +1328,13 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         offset = self._get_current_function_param(OFFSET, context)
         scale = self._get_current_function_param(SCALE, context)
 
+        exponent = -2 * (gain * (input + bias - x_0) + offset)
+        mult = -2 * gain * scale
         from math import e
-        return gain * scale / ((1 + e**(-2 * (gain * (input + bias - x_0) + offset))) / (2 * e**(-gain * (input + bias - x_0) + offset)))**2
+        numerator = -2 * e**(exponent)
+        denominator = (1 + e**(exponent))**2
+
+        return mult * (numerator / denominator)
 
 
 # **********************************************************************************************************************
