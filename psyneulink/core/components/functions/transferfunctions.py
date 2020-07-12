@@ -1241,26 +1241,47 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
         x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
         offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
         x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
+
+        variable = builder.load(ptri)
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
 
-        assert "derivative" not in tags, f"Compiled derivatives are not currently supported for {self}!"
+        if "derivative" in tags:
+            exponent = builder.fadd(variable, bias)
+            exponent = builder.fsub(exponent, x_0)
+            exponent = builder.fmul(gain, exponent)
+            exponent = builder.fadd(exponent, offset)
+            exponent = builder.fmul(exponent.type(-2), exponent)
 
-        exp_val = builder.load(ptri)
-        exp_val = builder.fadd(exp_val, bias)
-        exp_val = builder.fsub(exp_val, x_0)
-        exp_val = builder.fmul(exp_val, gain)
-        exp_val = builder.fadd(exp_val, offset)
-        exp_val = builder.fmul(exp_val.type(-2), exp_val)
+            mult = builder.fmul(gain, scale)
+            mult = builder.fmul(mult.type(-2), mult)
 
-        val = builder.call(exp_f, [exp_val])
-        val1 = builder.fsub(val.type(1), val)
-        val2 = builder.fadd(val.type(1), val)
-        val = builder.fdiv(val1, val2)
+            exp_val = builder.call(exp_f, [exponent])
+            numerator = builder.fmul(exp_val.type(-2), exp_val)
+
+            denominator = builder.fadd(exp_val.type(1), exp_val)
+            denominator = builder.fmul(denominator, denominator)
+            
+            val = builder.fdiv(numerator, denominator)
+            val = builder.fmul(val, mult)
+        else:
+            exp_val = builder.fadd(variable, bias)
+            exp_val = builder.fsub(exp_val, x_0)
+            exp_val = builder.fmul(exp_val, gain)
+            exp_val = builder.fadd(exp_val, offset)
+            exp_val = builder.fmul(exp_val.type(-2), exp_val)
+
+            val = builder.call(exp_f, [exp_val])
+            val1 = builder.fsub(val.type(1), val)
+            val2 = builder.fadd(val.type(1), val)
+            val = builder.fdiv(val1, val2)
+            val = builder.fmul(val, scale)
 
         builder.store(val, ptro)
 
