@@ -1073,7 +1073,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
     .. math::
 
-        \\frac{1 - e^{-2(gain*(variable+bias-x\\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\\_0)+offset)}}
+        \\scale*frac{1 - e^{-2(gain*(variable+bias-x\\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\\_0)+offset)}}
 
     .. note::
 
@@ -1292,13 +1292,14 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bias = self._get_current_function_param(BIAS, context)
         x_0 = self._get_current_function_param(X_0, context)
         offset = self._get_current_function_param(OFFSET, context)
+        scale = self._get_current_function_param(SCALE, context)
 
         # The following probably doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         #   (since np.exp doesn't work)
         # result = 1. / (1 + np.tanh(-gain * (variable - bias) + offset))
         from math import e
         exponent = -2 * (gain * (variable + bias - x_0) + offset)
-        result = (1 - e**exponent)/ (1 + e**exponent)
+        result = scale * (1 - e**exponent)/ (1 + e**exponent)
 
         return self.convert_output_type(result)
 
