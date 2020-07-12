@@ -53,11 +53,14 @@ test_data = [
 
 relu_derivative_helper = lambda x : RAND1 if x > 0 else RAND1 * RAND3
 logistic_helper = RAND4 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3))
+tanh_derivative_helper = (RAND1 * (test_var + RAND2) + RAND3)
+tanh_derivative_helper = (1 - np.tanh(tanh_derivative_helper)**2) * RAND4 * RAND1
 derivative_test_data = [
     (Functions.Linear, test_var, {'slope':RAND1, 'intercept':RAND2}, RAND1),
     (Functions.Exponential, test_var, {'scale':RAND1, 'rate':RAND2}, RAND1 * RAND2 * np.exp(RAND2 * test_var)),
     (Functions.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3, 'scale':RAND4}, RAND1 * RAND4 * logistic_helper * (1 - logistic_helper)),
     (Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, list(map(relu_derivative_helper, test_var))),
+    (Functions.Tanh, test_var, {'gain':RAND1, 'bias':RAND2, 'offset':RAND3, 'scale':RAND4}, tanh_derivative_helper),
 ]
 
 # use list, naming function produces ugly names
@@ -83,6 +86,7 @@ derivative_names = [
     "EXPONENTIAL_DERIVATIVE",
     "LOGISTIC_DERIVATIVE",
     "RELU_DERIVATIVE",
+    "TANH_DERIVATIVE",
 ]
 
 @pytest.mark.function
