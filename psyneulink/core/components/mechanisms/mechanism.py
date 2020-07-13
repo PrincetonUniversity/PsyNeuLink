@@ -2870,6 +2870,18 @@ class Mechanism_Base(Mechanism):
         builder = self._gen_llvm_ports(ctx, builder, self.input_ports,
                                        _get_output_ptr, _fill_input,
                                        mech_params, mech_state, mech_input)
+        
+        # update mech variable state
+        mech_variable_ptr = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "variable")
+        for idx, _ in enumerate(self.variable):
+            mech_input_ptr = builder.gep(mech_input, [ctx.int32_ty(0),
+                                                      ctx.int32_ty(idx),
+                                                      ctx.int32_ty(0)])
+
+            mech_variable_port_ptr = builder.gep(mech_variable_ptr, [ctx.int32_ty(0),
+                                                                     ctx.int32_ty(idx)])
+
+            builder.store(builder.load(mech_input_ptr), mech_variable_port_ptr)
 
         return ip_output, builder
 
