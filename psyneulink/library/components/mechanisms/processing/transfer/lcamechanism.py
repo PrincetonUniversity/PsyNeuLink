@@ -391,7 +391,8 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         function = Parameter(Logistic, stateful=False, loggable=False)
 
-        leak = Parameter(0.5, modulable=True)
+        #leak = Parameter(0.5, modulable=True)
+        integration_rate = Parameter(0.5, modulable=True, aliases='leak')
         auto = Parameter(0.0, modulable=True, aliases='self_excitation')
         hetero = Parameter(-1.0, modulable=True)
         competition = Parameter(1.0, modulable=True)
@@ -563,7 +564,8 @@ class LCAMechanism(RecurrentTransferMechanism):
 
     def _get_integrated_function_input(self, function_variable, initial_value, noise, context):
 
-        leak = self._get_current_mechanism_param("leak", context)
+        #leak = self._get_current_mechanism_param("leak", context)
+        leak = self._get_current_mechanism_param("integration_rate", context)
         time_step_size = self._get_current_mechanism_param("time_step_size", context)
 
         # if not self.integrator_function:

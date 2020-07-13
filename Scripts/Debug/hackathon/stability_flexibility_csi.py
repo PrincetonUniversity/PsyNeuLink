@@ -71,7 +71,7 @@ def generateTrialSequence(N, Frequency):
 
 GAIN = 1
 LEAK = 1
-COMP = 7.0
+COMP = 7.5
 
 AUTOMATICITY = .15 # Automaticity Weight
 
@@ -109,7 +109,7 @@ controlModule = pnl.LCAMechanism(size=2,
                                  noise=0,
                                  termination_measure=pnl.TimeScale.TRIAL,
                                  termination_threshold=10,
-                                 time_step_size=.001,
+                                 time_step_size=.1,
                                  name='Task Activations [Act1, Act2]')
 
 # Control Mechanism Setting Cue-To-Stimulus Interval
@@ -147,7 +147,7 @@ ddmInputScale = pnl.TransferMechanism(size=1,
 decisionMaker = pnl.DDM(function=pnl.DriftDiffusionIntegrator(starting_point=STARTING_POINT,
                                                               threshold=THRESHOLD,
                                                               noise=NOISE),
-                        reinitialize_when=pnl.AtTrialStart(),
+                        reset_stateful_function_when=pnl.AtTrialStart(),
                         output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME],
                         name='DDM')
 
@@ -202,24 +202,26 @@ stabilityFlexibility.add_projection(sender=decisionMaker.output_ports[1], receiv
 stabilityFlexibility.scheduler.add_condition(decisionGate, pnl.WhenFinished(decisionMaker))
 stabilityFlexibility.scheduler.add_condition(responseGate, pnl.WhenFinished(decisionMaker))
 
-
-
 # Origin Node Inputs
-USE_GPU = True
+USE_GPU = False
 
 taskTrain, stimulusTrain, cueTrain = generateTrialSequence(80, 0.5)
 
-inputs = {taskLayer: taskTrain, stimulusInfo: stimulusTrain, cueInterval: cueTrain}
+inputs = {taskLayer: taskTrain[0:10], stimulusInfo: stimulusTrain[0:10], cueInterval: cueTrain[0:10]}
+
+#stabilityFlexibility.show_graph()
 
 if not USE_GPU:
-    stabilityFlexibility.run(inputs, bin_execute=True)
+    stabilityFlexibility.run(inputs, bin_execute=False)
     res = stabilityFlexibility.results
 else:
     stabilityFlexibility._analyze_graph()
-    num_executions = 10
+    num_executions = 1000
     var = [inputs for _ in range(num_executions)]
+    adjusted_inputs, num_input_sets = stabilityFlexibility._parse_run_inputs(inputs)
+    var = [adjusted_inputs for _ in range(num_executions)]
     e = pnlvm.execution.CompExecution(stabilityFlexibility, [None for _ in range(num_executions)])
-    res = e.cuda_run(var, 1, 1)
+    res = e.cuda_run(var, 1, num_input_sets)
 
 # mechanisms
 # A = pnl.ProcessingMechanism(name="A",
@@ -236,14 +238,14 @@ else:
 # res = e.cuda_run(var, 4, 2)
 # print(np.array(res))
 
-#taskLayer.log.print_entries()
-#stimulusInfo.log.print_entries()
-#controlModule.log.print_entries()
-#nonAutomaticComponent.log.print_entries()
-#congruenceWeighting.log.print_entries()
-#ddmCombination.log.print_entries()
-#ddmInputScale.log.print_entries()
-#decisionMaker.log.print_entries()
+# taskLayer.log.print_entries()
+# stimulusInfo.log.print_entries()
+controlModule.log.print_entries()
+# nonAutomaticComponent.log.print_entries()
+# congruenceWeighting.log.print_entries()
+# ddmCombination.log.print_entries()
+# ddmInputScale.log.print_entries()
+# decisionMaker.log.print_entries()
 #
 # for trial in stabilityFlexibility.results:
 #     print(trial)
