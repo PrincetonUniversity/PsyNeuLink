@@ -22,19 +22,58 @@ import psyneulink as pnl
 # Using prettier https://prettier.io/ can reduce the line footprint of
 # the resulting file while not totally minifying it
 @pytest.mark.parametrize(
-    'model_name, composition_name, additional_args',
+    'model_name, composition_name, additional_args, reduced',
     [
-        ('Cohen_Huston1994', 'Bidirectional_Stroop', []),
-        ('Cohen_Huston1994_horse_race', 'Bidirectional_Stroop', []),
-        ('GilzenratModel', 'task', ['--noise-stddev=0.0']),
-        ('Kalanthroff_PCTC_2018', 'PCTC', []),
-        ('MontagueDayanSejnowski96', 'comp_5a', ['--figure', '5a']),
-        ('MontagueDayanSejnowski96', 'comp_5b', ['--figure', '5b']),
-        ('MontagueDayanSejnowski96', 'comp_5c', ['--figure', '5c']),
-        ('Nieuwenhuis2005Model', 'task', []),
+        pytest.param(
+            'Cohen_Huston1994',
+            'Bidirectional_Stroop',
+            [],
+            False,
+            marks=pytest.mark.stress
+        ),
+        pytest.param(
+            'Cohen_Huston1994',
+            'Bidirectional_Stroop',
+            [
+                '--threshold=0.5',
+                '--settle-trials=10'
+            ],
+            True
+        ),
+        pytest.param(
+            'Cohen_Huston1994_horse_race',
+            'Bidirectional_Stroop',
+            [],
+            False,
+            marks=pytest.mark.stress
+        ),
+        pytest.param(
+            'Cohen_Huston1994_horse_race',
+            'Bidirectional_Stroop',
+            [
+                '--word-runs=2',
+                '--color-runs=1',
+                '--threshold=0.5',
+                '--settle-trials=10',
+                '--pre-stimulus-trials=10'
+            ],
+            True
+        ),
+        pytest.param('GilzenratModel', 'task', ['--noise-stddev=0.0'], False),
+        pytest.param('Kalanthroff_PCTC_2018', 'PCTC', [], False, marks=pytest.mark.stress),
+        pytest.param('Kalanthroff_PCTC_2018', 'PCTC', ['--threshold=0.2', '--settle-trials=10'], True),
+        pytest.param('MontagueDayanSejnowski96', 'comp_5a', ['--figure', '5a'], False),
+        pytest.param('MontagueDayanSejnowski96', 'comp_5b', ['--figure', '5b'], False),
+        pytest.param('MontagueDayanSejnowski96', 'comp_5c', ['--figure', '5c'], False),
+        pytest.param('Nieuwenhuis2005Model', 'task', [], False),
     ]
 )
-def test_documentation_models(model_name, composition_name, additional_args):
+def test_documentation_models(
+    model_name,
+    composition_name,
+    additional_args,
+    reduced,
+):
     models_dir = os.path.join(
         os.path.dirname(__file__),
         '..',
@@ -52,7 +91,7 @@ def test_documentation_models(model_name, composition_name, additional_args):
     expected_results_file = os.path.join(
         models_dir,
         'results',
-        f'{model_name}-{composition_name}.json'
+        f'{model_name}-{composition_name}{"-reduced" if reduced else ""}.json'
     )
     with open(expected_results_file) as fi:
         expected_results = pnl.convert_all_elements_to_np_array(json.loads(fi.read()))
