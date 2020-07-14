@@ -154,12 +154,12 @@ class NormalDist(DistributionFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 mean=0.0,
-                 standard_deviation=1.0,
+                 mean=None,
+                 standard_deviation=None,
                  params=None,
                  owner=None,
                  seed=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if seed is None:
             seed = get_global_seed()
@@ -179,7 +179,7 @@ class NormalDist(DistributionFunction):
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if STANDARD_DEVIATION in target_set:
+        if STANDARD_DEVIATION in target_set and target_set[STANDARD_DEVIATION] is not None:
             if target_set[STANDARD_DEVIATION] < 0.0:
                 raise FunctionError("The standard_deviation parameter ({}) of {} must be greater than zero.".
                                     format(target_set[STANDARD_DEVIATION], self.name))
@@ -340,12 +340,12 @@ class UniformToNormalDist(DistributionFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 mean=0.0,
-                 standard_deviation=1.0,
+                 mean=None,
+                 standard_deviation=None,
                  params=None,
                  owner=None,
                  seed=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if seed is None:
             seed = get_global_seed()
@@ -470,11 +470,11 @@ class ExponentialDist(DistributionFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 beta=1.0,
+                 beta=None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if seed is None:
             seed = get_global_seed()
@@ -599,12 +599,12 @@ class UniformDist(DistributionFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 low=0.0,
-                 high=1.0,
+                 low=None,
+                 high=None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if seed is None:
             seed = get_global_seed()
@@ -738,12 +738,12 @@ class GammaDist(DistributionFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 scale=1.0,
-                 dist_shape=1.0,
+                 scale=None,
+                 dist_shape=None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         if seed is None:
             seed = get_global_seed()
 
@@ -874,12 +874,12 @@ class WaldDist(DistributionFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 scale=1.0,
-                 mean=1.0,
+                 scale=None,
+                 mean=None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         if seed is None:
             seed = get_global_seed()
 
@@ -1113,14 +1113,14 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 drift_rate: parameter_spec = 1.0,
-                 starting_point: parameter_spec = 0.0,
-                 threshold: parameter_spec = 1.0,
-                 noise: parameter_spec = 0.5,
-                 t0: parameter_spec = .200,
+                 drift_rate: tc.optional(parameter_spec) = None,
+                 starting_point: tc.optional(parameter_spec) = None,
+                 threshold: tc.optional(parameter_spec) = None,
+                 noise: tc.optional(parameter_spec) = None,
+                 t0: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  shenhav_et_al_compat_mode=False):
 
         self._shenhav_et_al_compat_mode = shenhav_et_al_compat_mode

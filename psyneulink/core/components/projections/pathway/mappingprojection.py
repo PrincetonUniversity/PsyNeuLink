@@ -450,7 +450,7 @@ class MappingProjection(PathwayProjection_Base):
                  receiver=None,
                  weight=None,
                  exponent=None,
-                 matrix=DEFAULT_MATRIX,
+                 matrix=None,
                  function=None,
                  params=None,
                  name=None,

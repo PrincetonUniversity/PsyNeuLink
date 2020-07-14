@@ -719,6 +719,13 @@ class DDM(ProcessingMechanism):
         initializer = np.array([[0]])
         random_state = Parameter(None, stateful=True, loggable=False)
 
+        output_ports = Parameter(
+            [DECISION_VARIABLE, RESPONSE_TIME],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+        )
 
     standard_output_ports =[{NAME: DECISION_VARIABLE,},           # Upper or lower threshold for Analtyic function
                             {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL for Integrator function
@@ -740,11 +747,11 @@ class DDM(ProcessingMechanism):
                  input_format:tc.optional(tc.enum(SCALAR, ARRAY, VECTOR))=None,
                  function=None,
                  input_ports=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=(DECISION_VARIABLE, RESPONSE_TIME),
+                 output_ports: tc.optional(tc.any(str, Iterable)) = None,
                  seed=None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  **kwargs):
 
         # Override instantiation of StandardOutputPorts usually done in _instantiate_output_ports

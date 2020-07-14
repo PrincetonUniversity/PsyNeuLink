@@ -435,14 +435,14 @@ class BayesGLM(LearningFunction):
 
     def __init__(self,
                  default_variable=None,
-                 mu_0=0,
-                 sigma_0=1,
-                 gamma_shape_0=1,
-                 gamma_size_0=1,
+                 mu_0=None,
+                 sigma_0=None,
+                 gamma_shape_0=None,
+                 gamma_size_0=None,
                  params=None,
                  owner=None,
                  seed=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         self.user_specified_default_variable = default_variable
 
@@ -761,12 +761,12 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
     def __init__(self,
                  default_variable=None,
-                 # learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
                  learning_rate=None,
-                 distance_function:tc.any(tc.enum(GAUSSIAN, LINEAR, EXPONENTIAL), is_function_type)=GAUSSIAN,
+                 distance_function:tc.any(tc.enum(GAUSSIAN, LINEAR, EXPONENTIAL), is_function_type)=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1028,7 +1028,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                  learning_rate=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1253,11 +1253,11 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
     def __init__(self,
                  default_variable=None,
-                 # learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
                  learning_rate=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1548,11 +1548,11 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
     def __init__(self,
                  default_variable=None,
-                 # learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
                  learning_rate=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1900,13 +1900,13 @@ class BackPropagation(LearningFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 activation_derivative_fct: tc.optional(tc.any(types.FunctionType, types.MethodType)) = None,
-                 # learning_rate: tc.optional(parameter_spec) = None,
+                 activation_derivative_fct: tc.optional(tc.optional(tc.any(types.FunctionType, types.MethodType))) = None,
+                 # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
                  learning_rate=None,
                  loss_function=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         error_matrix = np.zeros((len(default_variable[LEARNING_ACTIVATION_OUTPUT]),
                                  len(default_variable[LEARNING_ERROR_OUTPUT])))

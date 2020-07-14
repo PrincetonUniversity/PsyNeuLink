@@ -291,12 +291,12 @@ class PredictionErrorMechanism(ComparatorMechanism):
                  target: tc.optional(tc.any(OutputPort, Mechanism_Base, dict,
                                             is_numeric,
                                             str)) = None,
-                 function=PredictionErrorDeltaFunction(),
-                 output_ports: tc.optional(tc.any(str, Iterable)) = None,
-                 learning_rate: is_numeric = 0.3,
+                 function=None,
+                 output_ports: tc.optional(tc.optional(tc.any(str, Iterable))) = None,
+                 learning_rate: tc.optional(is_numeric) = None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  **kwargs
                  ):
 
