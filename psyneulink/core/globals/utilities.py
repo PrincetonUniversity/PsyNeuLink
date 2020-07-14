@@ -107,6 +107,8 @@ import typecheck as tc
 
 from enum import Enum, EnumMeta, IntEnum
 from collections.abc import Mapping
+from collections import UserDict, UserList
+from itertools import chain, combinations
 
 import numpy as np
 
@@ -577,7 +579,7 @@ def scalar_distance(measure, value, scale=1, offset=0):
     if measure == SINUSOID:
         return sinusoid(value, frequency=scale, phase=offset)
 
-from itertools import chain, combinations
+
 def powerset(iterable):
     """powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"""
     s = list(iterable)
@@ -992,7 +994,6 @@ def append_type_to_name(object, type=None):
 #endregion
 
 
-from collections import UserDict
 class ReadOnlyOrderedDict(UserDict):
     def __init__(self, dict=None, name=None, **kwargs):
         self.name = name or self.__class__.__name__
@@ -1019,7 +1020,6 @@ class ReadOnlyOrderedDict(UserDict):
     def copy(self):
         return self.data.copy()
 
-from collections import UserList
 class ContentAddressableList(UserList):
     """
     ContentAddressableList( component_type, key=None, list=None)
