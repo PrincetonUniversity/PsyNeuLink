@@ -20,7 +20,6 @@ Functions that return a scalar evaluation of their input.
 """
 
 import functools
-import itertools
 
 import numpy as np
 import typecheck as tc

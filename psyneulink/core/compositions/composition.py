@@ -9758,6 +9758,5 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 def get_compositions():
     """Return list of Compositions in caller's namespace."""
-    import inspect
     frame = inspect.currentframe()
     return [c for c in frame.f_back.f_locals.values() if isinstance(c, Composition)]

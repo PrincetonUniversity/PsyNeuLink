@@ -71,7 +71,6 @@ Class Reference
 ---------------
 
 """
-import itertools
 import numpy as np
 import typecheck as tc
 

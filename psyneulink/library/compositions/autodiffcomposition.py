@@ -127,6 +127,19 @@ Class Reference
 ---------------
 
 """
+import numpy as np
+
+import logging
+try:
+    import torch
+    from torch import nn
+    import torch.optim as optim
+    torch_available = True
+except ImportError:
+    torch_available = False
+else:
+    from psyneulink.library.compositions.pytorchmodelcreator import PytorchModelCreator
+
 
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
@@ -140,23 +153,7 @@ from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core import llvm as pnlvm
-import copy
-import numpy as np
-import ctypes
-from collections.abc import Iterable
-from toposort import toposort
-from inspect import isgenerator
 
-import logging
-try:
-    import torch
-    from torch import nn
-    import torch.optim as optim
-    torch_available = True
-except ImportError:
-    torch_available = False
-else:
-    from psyneulink.library.compositions.pytorchmodelcreator import PytorchModelCreator
 
 logger = logging.getLogger(__name__)
 

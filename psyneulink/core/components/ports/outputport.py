@@ -615,12 +615,10 @@ Class Reference
 """
 
 import copy
-import inspect
 import numpy as np
 import typecheck as tc
 import types
 import warnings
-from collections import OrderedDict
 
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function

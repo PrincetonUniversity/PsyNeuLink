@@ -8,7 +8,6 @@
 
 # ********************************************* AutodiffComposition *************************************************
 import numpy as np
-import collections.abc
 
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.keywords import OBJECTIVE_MECHANISM, TRAINING_SET

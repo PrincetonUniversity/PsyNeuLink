@@ -359,8 +359,8 @@ Class Reference
 
 """
 
+from copy import deepcopy
 import inspect
-import itertools
 import types
 import warnings
 
@@ -1002,7 +1002,6 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
         ):
             reference_value = function_param_value
         else:
-            from copy import deepcopy
             reference_value = deepcopy(function_param_value)
 
         # Assign parameterPort for function_param to the component

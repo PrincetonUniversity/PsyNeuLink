@@ -25,8 +25,6 @@ Functions that integrate current value of input with previous value.
 
 """
 
-import itertools
-import numbers
 import warnings
 
 import numpy as np

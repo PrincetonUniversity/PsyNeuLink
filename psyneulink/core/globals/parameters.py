@@ -244,7 +244,6 @@ import copy
 import logging
 import types
 import typing
-import warnings
 import weakref
 
 from psyneulink.core.globals.keywords import MULTIPLICATIVE

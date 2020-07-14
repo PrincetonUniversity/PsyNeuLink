@@ -396,6 +396,7 @@ import abc
 import inspect
 import itertools
 import warnings
+from collections import namedtuple, defaultdict
 
 import numpy as np
 import typecheck as tc
@@ -458,7 +459,6 @@ def projection_param_keywords():
     return set(projection_param_keyword_mapping().values())
 
 
-from collections import namedtuple
 ProjectionTuple = namedtuple("ProjectionTuple", "port, weight, exponent, projection")
 
 
@@ -1196,7 +1196,6 @@ def _parse_projection_spec(projection_spec,
     if bad_arg:
         raise ProjectionError("Illegal argument in call to _parse_port_spec: {}".format(bad_arg))
 
-    from collections import defaultdict
     proj_spec_dict = defaultdict(lambda :None)
     proj_spec_dict.update(kwargs)
 
