@@ -1,5 +1,6 @@
 import json
 import os
+import runpy
 import sys
 
 import numpy as np
@@ -43,11 +44,10 @@ def test_documentation_models(model_name, composition_name, additional_args):
         'models'
     )
     model_file = os.path.join(models_dir, f'{model_name}.py')
-    with open(model_file, encoding='utf-8') as fi:
-        script_globals = {}
-        sys.argv = [model_file, '--no-plot'] + additional_args
-        exec(fi.read(), script_globals)
-        locals().update(script_globals)
+    old_argv = sys.argv
+    sys.argv = [model_file, '--no-plot'] + additional_args
+    script_globals = runpy.run_path(model_file)
+    sys.argv = old_argv
 
     expected_results_file = os.path.join(
         models_dir,
@@ -57,7 +57,7 @@ def test_documentation_models(model_name, composition_name, additional_args):
     with open(expected_results_file) as fi:
         expected_results = pnl.convert_all_elements_to_np_array(json.loads(fi.read()))
 
-    results = pnl.convert_all_elements_to_np_array(eval(f'{composition_name}.results'))
+    results = pnl.convert_all_elements_to_np_array(script_globals[composition_name].results)
 
     assert expected_results.shape == results.shape
     np.testing.assert_allclose(
