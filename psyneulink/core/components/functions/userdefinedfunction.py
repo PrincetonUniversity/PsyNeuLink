@@ -13,6 +13,8 @@ import ctypes
 import numpy as np
 import typecheck as tc
 
+from inspect import signature, _empty
+
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import FunctionError, Function_Base
 from psyneulink.core.globals.context import ContextFlags
@@ -394,7 +396,6 @@ class UserDefinedFunction(Function_Base):
                 - dict with all others (to be assigned as params of UDF)
                 - dict with default values (from function definition, else set to None)
             """
-            from inspect import signature, _empty
             try:
                 arg_names = custom_function.__code__.co_varnames
             except AttributeError:

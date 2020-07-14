@@ -91,6 +91,7 @@ CONTENTS
 
 """
 
+import collections
 import copy
 import inspect
 import logging
@@ -102,10 +103,11 @@ import warnings
 import weakref
 import types
 import typing
+import typecheck as tc
 
 from enum import Enum, EnumMeta, IntEnum
+from collections.abc import Mapping
 
-import collections
 import numpy as np
 
 from psyneulink.core.globals.keywords import \
@@ -581,7 +583,6 @@ def powerset(iterable):
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
-import typecheck as tc
 @tc.typecheck
 def tensor_power(items, levels:tc.optional(range)=None, flat=False):
     """return tensor product for all members of powerset of items
@@ -635,7 +636,6 @@ def get_args(frame):
     return dict((key, value) for key, value in values.items() if key in args)
 
 
-from collections.abc import Mapping
 def recursive_update(d, u, non_destructive=False):
     """Recursively update entries of dictionary d with dictionary u
     From: https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
@@ -1519,12 +1519,9 @@ def safe_equals(x, y):
             return np.array_equal(x, y)
 
 
-import typecheck as tc
 @tc.typecheck
 def _get_arg_from_stack(arg_name:str):
     # Get arg from the stack
-
-    import inspect
 
     curr_frame = inspect.currentframe()
     prev_frame = inspect.getouterframes(curr_frame, 2)

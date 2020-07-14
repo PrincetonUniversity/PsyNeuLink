@@ -8,6 +8,7 @@
 #
 # ***********************************************  Registry ************************************************************
 
+import inspect
 import re
 
 from collections import defaultdict, namedtuple
@@ -121,7 +122,6 @@ def register_category(entry,
     """
 
     # IMPLEMENTATION NOTE:  Move to Port when that is implemented as ABC
-    import inspect
     from psyneulink.core.components.shellclasses import Port
     if inspect.isclass(entry) and issubclass(entry, Port):
         try:

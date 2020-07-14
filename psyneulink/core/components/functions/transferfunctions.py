@@ -41,12 +41,13 @@ All TransferFunctions have the following attributes:
 """
 
 import numbers
-from enum import IntEnum
-
 import numpy as np
 import typecheck as tc
 import types
 import warnings
+
+from enum import IntEnum
+from math import e, pi, sqrt
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
@@ -707,7 +708,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = scale * np.exp(rate * variable + bias) + offset
-        from math import e
         result = scale * e**(rate * variable + bias) + offset
         return self.convert_output_type(result)
 
@@ -731,7 +731,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
 
         """
-        from math import e
         rate = self._get_current_function_param(RATE, context)
         scale = self._get_current_function_param(SCALE, context)
         bias = self._get_current_function_param(BIAS, context)
@@ -997,7 +996,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
-        from math import e
         result = scale * (1. / (1 + e**(-gain * (variable + bias - x_0) + offset)))
 
         return self.convert_output_type(result)
@@ -1318,7 +1316,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         # The following probably doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         #   (since np.exp doesn't work)
         # result = 1. / (1 + np.tanh(-gain * (variable - bias) + offset))
-        from math import e
         exponent = -2 * (gain * (variable + bias - x_0) + offset)
         result = scale * (1 - e**exponent)/ (1 + e**exponent)
 
@@ -1351,7 +1348,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
         exponent = -2 * (gain * (input + bias - x_0) + offset)
         mult = -2 * gain * scale
-        from math import e
         numerator = -2 * e**(exponent)
         denominator = (1 + e**(exponent))**2
 
@@ -1771,7 +1767,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         exp = builder.fdiv(exp_num, exp_denom)
         numerator = builder.call(exp_f, [exp])
 
-        from math import pi
         denom = builder.fmul(standard_deviation.type(2 * pi), standard_deviation)
         denom = builder.call(sqrt_f, [denom])
         val = builder.fdiv(numerator, denom)
@@ -1811,7 +1806,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         scale = self._get_current_function_param(SCALE, context)
         offset = self._get_current_function_param(OFFSET, context)
 
-        from math import e, pi, sqrt
         gaussian = e**(-(variable - bias)**2 / (2 * standard_deviation**2)) / sqrt(2 * pi * standard_deviation)
         result = scale * gaussian + offset
 
@@ -1841,7 +1835,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         sigma = self._get_current_function_param(STANDARD_DEVIATION, context)
         bias = self._get_current_function_param(BIAS, context)
 
-        from math import e, pi, sqrt
         adjusted_input = input - bias
         result = (-adjusted_input * e**(-(adjusted_input**2 / (2 * sigma**2)))) / sqrt(2 * pi * sigma**3)
 

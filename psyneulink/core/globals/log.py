@@ -1154,7 +1154,6 @@ class Log:
                 warnings.warn("{0} is not an entry in the Log for {1}".
                       format(entry_name, self.owner.name))
             else:
-                import numpy as np
                 multiple_eids = len(datum)>1
                 for eid in datum:
                     if multiple_eids:

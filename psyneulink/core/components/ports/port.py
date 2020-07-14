@@ -763,10 +763,10 @@ Class Reference
 """
 
 import abc
-import abc
 import inspect
 import itertools
 import numbers
+import sys
 import types
 import warnings
 
@@ -2674,7 +2674,6 @@ def _parse_port_type(owner, port_spec):
 
         # Port keyword
         if port_spec in port_type_keywords:
-            import sys
             return getattr(sys.modules['PsyNeuLink.Components.Ports.' + port_spec], port_spec)
 
         # Try as name of Port

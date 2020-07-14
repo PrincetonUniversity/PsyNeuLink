@@ -1071,6 +1071,7 @@ import abc
 import inspect
 import itertools
 import logging
+import re
 import types
 import warnings
 
@@ -3083,7 +3084,6 @@ class Mechanism_Base(Mechanism):
             output = self.output_port.parameters.value._get(context)
         params = params or self.parameters.values()
 
-        import re
         if 'mechanism' in self.name or 'Mechanism' in self.name:
             mechanism_string = ' '
         else:
