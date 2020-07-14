@@ -1075,7 +1075,7 @@ import re
 import types
 import warnings
 
-from collections import OrderedDict, defaultdict
+from collections import defaultdict, OrderedDict, UserDict, UserList
 from inspect import isclass
 from numbers import Number
 
@@ -1128,7 +1128,6 @@ class MechanismError(Exception):
         return repr(self.error_value)
 
 
-from collections import UserDict
 class MechParamsDict(UserDict):
     """Subclass for validation of dicts used to pass Mechanism parameters to OutputPort for variable specification."""
     pass
@@ -3990,7 +3989,6 @@ def _is_mechanism_spec(spec):
         return True
     return False
 
-from collections import UserList
 class MechanismList(UserList):
     """Provides access to Mechanisms and their attributes in a list Mechanisms of an owner.
 

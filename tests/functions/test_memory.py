@@ -3,6 +3,7 @@ import pytest
 
 import psyneulink.core.components.functions.statefulfunctions.memoryfunctions as Functions
 import psyneulink.core.llvm as pnlvm
+from psyneulink import *
 
 np.random.seed(0)
 SIZE=10
@@ -112,8 +113,6 @@ def test_ptx_cuda(func, variable, params, expected, benchmark):
     benchmark(m.cuda_execute, variable)
 
 # Test of ContentAddressableMemory without LLVM:
-from psyneulink import *
-
 def test_ContentAddressableMemory_with_initializer_and_key_size_same_as_val_size():
 
     stimuli = {'A': [[1,2,3],[4,5,6]],
