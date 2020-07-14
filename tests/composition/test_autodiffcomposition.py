@@ -25,6 +25,38 @@ logger = logging.getLogger(__name__)
 # Unit tests for functions of AutodiffComposition class that are new (not in Composition)
 # or override functions in Composition
 
+@pytest.mark.pytorch
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                 ])
+def test_autodiff_forward(mode):
+    # create xor model mechanisms and projections
+    xor_in = TransferMechanism(name='xor_in',
+                               default_variable=np.zeros(2))
+
+    xor_hid = TransferMechanism(name='xor_hid',
+                                default_variable=np.zeros(10),
+                                function=Logistic())
+
+    xor_out = TransferMechanism(name='xor_out',
+                                default_variable=np.zeros(1),
+                                function=Logistic())
+
+    hid_map = MappingProjection(matrix=np.random.rand(2,10))
+    out_map = MappingProjection(matrix=np.random.rand(10,1))
+
+    # put the mechanisms and projections together in an autodiff composition (AC)
+    xor = AutodiffComposition()
+
+    xor.add_node(xor_in)
+    xor.add_node(xor_hid)
+    xor.add_node(xor_out)
+
+    xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+    xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+    outputs = xor.run(inputs=[0,0], bin_execute=mode)
+    assert np.allclose(outputs, [[0.9479085241082691]])
 
 @pytest.mark.pytorch
 @pytest.mark.acconstructor
@@ -62,14 +94,12 @@ class TestACConstructor:
         # comp = AutodiffComposition()
         # assert comp.patience == 10
 
-
 @pytest.mark.pytorch
 @pytest.mark.acmisc
 class TestMiscTrainingFunctionality:
 
     # test whether pytorch parameters are initialized to be identical to the Autodiff Composition's
-    # projections when AC is initialized with the "param_init_from_pnl" argument set to True
-    def test_param_init_from_pnl(self):
+    def test_weight_initialization(self):
 
         # create xor model mechanisms and projections
         xor_in = TransferMechanism(name='xor_in',
@@ -87,7 +117,7 @@ class TestMiscTrainingFunctionality:
         out_map = MappingProjection(matrix=np.random.rand(10,1))
 
         # put the mechanisms and projections together in an autodiff composition (AC)
-        xor = AutodiffComposition(param_init_from_pnl=True)
+        xor = AutodiffComposition()
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -124,7 +154,7 @@ class TestMiscTrainingFunctionality:
         hid_map = MappingProjection()
         out_map = MappingProjection()
 
-        xor = AutodiffComposition(param_init_from_pnl=True)
+        xor = AutodiffComposition()
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -191,7 +221,7 @@ class TestMiscTrainingFunctionality:
         hid_map = MappingProjection()
         out_map = MappingProjection()
 
-        xor = AutodiffComposition(param_init_from_pnl=True, loss_spec=loss)
+        xor = AutodiffComposition(loss_spec=loss)
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -237,7 +267,7 @@ class TestMiscTrainingFunctionality:
         hid_map = MappingProjection()
         out_map = MappingProjection()
 
-        xor = AutodiffComposition(param_init_from_pnl=True, loss_spec=ls)
+        xor = AutodiffComposition(loss_spec=ls)
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -283,8 +313,7 @@ class TestMiscTrainingFunctionality:
         hid_map = MappingProjection()
         out_map = MappingProjection()
 
-        xor = AutodiffComposition(param_init_from_pnl=True,
-                                  learning_rate=learning_rate,
+        xor = AutodiffComposition(learning_rate=learning_rate,
                                   optimizer_type=optimizer_type,
                                   weight_decay=weight_decay)
 
@@ -344,8 +373,7 @@ class TestMiscTrainingFunctionality:
                                     sender=xor_hid,
                                     receiver=xor_out)
 
-        xor = AutodiffComposition(param_init_from_pnl=True,
-                                  learning_rate=10.0,
+        xor = AutodiffComposition(learning_rate=10.0,
                                   optimizer_type="sgd")
 
         xor.add_node(xor_in)
@@ -379,83 +407,6 @@ class TestMiscTrainingFunctionality:
         assert not np.allclose(pt_weights_hid, hid_map.parameters.matrix.get(None))
         assert not np.allclose(pt_weights_out, out_map.parameters.matrix.get(None))
 
-    # test whether the autodiff composition's get_parameters method works as desired
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    #   LLVM test is disabled since parameters are currently not written back
-
-                                     ])
-    def test_get_params(self, mode):
-
-        xor_in = TransferMechanism(name='xor_in',
-                                   default_variable=np.zeros(2))
-
-        xor_hid = TransferMechanism(name='xor_hid',
-                                    default_variable=np.zeros(10),
-                                    function=Logistic())
-
-        xor_out = TransferMechanism(name='xor_out',
-                                    default_variable=np.zeros(1),
-                                    function=Logistic())
-
-        hid_map = MappingProjection(matrix=np.random.rand(2,10))
-        out_map = MappingProjection(matrix=np.random.rand(10,1))
-
-        xor = AutodiffComposition(param_init_from_pnl=True,
-                                  learning_rate=1.0)
-
-        xor.add_node(xor_in)
-        xor.add_node(xor_hid)
-        xor.add_node(xor_out)
-
-        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
-        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0], [0, 1], [1, 0], [1, 1]])
-
-        xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0], [1], [1], [0]])
-
-        # call run to only process the inputs, so that pytorch representation of AC gets created
-        # results = xor.run(inputs={xor_in:xor_inputs})
-
-        #KAM Changed 11/1/18
-
-        # mini version of xor.execute just to build up pytorch representation
-        xor._analyze_graph()
-        # CW changed 12/3/18
-        xor._build_pytorch_representation(xor.default_execution_id)
-        # OLD
-        # xor._build_pytorch_representation()
-
-        # call get_parameters to obtain a copy of the pytorch parameters in numpy arrays,
-        # and get the parameters straight from pytorch
-        weights_get_params = xor.get_parameters()
-        weights_straight_1 = xor.parameters.pytorch_representation.get(xor).params[0]
-        weights_straight_2 = xor.parameters.pytorch_representation.get(xor).params[1]
-
-        # check that parameter copies obtained from get_parameters are the same as the
-        # projections and parameters from pytorch
-        assert np.allclose(hid_map.parameters.matrix.get(None), weights_get_params[hid_map])
-        assert np.allclose(weights_straight_1.detach().numpy(), weights_get_params[hid_map])
-        assert np.allclose(out_map.parameters.matrix.get(None), weights_get_params[out_map])
-        assert np.allclose(weights_straight_2.detach().numpy(), weights_get_params[out_map])
-
-        # call run to train the pytorch parameters
-        results = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
-                                  "targets": {xor_out:xor_targets},
-                                  "epochs": 10}, bin_execute=mode)
-
-
-        # check that the parameter copies obtained from get_parameters have not changed with the
-        # pytorch parameters during training (and are thus at a different memory location)
-        # (only makes sense in Python mode)
-        if mode == 'Python':
-            assert not np.allclose(weights_straight_1.detach().numpy(), weights_get_params[hid_map])
-            assert not np.allclose(weights_straight_2.detach().numpy(), weights_get_params[out_map])
-
-
 @pytest.mark.pytorch
 @pytest.mark.accorrectness
 class TestTrainingCorrectness:
@@ -463,17 +414,15 @@ class TestTrainingCorrectness:
     # test whether xor model created as autodiff composition learns properly
     @pytest.mark.benchmark(group="XOR")
     @pytest.mark.parametrize(
-        'eps, calls, opt, from_pnl_or_not, expected', [
-            (100, 'single', 'adam', True, [[[0.09823965]], [[0.81092879]], [[0.78179557]], [[0.25593583]]]),
-            (50, 'multiple', 'adam', True, [[[0.31200036]], [[0.59406178]], [[0.60417587]], [[0.52347365]]]),
-            (100, 'single', 'adam', False, [[[0.12697489]], [[0.74632817]], [[0.80712739]], [[0.28699516]]]),
-            (50, 'multiple', 'adam', False, [[[0.2935138]], [[0.60503794]], [[0.57901045]], [[0.57705371]]])
+        'eps, calls, opt, expected', [
+            (100, 'single', 'adam', [[[0.09823965]], [[0.81092879]], [[0.78179557]], [[0.25593583]]]),
+            (50, 'multiple', 'adam', [[[0.31200036]], [[0.59406178]], [[0.60417587]], [[0.52347365]]]),
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
-    def test_xor_training_correctness(self, eps, calls, opt, from_pnl_or_not, mode, benchmark, expected):
+    def test_xor_training_correctness(self, eps, calls, opt, mode, benchmark, expected):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -488,8 +437,7 @@ class TestTrainingCorrectness:
         hid_map = MappingProjection(matrix=np.random.rand(2, 10))
         out_map = MappingProjection(matrix=np.random.rand(10, 1))
 
-        xor = AutodiffComposition(param_init_from_pnl=from_pnl_or_not,
-                                  optimizer_type=opt,
+        xor = AutodiffComposition(optimizer_type=opt,
                                   learning_rate=0.1)
 
         xor.add_node(xor_in)
@@ -517,11 +465,9 @@ class TestTrainingCorrectness:
             for i in range(eps):
                 results = xor.learn(inputs=input_dict, bin_execute=mode)
 
-        # FIXME: Improve accuracy
-        atol = 0.1 if not from_pnl_or_not and mode == 'LLVMRun' else 0.001
         assert len(results) == len(expected)
         for r, t in zip(results, expected):
-            assert np.allclose(r[0], t, atol=atol)
+            assert np.allclose(r[0], t)
 
         benchmark(xor.learn, inputs={"inputs": {xor_in: xor_inputs},
                                      "targets": {xor_out: xor_targets},
@@ -531,15 +477,14 @@ class TestTrainingCorrectness:
     # tests whether semantic network created as autodiff composition learns properly
     @pytest.mark.benchmark(group="Semantic net")
     @pytest.mark.parametrize(
-        'eps, opt, from_pnl_or_not', [
-            (500, 'adam', True),
-            # (300, 'adam', False)
+        'eps, opt', [
+            (500, 'adam'),
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
-    def test_semantic_net_training_correctness(self, eps, opt, from_pnl_or_not, mode, benchmark):
+    def test_semantic_net_training_correctness(self, eps, opt, mode, benchmark):
 
         # MECHANISMS FOR SEMANTIC NET:
 
@@ -611,8 +556,7 @@ class TestTrainingCorrectness:
                                        receiver=out_sig_can)
 
         # COMPOSITION FOR SEMANTIC NET
-        sem_net = AutodiffComposition(param_init_from_pnl=from_pnl_or_not,
-                                      optimizer_type=opt, learning_rate=.001)
+        sem_net = AutodiffComposition(optimizer_type=opt, learning_rate=.001)
 
         sem_net.add_node(nouns_in)
         sem_net.add_node(rels_in)
@@ -805,10 +749,7 @@ class TestTrainingCorrectness:
 
         for res, exp in zip(results, expected):
             for r, e in zip(res, exp):
-                if mode == 'Python':
-                    assert np.allclose(r, e)
-                else:
-                    assert np.allclose(r, e, atol=0.01)
+                assert np.allclose(r, e)
         benchmark(sem_net.learn, inputs={'inputs': inputs_dict,
                                          'targets': targets_dict,
                                          'epochs': eps}, bin_execute=mode)
@@ -956,8 +897,7 @@ class TestTrainingCorrectness:
         pco = MappingProjection(matrix=wco)
         pho = MappingProjection(matrix=who)
 
-        mnet = AutodiffComposition(param_init_from_pnl=True,
-                                   learning_rate=learning_rate)
+        mnet = AutodiffComposition(learning_rate=learning_rate)
 
         mnet.add_node(il)
         mnet.add_node(cl)
@@ -1171,8 +1111,7 @@ class TestTrainingCorrectness:
         pco = MappingProjection(matrix=wco)
         pho = MappingProjection(matrix=who, learnable=False)
 
-        mnet = AutodiffComposition(param_init_from_pnl=True,
-                                   learning_rate=learning_rate)
+        mnet = AutodiffComposition(learning_rate=learning_rate)
 
         mnet.add_node(il)
         mnet.add_node(cl)
@@ -1298,7 +1237,7 @@ class TestTrainingTime:
 
         # SET UP COMPOSITION
 
-        and_net = AutodiffComposition(param_init_from_pnl=True)
+        and_net = AutodiffComposition()
 
         and_net.add_node(and_in)
         and_net.add_node(and_out)
@@ -1401,7 +1340,7 @@ class TestTrainingTime:
 
         # SET UP COMPOSITION
 
-        xor = AutodiffComposition(param_init_from_pnl=True,bin_execute=mode)
+        xor = AutodiffComposition(bin_execute=mode)
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -1606,7 +1545,7 @@ class TestTrainingTime:
 
         # COMPOSITION FOR SEMANTIC NET
 
-        sem_net = AutodiffComposition(param_init_from_pnl=True)
+        sem_net = AutodiffComposition()
 
         sem_net.add_node(nouns_in)
         sem_net.add_node(rels_in)
@@ -1872,8 +1811,7 @@ class TestTrainingIdenticalness():
                                            receiver=out_sig_can_sys)
 
         # SET UP COMPOSITION FOR SEMANTIC NET
-        sem_net = AutodiffComposition(param_init_from_pnl=True,
-                                      learning_rate=0.5,
+        sem_net = AutodiffComposition(learning_rate=0.5,
                                       optimizer_type=opt,
                                       )
 
@@ -1968,8 +1906,6 @@ class TestTrainingIdenticalness():
 
         result = sem_net.run(inputs=inputs_dict)
 
-        # comp_weights = sem_net.get_parameters()[0]
-
         # TRAIN COMPOSITION
         def g_f():
             yield {"inputs": inputs_dict,
@@ -1977,8 +1913,6 @@ class TestTrainingIdenticalness():
                    "epochs": eps}
         g = g_f()
         result = sem_net.learn(inputs=g_f)
-
-        comp_weights = sem_net.get_parameters()
 
         # SET UP SYSTEM
         sem_net_sys = Composition()
@@ -2035,13 +1969,13 @@ class TestTrainingIdenticalness():
 
         # CHECK THAT PARAMETERS FOR COMPOSITION, SYSTEM ARE SAME
 
-        assert np.allclose(comp_weights[map_nouns_h1], map_nouns_h1_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(comp_weights[map_rels_h2], map_rels_h2_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(comp_weights[map_h1_h2], map_h1_h2_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(comp_weights[map_h2_I], map_h2_I_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(comp_weights[map_h2_is], map_h2_is_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(comp_weights[map_h2_has], map_h2_has_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(comp_weights[map_h2_can], map_h2_can_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_nouns_h1.parameters.matrix.get(sem_net), map_nouns_h1_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_rels_h2.parameters.matrix.get(sem_net), map_rels_h2_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_h1_h2.parameters.matrix.get(sem_net), map_h1_h2_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_h2_I.parameters.matrix.get(sem_net), map_h2_I_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_h2_is.parameters.matrix.get(sem_net), map_h2_is_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_h2_has.parameters.matrix.get(sem_net), map_h2_has_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_h2_can.parameters.matrix.get(sem_net), map_h2_can_sys.get_mod_matrix(sem_net_sys))
 
     def test_identicalness_of_input_types(self):
         # SET UP MECHANISMS FOR COMPOSITION
@@ -2073,7 +2007,7 @@ class TestTrainingIdenticalness():
 
         # SET UP COMPOSITION
 
-        xor_dict = AutodiffComposition(param_init_from_pnl=True)
+        xor_dict = AutodiffComposition()
 
         xor_dict.add_node(xor_in_dict)
         xor_dict.add_node(xor_hid_dict)
@@ -2132,7 +2066,7 @@ class TestTrainingIdenticalness():
 
         # SET UP COMPOSITION
 
-        xor_func = AutodiffComposition(param_init_from_pnl=True)
+        xor_func = AutodiffComposition()
 
         xor_func.add_node(xor_in_func)
         xor_func.add_node(xor_hid_func)
@@ -2193,7 +2127,7 @@ class TestTrainingIdenticalness():
 
         # SET UP COMPOSITION
 
-        xor_gen = AutodiffComposition(param_init_from_pnl=True)
+        xor_gen = AutodiffComposition()
 
         xor_gen.add_node(xor_in_gen)
         xor_gen.add_node(xor_hid_gen)
@@ -2255,7 +2189,7 @@ class TestTrainingIdenticalness():
 
         # SET UP COMPOSITION
 
-        xor_gen_func = AutodiffComposition(param_init_from_pnl=True)
+        xor_gen_func = AutodiffComposition()
 
         xor_gen_func.add_node(xor_in_gen_func)
         xor_gen_func.add_node(xor_hid_gen_func)
@@ -2310,7 +2244,7 @@ class TestACLogging:
         hid_map = MappingProjection()
         out_map = MappingProjection()
 
-        xor = AutodiffComposition(param_init_from_pnl=True)
+        xor = AutodiffComposition()
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -2318,6 +2252,10 @@ class TestACLogging:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+        xor_in.set_log_conditions('value', pnl.LogCondition.TRIAL)
+        xor_hid.set_log_conditions('value', pnl.LogCondition.TRIAL)
+        xor_out.set_log_conditions('value', pnl.LogCondition.TRIAL)
 
         hid_map.set_log_conditions('matrix', pnl.LogCondition.TRIAL)
         out_map.set_log_conditions('matrix', pnl.LogCondition.TRIAL)
@@ -2390,7 +2328,7 @@ class TestACLogging:
         hid_map = MappingProjection()
         out_map = MappingProjection()
 
-        xor = AutodiffComposition(param_init_from_pnl=True)
+        xor = AutodiffComposition()
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -2474,7 +2412,6 @@ class TestNested:
         # -----------------------------------------------------------------
 
         xor_autodiff = AutodiffComposition(
-            param_init_from_pnl=True,
             learning_rate=learning_rate,
         )
 
@@ -2546,7 +2483,6 @@ class TestNested:
         # -----------------------------------------------------------------
 
         xor_autodiff = AutodiffComposition(
-            param_init_from_pnl=True,
             learning_rate=learning_rate,
         )
 
@@ -2618,7 +2554,6 @@ class TestNested:
     #     # -----------------------------------------------------------------
     #
     #     xor_autodiff = AutodiffComposition(
-    #         param_init_from_pnl=True,
     #         patience=patience,
     #         min_delta=min_delta,
     #         learning_rate=learning_rate,
@@ -2804,8 +2739,7 @@ class TestNested:
 
         # SET UP COMPOSITION FOR SEMANTIC NET
 
-        sem_net = AutodiffComposition(param_init_from_pnl=True,
-                                      learning_rate=0.5,
+        sem_net = AutodiffComposition(learning_rate=0.5,
                                       optimizer_type=opt)
 
         sem_net.add_node(nouns_in)
@@ -2894,8 +2828,6 @@ class TestNested:
                 targets_dict[out_sig_has].append(truth_has[i])
                 targets_dict[out_sig_can].append(truth_can[i])
 
-        # comp_weights = sem_net.get_parameters()[0]
-
         # TRAIN COMPOSITION
         input_dict = {"inputs": inputs_dict,
                       "targets": targets_dict,
@@ -2945,8 +2877,7 @@ class TestBatching:
 
         # SET UP COMPOSITION
 
-        xor = AutodiffComposition(param_init_from_pnl=True,
-                                  learning_rate=10)
+        xor = AutodiffComposition(learning_rate=10)
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -3013,8 +2944,7 @@ class TestBatching:
 
         # SET UP COMPOSITION
 
-        xor = AutodiffComposition(param_init_from_pnl=True,
-                                  learning_rate=10)
+        xor = AutodiffComposition(learning_rate=10)
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -3085,8 +3015,7 @@ class TestBatching:
 
         # SET UP COMPOSITION
 
-        xor = AutodiffComposition(param_init_from_pnl=True,
-                                  learning_rate=10,
+        xor = AutodiffComposition(learning_rate=10,
                                   # optimizer_type=opt
                                   )
 

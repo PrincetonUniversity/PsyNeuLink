@@ -143,7 +143,6 @@ from psyneulink.core import llvm as pnlvm
 import copy
 import numpy as np
 import ctypes
-import warnings
 from collections.abc import Iterable
 from toposort import toposort
 from inspect import isgenerator
@@ -226,7 +225,6 @@ class AutodiffComposition(Composition):
 
     # TODO (CW 9/28/18): add compositions to registry so default arg for name is no longer needed
     def __init__(self,
-                 param_init_from_pnl=True,
                  learning_rate=None,
                  optimizer_type='sgd',
                  weight_decay=0,
@@ -256,11 +254,6 @@ class AutodiffComposition(Composition):
         self.force_no_retain_graph = force_no_retain_graph
         self.loss = None
         self.disable_learning = disable_learning
-        # user indication of how to initialize pytorch parameters
-        self.param_init_from_pnl = param_init_from_pnl
-
-        if param_init_from_pnl is False:
-            warnings.warn("WARNING: Autodiffcomposition.param_init_from_pnl is deprecated! Please do not use it!")
 
         # keeps track of average loss per epoch
         self.losses = []
@@ -281,17 +274,11 @@ class AutodiffComposition(Composition):
     def _build_pytorch_representation(self, context=None):
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
-        if self.execution_sets is None:
-            self.execution_sets = [ x - set(self.get_nodes_by_role(NodeRole.LEARNING)) for x in self.scheduler.run(context=context)]
-            self.execution_sets = [x for x in self.execution_sets if len(x) > 0]
-        if self.parameters.pytorch_representation._get(context) is None:
-            model = PytorchModelCreator(self.graph_processing,
-                                        self.param_init_from_pnl,
-                                        self.execution_sets,
-                                        self.device,
-                                        context=context,
-                                        composition = self,
-                                        )
+        if self.parameters.pytorch_representation._get(context=context) is None:
+            model = PytorchModelCreator(composition=self,
+                                        device=self.device,
+                                        context=context)
+
             self.parameters.pytorch_representation._set(model, context, skip_history=True, skip_log=True)
 
         # Set up optimizer function
@@ -379,7 +366,6 @@ class AutodiffComposition(Composition):
         curr_tensor_outputs = self.parameters.pytorch_representation._get(context).forward(
             curr_tensor_inputs,
             context,
-            scheduler=scheduler,
         )
 
         for component in curr_tensor_outputs.keys():
@@ -423,8 +409,6 @@ class AutodiffComposition(Composition):
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "run" in tags:
             return pnlvm.codegen.gen_composition_run(ctx, self, tags=tags)
-        elif "learning" in tags:
-            return pnlvm.codegen.gen_autodiffcomp_learning_exec(ctx, self, tags=tags)
         else:
             return pnlvm.codegen.gen_autodiffcomp_exec(ctx, self, tags=tags)
 
@@ -531,9 +515,6 @@ class AutodiffComposition(Composition):
             context.execution_phase = execution_phase
 
 
-            # note that output[-1] might not be the truly most recent value
-            # HACK CW 2/5/19: the line below is a hack. In general, the output_CIM of an AutodiffComposition
-            # is not having its parameters populated correctly, and this should be fixed in the long run.
             scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
             return output
 
@@ -551,23 +532,6 @@ class AutodiffComposition(Composition):
                                                         runtime_params=runtime_params,
                                                         bin_execute=bin_execute,
                                                         )
-
-    # gives user weights and biases of the model (from the pytorch representation)
-    @handle_external_context(execution_id=NotImplemented)
-    def get_parameters(self, context=None):
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.default_execution_id
-
-        pytorch_representation = self.parameters.pytorch_representation._get(context)
-
-        if pytorch_representation is None:
-            raise AutodiffCompositionError("{0} has not been run yet so parameters have not been created "
-                                           "in Pytorch."
-                                           .format(self.name))
-
-        weights = pytorch_representation.get_weights_for_projections()
-
-        return weights
 
     def _get_state_struct_type(self, ctx):
         node_state_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)

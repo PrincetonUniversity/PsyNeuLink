@@ -7,8 +7,6 @@ __all__ = ['MSELoss']
 class Loss():
 
     def __init__(self):
-        self._structs = []
-
         self._DELTA_W_NUM = 0
 
 

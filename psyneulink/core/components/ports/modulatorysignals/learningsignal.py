@@ -342,7 +342,7 @@ class LearningSignal(ModulatorySignal):
                  index=PRIMARY,
                  assign=None,
                  function=None,
-                 learning_rate: tc.optional(parameter_spec) = None,
+                 learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
                  modulation:tc.optional(str)=None,
                  modulates=None,
                  params=None,

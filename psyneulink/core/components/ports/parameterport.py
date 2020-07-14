@@ -871,13 +871,13 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
         """Return (<default param value>, <modulatory spec>) for modulatory spec
         """
         try:
-            param_default_value = obj.get_constructor_defaults()[name]
+            param_default_value = getattr(obj.defaults, name)
             # Only assign default value if it is not None
             if param_default_value is not None:
                 return (param_default_value, value)
             else:
                 return value
-        except KeyError:
+        except AttributeError:
             raise ParameterPortError("Unrecognized specification for {} paramater of {} ({})".
                                       format(param_name, owner.name, param_value))
 

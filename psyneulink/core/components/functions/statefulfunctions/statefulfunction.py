@@ -201,12 +201,12 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate=1.0,
-                 noise=0.0,
+                 rate=None,
+                 noise=None,
                  initializer=None,
-                 params: tc.optional(dict) = None,
+                 params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  context=None,
                  **kwargs
                  ):
@@ -391,7 +391,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                                             "{} is not a valid noise element for {}".format(noise[i], self.name))
 
         # Otherwise, must be a float, int or function
-        elif not isinstance(noise, (float, int)) and not callable(noise):
+        elif noise is not None and not isinstance(noise, (float, int)) and not callable(noise):
             raise FunctionError(
                 "Noise parameter ({}) for {} must be a float, function, or array/list of these."
                     .format(noise, self.name))

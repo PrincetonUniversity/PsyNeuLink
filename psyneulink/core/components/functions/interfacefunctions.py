@@ -122,7 +122,7 @@ class InterfacePortMap(InterfaceFunction):
                  corresponding_input_port=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,

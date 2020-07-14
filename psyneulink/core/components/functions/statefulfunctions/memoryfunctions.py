@@ -207,19 +207,19 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  # was failing.
                  # For now, updated default_variable, noise, and Alternatively, we can change validation on
                  # default_variable=None,   # Changed to [] because None conflicts with initializer
-                 rate=1.0,
-                 noise=0.0,
+                 rate=None,
+                 noise=None,
                  # rate: parameter_spec=1.0,
                  # noise: parameter_spec=0.0,
-                 # rate: tc.optional(tc.any(int, float)) = None,         # Changed to 1.0 because None fails validation
-                 # noise: tc.optional(tc.any(int, float, callable)) = None,    # Changed to 0.0 - None fails validation
+                 # rate: tc.optional(tc.optional(tc.any(int, float))) = None,         # Changed to 1.0 because None fails validation
+                 # noise: tc.optional(tc.optional(tc.any(int, float, callable))) = None,    # Changed to 0.0 - None fails validation
                  # rate: tc.optional(tc.any(int, float, list, np.ndarray)) = 1.0,
                  # noise: tc.optional(tc.any(int, float, list, np.ndarray, callable)) = 0.0,
-                 history: tc.optional(int) = None,
+                 history: tc.optional(tc.optional(int)) = None,
                  initializer=None,
-                 params: tc.optional(dict) = None,
+                 params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -687,20 +687,20 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 retrieval_prob: tc.optional(tc.any(int, float))=1.0,
-                 storage_prob: tc.optional(tc.any(int, float))=1.0,
-                 noise: tc.optional(tc.any(int, float, list, np.ndarray, callable))=0.0,
-                 rate: tc.optional(tc.any(int, float, list, np.ndarray))=1.0,
+                 retrieval_prob: tc.optional(tc.any(int, float))=None,
+                 storage_prob: tc.optional(tc.any(int, float))=None,
+                 noise: tc.optional(tc.any(int, float, list, np.ndarray, callable))=None,
+                 rate: tc.optional(tc.any(int, float, list, np.ndarray))=None,
                  initializer=None,
                  distance_function:tc.optional(tc.any(Distance, is_function_type))=None,
                  selection_function:tc.optional(tc.any(OneHot, is_function_type))=None,
-                 duplicate_keys:tc.any(bool, tc.enum(OVERWRITE))=False,
-                 equidistant_keys_select:tc.enum(RANDOM, OLDEST, NEWEST)=RANDOM,
-                 max_entries=1000,
+                 duplicate_keys:tc.optional(tc.any(bool, tc.enum(OVERWRITE)))=None,
+                 equidistant_keys_select:tc.optional(tc.enum(RANDOM, OLDEST, NEWEST))=None,
+                 max_entries=None,
                  seed=None,
-                 params: tc.optional(tc.any(list, np.ndarray)) = None,
+                 params: tc.optional(tc.optional(tc.any(list, np.ndarray))) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if initializer is None:
             initializer = []

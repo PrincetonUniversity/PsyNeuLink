@@ -199,12 +199,12 @@ from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.globals.keywords import \
     CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INITIALIZER, LCA_MECHANISM, LEAK, LESS_THAN_OR_EQUAL, MATRIX, NAME, \
-    NOISE, RATE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, VALUE
+    NOISE, RATE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, VALUE, INVERSE_HOLLOW_MATRIX
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
-    RecurrentTransferMechanism
+    RecurrentTransferMechanism, _recurrent_transfer_mechanism_matrix_getter, _recurrent_transfer_mechanism_matrix_setter
 
 __all__ = ['LCAMechanism', 'LCAError', 'CONVERGENCE']
 
@@ -391,6 +391,12 @@ class LCAMechanism(RecurrentTransferMechanism):
 
         function = Parameter(Logistic, stateful=False, loggable=False)
 
+        matrix = Parameter(
+            INVERSE_HOLLOW_MATRIX,
+            modulable=True,
+            getter=_recurrent_transfer_mechanism_matrix_getter,
+            setter=_recurrent_transfer_mechanism_matrix_setter
+        )
         leak = Parameter(0.5, modulable=True)
         auto = Parameter(0.0, modulable=True, aliases='self_excitation')
         hetero = Parameter(-1.0, modulable=True)
@@ -401,6 +407,24 @@ class LCAMechanism(RecurrentTransferMechanism):
         integrator_mode = Parameter(True, setter=_integrator_mode_setter)
         integrator_function = Parameter(LeakyCompetingIntegrator, stateful=False, loggable=False)
         termination_measure = Parameter(max, stateful=False, loggable=False)
+
+        output_ports = Parameter(
+            [RESULT],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+        )
+
+        def _validate_competition(self, competition):
+            if competition < 0:
+                warnings.warn(
+                    f"The 'competition' arg specified for {self.name} is a negative value ({competition}); "
+                    f"note that this will result in a matrix that has positive off-diagonal elements "
+                    f"since 'competition' is assumed to specify the magnitude of inhibition."
+                )
+
+            return None
 
     standard_output_ports = RecurrentTransferMechanism.standard_output_ports.copy()
     standard_output_ports.extend([{NAME:MAX_VS_NEXT,
@@ -413,30 +437,23 @@ class LCAMechanism(RecurrentTransferMechanism):
                  default_variable=None,
                  size:tc.optional(tc.any(int, list, np.array))=None,
                  input_ports:tc.optional(tc.any(list, dict))=None,
-                 function=Logistic,
+                 function=None,
                  initial_value=None,
-                 leak=0.5,
-                 competition=1.0,
+                 leak=None,
+                 competition=None,
                  hetero=None,
                  self_excitation=None,
-                 noise=0.0,
-                 integrator_mode=True,
-                 time_step_size=0.1,
+                 noise=None,
+                 integrator_mode=None,
+                 time_step_size=None,
                  clip=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=RESULT,
+                 output_ports:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
         """Instantiate LCAMechanism
         """
-
-        # Default output_ports is specified in constructor as a string rather than a list
-        # to avoid "gotcha" associated with mutable default arguments
-        # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if output_ports is None or output_ports == RESULT:
-            output_ports = [RESULT]
-
         # MODIFIED 1/22/20 NEW: [JDC]
         if MATRIX in kwargs:
             matrix = kwargs[MATRIX]
@@ -467,8 +484,6 @@ class LCAMechanism(RecurrentTransferMechanism):
         termination_threshold, termination_measure, termination_comparison_op = self._parse_threshold_args(kwargs)
         # MODIFIED 10/26/19 END
 
-        integrator_function = LeakyCompetingIntegrator
-
         super().__init__(
             default_variable=default_variable,
             size=size,
@@ -477,7 +492,7 @@ class LCAMechanism(RecurrentTransferMechanism):
             auto=self_excitation,
             hetero=hetero,
             function=function,
-            integrator_function=LeakyCompetingIntegrator,
+            integrator_function=None,
             initial_value=initial_value,
             noise=noise,
             clip=clip,
@@ -506,11 +521,6 @@ class LCAMechanism(RecurrentTransferMechanism):
             warnings.warn(f"The 'matrix' arg was specified for {self.name}, "
                           f"so its 'self_excitation' and 'competition' arguments will be ignored.")
             # MODIFIED 1/22/20 END
-
-        elif competition < 0:
-            warnings.warn(f"The 'competition' arg specified for {self.name} is a negative value ({competition}); "
-                          f"note that this will result in a matrix that has positive off-diagonal elements "
-                          f"since 'competition' is assumed to specify the magnitude of inhibition.")
 
     def _parse_threshold_args(self, kwargs):
         """Implements convenience arguments threshold and threshold_criterion

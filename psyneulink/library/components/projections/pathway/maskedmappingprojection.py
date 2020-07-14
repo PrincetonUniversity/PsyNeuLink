@@ -179,13 +179,13 @@ class MaskedMappingProjection(MappingProjection):
     def __init__(self,
                  sender=None,
                  receiver=None,
-                 matrix=DEFAULT_MATRIX,
+                 matrix=None,
                  mask:tc.optional(tc.any(int,float,list,np.ndarray,np.matrix))=None,
-                 mask_operation:tc.enum(ADD, MULTIPLY, EXPONENTIATE)=MULTIPLY,
+                 mask_operation: tc.optional(tc.enum(ADD, MULTIPLY, EXPONENTIATE)) = None,
                  function=None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  **kwargs):
 
         super().__init__(

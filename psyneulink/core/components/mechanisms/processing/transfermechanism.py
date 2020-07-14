@@ -609,7 +609,6 @@ import inspect
 import numbers
 import warnings
 import logging
-import operator
 import types
 from collections.abc import Iterable
 
@@ -1069,7 +1068,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             loggable=False
         )
         termination_threshold = Parameter(None, modulable=True)
-        termination_comparison_op = Parameter(operator.le, modulable=False, loggable=False)
+        termination_comparison_op = Parameter(LESS_THAN_OR_EQUAL, modulable=False, loggable=False)
         termination_measure_value = Parameter(0.0, modulable=False, read_only=True)
 
         output_ports = Parameter(
@@ -1113,21 +1112,21 @@ class TransferMechanism(ProcessingMechanism_Base):
                  default_variable=None,
                  size=None,
                  input_ports:tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))=None,
-                 function=Linear,
-                 integrator_mode=False,
+                 function=None,
+                 integrator_mode=None,
                  integrator_function=None,
                  initial_value=None,
-                 integration_rate=0.5,
-                 on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
-                 noise=0.0,
+                 integration_rate=None,
+                 on_resume_integrator_mode=None,
+                 noise=None,
                  clip=None,
                  termination_measure=None,
                  termination_threshold:tc.optional(tc.any(int, float))=None,
-                 termination_comparison_op:tc.any(str, is_comparison_operator)=LESS_THAN_OR_EQUAL,
+                 termination_comparison_op: tc.optional(tc.any(str, is_comparison_operator)) = None,
                  output_ports:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs: tc.optional(is_pref_set) = None,
                  **kwargs):
         """Assign type-level preferences and call super.__init__
         """
@@ -1137,9 +1136,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
         if output_ports is None or output_ports == RESULTS:
             output_ports = [RESULTS]
-
-        if termination_measure is None:
-            Distance(metric=MAX_ABS_DIFF)
 
         initial_value = self._parse_arg_initial_value(initial_value)
 
@@ -1304,7 +1300,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             pass
 
         # Otherwise, must be a float, int or function
-        elif not isinstance(noise, (float, int)) and not callable(noise):
+        elif noise is not None and not isinstance(noise, (float, int)) and not callable(noise):
             raise MechanismError("Noise parameter ({}) for {} must be a float, "
                                  "function, or array/list of these.".format(noise,
                                                                             self.name))
@@ -1632,7 +1628,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         cmp_str = self.parameters.termination_comparison_op.get(None)
         return builder.fcmp_ordered(cmp_str, cmp_val, threshold)
 
-    def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out):
+    def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         ip_out, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
 
         if self.integrator_mode:
@@ -1645,7 +1641,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     params, state, arg_in)
 
             mf_in, builder = self._gen_llvm_invoke_function(
-                    ctx, builder, self.integrator_function, if_params, if_state, ip_out)
+                    ctx, builder, self.integrator_function, if_params, if_state, ip_out, tags=tags)
         else:
             mf_in = ip_out
 
@@ -1654,7 +1650,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         mf_params, builder = self._gen_llvm_param_ports_for_obj(
                 self.function, mf_param_ptr, ctx, builder, params, state, arg_in)
 
-        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, mf_in)
+        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, mf_in, tags=tags)
 
         # FIXME: Convert to runtime instead of compile time
         clip = self.parameters.clip.get()

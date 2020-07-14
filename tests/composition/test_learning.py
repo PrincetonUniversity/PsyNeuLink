@@ -2020,6 +2020,10 @@ class TestBackProp:
                                                                               output_comp],
                                                                              learning_rate=10)
             target_mech = backprop_pathway.target
+            inputs_dict = {"inputs": {input_comp:xor_inputs},
+                           "targets": {output_comp:xor_targets},
+                           "epochs": num_epochs}
+            result_comp = xor_comp.learn(inputs=inputs_dict)
 
         # AutodiffComposition
         if 'AUTODIFF' in models:
@@ -2045,9 +2049,8 @@ class TestBackProp:
                                         sender=hidden_autodiff,
                                         receiver=output_autodiff)
     
-            xor_autodiff = pnl.AutodiffComposition(param_init_from_pnl=True,
-                                      learning_rate=10,
-                                      optimizer_type='sgd')
+            xor_autodiff = pnl.AutodiffComposition(learning_rate=10,
+                                                   optimizer_type='sgd')
     
             xor_autodiff.add_node(input_autodiff)
             xor_autodiff.add_node(hidden_autodiff)
@@ -2060,20 +2063,13 @@ class TestBackProp:
             inputs_dict = {"inputs": {input_autodiff:xor_inputs},
                            "targets": {output_autodiff:xor_targets},
                            "epochs": num_epochs}
-        # RUN MODELS -----------------------------------------------------------------------------------
-        if pnl.COMPOSITION in models:
-            result = xor_comp.learn(inputs={input_comp:xor_inputs,
-                                            target_mech:xor_targets},
-                                    num_trials=(num_epochs * xor_inputs.shape[0]),
-                                    )
-        if 'AUTODIFF' in models:
-            result = xor_autodiff.learn(inputs=inputs_dict)
-            autodiff_weights = xor_autodiff.get_parameters()
+            result_autodiff = xor_autodiff.learn(inputs=inputs_dict)
 
         # COMPARE WEIGHTS FOR PAIRS OF MODELS ----------------------------------------------------------
         if all(m in models for m in {pnl.COMPOSITION, 'AUTODIFF'}):
-            assert np.allclose(autodiff_weights[in_to_hidden_autodiff], in_to_hidden_comp.get_mod_matrix(xor_comp))
-            assert np.allclose(autodiff_weights[hidden_to_out_autodiff], hidden_to_out_comp.get_mod_matrix(xor_comp))
+            assert np.allclose(in_to_hidden_autodiff.parameters.matrix.get(xor_autodiff), in_to_hidden_comp.get_mod_matrix(xor_comp))
+            assert np.allclose(hidden_to_out_autodiff.parameters.matrix.get(xor_autodiff), hidden_to_out_comp.get_mod_matrix(xor_comp))
+            assert np.allclose(result_comp, result_autodiff)
 
     @pytest.mark.parametrize('configuration', [
         'Y UP',

@@ -193,7 +193,6 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function, get_matrix, is_function_type
 from psyneulink.core.components.functions.learningfunctions import Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Stability
-from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
@@ -634,8 +633,15 @@ class RecurrentTransferMechanism(TransferMechanism):
         )
         learning_rate = Parameter(None, setter=_recurrent_transfer_mechanism_learning_rate_setter)
         learning_condition = Parameter(None, stateful=False, loggable=False)
-        has_recurrent_input_port = Parameter(None, stateful=False, loggable=False)
+        has_recurrent_input_port = Parameter(False, stateful=False, loggable=False)
 
+        output_ports = Parameter(
+            [RESULT],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+        )
 
     standard_output_ports = TransferMechanism.standard_output_ports.copy()
     standard_output_ports.extend([{NAME:ENERGY_OUTPUT_PORT_NAME}, {NAME:ENTROPY_OUTPUT_PORT_NAME}])
@@ -646,22 +652,22 @@ class RecurrentTransferMechanism(TransferMechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_ports:tc.optional(tc.any(list, dict)) = None,
-                 has_recurrent_input_port=False,
-                 combination_function:is_function_type=LinearCombination,
-                 function=Linear,
+                 input_ports:tc.optional(tc.optional(tc.any(list, dict))) = None,
+                 has_recurrent_input_port=None,
+                 combination_function: tc.optional(is_function_type) = None,
+                 function=None,
                  matrix=None,
                  auto=None,
                  hetero=None,
-                 integrator_mode=False,
+                 integrator_mode=None,
                  integrator_function=None,
                  initial_value=None,
-                 integration_rate: is_numeric_or_none=0.5,
-                 noise=0.0,
+                 integration_rate: is_numeric_or_none=None,
+                 noise=None,
                  clip=None,
-                 enable_learning:bool=False,
+                 enable_learning: tc.optional(bool) = None,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
-                 learning_function: tc.any(is_function_type) = Hebbian,
+                 learning_function: tc.optional(tc.any(is_function_type)) = None,
                  learning_condition:tc.optional(tc.any(Condition, TimeScale,
                                                        tc.enum(UPDATE, CONVERGENCE)))=None,
                  output_ports:tc.optional(tc.any(str, Iterable))=None,
@@ -671,13 +677,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                  **kwargs):
         """Instantiate RecurrentTransferMechanism
         """
-
-        # Default output_ports is specified in constructor as a string rather than a list
-        # to avoid "gotcha" associated with mutable default arguments
-        # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if output_ports is None or output_ports == RESULT:
-            output_ports = [RESULT]
-
         if isinstance(hetero, (list, np.matrix)):
             hetero = np.array(hetero)
 

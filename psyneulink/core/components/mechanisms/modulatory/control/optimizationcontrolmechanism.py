@@ -713,11 +713,11 @@ class OptimizationControlMechanism(ControlMechanism):
     def __init__(self,
                  agent_rep=None,
                  function=None,
-                 features: tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort)) = None,
-                 feature_function: tc.optional(tc.any(is_function_type)) = None,
+                 features: tc.optional(tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))) = None,
+                 feature_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  num_estimates = None,
-                 search_function: tc.optional(tc.any(is_function_type)) = None,
-                 search_termination_function: tc.optional(tc.any(is_function_type)) = None,
+                 search_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
+                 search_termination_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  search_statefulness=None,
                  context=None,
                  **kwargs):
@@ -1228,7 +1228,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return f
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable, *, tags:frozenset):
         fun = ctx.import_llvm_function(function)
         fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
         fun_out = builder.alloca(fun.args[3].type.pointee)

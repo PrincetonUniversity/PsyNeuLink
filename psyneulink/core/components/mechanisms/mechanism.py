@@ -2945,8 +2945,8 @@ class Mechanism_Base(Mechanism):
                                        mech_params, mech_state, mech_in)
         return builder
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable):
-        fun = ctx.import_llvm_function(function)
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, *, tags:frozenset):
+        fun = ctx.import_llvm_function(function, tags=tags)
         fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
         fun_out = builder.alloca(fun.args[3].type.pointee)
 
@@ -2957,7 +2957,7 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
         return pnlvm.ir.IntType(1)(1)
 
-    def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out):
+    def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
 
         ip_output, builder = self._gen_llvm_input_ports(ctx, builder,
                                                         params, state, arg_in)
@@ -2967,7 +2967,7 @@ class Mechanism_Base(Mechanism):
                 self.function, f_params_ptr, ctx, builder, params, state, arg_in)
 
         f_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
-        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, f_params, f_state, ip_output)
+        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, f_params, f_state, ip_output, tags=tags)
 
         # Update execution counter
         exec_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "execution_count")
@@ -3030,7 +3030,7 @@ class Mechanism_Base(Mechanism):
                                                     return_type=pnlvm.ir.IntType(1))
         iparams, istate, iin, iout = internal_builder.function.args[:4]
         internal_builder, is_finished = self._gen_llvm_function_internal(ctx, internal_builder,
-                                                                         iparams, istate, iin, iout)
+                                                                         iparams, istate, iin, iout, tags=tags)
         internal_builder.ret(is_finished)
 
         # Call Internal Function

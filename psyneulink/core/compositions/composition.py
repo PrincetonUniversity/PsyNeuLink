@@ -6624,7 +6624,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         p.insert(0, curr_node)
                         curr_node = prev[curr_node]
                     p.insert(0, curr_node)
-                    pathways.append(p)
+                    # we only consider input -> projection -> ... -> output pathways (since we can't learn on only one mechanism)
+                    if len(p) >= 3:
+                        pathways.append(p)
                     continue
                 for projection, efferent_node in [(p, p.receiver.owner) for p in curr_node.efferents]:
                     if (not hasattr(projection,'learnable')) or (projection.learnable is False):
@@ -8288,6 +8290,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Reset gym forager environment for the current trial
         if self.env:
             trial_output = np.atleast_2d(self.env.reset())
+        else:
+            trial_output = None
 
         # Loop over the length of the list of inputs - each input represents a TRIAL
         for trial_num in range(num_trials):
@@ -8388,13 +8392,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def learn(
             self,
             inputs: dict,
-            targets: dict = None,
-            num_trials: int = None,
+            targets: tc.optional(dict) = None,
+            num_trials: tc.optional(int) = None,
             epochs: int = 1,
             minibatch_size: int = 1,
-            patience: int = None,
+            patience: tc.optional(int) = None,
             min_delta: int = 0,
-            context: Context = None,
+            context: tc.optional(Context) = None,
             bin_execute=False,
             randomize_minibatches=False,
             call_before_minibatch = None,
