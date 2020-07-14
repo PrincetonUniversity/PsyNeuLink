@@ -5,6 +5,11 @@ import psyneulink as pnl
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
+parser.add_argument('--threshold', type=float, help='Termination threshold for response output (default: %(default)f)', default=0.55)
+parser.add_argument('--word-runs', type=int, help='Number of runs after word is presented (default: %(default)d)', default=5)
+parser.add_argument('--color-runs', type=int, help='Number of runs after color is presented (default: %(default)d)', default=4)
+parser.add_argument('--settle-trials', type=int, help='Number of trials for composition to initialize and settle (default: %(default)d)', default=50)
+parser.add_argument('--pre-stimulus-trials', type=int, help='Number of trials before stimulus is added', default=100)
 args = parser.parse_args()
 
 # This implements the horse race Figure shown in Cohen & Huston (1994).
@@ -14,9 +19,9 @@ args = parser.parse_args()
 rate = 0.1          # The integration rate was changed from 0.01 to 0.1
 inhibition = -2.0   # Mutual inhibition across each layer
 bias = 4.0          # bias for hidden layer units
-threshold = 0.55    # Threshold until a response is made, changed from 0.6 to 0.55
-settle_trials = 50  # Time for system to initialize and settle
-prior120 = 100      # Cycles needed to be added for stimulus to start
+threshold = args.threshold    # Threshold until a response is made, changed from 0.6 to 0.55
+settle_trials = args.settle_trials  # Time for system to initialize and settle
+prior120 = args.pre_stimulus_trials      # Cycles needed to be added for stimulus to start
 
 # Different time steps at which the System should end run and start new terminate_processing run
 # This is needed for conditions in which the irrelevant condition is like a neutral trial and could already lead to
@@ -252,8 +257,8 @@ CN_incongruent_word_first_input = trial_dict(0, 0, 0, 0, 1, 0, 1, 0) #red_color,
 # WR_control_trial_input = trial_dict(1, 0, 0, 0, 0, 0, 0, 1) #red_color, green color, red_word, green word, CN, WR
 
 conditions = 3
-runs = 5
-runs2 = 4
+runs = args.word_runs
+runs2 = args.color_runs
 response_all = []
 response_all2 = []
 
@@ -261,6 +266,8 @@ Stimulus = [[CN_initialize_input, CN_congruent_word_first_input, CN_congruent_tr
             [CN_initialize_input, CN_incongruent_word_first_input, CN_incongruent_trial_input, CN_control_trial_input],
             [CN_initialize_input, CN_control_word_trial_input, CN_control_trial_input, CN_control_trial_input]]
 
+
+post_settlement_multiplier = int(prior120 / 5)
 
 # First "for loop" over conditions
 # Second "for loop" over runs
@@ -274,7 +281,7 @@ for cond in range(conditions):
         response_word_weights = pnl.MappingProjection(matrix=np.array([[0.0, 0.0, 0.0],
                                                                        [0.0, 0.0, 0.0]]))
         Bidirectional_Stroop.run(inputs=Stimulus[cond][0], num_trials=settle_trials)    # run system to settle for 200 trials with congruent stimuli input
-        Bidirectional_Stroop.run(inputs=Stimulus[cond][0], num_trials=20 * (run))  # run system to settle for 200 trials with congruent stimuli input
+        Bidirectional_Stroop.run(inputs=Stimulus[cond][0], num_trials=post_settlement_multiplier * (run))  # run system to settle for 200 trials with congruent stimuli input
 
         response_color_weights = pnl.MappingProjection(matrix=np.array([[1.5, 0.0, 0.0],
                                                                         [0.0, 1.5, 0.0]]))
@@ -282,7 +289,7 @@ for cond in range(conditions):
         response_word_weights  = pnl.MappingProjection(matrix=np.array([[2.5, 0.0, 0.0],
                                                                         [0.0, 2.5, 0.0]]))
 
-        Bidirectional_Stroop.run(inputs=Stimulus[cond][1], num_trials=prior120 - (run * 20))# termination_processing=terminate_trial) # run system with congruent stimulus input until
+        Bidirectional_Stroop.run(inputs=Stimulus[cond][1], num_trials=prior120 - (run * post_settlement_multiplier))# termination_processing=terminate_trial) # run system with congruent stimulus input until
         Bidirectional_Stroop.run(inputs=Stimulus[cond][2], termination_processing=terminate_trial) # run system with congruent stimulus input until
                                                                     # threshold in of of the response layer units is reached
 
@@ -350,10 +357,12 @@ if args.enable_plot:
     # plt.plot(response_all[9:18])
     # plt.plot(response_all[18:27])
 
-    stimulus_onset_asynchrony = np.linspace(-400, 400, 9)
-    plt.plot(stimulus_onset_asynchrony, reg[0:9], '-^')
-    plt.plot(stimulus_onset_asynchrony, reg[9:18], '-s')
-    plt.plot(stimulus_onset_asynchrony, reg[18:27], '-o')
+    response_len = runs + runs2
+
+    stimulus_onset_asynchrony = np.linspace(-400, 400, response_len)
+    plt.plot(stimulus_onset_asynchrony, reg[0:response_len], '-^')
+    plt.plot(stimulus_onset_asynchrony, reg[response_len:2 * response_len], '-s')
+    plt.plot(stimulus_onset_asynchrony, reg[2 * response_len:3 * response_len], '-o')
     plt.title('stimulus onset asynchrony - horse race model ')
     plt.legend(['congruent', 'incongruent', 'neutral'])
     plt.ylabel('reaction time in ms')
