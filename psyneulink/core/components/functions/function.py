@@ -308,10 +308,6 @@ def _output_type_setter(value, owning_component):
     # https://github.com/PrincetonUniversity/PsyNeuLink/issues/895 is solved
     # properly(meaning Mechanism values may be something other than 2D np array)
     try:
-        # import here because if this package is not installed, we can assume
-        # the user is probably not dealing with compilation so no need to warn
-        # unecessarily
-        import llvmlite
         if (
             isinstance(owning_component.owner, Mechanism)
             and (

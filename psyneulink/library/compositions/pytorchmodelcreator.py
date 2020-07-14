@@ -1,4 +1,3 @@
-from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.compositions.composition import NodeRole
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU
 from psyneulink.core.globals.context import ContextFlags, handle_external_context

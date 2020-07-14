@@ -363,10 +363,8 @@ Class Reference
 
 """
 
-import itertools
 import warnings
 import typecheck as tc
-import numpy as np
 
 from collections.abc import Iterable
 from collections import namedtuple

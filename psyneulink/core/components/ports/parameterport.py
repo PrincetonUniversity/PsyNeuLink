@@ -361,7 +361,6 @@ Class Reference
 
 from copy import deepcopy
 import inspect
-import itertools
 import types
 import warnings
 

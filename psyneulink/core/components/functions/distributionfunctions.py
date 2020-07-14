@@ -23,7 +23,6 @@ Overview
 Functions that return one or more samples from a distribution.
 
 """
-from enum import IntEnum
 
 import numpy as np
 import typecheck as tc

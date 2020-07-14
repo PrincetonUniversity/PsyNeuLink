@@ -381,7 +381,6 @@ Class Reference
 
 """
 import enum
-import inspect
 import warnings
 
 from collections import OrderedDict, namedtuple

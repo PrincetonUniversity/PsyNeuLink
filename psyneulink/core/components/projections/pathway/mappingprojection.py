@@ -284,10 +284,8 @@ Class Reference
 
 """
 import copy
-import inspect
 
 import numpy as np
-import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
@@ -444,7 +442,6 @@ class MappingProjection(PathwayProjection_Base):
 
     projection_sender = OutputPort
 
-    # @tc.typecheck
     def __init__(self,
                  sender=None,
                  receiver=None,

@@ -397,12 +397,6 @@ Class Reference
 
 """
 
-import inspect
-import itertools
-import warnings
-
-from enum import IntEnum
-
 import numpy as np
 import typecheck as tc
 

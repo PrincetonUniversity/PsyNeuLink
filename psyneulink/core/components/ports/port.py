@@ -772,7 +772,6 @@ import warnings
 
 from collections.abc import Iterable
 from collections import defaultdict
-from copy import deepcopy
 
 import numpy as np
 import typecheck as tc

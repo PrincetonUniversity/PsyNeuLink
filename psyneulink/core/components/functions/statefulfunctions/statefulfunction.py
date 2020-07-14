@@ -16,13 +16,12 @@
 
 """
 
-import numpy as np
+import abc
 import typecheck as tc
-import itertools
 import warnings
 import numbers
 
-import abc
+import numpy as np
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
