@@ -4,18 +4,25 @@ This implements a model of Locus Coeruleus / Norepinephrine (LC/NE) function des
 and electrophysiological data (from LC recordings) in non-human primates.
 
 """
-import numpy as np
-import psyneulink as pnl
+import argparse
 import sys
 
-from matplotlib import pyplot as plt
+import numpy as np
+import psyneulink as pnl
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
+parser.add_argument(
+    '--noise-stddev',
+    type=float,
+    help='Standard deviation of Gaussian noise distributions (default: 0.22, Gilzenrat et al. (2002))',
+    default=0.22
+)
+args = parser.parse_args()
 
 # Define Variables ----------------------------------------------------------------------------------------------------
 
 # Weights & Biases:
-import psyneulink.core.components.functions.distributionfunctions
-import psyneulink.core.components.functions.transferfunctions
-
 b_decision = 0.00   # Bias on decision units (not biased)
 b_response = 2.00   # Bias on response unit --- NOTE: Gilzenrat has negative signs in his logistic equation
 w_XiIi = 1.00       # Connection weight from input units I1 and I2 to respective decision units X1 and X2
@@ -31,7 +38,7 @@ a = 0.50        # Parameter describing shape of the FitzHugh–Nagumo cubic null
 d = 0.50        # Baseline level of intrinsic, uncorrelated LC activity
 G = 0.50        # Base level of gain applied to decision and response units
 k = 3.00        # Scaling factor for transforming NE release (u) to gain (g) on potentiated units
-SD = 0.1        # Standard deviation of Gaussian noise distributions | NOTE: 0.22 in Gilzenrat paper
+SD = args.noise_stddev  # Standard deviation of Gaussian noise distributions | NOTE: 0.22 in Gilzenrat paper
 tau_v = 0.05    # Time constant for fast LC excitation variable v | NOTE: tau_v is misstated in the Gilzenrat paper(0.5)
 tau_u = 5.00    # Time constant for slow LC recovery variable (‘NE release’) u
 dt = 0.02       # Time step size for numerical integration
@@ -68,8 +75,8 @@ decision_layer = pnl.LCAMechanism(
     competition=w_XiXj,
     #  Recurrent matrix: [  w_XiXi   -w_XiXj ]
     #                    [ -w_XiXj    w_XiXi ]
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=b_decision),
-    noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(standard_deviation=SD).function,
+    function=pnl.Logistic(x_0=b_decision),
+    noise=pnl.NormalDist(standard_deviation=SD),
     integrator_mode=True,
     name='DECISION LAYER'
 )
@@ -83,8 +90,8 @@ response_layer = pnl.LCAMechanism(
     self_excitation=w_X3X3,
     #  Recurrent matrix: [w_X3X3]
     #  Competition param does not apply because there is only one unit
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=b_response),
-    noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(standard_deviation=SD).function,
+    function=pnl.Logistic(x_0=b_response),
+    noise=pnl.NormalDist(standard_deviation=SD),
     integrator_mode=True,
     name='RESPONSE'
 )
@@ -103,7 +110,7 @@ output_weights = np.array([
     [0.00]
 ])
 
-decision_process = pnl.Process(
+decision_pathway = pnl.Pathway(
     pathway=[
         input_layer,
         input_weights,
@@ -117,48 +124,47 @@ decision_process = pnl.Process(
 # Monitor decision layer in order to modulate gain --------------------------------------------------------------------
 
 LC = pnl.LCControlMechanism(
-        integration_method="EULER",
-        threshold_FitzHughNagumo=a,
-        uncorrelated_activity_FitzHughNagumo=d,
-        base_level_gain=G,
-        scaling_factor_gain=k,
-        time_step_size_FitzHughNagumo=dt,
-        mode_FitzHughNagumo=C,
-        time_constant_v_FitzHughNagumo=tau_v,
-        time_constant_w_FitzHughNagumo=tau_u,
-        a_v_FitzHughNagumo=-1.0,
-        b_v_FitzHughNagumo=1.0,
-        c_v_FitzHughNagumo=1.0,
-        d_v_FitzHughNagumo=0.0,
-        e_v_FitzHughNagumo=-1.0,
-        f_v_FitzHughNagumo=1.0,
-        a_w_FitzHughNagumo=1.0,
-        b_w_FitzHughNagumo=-1.0,
-        c_w_FitzHughNagumo=0.0,
-        t_0_FitzHughNagumo=0.0,
-        initial_v_FitzHughNagumo=initial_v,
-        initial_w_FitzHughNagumo=initial_u,
-        objective_mechanism=pnl.ObjectiveMechanism(
-                function=psyneulink.core.components.functions.transferfunctions.Linear,
-                monitored_output_ports=[(
-                    decision_layer,
-                    None,
-                    None,
-                    np.array([
-                        [w_vX1],
-                        [0.0]]
-                    )
-                )],
-                name='LC ObjectiveMechanism'
-        ),
-        modulated_mechanisms=[decision_layer, response_layer],  # Modulate gain of decision & response layers
-        name='LC'
+    integration_method="EULER",
+    threshold_FitzHughNagumo=a,
+    uncorrelated_activity_FitzHughNagumo=d,
+    base_level_gain=G,
+    scaling_factor_gain=k,
+    time_step_size_FitzHughNagumo=dt,
+    mode_FitzHughNagumo=C,
+    time_constant_v_FitzHughNagumo=tau_v,
+    time_constant_w_FitzHughNagumo=tau_u,
+    a_v_FitzHughNagumo=-1.0,
+    b_v_FitzHughNagumo=1.0,
+    c_v_FitzHughNagumo=1.0,
+    d_v_FitzHughNagumo=0.0,
+    e_v_FitzHughNagumo=-1.0,
+    f_v_FitzHughNagumo=1.0,
+    a_w_FitzHughNagumo=1.0,
+    b_w_FitzHughNagumo=-1.0,
+    c_w_FitzHughNagumo=0.0,
+    t_0_FitzHughNagumo=0.0,
+    initial_v_FitzHughNagumo=initial_v,
+    initial_w_FitzHughNagumo=initial_u,
+    objective_mechanism=pnl.ObjectiveMechanism(
+        function=pnl.Linear,
+        monitor=[(
+            decision_layer,
+            None,
+            None,
+            np.array([
+                [w_vX1],
+                [0.0]]
+            )
+        )],
+        name='LC ObjectiveMechanism'
+    ),
+    modulated_mechanisms=[decision_layer, response_layer],  # Modulate gain of decision & response layers
+    name='LC'
 )
 
-LC_process = pnl.Process(pathway=[LC])
-
-task = pnl.System(processes=[decision_process, LC_process],
-                  reinitialize_mechanisms_when=pnl.Never())
+task = pnl.Composition()
+task.add_linear_processing_pathway(decision_pathway)
+task.add_node(LC)
 
 # This displays a diagram of the System
 # task.show_graph()
@@ -217,57 +223,58 @@ task.run(
     num_trials=trials,
     call_after_trial=record_trial
 )
-print('\nModel run, generating plots...')
 
 # Plot results of all units into one figure ---------------------------------------------------------------------------
+if args.enable_plot:
+    import matplotlib.pyplot as plt
 
+    print('\nModel run, generating plots...')
 
-# Create x axis "t" for plotting
-t = np.arange(0.0, 20.02, 0.02)
+    # Create x axis "t" for plotting
+    t = np.arange(0.0, 20.02, 0.02)
 
-# Plot target unit, distraction unit, response unit, h(v), and u using the values that were recorded after each trial
-plt.plot(
-    t,
-    decision_layer_target_values,
-    label="target unit",
-    color='green'
-)
-plt.plot(
-    t,
-    decision_layer_distractor_values,
-    label="distraction unit",
-    color='red'
-)
-plt.plot(
-    t,
-    response_layer_values,
-    label="response unit",
-    color='magenta'
-)
-plt.plot(
-    t,
-    LC_results_h_of_v,
-    label="h(v)",
-    color='b'
-)
-plt.plot(
-    t,
-    LC_results_u,
-    label="u",
-    color='black'
-)
+    # Plot target unit, distraction unit, response unit, h(v), and u using the values that were recorded after each trial
+    plt.plot(
+        t,
+        decision_layer_target_values,
+        label="target unit",
+        color='green'
+    )
+    plt.plot(
+        t,
+        decision_layer_distractor_values,
+        label="distraction unit",
+        color='red'
+    )
+    plt.plot(
+        t,
+        response_layer_values,
+        label="response unit",
+        color='magenta'
+    )
+    plt.plot(
+        t,
+        LC_results_h_of_v,
+        label="h(v)",
+        color='b'
+    )
+    plt.plot(
+        t,
+        LC_results_u,
+        label="u",
+        color='black'
+    )
 
-plt.xlabel('Time')
-plt.ylabel('Activation')
-plt.legend(loc='upper left')
-plt.xlim((0.0, 20.0))
-plt.ylim((-0.2, 1.2))
-x_values = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
-plt.xticks(x_values)
-plt.title('GILZENRAT 2002 PsyNeuLink', fontweight='bold')
+    plt.xlabel('Time')
+    plt.ylabel('Activation')
+    plt.legend(loc='upper left')
+    plt.xlim((0.0, 20.0))
+    plt.ylim((-0.2, 1.2))
+    x_values = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+    plt.xticks(x_values)
+    plt.title('GILZENRAT 2002 PsyNeuLink', fontweight='bold')
 
+    plt.show()
 
-plt.show()
-
-task.show()
-print('\nPlots generated')
+    task.show_graph()
+    print('\nPlots generated')
