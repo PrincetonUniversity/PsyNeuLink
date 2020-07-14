@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningFunctions &mdash; PsyNeuLink 0.8.2.3+23.g3ed6241 documentation</title>
+  <title>LearningFunctions &mdash; PsyNeuLink 0.8.2.3+26.g190034b documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.2.3+23
+                  0.8.2.3+26
                 </div>
               
             
@@ -256,7 +256,7 @@ value (i.e., whether it is a scalar or array) and how it is used depend on the f
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">BayesGLM</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>mu_0=0</em>, <em>sigma_0=1</em>, <em>gamma_shape_0=1</em>, <em>gamma_size_0=1</em>, <em>params=None</em>, <em>owner=None</em>, <em>seed=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">BayesGLM</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>mu_0=None</em>, <em>sigma_0=None</em>, <em>gamma_shape_0=None</em>, <em>gamma_size_0=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>seed=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use Bayesian linear regression to find means and distributions of weights that predict dependent variable(s).</p>
 <p><code class="xref any docutils literal"><span class="pre">function</span></code> uses a normal linear model:</p>
 <blockquote>
@@ -473,7 +473,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.learningfunctions.Kohonen">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">Kohonen</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>learning_rate=None</em>, <em>distance_function='gaussian'</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="descname">Kohonen</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>learning_rate=None</em>, <em>distance_function=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates a matrix of weight changes using the Kohenen learning rule.</p>
 <p>The Kohonen learning rule is used to implement a <a class="reference external" href="http://scholarpedia.org/article/Kohonen_network">Kohonen netowrk</a>, which is an instance of the more general category of
 <a class="reference external" href="https://en.wikipedia.org/wiki/Self-organizing_map">self organizing map (SOM)</a>, that modifies the weights to
@@ -1232,7 +1232,7 @@ function of <a class="reference internal" href="#psyneulink.core.components.func
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.2.3+23.g3ed6241',
+               VERSION:'0.8.2.3+26.g190034b',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

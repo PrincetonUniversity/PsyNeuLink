@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CombinationFunctions &mdash; PsyNeuLink 0.8.2.3+23.g3ed6241 documentation</title>
+  <title>CombinationFunctions &mdash; PsyNeuLink 0.8.2.3+26.g190034b documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.2.3+23
+                  0.8.2.3+26
                 </div>
               
             
@@ -215,7 +215,7 @@ this is for use by ModulatoryProjections (and, in particular, GatingProjections,
 when the CombinationFunction is used as the function of an InputPort or OutputPort).</p>
 <dl class="class">
 <dt id="psyneulink.core.components.functions.combinationfunctions.Concatenate">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">Concatenate</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>scale=1.0</em>, <em>offset=0.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Concatenate" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">Concatenate</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>scale=None</em>, <em>offset=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Concatenate" title="Permalink to this definition">¶</a></dt>
 <dd><p id="concatenate">Concatenates items in outer dimension (axis 0) of of <code class="xref any docutils literal"><span class="pre">variable</span></code> into a single array,
 optionally scaling and/or adding an offset to the result after concatenating.</p>
 <p><code class="xref any docutils literal"><span class="pre">function</span></code> returns a 1d array with lenght equal to the sum of the lengths of the items
@@ -336,7 +336,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.combinationfunctions.Rearrange">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">Rearrange</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>scale=1.0</em>, <em>offset=0.0</em>, <em>arrangement=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">Rearrange</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>scale=None</em>, <em>offset=None</em>, <em>arrangement=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Rearrange" title="Permalink to this definition">¶</a></dt>
 <dd><p id="rearrange">Rearranges items in outer dimension (axis 0) of <code class="xref any docutils literal"><span class="pre">variable</span></code>, as specified by <strong>arrangement</strong>,
 optionally scaling and/or adding an offset to the result after concatenating.</p>
 <p id="rearrange-arrangement">The <strong>arrangement</strong> argument specifies how to rearrange the items of <code class="xref any docutils literal"><span class="pre">variable</span></code>, possibly
@@ -480,7 +480,7 @@ If default_variable IS _user_specified, compatiblility with arrangement is check
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.combinationfunctions.Reduce">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">Reduce</code><span class="sig-paren">(</span><em>weights=None</em>, <em>exponents=None</em>, <em>default_variable=None</em>, <em>operation='sum'</em>, <em>scale=1.0</em>, <em>offset=0.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Reduce" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">Reduce</code><span class="sig-paren">(</span><em>weights=None</em>, <em>exponents=None</em>, <em>default_variable=None</em>, <em>operation=None</em>, <em>scale=None</em>, <em>offset=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.Reduce" title="Permalink to this definition">¶</a></dt>
 <dd><p id="reduce">Combines values in each of one or more arrays into a single value for each array, with optional weighting and/or
 exponentiation of each item within an array prior to combining, and scaling and/or offset of result after combining.</p>
 <p><code class="xref any docutils literal"><span class="pre">function</span></code> returns an array of scalar values, one for each array in <code class="xref any docutils literal"><span class="pre">variable</span></code>.</p>
@@ -626,7 +626,7 @@ a parameter may be re-assigned before variable assigned during is known</dd>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.combinationfunctions.LinearCombination">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">LinearCombination</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>weights=None</em>, <em>exponents=None</em>, <em>operation='sum'</em>, <em>scale=None</em>, <em>offset=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">LinearCombination</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>weights=None</em>, <em>exponents=None</em>, <em>operation=None</em>, <em>scale=None</em>, <em>offset=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="Permalink to this definition">¶</a></dt>
 <dd><p id="linearcombination">Linearly combine arrays of values, optionally weighting and/or exponentiating each array prior to combining,
 and scaling and/or offsetting after combining.</p>
 <p><code class="xref any docutils literal"><span class="pre">function</span></code> combines the arrays in the outermost dimension (axis 0) of <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.variable" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> either additively or multiplicatively (as specified by <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.operation" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a>), applying <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.weights" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.weights"><code class="xref any py py-attr docutils literal"><span class="pre">weights</span></code></a> and/or <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.exponents" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.exponents"><code class="xref any py py-attr docutils literal"><span class="pre">exponents</span></code></a> (if specified) to each array prior to combining them, and applying <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.scale" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.scale"><code class="xref any py py-attr docutils literal"><span class="pre">scale</span></code></a> and/or <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.offset" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.offset"><code class="xref any py py-attr docutils literal"><span class="pre">offeset</span></code></a> (if specified) to the result after
@@ -793,7 +793,7 @@ a parameter may be re-assigned before variable assigned during is known</dd>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.combinationfunctions.CombineMeans">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">CombineMeans</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>weights=None</em>, <em>exponents=None</em>, <em>operation='sum'</em>, <em>scale=None</em>, <em>offset=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.CombineMeans" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">CombineMeans</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>weights=None</em>, <em>exponents=None</em>, <em>operation=None</em>, <em>scale=None</em>, <em>offset=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.CombineMeans" title="Permalink to this definition">¶</a></dt>
 <dd><p id="combinemeans">Calculate and combine mean(s) for arrays of values, optionally weighting and/or exponentiating each mean prior to
 combining, and scaling and/or offsetting after combining.</p>
 <p><code class="xref any docutils literal"><span class="pre">function</span></code> takes the mean of each array in the outermost dimension (axis 0) of <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.CombineMeans.variable" title="psyneulink.core.components.functions.combinationfunctions.CombineMeans.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>, and combines them either additively or multiplicatively (as specified by <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.CombineMeans.operation" title="psyneulink.core.components.functions.combinationfunctions.CombineMeans.operation"><code class="xref any py py-attr docutils literal"><span class="pre">operation</span></code></a>), applying <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.weights" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.weights"><code class="xref any py py-attr docutils literal"><span class="pre">weights</span></code></a> and/or <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.exponents" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.exponents"><code class="xref any py py-attr docutils literal"><span class="pre">exponents</span></code></a> (if specified) to each mean prior to combining them, and applying <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.scale" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.scale"><code class="xref any py py-attr docutils literal"><span class="pre">scale</span></code></a> and/or <a class="reference internal" href="#psyneulink.core.components.functions.combinationfunctions.LinearCombination.offset" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.offset"><code class="xref any py py-attr docutils literal"><span class="pre">offeset</span></code></a> (if specified) to the result after combining,
@@ -951,7 +951,7 @@ a parameter may be re-assigned before variable assigned during is known</dd>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">PredictionErrorDeltaFunction</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>gamma=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.combinationfunctions.</code><code class="descname">PredictionErrorDeltaFunction</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>gamma=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate temporal difference prediction error.</p>
 <p><code class="xref any docutils literal"><span class="pre">function</span></code> returns the prediction error using arrays in <code class="xref any docutils literal"><span class="pre">variable</span></code>:</p>
 <div class="math">
@@ -1098,7 +1098,7 @@ re-assigned before variable assigned during is known</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.2.3+23.g3ed6241',
+               VERSION:'0.8.2.3+26.g190034b',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MemoryFunctions &mdash; PsyNeuLink 0.8.2.3+23.g3ed6241 documentation</title>
+  <title>MemoryFunctions &mdash; PsyNeuLink 0.8.2.3+26.g190034b documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.2.3+23
+                  0.8.2.3+26
                 </div>
               
             
@@ -207,7 +207,7 @@
 <p>Functions that store and can return a record of their input.</p>
 <dl class="class">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.statefulfunctions.memoryfunctions.</code><code class="descname">Buffer</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>rate=1.0</em>, <em>noise=0.0</em>, <em>history=None</em>, <em>initializer=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.statefulfunctions.memoryfunctions.</code><code class="descname">Buffer</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>rate=None</em>, <em>noise=None</em>, <em>history=None</em>, <em>initializer=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer" title="Permalink to this definition">¶</a></dt>
 <dd><p id="buffer">Append <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to the end of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> (i.e., right-append
 to deque of previous inputs).</p>
 <div class="admonition note">
@@ -351,7 +351,7 @@ Otherwise, the new <a class="reference internal" href="#psyneulink.core.componen
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.statefulfunctions.memoryfunctions.</code><code class="descname">ContentAddressableMemory</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>retrieval_prob=1.0</em>, <em>storage_prob=1.0</em>, <em>noise=0.0</em>, <em>rate=1.0</em>, <em>initializer=None</em>, <em>distance_function=None</em>, <em>selection_function=None</em>, <em>duplicate_keys=False</em>, <em>equidistant_keys_select='random'</em>, <em>max_entries=1000</em>, <em>seed=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.statefulfunctions.memoryfunctions.</code><code class="descname">ContentAddressableMemory</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>retrieval_prob=None</em>, <em>storage_prob=None</em>, <em>noise=None</em>, <em>rate=None</em>, <em>initializer=None</em>, <em>distance_function=None</em>, <em>selection_function=None</em>, <em>duplicate_keys=None</em>, <em>equidistant_keys_select=None</em>, <em>max_entries=None</em>, <em>seed=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory" title="Permalink to this definition">¶</a></dt>
 <dd><p id="contentaddressablememory">Implement a configurable, dictionary-style storage and retrieval of key-value pairs, in which storage
 is determined by <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob"><code class="xref any py py-attr docutils literal"><span class="pre">storage_prob</span></code></a>, and retrieval of items is
 determined by <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal"><span class="pre">distance_function</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function"><code class="xref any py py-attr docutils literal"><span class="pre">selection_function</span></code></a>, and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.retrieval_prob" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.retrieval_prob"><code class="xref any py py-attr docutils literal"><span class="pre">retrieval_prob</span></code></a>.
@@ -769,7 +769,7 @@ attribute contains a value besides [], then that value is used to start the new 
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.2.3+23.g3ed6241',
+               VERSION:'0.8.2.3+26.g190034b',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
