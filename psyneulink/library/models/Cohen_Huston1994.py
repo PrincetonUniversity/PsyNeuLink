@@ -10,14 +10,16 @@ import psyneulink as pnl
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
+parser.add_argument('--threshold', type=float, help='Termination threshold for response output (default: %(default)f)', default=0.55)
+parser.add_argument('--settle-trials', type=int, help='Number of trials for composition to initialize and settle (default: %(default)d)', default=50)
 args = parser.parse_args()
 
 # Define Variables ----------------------------------------------------------------------------------------------------
 rate = 0.1          # modified from the original code from 0.01 to 0.1
 inhibition = -2.0   # lateral inhibition
 bias = 4.0          # bias is positive since Logistic equation has - sing already implemented
-threshold = 0.55    # modified from thr original code from 0.6 to 0.55 because incongruent condition won't reach 0.6
-settle_trials = 50  # cycles until model settles
+threshold = args.threshold    # modified from thr original code from 0.6 to 0.55 because incongruent condition won't reach 0.6
+settle_trials = args.settle_trials  # cycles until model settles
 
 # Create mechanisms ---------------------------------------------------------------------------------------------------
 #   Linear input units, colors: ('red', 'green'), words: ('RED','GREEN')
