@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.8.2.3 documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.8.2.3+27.g0374dca documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.2.3
+                  0.8.2.3+27
                 </div>
               
             
@@ -437,7 +437,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.transferfunctions.Exponential">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">Exponential</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>rate=1.0</em>, <em>scale=1.0</em>, <em>bias=0.0</em>, <em>offset=0.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Exponential" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">Exponential</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>rate=None</em>, <em>scale=None</em>, <em>bias=None</em>, <em>offset=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Exponential" title="Permalink to this definition">¶</a></dt>
 <dd><p id="exponential"><code class="xref any docutils literal"><span class="pre">function</span></code> returns exponential transform of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Exponential.variable" title="psyneulink.core.components.functions.transferfunctions.Exponential.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>:</p>
 <div class="math">
 \[scale * e^{rate*variable+bias} + offset\]</div>
@@ -578,7 +578,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.transferfunctions.Logistic">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">Logistic</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>gain=1.0</em>, <em>x_0=0.0</em>, <em>bias=0.0</em>, <em>offset=0.0</em>, <em>scale=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Logistic" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">Logistic</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>gain=None</em>, <em>x_0=None</em>, <em>bias=None</em>, <em>offset=None</em>, <em>scale=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Logistic" title="Permalink to this definition">¶</a></dt>
 <dd><p id="logistic-function"><code class="xref any docutils literal"><span class="pre">function</span></code> returns logistic transform of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>:</p>
 <div class="math">
 \[\frac{1}{1 + e^{ - gain ( variable + bias  - x_{0}) + offset}}\]</div>
@@ -741,10 +741,10 @@ an error is generated if <strong>output</strong> does not correspond to <code cl
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.transferfunctions.Tanh">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">Tanh</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>gain=1.0</em>, <em>x_0=0.0</em>, <em>bias=0.0</em>, <em>offset=0.0</em>, <em>scale=1.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Tanh" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">Tanh</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>gain=None</em>, <em>x_0=None</em>, <em>bias=None</em>, <em>offset=None</em>, <em>scale=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Tanh" title="Permalink to this definition">¶</a></dt>
 <dd><p id="tanh-function"><code class="xref any docutils literal"><span class="pre">function</span></code> returns hyperbolic tangent of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>:</p>
 <div class="math">
-\[\frac{1 - e^{-2(gain*(variable+bias-x\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\_0)+offset)}}\]</div>
+\[\scale*frac{1 - e^{-2(gain*(variable+bias-x\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\_0)+offset)}}\]</div>
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p class="last">The <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function is an offset and scaled version of this function.
@@ -893,7 +893,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.transferfunctions.ReLU">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">ReLU</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>gain=1.0</em>, <em>bias=0.0</em>, <em>leak=0.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.ReLU" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">ReLU</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>gain=None</em>, <em>bias=None</em>, <em>leak=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.ReLU" title="Permalink to this definition">¶</a></dt>
 <dd><p id="relu"><code class="xref any docutils literal"><span class="pre">function</span></code> returns rectified linear tranform of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.ReLU.variable" title="psyneulink.core.components.functions.transferfunctions.ReLU.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>:</p>
 <div class="math">
 \[x = gain*(variable - bias)\]</div>
@@ -1023,7 +1023,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.transferfunctions.Gaussian">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">Gaussian</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>standard_deviation=1.0</em>, <em>bias=0.0</em>, <em>scale=1.0</em>, <em>offset=0.0</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Gaussian" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">Gaussian</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>standard_deviation=None</em>, <em>bias=None</em>, <em>scale=None</em>, <em>offset=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Gaussian" title="Permalink to this definition">¶</a></dt>
 <dd><p id="gaussian-function"><code class="xref any docutils literal"><span class="pre">function</span></code> returns Gaussian transform of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Gaussian.variable" title="psyneulink.core.components.functions.transferfunctions.Gaussian.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>:</p>
 <div class="math">
 \[scale*\frac{e^{-\frac{(varible-bias)^{2}}{2\sigma^{2}}}}{\sqrt{2\pi}\sigma}+offset\]</div>
@@ -1155,7 +1155,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.transferfunctions.GaussianDistort">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">GaussianDistort</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>variance=1.0</em>, <em>bias=0.0</em>, <em>scale=1.0</em>, <em>offset=0.0</em>, <em>seed=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.GaussianDistort" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">GaussianDistort</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>variance=None</em>, <em>bias=None</em>, <em>scale=None</em>, <em>offset=None</em>, <em>seed=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.GaussianDistort" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils" id="gaussiandistort-function">
 <dt><code class="xref any docutils literal"><span class="pre">function</span></code> returns random value from a Gaussian distribution with</dt>
 <dd>mean = <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.GaussianDistort.variable" title="psyneulink.core.components.functions.transferfunctions.GaussianDistort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and variance = <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.GaussianDistort.variance" title="psyneulink.core.components.functions.transferfunctions.GaussianDistort.variance"><code class="xref any py py-attr docutils literal"><span class="pre">variance</span></code></a></dd>
@@ -1275,7 +1275,7 @@ arguments of the constructor.</li>
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.transferfunctions.SoftMax">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">SoftMax</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>gain=1.0</em>, <em>output=None</em>, <em>per_item=True</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">SoftMax</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>gain=None</em>, <em>output=None</em>, <em>per_item=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.SoftMax" title="Permalink to this definition">¶</a></dt>
 <dd><p id="softmax">SoftMax transform of <code class="xref any docutils literal"><span class="pre">variable</span></code></p>
 <p><code class="xref any docutils literal"><span class="pre">function</span></code> returns SoftMax transform of <code class="xref any docutils literal"><span class="pre">variable</span></code>:</p>
 <div class="math">
@@ -1583,7 +1583,7 @@ Note: this method (or the class version) is called only if the parameter_validat
 
 <dl class="class">
 <dt id="psyneulink.core.components.functions.transferfunctions.TransferWithCosts">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">TransferWithCosts</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>transfer_fct=&lt;class 'psyneulink.core.components.functions.transferfunctions.Linear'&gt;</em>, <em>enabled_cost_functions=None</em>, <em>intensity_cost_fct=&lt;class 'psyneulink.core.components.functions.transferfunctions.Exponential'&gt;</em>, <em>adjustment_cost_fct=&lt;class 'psyneulink.core.components.functions.transferfunctions.Linear'&gt;</em>, <em>duration_cost_fct=&lt;class 'psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator'&gt;</em>, <em>combine_costs_fct=&lt;class 'psyneulink.core.components.functions.combinationfunctions.LinearCombination'&gt;</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.transferfunctions.</code><code class="descname">TransferWithCosts</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>transfer_fct=None</em>, <em>enabled_cost_functions=None</em>, <em>intensity_cost_fct=None</em>, <em>adjustment_cost_fct=None</em>, <em>duration_cost_fct=None</em>, <em>combine_costs_fct=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts" title="Permalink to this definition">¶</a></dt>
 <dd><p id="transferwithcosts">returns value of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.variable" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> transformed by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.transfer_fct" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts.transfer_fct"><code class="xref any py py-attr docutils literal"><span class="pre">transfer_fct</span></code></a>, after calling any cost functions that are enabled and assigning
 the result(s) to the corresponding parameter(s), as described below.</p>
 <p id="transferwithcosts-cost-functions"><strong>Cost Functions</strong></p>
@@ -2059,7 +2059,7 @@ based on its integral (i.e., it accumulated value over multiple executions).</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.2.3',
+               VERSION:'0.8.2.3+27.g0374dca',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
