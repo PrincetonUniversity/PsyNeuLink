@@ -365,7 +365,16 @@ class ParametersTemplate:
     def __str__(self):
         return self.show()
 
-    __deepcopy__ = get_deepcopy_with_shared(_deepcopy_shared_keys)
+    def __deepcopy__(self, memo):
+        newone = get_deepcopy_with_shared(self._deepcopy_shared_keys)(self, memo)
+
+        for name, param in self.values(show_all=True).items():
+            if isinstance(param, ParameterAlias):
+                source_name = param.source.name
+                getattr(newone, name).source = getattr(newone, source_name)
+
+        memo[id(self)] = newone
+        return newone
 
     def __del__(self):
         try:
@@ -1425,6 +1434,15 @@ class ParameterAlias(types.SimpleNamespace, metaclass=_ParameterAliasMeta):
 
     def __getattr__(self, attr):
         return getattr(self.source, attr)
+
+    # must override deepcopy despite it being essentially shallow
+    # because otherwise it will default to Parameter.__deepcopy__ and
+    # return an instance of Parameter
+    def __deepcopy__(self, memo):
+        result = ParameterAlias(source=self._source, name=self.name)
+        memo[id(self)] = result
+
+        return result
 
     @property
     def source(self):
