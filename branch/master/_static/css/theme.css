@@ -9954,7 +9954,7 @@ article.psyneulink-article .error .admonition-title {
   background: #cc2f90;
 }
 article.psyneulink-article .sphx-glr-download-link-note.admonition.note,
-article.psyneulink-article .reference.download.internal, article.psyneulink-article .sphx-glr-signature {
+article.psyneulink-article .sphx-glr-signature {
   display: none;
 }
 article.psyneulink-article .admonition > p:last-of-type {
