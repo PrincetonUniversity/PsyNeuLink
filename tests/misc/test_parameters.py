@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 import psyneulink as pnl
 import pytest
@@ -217,3 +218,11 @@ def test_dot_notation():
     assert t.parameters.value.get(c) == 5
     assert t.parameters.value.get(d) == 10
     assert t.parameters.value.get('custom execution id') == 20
+
+
+def test_copy():
+    f = pnl.Linear()
+    g = copy.deepcopy(f)
+
+    assert isinstance(g.parameters.additive_param, pnl.ParameterAlias)
+    assert g.parameters.additive_param.source is g.parameters.intercept
