@@ -5,6 +5,8 @@ import psyneulink as pnl
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
+parser.add_argument('--threshold', type=float, help='Termination threshold for response output (default: %(default)f)', default=0.70)
+parser.add_argument('--settle-trials', type=int, help='Number of trials for composition to initialize and settle (default: %(default)d)', default=200)
 args = parser.parse_args()
 
 # Implements the Kalanthroff, Davelaar, Henik, Goldfarb & Usher model: Task Conflict and Proactive Control:
@@ -20,8 +22,8 @@ pc = pc_low              # Select proactive control
 inhibition = -1.3        # Inhibition between units within a layer
 inhibition_task = -1.9   # Inhibition between units within task layer
 bias = -0.3              # bias input to color feature layer and word feature layer
-threshold = 0.70
-settle = 200    # Number of trials until Composition settles
+threshold = args.threshold
+settle = args.settle_trials    # Number of trials until Composition settles
 
 # Create mechanisms ---------------------------------------------------------------------------------------------------
 # 4 Input layers for color, word, task & bias
