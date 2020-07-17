@@ -688,6 +688,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         if matrix is AutoAssociativeProjection:
             matrix = HOLLOW_MATRIX
 
+        self.learning_mechanism = None
         self._learning_enabled = enable_learning
 
         super().__init__(
@@ -1063,7 +1064,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         self._learning_enabled = value
         # Enable learning for RecurrentTransferMechanism's learning_mechanism
-        if hasattr(self, 'learning_mechanism'):
+        if self.learning_mechanism is not None:
             self.learning_mechanism.learning_enabled = value
         # If RecurrentTransferMechanism has no LearningMechanism, warn and then ignore attempt to set learning_enabled
         elif value is True:

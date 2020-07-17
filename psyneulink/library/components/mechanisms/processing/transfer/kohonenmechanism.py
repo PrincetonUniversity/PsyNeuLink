@@ -466,7 +466,7 @@ class KohonenMechanism(TransferMechanism):
 
         self._learning_enabled = value
         # Enable learning for KohonenMechanism's learning_mechanism
-        if hasattr(self, 'learning_mechanism'):
+        if self.learning_mechanism is not None:
             self.learning_mechanism.learning_enabled = value
         # If KohonenMechanism has no LearningMechanism, warn and then ignore attempt to set learning_enabled
         elif value is True:

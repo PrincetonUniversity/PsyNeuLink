@@ -112,7 +112,7 @@ from psyneulink.core.components.projections.projection import projection_keyword
 from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, HOLLOW_MATRIX, MATRIX
+from psyneulink.core.globals.keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, HOLLOW_MATRIX, MATRIX, FUNCTION, OWNER_MECH
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -293,6 +293,19 @@ class AutoAssociativeProjection(MappingProjection):
                          name=name,
                          prefs=prefs,
                          **kwargs)
+
+    # temporary override to make sure matrix/auto/hetero parameters
+    # get passed properly. should be replaced with a better organization
+    # of auto/hetero, in which the base parameters are stored either on
+    # AutoAssociativeProjection or on LinearMatrix itself
+    def _override_unspecified_shared_parameters(self, context):
+        super()._override_unspecified_shared_parameters(context)
+
+        if FUNCTION not in self.initial_shared_parameters:
+            try:
+                self.initial_shared_parameters[FUNCTION] = self.initial_shared_parameters[OWNER_MECH]
+            except KeyError:
+                pass
 
     # COMMENTED OUT BY KAM 1/9/2018 -- this method is not currently used; should be moved to Recurrent Transfer Mech
     #     if it is used in the future
