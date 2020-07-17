@@ -478,6 +478,7 @@ COMMENT
 
 """
 import base64
+import collections
 import copy
 import dill
 import inspect
@@ -507,7 +508,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.parameters import \
-    Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
+    Defaults, FunctionParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceEntry, PreferenceLevel, PreferenceSet, _assign_prefs
@@ -1091,10 +1092,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             **parameter_values
         )
 
-        self.initial_function_parameters = {
-            k: v for k, v in parameter_values.items() if k in self.parameters.names() and getattr(self.parameters, k).function_parameter
-        }
-
         v = call_with_pruned_args(
             self._handle_default_variable,
             default_variable=default_variable,
@@ -1111,6 +1108,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # we must know the final variable shape before setting up parameter
         # Functions or they will mismatch
         self._instantiate_parameter_classes(context)
+        self._handle_function_parameters(context)
         self._validate_subfunctions()
 
         if reset_stateful_function_when is not None:
@@ -1977,16 +1975,20 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     if isinstance(val, Function):
                         if val.owner is not None:
                             val = copy.deepcopy(val)
-
-                        val.owner = self
                 else:
                     val = copy_parameter_value(
                         p.default_value,
                         shared_types=shared_types
                     )
 
-                    if isinstance(val, Function):
-                        val.owner = self
+                if isinstance(val, Function):
+                    val.owner = self
+
+                    # for initial_function_param in self.initial_function_parameters[p.name]:
+                    #     param = getattr(val.parameters, initial_function_param)
+                    #     if not param._user_specified:
+                    #         param.default_value = self.initial_function_parameters[p.name][initial_function_param]
+                    #         param._set(copy.deepcopy(val.default_value), context)
 
                 p.set(val, context=context, skip_history=True, override=True)
 
@@ -2013,6 +2015,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                         and issubclass(val, Function)
                     ):
                         val = val()
+
                         val.owner = self
                         p._set(val, context)
 
@@ -2066,6 +2069,19 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                 function_default_variable,
                                 context
                             )
+
+    def _handle_function_parameters(self, context):
+        self.initial_function_parameters = collections.defaultdict(dict)
+
+        for param_name, param in self.parameters.values(show_all=True).items():
+            if isinstance(param, FunctionParameter):
+                self.initial_function_parameters[param.function_name][param.function_parameter_name] = param.default_value
+
+                function = getattr(self.parameters, param.function_name)
+                function_param = getattr(function.default_value, param.function_parameter_name)
+                if not function_param._user_specified:
+                    function_param._set(param.default_value)
+                    getattr(function._get(context), param.function_parameter_name)._set(param.default_value)
 
     @handle_external_context()
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS, context=None):

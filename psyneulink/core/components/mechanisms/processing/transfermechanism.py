@@ -1053,7 +1053,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     :type:
         """
         integrator_mode = Parameter(False, setter=_integrator_mode_setter)
-        integration_rate = Parameter(0.5, modulable=True)
+        integration_rate = FunctionParameter(0.5, modulable=True, function_name='integrator_function', function_parameter_name='rate')
         initial_value = None
         integrator_function = Parameter(AdaptiveIntegrator, stateful=False, loggable=False)
         integrator_function_value = Parameter([[0]], read_only=True)

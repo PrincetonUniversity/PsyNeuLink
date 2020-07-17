@@ -687,7 +687,7 @@ class Parameter(types.SimpleNamespace):
     """
     # The values of these attributes will never be inherited from parent Parameters
     # KDM 7/12/18: consider inheriting ONLY default_value?
-    _uninherited_attrs = {'name', 'values', 'history', 'log'}
+    _uninherited_attrs = {'name', 'values', 'history', 'log', '_function_parameter_name'}
 
     # for user convenience - these attributes will be hidden from the repr
     # display if the function is True based on the value of the attribute
@@ -751,6 +751,7 @@ class Parameter(types.SimpleNamespace):
         # attributes will be taken from
         _inherited_source=None,
         _user_specified=False,
+        **kwargs
     ):
         if isinstance(aliases, str):
             aliases = [aliases]
@@ -802,6 +803,7 @@ class Parameter(types.SimpleNamespace):
             _inherited=_inherited,
             _inherited_source=_inherited_source,
             _user_specified=_user_specified,
+            **kwargs
         )
 
         self._owner = _owner
@@ -937,6 +939,8 @@ class Parameter(types.SimpleNamespace):
                         self._inherited_attrs_cache[attr] = getattr(self, attr)
                         try:
                             delattr(self, attr)
+                            if 'function' in attr:
+                                print('deleted', attr)
                         except AttributeError:
                             # attribute is a property
                             pass
@@ -1466,6 +1470,7 @@ class FunctionParameter(Parameter):
 
     def __init__(
         self,
+        default_value=None,
         function_parameter_name=None,
         function_name='function',
         getter=None,
@@ -1490,15 +1495,21 @@ class FunctionParameter(Parameter):
 
                 return value
 
-        self._function_parameter_name = function_parameter_name
-        self.function_name = function_name
+        # self.function_name = function_name
+        # self._function_parameter_name = function_parameter_name
+        import traceback
+        print(traceback.print_stack())
+        print(function_parameter_name)
 
         super().__init__(
-            function_parameter=True,
+            default_value=default_value,
             getter=getter,
             setter=setter,
+            function_name=function_name,
+            _function_parameter_name=function_parameter_name,
             **kwargs
         )
+        print(self)
 
     @property
     def function_parameter_name(self):
