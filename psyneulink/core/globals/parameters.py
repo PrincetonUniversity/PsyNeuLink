@@ -820,7 +820,7 @@ class Parameter(types.SimpleNamespace):
         # modified from types.SimpleNamespace to exclude _-prefixed attrs
         try:
             items = (
-                "{}={!r}".format(k, getattr(self, k)) for k in self._param_attrs
+                "{}={!r}".format(k, getattr(self, k)) for k in sorted(self._param_attrs)
                 if k not in self._hidden_when or not self._hidden_when[k](self, getattr(self, k))
             )
 
@@ -837,7 +837,7 @@ class Parameter(types.SimpleNamespace):
         else:
             shared_types = None
 
-        result = Parameter(
+        result = type(self)(
             **{
                 k: copy_parameter_value(getattr(self, k), memo=memo, shared_types=shared_types)
                 for k in self._param_attrs
@@ -935,7 +935,11 @@ class Parameter(types.SimpleNamespace):
                 for attr in self._param_attrs:
                     if attr not in self._uninherited_attrs:
                         self._inherited_attrs_cache[attr] = getattr(self, attr)
-                        delattr(self, attr)
+                        try:
+                            delattr(self, attr)
+                        except AttributeError:
+                            # attribute is a property
+                            pass
             else:
                 # This is a rare operation, so we can just immediately
                 # trickle down sources without performance issues.
@@ -1456,6 +1460,53 @@ class ParameterAlias(types.SimpleNamespace, metaclass=_ParameterAliasMeta):
             self._source = value
 
 
+class FunctionParameter(Parameter):
+
+    _additional_param_attr_properties = Parameter._additional_param_attr_properties.union({'function_parameter_name'})
+
+    def __init__(
+        self,
+        function_parameter_name=None,
+        function_name='function',
+        getter=None,
+        setter=None,
+        **kwargs
+    ):
+        if getter is None:
+            def getter(owning_component=None, context=None):
+                try:
+                    function = getattr(owning_component.parameters, function_name)._get(context)
+                    return getattr(function.parameters, self.function_parameter_name)._get(context)
+                except (AttributeError, TypeError, IndexError):
+                    return None
+
+        if setter is None:
+            def setter(value, owning_component=None, context=None):
+                try:
+                    function = getattr(owning_component.parameters, function_name)._get(context)
+                    getattr(function.parameters, self.function_parameter_name)._set(value, context)
+                except AttributeError:
+                    pass
+
+                return value
+
+        self._function_parameter_name = function_parameter_name
+        self.function_name = function_name
+
+        super().__init__(
+            function_parameter=True,
+            getter=getter,
+            setter=setter,
+            **kwargs
+        )
+
+    @property
+    def function_parameter_name(self):
+        if self._function_parameter_name is not None:
+            return self._function_parameter_name
+        else:
+            return self.name
+
 # KDM 6/29/18: consider assuming that ALL parameters are stateful
 #   and that anything that you would want to set as not stateful
 #   are actually just "settings" or "preferences", like former prefs,
@@ -1490,14 +1541,15 @@ class ParametersBase(ParametersTemplate):
                 # in a class's Parameters class
                 setattr(self, param_name, param_value)
             else:
-                if isinstance(getattr(self._parent, param_name), ParameterAlias):
+                parent_param = getattr(self._parent, param_name)
+                if isinstance(parent_param, ParameterAlias):
                     # store aliases we need to create here and then create them later, because
                     # the param that the alias is going to refer to may not have been created yet
                     # (the alias then may refer to the parent Parameter instead of the Parameter associated with this
                     # Parameters class)
                     aliases_to_create.add(param_name)
                 else:
-                    new_param = Parameter(name=param_name, _owner=self, _inherited=True)
+                    new_param = type(parent_param)(name=param_name, _owner=self, _inherited=True)
                     # store the parent's values as the default "uninherited" attr values
                     new_param._cache_inherited_attrs()
                     setattr(self, param_name, new_param)

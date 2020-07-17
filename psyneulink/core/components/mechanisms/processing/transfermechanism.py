@@ -636,7 +636,7 @@ from psyneulink.core.globals.keywords import \
     INITIALIZER, INSTANTANEOUS_MODE_VALUE, LESS_THAN_OR_EQUAL, MAX_ABS_DIFF, \
     NAME, NOISE, NUM_EXECUTIONS_BEFORE_FINISHED, OWNER_VALUE, RATE, RESET, RESULT, RESULTS, \
     SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, FunctionParameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
@@ -1078,6 +1078,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             read_only=True,
             structural=True,
         )
+
+        my_offset = FunctionParameter(function_parameter_name='offset', function_name='integrator_function', modulable=True)
 
         def _validate_variable(self, variable):
             if 'U' in str(variable.dtype):
