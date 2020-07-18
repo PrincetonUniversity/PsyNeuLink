@@ -1591,9 +1591,9 @@ def _parse_connection_specs(connectee_port_type,
                      # Call _parse_connection_spec for each Port or Mechanism, to generate a conection spec for each
                     for connect_with_spec in first_item:
                         if not isinstance(connect_with_spec, (Port, Mechanism)):
-                              raise PortError(f"Item in the list used to specify a {last_item.__name__} "
-                                               f"for {owner.name} ({connect_with_spec.__name__}) "
-                                               f"is not a {Port.__name__} or {Mechanism.__name__}")
+                            raise PortError(f"Item in the list used to specify a {last_item.__name__} "
+                                            f"for {owner.name} ({connect_with_spec.__name__}) "
+                                            f"is not a {Port.__name__} or {Mechanism.__name__}")
                         c = _parse_connection_specs(connectee_port_type=connectee_port_type,
                                                     owner=owner,
                                                     connections=ProjectionTuple(connect_with_spec,
@@ -1620,10 +1620,10 @@ def _parse_connection_specs(connectee_port_type,
                      # Call _parse_connection_spec for each Port name, to generate a conection spec for each
                     for port_Name in port_item:
                         if not isinstance(port_Name, str):
-                             raise ProjectionError("Expected 1st item of the {} specification tuple for {} ({}) to be "
-                                                   "the name of a {} of its 2nd item ({})".
-                                                      format(connectee_port_type.__name__, owner.name, port_Name,
-                                                              connects_with, mech_item.name))
+                            raise ProjectionError("Expected 1st item of the {} specification tuple for {} ({}) to be "
+                                                  "the name of a {} of its 2nd item ({})".
+                                                  format(connectee_port_type.__name__, owner.name, port_Name,
+                                                         connects_with, mech_item.name))
                         c = _parse_connection_specs(connectee_port_type=connectee_port_type,
                                                     owner=owner,
                                                     connections=ProjectionTuple(port_Name,

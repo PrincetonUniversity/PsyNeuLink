@@ -125,8 +125,8 @@ class TransferFunction(Function_Base):
                     self._gen_llvm_transfer(ctx=ctx, vi=vi, vo=vo,
                                             params=params, state=state, *args, tags=tags)
             else:
-               self._gen_llvm_transfer(b, idx, ctx=ctx, vi=arg_in, vo=arg_out,
-                                       params=params, state=state, tags=tags)
+                self._gen_llvm_transfer(b, idx, ctx=ctx, vi=arg_in, vo=arg_out,
+                                        params=params, state=state, tags=tags)
 
         return builder
 

@@ -40,11 +40,11 @@ class PreferenceLevel(IntEnum):
 
 
 class PreferenceSetError(Exception):
-     def __init__(self, error_value):
-         self.error_value = error_value
+    def __init__(self, error_value):
+        self.error_value = error_value
 
-     def __str__(self):
-         return repr(self.error_value)
+    def __str__(self):
+        return repr(self.error_value)
 
 
 @abc.abstractmethod
@@ -228,10 +228,10 @@ class PreferenceSet(object):
             name = self.__class__.__name__
             # If it belongs to a class, append name of owner's class to name
             if inspect.isclass(owner):
-                 name = name + 'DefaultsFor' + owner.__name__
+                name = name + 'DefaultsFor' + owner.__name__
             # Otherwise, it belongs to an object, so append name of the owner object's class to name
             else:
-                 name = name + 'Defaultsfor' + owner.__class__.__name__
+                name = name + 'Defaultsfor' + owner.__class__.__name__
 
         # REGISTER
         # FIX: MAKE SURE THIS MAKES SENSE

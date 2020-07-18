@@ -116,23 +116,23 @@ class TestProjectionSpecificationFormats:
         assert M.output_ports[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
 
     def test_mapping_projection_with_mech_and_port_Name_specs(self):
-         R1 = pnl.TransferMechanism(output_ports=['OUTPUT_1', 'OUTPUT_2'])
-         R2 = pnl.TransferMechanism(default_variable=[[0],[0]],
-                                    input_ports=['INPUT_1', 'INPUT_2'])
-         T = pnl.TransferMechanism(input_ports=[{pnl.MECHANISM: R1,
-                                                  pnl.OUTPUT_PORTS: ['OUTPUT_1', 'OUTPUT_2']}],
-                                   output_ports=[{pnl.MECHANISM:R2,
-                                                   pnl.INPUT_PORTS: ['INPUT_1', 'INPUT_2']}])
-         assert len(R1.output_ports)==2
-         assert len(R2.input_ports)==2
-         assert len(T.input_ports)==1
-         for input_port in T.input_ports:
-             for projection in input_port.path_afferents:
-                 assert projection.sender.owner is R1
-         assert len(T.output_ports)==1
-         for output_port in T.output_ports:
-             for projection in output_port.efferents:
-                 assert projection.receiver.owner is R2
+        R1 = pnl.TransferMechanism(output_ports=['OUTPUT_1', 'OUTPUT_2'])
+        R2 = pnl.TransferMechanism(default_variable=[[0],[0]],
+                                   input_ports=['INPUT_1', 'INPUT_2'])
+        T = pnl.TransferMechanism(input_ports=[{pnl.MECHANISM: R1,
+                                                pnl.OUTPUT_PORTS: ['OUTPUT_1', 'OUTPUT_2']}],
+                                  output_ports=[{pnl.MECHANISM:R2,
+                                                 pnl.INPUT_PORTS: ['INPUT_1', 'INPUT_2']}])
+        assert len(R1.output_ports)==2
+        assert len(R2.input_ports)==2
+        assert len(T.input_ports)==1
+        for input_port in T.input_ports:
+            for projection in input_port.path_afferents:
+                assert projection.sender.owner is R1
+        assert len(T.output_ports)==1
+        for output_port in T.output_ports:
+            for projection in output_port.efferents:
+                assert projection.receiver.owner is R2
 
     def test_mapping_projection_using_2_item_tuple_with_list_of_port_Names(self):
 
