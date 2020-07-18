@@ -1071,10 +1071,11 @@ import abc
 import inspect
 import itertools
 import logging
+import re
 import types
 import warnings
 
-from collections import OrderedDict, defaultdict
+from collections import defaultdict, OrderedDict, UserDict, UserList
 from inspect import isclass
 from numbers import Number
 
@@ -1127,7 +1128,6 @@ class MechanismError(Exception):
         return repr(self.error_value)
 
 
-from collections import UserDict
 class MechParamsDict(UserDict):
     """Subclass for validation of dicts used to pass Mechanism parameters to OutputPort for variable specification."""
     pass
@@ -2397,7 +2397,7 @@ class Mechanism_Base(Mechanism):
 
                         return return_value
                 else:
-                    converted_to_2d = np.atleast_2d(return_value)
+                    converted_to_2d = convert_to_np_array(return_value, dimension=2)
                 # If return_value is a list of heterogenous elements, return as is
                 #     (satisfies requirement that return_value be an array of possibly multidimensional values)
                 if converted_to_2d.dtype == object:
@@ -2411,7 +2411,7 @@ class Mechanism_Base(Mechanism):
                 return_value = super()._execute(variable=self.defaults.variable,
                                                 context=context,
                                                 runtime_params=runtime_params)
-                return np.atleast_2d(return_value)
+                return convert_to_np_array(return_value, dimension=2)
 
         # SET UP RUNTIME PARAMS if any
 
@@ -2491,7 +2491,7 @@ class Mechanism_Base(Mechanism):
                                 for item in value))):
                         pass
                 else:
-                    converted_to_2d = np.atleast_2d(value)
+                    converted_to_2d = convert_to_np_array(value, dimension=2)
                     # If return_value is a list of heterogenous elements, return as is
                     #     (satisfies requirement that return_value be an array of possibly multidimensional values)
                     if converted_to_2d.dtype == object:
@@ -2537,7 +2537,7 @@ class Mechanism_Base(Mechanism):
         return value
 
     def _get_variable_from_input(self, input, context=None):
-        input = np.atleast_2d(input)
+        input = convert_to_np_array(input, dimension=2)
         num_inputs = np.size(input, 0)
         num_input_ports = len(self.input_ports)
         if num_inputs != num_input_ports:
@@ -2559,7 +2559,7 @@ class Mechanism_Base(Mechanism):
                                      f"required length ({len(input_port.defaults.variable)}) for input "
                                      f"to {InputPort.__name__} {repr(input_port.name)} of {self.name}.")
 
-        return np.array(self.get_input_values(context))
+        return convert_to_np_array(self.get_input_values(context))
 
     def _update_input_ports(self, runtime_input_port_params=None, context=None):
         """Update value for each InputPort in self.input_ports:
@@ -2574,7 +2574,7 @@ class Mechanism_Base(Mechanism):
             port= self.input_ports[i]
             port._update(params=runtime_input_port_params,
                          context=context)
-        return np.array(self.get_input_values(context))
+        return convert_to_np_array(self.get_input_values(context))
 
     def _update_parameter_ports(self, runtime_parameter_port_params=None, context=None):
 
@@ -2945,8 +2945,8 @@ class Mechanism_Base(Mechanism):
                                        mech_params, mech_state, mech_in)
         return builder
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable):
-        fun = ctx.import_llvm_function(function)
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, *, tags:frozenset):
+        fun = ctx.import_llvm_function(function, tags=tags)
         fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
         fun_out = builder.alloca(fun.args[3].type.pointee)
 
@@ -2957,7 +2957,7 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
         return pnlvm.ir.IntType(1)(1)
 
-    def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out):
+    def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
 
         ip_output, builder = self._gen_llvm_input_ports(ctx, builder,
                                                         params, state, arg_in)
@@ -2967,7 +2967,7 @@ class Mechanism_Base(Mechanism):
                 self.function, f_params_ptr, ctx, builder, params, state, arg_in)
 
         f_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
-        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, f_params, f_state, ip_output)
+        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, f_params, f_state, ip_output, tags=tags)
 
         # Update execution counter
         exec_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "execution_count")
@@ -3030,7 +3030,7 @@ class Mechanism_Base(Mechanism):
                                                     return_type=pnlvm.ir.IntType(1))
         iparams, istate, iin, iout = internal_builder.function.args[:4]
         internal_builder, is_finished = self._gen_llvm_function_internal(ctx, internal_builder,
-                                                                         iparams, istate, iin, iout)
+                                                                         iparams, istate, iin, iout, tags=tags)
         internal_builder.ret(is_finished)
 
         # Call Internal Function
@@ -3083,7 +3083,6 @@ class Mechanism_Base(Mechanism):
             output = self.output_port.parameters.value._get(context)
         params = params or self.parameters.values()
 
-        import re
         if 'mechanism' in self.name or 'Mechanism' in self.name:
             mechanism_string = ' '
         else:
@@ -3569,7 +3568,7 @@ class Mechanism_Base(Mechanism):
                 else:
                     old_variable = self.defaults.variable
                 old_variable.extend(added_variable)
-                self.defaults.variable = np.array(old_variable)
+                self.defaults.variable = convert_to_np_array(old_variable)
             instantiated_input_ports = _instantiate_input_ports(self,
                                                                   input_ports,
                                                                   added_variable,
@@ -3990,10 +3989,9 @@ def _is_mechanism_spec(spec):
         return True
     return False
 
-from collections import UserList
 class MechanismList(UserList):
     """Provides access to Mechanisms and their attributes in a list Mechanisms of an owner.
-    
+
     Properties return dicts with item : attribute pairs.
     Recursively process any item that itself is a MechanismList (e.g., a `Nested Composition <Composition_Nested>`.
 

@@ -483,18 +483,14 @@ import dill
 import inspect
 import logging
 import numbers
-import re
 import types
 import warnings
-import weakref
 
 from abc import ABCMeta
 from collections.abc import Iterable
-from collections import OrderedDict, UserDict
 from enum import Enum, IntEnum
 
 import numpy as np
-import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.context import \
@@ -976,7 +972,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 return variable
 
             try:
-                return np.asarray(variable)
+                return convert_to_np_array(variable)
             except ValueError:
                 return convert_all_elements_to_np_array(variable)
 
@@ -1396,10 +1392,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 p.attributes.add('noalias')
 
         if "reset" in tags:
-            builder = self._gen_llvm_function_reset(ctx, builder,
-                                                           params, state,
-                                                           arg_in, arg_out,
-                                                           tags=tags)
+            builder = self._gen_llvm_function_reset(ctx, builder, params, state,
+                                                    arg_in, arg_out, tags=tags)
         else:
             builder = self._gen_llvm_function_body(ctx, builder, params, state,
                                                    arg_in, arg_out, tags=tags)
@@ -1509,7 +1503,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     variable = []
                     for s in size:
                         variable.append(np.zeros(s))
-                    variable = np.array(variable)
+                    variable = convert_to_np_array(variable)
+                # TODO: fix bare except
                 except:
                     raise ComponentError("variable (possibly default_variable) was not specified, but PsyNeuLink "
                                          "was unable to infer variable from the size argument, {}. size should be"
@@ -2439,7 +2434,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
                 elif target_set is not None:
                     # Copy any iterables so that deletions can be made to assignments belonging to the instance
-                    from collections.abc import Iterable
                     if not isinstance(param_value, Iterable) or isinstance(param_value, str):
                         target_set[param_name] = param_value
                     else:
@@ -3370,10 +3364,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     @_variable_shape_flexibility.setter
     def _variable_shape_flexibility(self, value):
         self.__variable_shape_flexibility = value
-
-    @classmethod
-    def get_constructor_defaults(cls):
-        return {arg_name: arg.default for (arg_name, arg) in inspect.signature(cls.__init__).parameters.items()}
 
     @property
     def class_parameters(self):

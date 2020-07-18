@@ -79,8 +79,6 @@ import typecheck as tc
 
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.learningfunctions import Kohonen
-from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism
@@ -282,21 +280,21 @@ class KohonenMechanism(TransferMechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 function=Linear,
+                 function=None,
                  # selection_function=OneHot(mode=MAX_INDICATOR),  # RE-INSTATE WHEN IMPLEMENT NHot function
-                 integrator_function=AdaptiveIntegrator,
+                 integrator_function=None,
                  initial_value=None,
-                 noise: is_numeric_or_none = 0.0,
-                 integration_rate: is_numeric_or_none = 0.5,
-                 integrator_mode=False,
+                 noise: tc.optional(is_numeric_or_none) = None,
+                 integration_rate: tc.optional(is_numeric_or_none) = None,
+                 integrator_mode=None,
                  clip=None,
-                 enable_learning=True,
+                 enable_learning=None,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
-                 learning_function:is_function_type=Kohonen(distance_function=GAUSSIAN),
+                 learning_function: tc.optional(is_function_type) = None,
                  learned_projection:tc.optional(MappingProjection)=None,
                  additional_output_ports:tc.optional(tc.any(str, Iterable))=None,
                  name=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  **kwargs
                  ):
         # # Default output_ports is specified in constructor as a string rather than a list

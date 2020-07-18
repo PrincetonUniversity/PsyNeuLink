@@ -41,12 +41,13 @@ All TransferFunctions have the following attributes:
 """
 
 import numbers
-from enum import IntEnum
-
 import numpy as np
 import typecheck as tc
 import types
 import warnings
+
+from enum import IntEnum
+from math import e, pi, sqrt
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
@@ -68,7 +69,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import \
     Parameter, get_validator_by_function
 from psyneulink.core.globals.utilities import parameter_spec, get_global_seed, safe_len
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
 
@@ -122,10 +123,10 @@ class TransferFunction(Function_Base):
                 vo = b.gep(arg_out, [ctx.int32_ty(0), idx])
                 with pnlvm.helpers.array_ptr_loop(b, vi, "nested_transfer_loop") as args:
                     self._gen_llvm_transfer(ctx=ctx, vi=vi, vo=vo,
-                                            params=params, state=state, *args)
+                                            params=params, state=state, *args, tags=tags)
             else:
                self._gen_llvm_transfer(b, idx, ctx=ctx, vi=arg_in, vo=arg_out,
-                                       params=params, state=state)
+                                       params=params, state=state, tags=tags)
 
         return builder
 
@@ -202,7 +203,7 @@ class Identity(TransferFunction):  # -------------------------------------------
                  default_variable=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
@@ -369,11 +370,11 @@ class Linear(TransferFunction):  # ---------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 slope: tc.optional(parameter_spec) = None,
-                 intercept: tc.optional(parameter_spec) = None,
+                 slope: tc.optional(tc.optional(parameter_spec)) = None,
+                 intercept: tc.optional(tc.optional(parameter_spec)) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -384,7 +385,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         slope_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SLOPE)
@@ -393,9 +394,15 @@ class Linear(TransferFunction):  # ---------------------------------------------
         slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
         intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
 
-        val = builder.load(ptri)
-        val = builder.fmul(val, slope)
-        val = builder.fadd(val, intercept)
+
+        if "derivative" in tags:
+            # f'(x) = m
+            val = slope
+        else:
+            # f(x) = mx + b
+            val = builder.load(ptri)
+            val = builder.fmul(val, slope)
+            val = builder.fadd(val, intercept)
 
         builder.store(val, ptro)
 
@@ -451,6 +458,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         return self.convert_output_type(result)
 
+    @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
         """
         derivative(input)
@@ -620,13 +628,13 @@ class Exponential(TransferFunction):  # ----------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec = 1.0,
-                 scale: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
-                 offset: parameter_spec = 0.0,
+                 rate: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
+                 bias: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -638,7 +646,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -657,8 +665,15 @@ class Exponential(TransferFunction):  # ----------------------------------------
         val = builder.fmul(val, rate)
         val = builder.fadd(val, bias)
         val = builder.call(exp_f, [val])
-        val = builder.fmul(val, scale)
-        val = builder.fadd(val, offset)
+
+        if "derivative" in tags:
+            # f'(x) = s*r*e^(r*x + b)
+            val = builder.fmul(val, scale)
+            val = builder.fmul(val, rate)
+        else:
+            # f(x) = s*e^(r*x + b) + o
+            val = builder.fmul(val, scale)
+            val = builder.fadd(val, offset)
 
         builder.store(val, ptro)
 
@@ -693,10 +708,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = scale * np.exp(rate * variable + bias) + offset
-        from math import e
         result = scale * e**(rate * variable + bias) + offset
         return self.convert_output_type(result)
 
+    @handle_external_context()
     def derivative(self, input, output=None, context=None):
         """
         derivative(input)
@@ -716,8 +731,11 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
 
         """
-        return self._get_current_function_param(RATE, context) * input + self._get_current_function_param(BIAS, context)
+        rate = self._get_current_function_param(RATE, context)
+        scale = self._get_current_function_param(SCALE, context)
+        bias = self._get_current_function_param(BIAS, context)
 
+        return rate * scale * e**(rate * input + bias)
 
 # **********************************************************************************************************************
 #                                                   Logistic
@@ -888,14 +906,14 @@ class Logistic(TransferFunction):  # -------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: parameter_spec = 1.0,
-                 x_0=0.0,
-                 bias=0.0,
-                 offset: parameter_spec = 0.0,
-                 scale: parameter_spec = 1.0,
+                 gain: tc.optional(parameter_spec) = None,
+                 x_0=None,
+                 bias=None,
+                 offset: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -908,7 +926,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -926,6 +944,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
+
         val = builder.fadd(val, bias)
         val = builder.fsub(val, x_0)
         val = builder.fmul(val, gain)
@@ -934,6 +953,14 @@ class Logistic(TransferFunction):  # -------------------------------------------
         val = builder.fadd(ctx.float_ty(1), val)
         val = builder.fdiv(ctx.float_ty(1), val)
         val = builder.fmul(val, scale)
+
+        if "derivative" in tags:
+            # f(x) = g * s * o * (1-o)
+            function_val = val
+            val = builder.fsub(ctx.float_ty(1), function_val)
+            val = builder.fmul(function_val, val)
+            val = builder.fmul(gain, val)
+            val = builder.fmul(scale, val)
 
         builder.store(val, ptro)
 
@@ -969,11 +996,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
-        from math import e
         result = scale * (1. / (1 + e**(-gain * (variable + bias - x_0) + offset)))
 
         return self.convert_output_type(result)
 
+    @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
         """
         derivative(input=None, output=None)
@@ -1044,7 +1071,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
     .. math::
 
-        \\frac{1 - e^{-2(gain*(variable+bias-x\\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\\_0)+offset)}}
+        \\scale*frac{1 - e^{-2(gain*(variable+bias-x\\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\\_0)+offset)}}
 
     .. note::
 
@@ -1184,14 +1211,14 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: parameter_spec = 1.0,
-                 x_0=0.0,
-                 bias=0.0,
-                 offset: parameter_spec = 0.0,
-                 scale: parameter_spec = 1.0,
+                 gain: tc.optional(parameter_spec) = None,
+                 x_0=None,
+                 bias=None,
+                 offset: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1204,7 +1231,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -1212,23 +1239,47 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
         x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
         offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
         x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
-        exp_val = builder.load(ptri)
-        exp_val = builder.fadd(exp_val, bias)
-        exp_val = builder.fsub(exp_val, x_0)
-        exp_val = builder.fmul(exp_val, gain)
-        exp_val = builder.fadd(exp_val, offset)
-        exp_val = builder.fmul(exp_val.type(-2), exp_val)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
 
-        val = builder.call(exp_f, [exp_val])
-        val1 = builder.fsub(val.type(1), val)
-        val2 = builder.fadd(val.type(1), val)
-        val = builder.fdiv(val1, val2)
+        variable = builder.load(ptri)
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
+
+        if "derivative" in tags:
+            exponent = builder.fadd(variable, bias)
+            exponent = builder.fsub(exponent, x_0)
+            exponent = builder.fmul(gain, exponent)
+            exponent = builder.fadd(exponent, offset)
+            exponent = builder.fmul(exponent.type(-2), exponent)
+
+            mult = builder.fmul(gain, scale)
+            mult = builder.fmul(mult.type(-2), mult)
+
+            exp_val = builder.call(exp_f, [exponent])
+            numerator = builder.fmul(exp_val.type(-2), exp_val)
+
+            denominator = builder.fadd(exp_val.type(1), exp_val)
+            denominator = builder.fmul(denominator, denominator)
+            
+            val = builder.fdiv(numerator, denominator)
+            val = builder.fmul(val, mult)
+        else:
+            exp_val = builder.fadd(variable, bias)
+            exp_val = builder.fsub(exp_val, x_0)
+            exp_val = builder.fmul(exp_val, gain)
+            exp_val = builder.fadd(exp_val, offset)
+            exp_val = builder.fmul(exp_val.type(-2), exp_val)
+
+            val = builder.call(exp_f, [exp_val])
+            val1 = builder.fsub(val.type(1), val)
+            val2 = builder.fadd(val.type(1), val)
+            val = builder.fdiv(val1, val2)
+            val = builder.fmul(val, scale)
 
         builder.store(val, ptro)
 
@@ -1260,17 +1311,18 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bias = self._get_current_function_param(BIAS, context)
         x_0 = self._get_current_function_param(X_0, context)
         offset = self._get_current_function_param(OFFSET, context)
+        scale = self._get_current_function_param(SCALE, context)
 
         # The following probably doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         #   (since np.exp doesn't work)
         # result = 1. / (1 + np.tanh(-gain * (variable - bias) + offset))
-        from math import e
         exponent = -2 * (gain * (variable + bias - x_0) + offset)
-        result = (1 - e**exponent)/ (1 + e**exponent)
+        result = scale * (1 - e**exponent)/ (1 + e**exponent)
 
         return self.convert_output_type(result)
 
 
+    @handle_external_context()
     def derivative(self, input, output=None, context=None):
         """
         derivative(input)
@@ -1294,8 +1346,12 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         offset = self._get_current_function_param(OFFSET, context)
         scale = self._get_current_function_param(SCALE, context)
 
-        from math import e
-        return gain * scale / ((1 + e**(-2 * (gain * (input + bias - x_0) + offset))) / (2 * e**(-gain * (input + bias - x_0) + offset)))**2
+        exponent = -2 * (gain * (input + bias - x_0) + offset)
+        mult = -2 * gain * scale
+        numerator = -2 * e**(exponent)
+        denominator = (1 + e**(exponent))**2
+
+        return mult * (numerator / denominator)
 
 
 # **********************************************************************************************************************
@@ -1419,12 +1475,12 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
-                 leak: parameter_spec = 0.0,
+                 gain: tc.optional(parameter_spec) = None,
+                 bias: tc.optional(parameter_spec) = None,
+                 leak: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1467,7 +1523,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         return self.convert_output_type(result)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -1482,14 +1538,20 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         # Maxnum for some reason needs full function prototype
         max_f = ctx.get_builtin("maxnum", [ctx.float_ty])
         var = builder.load(ptri)
-        val = builder.fsub(var, bias)
-        val1 = builder.fmul(val, gain)
-        val2 = builder.fmul(val1, leak)
 
-        val = builder.call(max_f, [val1, val2])
+        if "derivative" in tags:
+            predicate = builder.fcmp_ordered('>', var, var.type(0))
+            val = builder.select(predicate, gain, builder.fmul(gain, leak))
+        else:
+            val = builder.fsub(var, bias)
+            val1 = builder.fmul(val, gain)
+            val2 = builder.fmul(val1, leak)
+
+            val = builder.call(max_f, [val1, val2])
 
         builder.store(val, ptro)
 
+    @handle_external_context()
     def derivative(self, input, output=None, context=None):
         """
         derivative(input)
@@ -1511,7 +1573,11 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         gain = self._get_current_function_param(GAIN, context)
         leak = self._get_current_function_param(LEAK, context)
 
-        return gain if input > 0 else gain * leak
+        input = np.asarray(input).copy()
+        input[input>0] = gain
+        input[input<=0] = gain * leak
+
+        return input
 
 
 # **********************************************************************************************************************
@@ -1656,13 +1722,13 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 standard_deviation: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 standard_deviation: tc.optional(parameter_spec) = None,
+                 bias: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             standard_deviation=standard_deviation,
@@ -1674,7 +1740,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -1701,7 +1767,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         exp = builder.fdiv(exp_num, exp_denom)
         numerator = builder.call(exp_f, [exp])
 
-        from math import pi
         denom = builder.fmul(standard_deviation.type(2 * pi), standard_deviation)
         denom = builder.call(sqrt_f, [denom])
         val = builder.fdiv(numerator, denom)
@@ -1741,12 +1806,12 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         scale = self._get_current_function_param(SCALE, context)
         offset = self._get_current_function_param(OFFSET, context)
 
-        from math import e, pi, sqrt
         gaussian = e**(-(variable - bias)**2 / (2 * standard_deviation**2)) / sqrt(2 * pi * standard_deviation)
         result = scale * gaussian + offset
 
         return self.convert_output_type(result)
 
+    @handle_external_context()
     def derivative(self, input, output=None, context=None):
         """
         derivative(input)
@@ -1770,7 +1835,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         sigma = self._get_current_function_param(STANDARD_DEVIATION, context)
         bias = self._get_current_function_param(BIAS, context)
 
-        from math import e, pi, sqrt
         adjusted_input = input - bias
         result = (-adjusted_input * e**(-(adjusted_input**2 / (2 * sigma**2)))) / sqrt(2 * pi * sigma**3)
 
@@ -1931,14 +1995,14 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 variance: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 variance: tc.optional(parameter_spec) = None,
+                 bias: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if seed is None:
             seed = get_global_seed()
@@ -1957,7 +2021,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -2218,12 +2282,12 @@ class SoftMax(TransferFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: parameter_spec = 1.0,
+                 gain: tc.optional(parameter_spec) = None,
                  output=None,
-                 per_item=True,
-                 params: tc.optional(dict) = None,
+                 per_item=None,
+                 params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         try:
             # needed because one_hot_function is initialized here based
@@ -2421,6 +2485,7 @@ class SoftMax(TransferFunction):
 
         return self.convert_output_type(output)
 
+    @handle_external_context()
     def derivative(self, output, input=None, context=None):
         """
         derivative(output)
@@ -2621,7 +2686,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  matrix=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         # Note: this calls _validate_variable and _validate_params which are overridden below;
         #       the latter implements the matrix if required
@@ -3739,15 +3804,15 @@ class TransferWithCosts(TransferFunction):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 transfer_fct:(is_function_type)=Linear,
+                 transfer_fct:tc.optional(is_function_type)=None,
                  enabled_cost_functions:tc.optional(tc.any(CostFunctions, list))=None,
-                 intensity_cost_fct:(is_function_type)=Exponential,
-                 adjustment_cost_fct:tc.optional(is_function_type)=Linear,
-                 duration_cost_fct:tc.optional(is_function_type)=SimpleIntegrator,
-                 combine_costs_fct:tc.optional(is_function_type)=LinearCombination,
+                 intensity_cost_fct:tc.optional(is_function_type)=None,
+                 adjustment_cost_fct:tc.optional(is_function_type)=None,
+                 duration_cost_fct:tc.optional(is_function_type)=None,
+                 combine_costs_fct:tc.optional(is_function_type)=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         # if size:
         #     if default_variable is None:

@@ -244,7 +244,6 @@ import copy
 import logging
 import types
 import typing
-import warnings
 import weakref
 
 from psyneulink.core.globals.keywords import MULTIPLICATIVE
@@ -366,7 +365,16 @@ class ParametersTemplate:
     def __str__(self):
         return self.show()
 
-    __deepcopy__ = get_deepcopy_with_shared(_deepcopy_shared_keys)
+    def __deepcopy__(self, memo):
+        newone = get_deepcopy_with_shared(self._deepcopy_shared_keys)(self, memo)
+
+        for name, param in self.values(show_all=True).items():
+            if isinstance(param, ParameterAlias):
+                source_name = param.source.name
+                getattr(newone, name).source = getattr(newone, source_name)
+
+        memo[id(self)] = newone
+        return newone
 
     def __del__(self):
         try:
@@ -1353,9 +1361,10 @@ class Parameter(types.SimpleNamespace):
     # in the interface for user simplicity: that is, inheritable (by this Parameter's children or from its parent),
     # visible in a Parameter's repr, and easily settable by the user
     def _set_default_value(self, value):
+        value = self._parse(value)
         self._validate(value)
 
-        super().__setattr__('default_value', self._parse(value))
+        super().__setattr__('default_value', value)
 
     def _set_history_max_length(self, value):
         if value < self.history_min_length:
@@ -1425,6 +1434,15 @@ class ParameterAlias(types.SimpleNamespace, metaclass=_ParameterAliasMeta):
 
     def __getattr__(self, attr):
         return getattr(self.source, attr)
+
+    # must override deepcopy despite it being essentially shallow
+    # because otherwise it will default to Parameter.__deepcopy__ and
+    # return an instance of Parameter
+    def __deepcopy__(self, memo):
+        result = ParameterAlias(source=self._source, name=self.name)
+        memo[id(self)] = result
+
+        return result
 
     @property
     def source(self):

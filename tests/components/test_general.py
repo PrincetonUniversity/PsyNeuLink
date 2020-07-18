@@ -1,3 +1,4 @@
+import inspect
 import psyneulink as pnl
 import pytest
 
@@ -6,6 +7,7 @@ from psyneulink.core.components.projections.pathway.pathwayprojection import Pat
 
 # gather all Component classes (a set to ensure no duplicates)
 component_classes = []
+component_class_constructor_arguments = {}
 for item in pnl.__all__:
     evaled = eval(f'pnl.{item}')
 
@@ -14,6 +16,9 @@ for item in pnl.__all__:
         pnl.core.components.component.ComponentsMeta
     ):
         component_classes.append(evaled)
+        component_class_constructor_arguments[evaled] = inspect.signature(
+            evaled.__init__
+        ).parameters
 
 component_classes.sort(key=lambda x: x.__name__)
 
@@ -47,3 +52,32 @@ def test_function_parameters_stateless(class_):
         )
     except AttributeError:
         pass
+
+
+@pytest.mark.parametrize(
+    'class_',
+    component_classes
+)
+def test_parameters_user_specified(class_):
+    violators = set()
+    constructor_parameters = inspect.signature(class_.__init__).parameters
+    for name, param in constructor_parameters.items():
+        if (
+            param.kind in {
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                inspect.Parameter.KEYWORD_ONLY
+            }
+            and name in class_.parameters.names()
+            and param.default is not inspect.Parameter.empty
+            and param.default is not None
+        ):
+            violators.add(name)
+
+    message = (
+        "If a value other than None is used as the default value in a class's"
+        + ' constructor/__init__, for an argument corresponding to a Parameter,'
+        + ' _user_specified will always be True. The default value should be'
+        + " specified in the class's Parameters inner class. Violators for"
+        + f' {class_.__name__}: {violators}'
+    )
+    assert violators == set(), message

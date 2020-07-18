@@ -763,16 +763,15 @@ Class Reference
 """
 
 import abc
-import abc
 import inspect
 import itertools
 import numbers
+import sys
 import types
 import warnings
 
 from collections.abc import Iterable
 from collections import defaultdict
-from copy import deepcopy
 
 import numpy as np
 import typecheck as tc
@@ -2627,7 +2626,8 @@ def _instantiate_port(port_type:_is_port_class,           # Port's type
             port_spec_dict[REFERENCE_VALUE] = port_spec_dict[VARIABLE]
 
     #  Convert reference_value to np.array to match port_variable (which, as output of function, will be an np.array)
-    port_spec_dict[REFERENCE_VALUE] = convert_to_np_array(port_spec_dict[REFERENCE_VALUE],1)
+    if port_spec_dict[REFERENCE_VALUE] is not None:
+        port_spec_dict[REFERENCE_VALUE] = convert_to_np_array(port_spec_dict[REFERENCE_VALUE], 1)
 
     # INSTANTIATE PORT:
 
@@ -2673,7 +2673,6 @@ def _parse_port_type(owner, port_spec):
 
         # Port keyword
         if port_spec in port_type_keywords:
-            import sys
             return getattr(sys.modules['PsyNeuLink.Components.Ports.' + port_spec], port_spec)
 
         # Try as name of Port

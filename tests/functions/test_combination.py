@@ -44,10 +44,10 @@ class TestRearrange:
     @pytest.mark.combination_function
     def test_default_variable_has_non_numeric_index(self):
         # with pytest.raises(pnl.FunctionError) as error_text:
-        with pytest.raises(pnl.UtilitiesError) as error_text:
+        with pytest.raises(pnl.FunctionError) as error_text:
             pnl.Rearrange(default_variable=[[0],['a']], arrangement=[(1,2),0])
         # error_msg = "All elements of 'default_variable' for Rearrange must be scalar values."
-        error_msg = "[['0']\\n ['a']] has non-numeric entries"
+        error_msg = "must be scalar values"
         assert error_msg in str(error_text.value)
 
     @pytest.mark.function

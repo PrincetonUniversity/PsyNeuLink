@@ -106,6 +106,7 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONTEXT, NAME, OWNER_VALUE, SIZE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.utilities import convert_to_np_array
 
 __all__ = ['EpisodicMemoryMechanism', 'CONTENT_INPUT', 'ASSOC_INPUT', 'CONTENT_OUTPUT', 'ASSOC_OUTPUT']
 
@@ -236,8 +237,8 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         )
 
     def __init__(self,
-                 content_size:int=1,
-                 assoc_size:int=0,
+                 content_size:int=None,
+                 assoc_size:int=None,
                  function:Function=None,
                  params=None,
                  name=None,
@@ -248,10 +249,10 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         input_ports = None
         output_ports = None
 
-        if content_size != self.defaults.content_size:
+        if content_size is not None and content_size != self.defaults.content_size:
             input_ports = _generate_content_input_port_spec(content_size)
 
-        if assoc_size != self.defaults.assoc_size:
+        if assoc_size is not None and assoc_size != self.defaults.assoc_size:
             try:
                 input_ports.append({NAME: ASSOC_INPUT, SIZE: assoc_size})
             except AttributeError:
@@ -302,7 +303,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
         # If assoc has not been specified, add empty list to call to function (which expects two items in its variable)
         if len(variable) != 2:
-            return np.array([variable[0],[]])
+            return convert_to_np_array([variable[0],[]])
         else:
             return variable
 

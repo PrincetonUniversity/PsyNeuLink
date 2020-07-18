@@ -20,7 +20,6 @@ Functions that return a scalar evaluation of their input.
 """
 
 import functools
-import itertools
 
 import numpy as np
 import typecheck as tc
@@ -212,14 +211,14 @@ class Stability(ObjectiveFunction):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 matrix=HOLLOW_MATRIX,
-                 # metric:is_distance_metric=ENERGY,
-                 metric: tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric) = ENERGY,
-                 transfer_fct: tc.optional(tc.any(types.FunctionType, types.MethodType)) = None,
-                 normalize: bool = False,
+                 matrix=None,
+                 # metric:is_distance_metric=None,
+                 metric: tc.optional(tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric)) = None,
+                 transfer_fct: tc.optional(tc.optional(tc.any(types.FunctionType, types.MethodType))) = None,
+                 normalize: tc.optional(bool) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if size:
             if default_variable is None:
@@ -560,9 +559,9 @@ class Energy(Stability):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 normalize:bool=False,
+                 normalize:bool=None,
                  # transfer_fct=None,
-                 matrix=HOLLOW_MATRIX,
+                 matrix=None,
                  params=None,
                  owner=None,
                  prefs=None):
@@ -668,7 +667,7 @@ class Entropy(Stability):
 
     def __init__(self,
                  default_variable=None,
-                 normalize:bool=False,
+                 normalize:bool=None,
                  transfer_fct=None,
                  params=None,
                  owner=None,
@@ -781,11 +780,11 @@ class Distance(ObjectiveFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 metric: DistanceMetrics._is_metric = DIFFERENCE,
-                 normalize: bool = False,
+                 metric: tc.optional(DistanceMetrics._is_metric) = None,
+                 normalize: tc.optional(bool) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             metric=metric,

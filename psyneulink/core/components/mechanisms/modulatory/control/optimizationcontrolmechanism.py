@@ -413,6 +413,7 @@ from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, \
     OPTIMIZATION_CONTROL_MECHANISM, OBJECTIVE_MECHANISM, OUTCOME, PRODUCT, PARAMS, \
     CONTROL, AUTO_ASSIGN_MATRIX
+from psyneulink.core.globals.utilities import convert_to_np_array
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.context import handle_external_context
@@ -712,11 +713,11 @@ class OptimizationControlMechanism(ControlMechanism):
     def __init__(self,
                  agent_rep=None,
                  function=None,
-                 features: tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort)) = None,
-                 feature_function: tc.optional(tc.any(is_function_type)) = None,
+                 features: tc.optional(tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))) = None,
+                 feature_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  num_estimates = None,
-                 search_function: tc.optional(tc.any(is_function_type)) = None,
-                 search_termination_function: tc.optional(tc.any(is_function_type)) = None,
+                 search_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
+                 search_termination_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  search_statefulness=None,
                  context=None,
                  **kwargs):
@@ -873,7 +874,7 @@ class OptimizationControlMechanism(ControlMechanism):
             port = self.input_ports[i]
             port._update(params=runtime_params, context=context)
             port_values.append(port.parameters.value._get(context))
-        return np.array(port_values)
+        return convert_to_np_array(port_values)
         # # MODIFIED 5/8/20 NEW:
         # input_port_values = super()._update_input_ports(runtime_params, context)
         # port_values.append(input_port_values)
@@ -983,12 +984,15 @@ class OptimizationControlMechanism(ControlMechanism):
             old_composition = context.composition
             context.composition = self.agent_rep
 
+            # We shouldn't get this far if execution mode is not Python
+            exec_mode = self.parameters.comp_execution_mode._get(context)
+            assert exec_mode == "Python"
             result = self.agent_rep.evaluate(self.parameters.feature_values._get(context),
                                              control_allocation,
                                              self.parameters.num_estimates._get(context),
                                              base_context=context,
                                              context=new_context,
-                                             execution_mode=self.parameters.comp_execution_mode._get(context),
+                                             execution_mode=exec_mode,
                                              return_results=return_results)
             context.composition = old_composition
 
@@ -1224,7 +1228,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return f
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable, *, tags:frozenset):
         fun = ctx.import_llvm_function(function)
         fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
         fun_out = builder.alloca(fun.args[3].type.pointee)

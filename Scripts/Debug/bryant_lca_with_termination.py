@@ -1,6 +1,4 @@
 import psyneulink as pnl
-import numpy as np
-import pytest
 
 cueInterval = pnl.TransferMechanism(default_variable=[[0.0]],
                                     size=1,

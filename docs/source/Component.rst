@@ -1,27 +1,30 @@
 Component
 =========
+.. container:: subclasses
 
-*Subclasses:*
+    *Subclasses*
 
-.. toctree::
-   :maxdepth: 1
+    .. toctree::
+       :maxdepth: 1
 
-   Mechanisms <Mechanism>
-   Projections <Projection>
-   Ports <Port>
-   Functions <Functions>
+       Mechanisms <Mechanism>
+       Projections <Projection>
+       Ports <Port>
+       Functions <Functions>
+    |
 
-|
-*Related*
+.. container:: related
 
-.. toctree::
-   :maxdepth: 1
+    *Related*
 
-   Parameters
-   Log
-   Registry
-   Preferences
-|
+    .. toctree::
+       :maxdepth: 1
+
+       Parameters
+       Log
+       Registry
+       Preferences
+
 .. automodule:: psyneulink.core.components.component
    :members:
    :private-members:

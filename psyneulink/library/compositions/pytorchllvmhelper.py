@@ -1,5 +1,19 @@
 from psyneulink.core import llvm as pnlvm
 
+__all__ = ["gen_inject_unary_function_call",
+           "gen_inject_vec_copy",
+           "gen_inject_vec_binop",
+           "gen_inject_vec_add",
+           "gen_inject_vec_sub",
+           "gen_inject_vec_hadamard",
+           "gen_inject_mat_binop",
+           "gen_inject_mat_add",
+           "gen_inject_mat_sub",
+           "gen_inject_mat_hadamard",
+           "gen_inject_mat_scalar_mult",
+           "gen_inject_vxm",
+           "gen_inject_vxm_transposed"]
+
 def gen_inject_unary_function_call(ctx, builder, unary_func, vector, output_vec=None):
     dim = len(vector.type.pointee)
     if output_vec is None:

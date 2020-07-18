@@ -27,6 +27,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import \
     PreferenceEntry, PreferenceLevel, is_pref_set, REPORT_OUTPUT_PREF
+from psyneulink.core.globals.utilities import convert_to_np_array
 
 
 __all__ = ['InterfaceFunction', 'InterfacePortMap']
@@ -121,7 +122,7 @@ class InterfacePortMap(InterfaceFunction):
                  corresponding_input_port=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -173,7 +174,10 @@ class InterfacePortMap(InterfaceFunction):
         if self.corresponding_input_port.owner.parameters.value._get(context) is not None:
 
             # If CIM's variable does not match its value, then a new pair of ports was added since the last execution
-            if not np.shape(self.corresponding_input_port.owner.get_input_values(context)) == np.shape(self.corresponding_input_port.owner.parameters.value._get(context)):
+            input_values = convert_to_np_array(
+                self.corresponding_input_port.owner.get_input_values(context)
+            )
+            if not np.shape(input_values) == np.shape(self.corresponding_input_port.owner.parameters.value._get(context)):
                 return self.corresponding_input_port.owner.defaults.variable[index]
 
             # If the variable is 1D (e.g. [0. , 0.], NOT [[0. , 0.]]), and the index is 0, then return whole variable

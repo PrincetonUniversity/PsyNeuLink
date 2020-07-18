@@ -21,7 +21,6 @@ from itertools import product
     pytest.param('LLVM', marks=[pytest.mark.llvm]),
     pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
     pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
@@ -149,7 +148,6 @@ def test_simplified_necker_cube(benchmark, mode):
                                   pytest.param('LLVM', marks=[pytest.mark.llvm]),
                                   pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
                                   pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                   pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                   pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                   ])
