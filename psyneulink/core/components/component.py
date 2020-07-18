@@ -1945,25 +1945,22 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 and param_defaults[parameter.name] is not None
             )
 
-        for p in self.parameters:
+        for p in filter(lambda x: isinstance(x, ParameterAlias), self.parameters):
+            if _is_user_specified(p):
+                if _is_user_specified(p.source):
+                    if param_defaults[p.name] is not param_defaults[p.source.name]:
+                        raise ComponentError(
+                            f"Multiple values ({p.name}: {param_defaults[p.name]}"
+                            f"\t{p.source.name}: {param_defaults[p.source.name]} "
+                            f"assigned to identical Parameters. {p.name} is an alias "
+                            f"of {p.source.name}",
+                            component=self,
+                        )
+                else:
+                    param_defaults[p.source.name] = param_defaults[p.name]
+
+        for p in filter(lambda x: not isinstance(x, ParameterAlias), self.parameters):
             p._user_specified = _is_user_specified(p)
-
-            if isinstance(p, ParameterAlias):
-                if p._user_specified:
-                    if _is_user_specified(p.source):
-                        if param_defaults[p.name] is not param_defaults[p.source.name]:
-                            raise ComponentError(
-                                f"Multiple values ({p.name}: {param_defaults[p.name]}"
-                                f"\t{p.source.name}: {param_defaults[p.source.name]} "
-                                f"assigned to identical Parameters. {p.name} is an alias "
-                                f"of {p.source.name}",
-                                component=self,
-                            )
-
-                    else:
-                        param_defaults[p.source.name] = param_defaults[p.name]
-
-                continue
 
             # copy spec so it is not overwritten later
             # TODO: check if this is necessary
