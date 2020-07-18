@@ -1014,11 +1014,11 @@ class TestControlMechanisms:
                                             initial_value=np.array([[0.0, 0.0]]),
                                             output_ports=[pnl.RESULT],
                                             name='rtm')
-    
+
         controller = pnl.ControlMechanism(
             monitor_for_control=monitor,
             control_signals=[(pnl.NOISE, rtm)])
-        
+
         comp = pnl.Composition()
         roles = [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT]
         comp.add_node(monitor, required_roles=roles)

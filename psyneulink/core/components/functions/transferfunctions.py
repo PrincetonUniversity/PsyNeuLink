@@ -1265,7 +1265,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
             denominator = builder.fadd(exp_val.type(1), exp_val)
             denominator = builder.fmul(denominator, denominator)
-            
+
             val = builder.fdiv(numerator, denominator)
             val = builder.fmul(val, mult)
         else:

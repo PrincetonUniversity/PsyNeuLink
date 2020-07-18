@@ -1086,7 +1086,7 @@ class TestCompositionPathwaysArg:
             c = Composition(pathways=[{'P1':'A'}])
         assert ("The value in a dict specified in the \'pathways\' arg of the constructor" in str(error_text.value) and
                 "must be a pathway specification (Node, list or tuple): A." in str(error_text.value))
- 
+
     def test_composition_pathways_Pathway_in_learning_tuples(self):
         pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
@@ -4472,7 +4472,7 @@ class TestNestedCompositions:
         sched = Scheduler(composition=outer_comp)
         ret = outer_comp.run(inputs={inner_comp1: [[1.0]], inner_comp2: [[1.0]]}, bin_execute=mode)
         assert np.allclose(ret, [[[0.52497918747894]],[[0.52497918747894]]])
-    
+
     @pytest.mark.nested
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
@@ -4497,7 +4497,7 @@ class TestNestedCompositions:
                 inner_mech_B : [[[0,0]],[[0,0]]],
             }
         }
-        
+
         outer.run(inputs=input, bin_execute=mode)
 
     def test_invalid_projection_deletion_when_nesting_comps(self):
@@ -5666,13 +5666,13 @@ class TestInputSpecifications:
              [0, 1],
              [1, 0],
              [1, 1]])
-    
+
         xor_targets = np.array(  # the outputs we wish to see from the model
             [[0],
              [1],
              [1],
              [0]])
-    
+
         in_to_hidden_matrix = np.random.rand(2,10)
         hidden_to_out_matrix = np.random.rand(10,1)
 
