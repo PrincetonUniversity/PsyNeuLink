@@ -4124,7 +4124,7 @@ class TransferWithCosts(TransferFunction):
 
         enabled_cost_functions = self.parameters.enabled_cost_functions.get(execution_context)
         if assignment:
-            if not cost_function_name in self.parameters.names():
+            if cost_function_name not in self.parameters.names():
                 raise FunctionError("Unable to toggle {} ON as function assignment is \'None\'".
                                          format(cost_function_name))
             if not enabled_cost_functions:

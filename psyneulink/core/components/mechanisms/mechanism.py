@@ -3746,7 +3746,7 @@ class Mechanism_Base(Mechanism):
                     i = ports[k].position_in_mechanism
                     _label_dict[i] = v
                 else:
-                    if not 0 in _label_dict:
+                    if 0 not in _label_dict:
                         _label_dict[0] = {}
                     _label_dict[0].update({k:v})
         return _label_dict

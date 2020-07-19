@@ -923,7 +923,7 @@ class LCControlMechanism(ControlMechanism):
         """
 
         for mech in mechanisms:
-            if not mech in self.modulated_mechanisms:
+            if mech not in self.modulated_mechanisms:
                 continue
 
             parameter_port = mech._parameter_ports[mech.multiplicative_param]

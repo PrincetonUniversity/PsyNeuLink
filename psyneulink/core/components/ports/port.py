@@ -1477,7 +1477,7 @@ class Port_Base(Port):
                 continue
 
             # reassign default variable shape to this port and its function
-            if isinstance(projection, PathwayProjection_Base) and not projection in self.path_afferents:
+            if isinstance(projection, PathwayProjection_Base) and projection not in self.path_afferents:
                 projs = self.path_afferents
                 variable = self.defaults.variable
                 projs.append(projection)
@@ -1515,7 +1515,7 @@ class Port_Base(Port):
                             #     f'unexpected results may occur when the {Mechanism.__name__} ' \
                             #     f'or {Composition.__name__} to which it belongs is executed.')
 
-            elif isinstance(projection, ModulatoryProjection_Base) and not projection in self.mod_afferents:
+            elif isinstance(projection, ModulatoryProjection_Base) and projection not in self.mod_afferents:
                 self.mod_afferents.append(projection)
                 new_projections.append(projection)
 
@@ -2567,7 +2567,7 @@ def _instantiate_port(port_type:_is_port_class,           # Port's type
             if not port._init_args[OWNER]:
                 port._init_args[OWNER] = owner
             # If variable was not specified by user or Port's constructor:
-            if not VARIABLE in port._init_args or port._init_args[VARIABLE] is None:
+            if VARIABLE not in port._init_args or port._init_args[VARIABLE] is None:
                 # If call to _instantiate_port specified variable, use that
                 if variable is not None:
                     port._init_args[VARIABLE] = variable
@@ -3077,7 +3077,7 @@ def _parse_port_spec(port_type=None,
             #           MECHANISM: <Mechanism>, <PORTS>:[<Port.name>, ...]}
             if MECHANISM in port_specific_args:
 
-                if not PROJECTIONS in params:
+                if PROJECTIONS not in params:
                     if NAME in spec:
                         # substitute into tuple spec
                         params[PROJECTIONS] = (spec[NAME], params[MECHANISM])
@@ -3107,7 +3107,7 @@ def _parse_port_spec(port_type=None,
                                 port_attr = getattr(mech, PORTS)
                                 port = port_attr[port]
                             except:
-                                name = owner.name if not 'unnamed' in owner.name else 'a ' + owner.__class__.__name__
+                                name = owner.name if 'unnamed' not in owner.name else 'a ' + owner.__class__.__name__
                                 raise PortError("Unrecognized name ({}) for {} "
                                                  "of {} in specification of {} "
                                                  "for {}".format(port,
@@ -3131,7 +3131,7 @@ def _parse_port_spec(port_type=None,
             # FIX:   REGARDING WHAT IS IN port_specific_args VS params (see REF_VAL_NAME BRANCH)
             # FIX:   ALSO, ??DOES PROJECTIONS ENTRY BELONG IN param OR port_dict?
             # Check for single unrecognized key in params, used for {<Port_Name>:[<projection_spec>,...]} format
-            unrecognized_keys = [key for key in port_specific_args if not key in port_type.portAttributes]
+            unrecognized_keys = [key for key in port_specific_args if key not in port_type.portAttributes]
             if unrecognized_keys:
                 if len(unrecognized_keys)==1:
                     key = unrecognized_keys[0]
@@ -3310,7 +3310,7 @@ def _get_port_for_socket(owner,
     if _is_projection_spec(port_spec):
 
         # These specifications require that a particular Port be specified to assign its default Projection type
-        if ((is_matrix(port_spec) or (isinstance(port_spec, dict) and not PROJECTION_TYPE in port_spec))):
+        if ((is_matrix(port_spec) or (isinstance(port_spec, dict) and PROJECTION_TYPE not in port_spec))):
             for st in port_types:
                 try:
                     proj_spec = _parse_projection_spec(port_spec, owner=owner, port_type=st)
@@ -3390,7 +3390,7 @@ def _get_port_for_socket(owner,
             port = port_type._get_primary_port(port_type, port_spec)
             # Primary Port for Mechanism specified in port_spec is not compatible
             # with owner's Port for which a connection is being specified
-            if not port.__class__.__name__ in connectee_port_type.connectsWith:
+            if port.__class__.__name__ not in connectee_port_type.connectsWith:
                 from psyneulink.core.components.projections.projection import ProjectionError
                 raise ProjectionError(f"Primary {port_type.__name__} of {port_spec.name} ({port.name}) cannot be "
                                       f"used "

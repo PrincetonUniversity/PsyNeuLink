@@ -1884,7 +1884,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # assign defaults based on pass in params and class defaults
         defaults = {
             k: v for (k, v) in self.class_defaults.values(show_all=True).items()
-            if not k in alias_names
+            if k not in alias_names
         }
 
         if param_defaults is not None:
@@ -2311,7 +2311,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             # setattr(self, "_"+param_name, param_value)
 
             # Check that param is in self.defaults (if not, it is assumed to be invalid for this object)
-            if not param_name in self.defaults.names(show_all=True):
+            if param_name not in self.defaults.names(show_all=True):
                 continue
 
             # The default value of the param is None: suppress type checking
@@ -2538,7 +2538,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         else:
             raise ComponentError("PROGRAM ERROR: got {} instead of string, Component, or Class".format(param_value))
 
-        if not param_spec in MODULATORY_SPEC_KEYWORDS:
+        if param_spec not in MODULATORY_SPEC_KEYWORDS:
             return(param_value)
 
         try:

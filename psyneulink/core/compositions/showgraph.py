@@ -1201,9 +1201,9 @@ class ShowGraph():
 
                         # Validate the Projection is to an INPUT node or a node that is shadowing one
                         if ((rcvr_input_node_proj_owner in composition.nodes_to_roles and
-                             not NodeRole.INPUT in composition.nodes_to_roles[rcvr_input_node_proj_owner])
+                             NodeRole.INPUT not in composition.nodes_to_roles[rcvr_input_node_proj_owner])
                                 and (proj.receiver.shadow_inputs in composition.nodes_to_roles and
-                                     not NodeRole.INPUT in composition.nodes_to_roles[proj.receiver.shadow_inputs])):
+                                     NodeRole.INPUT not in composition.nodes_to_roles[proj.receiver.shadow_inputs])):
                             raise ShowGraphError(f"Projection from input_CIM of {composition.name} to node "
                                                    f"{rcvr_input_node_proj_owner} that is not an "
                                                    f"{NodeRole.INPUT.name} node or shadowing its "
@@ -1346,7 +1346,7 @@ class ShowGraph():
                             sndr_output_node_proj_owner = sndr_output_node_proj.owner
                         # Validate the Projection is from an OUTPUT node
                         if ((sndr_output_node_proj_owner in composition.nodes_to_roles and
-                             not NodeRole.OUTPUT in composition.nodes_to_roles[sndr_output_node_proj_owner])):
+                             NodeRole.OUTPUT not in composition.nodes_to_roles[sndr_output_node_proj_owner])):
                             raise ShowGraphError(f"Projection to output_CIM of {composition.name} "
                                                    f"from node {sndr_output_node_proj_owner} that is not "
                                                    f"an {NodeRole.OUTPUT} node.")
@@ -2155,7 +2155,7 @@ class ShowGraph():
                 if ((quoted_items and node.name == quoted_items[0])
                         or (node.name + ' [' in item)) and node_type in {MECHANISM, PROJECTION}:
                     if node_type in {MECHANISM}:
-                        if not '->' in item:
+                        if '->' not in item:
                             return i
                     elif node_type in {PROJECTION}:
                         if '->' in item:
@@ -2328,7 +2328,7 @@ class ShowGraph():
             composition._animation_directory = composition._animate.pop(MOVIE_DIR, default_dir)
             composition._save_images = composition._animate.pop(SAVE_IMAGES, False)
             composition._show_animation = composition._animate.pop(SHOW, False)
-            if not composition._animate_unit in {COMPONENT, EXECUTION_SET}:
+            if composition._animate_unit not in {COMPONENT, EXECUTION_SET}:
                 raise ShowGraphError(f"{repr(UNIT)} entry of {repr('animate')} argument for {composition.name} method "
                                        f"of {repr('run')} ({composition._animate_unit}) "
                                        f"must be {repr(COMPONENT)} or {repr(EXECUTION_SET)}.")

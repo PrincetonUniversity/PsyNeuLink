@@ -609,7 +609,7 @@ def tensor_power(items, levels:tc.optional(range)=None, flat=False):
     pp = []
     for s in ps:
         order = len(s)
-        if not order in list(levels):
+        if order not in list(levels):
             continue
         if order==1:
             pp.append(np.array(s[0]))
@@ -1011,7 +1011,7 @@ class ReadOnlyOrderedDict(UserDict):
         raise UtilitiesError("{} is read-only".format(self.name))
     def __additem__(self, key, value):
         self.data[key] = value
-        if not key in self._ordered_keys:
+        if key not in self._ordered_keys:
             self._ordered_keys.append(key)
     def __deleteitem__(self, key):
         del self.data[key]

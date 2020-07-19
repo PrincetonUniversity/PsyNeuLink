@@ -4349,7 +4349,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 sender = comp_projection.sender.owner
                 receiver = comp_projection.receiver
                 route_projection_through_pcim = False
-                if not sender in self.nodes \
+                if sender not in self.nodes \
                         and not (hasattr(sender, 'composition') and sender.composition == self):
                     connections = [v for k, v in receiver._afferents_info.items()]
                     for i in connections:
@@ -4578,7 +4578,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             receiver = comp_projection.receiver
             # the mechanism that owns the port for which the projection is an afferent
             owner = receiver.owner
-            if not receiver in self.parameter_CIM_ports:
+            if receiver not in self.parameter_CIM_ports:
                 # control signal modulation should match the modulation type of the original control signal
                 modulation = comp_projection.sender.modulation
                 # input port of parameter CIM that will receive projection from the original control signal
@@ -4788,7 +4788,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if owner in nested_nodes:
                     owner = nested_nodes[owner]
                 if node is self.controller and self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
-                    if not owner in self.nodes:
+                    if owner not in self.nodes:
                         continue
                 if node not in self.shadows[owner]:
                     self.shadows[owner].append(node)
@@ -7030,7 +7030,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     except DuplicateProjectionError:
                         continue
             for proj in input_port.path_afferents:
-                if not proj.sender.owner in nested_cims:
+                if proj.sender.owner not in nested_cims:
                     proj._activate_for_compositions(self)
 
         # Check whether controller has input, and if not then disable
@@ -7110,14 +7110,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
                 owner = input_port.shadow_inputs.owner
                 if self._controller_initialization_status == ContextFlags.DEFERRED_INIT \
-                        and not owner in nested_nodes\
-                        and not owner in self.nodes:
+                        and owner not in nested_nodes \
+                        and owner not in self.nodes:
                     continue
-                if not owner in nested_nodes:
+                if owner not in nested_nodes:
                     inputs[input_port.shadow_inputs.owner] = predicted_input[j]
                 else:
                     comp = nested_nodes[owner]
-                    if not comp in inputs:
+                    if comp not in inputs:
                         inputs[comp]=[[predicted_input[j]]]
                     else:
                         inputs[comp]=np.concatenate([[predicted_input[j]],inputs[comp][0]])
@@ -7704,8 +7704,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         target_to_output = {path.target: path.output for path in self.pathways if 'LEARNING' in [role.name for role in path.roles]}
         if mech:
             target_nodes_of_learning_pathways = [path.target for path in self.pathways]
-            label_type = INPUT if not mech in target_nodes_of_learning_pathways else OUTPUT
-            label_mech = mech if not mech in target_to_output else target_to_output[mech]
+            label_type = INPUT if mech not in target_nodes_of_learning_pathways else OUTPUT
+            label_mech = mech if mech not in target_to_output else target_to_output[mech]
             labels = label_mech._get_standardized_label_dict(label_type)
         if type(inputs) == dict:
             _inputs = {}
@@ -7766,7 +7766,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # STEP 1A: Check that all of the nodes listed in the inputs dict are INPUT nodes in the composition
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
         for node in inputs.keys():
-            if not node in input_nodes:
+            if node not in input_nodes:
                 if not isinstance(node, (Mechanism, Composition)):
                     raise CompositionError(f'{node} in "inputs" dict for {self.name} is not a '
                                            f'{Mechanism.__name__} or {Composition.__name__}.')
@@ -7775,7 +7775,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # STEP 1B: Check that all of the INPUT nodes are represented - if not, use default_external_input_values
         for node in input_nodes:
-            if not node in inputs:
+            if node not in inputs:
                 inputs[node] = node.default_external_input_values
         return inputs
 

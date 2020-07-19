@@ -1089,7 +1089,7 @@ def _get_parameter_port(sender_owner, sender_type, param_name, component):
                                         "of {} or its function"
                                         .format(param_name, sender_type, sender_owner.name, component))
         # Check that the Mechanism has a ParameterPort for the param
-        if not param_name in component._parameter_ports.names:
+        if param_name not in component._parameter_ports.names:
             raise ParameterPortError("There is no ParameterPort for the parameter ({}) of {} "
                                         "specified in {} for {}".
                                         format(param_name, component.name, sender_type, sender_owner.name))

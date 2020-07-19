@@ -1027,7 +1027,7 @@ class OutputPort(Port_Base):
         self._instantiate_projections_to_port(projections=modulatory_projections, context=context)
 
         # Treat all remaining specifications in projections as ones for outgoing MappingProjections
-        pathway_projections = [proj for proj in projections if not proj in modulatory_projections]
+        pathway_projections = [proj for proj in projections if proj not in modulatory_projections]
         for proj in pathway_projections:
             self._instantiate_projection_from_port(projection_spec=MappingProjection,
                                                     receiver=proj,
