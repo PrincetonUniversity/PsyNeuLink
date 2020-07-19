@@ -1628,8 +1628,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         cmp_str = self.parameters.termination_comparison_op.get(None)
         return builder.fcmp_ordered(cmp_str, cmp_val, threshold)
 
-    def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        ip_out, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
+    def _gen_llvm_mechanism_functions(self, ctx, builder, params, state, arg_in,
+                                      ip_out, *, tags:frozenset):
 
         if self.integrator_mode:
             if_state = pnlvm.helpers.get_state_ptr(builder, self, state,
@@ -1665,25 +1665,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     val = pnlvm.helpers.fclamp(b1, val, clip[0], clip[1])
                     b1.store(val, ptro)
 
-        # Update execution counter
-        exec_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "execution_count")
-        exec_count = builder.load(exec_count_ptr)
-        exec_count = builder.fadd(exec_count, exec_count.type(1))
-        builder.store(exec_count, exec_count_ptr)
-
-        # Update internal clock (i.e. num_executions parameter)
-        num_executions_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "num_executions")
-        for scale in [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN]:
-            num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(scale.value)])
-            new_val = builder.load(num_exec_time_ptr)
-            new_val = builder.add(new_val, ctx.int32_ty(1))
-            builder.store(new_val, num_exec_time_ptr)
-
-        builder = self._gen_llvm_output_ports(ctx, builder, mf_out, params, state, arg_in, arg_out)
-        is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder, params,
-                                                           state, mf_out)
-
-        return builder, is_finished_cond
+        return mf_out, builder
 
     def _execute(self,
         variable=None,
