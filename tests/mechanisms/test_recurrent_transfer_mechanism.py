@@ -1394,5 +1394,3 @@ class TestDebugProperties:
         print("\n\nMatrix Values ----------------------------------")
         print("R.matrix = ", R.matrix)
         print("R.parameters.matrix.get(eid) = ", R.parameters.matrix.get(eid))
-
-

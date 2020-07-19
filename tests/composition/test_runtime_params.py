@@ -809,4 +809,3 @@ class TestCompositionRuntimeParams:
                  )
         assert ("Invalid specification in runtime_params arg for matrix of TARGET PROJECTION: 'amiby'."
                 in str(error_text.value))
-

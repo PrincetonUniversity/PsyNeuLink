@@ -319,4 +319,3 @@ from psyneulink.core.globals.keywords import ENABLED, INPUT_LABELS_DICT, OUTPUT_
 #         assert np.allclose(store_output_labels[1], [[2.0, 2.0]])
 #         assert store_output_labels[2] == ['green']
 #         assert np.allclose(store_output_labels[3], [[2.0, 2.0]])
-

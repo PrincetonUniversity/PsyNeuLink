@@ -2165,6 +2165,3 @@ def _add_projection_from(sender, port, projection_spec, receiver, context=None):
                                                       name=sender.name + '.output_ports')
 
     output_port._instantiate_projections_to_port(projections=projection_spec, context=context)
-
-
-

@@ -4146,4 +4146,3 @@ class MechanismList(UserList):
     def output_values(self):
         """Return dict with output_values for all Mechanisms in MechanismList"""
         return self._get_attributes_dict('values', 'value')
-

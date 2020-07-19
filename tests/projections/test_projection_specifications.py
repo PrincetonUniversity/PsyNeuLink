@@ -463,4 +463,3 @@ class TestProjectionSpecificationFormats:
             pnl.MappingProjection(sender=T1,receiver=T2,name='MP2')
         assert 'Attempt to assign Projection to InputPort-0 of T2 that already has an identical Projection.' \
                in record.value.args[0]
-
