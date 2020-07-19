@@ -1652,9 +1652,13 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, mf_in, tags=tags)
 
-        # FIXME: Convert to runtime instead of compile time
-        clip = self.parameters.clip.get()
-        if clip is not None:
+        clip_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "clip")
+        if len(clip_ptr.type.pointee) != 0:
+            assert len(clip_ptr.type.pointee) == 2
+            clip_lo = builder.load(builder.gep(clip_ptr, [ctx.int32_ty(0),
+                                                          ctx.int32_ty(0)]))
+            clip_hi = builder.load(builder.gep(clip_ptr, [ctx.int32_ty(0),
+                                                          ctx.int32_ty(1)]))
             for i in range(mf_out.type.pointee.count):
                 mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 with pnlvm.helpers.array_ptr_loop(builder, mf_out_local, "clip") as (b1, index):
@@ -1662,7 +1666,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     ptro = b1.gep(mf_out_local, [ctx.int32_ty(0), index])
 
                     val = b1.load(ptri)
-                    val = pnlvm.helpers.fclamp(b1, val, clip[0], clip[1])
+                    val = pnlvm.helpers.fclamp(b1, val, clip_lo, clip_hi)
                     b1.store(val, ptro)
 
         return mf_out, builder
