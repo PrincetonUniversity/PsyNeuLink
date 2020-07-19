@@ -2947,10 +2947,9 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, *, tags:frozenset):
         fun = ctx.import_llvm_function(function, tags=tags)
-        fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
         fun_out = builder.alloca(fun.args[3].type.pointee)
 
-        builder.call(fun, [params, state, fun_in, fun_out])
+        builder.call(fun, [params, state, variable, fun_out])
 
         return fun_out, builder
 
@@ -3001,9 +3000,6 @@ class Mechanism_Base(Mechanism):
         is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder, params,
                                                            state, value)
         return builder, is_finished_cond
-
-    def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
-        return func_in, builder
 
     def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reset" in tags

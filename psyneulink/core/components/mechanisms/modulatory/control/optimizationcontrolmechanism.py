@@ -1230,10 +1230,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable, *, tags:frozenset):
         fun = ctx.import_llvm_function(function)
-        fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
         fun_out = builder.alloca(fun.args[3].type.pointee)
 
-        args = [params, context, fun_in, fun_out]
+        args = [params, context, variable, fun_out]
         # If we're calling compiled version of Composition.evaluate,
         # we need to pass extra arguments
         if len(fun.args) > 4:
