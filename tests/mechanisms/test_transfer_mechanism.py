@@ -1566,7 +1566,7 @@ class TestTransferMechanismMultipleInputPorts:
             val = benchmark(e.execute, [[1], [2], [3]])
         elif mode == 'PTX':
             e = pnlvm.execution.MechExecution(T)
-            val = benchmark(e.execute, [[1], [2], [3]])
+            val = benchmark(e.cuda_execute, [[1], [2], [3]])
 
         assert len(T.variable)==3
         assert all(a==b for a,b in zip(val, [[ 1.],[ 2.],[ 3.]]))
