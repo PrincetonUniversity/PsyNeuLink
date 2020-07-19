@@ -179,7 +179,7 @@ class TestTargetSpecs:
             D: [2.0, 6.0],
             p1.target: [[3.0, 4.0], [7.0, 8.0]]
         }
-        def input_function (trial_num):
+        def input_function(trial_num):
             return {
                 A: inputs[A][trial_num],
                 D: inputs[D][trial_num],
@@ -203,7 +203,7 @@ class TestTargetSpecs:
             p1.target: [2.0, 2.0],
             p2.target: [4.0, 4.0]
         }
-        def input_function (trial_num):
+        def input_function(trial_num):
             return {
                 A: inputs[A][trial_num],
                 p1.target: inputs[p1.target][trial_num],

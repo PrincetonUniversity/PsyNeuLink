@@ -3095,10 +3095,7 @@ class Mechanism_Base(Mechanism):
         except TypeError:
             input_string = input_val
 
-        print ("\n\'{}\'{} executed:\n- input:  {}".
-               format(self.name,
-                      mechanism_string,
-                      input_string))
+        print("\n\'{}\'{} executed:\n- input:  {}".format(self.name, mechanism_string, input_string))
 
         if params:
             print("- params:")
@@ -3123,14 +3120,14 @@ class Mechanism_Base(Mechanism):
                     param_is_function = True
                 else:
                     param = param_value
-                print ("\t{}: {}".format(param_name, str(param).__str__().strip("[]")))
+                print("\t{}: {}".format(param_name, str(param).__str__().strip("[]")))
                 if param_is_function:
                     # Sort for consistency of output
                     func_params_keys_sorted = sorted(self.function.parameters.names())
                     for fct_param_name in func_params_keys_sorted:
-                        print ("\t\t{}: {}".
-                               format(fct_param_name,
-                                      str(getattr(self.function.parameters, fct_param_name)).__str__().strip("[]")))
+                        print("\t\t{}: {}".
+                              format(fct_param_name,
+                                     str(getattr(self.function.parameters, fct_param_name)).__str__().strip("[]")))
 
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #   if you want more specific output, you can add conditional tests here

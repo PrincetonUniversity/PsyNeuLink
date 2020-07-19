@@ -967,14 +967,14 @@ class LCControlMechanism(ControlMechanism):
                     weight = self.monitored_output_ports_weights_and_exponents[monitored_port_index][0]
                     exponent = self.monitored_output_ports_weights_and_exponents[monitored_port_index][1]
 
-                    print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
-                           format(monitored_port_Mech.name, monitored_port.name, weight, exponent))
+                    print("\t\t{0}: {1} (exp: {2}; wt: {3})".
+                          format(monitored_port_Mech.name, monitored_port.name, weight, exponent))
 
-        print ("\n\tModulating the following parameters:".format(self.name))
+        print("\n\tModulating the following parameters:".format(self.name))
         # Sort for consistency of output:
         port_Names_sorted = sorted(self.output_ports.names)
         for port_Name in port_Names_sorted:
             for projection in self.output_ports[port_Name].efferents:
-                print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+                print("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
 
-        print ("\n---------------------------------------------------------")
+        print("\n---------------------------------------------------------")

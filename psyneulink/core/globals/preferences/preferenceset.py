@@ -384,7 +384,7 @@ class PreferenceSet(object):
                                          format(owner.name, owner.__class__.__name__))
 
         if PreferenceSetVerbosity:
-            print ("Preference assignment condition {0}".format(condition))
+            print("Preference assignment condition {0}".format(condition))
 
 # FIX: ARE THESE NEEDED?? @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @property
