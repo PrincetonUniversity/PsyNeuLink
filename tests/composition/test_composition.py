@@ -90,7 +90,7 @@ class TestConstructor:
         B = ProcessingMechanism(function=Linear(slope=2))
         C = ProcessingMechanism(function=Logistic)
         c = Composition(pathways=[[A],[B],[C]])
-        assert c() == None
+        assert c() is None
         result = c(inputs={A:[[1],[100]],B:[[2],[200]],C:[[3],[1]]})
         assert np.allclose(result, [[100],[400],[0.73105858]])
         assert np.allclose(c(), [[100],[400],[0.73105858]])
@@ -103,7 +103,7 @@ class TestConstructor:
         B = ProcessingMechanism(function=Linear(slope=0.5))
         C = ProcessingMechanism(function=Logistic)
         c = Composition(pathways=[[A],{'LEARNING_PATHWAY':([B,C], BackPropagation)}])
-        assert c() == None
+        assert c() is None
 
         # Run without learning
         result = c(inputs={A:[[1],[100]],B:[[2],[1]]})
@@ -505,13 +505,13 @@ class TestPathway:
         C = ProcessingMechanism(name='C')
         p = Pathway(pathway=[A,B,C], name='P')
         assert p.pathway == [A, B, C]
-        assert p.composition == None
+        assert p.composition is None
         assert p.name == 'P'
-        assert p.input == None
-        assert p.output == None
-        assert p.target == None
-        assert p.roles == None
-        assert p.learning_components == None
+        assert p.input is None
+        assert p.output is None
+        assert p.target is None
+        assert p.roles is None
+        assert p.learning_components is None
 
     def test_pathway_assign_composition_arg_error(self):
         c = Composition()
@@ -530,7 +530,7 @@ class TestPathway:
                 f"because it has not been assigned to a Composition" in str(error_text.value))
         c.add_linear_processing_pathway(pathway=p)
         p_c = c.pathways[0]
-        assert p_c._assign_roles(composition=c) == None
+        assert p_c._assign_roles(composition=c) is None
 
     def test_pathway_illegal_arg_error(self):
         with pytest.raises(pnl.CompositionError) as error_text:
@@ -556,13 +556,13 @@ class TestCompositionPathwayAdditionMethods:
         assert p1.name == 'P'
         assert p1.input == A
         assert p1.output == C
-        assert p1.target == None
+        assert p1.target is None
         assert p2.input == D
-        assert p2.output == None
-        assert p2.target == None
-        assert p3.input == None
+        assert p2.output is None
+        assert p2.target is None
+        assert p3.input is None
         assert p3.output == E
-        assert p3.target == None
+        assert p3.target is None
         assert l.name == 'L'
         assert l.input == F
         assert l.output == G
@@ -6728,8 +6728,8 @@ class TestNodeRoles:
         A = RecurrentTransferMechanism(name='A', size=2, enable_learning=True)
         comp = Composition(pathways=A)
         pathway = comp.pathways[0]
-        assert pathway.target == None
-        assert pathway.learning_objective == None
+        assert pathway.target is None
+        assert pathway.learning_objective is None
         assert pathway.learning_components == {}
         roles = {NodeRole.INPUT, NodeRole.CYCLE, NodeRole.OUTPUT
             # , NodeRole.FEEDBACK_RECEIVER

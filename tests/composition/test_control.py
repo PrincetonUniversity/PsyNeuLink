@@ -365,7 +365,7 @@ class TestControlSpecification:
         comp.add_controller(new_ocm)
 
         assert comp.controller == new_ocm
-        assert old_ocm.composition == None
+        assert old_ocm.composition is None
         assert not any(pnl.SLOPE in p_name for p_name in comp.projections.names)
         assert any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
 

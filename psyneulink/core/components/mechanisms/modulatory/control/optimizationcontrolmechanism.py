@@ -724,7 +724,7 @@ class OptimizationControlMechanism(ControlMechanism):
         """Implement OptimizationControlMechanism"""
 
         # If agent_rep hasn't been specified, put into deferred init
-        if agent_rep==None:
+        if agent_rep is None:
             if context.source==ContextFlags.COMMAND_LINE:
                 # Temporarily name InputPort
                 self._assign_deferred_init_name(self.__class__.__name__, context)
