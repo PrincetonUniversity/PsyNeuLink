@@ -374,6 +374,34 @@ def setup_mat_hadamard(ctx):
 
     builder.ret_void()
 
+# outer product of vectors
+def setup_vec_outer_product(ctx):
+    # Setup types
+    double_ptr_ty = ctx.float_ty.as_pointer()
+
+    # builtin vector magnitude func
+    # param1: ptr to vec 1
+    # param2: ptr to vec 2
+    # param3: dim_x of vec 1
+    # param4: dim_y of vec 2
+    # param5: output ptr (should be dim_x by dim_y)
+    builder = _setup_builtin_func_builder(ctx, "vec_outer_product", (double_ptr_ty, double_ptr_ty, ctx.int32_ty, ctx.int32_ty, double_ptr_ty))
+    v1, v2, dim_x, dim_y, o = builder.function.args
+
+    with helpers.for_loop_zero_inc(builder, dim_x, "vec_outer_product_outer") as (b1, x):
+        with helpers.for_loop_zero_inc(b1, dim_y, "vec_outer_product_inner") as (b2, y):
+            matrix_index = b2.mul(x, dim_y)
+            matrix_index = b2.add(matrix_index, y)
+            v1_ptr = b2.gep(v1, [x])
+            v2_ptr = b2.gep(v2, [y])
+            o_ptr = b2.gep(o, [matrix_index])
+
+            v1_val = b2.load(v1_ptr)
+            v2_val = b2.load(v2_ptr)
+            o_val = b2.fmul(v1_val, v2_val)
+            b2.store(o_val, o_ptr)
+
+    builder.ret_void()
 
 # matrix subtraction
 def setup_mat_sub(ctx):
