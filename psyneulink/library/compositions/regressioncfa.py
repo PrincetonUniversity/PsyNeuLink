@@ -273,7 +273,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                     self.prediction_terms.append(PV[term.name])
         # MODIFIED 11/9/18 END
             for term in self.prediction_terms:
-                if not term in PV:
+                if term not in PV:
                     raise RegressionCFAError("{} specified in {} arg of {} is not a member of the {} enum".
                                                     format(repr(term.name),repr(PREDICTION_TERMS),
                                                            self.__class__.__name__, PV.__name__))

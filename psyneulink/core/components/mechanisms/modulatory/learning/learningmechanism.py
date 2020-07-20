@@ -1160,7 +1160,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
             for error_source in error_sources:
                 if (not isinstance(error_source, (ObjectiveMechanism, LearningMechanism, OutputPort))
                         or (isinstance(error_source, OutputPort)
-                            and not error_source in error_source.owner.output_ports[ERROR_SIGNAL])):
+                            and error_source not in error_source.owner.output_ports[ERROR_SIGNAL])):
                     raise LearningMechanismError(f"{repr(ERROR_SOURCES)} arg for {self.name} ({error_source}) "
                                                  f"must be an {ObjectiveMechanism.__name__}, "
                                                  f"another {LearningMechanism.__name__}, an {repr(ERROR_SIGNAL)} "
@@ -1178,7 +1178,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                 # Validate that the receiver of the LearningProjection (if specified)
                 #     is a MappingProjection and in the same System as self (if specified)
                 if learning_signal[PARAMS] and PROJECTIONS in learning_signal[PARAMS]:
-                    for learning_projection in  learning_signal[PARAMS][PROJECTIONS]:
+                    for learning_projection in learning_signal[PARAMS][PROJECTIONS]:
                         _validate_receiver(sender_mech=self,
                                            projection=learning_projection,
                                            expected_owner_type=MappingProjection,

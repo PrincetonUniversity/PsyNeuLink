@@ -1045,7 +1045,7 @@ class InputPort(Port_Base):
                     # (actual assignment is made in _parse_port_spec)
                     if reference_value is None:
                         port_dict[REFERENCE_VALUE]=port_spec
-                    elif  not iscompatible(port_spec, reference_value):
+                    elif not iscompatible(port_spec, reference_value):
                         raise PortError(f"Value in first item of 2-item tuple specification {InputPort.__name__} of "
                                         f"{owner.name} ({port_spec}) is not compatible with its {REFERENCE_VALUE} "
                                         f"({reference_value}).")

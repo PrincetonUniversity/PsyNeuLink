@@ -180,4 +180,3 @@ class TestBuffer():
         for i in range(5):
             assert np.allclose(expected_full_result[i],
                                np.asfarray(full_result[i]))
-

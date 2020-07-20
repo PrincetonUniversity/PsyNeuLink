@@ -125,8 +125,8 @@ class TransferFunction(Function_Base):
                     self._gen_llvm_transfer(ctx=ctx, vi=vi, vo=vo,
                                             params=params, state=state, *args, tags=tags)
             else:
-               self._gen_llvm_transfer(b, idx, ctx=ctx, vi=arg_in, vo=arg_out,
-                                       params=params, state=state, tags=tags)
+                self._gen_llvm_transfer(b, idx, ctx=ctx, vi=arg_in, vo=arg_out,
+                                        params=params, state=state, tags=tags)
 
         return builder
 
@@ -1265,7 +1265,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
             denominator = builder.fadd(exp_val.type(1), exp_val)
             denominator = builder.fmul(denominator, denominator)
-            
+
             val = builder.fdiv(numerator, denominator)
             val = builder.fmul(val, mult)
         else:
@@ -4124,7 +4124,7 @@ class TransferWithCosts(TransferFunction):
 
         enabled_cost_functions = self.parameters.enabled_cost_functions.get(execution_context)
         if assignment:
-            if not cost_function_name in self.parameters.names():
+            if cost_function_name not in self.parameters.names():
                 raise FunctionError("Unable to toggle {} ON as function assignment is \'None\'".
                                          format(cost_function_name))
             if not enabled_cost_functions:
