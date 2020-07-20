@@ -4920,7 +4920,139 @@ class TestNestedCompositions:
     #     output = sys.run(inputs=stimulus)
     #     assert np.allclose(16, output)
     # MODIFIED 5/8/20 END
+    def test_three_level_deep_pathway_routing_single_mech(self):
+        p2 = ProcessingMechanism(name='p2')
+        p0 = ProcessingMechanism(name='p0')
 
+        c2 = Composition(name='c2', pathways=[p2])
+        c1 = Composition(name='c1', pathways=[c2])
+        c0 = Composition(name='c0', pathways=[[c1], [p0]])
+
+        c0.add_projection(MappingProjection(), sender=p0, receiver=p2)
+        result = c0.run([5])
+        assert result == [5]
+
+    def test_three_level_deep_pathway_routing_two_mech(self):
+        p3a = ProcessingMechanism(name='p3a')
+        p3b = ProcessingMechanism(name='p3b')
+        p1 = ProcessingMechanism(name='p1')
+
+        c3 = Composition(name='c3', pathways=[[p3a], [p3b]])
+        c2 = Composition(name='c2', pathways=[c3])
+        c1 = Composition(name='c1', pathways=[[c2], [p1]])
+
+        c1.add_projection(MappingProjection(), sender=p1, receiver=p3a)
+        c1.add_projection(MappingProjection(), sender=p1, receiver=p3b)
+
+        result = c1.run([5])
+        assert result == [5, 5]
+
+    def test_three_level_deep_modulation_routing_single_mech(self):
+        p3 = ProcessingMechanism(name='p3')
+        ctrl1 = ControlMechanism(name='ctrl1',
+                                 control=ControlSignal(modulates=(SLOPE, p3)))
+
+        c3 = Composition(name='c3', pathways=[p3])
+        c2 = Composition(name='c2', pathways=[c3])
+        c1 = Composition(name='c1', pathways=[[(c2, NodeRole.INPUT)], [ctrl1]])
+
+        result = c1.run({c2: 2, ctrl1: 5})
+        assert result == [10]
+
+    def test_three_level_deep_modulation_routing_two_mech(self):
+        p3a = ProcessingMechanism(name='p3a')
+        p3b = ProcessingMechanism(name='p3b')
+        ctrl1 = ControlMechanism(name='ctrl1',
+                                 control=[
+                                     ControlSignal(modulates=(SLOPE, p3a)),
+                                     ControlSignal(modulates=(SLOPE, p3b))
+                                 ])
+
+        c3 = Composition(name='c3', pathways=[[p3a], [p3b]])
+        c2 = Composition(name='c2', pathways=[c3])
+        c1 = Composition(name='c1', pathways=[[(c2, NodeRole.INPUT)], [ctrl1]])
+
+        result = c1.run({c2: [[2], [2]], ctrl1: [5]})
+        assert result == [10, 10]
+
+    def test_four_level_nested_transfer_mechanism_composition_parallel(self, mode):
+        # mechanisms
+        A = ProcessingMechanism(name="A",
+                                function=AdaptiveIntegrator(rate=0.1))
+        B = ProcessingMechanism(name="B",
+                                function=Logistic)
+
+        comp_lvl3a = Composition(name="comp_lvl3a", pathways=[A, B])
+
+        C = TransferMechanism(name="C",
+                              function=Logistic,
+                              integration_rate=0.1,
+                              integrator_mode=True)
+
+        comp_lvl3b = Composition(name="comp_lvl3b", pathways=[C])
+        comp_lvl2 = Composition(name="comp_lvl2", pathways=[[comp_lvl3a], [comp_lvl3b]])
+        comp_lvl1 = Composition(name="comp_lvl2", pathways=[comp_lvl2])
+        comp_lvl0 = Composition(name="outer_comp", pathways=[comp_lvl1])
+        ret = comp_lvl0.run(inputs={comp_lvl1: {comp_lvl2: {comp_lvl3a: [[1.0]], comp_lvl3b: [[1.0]]}}})
+        assert np.allclose(ret, [[[0.52497918747894]], [[0.52497918747894]]])
+
+    def test_four_level_nested_OCM_control(self):
+        p_lvl3 = ProcessingMechanism(name='p_lvl3')
+
+        c_lvl3 = Composition(name='c_lvl3', pathways=[p_lvl3])
+        c_lvl2 = Composition(name='c_lvl2', pathways=[c_lvl3])
+        c_lvl1 = Composition(name='c_lvl1', pathways=[c_lvl2])
+        c_lvl0 = Composition(name='c_lvl0', pathways=[c_lvl1], controller_mode=BEFORE)
+
+        c_lvl0.add_controller(OptimizationControlMechanism(
+            name='c_top_controller',
+            agent_rep=c_lvl0,
+            features=[c_lvl1.input_port],
+            objective_mechanism=ObjectiveMechanism(monitor=[p_lvl3]),
+            function=GridSearch(),
+            control_signals=ControlSignal(
+                intensity_cost_function=lambda _: 0,
+                modulates=(SLOPE, p_lvl3),
+                allocation_samples=[10, 20, 30])))
+        result = c_lvl0.run([5])
+        assert result == [150]
+
+    def test_four_level_nested_dual_OCM_control(self):
+        from psyneulink import *
+
+        p_lvl3 = ProcessingMechanism(name='p_lvl3')
+        p_lvl1 = ProcessingMechanism(name='p_lvl1')
+
+        c_lvl3 = Composition(name='c_lvl3', pathways=[p_lvl3])
+        c_lvl2 = Composition(name='c_lvl2', pathways=[c_lvl3])
+        c_lvl1 = Composition(name='c_lvl1', pathways=[c_lvl2], controller_mode=BEFORE)
+
+        c_lvl1.add_controller(OptimizationControlMechanism(
+            name='c_lvl1_controller',
+            agent_rep=c_lvl1,
+            features=[c_lvl2.input_port],
+            objective_mechanism=ObjectiveMechanism(monitor=[p_lvl3]),
+            function=GridSearch(),
+            control_signals=ControlSignal(
+                intensity_cost_function=lambda _: 0,
+                modulates=(SLOPE, p_lvl3),
+                allocation_samples=[10, 20, 30])))
+
+        c_lvl0 = Composition(name='c_lvl0', pathways=[c_lvl1], controller_mode=BEFORE)
+
+        c_lvl0.add_controller(OptimizationControlMechanism(
+            name='c_lvl0_controller',
+            agent_rep=c_lvl0,
+            features=[c_lvl1.input_port],
+            objective_mechanism=ObjectiveMechanism(monitor=[p_lvl3]),
+            function=GridSearch(),
+            control_signals=ControlSignal(
+                intensity_cost_function=lambda _: 0,
+                modulates=(SLOPE, p_lvl3),
+                allocation_samples=[10, 20, 30])))
+
+        result = c_lvl0.run([5])
+        assert result == [4500]
 
 class TestOverloadedCompositions:
     def test_mechanism_different_inputs(self):
