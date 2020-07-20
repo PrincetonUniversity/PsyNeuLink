@@ -4977,7 +4977,7 @@ class TestNestedCompositions:
         result = c1.run({c2: [[2], [2]], ctrl1: [5]})
         assert result == [10, 10]
 
-    def test_four_level_nested_transfer_mechanism_composition_parallel(self, mode):
+    def test_four_level_nested_transfer_mechanism_composition_parallel(self):
         # mechanisms
         A = ProcessingMechanism(name="A",
                                 function=AdaptiveIntegrator(rate=0.1))
