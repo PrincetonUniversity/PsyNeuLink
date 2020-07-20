@@ -1693,8 +1693,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
         for eff in self.efferents:
             dependent_projections.add(eff)
 
+        if composition:
+            deeply_nested_aux_components = composition._get_deeply_nested_aux_projections(self)
+            dependent_projections -= set(deeply_nested_aux_components.values())
+
         for proj in dependent_projections:
             proj._activate_for_compositions(composition)
+
+        for proj in deeply_nested_aux_components.values():
+            composition.add_projection(proj, sender=proj.sender, receiver=proj.receiver)
 
     def _apply_control_allocation(self, control_allocation, runtime_params, context):
         """Update values to `control_signals <ControlMechanism.control_signals>`
