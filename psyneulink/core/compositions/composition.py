@@ -4866,7 +4866,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             modulates=receiver,
             name=PARAMETER_CIM_NAME + "_" + receiver.owner.name + "_" + receiver.name,
         )
-        if not receiver.owner in graph_receiver.nodes.data + graph_receiver.cims:
+        if receiver.owner not in graph_receiver.nodes.data + graph_receiver.cims:
             receiver = interface_input_port
         graph_receiver.parameter_CIM.add_ports([control_signal], context=context)
         # add sender and receiver to self.parameter_CIM_ports dict
@@ -5072,7 +5072,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._parse_receiver_spec(projection, receiver, sender, learning_projection)
 
         if (isinstance(receiver_mechanism, (CompositionInterfaceMechanism))
-                and not receiver_input_port.owner in self.nodes
+                and receiver_input_port.owner not in self.nodes
                 and receiver.componentType == 'ParameterPort'):
             # unlike when projecting to nested InputPorts, we don't know for sure whether
             # intermediary pcims will have input ports that correspond to the ParameterPorts we are interested
@@ -7039,7 +7039,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     aux_projections[i] = i
             nested_nodes = self._get_nested_nodes()
             for spec, proj in aux_projections.items():
-                if not proj.receiver.owner in self.nodes and \
+                if proj.receiver.owner not in self.nodes and \
                         proj.receiver.owner in [i[0] for i in nested_nodes if not i[1] in self.nodes]:
                     deeply_nested_projections[spec] = proj
         return deeply_nested_projections
@@ -7246,7 +7246,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         and owner not in nested_nodes \
                         and owner not in self.nodes:
                     continue
-                if not owner in nested_nodes:
+                if owner not in nested_nodes:
                     shadow_input_owner = input_port.shadow_inputs.owner
                     if isinstance(shadow_input_owner, CompositionInterfaceMechanism):
                         shadow_input_owner = shadow_input_owner.composition
