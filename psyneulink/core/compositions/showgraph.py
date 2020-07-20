@@ -206,8 +206,6 @@ from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontro
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.shellclasses import Mechanism, Projection
-from psyneulink.core.components.ports.inputport import InputPort
-from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -2336,7 +2334,6 @@ class ShowGraph():
         If there is no outer root Mechanism, as in the case of a nested input Mechanism that is not projected to,
         return None.
         """
-        comp = comp or self.composition
         sender = proj.sender
         owner = sender.owner
         # Insure relevant InputPort of cim has only one afferent
@@ -2354,7 +2351,6 @@ class ShowGraph():
 
     def _trace_receivers_for_terminal_receiver(self, receiver, comp=None):
         """Find the terminal ParameterPort for a given intermediary input port of a parameter CIM"""
-        comp = comp or self.composition
         parameter_port_map = receiver.owner.composition.parameter_CIM_ports
         ctl_proj_rcvr = next((k for k, v in parameter_port_map.items()
                               if parameter_port_map[k][0] is receiver), None)
