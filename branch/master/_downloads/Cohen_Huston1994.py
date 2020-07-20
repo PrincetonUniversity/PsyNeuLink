@@ -1,4 +1,5 @@
-import matplotlib.pyplot as plt
+import argparse
+
 import numpy as np
 import psyneulink as pnl
 
@@ -7,72 +8,76 @@ import psyneulink as pnl
 # AttentionandperformanceXV(pp.453-456). Cam- bridge, MA: MIT Press.
 # The model aims to capute top-down effects of selective attention and the bottom-up effects of attentional capture.
 
-# Define Variables ----------------------------------------------------------------------------------------------------
-import psyneulink.core.components.functions.transferfunctions
+parser = argparse.ArgumentParser()
+parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
+parser.add_argument('--threshold', type=float, help='Termination threshold for response output (default: %(default)f)', default=0.55)
+parser.add_argument('--settle-trials', type=int, help='Number of trials for composition to initialize and settle (default: %(default)d)', default=50)
+args = parser.parse_args()
 
+# Define Variables ----------------------------------------------------------------------------------------------------
 rate = 0.1          # modified from the original code from 0.01 to 0.1
 inhibition = -2.0   # lateral inhibition
 bias = 4.0          # bias is positive since Logistic equation has - sing already implemented
-threshold = 0.55    # modified from thr original code from 0.6 to 0.55 because incongruent condition won't reach 0.6
-settle_trials = 50  # cycles until model settles
+threshold = args.threshold    # modified from thr original code from 0.6 to 0.55 because incongruent condition won't reach 0.6
+settle_trials = args.settle_trials  # cycles until model settles
 
 # Create mechanisms ---------------------------------------------------------------------------------------------------
 #   Linear input units, colors: ('red', 'green'), words: ('RED','GREEN')
 colors_input_layer = pnl.TransferMechanism(
     size=3,
-    function=psyneulink.core.components.functions.transferfunctions.Linear,
+    function=pnl.Linear,
     name='COLORS_INPUT'
 )
 
 words_input_layer = pnl.TransferMechanism(
     size=3,
-    function=psyneulink.core.components.functions.transferfunctions.Linear,
+    function=pnl.Linear,
     name='WORDS_INPUT'
 )
 
 task_input_layer = pnl.TransferMechanism(
     size=2,
-    function=psyneulink.core.components.functions.transferfunctions.Linear,
+    function=pnl.Linear,
     name='TASK_INPUT'
 )
 
 #   Task layer, tasks: ('name the color', 'read the word')
 task_layer = pnl.RecurrentTransferMechanism(
     size=2,
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(),
-    hetero=-2,
+    function=pnl.Logistic(),
+    hetero=inhibition,
     integrator_mode=True,
-    integration_rate=0.1,
+    integration_rate=rate,
     name='TASK'
 )
 
 #   Hidden layer units, colors: ('red','green') words: ('RED','GREEN')
 colors_hidden_layer = pnl.RecurrentTransferMechanism(
     size=3,
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=4.0),
+    function=pnl.Logistic(x_0=bias),
     integrator_mode=True,
-    hetero=-2.0,
-    # noise=pnl.NormalDist(mean=0.0, standard_deviation=.0).function,
-    integration_rate=0.1,  # cohen-huston text says 0.01
+    hetero=inhibition,
+    # noise=pnl.NormalDist(mean=0.0, standard_deviation=.0),
+    integration_rate=rate,  # cohen-huston text says 0.01
     name='COLORS HIDDEN'
 )
 
 words_hidden_layer = pnl.RecurrentTransferMechanism(
     size=3,
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(x_0=4.0),
-    hetero=-2,
+    function=pnl.Logistic(x_0=bias),
+    hetero=inhibition,
     integrator_mode=True,
-    # noise=pnl.NormalDist(mean=0.0, standard_deviation=.05).function,
-    integration_rate=0.1,
+    # noise=pnl.NormalDist(mean=0.0, standard_deviation=.05),
+    integration_rate=rate,
     name='WORDS HIDDEN'
 )
 #   Response layer, responses: ('red', 'green'): RecurrentTransferMechanism for self inhibition matrix
 response_layer = pnl.RecurrentTransferMechanism(
     size=2,
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(),
-    hetero=-2.0,
+    function=pnl.Logistic(),
+    hetero=inhibition,
     integrator_mode=True,
-    integration_rate=0.1,
+    integration_rate=rate,
     name='RESPONSE'
 )
 
@@ -422,28 +427,31 @@ for cond in range(conditions):
     print('response_all: ', response_all)
 
 
-# Plot results --------------------------------------------------------------------------------------------------------
-# First, plot response layer activity for whole run
-plt.figure()
-# color naming plot
-plt.plot(response_all[0])
-plt.plot(response_all[1])
-plt.plot(response_all[2])
-# word reading plot
-plt.plot(response_all3[0])
-plt.plot(response_all3[1])
-plt.plot(response_all3[2])
-plt.show()
-# Second, plot regression plot
-# regression
-reg = np.dot(response_all2, 5) + 115
-reg2 = np.dot(response_all4, 5) + 115
-plt.figure()
+if args.enable_plot:
+    import matplotlib.pyplot as plt
 
-plt.plot(reg, '-s')  # plot color naming
-plt.plot(reg2, '-or')  # plot word reading
-plt.title('GRAIN MODEL with bidirectional weights')
-plt.legend(['color naming', 'word reading'])
-plt.xticks(np.arange(3), ('control', 'incongruent', 'congruent'))
-plt.ylabel('reaction time in ms')
-plt.show()
+    # Plot results --------------------------------------------------------------------------------------------------------
+    # First, plot response layer activity for whole run
+    plt.figure()
+    # color naming plot
+    plt.plot(response_all[0])
+    plt.plot(response_all[1])
+    plt.plot(response_all[2])
+    # word reading plot
+    plt.plot(response_all3[0])
+    plt.plot(response_all3[1])
+    plt.plot(response_all3[2])
+    plt.show()
+    # Second, plot regression plot
+    # regression
+    reg = np.dot(response_all2, 5) + 115
+    reg2 = np.dot(response_all4, 5) + 115
+    plt.figure()
+
+    plt.plot(reg, '-s')  # plot color naming
+    plt.plot(reg2, '-or')  # plot word reading
+    plt.title('GRAIN MODEL with bidirectional weights')
+    plt.legend(['color naming', 'word reading'])
+    plt.xticks(np.arange(3), ('control', 'incongruent', 'congruent'))
+    plt.ylabel('reaction time in ms')
+    plt.show()
