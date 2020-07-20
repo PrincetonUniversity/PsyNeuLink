@@ -1792,8 +1792,10 @@ class Port_Base(Port):
         del self.efferents[self.efferents.index(projection)]
 
     def _remove_projection_to_port(self, projection, context=None):
-        """If projection is in mod_afferents, remove that projection from self.mod_afferents.
-        Else, Remove Projection entry from Port.path_afferents and reshape variable accordingly."""
+        """
+        If projection is in mod_afferents, remove that projection from self.mod_afferents.
+        Else, Remove Projection entry from Port.path_afferents and reshape variable accordingly.
+        """
         if projection in self.mod_afferents:
             del self.mod_afferents[self.mod_afferents.index(projection)]
         else:

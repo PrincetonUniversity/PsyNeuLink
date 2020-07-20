@@ -17,12 +17,14 @@ from psyneulink.core.components.functions.transferfunctions import \
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.functions.learningfunctions import Reinforcement, BackPropagation
+from psyneulink.core.components.functions.optimizationfunctions import GridSearch
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import OptimizationControlMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal, CostFunctions
@@ -30,7 +32,7 @@ from psyneulink.core.compositions.composition import Composition, CompositionErr
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS, LEARNED_PROJECTIONS, \
-    NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, TARGET_MECHANISM, VARIANCE
+    NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, SLOPE, TARGET_MECHANISM, VARIANCE
 from psyneulink.core.scheduling.condition import AfterNCalls, AtTimeStep, AtTrial, Never
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
@@ -5018,8 +5020,6 @@ class TestNestedCompositions:
         assert result == [150]
 
     def test_four_level_nested_dual_OCM_control(self):
-        from psyneulink import *
-
         p_lvl3 = ProcessingMechanism(name='p_lvl3')
         p_lvl1 = ProcessingMechanism(name='p_lvl1')
 

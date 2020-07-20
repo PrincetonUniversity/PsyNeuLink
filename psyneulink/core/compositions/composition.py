@@ -4049,8 +4049,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return invalid_aux_components
 
     def _complete_init_of_partially_initialized_nodes(self, context=None):
-        """Attempt to complete initialization of aux components for any nodes with
-            aux components that were not previously compatible with Composition"""
+        """
+        Attempt to complete initialization of aux components for any nodes with
+            aux components that were not previously compatible with Composition
+        """
         completed_nodes = []
         for node in self._partially_added_nodes:
             invalid_aux_components = self._add_node_aux_components(node, context=context)
@@ -5069,8 +5071,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         receiver, receiver_mechanism, graph_receiver, receiver_input_port, nested_compositions, learning_projection = \
             self._parse_receiver_spec(projection, receiver, sender, learning_projection)
 
-        if (isinstance(receiver_mechanism, (CompositionInterfaceMechanism))\
-                and not receiver_input_port.owner in self.nodes\
+        if (isinstance(receiver_mechanism, (CompositionInterfaceMechanism))
+                and not receiver_input_port.owner in self.nodes
                 and receiver.componentType == 'ParameterPort'):
             # unlike when projecting to nested InputPorts, we don't know for sure whether
             # intermediary pcims will have input ports that correspond to the ParameterPorts we are interested

@@ -2331,9 +2331,11 @@ class ShowGraph():
         return False
 
     def _trace_senders_for_original_sender_mechanism(self, proj, nesting_level, comp=None):
-        """Find the original sender of a projection that is routed through n-levels of cims.
+        """
+        Find the original sender of a projection that is routed through n-levels of cims.
         If there is no outer root Mechanism, as in the case of a nested input Mechanism that is not projected to,
-        return None."""
+        return None.
+        """
         comp = comp or self.composition
         sender = proj.sender
         owner = sender.owner
