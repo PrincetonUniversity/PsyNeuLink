@@ -1792,13 +1792,19 @@ class Port_Base(Port):
         del self.efferents[self.efferents.index(projection)]
 
     def _remove_projection_to_port(self, projection, context=None):
-        """Remove Projection entry from Port.path_afferents and reshape variable accordingly."""
-        shape = list(self.defaults.variable.shape)
-        # Reduce outer dimension by one
-        shape[0]-=1
-        self.defaults.variable = np.resize(self.defaults.variable, shape)
-        self.function.defaults.variable = np.resize(self.function.defaults.variable, shape)
-        del self.path_afferents[self.path_afferents.index(projection)]
+        """
+        If projection is in mod_afferents, remove that projection from self.mod_afferents.
+        Else, Remove Projection entry from Port.path_afferents and reshape variable accordingly.
+        """
+        if projection in self.mod_afferents:
+            del self.mod_afferents[self.mod_afferents.index(projection)]
+        else:
+            shape = list(self.defaults.variable.shape)
+            # Reduce outer dimension by one
+            shape[0]-=1
+            self.defaults.variable = np.resize(self.defaults.variable, shape)
+            self.function.defaults.variable = np.resize(self.function.defaults.variable, shape)
+            del self.path_afferents[self.path_afferents.index(projection)]
 
     def _get_primary_port(self, mechanism):
         raise PortError("PROGRAM ERROR: {} does not implement _get_primary_port method".
