@@ -31,7 +31,7 @@ from psyneulink.core.components.ports.modulatorysignals.controlsignal import Con
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ALLOCATION_SAMPLES, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS, LEARNED_PROJECTIONS, \
+    ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS, LEARNED_PROJECTIONS, \
     NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, SLOPE, TARGET_MECHANISM, VARIANCE
 from psyneulink.core.scheduling.condition import AfterNCalls, AtTimeStep, AtTrial, Never
 from psyneulink.core.scheduling.condition import EveryNCalls
@@ -5021,7 +5021,6 @@ class TestNestedCompositions:
 
     def test_four_level_nested_dual_OCM_control(self):
         p_lvl3 = ProcessingMechanism(name='p_lvl3')
-        p_lvl1 = ProcessingMechanism(name='p_lvl1')
 
         c_lvl3 = Composition(name='c_lvl3', pathways=[p_lvl3])
         c_lvl2 = Composition(name='c_lvl2', pathways=[c_lvl3])
