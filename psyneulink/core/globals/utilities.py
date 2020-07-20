@@ -91,6 +91,7 @@ CONTENTS
 
 """
 
+import collections
 import copy
 import inspect
 import logging
@@ -102,10 +103,13 @@ import warnings
 import weakref
 import types
 import typing
+import typecheck as tc
 
 from enum import Enum, EnumMeta, IntEnum
+from collections.abc import Mapping
+from collections import UserDict, UserList
+from itertools import chain, combinations
 
-import collections
 import numpy as np
 
 from psyneulink.core.globals.keywords import \
@@ -575,13 +579,12 @@ def scalar_distance(measure, value, scale=1, offset=0):
     if measure == SINUSOID:
         return sinusoid(value, frequency=scale, phase=offset)
 
-from itertools import chain, combinations
+
 def powerset(iterable):
     """powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"""
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
-import typecheck as tc
 @tc.typecheck
 def tensor_power(items, levels:tc.optional(range)=None, flat=False):
     """return tensor product for all members of powerset of items
@@ -635,7 +638,6 @@ def get_args(frame):
     return dict((key, value) for key, value in values.items() if key in args)
 
 
-from collections.abc import Mapping
 def recursive_update(d, u, non_destructive=False):
     """Recursively update entries of dictionary d with dictionary u
     From: https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
@@ -992,7 +994,6 @@ def append_type_to_name(object, type=None):
 #endregion
 
 
-from collections import UserDict
 class ReadOnlyOrderedDict(UserDict):
     def __init__(self, dict=None, name=None, **kwargs):
         self.name = name or self.__class__.__name__
@@ -1019,7 +1020,6 @@ class ReadOnlyOrderedDict(UserDict):
     def copy(self):
         return self.data.copy()
 
-from collections import UserList
 class ContentAddressableList(UserList):
     """
     ContentAddressableList( component_type, key=None, list=None)
@@ -1519,12 +1519,9 @@ def safe_equals(x, y):
             return np.array_equal(x, y)
 
 
-import typecheck as tc
 @tc.typecheck
 def _get_arg_from_stack(arg_name:str):
     # Get arg from the stack
-
-    import inspect
 
     curr_frame = inspect.currentframe()
     prev_frame = inspect.getouterframes(curr_frame, 2)

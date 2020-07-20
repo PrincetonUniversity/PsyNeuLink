@@ -1296,7 +1296,6 @@ class InputPort(Port_Base):
         can't be called by _parse_port_spec since the InputPort itself may not yet have been instantiated.
 
         """
-        import inspect
 
         if (
                 (

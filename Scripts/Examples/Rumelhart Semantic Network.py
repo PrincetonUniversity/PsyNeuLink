@@ -1,6 +1,4 @@
 from psyneulink import *
-import numpy as np
-import typecheck as tc
 
 # This script implements the following network, first described in Rumelhart and Todd
 # (Rumelhart, D. E., & Todd, P. M. (1993). Learning and connectionist representations. Attention and performance XIV:

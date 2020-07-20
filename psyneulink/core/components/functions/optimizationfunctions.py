@@ -2344,8 +2344,7 @@ class ParamEstimationFunction(OptimizationFunction):
         # https://github.com/scikit-optimize/scikit-optimize/issues/637
         # Lets import and set the backend to PS to be safe. We aren't plotting anyway
         # I guess. Only do this on Mac OS X
-        from sys import platform
-        if platform == "darwin":
+        if sys.platform == "darwin":
             import matplotlib
             matplotlib.use('PS')
 

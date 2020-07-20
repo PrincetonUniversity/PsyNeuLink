@@ -763,16 +763,15 @@ Class Reference
 """
 
 import abc
-import abc
 import inspect
 import itertools
 import numbers
+import sys
 import types
 import warnings
 
 from collections.abc import Iterable
 from collections import defaultdict
-from copy import deepcopy
 
 import numpy as np
 import typecheck as tc
@@ -1793,13 +1792,19 @@ class Port_Base(Port):
         del self.efferents[self.efferents.index(projection)]
 
     def _remove_projection_to_port(self, projection, context=None):
-        """Remove Projection entry from Port.path_afferents and reshape variable accordingly."""
-        shape = list(self.defaults.variable.shape)
-        # Reduce outer dimension by one
-        shape[0]-=1
-        self.defaults.variable = np.resize(self.defaults.variable, shape)
-        self.function.defaults.variable = np.resize(self.function.defaults.variable, shape)
-        del self.path_afferents[self.path_afferents.index(projection)]
+        """
+        If projection is in mod_afferents, remove that projection from self.mod_afferents.
+        Else, Remove Projection entry from Port.path_afferents and reshape variable accordingly.
+        """
+        if projection in self.mod_afferents:
+            del self.mod_afferents[self.mod_afferents.index(projection)]
+        else:
+            shape = list(self.defaults.variable.shape)
+            # Reduce outer dimension by one
+            shape[0]-=1
+            self.defaults.variable = np.resize(self.defaults.variable, shape)
+            self.function.defaults.variable = np.resize(self.function.defaults.variable, shape)
+            del self.path_afferents[self.path_afferents.index(projection)]
 
     def _get_primary_port(self, mechanism):
         raise PortError("PROGRAM ERROR: {} does not implement _get_primary_port method".
@@ -2674,7 +2679,6 @@ def _parse_port_type(owner, port_spec):
 
         # Port keyword
         if port_spec in port_type_keywords:
-            import sys
             return getattr(sys.modules['PsyNeuLink.Components.Ports.' + port_spec], port_spec)
 
         # Try as name of Port

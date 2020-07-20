@@ -15,6 +15,7 @@ import copy
 import ctypes
 import numpy as np
 from inspect import isgenerator
+import itertools
 import sys
 
 
@@ -624,7 +625,6 @@ class CompExecution(CUDAExecution):
         ocm = self._composition.controller
         assert len(self._execution_contexts) == 1
         context = self._execution_contexts[0]
-        import itertools
 
         bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset({"evaluate"}))
         self.__bin_func = bin_func

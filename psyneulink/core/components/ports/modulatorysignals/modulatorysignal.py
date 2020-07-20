@@ -407,8 +407,6 @@ Class Reference
 ---------------
 """
 
-import itertools
-
 from psyneulink.core.components.component import component_keywords
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
