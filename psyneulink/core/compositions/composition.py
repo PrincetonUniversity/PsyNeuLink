@@ -6743,7 +6743,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         pathways.append(p)
                     continue
                 for projection, efferent_node in [(p, p.receiver.owner) for p in curr_node.efferents]:
-                    if (not hasattr(projection,'learnable')) or (projection.learnable is False) or efferent_node in prev:
+                    if getattr(projection, 'learnable', False) is False or efferent_node in prev:
                         continue
                     prev[efferent_node] = projection
                     prev[projection] = curr_node

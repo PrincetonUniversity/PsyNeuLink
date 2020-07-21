@@ -195,6 +195,197 @@ class PytorchMechanismWrapper(PytorchWrapper):
     def __repr__(self):
         return "PytorchWrapper for: " +self._mechanism.__repr__()
 
+class PytorchLSTMMechanismWrapper(PytorchMechanismWrapper):
+    """
+    An interpretation of a LSTM mechanism as an equivalent pytorch object
+    """
+    def __init__(self, mechanism, component_idx, device, context=None):
+        self._mechanism = mechanism
+        self._idx = component_idx
+        self._context = context
+
+        self.value = torch.tensor(mechanism.defaults.value.copy(), device=device, requires_grad=True)
+        self.afferents = []
+        self.efferents = []
+        self._lstm = torch.nn.LSTMCell(mechanism.input_size, mechanism.hidden_size, bias=False)
+        self._copy_params_from_psyneulink(device)
+
+    def _get_learnable_param_ids(self):
+        return ["i_input_matrix",
+                "i_hidden_matrix",
+                "f_input_matrix",
+                "f_hidden_matrix",
+                "g_input_matrix",
+                "g_hidden_matrix",
+                "o_input_matrix",
+                "o_hidden_matrix"]
+
+    def _copy_params_from_psyneulink(self, device):
+        # copy weights
+        i_input_matrix = self._mechanism.parameters.i_input_matrix._get(self._context)
+        i_hidden_matrix = self._mechanism.parameters.i_hidden_matrix._get(self._context)
+        f_input_matrix = self._mechanism.parameters.f_input_matrix._get(self._context)
+        f_hidden_matrix = self._mechanism.parameters.f_hidden_matrix._get(self._context)
+        g_input_matrix = self._mechanism.parameters.g_input_matrix._get(self._context)
+        g_hidden_matrix = self._mechanism.parameters.g_hidden_matrix._get(self._context)
+        o_input_matrix = self._mechanism.parameters.o_input_matrix._get(self._context)
+        o_hidden_matrix = self._mechanism.parameters.o_hidden_matrix._get(self._context)
+
+        w_ih = np.concatenate([i_input_matrix, f_input_matrix, g_input_matrix, o_input_matrix])
+        w_hh = np.concatenate([i_hidden_matrix, f_hidden_matrix, g_hidden_matrix, o_hidden_matrix])
+        w_ih_tensor = torch.nn.Parameter(torch.tensor(w_ih, dtype=torch.double, device=device))
+        w_hh_tensor = torch.nn.Parameter(torch.tensor(w_hh, dtype=torch.double, device=device))
+        self._lstm.weight_ih = w_ih_tensor
+        self._lstm.weight_hh = w_hh_tensor
+
+        # copy initial recurrent state
+        self.hidden_state = torch.tensor(self._mechanism.initial_hidden_state, dtype=torch.double, device=device)
+        self.cell_state = torch.tensor(self._mechanism.initial_cell_state, dtype=torch.double, device=device)
+
+    def _copy_params_to_psyneulink(self):
+        pass
+
+    def _update_llvm_param_gradients(self, ctx, builder, state, params, node_delta_w, z_value, backpropagated_error, *, tags=frozenset()):
+        # Setup function values
+        tags = tags.union({"derivative"})
+        func = ctx.import_llvm_function(self._mechanism.function, tags=tags)
+        fun_input_ty = func.args[2].type.pointee
+
+        mech_input = builder.alloca(fun_input_ty)
+        mech_input_ptr = builder.gep(mech_input, [ctx.int32_ty(0),
+                                                  ctx.int32_ty(0)])
+        builder.store(builder.load(z_value), mech_input_ptr)
+
+        params = builder.gep(params, [ctx.int32_ty(0),
+                                      ctx.int32_ty(0),
+                                      ctx.int32_ty(self._idx)])
+
+        state = builder.gep(state, [ctx.int32_ty(0),
+                                    ctx.int32_ty(0),
+                                    ctx.int32_ty(self._idx)])
+
+        f_params_ptr = pnlvm.helpers.get_param_ptr(builder, self._mechanism, params, "function")
+        f_params, builder = self._mechanism._gen_llvm_param_ports_for_obj(
+                self._mechanism.function, f_params_ptr, ctx, builder, params, state, mech_input)
+        f_state = pnlvm.helpers.get_state_ptr(builder, self._mechanism, state, "function")
+
+        logistic_params_ptr = pnlvm.helpers.get_param_ptr(builder, self._mechanism, params, "logistic")
+        logistic_params, builder = self._mechanism._gen_llvm_param_ports_for_obj(
+                self._mechanism.logistic, logistic_params_ptr, ctx, builder, params, state, mech_input)
+        logistic_state = pnlvm.helpers.get_state_ptr(builder, self._mechanism, state, "logistic")
+        logistic_derivative_func = ctx.import_llvm_function(self._mechanism.logistic, tags=tags)
+
+        tanh_params_ptr = pnlvm.helpers.get_param_ptr(builder, self._mechanism, params, "tanh")
+        tanh_params, builder = self._mechanism._gen_llvm_param_ports_for_obj(
+                self._mechanism.tanh, tanh_params_ptr, ctx, builder, params, state, mech_input)
+        tanh_state = pnlvm.helpers.get_state_ptr(builder, self._mechanism, state, "tanh")
+        tanh_func = ctx.import_llvm_function(self._mechanism.tanh)
+        tanh_derivative_func = ctx.import_llvm_function(self._mechanism.tanh, tags=tags)
+
+        # extract stored intermediates
+        i_ptr = pnlvm.helpers.get_state_ptr(builder, self._mechanism, state, "i")
+        i_bar_ptr = pnlvm.helpers.get_state_ptr(builder, self._mechanism, state, "i_bar")
+        f_ptr = pnlvm.helpers.get_state_ptr(builder, self._mechanism, state, "f")
+        f_bar_ptr = pnlvm.helpers.get_state_ptr(builder, self._mechanism, state, "f_bar")
+        g_ptr = pnlvm.helpers.get_state_ptr(builder, self._mechanism, state, "g")
+        g_bar_ptr = pnlvm.helpers.get_state_ptr(builder, self._mechanism, state, "g_bar")
+        o_ptr = pnlvm.helpers.get_state_ptr(builder, self._mechanism, state, "o")
+        o_bar_ptr = pnlvm.helpers.get_state_ptr(builder, self._mechanism, state, "o_bar")
+        c_ptr = pnlvm.helpers.get_state_ptr(builder, self._mechanism, state, "c")
+        c_prev_ptr = pnlvm.helpers.get_state_ptr(builder, self._mechanism, state, "c_prev")
+
+        #1) Calculate delta_o_bar
+        c_tanh = builder.alloca(c_ptr.type.pointee)
+        builder.call(tanh_func, [tanh_params, tanh_state, c_ptr, c_tanh])
+        o_bar_logistic_derivative = builder.alloca(o_bar_ptr.type.pointee)
+        builder.call(logistic_derivative_func, [logistic_params, logistic_state, o_bar_ptr, o_bar_logistic_derivative])
+
+        delta_o_bar = gen_inject_vec_hadamard(ctx, builder, backpropagated_error, c_tanh)
+        delta_o_bar = gen_inject_vec_hadamard(ctx, builder, delta_o_bar, o_bar_logistic_derivative)
+
+        #2) Calculate delta_c
+        c_tanh_derivative = builder.alloca(c_ptr.type.pointee)
+        builder.call(tanh_derivative_func, [tanh_params, tanh_state, c_ptr, c_tanh_derivative])
+        delta_c = gen_inject_vec_hadamard(ctx, builder, backpropagated_error, o_ptr)
+        delta_c = gen_inject_vec_hadamard(ctx, builder, delta_c, c_tanh_derivative)
+
+        #3) Calculate delta_f_bar
+        f_bar_logistic_deriviative = builder.alloca(f_bar_ptr.type.pointee)
+        builder.call(logistic_derivative_func, [logistic_params, logistic_state, f_bar_ptr, f_bar_logistic_deriviative])
+        delta_f_bar = gen_inject_vec_hadamard(ctx, builder, delta_c, c_prev_ptr)
+        delta_f_bar = gen_inject_vec_hadamard(ctx, builder, delta_f_bar, f_bar_logistic_deriviative)
+
+        #3) Calculate delta_i_bar
+        i_bar_logistic_deriviative = builder.alloca(i_bar_ptr.type.pointee)
+        builder.call(logistic_derivative_func, [logistic_params, logistic_state, i_bar_ptr, i_bar_logistic_deriviative])
+        delta_i_bar = gen_inject_vec_hadamard(ctx, builder, delta_c, g_ptr)
+        delta_i_bar = gen_inject_vec_hadamard(ctx, builder, delta_i_bar, i_bar_logistic_deriviative)
+        pnlvm.helpers.printf_float_array(builder, delta_i_bar, prefix=f"{self} delta_i_bar\t", override_debug=True)
+
+        #4) Calculate delta_g_bar
+        g_bar_tanh_deriviative = builder.alloca(g_bar_ptr.type.pointee)
+        builder.call(tanh_derivative_func, [tanh_params, tanh_state, g_bar_ptr, g_bar_tanh_deriviative])
+        delta_g_bar = gen_inject_vec_hadamard(ctx, builder, delta_c, i_ptr)
+        delta_g_bar = gen_inject_vec_hadamard(ctx, builder, delta_g_bar, g_bar_tanh_deriviative)
+
+
+        #5) Calculate weight gradients
+        delta_w_i_input_matrix = builder.gep(node_delta_w, [ctx.int32_ty(0), ctx.int32_ty(self._get_learnable_param_ids().index("i_input_matrix"))])
+        i_input_matrix_gradient = gen_inject_vec_outer_product(ctx, builder, delta_i_bar, z_value)
+        pnlvm.helpers.printf_float_array(builder, z_value, prefix=f"{self} z_value\t", override_debug=True)
+        gen_inject_mat_add(ctx, builder, delta_w_i_input_matrix, i_input_matrix_gradient, delta_w_i_input_matrix)
+        pnlvm.helpers.printf_float_matrix(builder, i_input_matrix_gradient, prefix=f"{self} i_input_matrix\t", override_debug=True)
+
+        # i_hidden_matrix = pnlvm.helpers.get_param_ptr(builder, self._mechanism, "i_hidden_matrix")
+        # delta_w_i_hidden_matrix = builder.gep(node_delta_w, [ctx.int32_ty(0), ctx.int32_ty(self._get_learnable_param_ids().index("i_hidden_matrix"))])
+        # i_hidden_matrix_gradient = gen_inject_vec_outer_product(ctx, builder, delta_i_bar, z_value)
+
+        delta_w_f_input_matrix = builder.gep(node_delta_w, [ctx.int32_ty(0), ctx.int32_ty(self._get_learnable_param_ids().index("f_input_matrix"))])
+        f_input_matrix_gradient = gen_inject_vec_outer_product(ctx, builder, delta_f_bar, z_value)
+        gen_inject_mat_add(ctx, builder, delta_w_f_input_matrix, f_input_matrix_gradient, delta_w_f_input_matrix)
+
+        # f_hidden_matrix = pnlvm.helpers.get_param_ptr(builder, self._mechanism, "f_hidden_matrix")
+        # delta_w_f_hidden_matrix = builder.gep(node_delta_w, [ctx.int32_ty(0), ctx.int32_ty(self._get_learnable_param_ids().index("f_hidden_matrix"))])
+        # f_hidden_matrix_gradient = gen_inject_vec_outer_product()
+
+        delta_w_g_input_matrix = builder.gep(node_delta_w, [ctx.int32_ty(0), ctx.int32_ty(self._get_learnable_param_ids().index("g_input_matrix"))])
+        g_input_matrix_gradient = gen_inject_vec_outer_product(ctx, builder, delta_g_bar, z_value)
+        gen_inject_mat_add(ctx, builder, delta_w_g_input_matrix, g_input_matrix_gradient, delta_w_g_input_matrix)
+
+        # g_hidden_matrix = pnlvm.helpers.get_param_ptr(builder, self._mechanism, "g_hidden_matrix")
+        # delta_w_g_hidden_matrix = builder.gep(node_delta_w, [ctx.int32_ty(0), ctx.int32_ty(self._get_learnable_param_ids().index("g_hidden_matrix"))])
+        # g_hidden_matrix_gradient = gen_inject_vec_outer_product()
+
+        delta_w_o_input_matrix = builder.gep(node_delta_w, [ctx.int32_ty(0), ctx.int32_ty(self._get_learnable_param_ids().index("o_input_matrix"))])
+        o_input_matrix_gradient = gen_inject_vec_outer_product(ctx, builder, delta_o_bar, z_value)
+        gen_inject_mat_add(ctx, builder, delta_w_o_input_matrix, o_input_matrix_gradient, delta_w_o_input_matrix)
+
+        # o_hidden_matrix = pnlvm.helpers.get_param_ptr(builder, self._mechanism, "o_hidden_matrix")
+        # delta_w_o_hidden_matrix = builder.gep(node_delta_w, [ctx.int32_ty(0), ctx.int32_ty(self._get_learnable_param_ids().index("o_hidden_matrix"))])
+        # o_hidden_matrix_gradient = gen_inject_vec_outer_product()
+
+        output, _ = self._mechanism._gen_llvm_invoke_function(ctx, builder, self._mechanism.function, f_params, f_state, mech_input, tags=tags)
+        activation_func_derivative = builder.gep(output, [ctx.int32_ty(0),
+                                                          ctx.int32_ty(0)])
+
+        error_val = gen_inject_vec_hadamard(ctx, builder, activation_func_derivative, backpropagated_error)
+        return error_val
+
+    def execute(self, variable):
+        variable = torch.reshape(variable, (1, variable.size(0)))
+        hidden = torch.reshape(self.hidden_state, (1, self.hidden_state.size(0)))
+        cell_state = torch.reshape(self.cell_state, (1, self.cell_state.size(0)))
+
+        hid, cell = self._lstm(variable, (hidden, cell_state))
+        self.hidden_state = hid[0]
+        self.cell_state = cell[0]
+        self.value = cell[0]
+
+        return self.value
+
+    def _get_pytorch_params(self):
+        return [self._lstm.weight_ih, self._lstm.weight_hh]
+
 class PytorchProjectionWrapper(PytorchWrapper):
     """
     An interpretation of a projection as an equivalent pytorch object
