@@ -9,12 +9,13 @@
 #
 # ******************************************   OPTIMIZATION FUNCTIONS **************************************************
 """
+Contents
+--------
 
 * `OptimizationFunction`
 * `GradientOptimization`
 * `GridSearch`
 * `GaussianProcess`
-* `ParamEstimationFunction`
 
 Overview
 --------
