@@ -18,8 +18,8 @@ Contents
       - `MappingProjection_Learning_Specification`
       - `MappingProjection_Deferred_Initialization`
   * `MappingProjection_Structure`
-      - `MappingProjection_Sender`
-      - `MappingProjection_Receiver`
+      - `MappingProjection_Matrix`
+      - `Mapping_Matrix_ParameterPort`
   * `MappingProjection_Execution`
       - `MappingProjection_Learning`
   * `MappingProjection_Class_Reference`
@@ -37,7 +37,7 @@ A MappingProjection transmits the `value <OutputPort.value>` of an `OutputPort` 
 value received from its `sender <MappingProjection.sender>` and provide the result to its `receiver
 <MappingProjection.receiver>`.
 
-.. _Mapping_Creation_Overview:
+.. _MappingProjection_Creation:
 
 Creating a MappingProjection
 -----------------------------
@@ -242,10 +242,10 @@ InputPort's owner `Mechanism <Mechanism>` is executed. When executed, the Mappin
 updates its `matrix <MappingProjection.matrix>` parameter based on any `LearningProjection(s)` it receives (listed in
 the ParameterPort's `mod_afferents <ParameterPort.mod_afferents>` attribute). This brings into effect any changes that
 occurred due to `learning <MappingProjection_Learning>`.  Since this does not occur until the Mechanism that receives
-the MappingProjection is executed (in accord with :ref:`Lazy Evaluation <LINK>`), any changes due to learning do not
-take effect, and are not observable (e.g., through inspection of the `matrix <MappingProjection.matrix>` attribute or
-the `value <ParameterPort.value>` of its ParameterPort) until the next `TRIAL` of execution (see :ref:`Lazy Evaluation`
-for an explanation of "lazy" updating).
+the MappingProjection is executed (in accord with `Lazy Evaluation <Component_Lazy_Updating>`), any changes due to
+learning do not take effect, and are not observable (e.g., through inspection of the `matrix <MappingProjection.matrix>`
+attribute or the `value <ParameterPort.value>` of its ParameterPort) until the next `TRIAL <TimeScale.TRIAL>` of
+execution (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
 .. _MappingProjection_Learning:
 
@@ -272,10 +272,10 @@ LearningProjection(s) are stored by the *MATRIX* ParameterPort's function, and n
 is, its unmodulated value, conforming to the general protocol for `modulation <ModulatorySignal_Modulation>` in
 PsyNeuLink).  The most recent value of the matrix used by the MappingProjection is stored in the `value
 <ParameterPort.value>` of its *MATRIX* ParameterPort. As noted `above <MappingProjection_Execution>`, however, this does
-not reflect any changes due to learning on the current `TRIAL` of execution; those are assigned to the ParameterPort's
-`value <ParameterPort.value>` when it executes, which does not occur until the `Mechanism <Mechanism>` that receives
-the MappingProjection is executed in the next `TRIAL` of execution (see :ref:`Lazy Evaluation <LINK>` for an explanation
-of "lazy" updating)
+not reflect any changes due to learning on the current `TRIAL <TimeScale.TRIAL>` of execution; those are assigned to the
+ParameterPort's `value <ParameterPort.value>` when it executes, which does not occur until the `Mechanism
+<Mechanism>` that receives the MappingProjection is executed in the next `TRIAL <TimeScale.TRIAL>` of execution
+(see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
 .. _MappingProjection_Class_Reference:
 
@@ -283,21 +283,21 @@ Class Reference
 ---------------
 
 """
-import inspect
+import copy
 
 import numpy as np
-import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
-from psyneulink.core.components.functions.transferfunctions import LinearMatrix, get_matrix
+from psyneulink.core.components.functions.transferfunctions import LinearMatrix
+from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, CONTEXT, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, \
     HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_PORT, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, \
-    OUTPUT_PORT, PROCESS_INPUT_PORT, PROJECTION_SENDER, SYSTEM_INPUT_PORT, VALUE
+    OUTPUT_PORT, PROJECTION_SENDER, VALUE
 from psyneulink.core.globals.log import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -322,8 +322,8 @@ def _mapping_projection_matrix_getter(owning_component=None, context=None):
 
 def _mapping_projection_matrix_setter(value, owning_component=None, context=None):
     owning_component.function.parameters.matrix.set(value, context)
-    # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reinitialize" type method
-    # but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
+    # KDM 11/13/18: not sure that below is correct to do here, probably is better to do this in a "reset" type
+    # method but this is needed for Kalanthroff model to work correctly (though untested, it is in Scripts/Models)
     owning_component.parameter_ports["matrix"].function.parameters.previous_value.set(value, context)
 
     return value
@@ -384,7 +384,7 @@ class MappingProjection(PathwayProjection_Base):
     name : str
         the name of the MappingProjection. If the specified name is the name of an existing MappingProjection,
         it is appended with an indexed suffix, incremented for each MappingProjection with the same base name (see
-        `Naming`). If the name is not specified in the **name** argument of its constructor, a default name is
+        `Registry_Naming`). If the name is not specified in the **name** argument of its constructor, a default name is
         assigned using the following format:
         'MappingProjection from <sender Mechanism>[<OutputPort>] to <receiver Mechanism>[InputPort]'
         (for example, ``'MappingProjection from my_mech_1[OutputPort-0] to my_mech2[InputPort-0]'``).
@@ -418,7 +418,10 @@ class MappingProjection(PathwayProjection_Base):
                     :type: ``str``
         """
         function = Parameter(LinearMatrix, stateful=False, loggable=False)
-        matrix = Parameter(DEFAULT_MATRIX, modulable=True, function_parameter=True, getter=_mapping_projection_matrix_getter, setter=_mapping_projection_matrix_setter)
+        matrix = Parameter(DEFAULT_MATRIX, modulable=True,
+                           function_parameter=True,
+                           getter=_mapping_projection_matrix_getter,
+                           setter=_mapping_projection_matrix_setter)
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -433,19 +436,18 @@ class MappingProjection(PathwayProjection_Base):
 
 
     class sockets:
-        sender=[OUTPUT_PORT, PROCESS_INPUT_PORT, SYSTEM_INPUT_PORT]
+        sender=[OUTPUT_PORT]
         receiver=[INPUT_PORT]
 
 
     projection_sender = OutputPort
 
-    @tc.typecheck
     def __init__(self,
                  sender=None,
                  receiver=None,
                  weight=None,
                  exponent=None,
-                 matrix=DEFAULT_MATRIX,
+                 matrix=None,
                  function=None,
                  params=None,
                  name=None,
@@ -482,7 +484,7 @@ class MappingProjection(PathwayProjection_Base):
                          **kwargs)
 
         try:
-            self._parameter_ports[MATRIX].function.reinitialize(context=context)
+            self._parameter_ports[MATRIX].function.reset(context=context)
         except AttributeError:
             pass
 
@@ -494,16 +496,19 @@ class MappingProjection(PathwayProjection_Base):
         # FIX: UPDATE WITH MODULATION_MODS
         # FIX: MOVE THIS TO MappingProjection.__init__;
         # FIX: AS IT IS, OVER-WRITES USER ASSIGNMENT OF FUNCTION IN params dict FOR MappingProjection
-        matrix = get_matrix(self._parameter_ports[MATRIX].value)
-        initial_rate = matrix * 0.0
+        # TODO: why is this using the value not the variable? if there isn't a
+        # specific reason, it should be variable, but this affects the values
+        # tests/mechanisms/test_gating_mechanism.py::test_gating_with_composition
+        new_variable = copy.deepcopy(self._parameter_ports[MATRIX].defaults.value)
+        initial_rate = new_variable * 0.0
 
         # KDM 7/11/19: instead of simply setting the function, we need to reinstantiate to ensure
         # new defaults get set properly
         self._parameter_ports[MATRIX]._instantiate_function(
             function=AccumulatorIntegrator(
                 owner=self._parameter_ports[MATRIX],
-                default_variable=matrix,
-                initializer=matrix,
+                default_variable=new_variable,
+                initializer=new_variable,
                 # rate=initial_rate
             ),
             context=context
@@ -610,7 +615,7 @@ class MappingProjection(PathwayProjection_Base):
 
     def _execute(self, variable=None, context=None, runtime_params=None):
 
-        self._update_parameter_ports(context=context, runtime_params=runtime_params)
+        self._update_parameter_ports(runtime_params=runtime_params, context=context)
 
         value = super()._execute(
                 variable=variable,

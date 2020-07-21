@@ -37,7 +37,7 @@ from psyneulink.core.globals.keywords import \
     MSE, SSE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.utilities import is_numeric, scalar_distance, get_global_seed
+from psyneulink.core.globals.utilities import is_numeric, scalar_distance, get_global_seed, convert_to_np_array
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
 __all__ = ['LearningFunction', 'Kohonen', 'Hebbian', 'ContrastiveHebbian',
@@ -435,14 +435,14 @@ class BayesGLM(LearningFunction):
 
     def __init__(self,
                  default_variable=None,
-                 mu_0=0,
-                 sigma_0=1,
-                 gamma_shape_0=1,
-                 gamma_size_0=1,
+                 mu_0=None,
+                 sigma_0=None,
+                 gamma_shape_0=None,
+                 gamma_size_0=None,
                  params=None,
                  owner=None,
                  seed=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         self.user_specified_default_variable = default_variable
 
@@ -522,7 +522,7 @@ class BayesGLM(LearningFunction):
         self.gamma_size_n = self.gamma_size_0
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
+    def reset(self, *args, context=None):
         # If variable passed during execution does not match default assigned during initialization,
         #    reassign default and re-initialize priors
         if DEFAULT_VARIABLE in args[0]:
@@ -585,7 +585,7 @@ class BayesGLM(LearningFunction):
 
 
         variable = self._check_args(
-            [np.atleast_2d(variable[0]), np.atleast_2d(variable[1])],
+            [convert_to_np_array(variable[0], dimension=2), convert_to_np_array(variable[1], dimension=2)],
             params,
             context,
         )
@@ -761,12 +761,12 @@ class Kohonen(LearningFunction):  # --------------------------------------------
 
     def __init__(self,
                  default_variable=None,
-                 # learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
                  learning_rate=None,
-                 distance_function:tc.any(tc.enum(GAUSSIAN, LINEAR, EXPONENTIAL), is_function_type)=GAUSSIAN,
+                 distance_function:tc.any(tc.enum(GAUSSIAN, LINEAR, EXPONENTIAL), is_function_type)=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1028,7 +1028,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                  learning_rate=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1253,11 +1253,11 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
     def __init__(self,
                  default_variable=None,
-                 # learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
                  learning_rate=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1351,7 +1351,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
         # Generate the column array from the variable
         # col = variable.reshape(len(variable),1)
-        col = np.atleast_2d(variable).transpose()
+        col = convert_to_np_array(variable, 2).transpose()
 
         # Calculate weight chhange matrix
         weight_change_matrix = variable * col
@@ -1548,11 +1548,11 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
     def __init__(self,
                  default_variable=None,
-                 # learning_rate: tc.optional(parameter_spec) = None,
+                 # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
                  learning_rate=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1792,7 +1792,7 @@ class BackPropagation(LearningFunction):
         `activation_output <BackPropagation.activation_output>`.
 
     error_signal : 1d array
-        the error signal for the next matrix (layer above) in the learning sequence, or the error computed from the
+        the error signal for the next matrix (layer above) in the learning pathway, or the error computed from the
         target (training signal) and the output of the last Mechanism in the sequence;
         same as 3rd item of `variable <BackPropagation.variable>`.
 
@@ -1900,13 +1900,13 @@ class BackPropagation(LearningFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 activation_derivative_fct: tc.optional(tc.any(types.FunctionType, types.MethodType)) = None,
-                 # learning_rate: tc.optional(parameter_spec) = None,
+                 activation_derivative_fct: tc.optional(tc.optional(tc.any(types.FunctionType, types.MethodType))) = None,
+                 # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
                  learning_rate=None,
                  loss_function=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         error_matrix = np.zeros((len(default_variable[LEARNING_ACTIVATION_OUTPUT]),
                                  len(default_variable[LEARNING_ERROR_OUTPUT])))

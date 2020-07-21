@@ -101,13 +101,13 @@ Parameters can be specified in one of several places:
       (see `Component_Structural_Attributes` for additional details).
     ..
     * In a *parameter specification dictionary* assigned to the **params** argument in the constructor for the
-      Component to which the parameter belongs. The entry for each parameter must use the name of the parameter
-      (or a corresponding keyword) as its key, and the parameter's specification as its value (see
-      `examples <ParameterPort_Specification_Examples>` below). Parameters for a Component's
-      `function <Component.function>` can be specified in an entry with the key *FUNCTION_PARAMS*, and a value that
-      is itself a parameter specification dictionary containing an entry for each of the function's parameters to be
-      specified.  When a value is assigned to a parameter in a specification dictionary, it overrides any value
-      assigned to the argument for the parameter in the Component's constructor.
+      Component to which the parameter belongs, or any place else the value of a parameter can be specified.
+      The entry for each parameter must use the name of the parameter (or a corresponding keyword) as its key,
+      and the parameter's specification as its value (see `examples <ParameterPort_Specification_Examples>` below).
+      Parameters for a Component's `function <Component.function>` can be specified in an entry with the key
+      *FUNCTION_PARAMS*, and a value that is itself a parameter specification dictionary containing an entry for
+      each of the function's parameters to be specified.  When a value is assigned to a parameter in a specification
+      dictionary, it overrides any value assigned to the argument for the parameter in the Component's constructor.
     ..
     * By direct assignment to the Component's attribute for the parameter
       (see `below <ParameterPort_Modulable_Parameters>`).
@@ -251,35 +251,36 @@ the Logistic function in the example.
 
 The example below shows how to access ParameterPort values vs base values, and demonstrates their differences:
 
-    >>> my_transfer_mechanism = pnl.TransferMechanism(              #doctest: +SKIP
-    ...                      noise=5.0,                             #doctest: +SKIP
-    ...                      function=pnl.Linear(slope=2.0))        #doctest: +SKIP
-    >>> assert my_transfer_mechanism.noise == 5.0                   #doctest: +SKIP
-    >>> assert my_transfer_mechanism.mod_noise == [5.0]             #doctest: +SKIP
-    >>> assert my_transfer_mechanism.function.slope == 2.0   #doctest: +SKIP
-    >>> assert my_transfer_mechanism.mod_slope == [2.0]             #doctest: +SKIP
+    >>> my_transfer_mechanism = pnl.TransferMechanism(
+    ...                      noise=5.0,
+    ...                      function=pnl.Linear(slope=2.0))
+    >>> assert my_transfer_mechanism.noise == 5.0
+    >>> assert my_transfer_mechanism.mod_noise == [5.0]
+    >>> assert my_transfer_mechanism.function.slope == 2.0
+    >>> assert my_transfer_mechanism.mod_slope == [2.0]
 
 Notice that the noise attribute, which stores the base value for the noise ParameterPort of my_transfer_mechanism, is
 on my_transfer_mechanism, while the slope attribute, which stores the base value for the slope ParameterPort of
 my_transfer_mechanism, is on my_transfer_mechanism's function. However, mod_noise and mod_slope are both properties on
 my_transfer_mechanism.
 
-    >>> my_transfer_mechanism.noise = 4.0                           #doctest: +SKIP
-    >>> my_transfer_mechanism.function.slope = 1.0           #doctest: +SKIP
-    >>> assert my_transfer_mechanism.noise == 4.0                   #doctest: +SKIP
-    >>> assert my_transfer_mechanism.mod_noise == [5.0]             #doctest: +SKIP
-    >>> assert my_transfer_mechanism.function.slope == 1.0   #doctest: +SKIP
-    >>> assert my_transfer_mechanism.mod_slope == [2.0]             #doctest: +SKIP
+    >>> my_transfer_mechanism.noise = 4.0
+    >>> my_transfer_mechanism.function.slope = 1.0
+    >>> assert my_transfer_mechanism.noise == 4.0
+    >>> assert my_transfer_mechanism.mod_noise == [5.0]
+    >>> assert my_transfer_mechanism.function.slope == 1.0
+    >>> assert my_transfer_mechanism.mod_slope == [2.0]
 
 When the base values of noise and slope are updated, we can inspect these attributes immediately and observe that they
 have changed. We do not observe a change in mod_noise or mod_slope because the ParameterPort value will not update
 until the mechanism executes.
 
-    >>> my_transfer_mechanism.execute([10.0])                       #doctest: +SKIP
-    >>> assert my_transfer_mechanism.noise == 4.0                   #doctest: +SKIP
-    >>> assert my_transfer_mechanism.mod_noise == [4.0]             #doctest: +SKIP
-    >>> assert my_transfer_mechanism.function.slope == 1.0   #doctest: +SKIP
-    >>> assert my_transfer_mechanism.mod_slope == 1.0               #doctest: +SKIP
+    >>> my_transfer_mechanism.execute([10.0])
+    array([[14.]])
+    >>> assert my_transfer_mechanism.noise == 4.0
+    >>> assert my_transfer_mechanism.mod_noise == [4.0]
+    >>> assert my_transfer_mechanism.function.slope == 1.0
+    >>> assert my_transfer_mechanism.mod_slope == 1.0
 
 Now that the mechanism has executed, we can see that each ParameterPort evaluated its function with the base value,
 producing a modulated noise value of 4.0 and a modulated slope value of 1.0. These values were used by
@@ -358,8 +359,8 @@ Class Reference
 
 """
 
+from copy import deepcopy
 import inspect
-import itertools
 import types
 import warnings
 
@@ -624,7 +625,7 @@ class ParameterPort(Port_Base):
                     # (actual assignment is made in _parse_port_spec)
                     if reference_value is None:
                         port_dict[REFERENCE_VALUE]=port_spec
-                    elif  not iscompatible(port_spec, reference_value):
+                    elif not iscompatible(port_spec, reference_value):
                         raise PortError("Value in first item of 2-item tuple specification for {} of {} ({}) "
                                          "is not compatible with its {} ({})".
                                          format(ParameterPort.__name__, owner.name, port_spec,
@@ -749,7 +750,7 @@ class ParameterPort(Port_Base):
         """Return parameter variable (since ParameterPort's function never changes the form of its variable"""
         return variable
 
-    def _get_fallback_variable(self, context=None):
+    def _get_variable_from_projections(self, context=None):
         """
         Get backingfield ("base") value of param of function of Mechanism to which the ParameterPort belongs.
         """
@@ -842,6 +843,7 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
                 function=function
             )
 
+    owner.parameter_ports.sort(key=lambda port: port.name)
 
 def _instantiate_parameter_port(owner, param_name, param_value, context, function=None):
     """Call _instantiate_port for allowable params, to instantiate a ParameterPort for it
@@ -869,13 +871,13 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
         """Return (<default param value>, <modulatory spec>) for modulatory spec
         """
         try:
-            param_default_value = obj.get_constructor_defaults()[name]
+            param_default_value = getattr(obj.defaults, name)
             # Only assign default value if it is not None
             if param_default_value is not None:
                 return (param_default_value, value)
             else:
                 return value
-        except KeyError:
+        except AttributeError:
             raise ParameterPortError("Unrecognized specification for {} paramater of {} ({})".
                                       format(param_name, owner.name, param_value))
 
@@ -1000,7 +1002,6 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
         ):
             reference_value = function_param_value
         else:
-            from copy import deepcopy
             reference_value = deepcopy(function_param_value)
 
         # Assign parameterPort for function_param to the component
@@ -1088,7 +1089,7 @@ def _get_parameter_port(sender_owner, sender_type, param_name, component):
                                         "of {} or its function"
                                         .format(param_name, sender_type, sender_owner.name, component))
         # Check that the Mechanism has a ParameterPort for the param
-        if not param_name in component._parameter_ports.names:
+        if param_name not in component._parameter_ports.names:
             raise ParameterPortError("There is no ParameterPort for the parameter ({}) of {} "
                                         "specified in {} for {}".
                                         format(param_name, component.name, sender_type, sender_owner.name))

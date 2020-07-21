@@ -56,4 +56,3 @@ class TestControlMechanism:
 
         assert Tz.parameter_ports[SLOPE].mod_afferents[0].sender.owner == C
         assert np.allclose(comp.results,[[[1.], [4.]], [[4.], [4.]]])
-

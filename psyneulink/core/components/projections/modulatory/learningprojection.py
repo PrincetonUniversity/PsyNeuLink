@@ -156,19 +156,19 @@ A LearningProjection cannot be executed directly.  It's execution is determined 
 *ONLINE*, is executed when the *MATRIX* ParameterPort to which it projects is updated.  This occurs when the
 `learned_projection <LearningProjection.learned_projection>` (the `MappingProjection` to which the *MATRIX*
 ParameterPort belongs) is updated. Note that these events occur only when the ProcessingMechanism that receives the
-`learned_projection <LearningProjection.learned_projection>` is executed (see :ref:`Lazy Evaluation <LINK>` for an
-explanation of "lazy" updating).  If `learning_enabled <LearningProjection.learning_enabled>` is *AFTER*, then
-LearningProjection is executed at the end of the `TRIAL` of the Composition to which it belongs.  When the
-LearningProjection is executed, its `function <LearningProjection.function>` gets the `learning_signal
-<LearningProjection.learning_signal>` from its `sender <LearningProjection.sender>` and conveys that to its
-`receiver <LearningProjection.receiver>`, possibly modified by a `learning_rate <LearningProjection.learning_rate>`
-if that is specified for it or its `sender <LearningProjection.sender>` (see `above
-<LearningProjection_Function_and_Learning_Rate>`).
+`learned_projection <LearningProjection.learned_projection>` is executed (see `Lazy Evaluation
+<Component_Lazy_Updating>` for an explanation of "lazy" updating).  If `learning_enabled
+<LearningProjection.learning_enabled>` is *AFTER*, then LearningProjection is executed at the end of the `TRIAL
+<TimeScale.TRIAL>` of the Composition to which it belongs.  When the LearningProjection is executed, its `function
+<LearningProjection.function>` gets the `learning_signal <LearningProjection.learning_signal>` from its `sender
+<LearningProjection.sender>` and conveys that to its `receiver <LearningProjection.receiver>`, possibly modified by
+a `learning_rate <LearningProjection.learning_rate>` if that is specified for it or its `sender
+<LearningProjection.sender>` (see `above <LearningProjection_Function_and_Learning_Rate>`).
 
 .. note::
    The changes to the `matrix <MappingProjection.matrix>` parameter of a `MappingProjection` in response to the
    execution of a LearningProjection are not applied until the `Mechanism <Mechanism>` that receives MappingProjection
-   are next executed; see :ref:`Lazy Evaluation` for an explanation of "lazy" updating).
+   are next executed; see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
 
 .. _LearningProjection_Class_Reference:
@@ -179,6 +179,7 @@ Class Reference
 """
 
 import inspect
+import warnings
 
 import numpy as np
 import typecheck as tc
@@ -425,10 +426,13 @@ class LearningProjection(ModulatoryProjection_Base):
         """
         value = Parameter(np.array([0]), read_only=True, aliases=['weight_change_matrix'], pnl_internal=True)
         function = Parameter(Linear, stateful=False, loggable=False)
-        error_function = Parameter(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False)
-        learning_function = Parameter(BackPropagation, stateful=False, loggable=False)
+        error_function = Parameter(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False, reference=True)
+        learning_function = Parameter(BackPropagation, stateful=False, loggable=False, reference=True)
         learning_rate = Parameter(None, modulable=True)
-        learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter, setter=_learning_signal_setter, pnl_internal=True)
+        learning_signal = Parameter(None, read_only=True,
+                                    getter=_learning_signal_getter,
+                                    setter=_learning_signal_setter,
+                                    pnl_internal=True)
         learning_enabled = None
 
 
@@ -438,8 +442,8 @@ class LearningProjection(ModulatoryProjection_Base):
     def __init__(self,
                  sender:tc.optional(tc.any(LearningSignal, LearningMechanism))=None,
                  receiver:tc.optional(tc.any(ParameterPort, MappingProjection))=None,
-                 error_function:tc.optional(is_function_type)=LinearCombination(weights=[[-1], [1]]),
-                 learning_function:tc.optional(is_function_type)=BackPropagation,
+                 error_function:tc.optional(is_function_type)=None,
+                 learning_function:tc.optional(is_function_type)=None,
                  # FIX: 10/3/17 - TEST IF THIS OK AND REINSTATE IF SO
                  # learning_signal_params:tc.optional(dict)=None,
                  learning_rate:tc.optional(tc.any(parameter_spec))=None,
@@ -552,12 +556,7 @@ class LearningProjection(ModulatoryProjection_Base):
         self.sender = sender
 
         if not isinstance(self.sender, (OutputPort, LearningMechanism)):
-            from psyneulink.core.components.mechanisms.modulatory.learning.learningauxiliary \
-                import _instantiate_learning_components
-            context.source = ContextFlags.METHOD
-            _instantiate_learning_components(learning_projection=self,
-                                             # TODO: do we need this argument?
-                                             context=context)
+            warnings.warn("Instantiation of a LearningProjection outside of a Composition is tricky!")
 
         if isinstance(self.sender, OutputPort) and not isinstance(self.sender.owner, LearningMechanism):
             raise LearningProjectionError("Sender specified for LearningProjection {} ({}) is not a LearningMechanism".
@@ -608,22 +607,6 @@ class LearningProjection(ModulatoryProjection_Base):
         # Set learning_enabled to value of its LearningMechanism sender if it was not specified in the constructor
         if self.learning_enabled is None:
             self.learning_enabled = self.parameters.learning_enabled.default_value = learning_mechanism.learning_enabled
-
-        # Check if learning_mechanism receives a projection from an ObjectiveMechanism;
-        #    if it does, assign it to the objective_mechanism attribute for the projection being learned
-
-        # FIX: REMOVE WHEN System IS FULLY DEPRECATED
-        # MODIFIED 7/15/19 OLD: JDC RESTORED TO ALLOW SYSTEM TO WORK (DOESN"T SEEM TO TRASH BP)
-        # KAM Commented out next 8 lines on 6/24/19 to get past bug in multilayer backprop on Composition
-        try:
-            candidate_objective_mech = learning_mechanism.input_ports[ERROR_SIGNAL].path_afferents[0].sender.owner
-            if isinstance(candidate_objective_mech, ObjectiveMechanism) and candidate_objective_mech._role == LEARNING:
-                learned_projection.objective_mechanism = candidate_objective_mech
-        except TypeError:
-            # learning_mechanism does not receive from an ObjectiveMechanism
-            #    (e.g., AutoAssociativeLearningMechanism, which receives straight from a ProcessingMechanism)
-            pass
-        # MODIFIED 7/15/19 END
 
         learned_projection.learning_mechanism = learning_mechanism
         learned_projection.has_learning_projection = self

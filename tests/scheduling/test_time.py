@@ -22,14 +22,13 @@ class TestTime:
         t1 = pnl.TransferMechanism()
         t2 = pnl.TransferMechanism()
 
-        p = pnl.Process(pathway=[t1, t2])
-        s = pnl.System(processes=[p])
+        C = pnl.Composition(pathways=[t1, t2])
 
-        s.run(inputs={t1: [[1.0], [2.0], [3.0]]})
-        assert s.scheduler.get_clock(s).time == Time(run=1, trial=0, pass_=0, time_step=0)
+        C.run(inputs={t1: [[1.0], [2.0], [3.0]]})
+        assert C.scheduler.get_clock(C).time == Time(run=1, trial=0, pass_=0, time_step=0)
 
-        s.run(inputs={t1: [[4.0], [5.0], [6.0]]})
-        assert s.scheduler.get_clock(s).time == Time(run=2, trial=0, pass_=0, time_step=0)
+        C.run(inputs={t1: [[4.0], [5.0], [6.0]]})
+        assert C.scheduler.get_clock(C).time == Time(run=2, trial=0, pass_=0, time_step=0)
 
 
 class TestTimeHistoryTree:

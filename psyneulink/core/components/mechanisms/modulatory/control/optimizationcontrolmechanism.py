@@ -78,23 +78,24 @@ corresponds closely to the distinction between *model-based* and *model-free* op
 
 This is achieved by assigning as the `agent_rep  <OptimizationControlMechanism.agent_rep>` a Composition other than the
 one to which the OptimizationControlMechanism belongs (and for which it is the `controller <Composition.controller>`).
-In each `trial`, the `agent_rep <OptimizationControlMechanism.agent_rep>` is given the chance to adapt, by adjusting its
-parameters in order to improve its prediction of the `net_outcome <ControlMechanism.net_outcome>` for the Composition
-(or part of one) that is controlled by the OptimizationControlMechanism (based on the `state
-<OptimizationControlMechanism_State>` and `net_outcome <ControlMechanism.net_outcome>` of
-the prior trial).  The `agent_rep <OptimizationControlMechanism.agent_rep>` is then used to predict the `net_outcome
-<ControlMechanism.net_outcome>` for `control_allocation <ControlMechanism.control_allocation>` samples to find the one
-that yields the best predicted `net_outcome <ControlMechanism.net_outcome>` of processing on the upcoming trial,
-based on the current or (expected) `feature_values <OptimizationControlMechanism.feature_values>` for that trial.
+In each `TRIAL <TimeScale.TRIAL>`, the `agent_rep <OptimizationControlMechanism.agent_rep>` is given the chance to
+adapt, by adjusting its parameters in order to improve its prediction of the `net_outcome
+<ControlMechanism.net_outcome>` for the Composition (or part of one) that is controlled by the
+OptimizationControlMechanism (based on the `state <OptimizationControlMechanism_State>` and `net_outcome
+<ControlMechanism.net_outcome>` of the prior trial).  The `agent_rep <OptimizationControlMechanism.agent_rep>` is
+then used to predict the `net_outcome <ControlMechanism.net_outcome>` for `control_allocation
+<ControlMechanism.control_allocation>` samples to find the one that yields the best predicted `net_outcome
+<ControlMechanism.net_outcome>` of processing on the upcoming trial, based on the current or (expected)
+`feature_values <OptimizationControlMechanism.feature_values>` for that trial.
 
 .. _OptimizationControlMechanism_Model_Based:
 
 *Model-Based Optimization*
 
-This is achieved by assigning as the `agent_rep  <OptimizationControlMechanism.agent_rep>` the Composition to which
-the OptimizationControlMechanism belongs (and for which it is the `controller <Composition.controller>`). On each
-`trial`, that Composition itself is used to simulate processing on the upcoming trial, based on the current or
-(expected) `feature_values <OptimizationControlMechanism.feature_values>` for that trial, in order to find the
+This is achieved by assigning as the `agent_rep  <OptimizationControlMechanism.agent_rep>` the Composition to which the
+OptimizationControlMechanism belongs (and for which it is the `controller <Composition.controller>`). On each `TRIAL
+<TimeScale.TRIAL>`, that Composition itself is used to simulate processing on the upcoming trial, based on the current
+or (expected) `feature_values <OptimizationControlMechanism.feature_values>` for that trial, in order to find the
 <ControlMechanism.control_allocation>` that yields the best net_outcome <ControlMechanism.net_outcome>` for that trial.
 
 .. _OptimizationControlMechanism_Creation:
@@ -109,7 +110,7 @@ The following arguments of its constructor are specific to the OptimizationContr
   and specifies the values used by the OptimizationControlMechanism, together with a `control_allocation
   <ControlMechanism.control_allocation>`, to calculate a `net_outcome <ControlMechanism.net_outcome>`.  For
   `model-based optimzation <OptimizationControlMechanism_Model_Based>` these are also used as the inputs to the
-  Compositoin (i.e., `agent_rep <OptimizationControlMechanism.agent_rep>`) when it's `evaluate <Composition.evaluate>`
+  Composition (i.e., `agent_rep <OptimizationControlMechanism.agent_rep>`) when it's `evaluate <Composition.evaluate>`
   method is called (see `OptimizationControlMechanism_Features` below).  Features can be specified using any of the
   following, singly or combined in a list:
 
@@ -133,13 +134,14 @@ The following arguments of its constructor are specific to the OptimizationContr
 * **agent_rep** -- specifies the `Composition` used by the OptimizationControlMechanism's `evaluation_function
   <OptimizationControlMechanism.evaluation_function>` to calculate the predicted `net_outcome
   <ControlMechanism.net_outcome>` for a given `state <OptimizationControlMechanism_State>` (see `below
-  <OptimizationControlMechanism_Agent_Rep>` for additional details). If it is not specified, the
-  `Composition` to which the OptimizationControlMechanism belongs is assigned, and the OptimizationControlMechanism
-  is assigned as that Composition's `controller <Composition.controller>`, implementing fully `model-based
-  <OptimizationControlMechanism_Model_Based>` optimization.  If that Composition already has a `controller
-  <Composition.controller>` specified, the OptimizationControlMechanism is disabled. If another Composition is
-  specified, it must conform to the specifications for an `agent_rep <OptimizationControlMechanism.agent_rep>` as
-  described `below <OptimizationControlMechanism_Agent_Rep>`.
+  <OptimizationControlMechanism_Agent_Rep>` for additional details). If it is not specified, then the
+  `Composition` to which the OptimizationControlMechanism is assigned becomes its `agent_rep
+  <OptimizationControlMechanism.agent_rep>`, and the OptimizationControlMechanism is assigned as that Composition's
+  `controller <Composition.controller>`, implementing fully `model-based <OptimizationControlMechanism_Model_Based>`
+  optimization.  If that Composition already has a `controller <Composition.controller>` specified,
+  the OptimizationControlMechanism is disabled. If another Composition is specified, it must conform to the
+  specifications for an `agent_rep <OptimizationControlMechanism.agent_rep>` as described `below
+  <OptimizationControlMechanism_Agent_Rep>`.
 
 .. _OptimizationControlMechanism_Structure:
 
@@ -228,17 +230,16 @@ and a `control_allocation <ControlMechanism.control_allocation>`.
 ^^^^^^^^^^^^^^^^^^^^^^
 
 The defining feature of an OptimizationControlMechanism is its agent representation, specified in the **agent_rep**
-argument of its constructor and assigned to its `agent_rep <OptimizationControlMechanism.agent_rep>` attribute.
-This designates a representation of the `Composition` (or parts of one) that the OptimizationControlMechanism controls,
-that is used to evaluate sample `control_allocations <ControlMechanism.control_allocation>` in order to find the one
-that optimizes the `net_outcome <ControlMechanism.net_outcome>`. The `agent_rep
-<OptimizationControlMechanism.agent_rep>` is always itself a `Composition`, that can be either the same one that the
-OptimizationControlMechanism controls or another one that is used to estimate the `net_outcome
-<ControlMechanism.net_outcome>` for that Composition (see `above
+argument of its constructor and assigned to its `agent_rep <OptimizationControlMechanism.agent_rep>` attribute.  This
+designates a representation of the `Composition` (or parts of one) that the OptimizationControlMechanism controls, that
+is used to evaluate sample `control_allocations <ControlMechanism.control_allocation>` in order to find the one that
+optimizes the `net_outcome <ControlMechanism.net_outcome>`. The `agent_rep <OptimizationControlMechanism.agent_rep>`
+is always itself a `Composition`, that can be either the same one that the OptimizationControlMechanism controls or
+another one that is used to estimate the `net_outcome <ControlMechanism.net_outcome>` for that Composition (see `above
 <OptimizationControlMechanism_Agent_Representation_Types>`).  The `evaluate <Composition.evaluate>` method of the
 Composition is assigned as the `evaluation_function <OptimizationControlMechanism.evaluation_function>` of the
-OptimizationControlMechanism.  If the `agent_rep <OptimizationControlMechanism.agent_rep>` is not the Composition
-for which the OptimizationControlMechanism is the controller, then it must meet the following requirements:
+OptimizationControlMechanism.  If the `agent_rep <OptimizationControlMechanism.agent_rep>` is not the Composition for
+which the OptimizationControlMechanism is the controller, then it must meet the following requirements:
 
     * Its `evaluate <Composition.evaluate>` method must accept as its first three arguments, in order,
       values that correspond in shape to  the `feature_values <OptimizationControlMechanism.feature_values>`,
@@ -275,11 +276,11 @@ OptimizationControlMechanism, however it must meet the following requirements:
   - It must accept as its first argument and return as its result an array with the same shape as the
     OptimizationControlMechanism's `control_allocation <ControlMechanism.control_allocation>`.
   ..
-  - It must implement a `reinitialize` method that accepts **objective_function** as a keyword argument and
+  - It must implement a `reset` method that accepts **objective_function** as a keyword argument and
     implements an attribute with the same name.
 
     COMMENT:
-    - it must implement a `reinitialize` method that accepts as keyword arguments **objective_function**,
+    - it must implement a `reset` method that accepts as keyword arguments **objective_function**,
       **search_function**, **search_termination_function**, and **search_space**, and implement attributes
       with corresponding names.
     COMMENT
@@ -393,12 +394,15 @@ import typecheck as tc
 from collections.abc import Iterable
 
 from psyneulink.core.components.component import DefaultsFlexibility
-from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.function import is_function_type, FunctionError
 from psyneulink.core.components.functions.optimizationfunctions import \
-    OBJECTIVE_FUNCTION, SEARCH_SPACE, OptimizationFunction
+    OBJECTIVE_FUNCTION, SEARCH_SPACE
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.transferfunctions import CostFunctions
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
+    ObjectiveMechanism, ObjectiveMechanismError
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.ports.inputport import InputPort, _parse_shadow_inputs
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -407,10 +411,12 @@ from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, \
-    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMETER_PORTS, PARAMS, \
+    OPTIMIZATION_CONTROL_MECHANISM, OBJECTIVE_MECHANISM, OUTCOME, PRODUCT, PARAMS, \
     CONTROL, AUTO_ASSIGN_MATRIX
+from psyneulink.core.globals.utilities import convert_to_np_array
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.core.globals.context import handle_external_context
 
 from psyneulink.core import llvm as pnlvm
 
@@ -456,16 +462,10 @@ class OptimizationControlMechanism(ControlMechanism):
         compute_net_outcome=lambda x,y:x-y)
 
     Subclass of `ControlMechanism <ControlMechanism>` that adjusts its `ControlSignals <ControlSignal>` to optimize
-    performance of the `Composition` to which it belongs
+    performance of the `Composition` to which it belongs.  See parent class for additional arguments.
 
     Arguments
     ---------
-
-    objective_mechanism : ObjectiveMechanism or List[OutputPort specification]
-        specifies either an `ObjectiveMechanism` to use for the OptimizationControlMechanism, or a list of the
-        `OutputPort <OutputPort>`\\s it should monitor; if a list of `OutputPort specifications
-        <ObjectiveMechanism_Monitor>` is used, a default ObjectiveMechanism is created and the list
-        is passed to its **monitored_output_ports** argument.
 
     features : Mechanism, OutputPort, Projection, dict, or list containing any of these
         specifies Components, the values of which are assigned to `feature_values
@@ -477,14 +477,14 @@ class OptimizationControlMechanism(ControlMechanism):
         specifies the `function <InputPort.function>` for the `InputPort` assigned to each `feature
         <OptimizationControlMechanism_Features>`.
 
-    agent_rep : Composition  : default Composition to which the OptimizationControlMechanism belongs
+    agent_rep : None  : default Composition to which the OptimizationControlMechanism is assigned
         specifies the `Composition` used by the `evalution_function <OptimizationControlMechanism.evaluation_function>`
         to predict the `net_outcome <ControlMechanism.net_outcome>` for a given `state
-        <OptimizationControlMechanism_State>`.  If a Composition other than the default is assigned,
-        it must be suitably configured (see `above <OptimizationControlMechanism_Agent_Rep>` for additional details).
-        If the default is used, the OptimizationControlMechanism is assigned as the Composition's `controller
-        <Composition.controller>` unless one has already been assigned, in which case the
-        OptimizationControlMechanism is disabled.
+        <OptimizationControlMechanism_State>`.  If a Composition is specified, it must be suitably configured
+        (see `above <OptimizationControlMechanism_Agent_Rep>` for additional details). If it is not specified, the
+        OptimizationControlMechanism is placed in `deferred_init` status until it is assigned as the `controller
+        <Composition.controller>` of a Composition, at which that Composition is assigned as the `agent_rep
+        <agent_rep <OptimizationControlMechanism.agent_rep`.
 
     search_function : function or method
         specifies the function assigned to `function <OptimizationControlMechanism.function>` as its
@@ -681,7 +681,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     :type:
         """
         function = Parameter(None, stateful=False, loggable=False)
-        feature_function = Parameter(None, stateful=False, loggable=False)
+        feature_function = Parameter(None, reference=True, stateful=False, loggable=False)
         search_function = Parameter(None, stateful=False, loggable=False)
         search_termination_function = Parameter(None, stateful=False, loggable=False)
         comp_execution_mode = Parameter('Python', stateful=False, loggable=False, pnl_internal=True)
@@ -707,22 +707,40 @@ class OptimizationControlMechanism(ControlMechanism):
 
         saved_samples = None
         saved_values = None
+
+    @handle_external_context()
     @tc.typecheck
     def __init__(self,
                  agent_rep=None,
                  function=None,
-                 features: tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort)) = None,
-                 feature_function: tc.optional(tc.any(is_function_type)) = None,
+                 features: tc.optional(tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))) = None,
+                 feature_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  num_estimates = None,
-                 search_function: tc.optional(tc.any(is_function_type)) = None,
-                 search_termination_function: tc.optional(tc.any(is_function_type)) = None,
+                 search_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
+                 search_termination_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  search_statefulness=None,
-                 params=None,
+                 context=None,
                  **kwargs):
         """Implement OptimizationControlMechanism"""
 
+        # If agent_rep hasn't been specified, put into deferred init
+        if agent_rep is None:
+            if context.source==ContextFlags.COMMAND_LINE:
+                # Temporarily name InputPort
+                self._assign_deferred_init_name(self.__class__.__name__, context)
+                # Store args for deferred initialization
+                self._store_deferred_init_args(**locals())
+
+                # Flag for deferred initialization
+                self.initialization_status = ContextFlags.DEFERRED_INIT
+                return
+            # If constructor is called internally (i.e., for controller of Composition),
+            # agent_rep needs to be specified
+            else:
+                assert False, f"PROGRAM ERROR: 'agent_rep' arg should have been specified " \
+                              f"in internal call to constructor for {self.name}."
+
         super().__init__(
-            system=None,
             function=function,
             input_ports=features,
             features=features,
@@ -732,7 +750,6 @@ class OptimizationControlMechanism(ControlMechanism):
             search_function=search_function,
             search_termination_function=search_termination_function,
             agent_rep=agent_rep,
-            params=params,
             **kwargs
         )
 
@@ -780,7 +797,7 @@ class OptimizationControlMechanism(ControlMechanism):
         for i in range(1, len(self.input_ports)):
             port = self.input_ports[i]
             if len(port.path_afferents) > 1:
-                raise OptimizationControlMechanismError(f"Invalid {InputPort.__name__} on {self.name}. "
+                raise OptimizationControlMechanismError(f"Invalid {type(input_port).__name__} on {self.name}. "
                                                         f"{port.name} should receive exactly one projection, "
                                                         f"but it receives {len(port.path_afferents)} projections.")
 
@@ -817,7 +834,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # Workaround this issue here, and explicitly allow the function's
         # default variable to be modified
         if isinstance(function, Function):
-            function._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
+            function._variable_shape_flexibility = DefaultsFlexibility.FLEXIBLE
 
         super()._instantiate_function(function, function_params, context)
 
@@ -826,7 +843,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         super()._instantiate_attributes_after_function(context=context)
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
-        self.function.reinitialize({DEFAULT_VARIABLE: self.control_allocation,
+        self.function.reset({DEFAULT_VARIABLE: self.control_allocation,
                                     OBJECTIVE_FUNCTION: self.evaluation_function,
                                     # SEARCH_FUNCTION: self.search_function,
                                     # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
@@ -840,34 +857,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._initialize_composition_function_approximator(context)
 
-    def _instantiate_objective_mechanism(self, context=None):
-        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-        # differs from parent because it should not use add_to_monitor on its
-        # input_states (formerly monitor_for_control)
-
-        # Assign ObjectiveMechanism's role as CONTROL
-        self.objective_mechanism._role = CONTROL
-
-        # Instantiate MappingProjection from ObjectiveMechanism to ControlMechanism
-        projection_from_objective = MappingProjection(sender=self.objective_mechanism,
-                                                      receiver=self,
-                                                      matrix=AUTO_ASSIGN_MATRIX,
-                                                      context=context)
-
-        # CONFIGURE FOR ASSIGNMENT TO COMPOSITION
-
-        # Insure that ObjectiveMechanism's input_ports are not assigned projections from a Composition's input_CIM
-        for input_port in self.objective_mechanism.input_ports:
-            input_port.internal_only = True
-        # Flag ObjectiveMechanism and its Projection to ControlMechanism for inclusion in Composition
-        self.aux_components.append(self.objective_mechanism)
-        self.aux_components.append(projection_from_objective)
-
-        # ASSIGN ATTRIBUTES
-
-        self._objective_projection = projection_from_objective
-
-    def _update_input_ports(self, context=None, runtime_params=None):
+    def _update_input_ports(self, runtime_params=None, context=None):
         """Update value for each InputPort in self.input_ports:
 
         Call execute method for all (MappingProjection) Projections in Port.path_afferents
@@ -876,13 +866,20 @@ class OptimizationControlMechanism(ControlMechanism):
         """
         # "Outcome"
         outcome_input_port = self.input_port
-        outcome_input_port._update(context=context, params=runtime_params)
+        outcome_input_port._update(params=runtime_params, context=context)
         port_values = [np.atleast_2d(outcome_input_port.parameters.value._get(context))]
+        # MODIFIED 5/8/20 OLD:
+        # FIX 5/8/20 [JDC]: THIS DOESN'T CALL SUPER, SO NOT IDEAL HOWEVER, REVISION BELOW CRASHES... NEEDS TO BE FIXED
         for i in range(1, len(self.input_ports)):
             port = self.input_ports[i]
-            port._update(context=context, params=runtime_params)
+            port._update(params=runtime_params, context=context)
             port_values.append(port.parameters.value._get(context))
-        return np.array(port_values)
+        return convert_to_np_array(port_values)
+        # # MODIFIED 5/8/20 NEW:
+        # input_port_values = super()._update_input_ports(runtime_params, context)
+        # port_values.append(input_port_values)
+        # return np.array(port_values)
+        # MODIFIED 5/8/20 END
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         """Find control_allocation that optimizes result of `agent_rep.evaluate`  ."""
@@ -987,12 +984,15 @@ class OptimizationControlMechanism(ControlMechanism):
             old_composition = context.composition
             context.composition = self.agent_rep
 
+            # We shouldn't get this far if execution mode is not Python
+            exec_mode = self.parameters.comp_execution_mode._get(context)
+            assert exec_mode == "Python"
             result = self.agent_rep.evaluate(self.parameters.feature_values._get(context),
                                              control_allocation,
                                              self.parameters.num_estimates._get(context),
                                              base_context=context,
                                              context=new_context,
-                                             execution_mode=self.parameters.comp_execution_mode._get(context),
+                                             execution_mode=exec_mode,
                                              return_results=return_results)
             context.composition = old_composition
 
@@ -1228,7 +1228,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return f
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable, *, tags:frozenset):
         fun = ctx.import_llvm_function(function)
         fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
         fun_out = builder.alloca(fun.args[3].type.pointee)

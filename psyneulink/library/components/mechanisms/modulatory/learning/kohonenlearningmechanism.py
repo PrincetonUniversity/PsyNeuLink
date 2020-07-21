@@ -328,9 +328,9 @@ class KohonenLearningMechanism(LearningMechanism):
                  default_variable:tc.any(list, np.ndarray),
                  size=None,
                  matrix:tc.optional(ParameterPort)=None,
-                 function:is_function_type=Hebbian,
-                 learning_signals:tc.optional(list) = None,
-                 modulation:tc.optional(str)=ADDITIVE,
+                 function: tc.optional(is_function_type) = None,
+                 learning_signals:tc.optional(tc.optional(list)) = None,
+                 modulation:tc.optional(str)=None,
                  learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
                  name=None,
@@ -417,7 +417,7 @@ class KohonenLearningMechanism(LearningMechanism):
         super()._update_output_ports(context, runtime_params)
 
         if context.composition is not None and ContextFlags.LEARNING_MODE in context.runmode:
-            context.add_flag(ContextFlags.LEARNING)
+            context.execution_phase = ContextFlags.LEARNING
             self.learned_projection.execute(context=context)
             context.remove_flag(ContextFlags.LEARNING)
 

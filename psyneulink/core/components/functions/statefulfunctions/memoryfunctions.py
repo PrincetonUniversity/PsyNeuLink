@@ -22,7 +22,7 @@ Functions that store and can return a record of their input.
 
 """
 
-from collections import deque, OrderedDict
+from collections import deque
 
 import numpy as np
 import typecheck as tc
@@ -38,7 +38,7 @@ from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, ContentAddressableMemory_FUNCTION, \
     MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM
-from psyneulink.core.globals.utilities import all_within_range, parameter_spec, get_global_seed
+from psyneulink.core.globals.utilities import all_within_range, convert_to_np_array, parameter_spec, get_global_seed
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -141,9 +141,9 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         the value returned continues to be extended indefinitely.
 
     initializer : float, list or ndarray
-        value assigned as the first item of the deque when the Function is initialized, or reinitialized
-        if the **new_previous_value** argument is not specified in the call to `reinitialize
-        <StatefulFUnction.reinitialize>`.
+        value assigned as the first item of the deque when the Function is initialized, or reset
+        if the **new_previous_value** argument is not specified in the call to `reset
+        <StatefulFunction.reset>`.
 
     previous_value : 1d array : default class_defaults.variable
         state of the deque prior to appending `variable <Buffer.variable>` in the current call.
@@ -152,13 +152,13 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = BUFFER_FUNCTION
@@ -192,6 +192,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                     :default value: 1.0
                     :type: ``float``
         """
+        variable = Parameter([], pnl_internal=True, constructor_argument='default_variable')
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         history = None
@@ -206,22 +207,19 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  # was failing.
                  # For now, updated default_variable, noise, and Alternatively, we can change validation on
                  # default_variable=None,   # Changed to [] because None conflicts with initializer
-                 rate=1.0,
-                 noise=0.0,
+                 rate=None,
+                 noise=None,
                  # rate: parameter_spec=1.0,
                  # noise: parameter_spec=0.0,
-                 # rate: tc.optional(tc.any(int, float)) = None,         # Changed to 1.0 because None fails validation
-                 # noise: tc.optional(tc.any(int, float, callable)) = None,    # Changed to 0.0 - None fails validation
+                 # rate: tc.optional(tc.optional(tc.any(int, float))) = None,         # Changed to 1.0 because None fails validation
+                 # noise: tc.optional(tc.optional(tc.any(int, float, callable))) = None,    # Changed to 0.0 - None fails validation
                  # rate: tc.optional(tc.any(int, float, list, np.ndarray)) = 1.0,
                  # noise: tc.optional(tc.any(int, float, list, np.ndarray, callable)) = 0.0,
-                 history: tc.optional(int) = None,
+                 history: tc.optional(tc.optional(int)) = None,
                  initializer=None,
-                 params: tc.optional(dict) = None,
+                 params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
-
-        if default_variable is None:
-            default_variable = []
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -254,12 +252,12 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         )
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
+    def reset(self, *args, context=None):
         """
 
         Clears the `previous_value <Buffer.previous_value>` deque.
 
-        If an argument is passed into reinitialize or if the `initializer <Buffer.initializer>` attribute contains a
+        If an argument is passed into reset or if the `initializer <Buffer.initializer>` attribute contains a
         value besides [], then that value is used to start the new `previous_value <Buffer.previous_value>` deque.
         Otherwise, the new `previous_value <Buffer.previous_value>` deque starts out empty.
 
@@ -279,9 +277,9 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         # arguments were passed in, but there was a mistake in their specification -- raise error!
         else:
             raise FunctionError("Invalid arguments ({}) specified for {}. Either one value must be passed to "
-                                "reinitialize its stateful attribute (previous_value), or reinitialize must be called "
+                                "reset its stateful attribute (previous_value), or reset must be called "
                                 "without any arguments, in which case the current initializer value, will be used to "
-                                "reinitialize previous_value".format(args,
+                                "reset previous_value".format(args,
                                                                      self.name))
 
         if reinitialization_value is None or reinitialization_value == []:
@@ -332,7 +330,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         # Apply rate and/or noise, if they are specified, to all stored items
         if len(previous_value):
-            previous_value = previous_value * rate + noise
+            previous_value = convert_to_np_array(previous_value) * rate + noise
 
         previous_value = deque(previous_value, maxlen=self.parameters.history._get(context))
 
@@ -392,7 +390,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
     An item is stored and retrieved as a 2d array containing a key-value pair ([[key][value]]).  A 3d array of such
     pairs can be used to initialize the contents of memory by providing it in the **initialzer** argument of the
-    ContentAddressableMemory's constructor, or in a call to its `reinitialize  <ContentAddressableMemory.reinitialize>`
+    ContentAddressableMemory's constructor, or in a call to its `reset  <ContentAddressableMemory.reset>`
     method.  The current contents of the memory can be inspected using the `memory <ContentAddressableMemory.memory>`
     attribute, which returns a list containing the current entries, each as a 2 item list containing a key-value pair.
 
@@ -569,13 +567,13 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
 
     Returns
     -------
@@ -689,20 +687,20 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 retrieval_prob: tc.optional(tc.any(int, float))=1.0,
-                 storage_prob: tc.optional(tc.any(int, float))=1.0,
-                 noise: tc.optional(tc.any(int, float, list, np.ndarray, callable))=0.0,
-                 rate: tc.optional(tc.any(int, float, list, np.ndarray))=1.0,
+                 retrieval_prob: tc.optional(tc.any(int, float))=None,
+                 storage_prob: tc.optional(tc.any(int, float))=None,
+                 noise: tc.optional(tc.any(int, float, list, np.ndarray, callable))=None,
+                 rate: tc.optional(tc.any(int, float, list, np.ndarray))=None,
                  initializer=None,
                  distance_function:tc.optional(tc.any(Distance, is_function_type))=None,
                  selection_function:tc.optional(tc.any(OneHot, is_function_type))=None,
-                 duplicate_keys:tc.any(bool, tc.enum(OVERWRITE))=False,
-                 equidistant_keys_select:tc.enum(RANDOM, OLDEST, NEWEST)=RANDOM,
-                 max_entries=1000,
+                 duplicate_keys:tc.optional(tc.any(bool, tc.enum(OVERWRITE)))=None,
+                 equidistant_keys_select:tc.optional(tc.enum(RANDOM, OLDEST, NEWEST))=None,
+                 max_entries=None,
                  seed=None,
-                 params: tc.optional(tc.any(list, np.ndarray)) = None,
+                 params: tc.optional(tc.optional(tc.any(list, np.ndarray))) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if initializer is None:
             initializer = []
@@ -997,7 +995,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                     warnings.warn(f"Attempt to initialize memory of {self.__class__.__name__} with an entry ({entry}) "
                                   f"that has the same key as a previous one, while 'duplicate_keys'==False; "
                                   f"that entry has been skipped")
-            return np.asarray(self._memory)
+            return convert_to_np_array(self._memory)
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         self.parameters.previous_value._set(
@@ -1017,13 +1015,13 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             self.selection_function = self.selection_function(context=context)
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
+    def reset(self, *args, context=None):
         """
-        reinitialize(<new_dictionary> default={})
+        reset(<new_dictionary> default={})
 
         Clears the memory in `previous_value <ContentAddressableMemory.previous_value>`.
 
-        If an argument is passed into reinitialize or if the `initializer <ContentAddressableMemory.initializer>`
+        If an argument is passed into reset or if the `initializer <ContentAddressableMemory.initializer>`
         attribute contains a value besides [], then that value is used to start the new memory in `previous_value
         <ContentAddressableMemory.previous_value>`. Otherwise, the new `previous_value
         <ContentAddressableMemory.previous_value>` memory starts out empty.
@@ -1044,9 +1042,9 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # arguments were passed in, but there was a mistake in their specification -- raise error!
         else:
             raise FunctionError("Invalid arguments ({}) specified for {}. Either one value must be passed to "
-                                "reinitialize its stateful attribute (previous_value), or reinitialize must be called "
+                                "reset its stateful attribute (previous_value), or reset must be called "
                                 "without any arguments, in which case the current initializer value will be used to "
-                                "reinitialize previous_value".format(args, self.name))
+                                "reset previous_value".format(args, self.name))
 
         if reinitialization_value == []:
             self.get_previous_value(context).clear()
@@ -1127,7 +1125,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # Return 3d array with keys and vals as lists
         # IMPLEMENTATION NOTE:  if try to create np.ndarray directly, and keys and vals have same length
         #                       end up with array of arrays, rather than array of lists
-        ret_val = np.array([list(memory[0]),[]])
+        ret_val = convert_to_np_array([list(memory[0]),[]])
         ret_val[1] = list(memory[1])
         return ret_val
 
@@ -1184,7 +1182,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         distances = [self.distance_function([query_key, list(m)]) for m in _memory[KEYS]]
 
         # Get the best-match(es) in memory based on selection_function and return as non-zero value(s) in an array
-        selection_array = self.selection_function(distances)
+        selection_array = self.selection_function(distances, context=context)
         indices_of_selected_items = np.flatnonzero(selection_array)
 
         # Single key identified
@@ -1328,7 +1326,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
     def _parse_memories(self, memories, method, context=None):
         """Parse passing of single vs. multiple memories, validate memories, and return ndarray"""
-        memories = np.array(memories)
+        memories = convert_to_np_array(memories)
         if not 1 <= memories.ndim <= 3:
             raise FunctionError(f"'memories' arg for {method} method of {self.__class__.__name__} "
                                 f"must be a 2-item list or 2d array, or a list or 3d array containing those")
@@ -1349,5 +1347,3 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             return np.array(list(zip(self._memory[KEYS],self._memory[VALS])))
         except:
             return np.array([])
-
-

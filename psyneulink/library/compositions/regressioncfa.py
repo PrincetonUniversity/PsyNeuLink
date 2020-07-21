@@ -71,7 +71,6 @@ Class Reference
 ---------------
 
 """
-import itertools
 import numpy as np
 import typecheck as tc
 
@@ -246,7 +245,7 @@ class RegressionCFA(CompositionFunctionApproximator):
 
     def __init__(self,
                  name=None,
-                 update_weights=BayesGLM,
+                 update_weights=None,
                  prediction_terms:tc.optional(list)=None):
 
         self._instantiate_prediction_terms(prediction_terms)
@@ -274,7 +273,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                     self.prediction_terms.append(PV[term.name])
         # MODIFIED 11/9/18 END
             for term in self.prediction_terms:
-                if not term in PV:
+                if term not in PV:
                     raise RegressionCFAError("{} specified in {} arg of {} is not a member of the {} enum".
                                                     format(repr(term.name),repr(PREDICTION_TERMS),
                                                            self.__class__.__name__, PV.__name__))
@@ -298,7 +297,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                 self.update_weights(default_variable=update_weights_default_variable)
             self._update_parameter_components(context)
         else:
-            self.update_weights.reinitialize({DEFAULT_VARIABLE: update_weights_default_variable})
+            self.update_weights.reset({DEFAULT_VARIABLE: update_weights_default_variable})
 
     def adapt(self, feature_values, control_allocation, net_outcome, context=None):
         """Update `regression_weights <RegressorCFA.regression_weights>` so as to improve prediction of
@@ -329,7 +328,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         )
 
     # FIX: RENAME AS _EXECUTE_AS_REP ONCE SAME IS DONE FOR COMPOSITION
-    # def evaluate(self, control_allocation, num_samples, reinitialize_values, feature_values, context):
+    # def evaluate(self, control_allocation, num_samples, reset_stateful_functions_to, feature_values, context):
     def evaluate(self, feature_values, control_allocation, num_estimates, context):
         """Update prediction_vector <RegressorCFA.prediction_vector>`,
         then multiply by regression_weights.

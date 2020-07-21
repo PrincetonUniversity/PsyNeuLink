@@ -39,8 +39,8 @@ information to a decision layer).
 
 Mechanisms and Projections fall into two broad categories:  `ProcessingMechanisms <ProcessingMechanism>`
 *directly transmit* and possibly *transform* information, and are linked by `PathwayProjections
-<PathwayProjection>` that transmit the information between them. *ModulatoryMechanisms <ModulatoryMechanism>` *modify*
-or *modulate* the transmission and transformation of information, by way of `ModulatoryProjections
+<PathwayProjection>` that transmit the information between them. *ModulatoryMechanisms <ModulatoryMechanism>`
+*modify* or *modulate* the transmission and transformation of information, by way of `ModulatoryProjections
 <ModulatoryProjecdtion>` to the Components they modulate.  PsyNeuLink provides a library of Components of
 each type.  For example, there is a variety of ProcessingMechanisms that can be used to transform, integrate, and
 evaluate information in various ways (e.g., to implement layers of a feedforward or recurrent neural network, or a
@@ -95,13 +95,12 @@ encoder network, the first layer of which takes an an array of length 5 as its i
 `Logistic` function::
 
     # Construct the Mechanisms:
-    input_layer = ProcessingMechanism(size=5)
-    hidden_layer = ProcessingMechanism(size=2, function=Logistic)
-    output_layer = ProcessingMechanism(size=5, function=Logistic)
+    input_layer = ProcessingMechanism(size=5, name='Input')
+    hidden_layer = ProcessingMechanism(size=2, function=Logistic, name='hidden')
+    output_layer = ProcessingMechanism(size=5, function=Logistic, name='output')
 
     # Construct the Composition:
-    my_encoder = Composition()
-    my_encoder.add_linear_processing_pathway([input_layer, hidden_layer, output_layer])
+    my_encoder = Composition(pathways=[[input_layer, hidden_layer, output_layer]])
 
 Each of the Mechanisms can be executed individually, by simply calling its `execute <Mechanism_Base.execute>` method
 with an appropriately-sized input array, for example::
@@ -110,7 +109,7 @@ with an appropriately-sized input array, for example::
     >> array([[0.5, 0.92414182, 0.99998154, 0.88079708, 0.9994998 ]])
 
 The Composition connects the Mechanisms into a pathway that form a graph, which can be shown using its `show_graph
-<Composition.show_graph>` method:
+<ShowGraph.show_graph>` method:
 
 .. _BasicsAndPrimer_Simple_Pathway_Example_Figure:
 
@@ -135,10 +134,11 @@ the first Mechanism in the pathway (in this case, the input_layer)::
     my_encoder.run([1, 4.7, 3.2, 6, 2])
     [array([0.88079707, 0.88079707, 0.88079707, 0.88079707, 0.88079707])]
 
-The order in which Mechanisms appear in the list of the `add_linear_pathway <Composition.add_linear_pathway>`
-method determines their order in the pathway.  More complicated arrangements can be created by adding nodes
-individually using a Composition's `add_nodes <Composition.add_nodes>` method, and/or by creating intersecting
-pathways, as shown in some of the examples further below.
+The order in which Mechanisms appear in the list of the **pathways** argument of the Composition's constructor
+determines their order in the pathway.  More complicated arrangements can be created by using one of the Compositions
+`pathway addition methods <Composition_Pathway_Addition_Methods>`, by adding nodes individually using a
+Composition's `add_nodes <Composition.add_nodes>` method, and/or by creating intersecting pathways, as shown in some
+of the examples further below.
 
 PsyNeuLink picks sensible defaults when necessary Components are not specified.  In the example above no `Projections
 <Projection>` were actually specified, so PsyNeuLink automatically created the appropriate types (in this case,
@@ -154,8 +154,10 @@ matrix, simply by inserting them in between the Mechanisms in the pathway::
     my_encoder.add_linear_processing_pathway([input_layer, my_projection, hidden_layer, output_layer])
 
 The first line above creates a Projection with a 2x5 matrix of random weights constrained to be between -.1 and +.1,
-which is then inserted in the pathway between the ``input_layer`` and ``hiddeen_layer``.  The matrix itself could also
-have been inserted directly, as follows::
+which is then inserted in the pathway between the ``input_layer`` and ``hiddeen_layer``.  Note that here, one of the
+Composition's `pathway addition methods <Composition_Pathway_Addition_Methods>` is used to create the pathway, as an
+alternative to specifying it in the **pathways** argument of the constructor (as shown in the initial example). The
+Projection's matrix itself could also have been inserted directly, as follows::
 
     my_encoder.add_linear_processing_pathway([input_layer, (.2 * np.random.rand(2, 5)) - .1)), hidden_layer, output_layer])
 
@@ -220,15 +222,19 @@ drift diffusion (DDM) decision mechanism responsible for determining the respons
     Stroop_model.add_linear_processing_pathway(decision_pathway)
 
 This is a simplified version the model described in `Cohen et al. (1990) <https://www.researchgate
-.net/publication/20956134_Cohen_JD_McClelland_JL_Dunbar_K_On_the_control_of_automatic_processes_a_parallel_distributed_processing_account_of_the_Stroop_effect_Psychol_Rev_97_332-361>`_,
-a more complete version of which can be found in the `PsyNeuLink Library <https://princetonuniversity.github
-.io/PsyNeuLink/Library.html>`_ at `Stroop Model <XXXX GET FROM Q>`.  The figure belows shows the model using the
-Composition's `show_graph <Composition.show_graph>` method.
+.net/publication/20956134_Cohen_JD_McClelland_JL_Dunbar_K_On_the_control_of_automatic_processes_a_parallel_distributed_processing_account_of_the_Stroop_effect_Psychol_Rev_97_332-361>`_
+.
+
+.. FIX: ADD LINK TO STROOP MODEL
+.. a more complete version of which can be found in the
+.. `PsyNeuLink Library <https://princetonuniversity.github.io/PsyNeuLink/Library.html>`_ at `Stroop Model <XXXX GET FROM Q>`.
+
+The figure belows shows the model using the Composition's `show_graph <ShowGraph.show_graph>` method.
 
 .. _BasicsAndPrimer_Simple_Stroop_Example_Figure:
 
 .. figure:: _static/BasicsAndPrimer_Stroop_Model.svg
-   :width: 50%
+   :width: 100%
 
    **Stroop Model.** Representation of the Composition in the example above.
 
@@ -274,7 +280,7 @@ Dynamics of Execution
 
 One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
 different time scales.  By default, each Mechanism executes once per pass through the Composition, in the order
-determined by the projections between them (and shown in the `show_graph <Composition.show_graph>` method.  In the
+determined by the projections between them (and shown in the `show_graph <ShowGraph.show_graph>` method.  In the
 ``Stroop_model`` above, the ``decision`` Mechanism executes once per pass, just after the ``ouput`` Mechanism.  The
 ``decision`` Mechanism is a `DDM`.  This uses `DriftDiffusionAnalytical` as its default `function <DDM.function>`,
 which computes an analytic solution to the distribution of responses using the DDM integration process, and returns
@@ -287,7 +293,7 @@ Mechanism has completed its execution, as follows::
     # Modify consruction of decision Mechanism:
     decision = DDM(name='DECISION',
                    input_format=ARRAY,
-                   reinitialize_when=AtTrialStart(),
+                   reset_stateful_function_when=AtTrialStart(),
                    function=DriftDiffusionIntegrator(noise=0.5, threshold=20)
                    )
     Stroop_model.run(inputs={color_input:red, word_input:green, task_input:color},
@@ -313,7 +319,7 @@ creating one or more `Conditions <Condition>` for execution of those Mechanisms 
 in each `trial <TimeScale.TRIAL>`), its behavior relative to one or more other Components (e.g., how many times it
 should wait for another Mechanism to execute before it does so), or even arbitrary functions (e.g., a convergence
 criterion for the settling of a recurrent network). For example, the following implements a version of the model above
-that uses a leaky competing accumulator `<https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_ (`LCAMechanism`) for the
+that uses a `leaky competing accumulator <https://www.ncbi.nlm.nih.gov/pubmed/11488378>`_ (`LCAMechanism`) for the
 ``task`` Mechanism.  The latter settles for a specified number of executions before the color and word hidden layers
 execute, simulating a situation in which the task instruction is processed before processing the color or word stimuli::
 
@@ -393,7 +399,7 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
 
     # Set up run and then execute it
     task.initial_value = [0.5,0.5]         # Assign "neutral" starting point for task units on each trial
-    task.reinitialize_when=AtTrialStart()  # Reinitialize task units at beginning of each trial
+    task.reset_stateful_function_when=AtTrialStart()  # Reset task units at beginning of each trial
     num_trials = 4
     stimuli = {color_input:[red]*num_trials,
                word_input:[green]*num_trials,
@@ -401,7 +407,7 @@ conflict in the ``output`` Mechanism on each `trial <TimeScale.TRIAL>`, and use 
     Stroop_model.run(inputs=stimuli, call_after_trial=print_after)
 
 This example takes advantage of several additional features of PsyNeuLink, including its ability to automate certain
-forms of construction, and perform specified operations at various points during execution (e.g., reinitialize variables
+forms of construction, and perform specified operations at various points during execution (e.g., reset variables
 and call user-defined functions).  For example, the constructor for the ControlMechanism can be used to specify how
 control should be configured, and automates the process of implementing it:  the **objective_mechanism** argument
 specifies the construction of an ObjectiveMechanism for the ControlMechanism that provides its input, and
@@ -412,7 +418,7 @@ the **control_signals** argument specifies the parameters of the Mechanisms it s
 MappingProjections from ``output`` to the ObjectiveMechanism, and from the latter to the ControlMechanism.  The latter
 is then added to the ``Stroop_model`` as its `controller <Composition .controller>` in its constructor.
 The result is shown in the figure below, using the **show_controller** option of the Composition's `show_graph
-<Composition.show_graph>` method:
+<ShowGraph.show_graph>` method:
 
 .. _BasicsAndPrimer_Stroop_Example_With_Control_Figure:
 
@@ -422,7 +428,7 @@ The result is shown in the figure below, using the **show_controller** option of
    **Stroop Model with Controller.** Representation of the Composition with the ``control`` Mechanism added, generated
    by a call to ``Stroop_model.show_graph(show_controller)``.
 
-The ``task`` Mechanism is configured to reinitialize at the beginning of each `trial <TimeScale.TRIAL>`, and the
+The ``task`` Mechanism is configured to reset at the beginning of each `trial <TimeScale.TRIAL>`, and the
 **call_after_trial** argument of the Composition's `run <Composition.run>` method is used to print Mechanism values
 at the end of each `trial <TimeScale.TRIAL>` (see `below <Stroop_model_output>`).
 
@@ -430,7 +436,7 @@ When the Composition executes, the Objective Mechanism receives the output of th
 `Energy` function assigned to it to compute conflict in the ``output`` Mechanism (i.e., the degree of co-activity of
 the ``red`` and ``green`` values).  The result passed to the ``control`` Mechanism, which uses it to set the `gain
 <Logistic .gain>` of the ``task`` Mechanism's `Logistic` function.  The ``task`` Mechanism is configured to
-reinitialize at the beginning of each `trial <TimeScale.TRIAL>`; and,since the ``control`` Mechanism was assigned as
+reset at the beginning of each `trial <TimeScale.TRIAL>`; and,since the ``control`` Mechanism was assigned as
 the Composition's `controller <Composition.controller>`, it executes at the end of each `trial <TimeScale.TRIAL>`
 after all of the other Mechanisms in the Composition have executed, which has its effects on the ``task`` Mechanism
 the next time it executes (i.e., on the next `trial <TimeScale.TRIAL>`;  a Composition's `controller
@@ -438,6 +444,8 @@ the next time it executes (i.e., on the next `trial <TimeScale.TRIAL>`;  a Compo
 **call_after_trial** argument of the Composition's `run <Composition.run>` method is used to print Mechanism values
 at the end of each `trial <TimeScale.TRIAL>`.  The **animate** argument of the `run <Composition.run>` method can be
 used to generate an animation of the Composition's execution, as shown below:
+
+.. _BasicsAndPrimer_Stroop_Example_Animation_Figure:
 
 .. figure:: _static/BasicsAndPrimer_Stroop_Model_movie.gif
    :width: 75%
@@ -498,6 +506,7 @@ internal simulations to optimize the amount of control to optimize some criterio
 `expected value of control <https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_ (see XXX EVC
 script), or to implement `model-based learning <https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478>`_
 (see XXX LVOC script).
+.. FIX: ADD LINKS TO SCRIPTS ABOVE
 
 .. _BasicsAndPrimer_Parameters:
 
@@ -510,7 +519,7 @@ generic use of the term "value" to designate the quantity assigned to a paramete
 *particular* parameter of a Component.)  Although parameters are attributes of a Component, and can be accessed like
 any other Python attribute (as described below), they are actually instances of a special `Parameters` class that
 supports a number of important features. These include the ability to simultaneously have different values in
-different contexts (often referred to as `"statefulness" <Parameter_statefulness>`), the ability to keep a record of
+different contexts (often referred to as `"statefulness" <Parameter_Statefulness>`), the ability to keep a record of
 previous values, and the ability to be `modulated <ModulatorySignal_Modulation>` by other Components in PsyNeuLink.
 These features are supported by methods on the Parameter class, as described below.
 
@@ -524,7 +533,7 @@ access the first element of the output Mechanism's value, ``output.value[0]``, a
 decison Mechanism's `value <Mechanism_Base.value>`).  This returns their most recently assigned values. However, as an
 instance of the `Parameters` class, a parameter can be `stateful <Parameter.stateful>`, which means it can have more
 than one value associated with it. For example, PsyNeuLink has the capacity to execute the same Component in
-different `contexts <Parameter_statefulness>`, either as part of different Compositions or, within the same
+different `contexts <Parameter_Statefulness>`, either as part of different Compositions or, within the same
 Composition, as part of `model-based simulations <OptimizationControlMechanism_Model_Based>` executed by the
 Composition's `controller <Composition_Controller>`.  The value of a parameter in a particular context can be
 accessed by using the `get <Parameter.get>` method for the parameter and providing the context, for example::
@@ -727,8 +736,8 @@ a simple three-layered neural network that learns to compute the X-OR operation:
     xor_comp.learn(inputs={input:xor_inputs['stimuli'],
                          target:xor_inputs['targets']})
 
-Calling the Composition's ``show_graph`` with ``show_learning=True`` shows the network along with all of the learning
-components created by the call to ``add_backpropagation_pathway``:
+Calling the Composition's `show_graph <ShowGraph.show_graph>` with ``show_learning=True`` shows the network along with
+all of the learning components created by the call to ``add_backpropagation_pathway``:
 
 .. _BasicsAndPrimer_XOR_MODEL_Figure:
 

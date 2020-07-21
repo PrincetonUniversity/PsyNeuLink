@@ -120,8 +120,8 @@ Unlike specification in the constructor, this **does not** replace any OutputPor
 Doing so appends them to the list of OutputPorts in the Mechanism's `output_ports <Mechanism_Base.output_ports>`
 attribute, and their values are appended to its `output_values <Mechanism_Base.output_values>` attribute.  If the name
 of an OutputPort added to a Mechanism is the same as one that is already exists on the Mechanism, its name is suffixed
-with a numerical index (incremented for each OutputPort with that name; see `Naming`), and the OutputPort is added
-to the list (that is, it does *not* replace the one that was already there).
+with a numerical index (incremented for each OutputPort with that name; see `Registry_Naming`), and the OutputPort is
+added to the list (that is, it does *not* replace the one that was already there).
 
 
 .. _OutputPort_Variable_and_Value:
@@ -175,15 +175,16 @@ which it should project. Each of these is described below:
     * **OutputPort class**, **keyword** *OUTPUT_PORT*, or a **string** -- creates a default OutputPort that uses
       the first item of the `owner <Port.owner>` Mechanism's `value <Mechanism_Base.value>` as its `variable
       <OutputPort.variable>`, and assigns it as the `owner <Port.owner>` Mechanism's `primary OutputPort
-      <OutputPort_Primary>`. If the class name or *OUTPUT_PORT* keyword is used, a default name is assigned to the
-      Port; if a string is specified, it is used as the `name <OutputPort.name>` of the OutputPort  (see `Naming`).
+      <OutputPort_Primary>`. If the class name or *OUTPUT_PORT* keyword is used, a default name is assigned to
+      the Port; if a string is specified, it is used as the `name <OutputPort.name>` of the OutputPort
+      (see `Registry_Naming`).
 
     .. _OutputPort_Specification_by_Variable:
 
     * **variable** -- creates an OutputPort using the specification as the OutputPort's `variable
       <OutputPort.variable>` (see `OutputPort_Customization`).  This must be compatible with (have the same number
       and type of elements as) the OutputPort's `function <OutputPort.function>`.  A default name is assigned based
-      on the name of the Mechanism (see `Naming`).
+      on the name of the Mechanism (see `Registry_Naming`).
     ..
     .. _OutputPort_Specification_Dictionary:
 
@@ -613,12 +614,11 @@ Class Reference
 
 """
 
-import inspect
+import copy
 import numpy as np
 import typecheck as tc
 import types
 import warnings
-from collections import OrderedDict
 
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function
@@ -636,7 +636,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    is_numeric, iscompatible, make_readonly_property, recursive_update, ContentAddressableList
+    convert_to_np_array, is_numeric, iscompatible, make_readonly_property, recursive_update, ContentAddressableList
 
 __all__ = [
     'OutputPort', 'OutputPortError', 'PRIMARY', 'SEQUENTIAL', 'StandardOutputPorts', 'StandardOutputPortsError',
@@ -868,7 +868,7 @@ class OutputPort(Port_Base):
         Mechanisms automatically create one or more `Standard OutputPorts <OutputPort_Standard>`, that have
         pre-specified names.  However, if any OutputPorts are specified in the **input_ports** argument of the
         Mechanism's constructor, those replace its Standard OutputPorts (see `note
-        <Mechanism_Default_Port_Suppression_Note>`);  `standard naming conventions <Naming>` apply to the
+        <Mechanism_Default_Port_Suppression_Note>`);  `standard naming conventions <Registry_Naming>` apply to the
         OutputPorts specified, as well as any that are added to the Mechanism once it is created (see `note
         <Port_Naming_Note>`).
 
@@ -1027,7 +1027,7 @@ class OutputPort(Port_Base):
         self._instantiate_projections_to_port(projections=modulatory_projections, context=context)
 
         # Treat all remaining specifications in projections as ones for outgoing MappingProjections
-        pathway_projections = [proj for proj in projections if not proj in modulatory_projections]
+        pathway_projections = [proj for proj in projections if proj not in modulatory_projections]
         for proj in pathway_projections:
             self._instantiate_projection_from_port(projection_spec=MappingProjection,
                                                     receiver=proj,
@@ -1115,7 +1115,7 @@ class OutputPort(Port_Base):
                 # (actual assignment is made in _parse_port_spec)
                 if reference_value is None:
                     port_dict[REFERENCE_VALUE]=port_spec
-                elif  not iscompatible(port_spec, reference_value):
+                elif not iscompatible(port_spec, reference_value):
                     raise OutputPortError("Value in first item of 2-item tuple specification for {} of {} ({}) "
                                      "is not compatible with its {} ({})".
                                      format(OutputPort.__name__, owner.name, port_spec,
@@ -1181,7 +1181,7 @@ class OutputPort(Port_Base):
         )
         return np.atleast_1d(value)
 
-    def _get_fallback_variable(self, context=None):
+    def _get_variable_from_projections(self, context=None):
         # fall back to specified item(s) of owner's value
         try:
             return self.parameters.variable._get(context)
@@ -1348,7 +1348,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
                     for item in owner_value))):
         pass
     else:
-        converted_to_2d = np.atleast_2d(owner.value)
+        converted_to_2d = convert_to_np_array(owner.value, dimension=2)
         # If owner_value is a list of heterogenous elements, use as is
         if converted_to_2d.dtype == object:
             owner_value = owner.defaults.value
@@ -1398,8 +1398,16 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
                 #    - use the named Standard OutputPort
                 #    - merge initial specifications into std_output_port (giving precedence to user's specs)
                 if output_port[NAME] and hasattr(owner, STANDARD_OUTPUT_PORTS):
-                    std_output_port = owner.standard_output_ports.get_port_dict(output_port[NAME])
+                    std_output_port = copy.copy(owner.standard_output_ports.get_port_dict(output_port[NAME]))
                     if std_output_port is not None:
+                        try:
+                            if isinstance(std_output_port[FUNCTION], Function):
+                                # we should not reuse standard_output_port Function
+                                # instances across multiple ports
+                                std_output_port[FUNCTION] = copy.deepcopy(std_output_port[FUNCTION], memo={'no_shared': True})
+                        except KeyError:
+                            pass
+
                         _maintain_backward_compatibility(std_output_port, output_port[NAME], owner)
                         recursive_update(output_port, std_output_port, non_destructive=True)
 
@@ -1584,7 +1592,7 @@ class StandardOutputPorts():
         for port in dict_list:
             if INDEX in port:
                 if port[INDEX] in ALL:
-                    port._update({VARIABLE:OWNER_VALUE})
+                    port._update(params={VARIABLE:OWNER_VALUE})
                 elif port[INDEX] in PRIMARY:
                     port_dict.update({VARIABLE:(OWNER_VALUE, PRIMARY)})
                 elif port[INDEX] in SEQUENTIAL:

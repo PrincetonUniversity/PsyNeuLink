@@ -16,12 +16,13 @@ Overview
 A Scheduler is used to generate the order in which the `Components <Component>` of a `Composition <Composition>` are
 executed. By default, a Scheduler executes Components in an order determined by the pattern of `Projections
 <Projection>` among the `Mechanisms <Mechanism>` in the `Composition <Composition>`, with each Mechanism executed once
-per `PASS` through the Composition. For example, in a `System` in which a Mechanism A projects to a Mechanism B that
-projects to a Mechanism C, A will execute first followed by B, and then C in each `PASS` through the System.  However,
-a Scheduler can be used to implement more complex patterns of execution, by specifying `Conditions <Condition>` that
-determine when and how many times individual Components execute, and whether and how this depends on the execution of
-other Components. Any executable Component in a Composition can be assigned a Condition, and Conditions can be combined
-in arbitrary ways to generate any pattern of execution of the Components in a Composition that is logically possible.
+per `PASS` through the Composition. For example, in a `Composition` in which a Mechanism A projects to a Mechanism B
+that projects to a Mechanism C, A will execute first followed by B, and then C in each `PASS` through the Composition.
+However, a Scheduler can be used to implement more complex patterns of execution, by specifying `Conditions <Condition>`
+that determine when and how many times individual Components execute, and whether and how this depends on the execution
+of other Components. Any executable Component in a Composition can be assigned a Condition, and Conditions can be
+combined in arbitrary ways to generate any pattern of execution of the Components in a Composition that is logically
+possible.
 
 .. note::
    In general, `Mechanisms <Mechanism>` are the Components of a Composition that are most commonly associated with
@@ -64,18 +65,21 @@ ConditionSets can also be added after the  Scheduler has been created, using its
 Algorithm
 ---------
 
+.. _consideration_set:
+
 When a Scheduler is created, it constructs a `consideration_queue`:  a list of `consideration_sets <consideration_set>`
-that defines the order in which Components are eligible to be executed.  This is based on the pattern of projections
-among them specified in the Composition, or on the dependencies specified in the graph specification dictionary, whichever
-was provided in the Scheduler's constructor.  Each `consideration_set` is a set of Components that are eligible to
-execute at the same time/`TIME_STEP` (i.e., that appear at the same "depth" in a sequence of dependencies, and
-among which there are no dependencies).  The first `consideration_set` consists of only `ORIGIN` Mechanisms.
-The second consists of all Components that receive `Projections <Projection>` from the Mechanisms in the first
-`consideration_set`. The third consists of Components that receive Projections from Components in the first two
-`consideration_sets <consideration_set>`, and so forth.  When the Scheduler is run, it uses the
-`consideration_queue` to determine which Components are eligible to execute in each `TIME_STEP` of a `PASS`, and then
-evaluates the `Condition <Condition>` associated with each Component in the current `consideration_set`
-to determine which should actually be assigned for execution.
+that defines the order in which `Components <Component>` are eligible to be executed.  This is based on the pattern of
+`Projections <Projection>` among them specified in the `Composition`, or on the dependencies specified in the graph
+specification dictionary, whichever was provided in the Scheduler's constructor.  Each `consideration_set
+<consideration_set>` is a set of Components that are eligible to execute at the same time/`TIME_STEP` (i.e.,
+that appear at the same "depth" in a sequence of dependencies, and among which there are no dependencies).  The first
+`consideration_set <consideration_set>` consists of only `ORIGIN` Mechanisms. The second consists of all Components
+that receive `Projections <Projection>` from the Mechanisms in the first `consideration_set <consideration_set>`.
+The third consists of  Components that receive Projections from Components in the first two `consideration_sets
+<consideration_set>`, and so forth.  When the Scheduler is run, it uses the `consideration_queue` to determine which
+Components are eligible to execute in each `TIME_STEP` of a `PASS`, and then evaluates the `Condition <Condition>`
+associated with each Component in the current `consideration_set <consideration_set>` to determine which should
+actually be assigned for execution.
 
 Pseudocode::
 
@@ -113,21 +117,21 @@ Execution
 ---------
 
 When a Scheduler is run, it provides a set of Components that should be run next, based on their dependencies in the
-Composition or graph specification dictionary, and any `Conditions <Condition>`, specified in the Scheduler's constructor.
-For each call to the `run <Scheduler.run>` method, the Scheduler sequentially evaluates its
+Composition or graph specification dictionary, and any `Conditions <Condition>`, specified in the Scheduler's
+constructor. For each call to the `run <Scheduler.run>` method, the Scheduler sequentially evaluates its
 `consideration_sets <consideration_set>` in their order in the `consideration_queue`.  For each set, it  determines
 which Components in the set are allowed to execute, based on whether their associated `Condition <Condition>` has
 been met. Any Component that does not have a `Condition` explicitly specified is assigned a Condition that causes it
-to be executed whenever it is `under consideration <Scheduler_Algorithm>` and all its structural parents have been executed
-at least once since the Component's last execution. All of the Components within a `consideration_set` that
-are allowed to execute comprise a `TIME_STEP` of execution. These Components are
-considered as executing simultaneously.
+to be executed whenever it is `under consideration <Scheduler_Algorithm>` and all its structural parents have been
+executed at least once since the Component's last execution. All of the Components within a `consideration_set
+<consideration_set>` that are allowed to execute comprise a `TIME_STEP` of execution. These Components are considered
+as executing simultaneously.
 
 .. note::
-    The ordering of the Components specified within a `TIME_STEP` is arbitrary
-    (and is irrelevant, as there are no graph dependencies among Components within the same `consideration_set`).
-    However, the execution of a Component within a `time_step` may trigger the execution of another Component within its
-    `consideration_set`, as in the example below::
+    The ordering of the Components specified within a `TIME_STEP` is arbitrary (and is irrelevant, as there are no
+    graph dependencies among Components within the same `consideration_set <consideration_set>`). However,
+    the execution of a Component within a `time_step` may trigger the execution of another Component within its
+    `consideration_set <consideration_set>`, as in the example below::
 
             C
           ↗ ↖
@@ -139,9 +143,9 @@ considered as executing simultaneously.
         time steps: [{A}, {A, B}, {C}, ...]
 
     Since there are no graph dependencies between `A` and `B`, they may execute in the same `TIME_STEP`. Morever,
-    `A` and `B` are in the same `consideration_set`. Since `B` is specified to run every two times `A` runs,
-    `A`'s second execution in the second `TIME_STEP` allows `B` to run within that `TIME_STEP`, rather
-    than waiting for the next `PASS`.
+    `A` and `B` are in the same `consideration_set <consideration_set>`. Since `B` is specified to run every two
+    times `A` runs, `A`'s second execution in the second `TIME_STEP` allows `B` to run within that `TIME_STEP`,
+    rather than waiting for the next `PASS`.
 
 For each `TIME_STEP`, the Scheduler evaluates  whether any specified
 `termination Conditions <Scheduler_Termination_Conditions>` have been met, and terminates if so.  Otherwise,
@@ -150,30 +154,29 @@ it returns the set of Components that should be executed in the current `TIME_ST
 
 Processing of all of the `consideration_sets <consideration_set>` in the `consideration_queue` constitutes a `PASS` of
 execution, over which every Component in the Composition has been considered for execution. Subsequent calls to the
-`run <Scheduler.run>` method cycle back through the `consideration_queue`, evaluating the
-`consideration_sets <consideration_set>` in the same order as previously. Different subsets of Components within the
-same `consideration_set` may be assigned to execute on each `PASS`, since different Conditions may be satisfied.
+`run <Scheduler.run>` method cycle back through the `consideration_queue`, evaluating the `consideration_sets
+<consideration_set>` in the same order as previously. Different subsets of Components within the same `consideration_set
+<consideration_set>` may be assigned to execute on each `PASS`, since different Conditions may be satisfied.
 
-The Scheduler continues to make `PASS`es through the `consideration_queue` until a
-`termination Condition <Scheduler_Termination_Conditions>` is satisfied. If no termination Conditions are specified,
-the Scheduler terminates a `TRIAL` when every Component has been specified for execution at least once (corresponding
-to the `AllHaveRun` Condition).  However, other termination Conditions can be specified, that may cause the Scheduler
-to terminate a `TRIAL` earlier  or later (e.g., when the  Condition for a particular Component or set of Components
-is met).  When the Scheduler terminates a `TRIAL`, the `Composition <Composition>` begins processing the next input
-specified in the call to its `run <Composition.run>` method.  Thus, a `TRIAL` is defined as the scope of processing
-associated with a given input to the Composition.
-
+The Scheduler continues to make `PASS`es through the `consideration_queue` until a `termination Condition
+<Scheduler_Termination_Conditions>` is satisfied. If no termination Conditions are specified, the Scheduler terminates
+a `TRIAL <TimeScale.TRIAL>` when every Component has been specified for execution at least once (corresponding to the
+`AllHaveRun` Condition).  However, other termination Conditions can be specified, that may cause the Scheduler to
+terminate a `TRIAL <TimeScale.TRIAL>` earlier  or later (e.g., when the  Condition for a particular Component or set of
+Components is met).  When the Scheduler terminates a `TRIAL <TimeScale.TRIAL>`, the `Composition <Composition>` begins
+processing the next input specified in the call to its `run <Composition.run>` method.  Thus, a `TRIAL
+<TimeScale.TRIAL>` is defined as the scope of processing associated with a given input to the Composition.
 
 .. _Scheduler_Termination_Conditions:
 
 *Termination Conditions*
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Termination conditions are `Conditions <Condition>` that specify when the open-ended units of time - `TRIAL`
-and `RUN` - have ended.  By default, the termination condition for a `TRIAL` is `AllHaveRun`, which is satisfied
-when all Components have run at least once within the trial, and the termination condition for a `RUN` is
-when all of its constituent trials have terminated. These defaults may be overriden when running a Composition,
-by passing a dictionary mapping `TimeScales <TimeScale>` to `Conditions <Condition>` in the
+Termination conditions are `Conditions <Condition>` that specify when the open-ended units of time - `TRIAL
+<TimeScale.TRIAL>` and `RUN` - have ended.  By default, the termination condition for a `TRIAL <TimeScale.TRIAL>` is
+`AllHaveRun`, which is satisfied when all Components have run at least once within the trial, and the termination
+condition for a `RUN` is when all of its constituent trials have terminated. These defaults may be overriden when
+running a Composition, by passing a dictionary mapping `TimeScales <TimeScale>` to `Conditions <Condition>` in the
 **termination_processing** argument of a call to `Composition.run` (to terminate the execution of processing)::
 
     Composition.run(
@@ -195,7 +198,9 @@ Please see `Condition` for a list of all supported Conditions and their behavior
     >>> C = pnl.TransferMechanism(name='C')
 
     >>> comp = pnl.Composition()
-    >>> comp.add_linear_processing_pathway([A, B, C])
+
+    >>> pway = comp.add_linear_processing_pathway([A, B, C])
+    >>> pway.pathway
     [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULT] to B[InputPort-0]), (TransferMechanism B), (MappingProjection MappingProjection from B[RESULT] to C[InputPort-0]), (TransferMechanism C)]
 
     >>> # implicit condition of Always for A
@@ -210,7 +215,8 @@ Please see `Condition` for a list of all supported Conditions and their behavior
 * Alternate basic phasing in a linear process::
 
     >>> comp = pnl.Composition()
-    >>> comp.add_linear_processing_pathway([A, B])
+    >>> pway = comp.add_linear_processing_pathway([A, B])
+    >>> pway.pathway
     [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULT] to B[InputPort-0]), (TransferMechanism B)]
 
     >>> comp.scheduler.add_condition(
@@ -238,10 +244,12 @@ Please see `Condition` for a list of all supported Conditions and their behavior
 * Basic phasing in two processes::
 
     >>> comp = pnl.Composition()
-    >>> comp.add_linear_processing_pathway([A, C])
+    >>> pway = comp.add_linear_processing_pathway([A, C])
+    >>> pway.pathway
     [(TransferMechanism A), (MappingProjection MappingProjection from A[RESULT] to C[InputPort-0]), (TransferMechanism C)]
 
-    >>> comp.add_linear_processing_pathway([B, C])
+    >>> pway = comp.add_linear_processing_pathway([B, C])
+    >>> pway.pathway
     [(TransferMechanism B), (MappingProjection MappingProjection from B[RESULT] to C[InputPort-0]), (TransferMechanism C)]
 
     >>> comp.scheduler.add_condition(A, pnl.EveryNPasses(1))
@@ -267,13 +275,11 @@ Class Reference
 
 """
 
-import collections
 import copy
 import datetime
 import logging
-import warnings
 
-from toposort import toposort, toposort_flatten
+from toposort import toposort
 
 from psyneulink.core.globals.context import Context, handle_external_context
 from psyneulink.core.globals.json import JSONDumpable
@@ -304,25 +310,15 @@ class Scheduler(JSONDumpable):
     ---------
 
     composition : Composition
-        specifies the Components to be ordered for execution, and any dependencies among them, based on the
-        Composition's `graph <Composition.graph_processing>`.
-
-    COMMENT:
-        [**??IS THE FOLLOWING CORRECT]:
-        K: not correct, there are no implicit System Conditions
-        JDC: I WAS REFERRING TO THE DEPENDENCIES IN THE SYSTEM'S GRAPH.  THE FACT THAT conditions IS AN
-             OPTIONAL ARG FOR SCHEDULER, AND THAT PROVIDING A System IS SUFFICIENT TO GENERATE A SCHEDULE,
-             MEANS THAT THERE MUST BE CONDITIONS IMPLICIT IN THE System.
-        K: it's not that they're implicit, it's that we just set defaults to match the behavior of the
-            naive scheduler
-    COMMENT
+        specifies the `Components <Component>` to be ordered for execution, and any dependencies among them,
+        based on the `Composition <Composition>`\\'s `graph <Composition.graph_processing>`.
 
     conditions  : ConditionSet
-        set of `Conditions <Condition>` that specify when individual Components in **composition**
-        execute and any dependencies among them
+        set of `Conditions <Condition>` that specify when individual `Components` <Component>` in **composition**
+        execute and any dependencies among them.
 
     graph : Dict[Component: set(Component)]
-        a graph specification dictionary - each entry of the dictionary must be a Component,
+        a graph specification dictionary - each entry of the dictionary must be a `Component`,
         and the value of each entry must be a set of zero or more Components that project directly to the key.
 
     Attributes
@@ -334,14 +330,14 @@ class Scheduler(JSONDumpable):
     execution_list : list
         the full history of time steps the Scheduler has produced
 
-    consideration_queue: list
+    consideration_queue : list
         a list form of the Scheduler's toposort ordering of its nodes
 
     termination_conds : Dict[TimeScale: Condition]
         a mapping from `TimeScales <TimeScale>` to `Conditions <Condition>` that, when met, terminate the execution
         of the specified `TimeScale`.
 
-    times: Dict[TimeScale: Dict[TimeScale: int]]
+    times : Dict[TimeScale: Dict[TimeScale: int]]
         a structure counting the number of occurrences of a certain `TimeScale` within the scope of another `TimeScale`.
         For example, `times[TimeScale.RUN][TimeScale.PASS]` is the number of `PASS`es that have occurred in the
         current `RUN` that the Scheduler is scheduling at the time it is accessed
@@ -376,23 +372,11 @@ class Scheduler(JSONDumpable):
 
         self.cycle_nodes = set()
 
-        # can remove this once system is fully eliminated from tests/support
-        try:
-            system = kwargs['system']
-            warnings.warn('Systems are no longer updated, new code should use Compositions.', DeprecationWarning)
-        except KeyError:
-            system = None
-
         if composition is not None:
             self.nodes = [vert.component for vert in composition.graph_processing.vertices]
             self._init_consideration_queue_from_graph(composition.graph_processing)
             if default_execution_id is None:
                 default_execution_id = composition.default_execution_id
-        elif system is not None:
-            self.nodes = [m for m in system.execution_list]
-            self._init_consideration_queue_from_system(system)
-            if default_execution_id is None:
-                default_execution_id = system.default_execution_id
         elif graph is not None:
             try:
                 self.nodes = [vert.component for vert in graph.vertices]
@@ -418,125 +402,9 @@ class Scheduler(JSONDumpable):
 
     # the consideration queue is the ordered list of sets of nodes in the graph, by the
     # order in which they should be checked to ensure that all parents have a chance to run before their children
-    def _init_consideration_queue_from_system(self, system):
-        dependencies = []
-        for dependency_set in list(toposort(system.execution_graph)):
-            new_set = set()
-            for d in dependency_set:
-                new_set.add(d)
-            dependencies.append(new_set)
-        self.consideration_queue = dependencies
-
-    def _dfs_for_cycles(self, dependencies, node, loop_start_set, visited, loop):
-
-        if node in loop_start_set:
-            loop.append(node)
-            return loop
-
-        if visited is None:
-            visited = set()
-        visited.add(node)
-        loop.append(node)
-
-        if len(loop) == 2:
-            for next_node in dependencies[node]:
-                if next_node in loop_start_set:
-                    loop.append(next_node)
-                    return loop
-
-        for next_node in dependencies[node] - visited:
-            return self._dfs_for_cycles(dependencies, next_node, loop_start_set, visited, loop)
-
-    def _call_toposort(self, graph):
-        """
-        execution_depenencies stored in self.depdency_sets
-        :return:
-        """
-
-        execution_dependencies = {}         # stores  a modified version of the graph in which cycles are "flattened"
-        removed_dependencies = {}           # stores dependencies that were removed in order to flatten cycles
-        flattened_cycles = {}               # flattened_cycles[node] = [all cycles to which node belongs]
-        structural_dependencies = collections.OrderedDict()
-        self.cycle_nodes = set()
-        # Loop through the existing composition graph, considering "forward" projections only
-        # If a cycle is found, "flatten" it by bringing all nodes into the same execution set
-        for vert in graph.vertices:
-
-            if vert.component not in execution_dependencies:
-                execution_dependencies[vert.component] = set()
-                structural_dependencies[vert.component] = set()
-
-            # use "get_forward_children_from_component" to ignore any projections that were marked as "feedback"
-            # "feedback" projections, we've already determined, happen after all forward projections, but when "forward"
-            # projections cause cycles, we need to execute them all at once
-            for child in graph.get_forward_children_from_component(vert.component):
-                if child.component not in execution_dependencies:
-                    execution_dependencies[child.component] = set()
-                    structural_dependencies[child.component] = set()
-                execution_dependencies[child.component].add(vert.component)
-
-                # loop_start_set contains the current starting point and any cycles it is already connected to
-                # if the new dependency introduces any paths that lead back to a node in loop_start_set, then
-                # we will consider the new path a cycle
-                loop_start_set = {child.component}
-                connected_cycles = set()
-                self._get_all_connected_cycles(connected_cycles, child.component, set(), flattened_cycles)
-                for node in connected_cycles:
-                    loop_start_set.add(node)
-
-                # if the new dependency created a cycle, return that cycle
-                cycle = self._dfs_for_cycles(execution_dependencies, vert.component, loop_start_set, None, [child.component])
-
-                if cycle:
-                    # loop over all nodes in the cycle in order to:
-                    # (1) store the node: cycle pair in the flattened cycles dict
-                    # (2) remove the dependencies that created the cycle
-                    # (3) copy the dependencies of the node that "started" the cycle onto all other cycle nodes
-                    for i in range(len(cycle) - 1):
-                        node_a = cycle[i]
-                        self.cycle_nodes.add(node_a)
-                        node_b = cycle[i + 1]
-                        if node_a not in flattened_cycles:
-                            flattened_cycles[node_a] = []
-                        flattened_cycles[node_a].append(cycle)
-                        execution_dependencies[node_a].remove(node_b)
-                        if node_a not in removed_dependencies:
-                            removed_dependencies[node_a] = set()
-                        removed_dependencies[node_a].add(node_b)
-
-                        if i != 0:
-                            for dependency in execution_dependencies[cycle[0]]:
-                                execution_dependencies[cycle[i]].add(dependency)
-                else:
-                    # necessary for the case where you want to add a projection that terminates at a node in a loop
-                    # AFTER the loop has already been created.
-                    # e.g. ORIGINAL:    A <--> B <--> C -- > D
-                    # NEW: new_node --> A <--> B <--> C -- > D
-                    # (otherwise, the order in which a user adds components to a composition would affect the graph)
-                    for cycle_node in connected_cycles:
-                        execution_dependencies[cycle_node].add(vert.component)
-                structural_dependencies[child.component].add(vert.component)
-            for child in graph.get_backward_children_from_component(vert.component):
-                if child.component not in execution_dependencies:
-                    structural_dependencies[child.component] = set()
-                structural_dependencies[child.component].add(vert.component)
-            self.dependency_dict = execution_dependencies
-
-        return list(toposort(execution_dependencies)), removed_dependencies, structural_dependencies
-
-    def _get_all_connected_cycles(self, connected_cycles, original_key, visited_keys, flattened_cycles):
-        if original_key in flattened_cycles:
-            if original_key in visited_keys:
-                return
-            cycles = flattened_cycles[original_key]
-            visited_keys.add(original_key)
-            for cycle in cycles:
-                for cycle_node in cycle:
-                    connected_cycles.add(cycle_node)
-                    self._get_all_connected_cycles(connected_cycles, cycle_node, visited_keys, flattened_cycles)
-
     def _init_consideration_queue_from_graph(self, graph):
-        self.consideration_queue, self.removed_dependencies, self.structural_dependencies = self._call_toposort(graph)
+        self.dependency_dict, self.removed_dependencies, self.structural_dependencies = graph.prune_feedback_edges()
+        self.consideration_queue = list(toposort(self.dependency_dict))
 
     def _init_counts(self, execution_id=None, base_execution_id=None):
         """

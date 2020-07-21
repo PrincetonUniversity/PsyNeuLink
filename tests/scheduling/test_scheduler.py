@@ -1,15 +1,14 @@
 import logging
 import numpy as np
+import psyneulink as pnl
 import pytest
 
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.system import System
-from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.compositions.composition import Composition, EdgeType
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import VALUE
 from psyneulink.core.scheduling.condition import AfterNCalls, AfterNPasses, AfterNTrials, AfterPass, All, AllHaveRun, Always, Any, AtPass, BeforeNCalls, BeforePass, \
@@ -161,26 +160,26 @@ class TestScheduler:
 
     def test_change_termination_condition(self):
         D = DDM(function=DriftDiffusionIntegrator(threshold=10))
-        P = Process(pathway=[D])
-        S = System(processes=[P])
+        C = Composition(pathways=[D])
 
         D.set_log_conditions(VALUE)
 
         def change_termination_processing():
-            if S.termination_processing is None:
-                S.scheduler.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
-                S.termination_processing = {TimeScale.TRIAL: WhenFinished(D)}
-            elif isinstance(S.termination_processing[TimeScale.TRIAL], AllHaveRun):
-                S.scheduler.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
-                S.termination_processing = {TimeScale.TRIAL: WhenFinished(D)}
+            if C.termination_processing is None:
+                C.scheduler.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
+                C.termination_processing = {TimeScale.TRIAL: WhenFinished(D)}
+            elif isinstance(C.termination_processing[TimeScale.TRIAL], AllHaveRun):
+                C.scheduler.termination_conds = {TimeScale.TRIAL: WhenFinished(D)}
+                C.termination_processing = {TimeScale.TRIAL: WhenFinished(D)}
             else:
-                S.scheduler.termination_conds = {TimeScale.TRIAL: AllHaveRun()}
-                S.termination_processing = {TimeScale.TRIAL: AllHaveRun()}
+                C.scheduler.termination_conds = {TimeScale.TRIAL: AllHaveRun()}
+                C.termination_processing = {TimeScale.TRIAL: AllHaveRun()}
 
         change_termination_processing()
-        S.run(inputs={D: [[1.0], [2.0]]},
+        C.run(inputs={D: [[1.0], [2.0]]},
               # termination_processing={TimeScale.TRIAL: WhenFinished(D)},
               call_after_trial=change_termination_processing,
+              reset_stateful_functions_when=pnl.AtTimeStep(0),
               num_trials=4)
         # Trial 0:
         # input = 1.0, termination condition = WhenFinished
@@ -192,7 +191,7 @@ class TestScheduler:
                             [np.array([[2.]]), np.array([[1.]])],
                             [np.array([[10.]]), np.array([[10.]])],
                             [np.array([[2.]]), np.array([[1.]])]]
-        assert np.allclose(expected_results, np.asfarray(S.results))
+        assert np.allclose(expected_results, np.asfarray(C.results))
 
 
 class TestLinear:
@@ -1182,3 +1181,292 @@ class TestTermination:
         output = comp.run(inputs={A: 1}, termination_processing=termination_conds)
         # two executions of B
         assert output == [.75]
+
+
+def _get_vertex_feedback_type(graph, sender_port, receiver_mech):
+    # there is only one projection per pair
+    projection = [
+        p for p in sender_port.efferents
+        if p.receiver.owner is receiver_mech
+    ][0]
+    return graph.comp_to_vertex[projection].feedback
+
+
+def _get_feedback_source_type(graph, sender, receiver):
+    try:
+        return graph.comp_to_vertex[receiver].source_types[graph.comp_to_vertex[sender]]
+    except KeyError:
+        return EdgeType.NON_FEEDBACK
+
+
+class TestFeedback:
+
+    def test_unspecified_feedback(self):
+        A = pnl.TransferMechanism(name='A')
+        B = pnl.TransferMechanism(name='B')
+        C = pnl.ControlMechanism(
+            name='C',
+            monitor_for_control=B,
+            control_signals=[('slope', A)]
+        )
+        comp = pnl.Composition()
+        comp.add_linear_processing_pathway(pathway=[A, B])
+        comp.add_node(C)
+        comp._analyze_graph()
+
+        assert _get_vertex_feedback_type(comp.graph, A.output_port, B) is EdgeType.NON_FEEDBACK
+        assert _get_vertex_feedback_type(comp.graph, B.output_port, C) is EdgeType.NON_FEEDBACK
+
+        assert _get_vertex_feedback_type(comp.graph, C.control_signals[0], A) is EdgeType.FLEXIBLE
+        assert _get_feedback_source_type(comp.graph_processing, C, A) is EdgeType.FEEDBACK
+
+    @pytest.mark.parametrize(
+        'terminal_mech',
+        [
+            pnl.TransferMechanism,
+            pnl.RecurrentTransferMechanism
+        ]
+    )
+    def test_inline_control_acyclic(self, terminal_mech):
+        terminal_mech = terminal_mech(name='terminal_mech')
+        A = pnl.TransferMechanism(name='A')
+        C = pnl.ControlMechanism(
+            name='C',
+            monitor_for_control=A,
+            control_signals=[('slope', terminal_mech)]
+        )
+        comp = pnl.Composition()
+        comp.add_linear_processing_pathway(pathway=[A, terminal_mech])
+        comp.add_nodes([C, terminal_mech])
+        comp._analyze_graph()
+
+        # "is" comparisons because MAYBE can be assigned to feedback
+        assert _get_vertex_feedback_type(comp.graph, A.output_port, terminal_mech) is EdgeType.NON_FEEDBACK
+
+        assert _get_vertex_feedback_type(comp.graph, C.control_signals[0], terminal_mech) is EdgeType.FLEXIBLE
+        assert _get_feedback_source_type(comp.graph_processing, C, A) is EdgeType.NON_FEEDBACK
+
+    # any of the projections in the B, D, E, F cycle may be deleted
+    # based on feedback specification. There are individual parametrized
+    # tests for each scenario
+    #    A -> B -> C
+    #        ^  \
+    #       /    v
+    #      F      D
+    #      ^     /
+    #       \  v
+    #         E
+    @pytest.fixture
+    def seven_node_cycle_composition(self):
+        A = pnl.TransferMechanism(name='A')
+        B = pnl.TransferMechanism(name='B')
+        C = pnl.TransferMechanism(name='C')
+        D = pnl.TransferMechanism(name='D')
+        E = pnl.TransferMechanism(name='E')
+        F = pnl.TransferMechanism(name='F')
+
+        comp = Composition()
+        comp.add_linear_processing_pathway([A, B, C])
+        comp.add_nodes([D, E, F])
+
+        return comp.nodes, comp
+
+    @pytest.mark.parametrize(
+        'cycle_feedback_proj_pair',
+        [
+            '(B, D)',
+            '(D, E)',
+            '(E, F)',
+            '(F, B)',
+        ]
+    )
+    def test_cycle_manual_feedback_projections(
+        self,
+        seven_node_cycle_composition,
+        cycle_feedback_proj_pair
+    ):
+        [A, B, C, D, E, F], comp = seven_node_cycle_composition
+        fb_sender, fb_receiver = eval(cycle_feedback_proj_pair)
+
+        cycle_nodes = [B, D, E, F]
+        for s_i in range(len(cycle_nodes)):
+            r_i = (s_i + 1) % len(cycle_nodes)
+
+            if (
+                cycle_nodes[s_i] is not fb_sender
+                or cycle_nodes[r_i] is not fb_receiver
+            ):
+                comp.add_projection(
+                    sender=cycle_nodes[s_i],
+                    receiver=cycle_nodes[r_i]
+                )
+
+        comp.add_projection(
+            sender=fb_sender, receiver=fb_receiver,
+            feedback=EdgeType.FLEXIBLE
+        )
+        comp._analyze_graph()
+
+        for s_i in range(len(cycle_nodes)):
+            r_i = (s_i + 1) % len(cycle_nodes)
+
+            if (
+                cycle_nodes[s_i] is not fb_sender
+                or cycle_nodes[r_i] is not fb_receiver
+            ):
+                assert (
+                    _get_feedback_source_type(
+                        comp.graph_processing,
+                        cycle_nodes[s_i],
+                        cycle_nodes[r_i]
+                    )
+                    is EdgeType.NON_FEEDBACK
+                )
+
+        assert (
+            _get_feedback_source_type(
+                comp.graph_processing,
+                fb_sender,
+                fb_receiver
+            )
+            is EdgeType.FEEDBACK
+        )
+
+    @pytest.mark.parametrize(
+        'cycle_feedback_proj_pair, expected_dependencies',
+        [
+            ('(B, D)', '{A: set(), B: {A, F}, C: {B}, D: set(), E: {D}, F: {E}}'),
+            ('(D, E)', '{A: set(), B: {A, F}, C: {B}, D: {B}, E: set(), F: {E}}'),
+            ('(E, F)', '{A: set(), B: {A, F}, C: {B}, D: {B}, E: {D}, F: set()}'),
+            ('(F, B)', '{A: set(), B: {A}, C: {B}, D: {B}, E: {D}, F: {E}}'),
+        ]
+    )
+    def test_cycle_manual_feedback_dependencies(
+        self,
+        seven_node_cycle_composition,
+        cycle_feedback_proj_pair,
+        expected_dependencies
+    ):
+        [A, B, C, D, E, F], comp = seven_node_cycle_composition
+        fb_sender, fb_receiver = eval(cycle_feedback_proj_pair)
+        expected_dependencies = eval(expected_dependencies)
+
+        cycle_nodes = [B, D, E, F]
+        for s_i in range(len(cycle_nodes)):
+            r_i = (s_i + 1) % len(cycle_nodes)
+
+            if (
+                cycle_nodes[s_i] is not fb_sender
+                or cycle_nodes[r_i] is not fb_receiver
+            ):
+                comp.add_projection(
+                    sender=cycle_nodes[s_i],
+                    receiver=cycle_nodes[r_i]
+                )
+
+        comp.add_projection(
+            sender=fb_sender, receiver=fb_receiver,
+            feedback=EdgeType.FLEXIBLE
+        )
+        comp._analyze_graph()
+
+        assert comp.scheduler.dependency_dict == expected_dependencies
+
+    def test_cycle_multiple_acyclic_parents(self):
+        A = pnl.TransferMechanism(name='A')
+        B = pnl.TransferMechanism(name='B')
+        C = pnl.TransferMechanism(name='C')
+        D = pnl.TransferMechanism(name='D')
+        E = pnl.TransferMechanism(name='E')
+
+        comp = Composition()
+        comp.add_linear_processing_pathway([C, D, E, C])
+        comp.add_linear_processing_pathway([A, C])
+        comp.add_linear_processing_pathway([B, C])
+
+        expected_dependencies = {
+            A: set(),
+            B: set(),
+            C: {A, B},
+            D: {A, B},
+            E: {A, B},
+        }
+        assert comp.scheduler.dependency_dict == expected_dependencies
+
+
+    def test_objective_and_control(self):
+        # taken from test_3_mechanisms_2_origins_1_additive_control_1_terminal
+        comp = pnl.Composition()
+        B = pnl.TransferMechanism(name="B", function=pnl.Linear(slope=5.0))
+        C = pnl.TransferMechanism(name="C", function=pnl.Linear(slope=5.0))
+        A = pnl.ObjectiveMechanism(
+            function=Linear,
+            monitor=[B],
+            name="A"
+        )
+        LC = pnl.LCControlMechanism(
+            name="LC",
+            modulation=pnl.ADDITIVE,
+            modulated_mechanisms=C,
+            objective_mechanism=A)
+
+        D = pnl.TransferMechanism(name="D", function=pnl.Linear(slope=5.0))
+        comp.add_linear_processing_pathway([B, C, D])
+        comp.add_linear_processing_pathway([B, D])
+        comp.add_node(A)
+        comp.add_node(LC)
+
+        expected_dependencies = {
+            B: set(),
+            A: {B},
+            LC: {A},
+            C: set([LC, B]),
+            D: set([C, B])
+        }
+        assert comp.scheduler.dependency_dict == expected_dependencies
+
+    def test_inline_control_mechanism_example(self):
+        cueInterval = pnl.TransferMechanism(
+            default_variable=[[0.0]],
+            size=1,
+            function=pnl.Linear(slope=1, intercept=0),
+            output_ports=[pnl.RESULT],
+            name='Cue-Stimulus Interval'
+        )
+        taskLayer = pnl.TransferMechanism(
+            default_variable=[[0.0, 0.0]],
+            size=2,
+            function=pnl.Linear(slope=1, intercept=0),
+            output_ports=[pnl.RESULT],
+            name='Task Input [I1, I2]'
+        )
+        activation = pnl.LCAMechanism(
+            default_variable=[[0.0, 0.0]],
+            size=2,
+            function=pnl.Logistic(gain=1),
+            leak=.5,
+            competition=2,
+            noise=0,
+            time_step_size=.1,
+            termination_measure=pnl.TimeScale.TRIAL,
+            termination_threshold=3,
+            name='Task Activations [Act 1, Act 2]'
+        )
+        csiController = pnl.ControlMechanism(
+            name='Control Mechanism',
+            monitor_for_control=cueInterval,
+            control_signals=[(pnl.TERMINATION_THRESHOLD, activation)],
+            modulation=pnl.OVERRIDE
+        )
+        comp = pnl.Composition()
+        comp.add_linear_processing_pathway(pathway=[taskLayer, activation])
+        comp.add_node(cueInterval)
+        comp.add_node(csiController)
+
+        expected_dependencies = {
+            cueInterval: set(),
+            taskLayer: set(),
+            activation: set([csiController, taskLayer]),
+            csiController: set([cueInterval])
+        }
+        assert comp.scheduler.dependency_dict == expected_dependencies

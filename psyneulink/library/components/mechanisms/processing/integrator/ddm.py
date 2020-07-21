@@ -60,14 +60,14 @@ or a call to the function with arguments specifying its parameters::
 COMMENT:
 .. _DDM_Input:
 **Input**.  The `default_variable` argument specifies the default value to use as the stimulus component of the
-:ref:`drift rate <DDM_Drift_Rate>` for the decision process.  It must be a single scalar value.
+`drift rate <DDM_Drift_Rate>` for the decision process.  It must be a single scalar value.
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]
 **Input**.  The ``default_variable`` argument specifies the default value to use as the stimulus component of the
-:ref:`drift rate <DDM_Drift_Rate>` for each decision process, as well as the number of decision processes implemented
+`drift rate <DDM_Drift_Rate>` for each decision process, as well as the number of decision processes implemented
 and the corresponding format of the ``input`` required by calls to its ``execute`` and ``run`` methods.  This can be a
 single scalar value or an an array (list or 1d np.array). If it is a single value (as in the first two examples above),
 a single DDM process is implemented, and the input is used as the stimulus component of the
-:ref:`drift rate <DDM_Drift_Rate>` for the process. If the input is an array (as in the third example above),
+`drift rate <DDM_Drift_Rate>` for the process. If the input is an array (as in the third example above),
 multiple parallel DDM processes are implemented all of which use the same parameters but each of which receives its
 own input (from the corresponding element of the input array) and is executed independently of the others.
 COMMENT
@@ -239,11 +239,11 @@ COMMENT:
 [TBI - MULTIPROCESS DDM - REPLACE ABOVE]
 The DDM Mechanism implements a general form of the decision process.  A DDM Mechanism assigns one **inputPort** to
 each item in the `default_variable` argument, corresponding to each of the decision processes implemented
-(see :ref:`Input <DDM_Input>` above). The decision process can be configured to execute in different modes.  The
+(see `Input <DDM_Input>` above). The decision process can be configured to execute in different modes.  The
 `function <DDM.function>` parameters is the primary determinants of how the
 decision process is executed, and what information is returned. The `function <DDM.function>` parameter specifies
 the analytical solution to use. The number of `OutputPorts <OutputPort>` is determined by the `function <DDM.function>`
-in use (see :ref:`list of output values <DDM_Results>` below).
+in use (see `list of output values <DDM_Results>` below).
 
 [TBI - average_output_ports ARGUMENT/OPTION AFTER IMPLEMENTING MULTIPROCESS DDM]
 OUTPUT MEASURE?? OUTCOME MEASURE?? RESULT?? TYPE OF RESULT??
@@ -307,7 +307,7 @@ single set of parameters that are not subject to the analytic solution (e.g., fo
 
 .. note::
    DDM handles "runtime" parameters (specified in a call to its
-   :py:meth:`execute <Mechanism_Base.exeucte>` or :py:meth:`run <Mechanism_Base.run>` methods)
+   :py:meth:`execute <Mechanism_Base.execte>` or :py:meth:`run <Mechanism_Base.run>` methods)
    differently than standard Components: runtime parameters are added to the Mechanism's current value of the
    corresponding ParameterPort (rather than overriding it);  that is, they are combined additively with the value of
    any `ControlProjection` it receives to determine the parameter's value for that execution.  The ParameterPort's
@@ -360,7 +360,6 @@ Class Reference
 """
 import logging
 import types
-
 from collections.abc import Iterable
 
 import numpy as np
@@ -383,7 +382,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, is_same_function_spec, object_has_single_value, get_global_seed
+from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, is_same_function_spec, object_has_single_value, get_global_seed
 
 from psyneulink.core import llvm as pnlvm
 
@@ -506,8 +505,8 @@ class DDM(ProcessingMechanism):
         based on the `function <DDM.function>` and/or any specifications made in the **output_ports** argument of the
         DDM's constructor (see `DDM_Output` for additional details).
 
-    output_values : List[array(float64),array(float64),array(float64),array(float64)]
-        each item is the `value <OutputPort.value> of the corresponding OutputPort in `output_ports
+    output_values : List[array(float64)]
+        each item is the `value <OutputPort.value>` of the corresponding `OutputPort` in `output_ports
         <DDM.output_ports>`.  The first two items are always the `value <OutputPort.value>`\\s of the
         `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <DDM_RESPONSE_TIME>` OutputPorts;  additional
         ones may be included, based on the `function <DDM.function>` and any specifications made in the
@@ -563,8 +562,8 @@ class DDM(ProcessingMechanism):
             or negative value of the DDM `function <DDM.function>`'s threshold attribute as estimated by the analytic
             solution calculated by the `function <DDM.function>`); \n
           • `integration mode <DDM_Integration_Mode>`: the number of `TIME_STEP` that have occurred since the DDM began
-            to execute in the current `TRIAL` or, if it has reached the positive or negative value of the DDM `function
-            <DDM.function>`'s threshold attribute, the `TIME_STEP` at which that occurred. \n
+            to execute in the current `TRIAL <TimeScale.TRIAL>` or, if it has reached the positive or negative value of
+            the DDM `function <DDM.function>`'s threshold attribute, the `TIME_STEP` at which that occurred. \n
           Corresponds to the 2nd item of the DDM's `value <DDM.value>`.
 
         .. _DDM_PROBABILITY_UPPER_THRESHOLD:
@@ -720,6 +719,13 @@ class DDM(ProcessingMechanism):
         initializer = np.array([[0]])
         random_state = Parameter(None, stateful=True, loggable=False)
 
+        output_ports = Parameter(
+            [DECISION_VARIABLE, RESPONSE_TIME],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+        )
 
     standard_output_ports =[{NAME: DECISION_VARIABLE,},           # Upper or lower threshold for Analtyic function
                             {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL for Integrator function
@@ -739,17 +745,13 @@ class DDM(ProcessingMechanism):
                  default_variable=None,
                  size=None,
                  input_format:tc.optional(tc.enum(SCALAR, ARRAY, VECTOR))=None,
-                 function=DriftDiffusionAnalytical(drift_rate=1.0,
-                                                   starting_point=0.0,
-                                                   threshold=1.0,
-                                                   noise=0.5,
-                                                   t0=.200),
+                 function=None,
                  input_ports=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=(DECISION_VARIABLE, RESPONSE_TIME),
+                 output_ports: tc.optional(tc.any(str, Iterable)) = None,
                  seed=None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  **kwargs):
 
         # Override instantiation of StandardOutputPorts usually done in _instantiate_output_ports
@@ -941,7 +943,7 @@ class DDM(ProcessingMechanism):
         functions = {DriftDiffusionAnalytical,
                      DriftDiffusionIntegrator}
 
-        if FUNCTION in target_set:
+        if FUNCTION in target_set and target_set[FUNCTION] is not None:
             # If target_set[FUNCTION] is a method of a Function (e.g., being assigned in _instantiate_function),
             #   get the Function to which it belongs
             fun = target_set[FUNCTION]
@@ -1045,7 +1047,7 @@ class DDM(ProcessingMechanism):
             if self.initialization_status != ContextFlags.INITIALIZING:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
 
-            return np.array([result[0], [result[1]]])
+            return convert_to_np_array([result[0], [result[1]]])
 
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         else:
@@ -1083,8 +1085,8 @@ class DDM(ProcessingMechanism):
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
             return return_value
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable):
-        mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable)
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, *, tags:frozenset):
+        mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable, tags=tags)
 
         mech_out_ty = ctx.convert_python_struct_to_llvm_ir(self.defaults.value)
         mech_out = builder.alloca(mech_out_ty)
@@ -1124,7 +1126,7 @@ class DDM(ProcessingMechanism):
             prob_upper_thr = builder.fsub(prob_lower_thr.type(1),
                                           prob_lower_thr)
             builder.store(prob_upper_thr, dst)
-            
+
             # Load function threshold
             threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self.function,
                                                         params, THRESHOLD)
@@ -1153,15 +1155,15 @@ class DDM(ProcessingMechanism):
         return mech_out, builder
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
+    def reset(self, *args, force=False, context=None):
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
         if context.execution_id is NotImplemented:
             context.execution_id = self.most_recent_context.execution_id
 
-        # (1) reinitialize function, (2) update mechanism value, (3) update output ports
+        # (1) reset function, (2) update mechanism value, (3) update output ports
         if isinstance(self.function, IntegratorFunction):
-            new_values = self.function.reinitialize(*args, context=context)
+            new_values = self.function.reset(*args, context=context)
             self.parameters.value._set(np.array(new_values), context)
             self._update_output_ports(context=context)
 
@@ -1195,3 +1197,35 @@ class DDM(ProcessingMechanism):
             )
             return True
         return False
+
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
+        # Setup pointers to internal function
+        func_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, 'function')
+        func_param_ptr = pnlvm.helpers.get_state_ptr(builder, self, params, 'function')
+
+        # Find the single numeric entry in previous_value
+        try:
+            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self.function, func_state_ptr, "previous_value")
+        except ValueError:
+            return pnlvm.ir.IntType(1)(1)
+
+        # Extract scalar value from ptr
+        prev_val_ptr = builder.gep(prev_val_ptr, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+        prev_val = builder.load(prev_val_ptr)
+
+        # Take abs of previous val
+        llvm_fabs = ctx.get_builtin("fabs", [ctx.float_ty])
+        prev_val = builder.call(llvm_fabs, [prev_val])
+
+
+        # obtain threshold value
+        threshold_ptr = pnlvm.helpers.get_param_ptr(builder,
+                                                    self.function,
+                                                    func_param_ptr,
+                                                    "threshold")
+
+        threshold_ptr = builder.gep(threshold_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        threshold = builder.load(threshold_ptr)
+        is_prev_greater_or_equal = builder.fcmp_ordered('>=', prev_val, threshold)
+
+        return is_prev_greater_or_equal

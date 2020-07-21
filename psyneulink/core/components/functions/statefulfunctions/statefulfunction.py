@@ -16,13 +16,12 @@
 
 """
 
-import numpy as np
+import abc
 import typecheck as tc
-import itertools
 import warnings
 import numbers
 
-import abc
+import numpy as np
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
@@ -30,7 +29,7 @@ from psyneulink.core.components.functions.function import Function_Base, Functio
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.globals.keywords import INITIALIZER, STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.utilities import parameter_spec, iscompatible
+from psyneulink.core.globals.utilities import parameter_spec, iscompatible, object_has_single_value
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 
@@ -150,13 +149,13 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
-    prefs : PreferenceSet or specification dict : Function.classPreferences
-        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+    prefs : PreferenceSet or specification dict
+        the `PreferenceSet` for the Function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentType = STATEFUL_FUNCTION_TYPE
@@ -201,12 +200,12 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate=1.0,
-                 noise=0.0,
+                 rate=None,
+                 noise=None,
                  initializer=None,
-                 params: tc.optional(dict) = None,
+                 params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  context=None,
                  **kwargs
                  ):
@@ -262,7 +261,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism); in that
                     #       case, the StatefulFunction gets instantiated using its class_defaults.variable ([[0]]) before
                     #       the object itself, thus does not see the array specification for the input.
-                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                    if self._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
                             warnings.warn(
@@ -335,7 +334,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
             if isinstance(rate, np.ndarray) and not iscompatible(rate, self.defaults.variable):
                 if len(rate) != 1 and len(rate) != np.array(self.defaults.variable).size:
-                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                    if self._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self.defaults.variable = np.zeros_like(np.array(rate))
                         if self.verbosePref:
                             warnings.warn(
@@ -350,7 +349,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                                 self.defaults.variable,
                             )
                         self._instantiate_value()
-                        self._default_variable_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
+                        self._variable_shape_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
                     else:
                         raise FunctionError(
                             "The length of the array specified for the rate parameter of {} ({})"
@@ -375,9 +374,12 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                   and not iscompatible(np.atleast_1d(noise), self.defaults.variable) and len(noise) > 1):
                 raise FunctionError(
                     "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} "
-                    "must be specified as a float, a function, or an array of the appropriate shape ({})."
-                        .format(noise, self.defaults.variable, self.name,
-                                np.shape(np.array(self.defaults.variable))))
+                    "must be specified as a float, a function, or an array of the appropriate shape ({}).".format(
+                        noise, self.defaults.variable, self.name,
+                        np.shape(np.array(self.defaults.variable))
+                    ),
+                    component=self
+                )
             else:
                 for i in range(len(noise)):
                     if isinstance(noise[i], DistributionFunction):
@@ -388,7 +390,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                                             "{} is not a valid noise element for {}".format(noise[i], self.name))
 
         # Otherwise, must be a float, int or function
-        elif not isinstance(noise, (float, int)) and not callable(noise):
+        elif noise is not None and not isinstance(noise, (float, int)) and not callable(noise):
             raise FunctionError(
                 "Noise parameter ({}) for {} must be a float, function, or array/list of these."
                     .format(noise, self.name))
@@ -408,7 +410,11 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 for j in range(len(param[i])):
                     if callable(param[i][j]):
                         param[i][j] = param[i][j]()
-            param = param.reshape(param_shape)
+            try:
+                param = param.reshape(param_shape)
+            except ValueError:
+                if object_has_single_value(param):
+                    param = np.full(param_shape, float(param))
 
         # param is one function
         elif callable(param):
@@ -470,16 +476,16 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         return val
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, *args, context=None):
+    def reset(self, *args, context=None):
         """
             Resets `value <StatefulFunction.previous_value>`  and `previous_value <StatefulFunction.previous_value>`
             to the specified value(s).
 
-            If arguments are passed into the reinitialize method, then reinitialize sets each of the attributes in
+            If arguments are passed into the reset method, then reset sets each of the attributes in
             `stateful_attributes <StatefulFunction.stateful_attributes>` to the value of the corresponding argument.
             Next, it sets the `value <StatefulFunction.value>` to a list containing each of the argument values.
 
-            If reinitialize is called without arguments, then it sets each of the attributes in `stateful_attributes
+            If reset is called without arguments, then it sets each of the attributes in `stateful_attributes
             <StatefulFunction.stateful_attributes>` to the value of the corresponding attribute in `initializers
             <StatefulFunction.initializers>`. Next, it sets the `value <StatefulFunction.value>` to a list containing
             the values of each of the attributes in `initializers <StatefulFunction.initializers>`.
@@ -487,11 +493,11 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             Often, the only attribute in `stateful_attributes <StatefulFunction.stateful_attributes>` is
             `previous_value <StatefulFunction.previous_value>` and the only attribute in `initializers
             <StatefulFunction.initializers>` is `initializer <StatefulFunction.initializer>`, in which case
-            the reinitialize method sets `previous_value <StatefulFunction.previous_value>` and `value
+            the reset method sets `previous_value <StatefulFunction.previous_value>` and `value
             <StatefulFunction.value>` to either the value of the argument (if an argument was passed into
-            reinitialize) or the current value of `initializer <StatefulFunction.initializer>`.
+            reset) or the current value of `initializer <StatefulFunction.initializer>`.
 
-            For specific types of StatefulFunction functions, the reinitialize method may carry out other
+            For specific types of StatefulFunction functions, the reset method may carry out other
             reinitialization steps.
 
         """
@@ -535,10 +541,10 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 initializers_string += self.initializers[len(self.initializers) - 1]
 
             raise FunctionError("Invalid arguments ({}) specified for {}. If arguments are specified for the "
-                                "reinitialize method of {}, then a value must be passed to reinitialize each of its "
-                                "stateful_attributes: {}, in that order. Alternatively, reinitialize may be called "
+                                "reset method of {}, then a value must be passed to reset each of its "
+                                "stateful_attributes: {}, in that order. Alternatively, reset may be called "
                                 "without any arguments, in which case the current values of {}'s initializers: {}, will"
-                                " be used to reinitialize their corresponding stateful_attributes."
+                                " be used to reset their corresponding stateful_attributes."
                                 .format(args,
                                         self.name,
                                         self.name,
@@ -560,8 +566,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         self.parameters.value.set(value, context, override=True)
         return value
 
-    def _gen_llvm_function_reinitialize(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        assert "reinitialize" in tags
+    def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        assert "reset" in tags
         for i, a in enumerate(self.stateful_attributes):
             source_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, self.initializers[i])
             dest_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, a)

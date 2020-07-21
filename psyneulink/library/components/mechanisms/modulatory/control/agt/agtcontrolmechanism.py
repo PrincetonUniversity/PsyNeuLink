@@ -138,20 +138,20 @@ COMMENT
 Execution
 ---------
 
-An AGTControlMechanism's `function <AGTControlMechanism_Base.function>` takes as its input the `value <InputPort.value>` of
-its *OUTCOME* `input_port <Mechanism_Base.input_port>`, and uses that to determine its `control_allocation
+An AGTControlMechanism's `function <AGTControlMechanism_Base.function>` takes as its input the `value <InputPort.value>`
+of its *OUTCOME* `input_port <Mechanism_Base.input_port>`, and uses that to determine its `control_allocation
 <ITC.control_allocation>` which specifies the value assigned to the `allocation <ControlSignal.allocation>` of each of
-its `ControlSignals <ControlSignal>`.  An AGTControlMechanism assigns the same value (the `input <AGTControlMechanism_Input>` it
-receives from its `objective_mechanism <AGTControlMechanism.objective_mechanism>` to all of its ControlSignals.  Each
-ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`, which is used by its
-`ControlProjection(s) <ControlProjection>` to modulate the value of the ParameterPort(s) for the parameter(s) it
-controls, which are then used in the subsequent `TRIAL` of execution.
+its `ControlSignals <ControlSignal>`.  An AGTControlMechanism assigns the same value (the `input
+<AGTControlMechanism_Input>` it receives from its `objective_mechanism <AGTControlMechanism.objective_mechanism>` to
+all of its ControlSignals.  Each ControlSignal uses that value to calculate its `intensity <ControlSignal.intensity>`,
+which is used by its `ControlProjection(s) <ControlProjection>` to modulate the value of the ParameterPort(s) for the
+parameter(s) it controls, which are then used in the subsequent `TRIAL <TimeScale.TRIAL>` of execution.
 
 .. note::
-   A `ParameterPort` that receives a `ControlProjection` does not update its value until its owner Mechanism
-   executes (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).  This means that even if a
-   ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism
-   to which it belongs has executed.
+   A `ParameterPort` that receives a `ControlProjection` does not update its value until its owner Mechanism executes
+   (see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).  This means that even if a
+   ControlMechanism has executed, a parameter that it controls will not assume its new value until the Mechanism to
+   which it belongs has executed.
 
 
 .. _AGTControlMechanism_Class_Reference:
@@ -247,18 +247,16 @@ class AGTControlMechanism(ControlMechanism):
 
     @tc.typecheck
     def __init__(self,
-                 system:tc.optional(System_Base)=None,
                  monitored_output_ports=None,
                  function=None,
-                 # control_signals:tc.optional(list) = None,
+                 # control_signals:tc.optional(tc.optional(list)) = None,
                  control_signals= None,
-                 modulation:tc.optional(str)=MULTIPLICATIVE,
+                 modulation:tc.optional(str)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None):
 
         super().__init__(
-            system=system,
             objective_mechanism=ObjectiveMechanism(
                 monitored_output_ports=monitored_output_ports,
                 function=DualAdaptiveIntegrator
@@ -271,7 +269,6 @@ class AGTControlMechanism(ControlMechanism):
         )
 
         self.objective_mechanism.name = self.name + '_ObjectiveMechanism'
-        self.objective_mechanism._role = CONTROL
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS
@@ -350,7 +347,7 @@ class AGTControlMechanism(ControlMechanism):
         self.objective_mechanism.function.short_term_bias = value
 
     @property
-    def    long_term_bias(self):
+    def long_term_bias(self):
         return self.objective_mechanism.function._long_term_bias
 
     @long_term_bias.setter
@@ -358,7 +355,7 @@ class AGTControlMechanism(ControlMechanism):
         self.objective_mechanism.function.long_term_bias = value
 
     @property
-    def    short_term_rate(self):
+    def short_term_rate(self):
         return self.objective_mechanism.function._short_term_rate
 
     @short_term_rate.setter
@@ -366,7 +363,7 @@ class AGTControlMechanism(ControlMechanism):
         self.objective_mechanism.function.short_term_rate = value
 
     @property
-    def    long_term_rate(self):
+    def long_term_rate(self):
         return self.objective_mechanism.function._long_term_rate
 
     @long_term_rate.setter
@@ -390,12 +387,12 @@ class AGTControlMechanism(ControlMechanism):
         and the `multiplicative_params <Function_Modulatory_Params>` modulated by the AGTControlMechanism.
         """
 
-        print ("\n---------------------------------------------------------")
+        print("\n---------------------------------------------------------")
 
-        print ("\n{0}".format(self.name))
+        print("\n{0}".format(self.name))
         print("\n\tMonitoring the following Mechanism OutputPorts:")
         if self.objective_mechanism is None:
-            print ("\t\tNone")
+            print("\t\tNone")
         else:
             for port in self.objective_mechanism.input_ports:
                 for projection in port.path_afferents:
@@ -406,14 +403,14 @@ class AGTControlMechanism(ControlMechanism):
                     weight = self.monitored_output_ports_weights_and_exponents[monitored_port_index][0]
                     exponent = self.monitored_output_ports_weights_and_exponents[monitored_port_index][1]
 
-                    print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
-                           format(monitored_port_Mech.name, monitored_port.name, weight, exponent))
+                    print("\t\t{0}: {1} (exp: {2}; wt: {3})".
+                          format(monitored_port_Mech.name, monitored_port.name, weight, exponent))
 
-        print ("\n\tModulating the following parameters:".format(self.name))
+        print("\n\tModulating the following parameters:".format(self.name))
         # Sort for consistency of output:
         port_Names_sorted = sorted(self.output_ports.names)
         for port_Name in port_Names_sorted:
             for projection in self.output_ports[port_Name].efferents:
-                print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+                print("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
 
-        print ("\n---------------------------------------------------------")
+        print("\n---------------------------------------------------------")

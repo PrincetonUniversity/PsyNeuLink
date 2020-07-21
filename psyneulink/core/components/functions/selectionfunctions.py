@@ -151,13 +151,13 @@ class OneHot(SelectionFunction):
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = ONE_HOT_FUNCTION
@@ -203,23 +203,23 @@ class OneHot(SelectionFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 mode: tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
+                 mode: tc.optional(tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
                                MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR,
-                               PROB, PROB_INDICATOR)=MAX_VAL,
+                               PROB, PROB_INDICATOR))=None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if seed is None:
             seed = get_global_seed()
 
         random_state = np.random.RandomState([seed])
 
-        reset_default_variable_flexibility = False
+        reset_variable_shape_flexibility = False
         if mode in {PROB, PROB_INDICATOR} and default_variable is None:
             default_variable = [[0], [0]]
-            reset_default_variable_flexibility = True
+            reset_variable_shape_flexibility = True
 
         super().__init__(
             default_variable=default_variable,
@@ -230,8 +230,8 @@ class OneHot(SelectionFunction):
             prefs=prefs,
         )
 
-        if reset_default_variable_flexibility:
-            self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
+        if reset_variable_shape_flexibility:
+            self._variable_shape_flexibility = DefaultsFlexibility.FLEXIBLE
 
     def _validate_params(self, request_set, target_set=None, context=None):
 

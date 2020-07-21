@@ -5,49 +5,82 @@ from psyneulink.core.components.functions.transferfunctions import Linear, Logis
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.processing import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing import TransferMechanism
-from psyneulink.core.components.process import Process
-from psyneulink.core.components.system import System
+from psyneulink.core.compositions.composition import Composition
+
+import psyneulink.core.llvm as pnlvm
 
 class TestUserDefFunc:
 
-    def test_python_func(self):
+    @pytest.mark.parametrize("bin_execute", ['Python',
+                                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                                             #pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                            ])
+    @pytest.mark.benchmark(group="Function UDF")
+    def test_user_def_func(self, bin_execute, benchmark):
+        def myFunction(variable, param1, param2):
+            return variable * 2 + param2
+
+        U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]], param2=3)
+        if (bin_execute == 'LLVM'):
+            e = pnlvm.execution.FuncExecution(U).execute
+        else:
+            e = U
+        val = benchmark(e, [1, 3])
+        assert np.allclose(val, [[5, 9]])
+
+    @pytest.mark.parametrize("bin_execute", ['Python',
+                                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                                             #pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                            ])
+    @pytest.mark.benchmark(group="UDF in Mechanism")
+    def test_udf_in_mechanism(self, bin_execute, benchmark):
         def myFunction(variable, param1, param2):
             return sum(variable[0]) + 2
+
         myMech = ProcessingMechanism(function=myFunction, size=4, name='myMech')
         # assert 'param1' in myMech.parameter_ports.names # <- FIX reinstate when problem with function params is fixed
         # assert 'param2' in myMech.parameter_ports.names # <- FIX reinstate when problem with function params is fixed
-        val = myMech.execute(input=[-1, 2, 3, 4])
+        if (bin_execute == 'LLVM'):
+            e = pnlvm.execution.MechExecution(myMech).execute
+        else:
+            e = myMech.execute
+        val = benchmark(e, [-1, 2, 3, 4])
         assert np.allclose(val, [[10]])
 
-    def test_user_def_func(self):
-        def myFunction(variable, param1, param2):
-            return variable * 2 + 3
-        U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]], param2=0)
-        myMech = ProcessingMechanism(function=U, size=2, name='myMech')
-        # assert 'param1' in myMech.parameter_ports.names # <- FIX reinstate when problem with function params is fixed
-        assert 'param2' in myMech.parameter_ports.names
-        val = myMech.execute([1, 3])
-        assert np.allclose(val, [[5, 9]])
 
-    def test_udf_system_origin(self):
+    @pytest.mark.parametrize("bin_execute", ['Python',
+                                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                             pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                             #pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                            ])
+    @pytest.mark.benchmark(group="UDF as Composition Origin")
+    def test_udf_composition_origin(self, bin_execute, benchmark):
         def myFunction(variable, params, context):
             return [variable[0][1], variable[0][0]]
+
         myMech = ProcessingMechanism(function=myFunction, size=3, name='myMech')
         T = TransferMechanism(size=2, function=Linear)
-        p = Process(pathway=[myMech, T])
-        s = System(processes=[p])
-        s.run(inputs = {myMech: [[1, 3, 5]]})
-        assert np.allclose(s.results[0][0], [3, 1])
+        c = Composition(pathways=[myMech, T])
+        benchmark(c.run, inputs={myMech: [[1, 3, 5]]}, bin_execute=bin_execute)
+        assert np.allclose(c.results[0][0], [3, 1])
 
-    def test_udf_system_terminal(self):
+    @pytest.mark.parametrize("bin_execute", ['Python',
+                                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                             pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                             #pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                            ])
+    @pytest.mark.benchmark(group="UDF as Composition Terminal")
+    def test_udf_composition_terminal(self, bin_execute, benchmark):
         def myFunction(variable, params, context):
             return [variable[0][2], variable[0][0]]
+
         myMech = ProcessingMechanism(function=myFunction, size=3, name='myMech')
         T2 = TransferMechanism(size=3, function=Linear)
-        p2 = Process(pathway=[T2, myMech])
-        s2 = System(processes=[p2])
-        s2.run(inputs = {T2: [[1, 2, 3]]})
-        assert(np.allclose(s2.results[0][0], [3, 1]))
+        c2 = Composition(pathways=[[T2, myMech]])
+        benchmark(c2.run, inputs={T2: [[1, 2, 3]]}, bin_execute=bin_execute)
+        assert(np.allclose(c2.results[0][0], [3, 1]))
 
     def test_udf_with_pnl_func(self):
         L = Logistic(gain=2)

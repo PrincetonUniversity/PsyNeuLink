@@ -79,18 +79,17 @@ import typecheck as tc
 
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.learningfunctions import Kohonen
-from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import DEFAULT_MATRIX, FUNCTION, GAUSSIAN, IDENTITY_MATRIX, INITIALIZING, KOHONEN_MECHANISM, LEARNED_PROJECTION, LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, OWNER_VARIABLE, RESULT, VARIABLE
+from psyneulink.core.globals.keywords import \
+    DEFAULT_MATRIX, FUNCTION, GAUSSIAN, IDENTITY_MATRIX, INITIALIZING, KOHONEN_MECHANISM, \
+    LEARNED_PROJECTIONS, LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, OWNER_VARIABLE, RESULT, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
@@ -253,7 +252,12 @@ class KohonenMechanism(TransferMechanism):
                     :type: ``list``
                     :read only: True
         """
-        learning_function = Parameter(Kohonen(distance_function=GAUSSIAN), stateful=False, loggable=False)
+        learning_function = Parameter(
+            Kohonen(distance_function=GAUSSIAN),
+            stateful=False,
+            loggable=False,
+            reference=True
+        )
         learning_rate = Parameter(None, modulable=True)
         enable_learning = True
         matrix = DEFAULT_MATRIX
@@ -276,21 +280,21 @@ class KohonenMechanism(TransferMechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 function=Linear,
+                 function=None,
                  # selection_function=OneHot(mode=MAX_INDICATOR),  # RE-INSTATE WHEN IMPLEMENT NHot function
-                 integrator_function=AdaptiveIntegrator,
+                 integrator_function=None,
                  initial_value=None,
-                 noise: is_numeric_or_none = 0.0,
-                 integration_rate: is_numeric_or_none = 0.5,
-                 integrator_mode=False,
+                 noise: tc.optional(is_numeric_or_none) = None,
+                 integration_rate: tc.optional(is_numeric_or_none) = None,
+                 integrator_mode=None,
                  clip=None,
-                 enable_learning=True,
+                 enable_learning=None,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
-                 learning_function:is_function_type=Kohonen(distance_function=GAUSSIAN),
+                 learning_function: tc.optional(is_function_type) = None,
                  learned_projection:tc.optional(MappingProjection)=None,
                  additional_output_ports:tc.optional(tc.any(str, Iterable))=None,
                  name=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  **kwargs
                  ):
         # # Default output_ports is specified in constructor as a string rather than a list

@@ -8,14 +8,12 @@ import pytest
 import psyneulink as pnl
 
 from psyneulink.core.components.functions.transferfunctions import Logistic
+from psyneulink.core.components.functions.learningfunctions import BackPropagation
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals import Context
 from psyneulink.core.globals.keywords import TRAINING_SET
-from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.system import System
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 
 logger = logging.getLogger(__name__)
@@ -27,6 +25,38 @@ logger = logging.getLogger(__name__)
 # Unit tests for functions of AutodiffComposition class that are new (not in Composition)
 # or override functions in Composition
 
+@pytest.mark.pytorch
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                 ])
+def test_autodiff_forward(mode):
+    # create xor model mechanisms and projections
+    xor_in = TransferMechanism(name='xor_in',
+                               default_variable=np.zeros(2))
+
+    xor_hid = TransferMechanism(name='xor_hid',
+                                default_variable=np.zeros(10),
+                                function=Logistic())
+
+    xor_out = TransferMechanism(name='xor_out',
+                                default_variable=np.zeros(1),
+                                function=Logistic())
+
+    hid_map = MappingProjection(matrix=np.random.rand(2,10))
+    out_map = MappingProjection(matrix=np.random.rand(10,1))
+
+    # put the mechanisms and projections together in an autodiff composition (AC)
+    xor = AutodiffComposition()
+
+    xor.add_node(xor_in)
+    xor.add_node(xor_hid)
+    xor.add_node(xor_out)
+
+    xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+    xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+    outputs = xor.run(inputs=[0,0], bin_execute=mode)
+    assert np.allclose(outputs, [[0.9479085241082691]])
 
 @pytest.mark.pytorch
 @pytest.mark.acconstructor
@@ -58,20 +88,18 @@ class TestACConstructor:
         assert comp.input_CIM.reportOutputPref == False
         assert comp.output_CIM.reportOutputPref == False
         # assert comp.target_CIM.reportOutputPref == False
-    
+
     # FIXME: This test for patience doesn't actually test for correctness
     # def test_patience(self):
         # comp = AutodiffComposition()
         # assert comp.patience == 10
-
 
 @pytest.mark.pytorch
 @pytest.mark.acmisc
 class TestMiscTrainingFunctionality:
 
     # test whether pytorch parameters are initialized to be identical to the Autodiff Composition's
-    # projections when AC is initialized with the "param_init_from_pnl" argument set to True
-    def test_param_init_from_pnl(self):
+    def test_weight_initialization(self):
 
         # create xor model mechanisms and projections
         xor_in = TransferMechanism(name='xor_in',
@@ -89,7 +117,7 @@ class TestMiscTrainingFunctionality:
         out_map = MappingProjection(matrix=np.random.rand(10,1))
 
         # put the mechanisms and projections together in an autodiff composition (AC)
-        xor = AutodiffComposition(param_init_from_pnl=True)
+        xor = AutodiffComposition()
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -126,7 +154,7 @@ class TestMiscTrainingFunctionality:
         hid_map = MappingProjection()
         out_map = MappingProjection()
 
-        xor = AutodiffComposition(param_init_from_pnl=True)
+        xor = AutodiffComposition()
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -134,7 +162,7 @@ class TestMiscTrainingFunctionality:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-        
+
         xor_inputs = np.array(  # the inputs we will provide to the model
             [[0, 0],
              [0, 1],
@@ -193,7 +221,7 @@ class TestMiscTrainingFunctionality:
         hid_map = MappingProjection()
         out_map = MappingProjection()
 
-        xor = AutodiffComposition(param_init_from_pnl=True, loss_spec=loss)
+        xor = AutodiffComposition(loss_spec=loss)
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -239,7 +267,7 @@ class TestMiscTrainingFunctionality:
         hid_map = MappingProjection()
         out_map = MappingProjection()
 
-        xor = AutodiffComposition(param_init_from_pnl=True, loss_spec=ls)
+        xor = AutodiffComposition(loss_spec=ls)
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -285,8 +313,7 @@ class TestMiscTrainingFunctionality:
         hid_map = MappingProjection()
         out_map = MappingProjection()
 
-        xor = AutodiffComposition(param_init_from_pnl=True,
-                                  learning_rate=learning_rate,
+        xor = AutodiffComposition(learning_rate=learning_rate,
                                   optimizer_type=optimizer_type,
                                   weight_decay=weight_decay)
 
@@ -346,8 +373,7 @@ class TestMiscTrainingFunctionality:
                                     sender=xor_hid,
                                     receiver=xor_out)
 
-        xor = AutodiffComposition(param_init_from_pnl=True,
-                                  learning_rate=10.0,
+        xor = AutodiffComposition(learning_rate=10.0,
                                   optimizer_type="sgd")
 
         xor.add_node(xor_in)
@@ -381,83 +407,6 @@ class TestMiscTrainingFunctionality:
         assert not np.allclose(pt_weights_hid, hid_map.parameters.matrix.get(None))
         assert not np.allclose(pt_weights_out, out_map.parameters.matrix.get(None))
 
-    # test whether the autodiff composition's get_parameters method works as desired
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    #   LLVM test is disabled since parameters are currently not written back
-
-                                     ])
-    def test_get_params(self, mode):
-
-        xor_in = TransferMechanism(name='xor_in',
-                                   default_variable=np.zeros(2))
-
-        xor_hid = TransferMechanism(name='xor_hid',
-                                    default_variable=np.zeros(10),
-                                    function=Logistic())
-
-        xor_out = TransferMechanism(name='xor_out',
-                                    default_variable=np.zeros(1),
-                                    function=Logistic())
-
-        hid_map = MappingProjection(matrix=np.random.rand(2,10))
-        out_map = MappingProjection(matrix=np.random.rand(10,1))
-
-        xor = AutodiffComposition(param_init_from_pnl=True,
-                                  learning_rate=1.0)
-
-        xor.add_node(xor_in)
-        xor.add_node(xor_hid)
-        xor.add_node(xor_out)
-
-        xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
-        xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
-
-        xor_inputs = np.array(  # the inputs we will provide to the model
-            [[0, 0], [0, 1], [1, 0], [1, 1]])
-
-        xor_targets = np.array(  # the outputs we wish to see from the model
-            [[0], [1], [1], [0]])
-
-        # call run to only process the inputs, so that pytorch representation of AC gets created
-        # results = xor.run(inputs={xor_in:xor_inputs})
-
-        #KAM Changed 11/1/18
-
-        # mini version of xor.execute just to build up pytorch representation
-        xor._analyze_graph()
-        # CW changed 12/3/18
-        xor._build_pytorch_representation(xor.default_execution_id)
-        # OLD
-        # xor._build_pytorch_representation()
-
-        # call get_parameters to obtain a copy of the pytorch parameters in numpy arrays,
-        # and get the parameters straight from pytorch
-        weights_get_params = xor.get_parameters()
-        weights_straight_1 = xor.parameters.pytorch_representation.get(xor).params[0]
-        weights_straight_2 = xor.parameters.pytorch_representation.get(xor).params[1]
-
-        # check that parameter copies obtained from get_parameters are the same as the
-        # projections and parameters from pytorch
-        assert np.allclose(hid_map.parameters.matrix.get(None), weights_get_params[hid_map])
-        assert np.allclose(weights_straight_1.detach().numpy(), weights_get_params[hid_map])
-        assert np.allclose(out_map.parameters.matrix.get(None), weights_get_params[out_map])
-        assert np.allclose(weights_straight_2.detach().numpy(), weights_get_params[out_map])
-
-        # call run to train the pytorch parameters
-        results = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
-                                  "targets": {xor_out:xor_targets},
-                                  "epochs": 10}, bin_execute=mode)
-
-
-        # check that the parameter copies obtained from get_parameters have not changed with the
-        # pytorch parameters during training (and are thus at a different memory location)
-        # (only makes sense in Python mode)
-        if mode == 'Python':
-            assert not np.allclose(weights_straight_1.detach().numpy(), weights_get_params[hid_map])
-            assert not np.allclose(weights_straight_2.detach().numpy(), weights_get_params[out_map])
-
-
 @pytest.mark.pytorch
 @pytest.mark.accorrectness
 class TestTrainingCorrectness:
@@ -465,17 +414,15 @@ class TestTrainingCorrectness:
     # test whether xor model created as autodiff composition learns properly
     @pytest.mark.benchmark(group="XOR")
     @pytest.mark.parametrize(
-        'eps, calls, opt, from_pnl_or_not', [
-            (50, 'single', 'adam', True),
-            # (50, 'multiple', 'adam', True),
-            (50, 'single', 'adam', False),
-            # (50, 'multiple', 'adam', False)
+        'eps, calls, opt, expected', [
+            (100, 'single', 'adam', [[[0.09823965]], [[0.81092879]], [[0.78179557]], [[0.25593583]]]),
+            (50, 'multiple', 'adam', [[[0.31200036]], [[0.59406178]], [[0.60417587]], [[0.52347365]]]),
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
-    def test_xor_training_correctness(self, eps, calls, opt, from_pnl_or_not, mode, benchmark):
+    def test_xor_training_correctness(self, eps, calls, opt, mode, benchmark, expected):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -487,11 +434,10 @@ class TestTrainingCorrectness:
                                     default_variable=np.zeros(1),
                                     function=Logistic())
 
-        hid_map = MappingProjection(matrix=np.random.rand(2,10), sender=xor_in, receiver=xor_hid)
-        out_map = MappingProjection(matrix=np.random.rand(10,1))
+        hid_map = MappingProjection(matrix=np.random.rand(2, 10))
+        out_map = MappingProjection(matrix=np.random.rand(10, 1))
 
-        xor = AutodiffComposition(param_init_from_pnl=from_pnl_or_not,
-                                  optimizer_type=opt,
+        xor = AutodiffComposition(optimizer_type=opt,
                                   learning_rate=0.1)
 
         xor.add_node(xor_in)
@@ -509,42 +455,36 @@ class TestTrainingCorrectness:
 
         if calls == 'single':
             results = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
-                                      "targets": {xor_out:xor_targets},
-                                      "epochs": eps}, bin_execute=mode)
-
-            for i in range(len(results[0])):
-                assert np.allclose(np.round(results[0][i][0]), xor_targets[i])
+                                        "targets": {xor_out:xor_targets},
+                                        "epochs": eps}, bin_execute=mode)
 
         else:
-            results = xor.learn(inputs={"inputs": {xor_in: xor_inputs},
-                                      "targets": {xor_out: xor_targets},
-                                      "epochs": 1}, bin_execute=mode)
+            input_dict = {"inputs": {xor_in: xor_inputs},
+                          "targets": {xor_out: xor_targets},
+                          "epochs": 1}
+            for i in range(eps):
+                results = xor.learn(inputs=input_dict, bin_execute=mode)
 
-            for i in range(eps - 1):
-                results = xor.learn(inputs={"inputs": {xor_in: xor_inputs},
-                                          "targets": {xor_out: xor_targets},
-                                          "epochs": 1}, bin_execute=mode)
+        assert len(results) == len(expected)
+        for r, t in zip(results, expected):
+            assert np.allclose(r[0], t)
 
-            for i in range(len(results[eps - 1])):
-                assert np.allclose(np.round(results[eps - 1][i][0]), xor_targets[i])
-
-        benchmark(xor.learn, inputs={'inputs': {xor_in: xor_inputs},
-                                   'targets': {xor_out: xor_targets},
-                                   'epochs': eps}, bin_execute=mode)
+        benchmark(xor.learn, inputs={"inputs": {xor_in: xor_inputs},
+                                     "targets": {xor_out: xor_targets},
+                                     "epochs": eps}, bin_execute=mode)
 
 
     # tests whether semantic network created as autodiff composition learns properly
     @pytest.mark.benchmark(group="Semantic net")
     @pytest.mark.parametrize(
-        'eps, opt, from_pnl_or_not', [
-            (500, 'adam', True),
-            # (300, 'adam', False)
+        'eps, opt', [
+            (50, 'adam'),
         ]
     )
-    @pytest.mark.parametrize("mode", ["Python",
+    @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
-    def test_semantic_net_training_correctness(self, eps, opt, from_pnl_or_not, mode, benchmark):
+    def test_semantic_net_training_correctness(self, eps, opt, mode, benchmark):
 
         # MECHANISMS FOR SEMANTIC NET:
 
@@ -616,8 +556,7 @@ class TestTrainingCorrectness:
                                        receiver=out_sig_can)
 
         # COMPOSITION FOR SEMANTIC NET
-        sem_net = AutodiffComposition(param_init_from_pnl=from_pnl_or_not,
-                                      optimizer_type=opt, learning_rate=.001)
+        sem_net = AutodiffComposition(optimizer_type=opt, learning_rate=.001)
 
         sem_net.add_node(nouns_in)
         sem_net.add_node(rels_in)
@@ -706,30 +645,141 @@ class TestTrainingCorrectness:
                 targets_dict[out_sig_can].append(truth_can[i])
 
         # TRAIN THE MODEL
-        result = sem_net.learn(inputs={'inputs': inputs_dict,
-                                      'targets': targets_dict,
-                                      'epochs': eps}, bin_execute=mode)
+        results = sem_net.learn(inputs={'inputs': inputs_dict,
+                                        'targets': targets_dict,
+                                        'epochs': eps}, bin_execute=mode)
 
         # CHECK CORRECTNESS
-        for i in range(len(result)): # go over trial outputs in the single results entry
-            for j in range(len(result[i])): # go over outputs for each output layer
+        expected = [[[0.13455769, 0.12924714, 0.13288172, 0.1404659 , 0.14305814,
+                    0.14801862, 0.13968417, 0.14191982], [0.99991336, 0.99989676, 0.50621126, 0.52845353, 0.25829169,
+                    0.26210662, 0.24857125, 0.25041139, 0.4960792 , 0.25689092,
+                    0.36730921, 0.24619036], [0.5026992 , 0.51272669, 0.24175637, 0.25034784, 0.2406316 ,
+                    0.23613707, 0.25192136, 0.25169522, 0.25615122], [0.99931055, 0.50694136, 0.23105683, 0.24641822, 0.49398116,
+                    0.25462159, 0.24433084, 0.24267716, 0.52209116]], [[0.13434049, 0.14280817, 0.13996269, 0.15002735, 0.12975428,
+                    0.13143489, 0.14087601, 0.1384075 ], [0.99988782, 0.99987699, 0.50700037, 0.48324852, 0.23605196,
+                    0.24623233, 0.25029056, 0.23937042, 0.51119504, 0.2428462 ,
+                    0.38335829, 0.24875281], [0.51938115, 0.48541386, 0.25513764, 0.26880953, 0.27165005,
+                    0.2768918 , 0.25270764, 0.25394743, 0.2453564 ], [0.99932127, 0.48854068, 0.25824899, 0.24792285, 0.52373987,
+                    0.23226666, 0.26078735, 0.25531502, 0.48945013]], [[0.14603474, 0.13076473, 0.14285659, 0.14135699, 0.13505543,
+                    0.13515591, 0.14114513, 0.13170369], [0.99990678, 0.99989262, 0.48366278, 0.49653231, 0.24862611,
+                    0.23489764, 0.25762623, 0.2557183 , 0.48931577, 0.24042071,
+                    0.38135237, 0.2559529 ], [0.48125071, 0.49795935, 0.25190272, 0.23454573, 0.24576829,
+                    0.24084843, 0.23960781, 0.24709719, 0.24797553], [0.99927591, 0.50571286, 0.25989537, 0.25337519, 0.49977912,
+                    0.2629161 , 0.24592842, 0.25430635, 0.48884817]], [[0.13471359, 0.12938359, 0.12833093, 0.13589542, 0.14362713,
+                    0.15158585, 0.14307399, 0.14359844], [0.99991663, 0.99990086, 0.50239329, 0.5363237 , 0.26273315,
+                    0.26079003, 0.24686505, 0.2514966 , 0.50092905, 0.26094556,
+                    0.36939329, 0.24278735], [0.50633107, 0.51005404, 0.24486936, 0.25305515, 0.2371648 ,
+                    0.23443371, 0.24958497, 0.25592672, 0.26077736], [0.99930883, 0.51096502, 0.2273585 , 0.24095976, 0.49420255,
+                    0.2541994 , 0.24348927, 0.23870194, 0.52777643]], [[0.13437031, 0.14294567, 0.13462913, 0.14499767, 0.13014469,
+                    0.1347783 , 0.14426174, 0.14003815], [0.99989275, 0.99988313, 0.50533481, 0.49070575, 0.24083416,
+                    0.24419528, 0.24850006, 0.2388715 , 0.51590916, 0.2477704 ,
+                    0.38492997, 0.24480191], [0.52312591, 0.48400766, 0.25827697, 0.27239575, 0.26774108,
+                    0.27407821, 0.24982668, 0.25714894, 0.24895088], [0.9993246 , 0.49095133, 0.25329179, 0.2414722 , 0.52311016,
+                    0.23199452, 0.25880536, 0.25034698, 0.49623819]], [[0.14624279, 0.13155149, 0.13771617, 0.13640541, 0.1355243 ,
+                    0.13836647, 0.14442104, 0.13306906], [0.9999103 , 0.99989714, 0.48256079, 0.50278716, 0.25496791,
+                    0.23361944, 0.25567964, 0.25577915, 0.49540433, 0.24632798,
+                    0.38186044, 0.25220444], [0.48732786, 0.49713526, 0.25686322, 0.23903771, 0.24179882,
+                    0.238869  , 0.2368224 , 0.25066201, 0.25139028], [0.9992754 , 0.50799072, 0.25448626, 0.24711122, 0.49775634,
+                    0.26134282, 0.24471328, 0.24960873, 0.49669515]], [[0.13743409, 0.12655781, 0.13687131, 0.14444673, 0.14586922,
+                    0.14982043, 0.14115407, 0.14425256], [0.999905  , 0.99988946, 0.5111958 , 0.52953632, 0.25829416,
+                    0.25816645, 0.24772719, 0.2493831 , 0.49172307, 0.25647241,
+                    0.36490702, 0.24579828], [0.49409604, 0.51876333, 0.2438246 , 0.25106641, 0.24575334,
+                    0.23758284, 0.25036778, 0.24501611, 0.26348273], [0.99927212, 0.49900832, 0.23785606, 0.24568878, 0.49229404,
+                    0.25799455, 0.2380617 , 0.24483316, 0.51242196]], [[0.13690143, 0.14031709, 0.14406563, 0.15349375, 0.13257716,
+                    0.13310877, 0.14252974, 0.14056437], [0.99987794, 0.99986931, 0.5140066 , 0.48347409, 0.23776129,
+                    0.24271912, 0.2491253 , 0.23773346, 0.50725307, 0.24412832,
+                    0.37955962, 0.24840394], [0.5134345 , 0.49359454, 0.25820627, 0.27104423, 0.27620957,
+                    0.27795555, 0.25014143, 0.24655665, 0.25137209], [0.99928701, 0.47923949, 0.26354622, 0.24637029, 0.51954436,
+                    0.23441734, 0.25357643, 0.25643598, 0.48217473]], [[0.14885265, 0.12888511, 0.14747413, 0.14492694, 0.13757074,
+                    0.13653999, 0.14230078, 0.1333605 ], [0.99989882, 0.99988608, 0.49175208, 0.49464422, 0.25033443,
+                    0.2315963 , 0.25565926, 0.25286519, 0.48521686, 0.24180012,
+                    0.37838253, 0.25482498], [0.47632935, 0.50754291, 0.25540722, 0.23699234, 0.24989352,
+                    0.24130117, 0.236814  , 0.23865942, 0.25337658], [0.99924137, 0.49439904, 0.26500386, 0.25133608, 0.49471845,
+                    0.26444086, 0.23836089, 0.2550785 , 0.48265071]], [[0.13796428, 0.13122133, 0.13665485, 0.14238789, 0.14646363,
+                    0.14953325, 0.14001922, 0.14631467], [0.99990658, 0.99988831, 0.51044886, 0.52877409, 0.26162535,
+                    0.26113322, 0.24464028, 0.25460667, 0.50142119, 0.26075076,
+                    0.36249296, 0.2469639 ], [0.49888045, 0.520344  , 0.24213434, 0.25386651, 0.23856703,
+                    0.23283943, 0.25382764, 0.25348876, 0.25930602], [0.9992759 , 0.50552098, 0.23581279, 0.25056642, 0.49046455,
+                    0.26042018, 0.24011749, 0.24306269, 0.52240185]], [[0.13750907, 0.14541291, 0.1443253 , 0.15189612, 0.13295338,
+                    0.13279175, 0.14102944, 0.14247126], [0.99987945, 0.99986745, 0.51385772, 0.48177978, 0.23992435,
+                    0.24651741, 0.24564878, 0.2423684 , 0.51605876, 0.24748102,
+                    0.37804356, 0.24958671], [0.51825942, 0.49563748, 0.25600593, 0.27323944, 0.26870607,
+                    0.27273737, 0.25405544, 0.25468467, 0.24732677], [0.99928937, 0.4851184 , 0.26178837, 0.25136875, 0.51760249,
+                    0.23648163, 0.25573403, 0.25496827, 0.49227648]], [[0.14930882, 0.13316748, 0.14767505, 0.14350067, 0.13804021,
+                    0.13603459, 0.14084128, 0.13513649], [0.99990066, 0.99988511, 0.49193637, 0.49266043, 0.25237073,
+                    0.23599757, 0.25202475, 0.25740929, 0.49266556, 0.24476454,
+                    0.37618961, 0.25697362], [0.48210255, 0.51007883, 0.25286726, 0.2385758 , 0.24213314,
+                    0.23616873, 0.23972905, 0.24636349, 0.24902741], [0.99924664, 0.4998954 , 0.2624679 , 0.25622887, 0.49190217,
+                    0.26610712, 0.24000543, 0.25322914, 0.49359824]], [[0.13981779, 0.13517728, 0.13714904, 0.14312451, 0.14264037,
+                    0.1471793 , 0.13872158, 0.14604209], [0.99990026, 0.99988117, 0.50978024, 0.51828715, 0.26366737,
+                    0.26281186, 0.24835743, 0.25797436, 0.50770859, 0.26547003,
+                    0.36335027, 0.24615446], [0.50366793, 0.51568697, 0.2470342 , 0.2533224 , 0.23632146,
+                    0.23162517, 0.25117307, 0.25934756, 0.256024  ], [0.99924436, 0.50891146, 0.23908499, 0.24926875, 0.48979495,
+                    0.26367751, 0.24330774, 0.24296292, 0.523776  ]], [[0.13961147, 0.14975401, 0.14472653, 0.15355384, 0.12925548,
+                    0.13046081, 0.13938395, 0.14208934], [0.99987039, 0.99985783, 0.51256916, 0.47090975, 0.24108525,
+                    0.24849742, 0.24950535, 0.24553023, 0.522052  , 0.25148739,
+                    0.37924791, 0.24931395], [0.52265254, 0.49040645, 0.26115407, 0.27231193, 0.26698365,
+                    0.27201252, 0.252447  , 0.26033848, 0.24417141], [0.99925421, 0.48866289, 0.26591473, 0.25072477, 0.51818878,
+                    0.23925897, 0.26008435, 0.25565447, 0.49313837]], [[0.15131984, 0.13702244, 0.14796541, 0.14499107, 0.13516231,
+                    0.13379344, 0.13967548, 0.13504357], [0.99989266, 0.99987644, 0.49069576, 0.48284025, 0.25373136,
+                    0.23780959, 0.25705167, 0.26031535, 0.49734223, 0.24868116,
+                    0.37609291, 0.25826094], [0.48615805, 0.50439585, 0.25764469, 0.23792093, 0.24102865,
+                    0.23622676, 0.23835519, 0.25200694, 0.24543424], [0.99920779, 0.50378559, 0.265772  , 0.25635798, 0.49252096,
+                    0.26892098, 0.24458074, 0.25443214, 0.494262  ]], [[0.13850469, 0.13222947, 0.13670674, 0.14224276, 0.14481382,
+                    0.14983366, 0.14173916, 0.14323358], [0.99990126, 0.99988249, 0.51196132, 0.52177217, 0.2678038 ,
+                    0.26687693, 0.24660127, 0.25415374, 0.50244534, 0.26499807,
+                    0.36556967, 0.24445311], [0.51065084, 0.52060372, 0.25297718, 0.25785385, 0.24041214,
+                    0.23595817, 0.24912937, 0.25285752, 0.26092579], [0.9992282 , 0.49866166, 0.23316642, 0.2414636 , 0.48397547,
+                    0.25549083, 0.24296723, 0.24121413, 0.52743639]], [[0.13795671, 0.14608656, 0.14389815, 0.15250863, 0.13137121,
+                    0.13292996, 0.14235728, 0.13916877], [0.99987232, 0.99986024, 0.514095  , 0.47542769, 0.24452563,
+                    0.25126078, 0.248764  , 0.241217  , 0.51579474, 0.25047855,
+                    0.38175049, 0.24768651], [0.52795513, 0.49433932, 0.26639626, 0.2765692 , 0.27249335,
+                    0.27735353, 0.25105699, 0.25316897, 0.24833112], [0.99924257, 0.47881092, 0.25918246, 0.24338929, 0.51375801,
+                    0.23187301, 0.26019419, 0.25420934, 0.49555353]], [[0.14984495, 0.13387861, 0.14722304, 0.14355772, 0.13724767,
+                    0.13665399, 0.14239016, 0.1320989 ], [0.99989382, 0.9998781 , 0.49129168, 0.48786117, 0.25736056,
+                    0.24076914, 0.2571532 , 0.25661644, 0.49134559, 0.24762313,
+                    0.37894905, 0.25678541], [0.49115594, 0.50720606, 0.26343239, 0.24118617, 0.24666918,
+                    0.24228136, 0.23828715, 0.24556003, 0.24986447], [0.9991909 , 0.49609669, 0.25952719, 0.2503092 , 0.48831756,
+                    0.26050785, 0.24624062, 0.25460693, 0.49571571]], [[0.13798156, 0.13536763, 0.13556549, 0.14026479, 0.14613495,
+                    0.1517147 , 0.14150378, 0.14582109], [0.99990224, 0.99988499, 0.51321887, 0.5234933 , 0.26596025,
+                    0.26627399, 0.24845062, 0.25224455, 0.50060705, 0.26840742,
+                    0.36382243, 0.24724158], [0.50857345, 0.52097167, 0.24807872, 0.25421915, 0.23896201,
+                    0.23521938, 0.25167447, 0.25399296, 0.25680194], [0.99924088, 0.50538628, 0.23168769, 0.24466784, 0.48374493,
+                    0.25836643, 0.24395082, 0.24271583, 0.52908765]], [[0.13738911, 0.14964169, 0.14240066, 0.14996998, 0.13258046,
+                    0.13529629, 0.14257416, 0.14196438], [0.99987348, 0.99986355, 0.51547364, 0.47846669, 0.24280831,
+                    0.25045232, 0.25106236, 0.23941227, 0.51388317, 0.25405565,
+                    0.38069812, 0.25010755], [0.52466269, 0.49422476, 0.26072088, 0.27243928, 0.27097311,
+                    0.27644019, 0.25390417, 0.25487688, 0.24468432], [0.99925402, 0.48653142, 0.25783738, 0.24674309, 0.51370588,
+                    0.23544836, 0.26119428, 0.25606803, 0.49686813]], [[0.14925705, 0.13686349, 0.14561612, 0.14139895, 0.13823102,
+                    0.13876809, 0.14286744, 0.13452957], [0.99989461, 0.99988054, 0.49152081, 0.49115061, 0.25525704,
+                    0.23961845, 0.25940244, 0.25531285, 0.48988801, 0.25049358,
+                    0.37898184, 0.25880442], [0.48716519, 0.50598831, 0.25786953, 0.23748522, 0.24522105,
+                    0.24133955, 0.24092032, 0.247859  , 0.24660646], [0.99920254, 0.50397091, 0.25882576, 0.25383231, 0.48962604,
+                    0.26477928, 0.24738806, 0.25637011, 0.49634854]], [[0.13466774, 0.13597299, 0.13044001, 0.13621353, 0.14063205,
+                    0.14927389, 0.13741799, 0.14182897], [0.99991209, 0.99989375, 0.50664715, 0.52647149, 0.26631381,
+                    0.26772046, 0.25065527, 0.25828284, 0.51113304, 0.26876027,
+                    0.36519173, 0.24445213], [0.50981376, 0.51216926, 0.24469315, 0.25069097, 0.23575157,
+                    0.23351051, 0.25738456, 0.26157098, 0.25154516], [0.9992887 , 0.51923276, 0.2286251 , 0.24647828, 0.48904116,
+                    0.25948029, 0.25191475, 0.24172423, 0.53116312]], [[0.13456692, 0.15039528, 0.13737152, 0.14609287, 0.12736956,
+                    0.13283867, 0.13853673, 0.13816526], [0.99988542, 0.99987272, 0.50746352, 0.48137383, 0.24278802,
+                    0.25182679, 0.25260023, 0.24645783, 0.52561721, 0.25394353,
+                    0.38280036, 0.24682469], [0.52522447, 0.48470641, 0.25775314, 0.26859876, 0.26712899,
+                    0.27417417, 0.25948482, 0.26348026, 0.24082551], [0.9992959 , 0.5009347 , 0.25614941, 0.24856744, 0.51984942,
+                    0.23715273, 0.2693644 , 0.2551465 , 0.49819368]], [[0.14562679, 0.13745423, 0.13996431, 0.13722137, 0.13278566,
+                    0.13632886, 0.13899164, 0.1314741 ], [0.99990502, 0.99988943, 0.48410876, 0.49522954, 0.2553264 ,
+                    0.24084323, 0.26058312, 0.26304712, 0.50254737, 0.2507632 ,
+                    0.3802493 , 0.25486957], [0.48768232, 0.49615974, 0.25448472, 0.23400199, 0.24116754,
+                    0.23886036, 0.24575353, 0.25715595, 0.24334699], [0.99925183, 0.51889063, 0.25712839, 0.25460613, 0.49597306,
+                    0.26739429, 0.25464059, 0.25453138, 0.49761396]]]
 
-                # get target for terminal node whose OutputPort corresponds to current output
-                correct_value = None
-                curr_CIM_input_port = sem_net.output_CIM.input_ports[j]
-                for output_port in sem_net.output_CIM_ports.keys():
-                    if sem_net.output_CIM_ports[output_port][0] == curr_CIM_input_port:
-                        node = output_port.owner
-                        correct_value = targets_dict[node][i]
-
-                # compare model output for terminal node on current trial with target for terminal node on current trial
-                assert np.allclose(np.round(result[i][j]), correct_value)
-
+        for res, exp in zip(results, expected):
+            for r, e in zip(res, exp):
+                assert np.allclose(r, e)
         benchmark(sem_net.learn, inputs={'inputs': inputs_dict,
-                                       'targets': targets_dict,
-                                       'epochs': eps}, bin_execute=mode)
+                                         'targets': targets_dict,
+                                         'epochs': eps}, bin_execute=mode)
 
-    @pytest.mark.parametrize("mode", ["Python",
+    @pytest.mark.parametrize("mode", ['Python',
                                 pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                 ])
     def test_pytorch_equivalence_with_autodiff_composition(self, mode):
@@ -872,8 +922,7 @@ class TestTrainingCorrectness:
         pco = MappingProjection(matrix=wco)
         pho = MappingProjection(matrix=who)
 
-        mnet = AutodiffComposition(param_init_from_pnl=True,
-                                   learning_rate=learning_rate)
+        mnet = AutodiffComposition(learning_rate=learning_rate)
 
         mnet.add_node(il)
         mnet.add_node(cl)
@@ -1087,8 +1136,7 @@ class TestTrainingCorrectness:
         pco = MappingProjection(matrix=wco)
         pho = MappingProjection(matrix=who, learnable=False)
 
-        mnet = AutodiffComposition(param_init_from_pnl=True,
-                                   learning_rate=learning_rate)
+        mnet = AutodiffComposition(learning_rate=learning_rate)
 
         mnet.add_node(il)
         mnet.add_node(cl)
@@ -1099,7 +1147,7 @@ class TestTrainingCorrectness:
         mnet.add_projection(projection=pco, sender=cl, receiver=ol)
         mnet.add_projection(projection=pho, sender=hl, receiver=ol)
 
-        
+
         mnet.learn(
                 inputs=input_set,
                 minibatch_size=1,
@@ -1214,7 +1262,7 @@ class TestTrainingTime:
 
         # SET UP COMPOSITION
 
-        and_net = AutodiffComposition(param_init_from_pnl=True)
+        and_net = AutodiffComposition()
 
         and_net.add_node(and_in)
         and_net.add_node(and_out)
@@ -1247,41 +1295,9 @@ class TestTrainingTime:
         end = timeit.default_timer()
         comp_time = end - start
 
-        # SET UP SYSTEM
-
-        and_process = Process(pathway=[and_in_sys,
-                                       and_map_sys,
-                                       and_out_sys],
-                              learning=pnl.LEARNING)
-
-        and_sys = System(processes=[and_process],
-                         learning_rate=0.1)
-
-        # TIME TRAINING FOR SYSTEM
-
-        start = timeit.default_timer()
-        results_sys = and_sys.run(inputs={and_in_sys:and_inputs},
-                                  targets={and_out_sys:and_targets},
-                                  num_trials=(eps * and_inputs.shape[0] + 1))
-        end = timeit.default_timer()
-        sys_time = end - start
-
-        # LOG TIMES, SPEEDUP PROVIDED BY COMPOSITION OVER SYSTEM
-
         msg = 'Training XOR model as AutodiffComposition for {0} epochs took {1} seconds'.format(eps, comp_time)
         print(msg)
         print("\n")
-        logger.info(msg)
-
-        msg = 'Training XOR model as System for {0} epochs took {1} seconds'.format(eps, sys_time)
-        print(msg)
-        print("\n")
-        logger.info(msg)
-
-        speedup = np.round((sys_time / comp_time), decimals=2)
-        msg = ('Training XOR model as AutodiffComposition for {0} epochs was {1} times faster than '
-               'training it as System for {0} epochs.'.format(eps, speedup))
-        print(msg)
         logger.info(msg)
 
     @pytest.mark.skip
@@ -1349,7 +1365,7 @@ class TestTrainingTime:
 
         # SET UP COMPOSITION
 
-        xor = AutodiffComposition(param_init_from_pnl=True,bin_execute=mode)
+        xor = AutodiffComposition(bin_execute=mode)
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -1386,46 +1402,27 @@ class TestTrainingTime:
 
         # SET UP SYSTEM
 
-        xor_process = Process(pathway=[xor_in_sys,
+        # xor_process = Process(pathway=[xor_in_sys,
+        #                                hid_map_sys,
+        #                                xor_hid_sys,
+        #                                out_map_sys,
+        #                                xor_out_sys],
+        #                       learning=pnl.LEARNING)
+
+        xor_process = Composition(pathways=([xor_in_sys,
                                        hid_map_sys,
                                        xor_hid_sys,
                                        out_map_sys,
-                                       xor_out_sys],
-                              learning=pnl.LEARNING)
+                                       xor_out_sys], BackPropagation))
 
-        xor_sys = System(processes=[xor_process],
-                         learning_rate=0.1)
-
-        # TIME TRAINING FOR SYSTEM
-
-        start = timeit.default_timer()
-        results_sys = xor_sys.run(inputs={xor_in_sys:xor_inputs},
-                                  targets={xor_out_sys:xor_targets},
-                                  num_trials=(eps * xor_inputs.shape[0] + 1))
-        end = timeit.default_timer()
-        sys_time = end - start
-
-        # LOG TIMES, SPEEDUP PROVIDED BY COMPOSITION OVER SYSTEM
-
-        msg = 'Training XOR model as AutodiffComposition for {0} epochs took {1} seconds'.format(eps, comp_time)
+        msg = 'Training XOR model as AutodiffComposition for {eps} epochs took {comp_time} seconds.'
         print(msg)
         print("\n")
-        logger.info(msg)
-
-        msg = 'Training XOR model as System for {0} epochs took {1} seconds'.format(eps, sys_time)
-        print(msg)
-        print("\n")
-        logger.info(msg)
-
-        speedup = np.round((sys_time / comp_time), decimals=2)
-        msg = ('Training XOR model as AutodiffComposition for {0} epochs was {1} times faster than '
-               'training it as System for {0} epochs.'.format(eps, speedup))
-        print(msg)
         logger.info(msg)
 
     @pytest.mark.skip
     @pytest.mark.parametrize(
-        'eps, opt', [
+            'eps, opt', [
             (1, 'sgd'),
             (10, 'sgd'),
             (100, 'sgd')
@@ -1573,7 +1570,7 @@ class TestTrainingTime:
 
         # COMPOSITION FOR SEMANTIC NET
 
-        sem_net = AutodiffComposition(param_init_from_pnl=True)
+        sem_net = AutodiffComposition()
 
         sem_net.add_node(nouns_in)
         sem_net.add_node(rels_in)
@@ -1682,66 +1679,9 @@ class TestTrainingTime:
         end = timeit.default_timer()
         comp_time = end - start
 
-        # SET UP SYSTEM
-
-        p11 = Process(pathway=[nouns_in_sys,
-                               map_nouns_h1_sys,
-                               h1_sys,
-                               map_h1_h2_sys,
-                               h2_sys,
-                               map_h2_I_sys,
-                               out_sig_I_sys],
-                      learning=pnl.LEARNING)
-
-        p12 = Process(pathway=[rels_in_sys,
-                               map_rels_h2_sys,
-                               h2_sys,
-                               map_h2_is_sys,
-                               out_sig_is_sys],
-                      learning=pnl.LEARNING)
-
-        p21 = Process(pathway=[h2_sys,
-                               map_h2_has_sys,
-                               out_sig_has_sys],
-                      learning=pnl.LEARNING)
-
-        p22 = Process(pathway=[h2_sys,
-                               map_h2_can_sys,
-                               out_sig_can_sys],
-                      learning=pnl.LEARNING)
-
-        sem_net_sys = System(processes=[p11,
-                                        p12,
-                                        p21,
-                                        p22,
-                                        ],
-                             learning_rate=0.1)
-
-        # TIME TRAINING FOR SYSTEM
-
-        start = timeit.default_timer()
-        results = sem_net_sys.run(inputs=inputs_dict_sys,
-                                  targets=targets_dict_sys,
-                                  num_trials=(len(inputs_dict[nouns_in]) * eps + 1))
-        end = timeit.default_timer()
-        sys_time = end - start
-
-        # LOG TIMES, SPEEDUP PROVIDED BY COMPOSITION OVER SYSTEM
-
         msg = 'Training Semantic net as AutodiffComposition for {0} epochs took {1} seconds'.format(eps, comp_time)
         print(msg)
         print("\n")
-        logger.info(msg)
-
-        msg = 'Training Semantic net as System for {0} epochs took {1} seconds'.format(eps, sys_time)
-        print(msg)
-        print("\n")
-        logger.info(msg)
-
-        speedup = np.round((sys_time / comp_time), decimals=2)
-        msg = ('Training Semantic net as AutodiffComposition for {0} epochs was {1} times faster than '
-               'training it as System for {0} epochs.'.format(eps, speedup))
-        print(msg)
         logger.info(msg)
 
 
@@ -1896,8 +1836,7 @@ class TestTrainingIdenticalness():
                                            receiver=out_sig_can_sys)
 
         # SET UP COMPOSITION FOR SEMANTIC NET
-        sem_net = AutodiffComposition(param_init_from_pnl=True,
-                                      learning_rate=0.5,
+        sem_net = AutodiffComposition(learning_rate=0.5,
                                       optimizer_type=opt,
                                       )
 
@@ -1992,8 +1931,6 @@ class TestTrainingIdenticalness():
 
         result = sem_net.run(inputs=inputs_dict)
 
-        # comp_weights = sem_net.get_parameters()[0]
-
         # TRAIN COMPOSITION
         def g_f():
             yield {"inputs": inputs_dict,
@@ -2002,12 +1939,10 @@ class TestTrainingIdenticalness():
         g = g_f()
         result = sem_net.learn(inputs=g_f)
 
-        comp_weights = sem_net.get_parameters()
-
         # SET UP SYSTEM
         sem_net_sys = Composition()
 
-        learning_components = sem_net_sys.add_backpropagation_learning_pathway(
+        backprop_pathway = sem_net_sys.add_backpropagation_learning_pathway(
             pathway=[
                 nouns_in_sys,
                 map_nouns_h1_sys,
@@ -2019,9 +1954,9 @@ class TestTrainingIdenticalness():
             ],
             learning_rate=0.5
         )
-        inputs_dict_sys[learning_components[pnl.TARGET_MECHANISM]] = targets_dict[out_sig_I]
+        inputs_dict_sys[backprop_pathway.target] = targets_dict[out_sig_I]
 
-        learning_components = sem_net_sys.add_backpropagation_learning_pathway(
+        backprop_pathway = sem_net_sys.add_backpropagation_learning_pathway(
             pathway=[
                 rels_in_sys,
                 map_rels_h2_sys,
@@ -2031,9 +1966,9 @@ class TestTrainingIdenticalness():
             ],
             learning_rate=0.5
         )
-        inputs_dict_sys[learning_components[pnl.TARGET_MECHANISM]] = targets_dict[out_sig_is]
+        inputs_dict_sys[backprop_pathway.target] = targets_dict[out_sig_is]
 
-        learning_components = sem_net_sys.add_backpropagation_learning_pathway(
+        backprop_pathway = sem_net_sys.add_backpropagation_learning_pathway(
             pathway=[
                 h2_sys,
                 map_h2_has_sys,
@@ -2041,9 +1976,9 @@ class TestTrainingIdenticalness():
             ],
             learning_rate=0.5
         )
-        inputs_dict_sys[learning_components[pnl.TARGET_MECHANISM]] = targets_dict[out_sig_has]
+        inputs_dict_sys[backprop_pathway.target] = targets_dict[out_sig_has]
 
-        learning_components = sem_net_sys.add_backpropagation_learning_pathway(
+        backprop_pathway = sem_net_sys.add_backpropagation_learning_pathway(
             pathway=[
                 h2_sys,
                 map_h2_can_sys,
@@ -2051,7 +1986,7 @@ class TestTrainingIdenticalness():
             ],
             learning_rate=0.5
         )
-        inputs_dict_sys[learning_components[pnl.TARGET_MECHANISM]] = targets_dict[out_sig_can]
+        inputs_dict_sys[backprop_pathway.target] = targets_dict[out_sig_can]
 
         # TRAIN SYSTEM
         results = sem_net_sys.learn(inputs=inputs_dict_sys,
@@ -2059,13 +1994,13 @@ class TestTrainingIdenticalness():
 
         # CHECK THAT PARAMETERS FOR COMPOSITION, SYSTEM ARE SAME
 
-        assert np.allclose(comp_weights[map_nouns_h1], map_nouns_h1_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(comp_weights[map_rels_h2], map_rels_h2_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(comp_weights[map_h1_h2], map_h1_h2_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(comp_weights[map_h2_I], map_h2_I_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(comp_weights[map_h2_is], map_h2_is_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(comp_weights[map_h2_has], map_h2_has_sys.get_mod_matrix(sem_net_sys))
-        assert np.allclose(comp_weights[map_h2_can], map_h2_can_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_nouns_h1.parameters.matrix.get(sem_net), map_nouns_h1_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_rels_h2.parameters.matrix.get(sem_net), map_rels_h2_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_h1_h2.parameters.matrix.get(sem_net), map_h1_h2_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_h2_I.parameters.matrix.get(sem_net), map_h2_I_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_h2_is.parameters.matrix.get(sem_net), map_h2_is_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_h2_has.parameters.matrix.get(sem_net), map_h2_has_sys.get_mod_matrix(sem_net_sys))
+        assert np.allclose(map_h2_can.parameters.matrix.get(sem_net), map_h2_can_sys.get_mod_matrix(sem_net_sys))
 
     def test_identicalness_of_input_types(self):
         # SET UP MECHANISMS FOR COMPOSITION
@@ -2097,7 +2032,7 @@ class TestTrainingIdenticalness():
 
         # SET UP COMPOSITION
 
-        xor_dict = AutodiffComposition(param_init_from_pnl=True)
+        xor_dict = AutodiffComposition()
 
         xor_dict.add_node(xor_in_dict)
         xor_dict.add_node(xor_hid_dict)
@@ -2156,7 +2091,7 @@ class TestTrainingIdenticalness():
 
         # SET UP COMPOSITION
 
-        xor_func = AutodiffComposition(param_init_from_pnl=True)
+        xor_func = AutodiffComposition()
 
         xor_func.add_node(xor_in_func)
         xor_func.add_node(xor_hid_func)
@@ -2179,13 +2114,13 @@ class TestTrainingIdenticalness():
                  [1],
                  [0]])
 
-        def get_inputs():
+        def get_inputs(idx):
             return {
                 "inputs": {
-                    xor_in_func: xor_inputs_func
+                    xor_in_func: xor_inputs_func[idx]
                 },
                 "targets": {
-                    xor_out_func: xor_targets_func
+                    xor_out_func: xor_targets_func[idx]
                 }
             }
 
@@ -2217,7 +2152,7 @@ class TestTrainingIdenticalness():
 
         # SET UP COMPOSITION
 
-        xor_gen = AutodiffComposition(param_init_from_pnl=True)
+        xor_gen = AutodiffComposition()
 
         xor_gen.add_node(xor_in_gen)
         xor_gen.add_node(xor_hid_gen)
@@ -2279,7 +2214,7 @@ class TestTrainingIdenticalness():
 
         # SET UP COMPOSITION
 
-        xor_gen_func = AutodiffComposition(param_init_from_pnl=True)
+        xor_gen_func = AutodiffComposition()
 
         xor_gen_func.add_node(xor_in_gen_func)
         xor_gen_func.add_node(xor_hid_gen_func)
@@ -2334,7 +2269,7 @@ class TestACLogging:
         hid_map = MappingProjection()
         out_map = MappingProjection()
 
-        xor = AutodiffComposition(param_init_from_pnl=True)
+        xor = AutodiffComposition()
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -2342,6 +2277,10 @@ class TestACLogging:
 
         xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
         xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+
+        xor_in.set_log_conditions('value', pnl.LogCondition.TRIAL)
+        xor_hid.set_log_conditions('value', pnl.LogCondition.TRIAL)
+        xor_out.set_log_conditions('value', pnl.LogCondition.TRIAL)
 
         hid_map.set_log_conditions('matrix', pnl.LogCondition.TRIAL)
         out_map.set_log_conditions('matrix', pnl.LogCondition.TRIAL)
@@ -2414,7 +2353,7 @@ class TestACLogging:
         hid_map = MappingProjection()
         out_map = MappingProjection()
 
-        xor = AutodiffComposition(param_init_from_pnl=True)
+        xor = AutodiffComposition()
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -2498,7 +2437,6 @@ class TestNested:
         # -----------------------------------------------------------------
 
         xor_autodiff = AutodiffComposition(
-            param_init_from_pnl=True,
             learning_rate=learning_rate,
         )
 
@@ -2516,10 +2454,10 @@ class TestNested:
 
         parentComposition = pnl.Composition()
         parentComposition.add_node(xor_autodiff)
-        
+
         input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
-        
+
         learning_context = Context()
         result1 = xor_autodiff.learn(inputs=input_dict, bin_execute=mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
         result1 = np.array(result1).flatten()
@@ -2570,7 +2508,6 @@ class TestNested:
         # -----------------------------------------------------------------
 
         xor_autodiff = AutodiffComposition(
-            param_init_from_pnl=True,
             learning_rate=learning_rate,
         )
 
@@ -2642,7 +2579,6 @@ class TestNested:
     #     # -----------------------------------------------------------------
     #
     #     xor_autodiff = AutodiffComposition(
-    #         param_init_from_pnl=True,
     #         patience=patience,
     #         min_delta=min_delta,
     #         learning_rate=learning_rate,
@@ -2828,8 +2764,7 @@ class TestNested:
 
         # SET UP COMPOSITION FOR SEMANTIC NET
 
-        sem_net = AutodiffComposition(param_init_from_pnl=True,
-                                      learning_rate=0.5,
+        sem_net = AutodiffComposition(learning_rate=0.5,
                                       optimizer_type=opt)
 
         sem_net.add_node(nouns_in)
@@ -2918,8 +2853,6 @@ class TestNested:
                 targets_dict[out_sig_has].append(truth_has[i])
                 targets_dict[out_sig_can].append(truth_can[i])
 
-        # comp_weights = sem_net.get_parameters()[0]
-
         # TRAIN COMPOSITION
         input_dict = {"inputs": inputs_dict,
                       "targets": targets_dict,
@@ -2969,8 +2902,7 @@ class TestBatching:
 
         # SET UP COMPOSITION
 
-        xor = AutodiffComposition(param_init_from_pnl=True,
-                                  learning_rate=10)
+        xor = AutodiffComposition(learning_rate=10)
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -3037,8 +2969,7 @@ class TestBatching:
 
         # SET UP COMPOSITION
 
-        xor = AutodiffComposition(param_init_from_pnl=True,
-                                  learning_rate=10)
+        xor = AutodiffComposition(learning_rate=10)
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -3109,8 +3040,7 @@ class TestBatching:
 
         # SET UP COMPOSITION
 
-        xor = AutodiffComposition(param_init_from_pnl=True,
-                                  learning_rate=10,
+        xor = AutodiffComposition(learning_rate=10,
                                   # optimizer_type=opt
                                   )
 

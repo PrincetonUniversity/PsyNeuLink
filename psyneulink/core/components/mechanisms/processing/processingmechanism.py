@@ -37,7 +37,7 @@ ProcessingMechanism have more specialized features, and often have restrictions 
 The output of a ProcessingMechanism may also be used by a `ModulatoryMechanism <ModulatoryMechanism>` to modify the
 parameters of other components (or its own parameters). ProcessingMechanisms are always executed before all
 ModulatoryMechanisms in the Composition to which they belong, so that any modifications made by the ModulatoryMechanism
-are available to all ProcessingMechanisms in the next `TRIAL`.
+are available to all ProcessingMechanisms in the next `TRIAL <TimeScale.TRIAL>`.
 
 .. _ProcessingMechanism_Creation:
 
@@ -76,25 +76,8 @@ See documentation for individual subtypes of ProcessingMechanism for more specif
 Execution
 ---------
 
-Three main tasks are completed each time a ProcessingMechanism executes:
-
-1. The ProcessingMechanism updates its `InputPort`(s), and their values are used to assemble `variable
-<Mechanism_Base.variable>`. Each InputPort `value <InputPort.value>` (often there is only one `InputPort`) is
-added to an outer array, such that each item of variable corresponds to an InputPort `value <InputPort.value>`.
-
-2. The ProcessingMechanism's `variable <Mechanism_Base.variable>` is handed off as the input to the
-ProcessingMechanism's `function <Mechanism_Base.function>`, and the function executes.
-
-3. The result of the ProcessingMechanism's `function <Mechanism_Base.function>` is placed in the Mechanism's
-`value <Mechanism_Base.value>` attribute, and OutputPorts are generated based on `value <Mechanism_Base.value>`.
-
-A ProcessingMechanism may be executed by calling its execute method directly:
-
-    >>> my_simple_processing_mechanism = pnl.ProcessingMechanism()      #doctest: +SKIP
-    >>> my_simple_processing_mechanism.execute(1.0)                     #doctest: +SKIP
-
-This option is intended for testing and debugging purposes.  More commonly, a mechanism is executed when the
-`Composition` to which it belongs is `run <Composition_Run>`.
+The execution of a ProcessingMechanism follows the same sequence of actions as a standard `Mechanism <Mechanism>`
+(see `Mechanism_Execution`).
 
 .. _ProcessingMechanism_Class_Reference:
 
@@ -172,15 +155,15 @@ class ProcessingMechanism_Base(Mechanism_Base):
                                   {NAME: MAX_ABS_VAL,
                                    FUNCTION:lambda x: np.max(np.absolute(x))},
                                   {NAME: MAX_ONE_HOT,
-                                   FUNCTION: OneHot(mode=MAX_VAL).function},
+                                   FUNCTION: OneHot(mode=MAX_VAL)},
                                   {NAME: MAX_ABS_ONE_HOT,
-                                   FUNCTION: OneHot(mode=MAX_ABS_VAL).function},
+                                   FUNCTION: OneHot(mode=MAX_ABS_VAL)},
                                   {NAME: MAX_INDICATOR,
-                                   FUNCTION: OneHot(mode=MAX_INDICATOR).function},
+                                   FUNCTION: OneHot(mode=MAX_INDICATOR)},
                                   {NAME: MAX_ABS_INDICATOR,
-                                   FUNCTION: OneHot(mode=MAX_ABS_INDICATOR).function},
+                                   FUNCTION: OneHot(mode=MAX_ABS_INDICATOR)},
                                   {NAME: PROB,
-                                   FUNCTION: SoftMax(output=PROB).function}])
+                                   FUNCTION: SoftMax(output=PROB)}])
     standard_output_port_names = [i['name'] for i in standard_output_ports]
 
     def __init__(self,
@@ -204,8 +187,6 @@ class ProcessingMechanism_Base(Mechanism_Base):
         :param prefs: (PreferenceSet)
         :param context: (str)
         """
-
-        self.system = None
 
         super().__init__(default_variable=default_variable,
                          size=size,
@@ -304,7 +285,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
                  size=None,
                  input_ports:tc.optional(tc.any(list, dict))=None,
                  output_ports:tc.optional(tc.any(str, Iterable))=None,
-                 function=Linear,
+                 function=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

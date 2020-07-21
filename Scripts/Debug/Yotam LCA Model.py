@@ -147,7 +147,7 @@ def get_trained_network(bipartite_graph, num_features=3, num_hidden=200, epochs=
 	}
 
 	# Build network
-	mnet = pnl.AutodiffComposition(param_init_from_pnl=True,
+	mnet = pnl.AutodiffComposition(
                            patience=patience,
                            min_delta=min_delt,
                            learning_rate=learning_rate,
@@ -186,7 +186,7 @@ def get_trained_network(bipartite_graph, num_features=3, num_hidden=200, epochs=
 							   time_step_size=0.01, 
 							   threshold=threshold, 
 							   threshold_criterion=pnl.CONVERGENCE,
-							   reinitialize_when=pnl.AtTrialStart(),
+							   reset_stateful_function_when=pnl.AtTrialStart(),
 							   name='lca')
 
 		# Wrapper composition used to pass values between mnet (AutodiffComposition) and lca (LCAMechanism)
@@ -273,7 +273,7 @@ def get_trained_network_multLCA(bipartite_graph, num_features=3, num_hidden=200,
 	}
 
 	# Build network
-	mnet = pnl.AutodiffComposition(param_init_from_pnl=True,
+	mnet = pnl.AutodiffComposition(
                            patience=patience,
                            min_delta=min_delt,
                            learning_rate=learning_rate,
@@ -316,7 +316,7 @@ def get_trained_network_multLCA(bipartite_graph, num_features=3, num_hidden=200,
 											 integrator_function=lci,
 											 name='lca',
 											 termination_threshold=threshold,
-											 reinitialize_when=pnl.AtTrialStart())
+											 reset_stateful_function_when=pnl.AtTrialStart())
 
 		# Wrapper composition used to pass values between mnet (AutodiffComposition) and lca (LCAMechanism)
 		wrapper_composition = pnl.Composition()

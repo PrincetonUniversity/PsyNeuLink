@@ -75,14 +75,10 @@ Class Reference
 
 """
 
-import itertools
 import numpy as np
 import typecheck as tc
 
 import gym_forager
-
-from enum import Enum
-from itertools import product
 
 from psyneulink.library.compositions.regressioncfa import RegressionCFA
 from psyneulink.core.components.functions.learningfunctions import BayesGLM
@@ -140,7 +136,7 @@ class GymForagerCFA(RegressionCFA):
             self.update_weights = \
                 self.update_weights(default_variable=update_weights_default_variable)
         else:
-            self.update_weights.reinitialize({DEFAULT_VARIABLE: update_weights_default_variable})
+            self.update_weights.reset({DEFAULT_VARIABLE: update_weights_default_variable})
 
     def adapt(self, feature_values, control_allocation, net_outcome, context=None):
         """Update `regression_weights <RegressorCFA.regression_weights>` so as to improve prediction of
@@ -171,7 +167,7 @@ class GymForagerCFA(RegressionCFA):
         )
 
     # FIX: RENAME AS _EXECUTE_AS_REP ONCE SAME IS DONE FOR COMPOSITION
-    # def evaluate(self, control_allocation, num_samples, reinitialize_values, feature_values, context):
+    # def evaluate(self, control_allocation, num_samples, reset_stateful_functions_to, feature_values, context):
     def evaluate(self, feature_values, control_allocation, num_estimates, context):
         """Update prediction_vector <RegressorCFA.prediction_vector>`,
         then multiply by regression_weights.

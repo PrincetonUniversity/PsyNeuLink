@@ -45,7 +45,8 @@ Structure
 A Log is composed of `entries <Log.entries>`, each of which is a dictionary that maintains a record of the logged
 values of a Component.  The key for each entry is a string that is the name of the Component, and its value is a list
 of `LogEntry` tuples recording its values.  Each `LogEntry` tuple has three items:
-    * *time* -- the `RUN`, `TRIAL`, `PASS`, and `TIME_STEP` in which the value of the item was recorded;
+    * *time* -- the `RUN`, `TRIAL <TimeScale.TRIAL>`, `PASS`, and `TIME_STEP` in which the value of the item was
+      recorded;
     * *context* -- a string indicating the context in which the value was recorded;
     * *value* -- the value of the item.
 The time is recorded only if the Component is executed within a `System`;  otherwise, the time field is `None`.
@@ -143,9 +144,9 @@ that the `value <Mechanism_Base.value>` of ``my_mech`` be logged both during exe
     ...        prefs={pnl.LOG_PREF: pnl.PreferenceEntry(pnl.LogCondition.INITIALIZATION, pnl.PreferenceLevel.INSTANCE)})
 
 .. hint::
-   `LogCondition.TRIAL` logs the `value <Component.value>` of a Component at the end of a `TRIAL`.  To log its
-   `value <Component.value>` at the start of a `TRIAL`, use its `log_values <Component.log_values>` method in the
-   **call_before_trial** argument of the System's `run <System.run>` method.
+   `LogCondition.TRIAL` logs the `value <Component.value>` of a Component at the end of a `TRIAL <TimeScale.TRIAL>`.
+   To log its `value <Component.value>` at the start of a `TRIAL <TimeScale.TRIAL>`, use its `log_values
+   <Component.log_values>` method in the **call_before_trial** argument of the System's `run <System.run>` method.
 
 .. _Log_Execution:
 
@@ -161,15 +162,14 @@ is `OFF`.
 Examples
 --------
 
-The following example creates a Process with two `TransferMechanisms <TransferMechanism>`, one that projects to
+The following example creates a Composition with two `TransferMechanisms <TransferMechanism>`, one that projects to
 another, and logs the `noise <TransferMechanism.noise>` and *RESULT* `OutputPort` of the first and the
 `MappingProjection` from the first to the second::
 
     # Create a Process with two TransferMechanisms, and get a reference for the Projection created between them:
     >>> my_mech_A = pnl.TransferMechanism(name='mech_A', size=2)
     >>> my_mech_B = pnl.TransferMechanism(name='mech_B', size=3)
-    >>> my_process = pnl.Process(pathway=[my_mech_A, my_mech_B])
-    >>> my_system = pnl.System(processes=[my_process])
+    >>> my_composition = pnl.Composition(pathways=[my_mech_A, my_mech_B])
     >>> proj_A_to_B = my_mech_B.path_afferents[0]
 
     COMMENT:
@@ -381,10 +381,10 @@ Class Reference
 
 """
 import enum
-import inspect
 import warnings
 
 from collections import OrderedDict, namedtuple
+from collections.abc import MutableMapping
 
 import numpy as np
 import typecheck as tc
@@ -407,7 +407,7 @@ class LogCondition(enum.IntFlag):
 
     .. note::
       The values of LogCondition are subset of (and directly reference) the ContextFlags bitwise enum,
-      with the exception of TRIAL and RUN, which are bit-shifted to follow the ContextFlags.SIMULATION value.
+      with the exception of TRIAL and RUN, which are bit-shifted to follow the ContextFlags.SIMULATION_MODE value.
     """
     OFF = ContextFlags.UNSET
     """No recording."""
@@ -424,12 +424,12 @@ class LogCondition(enum.IntFlag):
     """Set during the `learning phase <System_Execution_Learning>` of execution of a Composition."""
     CONTROL = ContextFlags.CONTROL
     """Set during the `control phase System_Execution_Control>` of execution of a Composition."""
-    SIMULATION = ContextFlags.SIMULATION
+    SIMULATION = ContextFlags.SIMULATION_MODE
     # Set during simulation by Composition.controller
-    TRIAL = ContextFlags.SIMULATION << 1
-    """Set at the end of a `TRIAL`."""
-    RUN = ContextFlags.SIMULATION << 2
-    """Set at the end of a `RUN`."""
+    TRIAL = ContextFlags.SIMULATION_MODE << 1
+    """Set at the end of a 'TRIAL'."""
+    RUN = ContextFlags.SIMULATION_MODE << 2
+    """Set at the end of a 'RUN'."""
     ALL_ASSIGNMENTS = (
         INITIALIZATION | VALIDATION | EXECUTION | PROCESSING | LEARNING | CONTROL
         | SIMULATION | TRIAL | RUN
@@ -509,7 +509,6 @@ def _time_string(time):
 
 #region Custom Entries Dict
 # Modified from: http://stackoverflow.com/questions/7760916/correct-useage-of-getter-setter-for-dictionary-values
-from collections.abc import MutableMapping
 class EntriesDict(MutableMapping,dict):
     """Maintains a Dict of Log entries; assignment of a LogEntry to an entry appends it to the list for that entry.
 
@@ -809,7 +808,7 @@ class Log:
                 levels |= l
             level = levels
 
-            if not item in self.loggable_items:
+            if item not in self.loggable_items:
                 # KDM 8/13/18: NOTE: add_entries is not defined anywhere
                 raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
                                format(item, self.owner.name))
@@ -1076,7 +1075,11 @@ class Log:
                     self._get_parameter_from_item_string(entry).clear_log(contexts)
                 else:
                     # Delete the data for the entry but leave the entry itself in the log to which it belongs
+                    # MODIFIED 6/15/20 OLD:
                     raise LogError('delete_entry=False currently unimplemented')
+                    # # MODIFIED 6/15/20 NEW:
+                    # warnings.warn('delete_entry=False currently unimplemented in Log.clear_entries()')
+                    # MODIFIED 6/15/20 END
                 assert True
 
     @tc.typecheck
@@ -1221,7 +1224,6 @@ class Log:
                 warnings.warn("{0} is not an entry in the Log for {1}".
                       format(entry_name, self.owner.name))
             else:
-                import numpy as np
                 multiple_eids = len(datum)>1
                 for eid in datum:
                     if multiple_eids:
@@ -1276,9 +1278,9 @@ class Log:
         Rows are ordered in the same order as Components are specified in the **entries** argument.
 
         If all of the data for every entry has a time value (i.e., the time field of its LogEntry is not `None`),
-        then the first four rows are time indices for the run, trial, pass, and time_step of each data item, respectively.
-        Each subsequent row is the times series of data for a given entry.  If there is no data for a given entry
-        at a given time point, it is entered as `None`.
+        then the first four rows are time indices for the run, trial, pass, and time_step of each data item,
+        respectively. Each subsequent row is the times series of data for a given entry.  If there is no data for a
+        given entry at a given time point, it is entered as `None`.
 
         If any of the data for any entry does not have a time value (e.g., if that Component was not run within a
         System), then all of the entries must have the same number of data (LogEntry) items, and the first row is a

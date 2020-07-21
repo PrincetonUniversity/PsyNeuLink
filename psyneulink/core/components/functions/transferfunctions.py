@@ -40,39 +40,42 @@ All TransferFunctions have the following attributes:
 
 """
 
-import itertools
 import numbers
-from enum import Enum, IntEnum
-
 import numpy as np
 import typecheck as tc
 import types
 import warnings
 
+from enum import IntEnum
+from math import e, pi, sqrt
+
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.function import \
-    Function, Function_Base, FunctionError, function_keywords, is_function_type
+from psyneulink.core.components.functions.function import (
+    Function, Function_Base, FunctionError, function_keywords, get_matrix, is_function_type,
+)
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.selectionfunctions import OneHot
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ADDITIVE_PARAM, ALL, AUTO_ASSIGN_MATRIX, BIAS, BOUNDS, EXPONENTIAL_FUNCTION, \
-    FULL_CONNECTIVITY_MATRIX, GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
-    IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, INVERSE_HOLLOW_MATRIX,\
-    LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
-    TANH_FUNCTION, MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
-    OFF, OFFSET, ON, PARAMETER_PORT_PARAMS, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
-    RANDOM_CONNECTIVITY_MATRIX, RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,\
+    ADDITIVE_PARAM, ALL, BIAS, EXPONENTIAL_FUNCTION, \
+    GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
+    IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
+    TANH_FUNCTION, MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, \
+    OFF, OFFSET, ON, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
+    RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,\
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import \
-    Parameter, ParameterError, get_validator_by_function
-from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
-from psyneulink.core.globals.context import Context, ContextFlags
+    Parameter, get_validator_by_function
+from psyneulink.core.globals.utilities import parameter_spec, get_global_seed, safe_len
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
 
-__all__ = ['Exponential', 'Gaussian', 'GaussianDistort', 'get_matrix', 'Identity', 'Linear', 'LinearMatrix',
+__all__ = ['Exponential', 'Gaussian', 'GaussianDistort', 'Identity', 'Linear', 'LinearMatrix',
            'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
-]
+           ]
 
 class TransferFunction(Function_Base):
     """Function that transforms variable but maintains its shape.
@@ -120,10 +123,10 @@ class TransferFunction(Function_Base):
                 vo = b.gep(arg_out, [ctx.int32_ty(0), idx])
                 with pnlvm.helpers.array_ptr_loop(b, vi, "nested_transfer_loop") as args:
                     self._gen_llvm_transfer(ctx=ctx, vi=vi, vo=vo,
-                                            params=params, state=state, *args)
+                                            params=params, state=state, *args, tags=tags)
             else:
-               self._gen_llvm_transfer(b, idx, ctx=ctx, vi=arg_in, vo=arg_out,
-                                       params=params, state=state)
+                self._gen_llvm_transfer(b, idx, ctx=ctx, vi=arg_in, vo=arg_out,
+                                        params=params, state=state, tags=tags)
 
         return builder
 
@@ -176,13 +179,13 @@ class Identity(TransferFunction):  # -------------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = IDENTITY_FUNCTION
@@ -200,7 +203,7 @@ class Identity(TransferFunction):  # -------------------------------------------
                  default_variable=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
@@ -324,13 +327,13 @@ class Linear(TransferFunction):  # ---------------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = LINEAR_FUNCTION
@@ -367,11 +370,11 @@ class Linear(TransferFunction):  # ---------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 slope: tc.optional(parameter_spec) = None,
-                 intercept: tc.optional(parameter_spec) = None,
+                 slope: tc.optional(tc.optional(parameter_spec)) = None,
+                 intercept: tc.optional(tc.optional(parameter_spec)) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -382,7 +385,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         slope_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SLOPE)
@@ -391,9 +394,15 @@ class Linear(TransferFunction):  # ---------------------------------------------
         slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
         intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
 
-        val = builder.load(ptri)
-        val = builder.fmul(val, slope)
-        val = builder.fadd(val, intercept)
+
+        if "derivative" in tags:
+            # f'(x) = m
+            val = slope
+        else:
+            # f(x) = mx + b
+            val = builder.load(ptri)
+            val = builder.fmul(val, slope)
+            val = builder.fadd(val, intercept)
 
         builder.store(val, ptro)
 
@@ -449,6 +458,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         return self.convert_output_type(result)
 
+    @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
         """
         derivative(input)
@@ -568,13 +578,13 @@ class Exponential(TransferFunction):  # ----------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = EXPONENTIAL_FUNCTION
@@ -618,13 +628,13 @@ class Exponential(TransferFunction):  # ----------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec = 1.0,
-                 scale: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
-                 offset: parameter_spec = 0.0,
+                 rate: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
+                 bias: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -636,7 +646,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -655,8 +665,15 @@ class Exponential(TransferFunction):  # ----------------------------------------
         val = builder.fmul(val, rate)
         val = builder.fadd(val, bias)
         val = builder.call(exp_f, [val])
-        val = builder.fmul(val, scale)
-        val = builder.fadd(val, offset)
+
+        if "derivative" in tags:
+            # f'(x) = s*r*e^(r*x + b)
+            val = builder.fmul(val, scale)
+            val = builder.fmul(val, rate)
+        else:
+            # f(x) = s*e^(r*x + b) + o
+            val = builder.fmul(val, scale)
+            val = builder.fadd(val, offset)
 
         builder.store(val, ptro)
 
@@ -691,10 +708,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = scale * np.exp(rate * variable + bias) + offset
-        from math import e
         result = scale * e**(rate * variable + bias) + offset
         return self.convert_output_type(result)
 
+    @handle_external_context()
     def derivative(self, input, output=None, context=None):
         """
         derivative(input)
@@ -714,8 +731,11 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
 
         """
-        return self._get_current_function_param(RATE, context) * input + self._get_current_function_param(BIAS, context)
+        rate = self._get_current_function_param(RATE, context)
+        scale = self._get_current_function_param(SCALE, context)
+        bias = self._get_current_function_param(BIAS, context)
 
+        return rate * scale * e**(rate * input + bias)
 
 # **********************************************************************************************************************
 #                                                   Logistic
@@ -825,13 +845,13 @@ class Logistic(TransferFunction):  # -------------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = LOGISTIC_FUNCTION
@@ -886,14 +906,14 @@ class Logistic(TransferFunction):  # -------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: parameter_spec = 1.0,
-                 x_0=0.0,
-                 bias=0.0,
-                 offset: parameter_spec = 0.0,
-                 scale: parameter_spec = 1.0,
+                 gain: tc.optional(parameter_spec) = None,
+                 x_0=None,
+                 bias=None,
+                 offset: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -906,7 +926,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -924,6 +944,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
+
         val = builder.fadd(val, bias)
         val = builder.fsub(val, x_0)
         val = builder.fmul(val, gain)
@@ -932,6 +953,14 @@ class Logistic(TransferFunction):  # -------------------------------------------
         val = builder.fadd(ctx.float_ty(1), val)
         val = builder.fdiv(ctx.float_ty(1), val)
         val = builder.fmul(val, scale)
+
+        if "derivative" in tags:
+            # f(x) = g * s * o * (1-o)
+            function_val = val
+            val = builder.fsub(ctx.float_ty(1), function_val)
+            val = builder.fmul(function_val, val)
+            val = builder.fmul(gain, val)
+            val = builder.fmul(scale, val)
 
         builder.store(val, ptro)
 
@@ -967,11 +996,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
-        from math import e
         result = scale * (1. / (1 + e**(-gain * (variable + bias - x_0) + offset)))
 
         return self.convert_output_type(result)
 
+    @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
         """
         derivative(input=None, output=None)
@@ -1042,7 +1071,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
     .. math::
 
-        \\frac{1 - e^{-2(gain*(variable+bias-x\\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\\_0)+offset)}}
+        \\scale*frac{1 - e^{-2(gain*(variable+bias-x\\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\\_0)+offset)}}
 
     .. note::
 
@@ -1124,13 +1153,13 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = TANH_FUNCTION
@@ -1182,14 +1211,14 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: parameter_spec = 1.0,
-                 x_0=0.0,
-                 bias=0.0,
-                 offset: parameter_spec = 0.0,
-                 scale: parameter_spec = 1.0,
+                 gain: tc.optional(parameter_spec) = None,
+                 x_0=None,
+                 bias=None,
+                 offset: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1202,7 +1231,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -1210,23 +1239,47 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
         x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
         offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
         x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
-        exp_val = builder.load(ptri)
-        exp_val = builder.fadd(exp_val, bias)
-        exp_val = builder.fsub(exp_val, x_0)
-        exp_val = builder.fmul(exp_val, gain)
-        exp_val = builder.fadd(exp_val, offset)
-        exp_val = builder.fmul(exp_val.type(-2), exp_val)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
 
-        val = builder.call(exp_f, [exp_val])
-        val1 = builder.fsub(val.type(1), val)
-        val2 = builder.fadd(val.type(1), val)
-        val = builder.fdiv(val1, val2)
+        variable = builder.load(ptri)
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
+
+        if "derivative" in tags:
+            exponent = builder.fadd(variable, bias)
+            exponent = builder.fsub(exponent, x_0)
+            exponent = builder.fmul(gain, exponent)
+            exponent = builder.fadd(exponent, offset)
+            exponent = builder.fmul(exponent.type(-2), exponent)
+
+            mult = builder.fmul(gain, scale)
+            mult = builder.fmul(mult.type(-2), mult)
+
+            exp_val = builder.call(exp_f, [exponent])
+            numerator = builder.fmul(exp_val.type(-2), exp_val)
+
+            denominator = builder.fadd(exp_val.type(1), exp_val)
+            denominator = builder.fmul(denominator, denominator)
+
+            val = builder.fdiv(numerator, denominator)
+            val = builder.fmul(val, mult)
+        else:
+            exp_val = builder.fadd(variable, bias)
+            exp_val = builder.fsub(exp_val, x_0)
+            exp_val = builder.fmul(exp_val, gain)
+            exp_val = builder.fadd(exp_val, offset)
+            exp_val = builder.fmul(exp_val.type(-2), exp_val)
+
+            val = builder.call(exp_f, [exp_val])
+            val1 = builder.fsub(val.type(1), val)
+            val2 = builder.fadd(val.type(1), val)
+            val = builder.fdiv(val1, val2)
+            val = builder.fmul(val, scale)
 
         builder.store(val, ptro)
 
@@ -1258,17 +1311,18 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bias = self._get_current_function_param(BIAS, context)
         x_0 = self._get_current_function_param(X_0, context)
         offset = self._get_current_function_param(OFFSET, context)
+        scale = self._get_current_function_param(SCALE, context)
 
         # The following probably doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         #   (since np.exp doesn't work)
         # result = 1. / (1 + np.tanh(-gain * (variable - bias) + offset))
-        from math import e
         exponent = -2 * (gain * (variable + bias - x_0) + offset)
-        result = (1 - e**exponent)/ (1 + e**exponent)
+        result = scale * (1 - e**exponent)/ (1 + e**exponent)
 
         return self.convert_output_type(result)
 
 
+    @handle_external_context()
     def derivative(self, input, output=None, context=None):
         """
         derivative(input)
@@ -1292,8 +1346,12 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         offset = self._get_current_function_param(OFFSET, context)
         scale = self._get_current_function_param(SCALE, context)
 
-        from math import e
-        return gain * scale / ((1 + e**(-2 * (gain * (input + bias - x_0) + offset))) / (2 * e**(-gain * (input + bias - x_0) + offset)))**2
+        exponent = -2 * (gain * (input + bias - x_0) + offset)
+        mult = -2 * gain * scale
+        numerator = -2 * e**(exponent)
+        denominator = (1 + e**(exponent))**2
+
+        return mult * (numerator / denominator)
 
 
 # **********************************************************************************************************************
@@ -1356,23 +1414,30 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
     variable : number or array
         contains value to be transformed.
+
     gain : float : default 1.0
         value by which to multiply `variable <ReLU.variable>` after `bias <ReLU.bias>` is subtracted
         from it.
+
     bias : float : default 0.0
         value to subtract from each element of `variable <ReLU.variable>`.
+
     leak : float : default 0.0
         scaling factor between 0 and 1 when (variable - bias) is less than or equal to 0.
+
     bounds : (None,None)
+
     owner : Component
         `component <Component>` to which the Function has been assigned.
+
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
+
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = RELU_FUNCTION
@@ -1410,12 +1475,12 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
-                 leak: parameter_spec = 0.0,
+                 gain: tc.optional(parameter_spec) = None,
+                 bias: tc.optional(parameter_spec) = None,
+                 leak: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1458,7 +1523,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         return self.convert_output_type(result)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -1473,14 +1538,20 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         # Maxnum for some reason needs full function prototype
         max_f = ctx.get_builtin("maxnum", [ctx.float_ty])
         var = builder.load(ptri)
-        val = builder.fsub(var, bias)
-        val1 = builder.fmul(val, gain)
-        val2 = builder.fmul(val1, leak)
 
-        val = builder.call(max_f, [val1, val2])
+        if "derivative" in tags:
+            predicate = builder.fcmp_ordered('>', var, var.type(0))
+            val = builder.select(predicate, gain, builder.fmul(gain, leak))
+        else:
+            val = builder.fsub(var, bias)
+            val1 = builder.fmul(val, gain)
+            val2 = builder.fmul(val1, leak)
+
+            val = builder.call(max_f, [val1, val2])
 
         builder.store(val, ptro)
 
+    @handle_external_context()
     def derivative(self, input, output=None, context=None):
         """
         derivative(input)
@@ -1502,7 +1573,11 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         gain = self._get_current_function_param(GAIN, context)
         leak = self._get_current_function_param(LEAK, context)
 
-        return gain if input > 0 else gain * leak
+        input = np.asarray(input).copy()
+        input[input>0] = gain
+        input[input<=0] = gain * leak
+
+        return input
 
 
 # **********************************************************************************************************************
@@ -1596,13 +1671,13 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = GAUSSIAN_FUNCTION
@@ -1647,13 +1722,13 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 standard_deviation: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 standard_deviation: tc.optional(parameter_spec) = None,
+                 bias: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             standard_deviation=standard_deviation,
@@ -1665,7 +1740,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -1692,7 +1767,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         exp = builder.fdiv(exp_num, exp_denom)
         numerator = builder.call(exp_f, [exp])
 
-        from math import pi
         denom = builder.fmul(standard_deviation.type(2 * pi), standard_deviation)
         denom = builder.call(sqrt_f, [denom])
         val = builder.fdiv(numerator, denom)
@@ -1732,12 +1806,12 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         scale = self._get_current_function_param(SCALE, context)
         offset = self._get_current_function_param(OFFSET, context)
 
-        from math import e, pi, sqrt
         gaussian = e**(-(variable - bias)**2 / (2 * standard_deviation**2)) / sqrt(2 * pi * standard_deviation)
         result = scale * gaussian + offset
 
         return self.convert_output_type(result)
 
+    @handle_external_context()
     def derivative(self, input, output=None, context=None):
         """
         derivative(input)
@@ -1761,7 +1835,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         sigma = self._get_current_function_param(STANDARD_DEVIATION, context)
         bias = self._get_current_function_param(BIAS, context)
 
-        from math import e, pi, sqrt
         adjusted_input = input - bias
         result = (-adjusted_input * e**(-(adjusted_input**2 / (2 * sigma**2)))) / sqrt(2 * pi * sigma**3)
 
@@ -1864,13 +1937,13 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = GAUSSIAN_DISTORT_FUNCTION
@@ -1922,14 +1995,14 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 variance: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 variance: tc.optional(parameter_spec) = None,
+                 bias: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if seed is None:
             seed = get_global_seed()
@@ -1948,7 +2021,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -2143,13 +2216,13 @@ class SoftMax(TransferFunction):
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = SOFTMAX_FUNCTION
@@ -2192,11 +2265,12 @@ class SoftMax(TransferFunction):
                     :default value: True
                     :type: ``bool``
         """
-        variable = Parameter(np.array(0.0), read_only=True, pnl_internal=True, constructor_argument='default_variable')
+        variable = Parameter(np.array([[0.0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bounds = (0, 1)
         output = ALL
         per_item = Parameter(True, pnl_internal=True)
+        one_hot_function = Parameter(OneHot, stateful=False, loggable=False)
 
         def _validate_output(self, output):
             options = {ALL, MAX_VAL, MAX_INDICATOR, PROB}
@@ -2208,22 +2282,48 @@ class SoftMax(TransferFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: parameter_spec = 1.0,
-                 output: tc.enum(ALL, MAX_VAL, MAX_INDICATOR, PROB) = ALL,
-                 per_item=True,
-                 params: tc.optional(dict) = None,
+                 gain: tc.optional(parameter_spec) = None,
+                 output=None,
+                 per_item=None,
+                 params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
+
+        try:
+            # needed because one_hot_function is initialized here based
+            # on output argument, which may also be passed in params
+            output = params['output']
+        except (TypeError, KeyError):
+            pass
+
+        if output not in {None, ALL}:
+            one_hot_function = OneHot(mode=output)
+        else:
+            one_hot_function = None
 
         super().__init__(
             default_variable=default_variable,
             gain=gain,
             per_item=per_item,
             output=output,
+            one_hot_function=one_hot_function,
             params=params,
             owner=owner,
             prefs=prefs,
         )
+
+    def _parse_one_hot_function_variable(self, variable):
+        if self.defaults.per_item:
+            variable = variable[0]
+
+        if self.defaults.output in {PROB, PROB_INDICATOR}:
+            prob_dist = np.asarray(variable)
+            # creates probability distribution in shape of variable
+            prob_dist = np.ones(variable.shape) / safe_len(prob_dist)
+
+            variable = np.asarray([variable, prob_dist])
+
+        return variable
 
     def _validate_variable(self, variable, context=None):
         if variable is None:
@@ -2233,18 +2333,6 @@ class SoftMax(TransferFunction):
                 return self.class_defaults.variable
 
         return np.asarray(variable)
-
-    def _instantiate_function(self, function, function_params=None, context=None):
-
-        self.one_hot_function = None
-        output_type = self._get_current_function_param(OUTPUT_TYPE, context)
-        bounds = None
-
-        if not output_type == ALL:
-            from psyneulink.core.components.functions.selectionfunctions import OneHot
-            self.one_hot_function = OneHot(mode=output_type).function
-
-        super()._instantiate_function(function, function_params=function_params, context=context)
 
     def __gen_llvm_exp_sum_max(self, builder, index, ctx, vi, gain, max_ptr, exp_sum_ptr, max_ind_ptr):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -2397,6 +2485,7 @@ class SoftMax(TransferFunction):
 
         return self.convert_output_type(output)
 
+    @handle_external_context()
     def derivative(self, output, input=None, context=None):
         """
         derivative(output)
@@ -2553,8 +2642,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
@@ -2597,7 +2686,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  matrix=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         # Note: this calls _validate_variable and _validate_params which are overridden below;
         #       the latter implements the matrix if required
@@ -3004,86 +3093,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 #         return True
 #     return False
 
-
-def get_matrix(specification, rows=1, cols=1, context=None):
-    """Returns matrix conforming to specification with dimensions = rows x cols or None
-
-     Specification can be a matrix keyword, filler value or np.ndarray
-
-     Specification (validated in _validate_params):
-        + single number (used to fill self.matrix)
-        + matrix keyword:
-            + AUTO_ASSIGN_MATRIX: IDENTITY_MATRIX if it is square, othwerwise FULL_CONNECTIVITY_MATRIX
-            + IDENTITY_MATRIX: 1's on diagonal, 0's elsewhere (must be square matrix), otherwise generates error
-            + HOLLOW_MATRIX: 0's on diagonal, 1's elsewhere (must be square matrix), otherwise generates error
-            + INVERSE_HOLLOW_MATRIX: 0's on diagonal, -1's elsewhere (must be square matrix), otherwise generates error
-            + FULL_CONNECTIVITY_MATRIX: all 1's
-            + RANDOM_CONNECTIVITY_MATRIX (random floats uniformly distributed between 0 and 1)
-        + 2D list or np.ndarray of numbers
-
-     Returns 2D array with length=rows in dim 0 and length=cols in dim 1, or none if specification is not recognized
-    """
-
-    # Matrix provided (and validated in _validate_params); convert to array
-    if isinstance(specification, (list, np.matrix)):
-        specification = np.array(specification)
-
-    if isinstance(specification, np.ndarray):
-        if specification.ndim == 2:
-            return specification
-        # FIX: MAKE THIS AN np.array WITH THE SAME DIMENSIONS??
-        elif specification.ndim < 2:
-            return np.atleast_2d(specification)
-        else:
-            raise FunctionError("Specification of np.array for matrix ({}) is more than 2d".
-                                format(specification))
-
-    if specification == AUTO_ASSIGN_MATRIX:
-        if rows == cols:
-            specification = IDENTITY_MATRIX
-        else:
-            specification = FULL_CONNECTIVITY_MATRIX
-
-    if specification == FULL_CONNECTIVITY_MATRIX:
-        return np.full((rows, cols), 1.0)
-
-    if specification == IDENTITY_MATRIX:
-        if rows != cols:
-            raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
-                                format(rows, cols, specification))
-        return np.identity(rows)
-
-    if specification == HOLLOW_MATRIX:
-        if rows != cols:
-            raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
-                                format(rows, cols, specification))
-        return 1 - np.identity(rows)
-
-    if specification == INVERSE_HOLLOW_MATRIX:
-        if rows != cols:
-            raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
-                                format(rows, cols, specification))
-        return (1 - np.identity(rows)) * -1
-
-    if specification == RANDOM_CONNECTIVITY_MATRIX:
-        return np.random.rand(rows, cols)
-
-    # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len
-    if isinstance(specification, types.FunctionType):
-        return specification(rows, cols)
-
-    # (7/12/17 CW) this is a PATCH (like the one in MappingProjection) to allow users to
-    # specify 'matrix' as a string (e.g. r = RecurrentTransferMechanism(matrix='1 2; 3 4'))
-    if type(specification) == str:
-        try:
-            return np.array(np.matrix(specification))
-        except (ValueError, NameError, TypeError):
-            # np.matrix(specification) will give ValueError if specification is a bad value (e.g. 'abc', '1; 1 2')
-            #                          [JDC] actually gives NameError if specification is a string (e.g., 'abc')
-            pass
-
-    # Specification not recognized
-    return None
 
 # **********************************************************************************************************************
 #                                             TransferWithCosts
@@ -3552,9 +3561,6 @@ class TransferWithCosts(TransferFunction):
         determines the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
     """
 
-    from psyneulink.core.components.functions.combinationfunctions import LinearCombination
-    from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
-
     componentName = TRANSFER_WITH_COSTS_FUNCTION
 
     bounds = None
@@ -3767,7 +3773,6 @@ class TransferWithCosts(TransferFunction):
                                                   setter=_adjustment_cost_fct_add_param_setter)
 
         duration_cost = None
-        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
         duration_cost_fct = Parameter(SimpleIntegrator, stateful=False)
         _validate_duration_cost_fct = get_validator_by_function(is_function_type)
         duration_cost_fct_mult_param = Parameter(modulable=True,
@@ -3782,7 +3787,6 @@ class TransferWithCosts(TransferFunction):
                                                 setter=_duration_cost_fct_add_param_setter)
 
         combined_costs = None
-        from psyneulink.core.components.functions.combinationfunctions import LinearCombination
         combine_costs_fct = Parameter(LinearCombination, stateful=False)
         _validate_combine_costs_fct = get_validator_by_function(is_function_type)
         combine_costs_fct_mult_param=Parameter(modulable=True,
@@ -3800,15 +3804,15 @@ class TransferWithCosts(TransferFunction):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 transfer_fct:(is_function_type)=Linear,
+                 transfer_fct:tc.optional(is_function_type)=None,
                  enabled_cost_functions:tc.optional(tc.any(CostFunctions, list))=None,
-                 intensity_cost_fct:(is_function_type)=Exponential,
-                 adjustment_cost_fct:tc.optional(is_function_type)=Linear,
-                 duration_cost_fct:tc.optional(is_function_type)=SimpleIntegrator,
-                 combine_costs_fct:tc.optional(is_function_type)=LinearCombination,
+                 intensity_cost_fct:tc.optional(is_function_type)=None,
+                 adjustment_cost_fct:tc.optional(is_function_type)=None,
+                 duration_cost_fct:tc.optional(is_function_type)=None,
+                 combine_costs_fct:tc.optional(is_function_type)=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         # if size:
         #     if default_variable is None:
@@ -3832,7 +3836,7 @@ class TransferWithCosts(TransferFunction):
         )
 
         # # MODIFIED 6/12/19 NEW: [JDC]
-        # self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
+        # self._variable_shape_flexibility = DefaultsFlexibility.FLEXIBLE
         # # MODIFIED 6/12/19 END
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
@@ -4120,7 +4124,7 @@ class TransferWithCosts(TransferFunction):
 
         enabled_cost_functions = self.parameters.enabled_cost_functions.get(execution_context)
         if assignment:
-            if not cost_function_name in self.parameters.names():
+            if cost_function_name not in self.parameters.names():
                 raise FunctionError("Unable to toggle {} ON as function assignment is \'None\'".
                                          format(cost_function_name))
             if not enabled_cost_functions:

@@ -10,6 +10,64 @@ language: shell
 os: linux
 dist: bionic
 
+arch:
+  - amd64
+  - arm64
+  - ppc64le
+  - s390x
+
+stages:
+  - precache
+  - test
+
+jobs:
+  include:
+    - script: true
+      after_script: true
+      stage: precache
+      env: PYTHON=3.8
+      arch: arm64
+    - script: true
+      after_script: true
+      stage: precache
+      env: PYTHON=3.7
+      arch: arm64
+    - script: true
+      after_script: true
+      stage: precache
+      env: PYTHON=3.6
+      arch: arm64
+    - script: true
+      after_script: true
+      stage: precache
+      env: PYTHON=3.8
+      arch: ppc64le
+    - script: true
+      after_script: true
+      stage: precache
+      env: PYTHON=3.7
+      arch: ppc64le
+    - script: true
+      after_script: true
+      stage: precache
+      env: PYTHON=3.6
+      arch: ppc64le
+    - script: true
+      after_script: true
+      stage: precache
+      env: PYTHON=3.8
+      arch: s390x
+    - script: true
+      after_script: true
+      stage: precache
+      env: PYTHON=3.7
+      arch: s390x
+    - script: true
+      after_script: true
+      stage: precache
+      env: PYTHON=3.6
+      arch: s390x
+
 env:
   jobs:
     - PYTHON=3.8
@@ -34,13 +92,23 @@ addons:
 before_install:
   - |
     # Install venv on Linux using Ubuntu distributed python
-    # distutils and lib2to3 are only needed for python3.8
+    if [ "$TRAVIS_CPU_ARCH" != "amd64" ]; then
+      # There are a lot fewer wheels distributed for non-x86 architectures.
+      # We end up building a lot of them locally, install dev packages
+      export EXTRA_PKGS="build-essential gfortran llvm-9-dev libfreetype6-dev libjpeg-dev liblapack-dev zlib1g-dev"
+      # Export LLVM_CONFIG for llvmlite
+      export LLVM_CONFIG=llvm-config-9
+      # Disable coverage
+      export RUN_COV=""
+    fi
+    # distutils is only needed for python3.8
     # https://bugs.launchpad.net/ubuntu/+source/python3.8/+bug/1851684
-    sudo apt-get install -y python$PYTHON-dev python$PYTHON-venv python3-distutils python3-lib2to3
+    sudo apt-get install -y python$PYTHON-dev python$PYTHON-venv python$PYTHON-distutils $EXTRA_PKGS
     python$PYTHON -m venv $HOME/venv
-    # Provide fake xdg-open
-    echo "#!/bin/sh" > $HOME/venv/bin/xdg-open
-    chmod +x $HOME/venv/bin/xdg-open
+
+  # Provide fake xdg-open
+  - echo "#!/bin/sh" > $HOME/venv/bin/xdg-open
+  - chmod +x $HOME/venv/bin/xdg-open
 
   # The rest of the setup is common for all environments
   - source $HOME/venv/bin/activate
@@ -54,6 +122,19 @@ before_install:
       pip install $EXTRA_PIP
     fi
 
+before_cache:
+  - pip cache info
+  - |
+    INSTALLED=`pip list | sed 's/-/_/g' | sed 's/  */-/' | tail -n+3`
+    CACHED=`pip cache list | cut -f 2,3 -d- | tail -n+3`
+    for P in $CACHED; do
+      # Remove cached and not installed
+      if [ `echo $INSTALLED | grep -o $P | wc -l` == "0" ] ; then
+        pip cache remove -v $P
+      fi
+    done
+  - pip cache info
+
 install:
   - pip install coveralls
   - pip install git+https://github.com/benureau/leabra.git@master
@@ -62,7 +143,9 @@ install:
 
 script:
   - if [ "x$RUN_COV" != "x" ] ; then echo "Running with coverage"; export COV_ARGS="--cov=psyneulink"; else echo "Running without coverage"; export COV_ARGS=""; fi
-  - pytest -n auto -p no:logging --verbosity=0 $COV_ARGS
+  - if [ "$TRAVIS_CPU_ARCH" == "ppc64le" ] ; then export MAX_PROCESSES="--maxprocesses=6"; fi
+  - if [ "$TRAVIS_CPU_ARCH" == "arm64" ] ; then export MAX_PROCESSES="--maxprocesses=16"; fi
+  - pytest -n auto -p no:logging --verbosity=0 $COV_ARGS $MAX_PROCESSES
 
 after_script:
   - if [ "x$RUN_COV" != "x" ] ; then coveralls; fi

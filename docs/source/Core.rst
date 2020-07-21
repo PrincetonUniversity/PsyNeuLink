@@ -1,13 +1,19 @@
 Core
 ====
 
-.. toctree::
-   :maxdepth: 2
-   :titlesonly:
+* `Component`
+   - `Mechanism`
+   - `Projection`
+   - `Port`
+   - `Function`
 
-   Components <Component>
-   Compositions <Composition>
-   Scheduling
-   Run
-   Log
-   json
+* `Composition`
+   - `AutodiffComposition`
+   - `CompositionFunctionApproximator`
+
+* `Services`
+   - `Visualization`
+   - `Log`
+   - `Registry`
+   - `Preferences`
+   - `json`

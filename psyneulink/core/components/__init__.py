@@ -29,20 +29,19 @@ from psyneulink.core.globals.registry import register_category
 from . import component
 from . import functions
 from . import mechanisms
-from . import process
 from . import projections
 from . import shellclasses
 from . import ports
-from . import system
 
 from .component import *
 from .functions import *
 from .mechanisms import *
-from .process import *
 from .projections import *
 from .shellclasses import *
 from .ports import *
-from .system import *
+
+from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
+from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, ComponentDefaultPrefDicts, PreferenceLevel
 
 __all__ = [
     'InitError'
@@ -50,11 +49,9 @@ __all__ = [
 __all__.extend(component.__all__)
 __all__.extend(functions.__all__)
 __all__.extend(mechanisms.__all__)
-__all__.extend(process.__all__)
 __all__.extend(projections.__all__)
 __all__.extend(shellclasses.__all__)
 __all__.extend(ports.__all__)
-__all__.extend(system.__all__)
 
 kwInitPy = '__init__.py'
 
@@ -68,27 +65,17 @@ class InitError(Exception):
 
 #region ***************************************** MECHANISM SUBCLASSES *************************************************
 
-from psyneulink.core.components.mechanisms.mechanism import MechanismRegistry
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
-from psyneulink.core.components.mechanisms.processing.defaultprocessingmechanism \
-    import DefaultProcessingMechanism_Base
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism \
-    import ControlMechanism
 register_category(entry=ControlMechanism,
                   base_class=Mechanism_Base,
                   registry=MechanismRegistry,
                   context=kwInitPy)
 
-from psyneulink.core.components.mechanisms.modulatory.control.defaultcontrolmechanism \
-    import DefaultControlMechanism
 register_category(entry=DefaultControlMechanism,
                   base_class=Mechanism_Base,
                   registry=MechanismRegistry,
                   context=kwInitPy)
 
 # DDM (used as DefaultMechanism)
-
-from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
 register_category(entry=DDM,
                   base_class=Mechanism_Base,
                   registry=MechanismRegistry,
@@ -119,60 +106,38 @@ SystemDefaultControlMechanism = DefaultControlMechanism
 #              while still indexing multiple uses of the same base name within an owner
 #
 # Port registry
-from psyneulink.core.components.ports.port import PortRegistry
-from psyneulink.core.components.ports.port import Port_Base
 
 # InputPort
-from psyneulink.core.components.ports.inputport import InputPort
 register_category(entry=InputPort,
                   base_class=Port_Base,
                   registry=PortRegistry,
                   context=kwInitPy)
 
 # ParameterPort
-from psyneulink.core.components.ports.parameterport import ParameterPort
 register_category(entry=ParameterPort,
                   base_class=Port_Base,
                   registry=PortRegistry,
                   context=kwInitPy)
 
 # OutputPort
-from psyneulink.core.components.ports.outputport import OutputPort
 register_category(entry=OutputPort,
                   base_class=Port_Base,
                   registry=PortRegistry,
                   context=kwInitPy)
 
-# ProcessInputPort
-from psyneulink.core.components.process import ProcessInputPort
-register_category(entry=ProcessInputPort,
-                  base_class=Port_Base,
-                  registry=PortRegistry,
-                  context=kwInitPy)
-
-# ProcessInputPort
-from psyneulink.core.components.system import SystemInputPort
-register_category(entry=SystemInputPort,
-                  base_class=Port_Base,
-                  registry=PortRegistry,
-                  context=kwInitPy)
-
 # LearningSignal
-from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
 register_category(entry=LearningSignal,
                   base_class=Port_Base,
                   registry=PortRegistry,
                   context=kwInitPy)
 
 # ControlSignal
-from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 register_category(entry=ControlSignal,
                   base_class=Port_Base,
                   registry=PortRegistry,
                   context=kwInitPy)
 
 # GatingSignal
-from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
 register_category(entry=GatingSignal,
                   base_class=Port_Base,
                   registry=PortRegistry,
@@ -182,32 +147,26 @@ register_category(entry=GatingSignal,
 # Projection -----------------------------------------------------------------------------------------------------------
 
 # Projection registry
-from psyneulink.core.components.projections.projection import ProjectionRegistry
-from psyneulink.core.components.projections.projection import Projection_Base
 
 # MappingProjection
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 register_category(entry=MappingProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
                   context=kwInitPy)
 
 # LearningProjection
-from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 register_category(entry=LearningProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
                   context=kwInitPy)
 
 # ControlProjection
-from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 register_category(entry=ControlProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
                   context=kwInitPy)
 
 # GatingProjection
-from psyneulink.core.components.projections.modulatory.gatingprojection import GatingProjection
 register_category(entry=GatingProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
@@ -291,23 +250,17 @@ for projection_type in ProjectionRegistry:
 #endregion
 
 #region ***************************************** CLASS _PREFERENCES ***************************************************
-from psyneulink.core.globals.preferences.basepreferenceset \
-    import BasePreferenceSet, ComponentDefaultPrefDicts, PreferenceLevel
-
-from psyneulink.core.components.shellclasses import System_Base
 System_Base.classPreferences = BasePreferenceSet(owner=System_Base,
                                                  prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
                                                  level=PreferenceLevel.INSTANCE,
                                                  context=".__init__.py")
 
-from psyneulink.core.components.shellclasses import Process_Base
 Process_Base.classPreferences = BasePreferenceSet(owner=Process_Base,
                                                   prefs=ComponentDefaultPrefDicts[PreferenceLevel.INSTANCE],
                                                   level=PreferenceLevel.INSTANCE,
                                                   context=".__init__.py")
 
 
-from psyneulink.core.components.shellclasses import Mechanism
 Mechanism.classPreferences = BasePreferenceSet(owner=Mechanism,
                                                prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
                                                level=PreferenceLevel.TYPE,
@@ -319,7 +272,6 @@ DDM.classPreferences = BasePreferenceSet(owner=DDM,
                                          context=".__init__.py")
 
 
-from psyneulink.core.components.shellclasses import Port
 Port.classPreferences = BasePreferenceSet(owner=Port,
                                           prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
                                           level=PreferenceLevel.CATEGORY,
@@ -335,13 +287,11 @@ MappingProjection.classPreferences = BasePreferenceSet(owner=MappingProjection,
                                                        level=PreferenceLevel.TYPE,
                                                        context=".__init__.py")
 
-from psyneulink.core.components.shellclasses import Projection
 Projection.classPreferences = BasePreferenceSet(owner=Projection,
                                                 prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
                                                 level=PreferenceLevel.CATEGORY,
                                                 context=".__init__.py")
 
-from psyneulink.core.components.functions.function import Function
 Function.classPreferences = BasePreferenceSet(owner=Function,
                                               prefs=ComponentDefaultPrefDicts[PreferenceLevel.CATEGORY],
                                               level=PreferenceLevel.CATEGORY,

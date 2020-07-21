@@ -20,7 +20,6 @@ Functions that return a scalar evaluation of their input.
 """
 
 import functools
-import itertools
 
 import numpy as np
 import typecheck as tc
@@ -28,8 +27,7 @@ import types
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
-from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base
-from psyneulink.core.components.functions.transferfunctions import get_matrix
+from psyneulink.core.components.functions.function import EPSILON, FunctionError, Function_Base, get_matrix
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CORRELATION, COSINE, CROSS_ENTROPY, \
@@ -213,14 +211,14 @@ class Stability(ObjectiveFunction):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 matrix=HOLLOW_MATRIX,
-                 # metric:is_distance_metric=ENERGY,
-                 metric: tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric) = ENERGY,
-                 transfer_fct: tc.optional(tc.any(types.FunctionType, types.MethodType)) = None,
-                 normalize: bool = False,
+                 matrix=None,
+                 # metric:is_distance_metric=None,
+                 metric: tc.optional(tc.any(tc.enum(ENERGY, ENTROPY), is_distance_metric)) = None,
+                 transfer_fct: tc.optional(tc.optional(tc.any(types.FunctionType, types.MethodType))) = None,
+                 normalize: tc.optional(bool) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if size:
             if default_variable is None:
@@ -241,7 +239,7 @@ class Stability(ObjectiveFunction):
         )
 
         # MODIFIED 6/12/19 NEW: [JDC]
-        self._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
+        self._variable_shape_flexibility = DefaultsFlexibility.FLEXIBLE
         # MODIFIED 6/12/19 END
 
     def _validate_variable(self, variable, context=None):
@@ -561,9 +559,9 @@ class Energy(Stability):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 normalize:bool=False,
+                 normalize:bool=None,
                  # transfer_fct=None,
-                 matrix=HOLLOW_MATRIX,
+                 matrix=None,
                  params=None,
                  owner=None,
                  prefs=None):
@@ -669,7 +667,7 @@ class Entropy(Stability):
 
     def __init__(self,
                  default_variable=None,
-                 normalize:bool=False,
+                 normalize:bool=None,
                  transfer_fct=None,
                  params=None,
                  owner=None,
@@ -782,11 +780,11 @@ class Distance(ObjectiveFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 metric: DistanceMetrics._is_metric = DIFFERENCE,
-                 normalize: bool = False,
+                 metric: tc.optional(DistanceMetrics._is_metric) = None,
+                 normalize: tc.optional(bool) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             metric=metric,
@@ -1196,7 +1194,7 @@ class Distance(ObjectiveFunction):
         else:
             assert False, '{} not a recognized metric in {}'.format(self.metric, self.__class__.__name__)
 
-        if self.normalize and not self.metric in {MAX_ABS_DIFF, CORRELATION}:
+        if self.normalize and self.metric not in {MAX_ABS_DIFF, CORRELATION}:
             if self.metric == ENERGY:
                 result /= len(v1) ** 2
             else:

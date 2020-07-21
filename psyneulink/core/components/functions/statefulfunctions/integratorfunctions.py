@@ -25,8 +25,6 @@ Functions that integrate current value of input with previous value.
 
 """
 
-import itertools
-import numbers
 import warnings
 
 import numpy as np
@@ -44,7 +42,7 @@ from psyneulink.core.globals.keywords import \
     INCREMENT, INITIALIZER, INPUT_PORTS, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
     INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, \
     MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_PORTS, PRODUCT, \
-    RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD
+    RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, iscompatible, get_global_seed
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
@@ -177,13 +175,13 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentType = INTEGRATOR_FUNCTION_TYPE
@@ -226,12 +224,12 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate=1.0,
-                 noise=0.0,
+                 rate=None,
+                 noise=None,
                  initializer=None,
-                 params: tc.optional(dict) = None,
+                 params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  context=None,
                  **kwargs):
 
@@ -263,6 +261,13 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                         _instantiate_attributes_before_function below
         """
 
+
+        super()._validate_params(
+            request_set=request_set,
+            target_set=target_set,
+            context=context
+        )
+
         # Use dict to be able to report names of params that are in violating set
         params_to_check = {}
 
@@ -284,16 +289,12 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
             if violators:
                 raise FunctionError(f"The following parameters with len>1 specified for {self.name} "
                                     f"don't have the same length as its {repr(DEFAULT_VARIABLE)} "
-                                    f"({default_variable_len}): {violators}.")
+                                    f"({default_variable_len}): {violators}.", component=self)
 
         # Check that all function_arg params with length > 1 have the same length
         elif any(len(v)!=len(values[0]) for v in values):
             raise FunctionError(f"The parameters with len>1 specified for {self.name} "
                                 f"({list(params_to_check.keys())}) don't all have the same length")
-
-        super()._validate_params(request_set=request_set,
-                         target_set=target_set,
-                         context=context)
     # MODIFIED 6/21/19 END
 
     # MODIFIED 6/21/19 NEW: [JDC]
@@ -520,13 +521,13 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = ACCUMULATOR_INTEGRATOR_FUNCTION
@@ -556,11 +557,11 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
                  default_variable=None,
                  rate=None,
                  increment=None,
-                 noise=0.0,
+                 noise=None,
                  initializer=None,
-                 params: tc.optional(dict) = None,
+                 params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -771,13 +772,13 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = SIMPLE_INTEGRATOR_FUNCTION
@@ -806,13 +807,13 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec = 1.0,
-                 noise=0.0,
-                 offset=0.0,
+                 rate: tc.optional(parameter_spec) = None,
+                 noise=None,
+                 offset=None,
                  initializer=None,
-                 params: tc.optional(dict) = None,
+                 params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -1006,13 +1007,13 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = ADAPTIVE_INTEGRATOR_FUNCTION
@@ -1040,13 +1041,13 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate=1.0,
-                 noise=0.0,
-                 offset=0.0,
+                 rate=None,
+                 noise=None,
+                 offset=None,
                  initializer=None,
-                 params: tc.optional(dict) = None,
+                 params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1062,6 +1063,11 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         self.has_initializers = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
+        super()._validate_params(
+            request_set=request_set,
+            target_set=target_set,
+            context=context
+        )
 
         # Handle list or array for rate specification
         if RATE in request_set:
@@ -1076,7 +1082,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
                     #       in that case, the IntegratorFunction gets instantiated using its class_defaults.variable ([[0]])
                     #       before the object itself, thus does not see the array specification for the input.
-                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                    if self._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
                             warnings.warn(
@@ -1090,11 +1096,6 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
                             f"The length ({len(rate)}) of the array specified for the rate parameter ({rate}) "
                             f"of {self.name} must match the length ({np.array(self.defaults.variable).size}) "
                             f"of the default input ({self.defaults.variable}).")
-
-        super()._validate_params(request_set=request_set,
-                                 target_set=target_set,
-                                 context=context)
-
 
         # FIX: 12/9/18 [JDC] REPLACE WITH USE OF all_within_range
         if self.parameters.rate._user_specified:
@@ -1200,7 +1201,12 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         previous_value = self.get_previous_value(context)
         # MODIFIED 6/14/19 END
 
-        value = self._EWMA_filter(previous_value, rate, variable) + noise
+        try:
+            value = self._EWMA_filter(previous_value, rate, variable) + noise
+        except TypeError:
+            # TODO: this should be standardized along with the other instances
+            # of this error
+            raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
 
         adjusted_value = value + offset
 
@@ -1419,13 +1425,13 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = DUAL_ADAPTIVE_INTEGRATOR_FUNCTION
@@ -1548,19 +1554,19 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                  # rate: parameter_spec = 0.5,
                  # noise=0.0,
                  initializer=None,
-                 initial_short_term_avg=0.0,
-                 initial_long_term_avg=0.0,
-                 short_term_gain=1.0,
-                 long_term_gain=1.0,
-                 short_term_bias=0.0,
-                 long_term_bias=0.0,
-                 short_term_rate=0.9,
-                 long_term_rate=0.1,
-                 operation=PRODUCT,
-                 offset=0.0,
-                 params: tc.optional(dict) = None,
+                 initial_short_term_avg=None,
+                 initial_long_term_avg=None,
+                 short_term_gain=None,
+                 long_term_gain=None,
+                 short_term_bias=None,
+                 long_term_bias=None,
+                 short_term_rate=None,
+                 long_term_rate=None,
+                 operation=None,
+                 offset=None,
+                 params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if not hasattr(self, "initializers"):
             self.initializers = ["initial_long_term_avg", "initial_short_term_avg"]
@@ -1605,7 +1611,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism);
                     #       in that case, the IntegratorFunction gets instantiated using its class_defaults.variable ([[0]]) before
                     #       the object itself, thus does not see the array specification for the input.
-                    if self._default_variable_flexibility is DefaultsFlexibility.FLEXIBLE:
+                    if self._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
                             warnings.warn(
@@ -1647,7 +1653,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
             #         raise FunctionError(
             #             "The rate parameter ({}) (or all of its elements) of {} must be between 0.0 and "
             #             "1.0 when integration_type is set to ADAPTIVE.".format(target_set[RATE], self.name))
-            if not all_within_range(target_set[RATE], 0, 1):
+            if target_set[RATE] is not None and not all_within_range(target_set[RATE], 0, 1):
                 raise FunctionError("The rate parameter ({}) (or all of its elements) of {} "
                                     "must be in the interval [0,1]".format(target_set[RATE], self.name))
 
@@ -1661,7 +1667,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
             #     self._validate_initializer(target_set[INITIALIZER])
 
         if OPERATION in target_set:
-            if not target_set[OPERATION] in OPERATIONS:
+            if target_set[OPERATION] is not None and not target_set[OPERATION] in OPERATIONS:
                 raise FunctionError("\'{}\' arg for {} must be one of the following: {}".
                                     format(OPERATION, self.name, OPERATIONS))
 
@@ -1749,7 +1755,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         return value + offset
 
     @handle_external_context(execution_id=NotImplemented)
-    def reinitialize(self, short=None, long=None, context=NotImplemented):
+    def reset(self, short=None, long=None, context=NotImplemented):
         """
         Effectively begins accumulation over again at the specified utilities.
 
@@ -1942,13 +1948,13 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION
@@ -1998,16 +2004,16 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec = 1.0,
-                 decay: parameter_spec = 0.0,
-                 rest: parameter_spec = 0.0,
-                 max_val: parameter_spec = 1.0,
-                 min_val: parameter_spec = -1.0,
-                 noise=0.0,
+                 rate: tc.optional(parameter_spec) = None,
+                 decay: tc.optional(parameter_spec) = None,
+                 rest: tc.optional(parameter_spec) = None,
+                 max_val: tc.optional(parameter_spec) = None,
+                 min_val: tc.optional(parameter_spec) = None,
+                 noise=None,
                  initializer=None,
-                 params: tc.optional(dict) = None,
+                 params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  # **kwargs
                  ):
 
@@ -2303,13 +2309,13 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = DRIFT_DIFFUSION_INTEGRATOR_FUNCTION
@@ -2395,17 +2401,17 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec = 1.0,
-                 noise=0.0,
-                 offset: parameter_spec = 0.0,
-                 starting_point=0.0,
-                 threshold=100.0,
-                 time_step_size=1.0,
+                 rate: tc.optional(parameter_spec) = None,
+                 noise=None,
+                 offset: tc.optional(parameter_spec) = None,
+                 starting_point=None,
+                 threshold=None,
+                 time_step_size=None,
                  initializer=None,
                  seed=None,
-                 params: tc.optional(dict) = None,
+                 params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if seed is None:
             seed = get_global_seed()
@@ -2437,7 +2443,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         self.has_initializers = True
 
     def _validate_noise(self, noise):
-        if not isinstance(noise, float) and not(isinstance(noise, np.ndarray) and np.issubdtype(noise.dtype, np.floating)):
+        if noise is not None and not isinstance(noise, float) and not(isinstance(noise, np.ndarray) and np.issubdtype(noise.dtype, np.floating)):
             raise FunctionError(
                 "Invalid noise parameter for {}: {}. DriftDiffusionIntegrator requires noise parameter to be a float or float array."
                 " Noise parameter is used to construct the standard DDM noise distribution".format(self.name, type(noise)))
@@ -2728,13 +2734,13 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION
@@ -2812,17 +2818,17 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec = 1.0,
-                 decay=1.0,
-                 noise=0.0,
-                 offset: parameter_spec = 0.0,
-                 starting_point=0.0,
-                 time_step_size=1.0,
+                 rate: tc.optional(parameter_spec) = None,
+                 decay=None,
+                 noise=None,
+                 offset: tc.optional(parameter_spec) = None,
+                 starting_point=None,
+                 time_step_size=None,
                  initializer=None,
-                 params: tc.optional(dict) = None,
+                 params: tc.optional(tc.optional(dict)) = None,
                  seed=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if not hasattr(self, "initializers"):
             self.initializers = ["initializer", "starting_point"]
@@ -2855,7 +2861,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         self.has_initializers = True
 
     def _validate_noise(self, noise):
-        if not isinstance(noise, float):
+        if noise is not None and not isinstance(noise, float):
             raise FunctionError(
                 "Invalid noise parameter for {}. OrnsteinUhlenbeckIntegrator requires noise parameter to be a float. "
                 "Noise parameter is used to construct the standard DDM noise distribution".format(self.name))
@@ -3067,13 +3073,13 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = LEAKY_COMPETING_INTEGRATOR_FUNCTION
@@ -3108,14 +3114,14 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 leak: parameter_spec = 1.0,
-                 noise=0.0,
+                 leak: tc.optional(parameter_spec) = None,
+                 noise=None,
                  offset=None,
-                 time_step_size=0.1,
+                 time_step_size=None,
                  initializer=None,
-                 params: tc.optional(dict) = None,
+                 params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  **kwargs):
 
         # IMPLEMENTATION NOTE:  For backward compatibility of LeakyFun in tests/functions/test_integrator.py
@@ -3786,28 +3792,28 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                  default_variable=None,
                  # scale=1.0,
                  # offset=0.0,
-                 initial_w=0.0,
-                 initial_v=0.0,
-                 a_v=-1 / 3,
-                 b_v=0.0,
-                 c_v=1.0,
-                 d_v=0.0,
-                 e_v=-1.0,
-                 f_v=1.0,
-                 time_constant_v=1.0,
-                 a_w=1.0,
-                 b_w=-0.8,
-                 c_w=0.7,
-                 time_constant_w=12.5,
-                 t_0=0.0,
-                 threshold=-1.0,
-                 time_step_size=0.05,
-                 mode=1.0,
-                 uncorrelated_activity=0.0,
-                 integration_method="RK4",
-                 params: tc.optional(dict) = None,
+                 initial_w=None,
+                 initial_v=None,
+                 a_v=None,
+                 b_v=None,
+                 c_v=None,
+                 d_v=None,
+                 e_v=None,
+                 f_v=None,
+                 time_constant_v=None,
+                 a_w=None,
+                 b_w=None,
+                 c_w=None,
+                 time_constant_w=None,
+                 t_0=None,
+                 threshold=None,
+                 time_step_size=None,
+                 mode=None,
+                 uncorrelated_activity=None,
+                 integration_method=None,
+                 params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  **kwargs):
 
         # These may be passed (as standard IntegratorFunction args) but are not used by FitzHughNagumo
@@ -4419,6 +4425,3 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         res = builder.fdiv(sum, param_vals["time_constant_w"])
         return res
-
-
-

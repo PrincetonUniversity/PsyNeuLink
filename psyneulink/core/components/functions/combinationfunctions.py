@@ -43,7 +43,7 @@ from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EXPONENTS, LINEAR_COMBINATION_FUNCTION, MULTIPLICATIVE_PARAM, OFFSET, OPERATION, \
     PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
     PREFERENCE_SET_NAME
-from psyneulink.core.globals.utilities import is_numeric, np_array_less_than_2d, parameter_spec
+from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, np_array_less_than_2d, parameter_spec
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import \
@@ -163,13 +163,13 @@ class Concatenate(CombinationFunction):  # -------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences` for
+        details).
     """
     componentName = CONCATENATE_FUNCTION
 
@@ -197,11 +197,11 @@ class Concatenate(CombinationFunction):  # -------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 scale: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -376,13 +376,13 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
     componentName = REARRANGE_FUNCTION
 
@@ -416,12 +416,12 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 scale: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  arrangement:tc.optional(tc.any(int, tuple, list))=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -552,7 +552,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                     for index in item:
                         stack.append(variable[index])
                     result.append(np.hstack(tuple(stack)))
-                result = np.array(result) * scale + offset
+                result = convert_to_np_array(result) * scale + offset
             except IndexError:
                 assert False, f"PROGRAM ERROR: Bad index specified in {repr(ARRANGEMENT)} arg -- " \
                     f"should have been caught in _validate_params or _instantiate_attributes_before_function"
@@ -657,13 +657,13 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
     componentName = REDUCE_FUNCTION
 
@@ -716,12 +716,12 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  weights=None,
                  exponents=None,
                  default_variable=None,
-                 operation: tc.enum(SUM, PRODUCT) = SUM,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 operation: tc.optional(tc.enum(SUM, PRODUCT)) = None,
+                 scale: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1086,13 +1086,13 @@ class LinearCombination(
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = LINEAR_COMBINATION_FUNCTION
@@ -1151,12 +1151,12 @@ class LinearCombination(
                  # exponents: tc.optional(parameter_spec)=None,
                  weights=None,
                  exponents=None,
-                 operation: tc.enum(SUM, PRODUCT) = SUM,
+                 operation: tc.optional(tc.enum(SUM, PRODUCT)) = None,
                  scale=None,
                  offset=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1611,13 +1611,13 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentName = COMBINE_MEANS_FUNCTION
@@ -1675,12 +1675,12 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                  # exponents:tc.optional(parameter_spec)=None,
                  weights=None,
                  exponents=None,
-                 operation: tc.enum(SUM, PRODUCT) = SUM,
+                 operation: tc.optional(tc.enum(SUM, PRODUCT)) = None,
                  scale=None,
                  offset=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1930,10 +1930,10 @@ class PredictionErrorDeltaFunction(CombinationFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gamma: tc.optional(float) = 1.0,
+                 gamma: tc.optional(tc.optional(float)) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1942,8 +1942,6 @@ class PredictionErrorDeltaFunction(CombinationFunction):
             owner=owner,
             prefs=prefs,
         )
-
-        self.gamma = gamma
 
     def _validate_variable(self, variable, context=None):
         """

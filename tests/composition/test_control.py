@@ -143,7 +143,7 @@ class TestControlSpecification:
 
         comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
 
-        ### add the controller to the Composition before we add the relevant mechanisms
+        # add the controller to the Composition before adding the relevant Mechanisms
         comp.add_controller(controller=pnl.OptimizationControlMechanism(
                 agent_rep=comp,
                 features=[Input.input_port, reward.input_port],
@@ -159,7 +159,7 @@ class TestControlSpecification:
                                  {PROJECTIONS: ("threshold", Decision),
                                   ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
         )
-        assert comp.controller.initialization_status == pnl.ContextFlags.DEFERRED_INIT
+        assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
 
         comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
         comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
@@ -227,6 +227,206 @@ class TestControlSpecification:
             np.testing.assert_allclose(comp.results[trial], expected_results_array[trial], atol=1e-08,
                                        err_msg='Failed on expected_output[{0}]'.format(trial))
 
+    def test_partial_deferred_init(self):
+        deferred_node = pnl.ProcessingMechanism(name='deferred')
+        initial_node_a = pnl.TransferMechanism(name='ia')
+        initial_node_b = pnl.ProcessingMechanism(name='ib')
+        ocomp = pnl.Composition(name='ocomp',
+                                pathways=[initial_node_a, initial_node_b],
+                                controller_mode=pnl.BEFORE)
+
+        member_node_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, initial_node_a)],
+                                                       variable=1.0,
+                                                       intensity_cost_function=pnl.Linear(slope=0.0),
+                                                       allocation_samples=pnl.SampleSpec(start=1.0,
+                                                                                         stop=5.0,
+                                                                                         num=5))
+
+        deferred_node_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, deferred_node)],
+                                                         variable=1.0,
+                                                         intensity_cost_function=pnl.Linear(slope=0.0),
+                                                         allocation_samples=pnl.SampleSpec(start=1.0,
+                                                                                           stop=5.0,
+                                                                                           num=5))
+
+        ocomp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=ocomp,
+                features=[initial_node_a.input_port,
+                          deferred_node.input_port],
+                name="Controller",
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    monitor=initial_node_b.output_port,
+                    function=pnl.SimpleIntegrator,
+                    name="oController Objective Mechanism"
+                ),
+                function=pnl.GridSearch(direction=pnl.MAXIMIZE),
+                control_signals=[
+                    member_node_control_signal,
+                    deferred_node_control_signal
+                ])
+        )
+
+        text = 'The controller of ocomp has been specified to project to deferred, but deferred is ' \
+               'not in ocomp or any of its nested Compositions. This projection will be deactivated ' \
+               'until deferred is added to ocomp in a compatible way.'
+        with pytest.warns(UserWarning, match=text):
+            # ocomp.show_graph(show_controller=True, show_cim=True)
+            # results = ocomp.run([5])
+            result = ocomp.run({initial_node_a: [1]})
+
+            # result = 5, the input (1) multiplied by the value of the ControlSignal projecting to Node "ia"
+            # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
+            # Control Signal "deferred_node": disabled
+
+        assert result == [[5]]
+
+        ocomp.add_linear_processing_pathway([deferred_node, initial_node_b])
+
+        result = ocomp.run({
+            initial_node_a: [1],
+            deferred_node: [1]
+        })
+
+        # result = 10, the sum of the input (1) multiplied by the value of the ControlSignals projecting, respectively, to Node "ia" and Node "deferred_node"
+        # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
+        # Control Signal "deferred_node": Maximizes over the search space consisting of ints 1-5
+
+        assert result == [[10]]
+
+    def test_deferred_objective_mech(self):
+        initial_node = pnl.TransferMechanism(name='initial_node')
+        deferred_node = pnl.ProcessingMechanism(name='deferred')
+        ocomp = pnl.Composition(name='ocomp',
+                                pathways=[initial_node],
+                                controller_mode=pnl.BEFORE)
+
+        initial_node_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, initial_node)],
+                                                        variable=1.0,
+                                                        intensity_cost_function=pnl.Linear(slope=0.0),
+                                                        allocation_samples=pnl.SampleSpec(start=1.0,
+                                                                                          stop=5.0,
+                                                                                          num=5))
+
+        ocomp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=ocomp,
+                features=[initial_node.input_port],
+                name="Controller",
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    monitor=deferred_node.output_port,
+                    function=pnl.SimpleIntegrator,
+                    name="oController Objective Mechanism"
+                ),
+                function=pnl.GridSearch(direction=pnl.MAXIMIZE),
+                control_signals=[
+                    initial_node_control_signal
+                ])
+        )
+
+        text = 'The controller of ocomp has a specification that includes the '\
+               'Mechanism oController Objective Mechanism, but oController '\
+               'Objective Mechanism is not in ocomp or any of its nested Compositions. '\
+               'This Mechanism will be deactivated until oController Objective Mechanism is '\
+               'added to ocomp or one of its nested Compositions in a compatible way.'
+        with pytest.warns(UserWarning, match=text):
+            result = ocomp.run({initial_node: [1]})
+
+        assert result == [[1]]
+        # result = 1, the input (1) multiplied by the first value in the SearchSpace of the ControlSignal projecting to
+        # initial_node (1)
+
+        # The objective Mechanism is disabled because one of its aux components is a projection to
+        # deferred_node, which is not currently a member node of the composition. Therefore, the Controller
+        # has no basis to determine which set of values it should use for its efferent ControlProjections and
+        # simply goes with the first in the search space, which is 1.
+
+        # add deferred_node to the Composition
+        ocomp.add_linear_processing_pathway([initial_node, deferred_node])
+
+        # The objective mechanism's aux components are now all legal, so it will be activated on the following run
+        result = ocomp.run({initial_node: [[1]]})
+        assert result == [[5]]
+        # result = 5, the input (1) multiplied by the value of the ControlSignal projecting to Node "ia"
+        # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
+
+    def test_agent_rep_assignement_as_controller_and_replacement(self):
+        mech = pnl.ProcessingMechanism()
+        comp = pnl.Composition(name='comp',
+                           pathways=[mech],
+                           controller=pnl.OptimizationControlMechanism(agent_rep=None,
+                                                                       control_signals=(pnl.SLOPE, mech)))
+        assert comp.controller.composition == comp
+        assert any(pnl.SLOPE in p_name for p_name in comp.projections.names)
+        assert not any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
+
+        new_ocm = pnl.OptimizationControlMechanism(agent_rep=None, control_signals=(pnl.INTERCEPT, mech))
+        old_ocm = comp.controller
+        comp.add_controller(new_ocm)
+
+        assert comp.controller == new_ocm
+        assert old_ocm.composition is None
+        assert not any(pnl.SLOPE in p_name for p_name in comp.projections.names)
+        assert any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
+
+    def test_hanging_control_spec_outer_controller(self):
+        internal_mech = pnl.ProcessingMechanism(
+            name='internal_mech',
+            function=pnl.Linear(slope=pnl.CONTROL)
+        )
+
+        inner_comp = pnl.Composition(
+            name='inner',
+            pathways=[internal_mech],
+        )
+
+        controller = pnl.ControlMechanism(
+            name='controller',
+            default_variable=5
+        )
+
+        outer_comp = pnl.Composition(
+            name='outer_with_controller',
+            pathways=[inner_comp],
+            controller=controller
+        )
+
+        result = outer_comp.run([1])
+        assert result == [[5]]
+        assert internal_mech.mod_afferents[0].sender.owner == inner_comp.parameter_CIM
+
+    def test_hanging_control_spec_nearest_controller(self):
+        inner_controller = pnl.ControlMechanism(
+            name='inner_controller',
+            default_variable=5
+        )
+
+        inner_comp = pnl.Composition(
+            name='inner_comp',
+            controller=inner_controller
+        )
+
+        outer_controller = pnl.ControlMechanism(
+            name='outer_controller',
+            default_variable=10
+        )
+
+        outer_comp = pnl.Composition(
+            name='outer_with_controller',
+            pathways=[inner_comp],
+            controller=outer_controller
+        )
+
+        internal_mech = pnl.ProcessingMechanism(
+            name='internal_mech',
+            function=pnl.Linear(slope=pnl.CONTROL)
+        )
+
+        inner_comp.add_node(internal_mech)
+
+        result = outer_comp.run([1])
+        assert result == [[5]]
+        assert internal_mech.mod_afferents[0].sender.owner == inner_comp.controller
 
 class TestControlMechanisms:
 
@@ -368,123 +568,10 @@ class TestControlMechanisms:
         for i in range(1,5):
             assert lvoc.input_ports[i].function.offset == 10.0
 
-    def test_default_lc_control_mechanism(self):
-        G = 1.0
-        k = 0.5
-        starting_value_LC = 2.0
-        user_specified_gain = 1.0
-
-        A = pnl.TransferMechanism(function=pnl.Logistic(gain=user_specified_gain), name='A')
-        B = pnl.TransferMechanism(function=pnl.Logistic(gain=user_specified_gain), name='B')
-        # B.output_ports[0].value *= 0.0  # Reset after init | Doesn't matter here b/c default var = zero, no intercept
-
-        LC = pnl.LCControlMechanism(
-            modulated_mechanisms=[A, B],
-            base_level_gain=G,
-            scaling_factor_gain=k,
-            objective_mechanism=pnl.ObjectiveMechanism(
-                function=pnl.Linear,
-                monitor=[B],
-                name='LC ObjectiveMechanism'
-            )
-        )
-        for output_port in LC.output_ports:
-            output_port.value *= starting_value_LC
-
-        path = [A, B, LC]
-        S = pnl.Composition()
-        S.add_node(A, required_roles=pnl.NodeRole.INPUT)
-        S.add_linear_processing_pathway(pathway=path)
-        S.add_node(LC)
-        S.show_graph()
-        LC.reinitialize_when = pnl.Never()
-
-        gain_created_by_LC_output_port_1 = []
-        mod_gain_assigned_to_A = []
-        base_gain_assigned_to_A = []
-        mod_gain_assigned_to_B = []
-        base_gain_assigned_to_B = []
-        A_value = []
-        B_value = []
-        LC_value = []
-
-        def report_trial(system):
-            gain_created_by_LC_output_port_1.append(LC.output_port.parameters.value.get(system)[0])
-            mod_gain_assigned_to_A.append(A.get_mod_gain(system))
-            mod_gain_assigned_to_B.append(B.get_mod_gain(system))
-            base_gain_assigned_to_A.append(A.function.parameters.gain.get())
-            base_gain_assigned_to_B.append(B.function.parameters.gain.get())
-            A_value.append(A.parameters.value.get(system))
-            B_value.append(B.parameters.value.get(system))
-            LC_value.append(LC.parameters.value.get(system))
-
-        result = S.run(inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},
-                      call_after_trial=functools.partial(report_trial, S))
-
-        # (1) First value of gain in mechanisms A and B must be whatever we hardcoded for LC starting value
-        assert mod_gain_assigned_to_A[0] == starting_value_LC
-
-        # (2) _gain should always be set to user-specified value
-        for i in range(5):
-            assert base_gain_assigned_to_A[i] == user_specified_gain
-            assert base_gain_assigned_to_B[i] == user_specified_gain
-
-        # (3) LC output on trial n becomes gain of A and B on trial n + 1
-        assert np.allclose(mod_gain_assigned_to_A[1:], gain_created_by_LC_output_port_1[0:-1])
-
-        # (4) mechanisms A and B should always have the same gain values (b/c they are identical)
-        assert np.allclose(mod_gain_assigned_to_A, mod_gain_assigned_to_B)
-
-        # # (5) validate output of each mechanism (using original "devel" output as a benchmark)
-        # expected_A_value = [np.array([[0.88079708]]),
-        #                     np.array([[0.73133331]]),
-        #                     np.array([[0.73162414]]),
-        #                     np.array([[0.73192822]]),
-        #                     np.array([[0.73224618]])]
-        #
-        # assert np.allclose(A_value, expected_A_value)
-        #
-        # expected_B_value = [np.array([[0.8534092]]),
-        #                     np.array([[0.67532197]]),
-        #                     np.array([[0.67562328]]),
-        #                     np.array([[0.67593854]]),
-        #                     np.array([[0.67626842]])]
-        # assert np.allclose(B_value, expected_B_value)
-        #
-        # expected_LC_value = [np.array([[[1.00139776]], [[0.04375488]], [[0.00279552]], [[0.05]]]),
-        #                      np.array([[[1.00287843]], [[0.08047501]], [[0.00575686]], [[0.1]]]),
-        #                      np.array([[[1.00442769]], [[0.11892843]], [[0.00885538]], [[0.15]]]),
-        #                      np.array([[[1.00604878]], [[0.15918152]], [[0.01209756]], [[0.2]]]),
-        #                      np.array([[[1.00774507]], [[0.20129484]], [[0.01549014]], [[0.25]]])]
-        # assert np.allclose(LC_value, expected_LC_value)
-
-    # UNSTABLE OUTPUT:
-    # def test_control_mechanism(self):
-    #     Tx = pnl.TransferMechanism(name='Tx')
-    #     Ty = pnl.TransferMechanism(name='Ty')
-    #     Tz = pnl.TransferMechanism(name='Tz')
-    #     C = pnl.ControlMechanism(default_variable=[1],
-    #                              monitor_for_control=Ty,
-    #                              control_signals=pnl.ControlSignal(modulation=pnl.OVERRIDE,
-    #                                                                projections=(pnl.SLOPE, Tz)))
-    #     comp = pnl.Composition()
-    #     # sched = pnl.Scheduler(omp)
-    #     # sched.add_condition(Tz, pnl.AllHaveRun([C]))
-    #     comp.add_linear_processing_pathway([Tx, Tz])
-    #     comp.add_linear_processing_pathway([Ty, C])
-    #     comp._analyze_graph()
-    #     comp._scheduler.add_condition(Tz, pnl.AllHaveRun(C))
-    #
-    #     # assert Tz.parameter_ports[pnl.SLOPE].mod_afferents[0].sender.owner == C
-    #     result = comp.run(inputs={Tx: [1, 1],
-    #                               Ty: [4, 4]})
-    #     assert np.allclose(result, [[[4.], [4.]],
-    #                                 [[4.], [4.]]])
-
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel GridSearch")
-    @pytest.mark.parametrize("mode", ["Python"])
+    @pytest.mark.parametrize("mode", ['Python'])
     def test_multilevel_ocm_gridsearch_conflicting_directions(self, mode, benchmark):
         oa = pnl.TransferMechanism(name='oa')
         ob = pnl.TransferMechanism(name='ob')
@@ -545,7 +632,7 @@ class TestControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel GridSearch")
-    @pytest.mark.parametrize("mode", ["Python"])
+    @pytest.mark.parametrize("mode", ['Python'])
     def test_multilevel_ocm_gridsearch_maximize(self, mode, benchmark):
         oa = pnl.TransferMechanism(name='oa')
         ob = pnl.TransferMechanism(name='ob')
@@ -610,7 +697,7 @@ class TestControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel GridSearch")
-    @pytest.mark.parametrize("mode", ["Python"])
+    @pytest.mark.parametrize("mode", ['Python'])
     def test_multilevel_ocm_gridsearch_minimize(self, mode, benchmark):
         oa = pnl.TransferMechanism(name='oa')
         ob = pnl.TransferMechanism(name='ob')
@@ -847,10 +934,10 @@ class TestControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel")
-    @pytest.mark.parametrize("mode", ["Python",
-                                      pytest.param("LLVM", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMRun", marks=pytest.mark.llvm),
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
     def test_multilevel_control(self, mode, benchmark):
         oA = pnl.TransferMechanism(
@@ -906,10 +993,10 @@ class TestControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ["Python",
-                                      pytest.param("LLVM", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMRun", marks=pytest.mark.llvm),
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
     def test_recurrent_control(self, mode):
         monitor = pnl.TransferMechanism(default_variable=[[0.0]],
@@ -927,14 +1014,15 @@ class TestControlMechanisms:
                                             initial_value=np.array([[0.0, 0.0]]),
                                             output_ports=[pnl.RESULT],
                                             name='rtm')
-    
+
         controller = pnl.ControlMechanism(
             monitor_for_control=monitor,
             control_signals=[(pnl.NOISE, rtm)])
-        
+
         comp = pnl.Composition()
-        comp.add_node(monitor)
-        comp.add_node(rtm)
+        roles = [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT]
+        comp.add_node(monitor, required_roles=roles)
+        comp.add_node(rtm, required_roles=roles)
         comp.add_node(controller)
         val = comp.run(inputs = {
                     monitor: [[1], [5], [1], [5]],
@@ -951,7 +1039,6 @@ class TestControlMechanisms:
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_control_of_mech_port(self, mode):
@@ -966,6 +1053,7 @@ class TestControlMechanisms:
         inputs = {mech:[[0.5]], control_mech:[0.2]}
         results = comp.run(inputs=inputs, num_trials=1, bin_execute=mode)
         assert np.allclose(comp.results, [[[0.375]]])
+
 
 class TestModelBasedOptimizationControlMechanisms:
 
@@ -1446,7 +1534,7 @@ class TestModelBasedOptimizationControlMechanisms:
             Input: [0.5, 0.123],
             reward: [20, 20]
         }
-        Input.reinitialize_when = pnl.Never()
+        Input.reset_stateful_function_when = pnl.Never()
 
         comp.run(inputs=stim_list_dict)
 
@@ -1510,11 +1598,16 @@ class TestModelBasedOptimizationControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Model Based OCM")
-    @pytest.mark.parametrize("mode", ["Python",
-                                      pytest.param("LLVM", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMRun", marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('Python-PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_model_based_ocm_after(self, benchmark, mode):
+        # OCM default mode is Python
+        mode, ocm_mode = (mode + "-Python").split('-')[0:2]
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
@@ -1534,7 +1627,8 @@ class TestModelBasedOptimizationControlMechanisms:
                                                features=[A.input_port],
                                                objective_mechanism=objective_mech,
                                                function=pnl.GridSearch(),
-                                               control_signals=[control_signal])
+                                               control_signals=[control_signal],
+                                               comp_execution_mode=ocm_mode)
         # objective_mech.log.set_log_conditions(pnl.OUTCOME)
 
         comp.add_controller(ocm)
@@ -1550,11 +1644,16 @@ class TestModelBasedOptimizationControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Model Based OCM")
-    @pytest.mark.parametrize("mode", ["Python",
-                                      pytest.param("LLVM", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMRun", marks=pytest.mark.llvm)])
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('Python-PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_model_based_ocm_before(self, benchmark, mode):
+        # OCM default mode is Python
+        mode, ocm_mode = (mode + "-Python").split('-')[0:2]
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
@@ -1574,7 +1673,8 @@ class TestModelBasedOptimizationControlMechanisms:
                                                features=[A.input_port],
                                                objective_mechanism=objective_mech,
                                                function=pnl.GridSearch(),
-                                               control_signals=[control_signal])
+                                               control_signals=[control_signal],
+                                               comp_execution_mode=ocm_mode)
         # objective_mech.log.set_log_conditions(pnl.OUTCOME)
 
         comp.add_controller(ocm)
@@ -1618,7 +1718,7 @@ class TestModelBasedOptimizationControlMechanisms:
         inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
 
         for i in range(1, len(ocm.input_ports)):
-            ocm.input_ports[i].function.reinitialize()
+            ocm.input_ports[i].function.reset()
         comp.run(inputs=inputs)
 
         log = objective_mech.log.nparray_dictionary()
@@ -1818,7 +1918,7 @@ class TestModelBasedOptimizationControlMechanisms:
         # stabilityFlexibility.model_based_optimizer_mode = pnl.BEFORE
 
         for i in range(1, len(stabilityFlexibility.controller.input_ports)):
-            stabilityFlexibility.controller.input_ports[i].function.reinitialize()
+            stabilityFlexibility.controller.input_ports[i].function.reset()
         # Origin Node Inputs
         taskTrain = [[1, 0], [0, 1], [1, 0], [0, 1]]
         stimulusTrain = [[1, -1], [-1, 1], [1, -1], [-1, 1]]
@@ -1898,10 +1998,10 @@ class TestModelBasedOptimizationControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel")
-    @pytest.mark.parametrize("mode", ["Python",
-                                      pytest.param("LLVM", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMExec", marks=pytest.mark.llvm),
-                                      pytest.param("LLVMRun", marks=pytest.mark.llvm),
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
     def test_grid_search_random_selection(self, mode, benchmark):
         A = pnl.ProcessingMechanism(name='A')
@@ -1935,7 +2035,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # control signal value (mod slope) is chosen randomly from all of the control signal values
         # that correspond to a net outcome of 1
-        if mode == "Python":
+        if mode == 'Python':
             log_arr = A.log.nparray_dictionary()
             assert np.allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
                                log_arr['outer_comp']['mod_slope'])
@@ -1948,8 +2048,8 @@ class TestModelBasedOptimizationControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ["Python",
-                                      pytest.param("LLVMRun", marks=pytest.mark.llvm),
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
     def test_input_CIM_assignment(self, mode):
         input_a = pnl.ProcessingMechanism(name='oa', function=pnl.Linear(slope=1))
@@ -1994,6 +2094,7 @@ class TestModelBasedOptimizationControlMechanisms:
         # Thus, in the correct case, the output of the model is 7 ((5*1)+(-2*-1)) and in the errant case the output of the model is
         # -7 ((5*-1)+(-2*1))
         assert np.allclose(results, [[7]])
+
 
 class TestSampleIterator:
 
@@ -2106,4 +2207,3 @@ class TestSampleIterator:
         assert sample_iterator.start == 1
         assert sample_iterator.stop is None
         assert sample_iterator.num == len(sample_list)
-

@@ -85,7 +85,7 @@ the `function <Port_Base.function>` to determine the `value <Port_Base.value>` o
 .. note::
    The change made to the parameter of the Port's Function in response to the execution of a ModulatoryProjection
    are not applied until the Port is updated which, in turn, does not occur until the Mechanism to which the Port
-   belongs is next executed; see :ref:`Lazy Evaluation` for an explanation of "lazy" updating).
+   belongs is next executed; see `Lazy Evaluation <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
 .. _ModulatoryProjection_Class_Reference:
 
@@ -94,9 +94,10 @@ Class Reference
 
 """
 
-from psyneulink.core.components.projections.projection import Projection_Base
-from psyneulink.core.globals.keywords import EXECUTING, INITIALIZATION_STATUS, INITIALIZING, MODULATORY_PROJECTION, NAME
+from psyneulink.core.components.projections.projection import Projection_Base, ProjectionRegistry
+from psyneulink.core.globals.keywords import MODULATORY_PROJECTION, NAME
 from psyneulink.core.globals.log import ContextFlags, LogEntry
+from psyneulink.core.globals.registry import remove_instance_from_registry
 
 
 __all__ = [
@@ -127,8 +128,8 @@ class ModulatoryProjection_Base(Projection_Base):
         <Projection_Deferred_Initialization>`, it is assigned a temporary name (indicating its deferred initialization
         status) until initialization is completed, at which time it is assigned its designated name.  If that is the
         name of an existing ModulatoryProjection, it is appended with an indexed suffix, incremented for each
-        ModulatoryProjection with the same base name (see `Naming`). If the name is not specified in the **name**
-        argument of its constructor, a default name is assigned using the following format:
+        ModulatoryProjection with the same base name (see `Registry_Naming`). If the name is not specified in the
+        **name** argument of its constructor, a default name is assigned using the following format:
         '<ModualatorySignal type> for <receiver owner Mechanism's name>[<receiver's name>]'
         (for example, ``'GatingSignal for my_mech[InputPort-0]'``).
 
@@ -153,9 +154,3 @@ class ModulatoryProjection_Base(Projection_Base):
         else:
             raise ModulatoryProjectionError("PROGRAM ERROR: {} has unrecognized initialization_status ({})".
                                             format(self, self.initialization_status))
-
-    def _delete_projection(projection):
-        """Delete Projection and its entry in receiver and sender lists"""
-        del projection.sender.efferents[projection.sender.efferents.index(projection)]
-        del projection.receiver.mod_afferents[projection.receiver.mod_afferents.index(projection)]
-        del projection

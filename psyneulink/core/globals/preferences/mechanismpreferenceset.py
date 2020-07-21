@@ -70,7 +70,7 @@ class MechanismPreferenceSet(BasePreferenceSet):
                  log_pref=logPrefInstanceDefault,
                  verbose_pref=verbosePrefInstanceDefault,
                  param_validation_pref=paramValidationPrefInstanceDefault,
-                 level=PreferenceLevel.SYSTEM,
+                 level=PreferenceLevel.COMPOSITION,
                  name=None,
                  **kargs):
         if kargs:
@@ -190,5 +190,3 @@ class MechanismPreferenceSet(BasePreferenceSet):
                   format(entry, self._runtime_param_modulation_pref))
             return
         self._runtime_param_modulation_pref = entry
-
-

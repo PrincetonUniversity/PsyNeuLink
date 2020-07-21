@@ -171,14 +171,14 @@ A LearningSignal cannot be executed directly.  It is executed whenever the `Lear
 executed.  When this occurs, the LearningMechanism provides the LearningSignal with a
 `learning_signal <LearningMechanism.learning_signal>`, that is used by its `function <LearningSignal.function>` to
 compute its `value <LearningSignal.value>` (i.e., its own `learning_signal <LearningSignal.learning_signal>` for that
-`TRIAL`. That value is used by its `LearningProjection(s) <LearningProjection>` to modify the `matrix
+`TRIAL <TimeScale.TRIAL>`. That value is used by its `LearningProjection(s) <LearningProjection>` to modify the `matrix
 <MappingProjection.matrix>` parameter of the `MappingProjection(s) <MappingProjection>` to which the LearningSignal
 projects.
 
 .. note::
    The changes in a MappingProjection's matrix parameter in response to the execution of a LearningSignal are not
-   applied until the MappingProjection is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of
-   "lazy" updating).
+   applied until the MappingProjection is next executed; see `Lazy Evaluation <Component_Lazy_Updating>` for an
+   explanation of "lazy" updating).
 
 .. _LearningSignal_Class_Reference:
 
@@ -190,7 +190,6 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.ports.outputport import PRIMARY
 from psyneulink.core.globals.keywords import \
@@ -342,8 +341,8 @@ class LearningSignal(ModulatorySignal):
                  size=None,
                  index=PRIMARY,
                  assign=None,
-                 function=Linear(),
-                 learning_rate: tc.optional(parameter_spec) = None,
+                 function=None,
+                 learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
                  modulation:tc.optional(str)=None,
                  modulates=None,
                  params=None,
@@ -387,4 +386,3 @@ class LearningSignal(ModulatorySignal):
         # Otherwise, allow ModulatorySignal to construct default name as usual
         else:
             super()._assign_default_port_Name(context=context)
-

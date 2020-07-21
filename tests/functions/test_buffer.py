@@ -2,11 +2,10 @@ import numpy as np
 import pytest
 from collections import deque
 
+from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.functions.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.core.components.process import Process
-from psyneulink.core.components.system import System
 from psyneulink.core.scheduling.condition import Never
 
 class TestBuffer():
@@ -83,8 +82,8 @@ class TestBuffer():
         B.execute([4, 5, 6])
         B.execute([7, 8, 9])
         val = B.execute([10,11,12])
-        assert np.allclose(deque(np.atleast_1d([[ 4.10105279, 5.34507377, 6.02430687],
-                                                [ 7.00103478, 8.09010473, 9.09586966],
+        assert np.allclose(deque(np.atleast_1d([[4.02430687, 4.91927251, 5.95087965],
+                                                [7.09586966, 7.91823773, 8.86077491],
                                                 [10, 11, 12]])), val)
         benchmark(B.execute, [1, 2, 3])
 
@@ -104,8 +103,7 @@ class TestBuffer():
                 assert np.allclose(v, e)
         benchmark(B.execute, [1, 2, 3])
 
-    @pytest.mark.benchmark(group="BufferFunction")
-    def test_buffer_standalone_noise_function_invocation(self, benchmark):
+    def test_buffer_standalone_noise_function_invocation(self):
         class CallCount:
             def __init__(self):
                 self.count = 0
@@ -156,23 +154,22 @@ class TestBuffer():
         # P.execute(1.0)
 
 
-    def test_buffer_as_function_of_origin_mech_in_system(self):
+    def test_buffer_as_function_of_origin_mech_in_composition(self):
         P = ProcessingMechanism(function=Buffer(default_variable=[[0.0]],
                                 initializer=[[0.0]],
                                 history=3))
 
-        process = Process(pathway=[P])
-        system = System(processes=[process])
-        P.reinitialize_when = Never()
+        C = Composition(pathways=[P])
+        P.reset_stateful_function_when = Never()
         full_result = []
 
         def assemble_full_result():
-            full_result.append(P.parameters.value.get(system))
+            full_result.append(P.parameters.value.get(C))
 
-        result = system.run(inputs={P: [[1.0], [2.0], [3.0], [4.0], [5.0]]},
-                            call_after_trial=assemble_full_result)
+        C.run(inputs={P: [[1.0], [2.0], [3.0], [4.0], [5.0]]},
+              call_after_trial=assemble_full_result)
         # only returns index 0 item of the deque on each trial  (OutputPort value)
-        assert np.allclose(np.asfarray(result), [[[0.0]], [[0.0]], [[1.0]], [[2.0]], [[3.0]]])
+        assert np.allclose(np.asfarray(C.results), [[[0.0]], [[0.0]], [[1.0]], [[2.0]], [[3.0]]])
 
         # stores full mechanism value (full deque) on each trial
         expected_full_result = [np.array([[0.], [1.]]),
@@ -183,4 +180,3 @@ class TestBuffer():
         for i in range(5):
             assert np.allclose(expected_full_result[i],
                                np.asfarray(full_result[i]))
-

@@ -291,12 +291,12 @@ class PredictionErrorMechanism(ComparatorMechanism):
                  target: tc.optional(tc.any(OutputPort, Mechanism_Base, dict,
                                             is_numeric,
                                             str)) = None,
-                 function=PredictionErrorDeltaFunction(),
-                 output_ports: tc.optional(tc.any(str, Iterable)) = None,
-                 learning_rate: is_numeric = 0.3,
+                 function=None,
+                 output_ports: tc.optional(tc.optional(tc.any(str, Iterable))) = None,
+                 learning_rate: tc.optional(is_numeric) = None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  **kwargs
                  ):
 
@@ -320,7 +320,7 @@ class PredictionErrorMechanism(ComparatorMechanism):
         sample = self.input_ports[SAMPLE].parameters.value._get(context)
         reward = self.input_ports[TARGET].parameters.value._get(context)
 
-        return [sample, reward]
+        return np.array([sample, reward])
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         delta = super()._execute(variable=variable, context=context, runtime_params=runtime_params)

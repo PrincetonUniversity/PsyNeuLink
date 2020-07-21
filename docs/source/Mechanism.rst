@@ -1,14 +1,28 @@
-Mechanisms
-==========
+Mechanism
+=========
 
-.. toctree::
-   :maxdepth: 1
+.. container:: subclasses
 
-   *Subclasses:*
-   Processing Mechanisms <ProcessingMechanism>
-   Modulatory Mechanisms <ModulatoryMechanism>
+    *Subclasses*
+
+    .. toctree::
+       :maxdepth: 1
+
+       ProcessingMechanism
+       ModulatoryMechanism
+    |
+
+.. container:: related
+
+    *Related*
+
+    .. toctree::
+       :maxdepth: 1
+
+       Port
 
 .. automodule:: psyneulink.core.components.mechanisms.mechanism
    :members:
-   :exclude-members: MechanismTuple, MechanismList, MonitoredOutputPortsOption, random, Parameters
+   :private-members:
+   :exclude-members: MechParamsDict, MechanismError, MonitoredOutputPortsOption, random, Parameters, _input_port_variables_getter
 

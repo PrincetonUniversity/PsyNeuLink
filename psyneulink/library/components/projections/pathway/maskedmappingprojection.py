@@ -64,13 +64,12 @@ Class Reference
 ---------------
 
 """
-import numbers
 
 import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.transferfunctions import get_matrix
+from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.projection import projection_keywords
 from psyneulink.core.components.shellclasses import Mechanism
@@ -179,13 +178,13 @@ class MaskedMappingProjection(MappingProjection):
     def __init__(self,
                  sender=None,
                  receiver=None,
-                 matrix=DEFAULT_MATRIX,
+                 matrix=None,
                  mask:tc.optional(tc.any(int,float,list,np.ndarray,np.matrix))=None,
-                 mask_operation:tc.enum(ADD, MULTIPLY, EXPONENTIATE)=MULTIPLY,
+                 mask_operation: tc.optional(tc.enum(ADD, MULTIPLY, EXPONENTIATE)) = None,
                  function=None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  **kwargs):
 
         super().__init__(
@@ -222,11 +221,11 @@ class MaskedMappingProjection(MappingProjection):
                                                    format(repr(MASK), self.name, mask_shape,
                                                           repr(MATRIX), matrix_shape))
 
-    def _update_parameter_ports(self, context=None, runtime_params=None):
+    def _update_parameter_ports(self, runtime_params=None, context=None):
 
         # Update parameters first, to be sure mask that has been updated if it is being modulated
         #  and that it is applied to the updated matrix param
-        super()._update_parameter_ports(context=context, runtime_params=runtime_params)
+        super()._update_parameter_ports(runtime_params=runtime_params, context=context)
 
         mask = self.parameters.mask._get(context)
         mask_operation = self.parameters.mask_operation._get(context)

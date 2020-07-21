@@ -36,11 +36,10 @@ Overview
 
 The purpose of an InputPort is to receive and combine inputs to a `Mechanism <Mechanism>`, allow them to be modified,
 and provide them to the Mechanism's `function <Mechanism_Base.function>`. An InputPort receives input to a Mechanism
-provided by the `Projections <Projection>` to that Mechanism from others in a `Composition`.  If the
-InputPort belongs to an `ORIGIN` Mechanism (see `role of Mechanisms in Processes and Systems
-<Mechanism_Role_In_Processes_And_Systems>`), then it receives the input specified when that Process or System is
-`run <Run>`.  The `PathwayProjections <PathWayProjection>` received by an InputPort are listed in its `path_afferents
-<Port.path_afferents>`, and its `ModulatoryProjections <ModulatoryProjection>` in its `mod_afferents
+provided by the `Projections <Projection>` to that Mechanism from others in a `Composition`.  If the InputPort belongs
+to an `ORIGIN` Mechanism (see `Mechanism_Role_In_Compositions`), then it receives the input specified when that
+Composition is `run <Run>`.  The `PathwayProjections <PathWayProjection>` received by an InputPort are listed in its
+`path_afferents <Port.path_afferents>`, and its `ModulatoryProjections <ModulatoryProjection>` in its `mod_afferents
 <Port.mod_afferents>` attribute.  Its `function <InputPort.function>` combines the values received from its
 PathWayProjections, modifies the combined value according to value(s) any ModulatoryProjections it receives, and
 provides the result to the assigned item of its owner Mechanism's `variable <Mechanism_Base.variable>` and
@@ -166,8 +165,8 @@ method (see `examples <Port_Create_Port_Examples>` in Port).
        <Mechanism_Add_InputPorts_Note>`).
 
 If the name of an InputPort added to a Mechanism is the same as one that already exists, its name is suffixed with a
-numerical index (incremented for each InputPort with that name; see `Naming`), and the InputPort is added to the
-list (that is, it will *not* replace ones that already exist).
+numerical index (incremented for each InputPort with that name; see `Registry_Naming`), and the InputPort is added to
+the list (that is, it will *not* replace ones that already exist).
 
 .. _InputPort_Forms_of_Specification:
 
@@ -193,8 +192,7 @@ should project to the InputPort. Each of these is described below:
       to specify an InputPort in the constructor for a Mechanism, the item of the owner Mechanism's `variable
       <Mechanism_Base.variable>` to which the InputPort is assigned is used as the format for the InputPort`s
       `variable <InputPort.variable>`; otherwise, the default for the InputPort is used.  If a string is specified,
-      it is used as the `name <InputPort.name>` of the InputPort (see `example
-      <Port_Constructor_Argument_Examples>`).
+      it is used as the `name <InputPort.name>` of the InputPort (see `example <Port_Constructor_Argument_Examples>`).
 
     .. _InputPort_Specification_by_Value:
 
@@ -371,14 +369,14 @@ starting with constraints that are given the highest precedence:
     then its format is determined by the `specification of Components that project to it
     <InputPort_Projection_Source_Specification>`:
 
-    * **More than one Component is specified with the same :ref:`value` format** -- that format is used to determine
+    * **More than one Component is specified with the same `value` format** -- that format is used to determine
       the format of the InputPort's `variable <InputPort.variable>`.
 
-    * **More than one Component is specified with different :ref:`value` formats** -- the InputPort's `variable
+    * **More than one Component is specified with different `value` formats** -- the InputPort's `variable
       <InputPort.variable>` is determined by item of the default `variable <Mechanism_Base.variable>` for
       the class of its owner Mechanism.
 
-    * **A single Component is specified** -- its :ref:`value` is used to determine the format of the InputPort's
+    * **A single Component is specified** -- its `value` is used to determine the format of the InputPort's
       `variable <InputPort.variable>`;  if the Component is a(n):
 
       * **MappingProjection** -- can be specified by its class, an existing MappingProjection, or a matrix:
@@ -512,13 +510,13 @@ from psyneulink.core.components.ports.port import PortError, Port_Base, _instant
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     COMBINE, CONTROL_SIGNAL, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_PORT, INPUT_PORTS, INPUT_PORT_PARAMS, \
-    LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, MECHANISM, NAME, OPERATION, OUTPUT_PORT, OUTPUT_PORTS, OWNER,\
-    PARAMS, PROCESS_INPUT_PORT, PRODUCT, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, \
-    SENDER, SIZE, PORT_TYPE, SUM, SYSTEM_INPUT_PORT, VALUE, VARIABLE, WEIGHT
+    LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, NAME, OPERATION, OUTPUT_PORT, OUTPUT_PORTS, OWNER,\
+    PARAMS, PRODUCT, PROJECTIONS, REFERENCE_VALUE, \
+    SENDER, SHADOW_INPUTS, SHADOW_INPUT_NAME, SIZE, PORT_TYPE, SUM, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import append_type_to_name, is_numeric, iscompatible, kwCompatibilityLength
+from psyneulink.core.globals.utilities import append_type_to_name, convert_to_np_array, is_numeric, iscompatible, kwCompatibilityLength
 
 __all__ = [
     'InputPort', 'InputPortError', 'port_type_keywords', 'SHADOW_INPUTS',
@@ -537,8 +535,6 @@ WEIGHT_INDEX = 1
 EXPONENT_INDEX = 2
 
 DEFER_VARIABLE_SPEC_TO_MECH_MSG = "InputPort variable not yet defined, defer to Mechanism"
-SHADOW_INPUTS = 'shadow_inputs'
-SHADOW_INPUT_NAME = 'Shadowed input of '
 
 class InputPortError(Exception):
     def __init__(self, error_value):
@@ -615,9 +611,8 @@ class InputPort(Port_Base):
         specifies the value of the `exponent <InputPort.exponent>` attribute of the InputPort.
 
     internal_only : bool : False
-        specifies whether external input is required by the InputPort's `owner <Port.owner>` if its `role
-        <Mechanism_Role_In_Processes_And_Systems>` is *EXTERNAL_INPUT*  (see `internal_only <InputPort.internal_only>`
-        for details).
+        specifies whether the InputPort requires external input when its `owner <Port.owner>` is the `INPUT`
+        `Node <Composition_Nodes>` of a `Composition (see `internal_only <InputPort.internal_only>` for details).
 
     Attributes
     ----------
@@ -660,19 +655,19 @@ class InputPort(Port_Base):
         see `weight and exponent <InputPort_Weights_And_Exponents>` for description.
 
     internal_only : bool
-        determines whether input is required for this InputPort from `Run` or another `Composition` when the
-        InputPort's `owner <Port.owner>` is executed, and its `role <Mechanism_Role_In_Processes_And_Systems>`
-        is designated as *EXTERNAL_INPUT*;  if `True`, external input is *not* required or allowed;  otherwise,
-        external input is required.
+        determines whether `input from a Composition <Composition_Execution_Input>` must be specified for this
+        InputPort from a Composition's `execution method <Composition_Execution_Method>` if the InputPort's `owner
+        <Port.owner>` is an `INPUT` `Node <Composition_Nodes>` of that Composition; if `True`, external input is
+        *not* required or allowed.
 
     name : str
         the name of the InputPort; if it is not specified in the **name** argument of the constructor, a default is
         assigned by the InputPortRegistry of the Mechanism to which the InputPort belongs.  Note that some Mechanisms
         automatically create one or more non-default InputPorts, that have pre-specified names.  However, if any
         InputPorts are specified in the **input_ports** argument of the Mechanism's constructor, those replace those
-        InputPorts (see `note <Mechanism_Default_Port_Suppression_Note>`), and `standard naming conventions <Naming>`
-        apply to the InputPorts specified, as well as any that are added to the Mechanism once it is created
-        (see `note <Port_Naming_Note>`).
+        InputPorts (see `note <Mechanism_Default_Port_Suppression_Note>`), and `standard naming conventions
+        <Registry_Naming>` apply to the InputPorts specified, as well as any that are added to the Mechanism once it
+        is created (see `note <Port_Naming_Note>`).
 
     """
 
@@ -684,8 +679,6 @@ class InputPort(Port_Base):
     portAttributes = Port_Base.portAttributes | {WEIGHT, EXPONENT}
 
     connectsWith = [OUTPUT_PORT,
-                    PROCESS_INPUT_PORT,
-                    SYSTEM_INPUT_PORT,
                     LEARNING_SIGNAL,
                     GATING_SIGNAL,
                     CONTROL_SIGNAL
@@ -771,7 +764,7 @@ class InputPort(Port_Base):
                  combine:tc.optional(tc.enum(SUM,PRODUCT))=None,
                  weight=None,
                  exponent=None,
-                 internal_only:bool=False,
+                 internal_only: tc.optional(bool) = None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -838,7 +831,7 @@ class InputPort(Port_Base):
         elif isinstance(proj_spec.port, OutputPort):
             variable = proj_spec.port.defaults.value
         else:
-            raise InputPortError("Unrecognized specification for \'{}\' arg of {}".format(PROJECTIONS, self.name))
+            raise InputPortError(f"Unrecognized specification for \'{PROJECTIONS}\' arg of {self.name}.")
 
         return variable
 
@@ -857,16 +850,14 @@ class InputPort(Port_Base):
             if function:
                 owner_name = ""
                 if self.owner:
-                    owner_name = " for InputPort of {}".format(self.owner.name)
+                    owner_name = f" for InputPort of {self.owner.name}."
                 if isinstance(function, LinearCombination):
                     # specification of combine conflicts with operation specified for LinearCombination in function arg
                     if function.operation != combine:
-                        raise InputPortError("Specification of {} argument ({}) conflicts with "
-                                              "specification of {} ({}) for LinearCombination in {} "
-                                              "argument{}".
-                                              format(repr(COMBINE), combine.upper(),
-                                                     repr(OPERATION),function.operation.upper(),
-                                                     repr(FUNCTION), owner_name))
+                        raise InputPortError(f"Specification of {repr(COMBINE)} argument ({combine.upper()}) "
+                                             f"conflicts with specification of {repr(OPERATION)} "
+                                             f"({function.operation.upper()}) for LinearCombination in "
+                                             f"{repr(FUNCTION)} argument{owner_name}.")
                     else:
                         # LinearFunction has been specified with same operation as specified for combine,
                         # so delete combine_function_args attribute so it is not seen in _instantiate_function
@@ -874,30 +865,28 @@ class InputPort(Port_Base):
                         del self.combine_function_args
                 # combine assumes LinearCombination, but Function other than LinearCombination specified for function
                 elif isinstance(function, Function):
-                    raise InputPortError("Specification of {} argument ({}) conflicts with "
-                                          "Function specified in {} argument ({}){}".
-                                          format(repr(COMBINE), combine.upper(),
-                                                 repr(FUNCTION), function.name, owner_name))
+                    raise InputPortError(f"Specification of {repr(COMBINE)} argument ({combine.upper()}) "
+                                         f"conflicts with Function specified in {repr(FUNCTION)} argument "
+                                         f"({function.name}){owner_name}.")
                 # combine assumes LinearCombination, but class other than LinearCombination specified for function
                 elif isinstance(function, type):
                     if not issubclass(function, LinearCombination):
-                        raise InputPortError("Specification of {} argument ({}) conflicts with "
-                                              "Function specified in {} argument ({}){}".
-                                              format(repr(COMBINE), combine.upper(),
-                                                     repr(FUNCTION), function.__name__, owner_name))
+                        raise InputPortError(f"Specification of {repr(COMBINE)} argument ({combine.upper()}) "
+                                             f"conflicts with Function specified in {repr(FUNCTION)} argument "
+                                             f"({function.__name__}){owner_name}.")
                 else:
-                    raise InputPortError("PROGRAM ERROR: unrecognized specification for function argument ({}){} ".
-                                          format(function, owner_name))
+                    raise InputPortError(f"PROGRAM ERROR: unrecognized specification for function argument "
+                                         f"({function}){owner_name}.")
 
         if WEIGHT in target_set and target_set[WEIGHT] is not None:
             if not isinstance(target_set[WEIGHT], (int, float)):
-                raise InputPortError("{} parameter of {} for {} ({}) must be an int or float".
-                                      format(WEIGHT, self.name, self.owner.name, target_set[WEIGHT]))
+                raise InputPortError(f"'{WEIGHT}' parameter of {self.name} for {self.owner.name} "
+                                     f"({target_set[WEIGHT]}) must be an int or float.")
 
         if EXPONENT in target_set and target_set[EXPONENT] is not None:
             if not isinstance(target_set[EXPONENT], (int, float)):
-                raise InputPortError("{} parameter of {} for {} ({}) must be an int or float".
-                                      format(EXPONENT, self.name, self.owner.name, target_set[EXPONENT]))
+                raise InputPortError(f"'{EXPONENT}' parameter of {self.name} for {self.owner.name}"
+                                     f"({ target_set[EXPONENT]}) must be an int or float.")
 
     def _validate_against_reference_value(self, reference_value):
         """Validate that Port.value is compatible with reference_value
@@ -907,8 +896,9 @@ class InputPort(Port_Base):
         match_len_option = {kwCompatibilityLength:False}
         if reference_value is not None and not iscompatible(reference_value, self.defaults.value, **match_len_option):
             name = self.name or ""
-            raise InputPortError("Value specified for {} {} of {} ({}) is not compatible with its expected format ({})"
-                                  .format(name, self.componentName, self.owner.name, self.defaults.value, reference_value))
+            raise InputPortError(f"Value specified for {name} {self.componentName} of {self.owner.name} "
+                                 f"({self.defaults.value}) is not compatible with its expected format "
+                                 f"({reference_value}).")
 
     def _instantiate_function(self, function, function_params=None, context=None):
         """If combine option was specified in constructor, assign as operation argument of LinearCombination function"""
@@ -919,9 +909,9 @@ class InputPort(Port_Base):
         self._use_1d_variable = False
         if not isinstance(self.function, CombinationFunction):
             self._use_1d_variable = True
-            self.function._default_variable_flexibility = DefaultsFlexibility.RIGID
+            self.function._variable_shape_flexibility = DefaultsFlexibility.RIGID
         else:
-            self.function._default_variable_flexibility = DefaultsFlexibility.FLEXIBLE
+            self.function._variable_shape_flexibility = DefaultsFlexibility.FLEXIBLE
 
     def _instantiate_projections(self, projections, context=None):
         """Instantiate Projections specified in PROJECTIONS entry of params arg of Port's constructor
@@ -940,6 +930,15 @@ class InputPort(Port_Base):
 
         Returns redundant Projection if found, otherwise False.
         """
+
+        try:
+            self.path_afferents
+        except:
+            if self.initialization_status == ContextFlags.DEFERRED_INIT:
+                raise InputPortError(f"Attempt to assign Projection ('{projection}') "
+                                     f"to InputPort ('{self.name}') that is in deferred init")
+            else:
+                raise InputPortError(f"No 'path_afferents' for {self.name}")
 
         # FIX: 7/22/19 - CHECK IF SENDER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_OUTPUT_PORT
         duplicate = next(iter([proj for proj in self.path_afferents
@@ -962,7 +961,7 @@ class InputPort(Port_Base):
             pass
         return variable
 
-    def _get_fallback_variable(self, context=None):
+    def _get_variable_from_projections(self, context=None):
         """
             Call self.function with self._path_proj_values
 
@@ -977,7 +976,7 @@ class InputPort(Port_Base):
         ]
 
         if len(path_proj_values) > 0:
-            return np.asarray(path_proj_values)
+            return convert_to_np_array(path_proj_values)
         else:
             return None
 
@@ -1020,9 +1019,9 @@ class InputPort(Port_Base):
             if SIZE in port_specific_spec:
                 if (VARIABLE in port_specific_spec or
                         any(key in port_dict and port_dict[key] is not None for key in {VARIABLE, SIZE})):
-                    raise InputPortError("PROGRAM ERROR: SIZE specification found in port_specific_spec dict "
-                                          "for {} specification of {} when SIZE or VARIABLE is already present in its "
-                                          "port_specific_spec dict or port_dict".format(self.__name__, owner.name))
+                    raise InputPortError(f"PROGRAM ERROR: SIZE specification found in port_specific_spec dict "
+                                         f"for {self.__name__} specification of {owner.name} when SIZE or VARIABLE "
+                                         f"is already present in its port_specific_spec dict or port_dict.")
                 port_dict.update({VARIABLE:np.zeros(port_specific_spec[SIZE])})
                 del port_specific_spec[SIZE]
                 return port_dict, port_specific_spec
@@ -1046,11 +1045,10 @@ class InputPort(Port_Base):
                     # (actual assignment is made in _parse_port_spec)
                     if reference_value is None:
                         port_dict[REFERENCE_VALUE]=port_spec
-                    elif  not iscompatible(port_spec, reference_value):
-                        raise PortError("Value in first item of 2-item tuple specification for {} of {} ({}) "
-                                         "is not compatible with its {} ({})".
-                                         format(InputPort.__name__, owner.name, port_spec,
-                                                REFERENCE_VALUE, reference_value))
+                    elif not iscompatible(port_spec, reference_value):
+                        raise PortError(f"Value in first item of 2-item tuple specification {InputPort.__name__} of "
+                                        f"{owner.name} ({port_spec}) is not compatible with its {REFERENCE_VALUE} "
+                                        f"({reference_value}).")
                     projections_spec = tuple_spec[1]
 
                 # Tuple is Projection specification that is used to specify the Port,
@@ -1102,9 +1100,8 @@ class InputPort(Port_Base):
                                      projection_spec.port.initialization_status == ContextFlags.DEFERRED_INIT):
                                 continue
                             else:
-                                raise PortError("PROGRAM ERROR: indeterminate value for {} "
-                                                 "specified to project to {} of {}".
-                                                 format(projection_spec.port.name, self.__name__, owner.name))
+                                raise PortError(f"PROGRAM ERROR: indeterminate value for {projection_spec.port.name} "
+                                                f"specified to project to {self.__name__} of {owner.name}.")
 
                         projection = projection_spec.projection
                         if isinstance(projection, dict):
@@ -1121,8 +1118,8 @@ class InputPort(Port_Base):
                             # possible needs to be projection.defaults.matrix?
                             matrix = projection.matrix
                         else:
-                            raise InputPortError("Unrecognized Projection specification for {} of {} ({})".
-                                                  format(self.name, owner.name, projection_spec))
+                            raise InputPortError(f"Unrecognized Projection specification for {self.name} of "
+                                                 f"{owner.name} ({projection_spec}).")
 
                         # Determine length of value of projection
                         if matrix is None:
@@ -1167,15 +1164,10 @@ class InputPort(Port_Base):
                         port_dict[VARIABLE] = variable
 
                 except InputPortError:
-                    raise InputPortError("Tuple specification in {} specification dictionary "
-                                          "for {} ({}) is not a recognized specification for one or more "
-                                          "{}s, {}s, or {}s that project to it".
-                                          format(InputPort.__name__,
-                                                 owner.name,
-                                                 projections_spec,
-                                                 'Mechanism',
-                                                 OutputPort.__name__,
-                                                 Projection.__name__))
+                    raise InputPortError(f"Tuple specification in {InputPort.__name__} specification dictionary for "
+                                         f"{owner.name} ({projections_spec}) is not a recognized specification for "
+                                         f"one or more Mechanisms, {OutputPort.__name__}s, or {Projection.__name__}s "
+                                         f"that project to it.")
 
             # GET WEIGHT AND EXPONENT IF SPECIFIED ***************************************************************
 
@@ -1190,22 +1182,22 @@ class InputPort(Port_Base):
                 exponent = tuple_spec[EXPONENT_INDEX]
 
                 if weight is not None and not isinstance(weight, numbers.Number):
-                    raise InputPortError("Specification of the weight ({}) in tuple of {} specification dictionary "
-                                          "for {} must be a number".format(weight, InputPort.__name__, owner.name))
+                    raise InputPortError(f"Specification of the weight ({weight}) in tuple of {InputPort.__name__} "
+                                         f"specification dictionary for {owner.name} must be a number.")
                 params_dict[WEIGHT] = weight
 
                 if exponent is not None and not isinstance(exponent, numbers.Number):
-                    raise InputPortError("Specification of the exponent ({}) in tuple of {} specification dictionary "
-                                          "for {} must be a number".format(exponent, InputPort.__name__, owner.name))
+                    raise InputPortError(f"Specification of the exponent ({exponent}) in tuple of {InputPort.__name__} "
+                                         f"specification dictionary for {owner.name} must be a number.")
                 params_dict[EXPONENT] = exponent
 
             else:
-                raise PortError("Tuple provided as port_spec for {} of {} ({}) must have either 2, 3 or 4 items".
-                                 format(InputPort.__name__, owner.name, tuple_spec))
+                raise PortError(f"Tuple provided as port_spec for {InputPort.__name__} of {owner.name} "
+                                f"({tuple_spec}) must have either 2, 3 or 4 items.")
 
         elif port_specific_spec is not None:
-            raise InputPortError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
-                                  format(self.__class__.__name__, port_specific_spec))
+            raise InputPortError(f"PROGRAM ERROR: Expected tuple or dict for {self.__class__.__name__}-specific params "
+                                 f"but, got: {port_specific_spec}.")
 
         return port_spec, params_dict
 
@@ -1216,9 +1208,8 @@ class InputPort(Port_Base):
         """
 
         if not isinstance(input_port, InputPort):
-            raise InputPortError("PROGRAM ERROR: "
-                                  "InputPort._parse_self_port_type called with non-InputPort specification ({})".
-                                  format(input_port))
+            raise InputPortError(f"PROGRAM ERROR: InputPort._parse_self_port_type called "
+                                 f"with non-InputPort specification ({input_port}).")
 
         sender_output_ports = [p.sender for p in input_port.path_afferents]
         port_spec = {NAME: SHADOW_INPUT_NAME + input_port.owner.name,
@@ -1305,7 +1296,6 @@ class InputPort(Port_Base):
         can't be called by _parse_port_spec since the InputPort itself may not yet have been instantiated.
 
         """
-        import inspect
 
         if (
                 (
@@ -1392,16 +1382,12 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
 
     if not variable_item_is_OK:
         old_variable = owner.defaults.variable
-        owner.defaults.variable = owner._handle_default_variable(default_variable=[port.value for port in owner.input_ports])
+        owner.defaults.variable = owner._handle_default_variable(default_variable=[port.value
+                                                                                   for port in owner.input_ports])
 
         if owner.verbosePref:
-            warnings.warn(
-                "Variable for {} ({}) has been adjusted to match number and format of its input_ports: ({})".format(
-                    old_variable,
-                    append_type_to_name(owner),
-                    owner.defaults.variable,
-                )
-            )
+            warnings.warn(f"Variable for {old_variable} ({append_type_to_name(owner)}) has been adjusted to match "
+                          f"number and format of its input_ports: ({owner.defaults.variable}).")
 
     return port_list
 
@@ -1423,9 +1409,8 @@ def _parse_shadow_inputs(owner, input_ports):
                 elif isinstance(item, Mechanism):
                     input_ports_to_shadow_in_spec.extend(item.input_ports)
                 else:
-                    raise InputPortError("Specification of {} in for {} arg of {} must be a {} or {}".
-                                          format(repr(SHADOW_INPUTS), repr(INPUT_PORTS), owner.name,
-                                                 Mechanism.__name__, InputPort.__name__))
+                    raise InputPortError(f"Specification of {repr(SHADOW_INPUTS)} in for {repr(INPUT_PORTS)} arg of "
+                                         f"{owner.name} must be a {Mechanism.__name__} or {InputPort.__name__}.")
             input_ports_to_shadow_specs.append((spec_idx, input_ports_to_shadow_in_spec))
 
     # If any SHADOW_INPUTS specs were found in input_ports, replace them with actual InputPorts to be shadowed

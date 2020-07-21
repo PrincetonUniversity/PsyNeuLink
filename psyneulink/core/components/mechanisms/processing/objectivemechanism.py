@@ -363,10 +363,8 @@ Class Reference
 
 """
 
-import itertools
 import warnings
 import typecheck as tc
-import numpy as np
 
 from collections.abc import Iterable
 from collections import namedtuple
@@ -567,7 +565,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  monitor=None,
                  default_variable=None,
                  size=None,
-                 function=LinearCombination,
+                 function=None,
                  output_ports:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
@@ -587,8 +585,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         input_ports = monitor
         if output_ports is None or output_ports == OUTCOME:
             output_ports = [OUTCOME]
-
-        self._learning_role = None
 
         super().__init__(
             default_variable=default_variable,
@@ -835,17 +831,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     @monitored_output_ports_weights_and_exponents.setter
     def monitored_output_ports_weights_and_exponents(self, weights_and_exponents_tuples):
         self.monitor_weights_and_exponents = weights_and_exponents_tuples
-
-
-def _objective_mechanism_role(mech, role):
-    if isinstance(mech, ObjectiveMechanism):
-        if mech._role is role:
-            return True
-        else:
-            return False
-    else:
-        return False
-
 
 def _parse_monitor_specs(monitor_specs):
     spec_tuple = namedtuple('SpecTuple', 'index spec')

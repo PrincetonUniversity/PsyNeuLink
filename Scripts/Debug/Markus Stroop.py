@@ -223,8 +223,8 @@ def testtrialtype(test_trial_input, initialize_trial_input, ntrials, condition):
     results = np.empty((10, 0))
     # clear log
     respond_red_accumulator.log.clear_entries(delete_entry=False)
-    respond_red_accumulator.reinitialize(0)
-    respond_green_accumulator.reinitialize(0)
+    respond_red_accumulator.reset(0)
+    respond_green_accumulator.reset(0)
     print('\n\n{}'.format(condition))
     for trial in range(ntrials):
         print('.', end='', flush=True)
@@ -240,8 +240,8 @@ def testtrialtype(test_trial_input, initialize_trial_input, ntrials, condition):
 
         my_Stroop.run(inputs=initialize_trial_input)
         # but didn't want to run accumulators so set those back to zero
-        respond_green_accumulator.reinitialize(0)
-        respond_red_accumulator.reinitialize(0)
+        respond_green_accumulator.reset(0)
+        respond_red_accumulator.reset(0)
 
         # now put back in integrator mode and noise
         colors_hidden_layer.integrator_mode = True
@@ -294,9 +294,9 @@ def testtrialtype(test_trial_input, initialize_trial_input, ntrials, condition):
 
         # after a run we want to reset the activations of the integrating units
         # so we can test many trials and examine the distrubtion of responses
-        words_hidden_layer.reinitialize([0, 0])
-        colors_hidden_layer.reinitialize([0, 0])
-        response_layer.reinitialize([0, 0])
+        words_hidden_layer.reset([0, 0])
+        colors_hidden_layer.reset([0, 0])
+        response_layer.reset([0, 0])
         # clear log to get num_timesteps for next run
         respond_red_accumulator.log.clear_entries(delete_entry=False)
 

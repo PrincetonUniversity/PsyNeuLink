@@ -1,14 +1,19 @@
-Control Mechanisms
-==================
+ControlMechanism
+================
 
 .. _ControlMechanism_Subtypes:
 
-.. toctree::
-   :maxdepth: 1
+.. container:: subclasses
 
-   GatingMechanism <GatingMechanism>
-   OptimzationControlMechanism <OptimizationControlMechanism>
+    *Subclasses*
+
+    .. toctree::
+       :maxdepth: 1
+
+       GatingMechanism
+       OptimizationControlMechanism
 
 .. automodule:: psyneulink.core.components.mechanisms.modulatory.control.controlmechanism
    :members:
+   :private-members:
    :exclude-members: Linear, random, Parameters, control_signals

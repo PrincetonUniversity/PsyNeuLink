@@ -145,12 +145,16 @@ gates (see `GatingSignal_Modulation` for description of how a GatingSignal modul
 Execution
 ---------
 
+COMMENT:
+    FIX 5/8/20: REWORK TO FOLLOW CONTROLMECHANISM
+COMMENT
+
 A GatingMechanism executes in the same way as a `ProcessingMechanism <ProcessingMechanism>`, based on its place in the
 Composition's `graph <Composition.graph>`.  Because `GatingProjections <GatingProjection>` are likely to introduce
 cycles (recurrent connection loops) in the graph, the effects of a GatingMechanism and its projections will generally
-not be applied in the first `TRIAL` (see
+not be applied in the first `TRIAL <TimeScale.TRIAL>` (see
 COMMENT:
-`Composition_Initial_Values_and_Feedback` and
+`Composition_Cycles_and_Feedback` and
 COMMENT
 **feedback** argument for the `add_projection <Composition.add_projection>`
 method of `Composition` for a description of how to configure the initialization of feedback loops in a Composition;
@@ -160,14 +164,14 @@ to execute).
 When executed, a GatingMechanism  uses its input to determine the value of its `gating_allocation
 <GatingMechanism.gating_allocation>`, each item of which is used by a corresponding `GatingSignal` to determine its
 `gating_signal <GatingSignal.gating_signal>` and assign to its `GatingProjections <GatingProjection>`. In the
-subsequent `TRIAL`, each GatingProjection's value is used by the Port to which it projects to modulate the `value
-<Port_Base.value>` of that Port (see `modulation <ModulatorySignal_Modulation>` fon an explanation of how the value
-of a Port is modulated).
+subsequent `TRIAL <TimeScale.TRIAL>`, each GatingProjection's value is used by the Port to which it projects to
+modulate the `value <Port_Base.value>` of that Port (see `modulation <ModulatorySignal_Modulation>` fon an explanation
+of how the value of a Port is modulated).
 
 .. note::
    A Port that receives a `GatingProjection` does not update its `value <Port_Base.value>` (and therefore does not
-   reflect the influence of its `GatingSignal`) until that Port's owner Mechanism executes
-   (see `Lazy Evaluation <LINK>` for an explanation of "lazy" updating).
+   reflect the influence of its `GatingSignal`) until that Port's owner Mechanism executes (see `Lazy Evaluation
+   <Component_Lazy_Updating>` for an explanation of "lazy" updating).
 
 .. _GatingMechanism_Class_Reference:
 
@@ -382,13 +386,13 @@ class GatingMechanism(ControlMechanism):
         unless they are `individually specified <GatingSignal_Specification>`.
 
     name : str
-        the name of the GatingMechanism; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by MechanismRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the GatingMechanism; if it is not specified in the **name** argument of the constructor, a default
+        is assigned by MechanismRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict
         the `PreferenceSet` for the GatingMechanism; if it is not specified in the **prefs** argument of the
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
     """
 
     componentType = "GatingMechanism"
@@ -443,8 +447,8 @@ class GatingMechanism(ControlMechanism):
                  monitor_for_gating=None,
                  function=None,
                  default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
-                 gate:tc.optional(list) = None,
-                 modulation:tc.optional(str)=MULTIPLICATIVE,
+                 gate:tc.optional(tc.optional(list)) = None,
+                 modulation:tc.optional(str)=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -520,18 +524,3 @@ class GatingMechanism(ControlMechanism):
     @gating_signals.setter
     def gating_signals(self, value):
         self._control_signals = value
-
-# IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
-def _add_gating_mechanism_to_system(owner:GatingMechanism):
-
-    if owner.gating_signals:
-        for gating_signal in owner.gating_signals:
-            for mech in [proj.receiver.owner for proj in gating_signal.efferents]:
-                for system in mech.systems:
-                    if owner not in system.execution_list:
-                        system.execution_list.append(owner)
-                        system.execution_graph[owner] = set()
-                        # FIX: NEED TO ALSO ADD SystemInputPort (AND ??ProcessInputPort) PROJECTIONS
-                        # # Add self to system's list of OriginMechanisms if it doesn't have any afferents
-                        # if not any(port.path_afferents for port in owner.input_ports):
-                        #     system.origin_mechanisms.mechs.append(owner)

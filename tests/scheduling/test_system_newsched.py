@@ -1,19 +1,16 @@
 import numpy
 
+from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.functions.distributionfunctions import DriftDiffusionAnalytical
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.process import Process
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.core.components.system import System
 from psyneulink.core.scheduling.condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
-from psyneulink.library.components.mechanisms.modulatory.control.evc.evccontrolmechanism import EVCControlMechanism
-
 
 
 class TestInit:
@@ -47,50 +44,20 @@ class TestInit:
             ),
             name='Decision',
         )
-        # Outcome Mechanisms:
+        # Outcome Mechanism:
         Reward = TransferMechanism(name='Reward')
 
-        # Processes:
-        ColorNamingProcess = Process(
-            default_variable=[0],
-            pathway=[Color_Input, Color_Hidden, Output, Decision],
-            name='Color Naming Process',
-        )
+        myComposition = Composition(pathways=[[Color_Input, Color_Hidden, Output, Decision],
+                                              [Word_Input, Word_Hidden, Output, Decision],
+                                              [Reward]])
 
-        WordReadingProcess = Process(
-            default_variable=[0],
-            pathway=[Word_Input, Word_Hidden, Output, Decision],
-            name='Word Reading Process',
-        )
-
-        RewardProcess = Process(
-            default_variable=[0],
-            pathway=[Reward],
-            name='RewardProcess',
-        )
-
-        # System:
-        mySystem = System(
-            processes=[ColorNamingProcess, WordReadingProcess, RewardProcess],
-            controller=EVCControlMechanism,
-            enable_controller=True,
-            # monitor_for_control=[Reward, (PROBABILITY_UPPER_THRESHOLD, 1, -1)],
-            name='EVC Gratton System',
-        )
-
-        sched = Scheduler(system=mySystem)
-
-        integrator_ColorInputPrediction = mySystem.execution_list[7]
-        integrator_RewardPrediction = mySystem.execution_list[8]
-        integrator_WordInputPrediction = mySystem.execution_list[9]
-        objective_EVC_mech = mySystem.execution_list[10]
+        sched = Scheduler(composition=myComposition)
 
         expected_consideration_queue = [
-            {Color_Input, Word_Input, Reward, integrator_ColorInputPrediction, integrator_WordInputPrediction, integrator_RewardPrediction},
+            {Color_Input, Word_Input, Reward},
             {Color_Hidden, Word_Hidden},
             {Output},
-            {Decision},
-            {objective_EVC_mech},
+            {Decision}
         ]
 
         assert sched.consideration_queue == expected_consideration_queue
@@ -107,21 +74,12 @@ class TestLinear:
             )
         )
 
-        p = Process(
-            default_variable=[0],
-            pathway=[A],
-            name='p'
-        )
-
-        s = System(
-            processes=[p],
-            name='s'
-        )
+        c = Composition(pathways=[A])
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(A, 2)}
         stim_list = {A: [[1]]}
 
-        s.run(
+        c.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -132,7 +90,7 @@ class TestLinear:
         ]
 
         for i in range(len(expected_output)):
-            numpy.testing.assert_allclose(expected_output[i], terminal_mech.get_output_values(s)[i])
+            numpy.testing.assert_allclose(expected_output[i], terminal_mech.get_output_values(c)[i])
 
     def test_two_AAB(self):
         A = IntegratorMechanism(
@@ -149,25 +107,16 @@ class TestLinear:
             function=Linear(slope=2.0),
         )
 
-        p = Process(
-            default_variable=[0],
-            pathway=[A, B],
-            name='p'
-        )
-
-        s = System(
-            processes=[p],
-            name='s'
-        )
+        c = Composition(pathways=[A, B])
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(B, 1)}
         stim_list = {A: [[1]]}
 
-        sched = Scheduler(system=s)
+        sched = Scheduler(composition=c)
         sched.add_condition(B, EveryNCalls(A, 2))
-        s.scheduler = sched
+        c.scheduler = sched
 
-        s.run(
+        c.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -178,7 +127,7 @@ class TestLinear:
         ]
 
         for i in range(len(expected_output)):
-            numpy.testing.assert_allclose(expected_output[i], terminal_mech.get_output_values(s)[i])
+            numpy.testing.assert_allclose(expected_output[i], terminal_mech.get_output_values(c)[i])
 
     def test_two_ABB(self):
         A = TransferMechanism(
@@ -195,26 +144,17 @@ class TestLinear:
             )
         )
 
-        p = Process(
-            default_variable=[0],
-            pathway=[A, B],
-            name='p'
-        )
-
-        s = System(
-            processes=[p],
-            name='s'
-        )
+        c = Composition(pathways=[A, B])
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(B, 2)}
         stim_list = {A: [[1]]}
 
-        sched = Scheduler(system=s)
+        sched = Scheduler(composition=c)
         sched.add_condition(A, Any(AtPass(0), AfterNCalls(B, 2)))
         sched.add_condition(B, Any(JustRan(A), JustRan(B)))
-        s.scheduler = sched
+        c.scheduler = sched
 
-        s.run(
+        c.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -225,7 +165,7 @@ class TestLinear:
         ]
 
         for i in range(len(expected_output)):
-            numpy.testing.assert_allclose(expected_output[i], terminal_mech.get_output_values(s)[i])
+            numpy.testing.assert_allclose(expected_output[i], terminal_mech.get_output_values(c)[i])
 
 
 class TestBranching:
@@ -250,32 +190,17 @@ class TestBranching:
             function=Linear(slope=2.0),
         )
 
-        p = Process(
-            default_variable=[0],
-            pathway=[A, B],
-            name='p'
-        )
-
-        q = Process(
-            default_variable=[0],
-            pathway=[A, C],
-            name='q'
-        )
-
-        s = System(
-            processes=[p, q],
-            name='s'
-        )
+        c = Composition(pathways=[[A,B],[A,C]])
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(C, 1)}
         stim_list = {A: [[1]]}
 
-        sched = Scheduler(system=s)
+        sched = Scheduler(composition=c)
         sched.add_condition(B, Any(AtNCalls(A, 1), EveryNCalls(A, 2)))
         sched.add_condition(C, EveryNCalls(A, 2))
-        s.scheduler = sched
+        c.scheduler = sched
 
-        s.run(
+        c.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -292,7 +217,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(s)[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(c)[i])
 
     def test_three_ABAC_convenience(self):
         A = IntegratorMechanism(
@@ -314,30 +239,15 @@ class TestBranching:
             function=Linear(slope=2.0),
         )
 
-        p = Process(
-            default_variable=[0],
-            pathway=[A, B],
-            name='p'
-        )
-
-        q = Process(
-            default_variable=[0],
-            pathway=[A, C],
-            name='q'
-        )
-
-        s = System(
-            processes=[p, q],
-            name='s'
-        )
+        c = Composition(pathways=[[A,B],[A,C]])
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(C, 1)}
         stim_list = {A: [[1]]}
 
-        s.scheduler.add_condition(B, Any(AtNCalls(A, 1), EveryNCalls(A, 2)))
-        s.scheduler.add_condition(C, EveryNCalls(A, 2))
+        c.scheduler.add_condition(B, Any(AtNCalls(A, 1), EveryNCalls(A, 2)))
+        c.scheduler.add_condition(C, EveryNCalls(A, 2))
 
-        s.run(
+        c.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -354,7 +264,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(s)[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(c)[i])
 
     def test_three_ABACx2(self):
         A = IntegratorMechanism(
@@ -376,32 +286,17 @@ class TestBranching:
             function=Linear(slope=2.0),
         )
 
-        p = Process(
-            default_variable=[0],
-            pathway=[A, B],
-            name='p'
-        )
-
-        q = Process(
-            default_variable=[0],
-            pathway=[A, C],
-            name='q'
-        )
-
-        s = System(
-            processes=[p, q],
-            name='s'
-        )
+        c = Composition(pathways=[[A,B],[A,C]])
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(C, 2)}
         stim_list = {A: [[1]]}
 
-        sched = Scheduler(system=s)
+        sched = Scheduler(composition=c)
         sched.add_condition(B, Any(AtNCalls(A, 1), EveryNCalls(A, 2)))
         sched.add_condition(C, EveryNCalls(A, 2))
-        s.scheduler = sched
+        c.scheduler = sched
 
-        s.run(
+        c.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -418,7 +313,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(s)[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(c)[i])
 
     def test_three_2_ABC(self):
         A = IntegratorMechanism(
@@ -443,31 +338,16 @@ class TestBranching:
             function=Linear(slope=2.0),
         )
 
-        p = Process(
-            default_variable=[0],
-            pathway=[A, C],
-            name='p'
-        )
-
-        q = Process(
-            default_variable=[0],
-            pathway=[B, C],
-            name='q'
-        )
-
-        s = System(
-            processes=[p, q],
-            name='s'
-        )
+        c = Composition(pathways=[[A,C],[B,C]])
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(C, 1)}
         stim_list = {A: [[1]], B: [[2]]}
 
-        sched = Scheduler(system=s)
+        sched = Scheduler(composition=c)
         sched.add_condition(C, All(EveryNCalls(A, 1), EveryNCalls(B, 1)))
-        s.scheduler = sched
+        c.scheduler = sched
 
-        s.run(
+        c.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -481,7 +361,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(s)[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(c)[i])
 
     def test_three_2_ABCx2(self):
         A = IntegratorMechanism(
@@ -506,31 +386,16 @@ class TestBranching:
             function=Linear(slope=2.0),
         )
 
-        p = Process(
-            default_variable=[0],
-            pathway=[A, C],
-            name='p'
-        )
-
-        q = Process(
-            default_variable=[0],
-            pathway=[B, C],
-            name='q'
-        )
-
-        s = System(
-            processes=[p, q],
-            name='s'
-        )
+        c = Composition(pathways=[[A,C],[B,C]])
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(C, 2)}
         stim_list = {A: [[1]], B: [[2]]}
 
-        sched = Scheduler(system=s)
+        sched = Scheduler(composition=c)
         sched.add_condition(C, All(EveryNCalls(A, 1), EveryNCalls(B, 1)))
-        s.scheduler = sched
+        c.scheduler = sched
 
-        s.run(
+        c.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -544,7 +409,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(s)[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(c)[i])
 
     def test_three_integrators(self):
         A = IntegratorMechanism(
@@ -571,32 +436,17 @@ class TestBranching:
             )
         )
 
-        p = Process(
-            default_variable=[0],
-            pathway=[A, C],
-            name='p'
-        )
-
-        q = Process(
-            default_variable=[0],
-            pathway=[B, C],
-            name='q'
-        )
-
-        s = System(
-            processes=[p, q],
-            name='s'
-        )
+        c = Composition(pathways=[[A,C],[B,C]])
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(C, 2)}
         stim_list = {A: [[1]], B: [[1]]}
 
-        sched = Scheduler(system=s)
+        sched = Scheduler(composition=c)
         sched.add_condition(B, EveryNCalls(A, 2))
         sched.add_condition(C, Any(EveryNCalls(A, 1), EveryNCalls(B, 1)))
-        s.scheduler = sched
+        c.scheduler = sched
 
-        s.run(
+        c.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -616,7 +466,7 @@ class TestBranching:
 
         for m in range(len(mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], mechs[m].get_output_values(s)[i])
+                numpy.testing.assert_allclose(expected_output[m][i], mechs[m].get_output_values(c)[i])
 
     def test_four_ABBCD(self):
         A = TransferMechanism(
@@ -647,33 +497,18 @@ class TestBranching:
             function=Linear(slope=1.0),
         )
 
-        p = Process(
-            default_variable=[0],
-            pathway=[A, B, D],
-            name='p'
-        )
-
-        q = Process(
-            default_variable=[0],
-            pathway=[A, C, D],
-            name='q'
-        )
-
-        s = System(
-            processes=[p, q],
-            name='s'
-        )
+        c = Composition(pathways=[[A,B,D],[A,C,D]])
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(D, 1)}
         stim_list = {A: [[1]]}
 
-        sched = Scheduler(system=s)
+        sched = Scheduler(composition=c)
         sched.add_condition(B, EveryNCalls(A, 1))
         sched.add_condition(C, EveryNCalls(A, 2))
         sched.add_condition(D, Any(EveryNCalls(B, 3), EveryNCalls(C, 3)))
-        s.scheduler = sched
+        c.scheduler = sched
 
-        s.run(
+        c.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -687,7 +522,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(s)[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(c)[i])
 
     def test_four_integrators_mixed(self):
         A = IntegratorMechanism(
@@ -722,45 +557,18 @@ class TestBranching:
             )
         )
 
-        p = Process(
-            default_variable=[0],
-            pathway=[A, C],
-            name='p'
-        )
-
-        p1 = Process(
-            default_variable=[0],
-            pathway=[A, D],
-            name='p1'
-        )
-
-        q = Process(
-            default_variable=[0],
-            pathway=[B, C],
-            name='q'
-        )
-
-        q1 = Process(
-            default_variable=[0],
-            pathway=[B, D],
-            name='q1'
-        )
-
-        s = System(
-            processes=[p, p1, q, q1],
-            name='s'
-        )
+        c = Composition(pathways=[[A,C],[A,D],[B,C],[B,D]])
 
         term_conds = {TimeScale.TRIAL: All(AfterNCalls(C, 1), AfterNCalls(D, 1))}
         stim_list = {A: [[1]], B: [[1]]}
 
-        sched = Scheduler(system=s)
+        sched = Scheduler(composition=c)
         sched.add_condition(B, EveryNCalls(A, 2))
         sched.add_condition(C, EveryNCalls(A, 1))
         sched.add_condition(D, EveryNCalls(B, 1))
-        s.scheduler = sched
+        c.scheduler = sched
 
-        s.run(
+        c.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -783,7 +591,7 @@ class TestBranching:
 
         for m in range(len(mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], mechs[m].get_output_values(s)[i])
+                numpy.testing.assert_allclose(expected_output[m][i], mechs[m].get_output_values(c)[i])
 
     def test_five_ABABCDE(self):
         A = TransferMechanism(
@@ -818,33 +626,18 @@ class TestBranching:
             function=Linear(slope=2.0),
         )
 
-        p = Process(
-            default_variable=[0],
-            pathway=[A, C, D],
-            name='p'
-        )
-
-        q = Process(
-            default_variable=[0],
-            pathway=[B, C, E],
-            name='q'
-        )
-
-        s = System(
-            processes=[p, q],
-            name='s'
-        )
+        c = Composition(pathways=[[A,C,D],[B,C,E]])
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(E, 1)}
         stim_list = {A: [[1]], B: [[2]]}
 
-        sched = Scheduler(system=s)
+        sched = Scheduler(composition=c)
         sched.add_condition(C, Any(EveryNCalls(A, 1), EveryNCalls(B, 1)))
         sched.add_condition(D, EveryNCalls(C, 1))
         sched.add_condition(E, EveryNCalls(C, 1))
-        s.scheduler = sched
+        c.scheduler = sched
 
-        s.run(
+        c.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -861,7 +654,7 @@ class TestBranching:
 
         for m in range(len(terminal_mechs)):
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(s)[i])
+                numpy.testing.assert_allclose(expected_output[m][i], terminal_mechs[m].get_output_values(c)[i])
 
     #
     #   A  B
@@ -919,66 +712,20 @@ class TestBranching:
             )
         )
 
-        p = [
-            Process(
-                default_variable=[0],
-                pathway=[A, C, E],
-                name='p'
-            ),
-            Process(
-                default_variable=[0],
-                pathway=[A, C, F],
-                name='p1'
-            ),
-            Process(
-                default_variable=[0],
-                pathway=[A, D, E],
-                name='p2'
-            ),
-            Process(
-                default_variable=[0],
-                pathway=[A, D, F],
-                name='p3'
-            ),
-            Process(
-                default_variable=[0],
-                pathway=[B, C, E],
-                name='q'
-            ),
-            Process(
-                default_variable=[0],
-                pathway=[B, C, F],
-                name='q1'
-            ),
-            Process(
-                default_variable=[0],
-                pathway=[B, D, E],
-                name='q2'
-            ),
-            Process(
-                default_variable=[0],
-                pathway=[B, D, F],
-                name='q3'
-            )
-        ]
-
-        s = System(
-            processes=p,
-            name='s'
-        )
+        c = Composition(pathways=[[A,C,E],[A,C,F],[A,D,E],[A,D,F],[B,C,E],[B,C,F],[B,D,E],[B,D,F]])
 
         term_conds = {TimeScale.TRIAL: All(AfterNCalls(E, 1), AfterNCalls(F, 1))}
         stim_list = {A: [[1]], B: [[1]]}
 
-        sched = Scheduler(system=s)
+        sched = Scheduler(composition=c)
         sched.add_condition(B, EveryNCalls(A, 2))
         sched.add_condition(C, EveryNCalls(A, 1))
         sched.add_condition(D, EveryNCalls(B, 1))
         sched.add_condition(E, EveryNCalls(C, 1))
         sched.add_condition(F, EveryNCalls(D, 2))
-        s.scheduler = sched
+        c.scheduler = sched
 
-        s.run(
+        c.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -1017,7 +764,7 @@ class TestBranching:
 
         for m in expected_output:
             for i in range(len(expected_output[m])):
-                numpy.testing.assert_allclose(expected_output[m][i], m.get_output_values(s)[i])
+                numpy.testing.assert_allclose(expected_output[m][i], m.get_output_values(c)[i])
 
 
 class TestTermination:
@@ -1037,25 +784,16 @@ class TestTermination:
             function=Linear(slope=2.0),
         )
 
-        p = Process(
-            default_variable=[0],
-            pathway=[A, B],
-            name='p'
-        )
+        c = Composition(pathways=[[A,B]])
 
-        s = System(
-            processes=[p],
-            name='s',
-            reinitialize_mechanisms_when=Never()
-        )
         term_conds = {TimeScale.TRIAL: AfterNCalls(B, 2)}
         stim_list = {A: [[1]]}
 
-        sched = Scheduler(system=s)
+        sched = Scheduler(composition=c)
         sched.add_condition(B, EveryNCalls(A, 2))
-        s.scheduler = sched
+        c.scheduler = sched
 
-        s.run(
+        c.run(
             inputs=stim_list,
             termination_processing=term_conds
         )
@@ -1067,9 +805,9 @@ class TestTermination:
         ]
 
         for i in range(len(expected_output)):
-            numpy.testing.assert_allclose(expected_output[i], terminal_mech.get_output_values(s)[i])
+            numpy.testing.assert_allclose(expected_output[i], terminal_mech.get_output_values(c)[i])
 
-        s.run(
+        c.run(
             inputs=stim_list,
         )
 
@@ -1080,4 +818,4 @@ class TestTermination:
         ]
 
         for i in range(len(expected_output)):
-            numpy.testing.assert_allclose(expected_output[i], terminal_mech.get_output_values(s)[i])
+            numpy.testing.assert_allclose(expected_output[i], terminal_mech.get_output_values(c)[i])

@@ -10,7 +10,6 @@
 
 from llvmlite import ir
 from contextlib import contextmanager
-import ctypes
 from ctypes import util
 
 from .debug import debug_env
@@ -181,25 +180,26 @@ def printf(builder, fmt, *args, override_debug=False):
         llvm.load_library_permanently(libc)
         # Address will be none if the symbol is not found
         printf_address = llvm.address_of_symbol("printf")
-        # Direct pointer constants don't work
-        printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
-        printf = builder.inttoptr(ir.IntType(64)(printf_address), printf_ty.as_pointer())
-        ir_module = builder.function.module
-        fmt += "\0"
-
-        int8 = ir.IntType(8)
-        fmt_data = bytearray(fmt.encode("utf8"))
-        fmt_ty = ir.ArrayType(int8, len(fmt_data))
-        global_fmt = ir.GlobalVariable(ir_module, fmt_ty,
-                                    name="printf_fmt_" + str(len(ir_module.globals)))
-        global_fmt.linkage = "internal"
-        global_fmt.global_constant = True
-        global_fmt.initializer = fmt_ty(fmt_data)
-
-        fmt_ptr = builder.gep(global_fmt, [ir.IntType(32)(0), ir.IntType(32)(0)])
-        builder.call(printf, [fmt_ptr] + list(args))
     except Exception as e:
         return
+
+    # Direct pointer constants don't work
+    printf_ty = ir.FunctionType(ir.IntType(32), [ir.IntType(8).as_pointer()], var_arg=True)
+    printf = builder.inttoptr(ir.IntType(64)(printf_address), printf_ty.as_pointer())
+    ir_module = builder.function.module
+    fmt += "\0"
+
+    int8 = ir.IntType(8)
+    fmt_data = bytearray(fmt.encode("utf8"))
+    fmt_ty = ir.ArrayType(int8, len(fmt_data))
+    global_fmt = ir.GlobalVariable(ir_module, fmt_ty,
+                                   name="printf_fmt_" + str(len(ir_module.globals)))
+    global_fmt.linkage = "internal"
+    global_fmt.global_constant = True
+    global_fmt.initializer = fmt_ty(fmt_data)
+
+    fmt_ptr = builder.gep(global_fmt, [ir.IntType(32)(0), ir.IntType(32)(0)])
+    builder.call(printf, [fmt_ptr] + list(args))
 
 
 def printf_float_array(builder, array, prefix="", suffix="\n", override_debug=False):
@@ -260,12 +260,22 @@ class ConditionGenerator:
         return tuple(data)
 
     def bump_ts(self, builder, cond_ptr, count=(0, 0, 1)):
+        """
+        Increments the time structure of the composition.
+        Count should be a tuple where there is a number in only one spot, and zeroes elsewhere.
+        Indices greater than that of the one are zeroed.
+        """
+
+        # Validate count tuple
+        assert count.count(0) == len(count) - 1
+
+        # Get timestruct pointer
         ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
         ts = builder.load(ts_ptr)
 
-        # run, pass, step
+        # Update run, pass, step of ts
         for idx in range(3):
-            if idx == 0 or not all(v == 0 for v in count[:idx]):
+            if all(v == 0 for v in count[:idx]):
                 el = builder.extract_value(ts, idx)
                 el = builder.add(el, self.ctx.int32_ty(count[idx]))
             else:
@@ -342,32 +352,47 @@ class ConditionGenerator:
 
         return builder.icmp_signed("==", node_run, global_run)
 
-    def generate_sched_condition(self, builder, condition, cond_ptr, node):
+    def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_flag_locs):
 
-        from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, Never
+        from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
+
         if isinstance(condition, Always):
             return ir.IntType(1)(1)
+
         if isinstance(condition, Never):
             return ir.IntType(1)(0)
+
+        elif isinstance(condition, Not):
+            condition = condition.condition
+            return builder.not_(self.generate_sched_condition(builder, condition, cond_ptr, node, is_finished_flag_locs))
+
         elif isinstance(condition, All):
             agg_cond = ir.IntType(1)(1)
             for cond in condition.args:
-                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node)
+                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_flag_locs)
                 agg_cond = builder.and_(agg_cond, cond_res)
             return agg_cond
+
         elif isinstance(condition, AllHaveRun):
+            # Extract dependencies
+            dependencies = self.composition.nodes
+            if len(condition.args) > 0:
+                dependencies = condition.args
+
             run_cond = ir.IntType(1)(1)
             array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
-            for node in self.composition.nodes:
+            for node in dependencies:
                 node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
                 run_cond = builder.and_(run_cond, node_ran)
             return run_cond
+
         elif isinstance(condition, AtTrial):
             trial_num = condition.args[0]
             ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
             ts = builder.load(ts_ptr)
             trial = builder.extract_value(ts, 0)
             return builder.icmp_unsigned("==", trial, trial.type(trial_num))
+
         elif isinstance(condition, AtPass):
             pass_num = condition.args[0]
             ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
@@ -375,6 +400,7 @@ class ConditionGenerator:
             current_pass = builder.extract_value(ts, 1)
             return builder.icmp_unsigned("==", current_pass,
                                          current_pass.type(pass_num))
+
         elif isinstance(condition, EveryNCalls):
             target, count = condition.args
 
@@ -397,5 +423,102 @@ class ConditionGenerator:
 
             # Return: target.calls % N == 0 AND me.last_time < target.last_time
             return builder.and_(completedNruns, ran_after_me)
+
+        elif isinstance(condition, BeforeNCalls):
+            target, count = condition.args
+
+            target_idx = self.ctx.int32_ty(self.composition.nodes.index(target))
+
+            array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
+            target_status = builder.load(builder.gep(array_ptr, [self._zero, target_idx]))
+
+            # Check number of runs
+            target_runs = builder.extract_value(target_status, 0, target.name + " runs")
+            less_than_call_count = builder.icmp_unsigned('<', target_runs, self.ctx.int32_ty(count))
+
+            # Check that we have not run yet
+            my_time_stamp = self.__get_node_ts(builder, cond_ptr, node)
+            target_time_stamp = self.__get_node_ts(builder, cond_ptr, target)
+            ran_after_me = self.ts_compare(builder, my_time_stamp, target_time_stamp, '<')
+
+            # Return: target.calls % N == 0 AND me.last_time < target.last_time
+            return builder.and_(less_than_call_count, ran_after_me)
+
+        elif isinstance(condition, AtNCalls):
+            target, count = condition.args
+
+            target_idx = self.ctx.int32_ty(self.composition.nodes.index(target))
+
+            array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
+            target_status = builder.load(builder.gep(array_ptr, [self._zero, target_idx]))
+
+            # Check number of runs
+            target_runs = builder.extract_value(target_status, 0, target.name + " runs")
+            less_than_call_count = builder.icmp_unsigned('==', target_runs, self.ctx.int32_ty(count))
+
+            # Check that we have not run yet
+            my_time_stamp = self.__get_node_ts(builder, cond_ptr, node)
+            target_time_stamp = self.__get_node_ts(builder, cond_ptr, target)
+            ran_after_me = self.ts_compare(builder, my_time_stamp, target_time_stamp, '<')
+
+            # Return: target.calls % N == 0 AND me.last_time < target.last_time
+            return builder.and_(less_than_call_count, ran_after_me)
+
+        elif isinstance(condition, AfterNCalls):
+            target, count = condition.args
+
+            target_idx = self.ctx.int32_ty(self.composition.nodes.index(target))
+
+            array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
+            target_status = builder.load(builder.gep(array_ptr, [self._zero, target_idx]))
+
+            # Check number of runs
+            target_runs = builder.extract_value(target_status, 0, target.name + " runs")
+            less_than_call_count = builder.icmp_unsigned('>=', target_runs, self.ctx.int32_ty(count))
+
+            # Check that we have not run yet
+            my_time_stamp = self.__get_node_ts(builder, cond_ptr, node)
+            target_time_stamp = self.__get_node_ts(builder, cond_ptr, target)
+            ran_after_me = self.ts_compare(builder, my_time_stamp, target_time_stamp, '<')
+
+            # Return: target.calls % N == 0 AND me.last_time < target.last_time
+            return builder.and_(less_than_call_count, ran_after_me)
+
+        elif isinstance(condition, WhenFinished):
+            # The first argument is the target node
+            assert len(condition.args) == 1
+            target_is_finished_ptr = is_finished_flag_locs[condition.args[0]]
+            target_is_finished = builder.load(target_is_finished_ptr)
+
+            return builder.fcmp_ordered("==", target_is_finished,
+                                        target_is_finished.type(1))
+
+        elif isinstance(condition, WhenFinishedAny):
+            assert len(condition.args) > 0
+
+            run_cond = ir.IntType(1)(0)
+            for node in condition.args:
+                node_is_finished_ptr = is_finished_flag_locs[node]
+                node_is_finished = builder.load(node_is_finished_ptr)
+                node_is_finished = builder.fcmp_ordered("==", node_is_finished,
+                                                        node_is_finished.type(1))
+
+                run_cond = builder.or_(run_cond, node_is_finished)
+
+            return run_cond
+
+        elif isinstance(condition, WhenFinishedAll):
+            assert len(condition.args) > 0
+
+            run_cond = ir.IntType(1)(1)
+            for node in condition.args:
+                node_is_finished_ptr = is_finished_flag_locs[node]
+                node_is_finished = builder.load(node_is_finished_ptr)
+                node_is_finished = builder.fcmp_ordered("==", node_is_finished,
+                                                        node_is_finished.type(1))
+
+                run_cond = builder.and_(run_cond, node_is_finished)
+
+            return run_cond
 
         assert False, "Unsupported scheduling condition: {}".format(condition)

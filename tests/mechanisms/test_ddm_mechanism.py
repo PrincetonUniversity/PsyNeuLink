@@ -10,15 +10,14 @@ from psyneulink.core.components.functions.distributionfunctions import DriftDiff
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.core.components.process import Process
-from psyneulink.core.components.system import System
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.condition import Never, WhenFinished
 from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.core.globals.keywords import IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import \
-    ARRAY, DDM, DDMError, SELECTED_INPUT_ARRAY, DECISION_VARIABLE_ARRAY
+    ARRAY, DDM, DDMError, DECISION_VARIABLE_ARRAY, SELECTED_INPUT_ARRAY
 
-class TestReinitialize:
+class TestReset:
 
     def test_valid(self):
         D = DDM(
@@ -33,8 +32,8 @@ class TestReinitialize:
         assert np.allclose(D.output_ports[0].value[0][0], 1.0)
         assert np.allclose(D.output_ports[1].value[0][0], 1.0)
 
-        # reinitialize function
-        D.function.reinitialize(2.0, 0.1)
+        # reset function
+        D.function.reset(2.0, 0.1)
         assert np.allclose(D.function.value[0], 2.0)
         assert np.allclose(D.function.previous_value, 2.0)
         assert np.allclose(D.function.previous_time, 0.1)
@@ -42,8 +41,8 @@ class TestReinitialize:
         assert np.allclose(D.output_ports[0].value[0][0], 1.0)
         assert np.allclose(D.output_ports[1].value[0][0], 1.0)
 
-        # reinitialize function without value spec
-        D.function.reinitialize()
+        # reset function without value spec
+        D.function.reset()
         assert np.allclose(D.function.value[0], 0.0)
         assert np.allclose(D.function.previous_value, 0.0)
         assert np.allclose(D.function.previous_time, 0.0)
@@ -51,8 +50,8 @@ class TestReinitialize:
         assert np.allclose(D.output_ports[0].value[0][0], 1.0)
         assert np.allclose(D.output_ports[1].value[0][0], 1.0)
 
-        # reinitialize mechanism
-        D.reinitialize(2.0, 0.1)
+        # reset mechanism
+        D.reset(2.0, 0.1)
         assert np.allclose(D.function.value[0], 2.0)
         assert np.allclose(D.function.previous_value, 2.0)
         assert np.allclose(D.function.previous_time, 0.1)
@@ -66,18 +65,18 @@ class TestReinitialize:
         assert np.allclose(D.output_ports[0].value[0][0], 3.0)
         assert np.allclose(D.output_ports[1].value[0][0], 1.1)
 
-        # reinitialize mechanism without value spec
-        D.reinitialize()
+        # reset mechanism without value spec
+        D.reset()
         assert np.allclose(D.function.value[0], 0.0)
         assert np.allclose(D.function.previous_value, 0.0)
         assert np.allclose(D.function.previous_time, 0.0)
         assert np.allclose(D.output_ports[0].value[0], 0.0)
         assert np.allclose(D.output_ports[1].value[0], 0.0)
 
-        # reinitialize only decision variable
+        # reset only decision variable
         D.function.initializer = 1.0
         D.function.starting_point = 0.0
-        D.reinitialize()
+        D.reset()
         assert np.allclose(D.function.value[0], 1.0)
         assert np.allclose(D.function.previous_value, 1.0)
         assert np.allclose(D.function.previous_time, 0.0)
@@ -115,18 +114,18 @@ class TestThreshold:
         (-2., [-2.0, -4.0, -5.0, -5.0, -5.0]),
         ], ids=["POSITIVE", "NEGATIVE"])
     @pytest.mark.parametrize("mode", [
-        "Python",
-        pytest.param("LLVM", marks=pytest.mark.llvm),
-        pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda]),
+        'Python',
+        pytest.param('LLVM', marks=pytest.mark.llvm),
+        pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     ])
     def test_threshold_stops_accumulation(self, mode, variable, expected, benchmark):
         D = DDM(name='DDM',
                 function=DriftDiffusionIntegrator(threshold=5.0))
-        if mode == "Python":
+        if mode == 'Python':
             ex = D.execute
-        elif mode == "LLVM":
+        elif mode == 'LLVM':
             ex = pnlvm.execution.MechExecution(D).execute
-        elif mode == "PTX":
+        elif mode == 'PTX':
             ex = pnlvm.execution.MechExecution(D).cuda_execute
 
         decision_variables = []
@@ -163,19 +162,17 @@ class TestThreshold:
     #     assert np.allclose(decision_variables_a, [2.0, 4.0, 5.0, 5.0, 5.0])
 
 
-    def test_is_finished_stops_system(self):
+    def test_is_finished_stops_composition(self):
         D = DDM(name='DDM',
                 function=DriftDiffusionIntegrator(threshold=10.0))
-        P = Process(pathway=[D])
-        S = System(processes=[P],
-                   reinitialize_mechanisms_when=Never())
-        S.run(inputs={D: 2.0},
+        C = Composition(pathways=[D], reset_stateful_function_when=Never())
+        C.run(inputs={D: 2.0},
               termination_processing={TimeScale.TRIAL: WhenFinished(D)})
 
         # decision variable's value should match threshold
-        assert D.parameters.value.get(S)[0] == 10.0
+        assert D.parameters.value.get(C)[0] == 10.0
         # it should have taken 5 executions (and time_step_size = 1.0)
-        assert D.parameters.value.get(S)[1] == 5.0
+        assert D.parameters.value.get(C)[1] == 5.0
 
 
     # def test_is_finished_stops_mechanism(self):
@@ -247,9 +244,9 @@ class TestOutputPorts:
 @pytest.mark.mechanism
 @pytest.mark.benchmark
 @pytest.mark.parametrize("mode", [
-    "Python",
-    pytest.param("LLVM", marks=pytest.mark.llvm),
-    pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    'Python',
+    pytest.param('LLVM', marks=pytest.mark.llvm),
+    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
 def test_DDM_Integrator_Bogacz(benchmark, mode):
     stim = 10
@@ -257,11 +254,11 @@ def test_DDM_Integrator_Bogacz(benchmark, mode):
         name='DDM',
         function=DriftDiffusionAnalytical()
     )
-    if mode == "Python":
+    if mode == 'Python':
         ex = T.execute
-    elif mode == "LLVM":
+    elif mode == 'LLVM':
         ex = pnlvm.execution.MechExecution(T).execute
-    elif mode == "PTX":
+    elif mode == 'PTX':
         ex = pnlvm.execution.MechExecution(T).cuda_execute
     val = ex(stim)[0]
     assert np.allclose(val, [1.0])
@@ -300,9 +297,9 @@ def test_DDM_Integrator_Bogacz(benchmark, mode):
     (2., 6.388767103722829),
     ], ids=["0", "0.5", "2.0"])
 @pytest.mark.parametrize("mode", [
-    "Python",
-    pytest.param("LLVM", marks=pytest.mark.llvm),
-    pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    'Python',
+    pytest.param('LLVM', marks=pytest.mark.llvm),
+    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
 def test_DDM_noise(mode, benchmark, noise, expected):
     T = DDM(
@@ -313,11 +310,11 @@ def test_DDM_noise(mode, benchmark, noise, expected):
             time_step_size=1.0
         )
     )
-    if mode == "Python":
+    if mode == 'Python':
         ex = T.execute
-    elif mode == "LLVM":
+    elif mode == 'LLVM':
         ex = pnlvm.execution.MechExecution(T).execute
-    elif mode == "PTX":
+    elif mode == 'PTX':
         ex = pnlvm.execution.MechExecution(T).cuda_execute
 
     val = ex([10])
@@ -331,7 +328,6 @@ def test_DDM_noise(mode, benchmark, noise, expected):
 # ------------------------------------------------------------------------------------------------
 @pytest.mark.ddm_mechanism
 @pytest.mark.mechanism
-@pytest.mark.benchmark(group="DDM")
 @pytest.mark.parametrize("noise", [
     2, NormalDist(),
     ], ids=["int", "functions"])
@@ -357,7 +353,6 @@ def test_DDM_noise_invalid(noise):
 # ------------------------------------------------------------------------------------------------
 @pytest.mark.ddm_mechanism
 @pytest.mark.mechanism
-@pytest.mark.benchmark(group="DDM")
 @pytest.mark.parametrize("stim", [
     10, 10.0, [10],
     ], ids=["int", "float", "list"])
@@ -435,9 +430,9 @@ def test_DDM_input_fn():
     (5, 50), (5., 50), ([5], 50), (-5.0, -50),
     ], ids=["int", "float", "list", "negative"])
 @pytest.mark.parametrize("mode", [
-    "Python",
-    pytest.param("LLVM", marks=pytest.mark.llvm),
-    pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    'Python',
+    pytest.param('LLVM', marks=pytest.mark.llvm),
+    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
 # ******
 # Should negative pass?
@@ -452,11 +447,11 @@ def test_DDM_rate(benchmark, rate, expected, mode):
             time_step_size=1.0
         ),
     )
-    if mode == "Python":
+    if mode == 'Python':
         ex = T.execute
-    elif mode == "LLVM":
+    elif mode == 'LLVM':
         ex = pnlvm.execution.MechExecution(T).execute
-    elif mode == "PTX":
+    elif mode == 'PTX':
         ex = pnlvm.execution.MechExecution(T).cuda_execute
     val = float(ex(stim)[0][0][0])
     assert val == expected
@@ -647,12 +642,12 @@ def test_WhenFinished_DDM_Analytical():
 @pytest.mark.mechanism
 @pytest.mark.benchmark(group="DDM-comp")
 @pytest.mark.parametrize("mode", [
-    "Python",
-    pytest.param("LLVM", marks=pytest.mark.llvm),
-    pytest.param("LLVMExec", marks=pytest.mark.llvm),
-    pytest.param("LLVMRun", marks=pytest.mark.llvm),
-    pytest.param("PTXExec", marks=[pytest.mark.llvm, pytest.mark.cuda]),
-    pytest.param("PTXRun", marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    'Python',
+    pytest.param('LLVM', marks=pytest.mark.llvm),
+    pytest.param('LLVMExec', marks=pytest.mark.llvm),
+    pytest.param('LLVMRun', marks=pytest.mark.llvm),
+    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
 def test_DDM_in_composition(benchmark, mode):
     M = pnl.DDM(
@@ -679,12 +674,12 @@ def test_DDM_in_composition(benchmark, mode):
 @pytest.mark.ddm_mechanism
 @pytest.mark.mechanism
 @pytest.mark.parametrize("mode", [
-    "Python",
-    pytest.param("LLVM", marks=pytest.mark.llvm),
-    pytest.param("LLVMExec", marks=pytest.mark.llvm),
-    pytest.param("LLVMRun", marks=pytest.mark.llvm),
-    pytest.param("PTXExec", marks=[pytest.mark.llvm, pytest.mark.cuda]),
-    pytest.param("PTXRun", marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    'Python',
+    pytest.param('LLVM', marks=pytest.mark.llvm),
+    pytest.param('LLVMExec', marks=pytest.mark.llvm),
+    pytest.param('LLVMRun', marks=pytest.mark.llvm),
+    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
 def test_DDM_threshold_modulation(mode):
     M = pnl.DDM(
@@ -713,3 +708,83 @@ def test_DDM_threshold_modulation(mode):
     val = np.asfarray(val)
     assert np.allclose(val[0], [60.0])
     assert np.allclose(val[1], [60.2])
+
+@pytest.mark.parametrize("mode", ['Python',
+                                    pytest.param('LLVM', marks=pytest.mark.llvm),
+                                    pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                    ])
+@pytest.mark.parametrize(["noise", "threshold", "expected_results"],[
+                            (1.0, 0.0, (0.0, 1.0)),
+                            (1.5, 2, (-2.0, 1.0)),
+                            (10.0, 10.0, (10.0, 29.0)),
+                            (100.0, 100.0, (100.0, 76.0)),
+                        ])
+def test_ddm_is_finished(mode, noise, threshold, expected_results):
+    comp = Composition()
+    ddm = DDM(execute_until_finished=True,
+                function=DriftDiffusionIntegrator(threshold=threshold, noise=noise))
+    comp.add_node(ddm)
+
+    results = comp.run([0], bin_execute=mode)
+
+    results = [x for x in np.array(results).flatten()] #HACK: The result is an object dtype in Python mode for some reason?
+    assert np.allclose(results, np.array(expected_results).flatten())
+
+
+def test_sequence_of_DDM_mechs_in_Composition_Pathway():
+    myMechanism = DDM(
+        function=DriftDiffusionAnalytical(
+            drift_rate=(1.0),
+            threshold=(10.0),
+            starting_point=0.0,
+        ),
+        name='My_DDM',
+    )
+
+    myMechanism_2 = DDM(
+        function=DriftDiffusionAnalytical(
+            drift_rate=2.0,
+            threshold=20.0),
+        name='My_DDM_2'
+    )
+
+    myMechanism_3 = DDM(
+        function=DriftDiffusionAnalytical(
+            drift_rate=3.0,
+            threshold=30.0
+        ),
+        name='My_DDM_3',
+    )
+
+    z = Composition(
+        # default_variable=[[30], [10]],
+        pathways=[[
+            myMechanism,
+            (IDENTITY_MATRIX),
+            myMechanism_2,
+            (FULL_CONNECTIVITY_MATRIX),
+            myMechanism_3
+        ]],
+    )
+
+    result = z.execute(inputs={myMechanism:[40]})
+
+    expected_output = [
+        (myMechanism.input_ports[0].parameters.value.get(z), np.array([40.])),
+        (myMechanism.output_ports[0].parameters.value.get(z), np.array([10.])),
+        (myMechanism_2.input_ports[0].parameters.value.get(z), np.array([10.])),
+        (myMechanism_2.output_ports[0].parameters.value.get(z), np.array([20.])),
+        (myMechanism_3.input_ports[0].parameters.value.get(z), np.array([20.])),
+        (myMechanism_3.output_ports[0].parameters.value.get(z), np.array([30.])),
+        (result[0], np.array([30.])),
+    ]
+
+    for i in range(len(expected_output)):
+        val, expected = expected_output[i]
+        # setting absolute tolerance to be in accordance with reference_output precision
+        # if you do not specify, assert_allcose will use a relative tolerance of 1e-07,
+        # which WILL FAIL unless you gather higher precision values to use as reference
+        np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))

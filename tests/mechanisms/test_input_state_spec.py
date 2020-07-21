@@ -37,7 +37,7 @@ class TestInputPortSpec:
             default_variable=[[0, 0], [0]],
             input_ports=[[32, 24], 'HELLO']
         )
-        assert T.defaults.variable.shape == np.array([[0, 0], [0]]).shape
+        assert T.defaults.variable.shape == np.array([[0, 0], [0]], dtype=object).shape
         assert len(T.input_ports) == 2
         assert T.input_ports[1].name == 'HELLO'
         # # PROBLEM WITH input FOR RUN:
@@ -53,7 +53,7 @@ class TestInputPortSpec:
     #         default_variable=[[0], [0]],
     #         input_ports=[[32, 24], 'HELLO']
     #     )
-    #     assert T.defaults.variable.shape == np.array([[0, 0], [0]]).shape
+    #     assert T.defaults.variable.shape == np.array([[0, 0], [0]], dtype=object).shape
     #     assert len(T.input_ports) == 2
     #     assert T.input_ports[1].name == 'HELLO'
 
@@ -145,7 +145,7 @@ class TestInputPortSpec:
             input_ports=[[32], 'HELLO'],
             params={INPUT_PORTS: [[32, 24], 'HELLO']}
         )
-        assert T.defaults.variable.shape == np.array([[0, 0], [0]]).shape
+        assert T.defaults.variable.shape == np.array([[0, 0], [0]], dtype=object).shape
         assert len(T.input_ports) == 2
         assert T.input_ports[1].name == 'HELLO'
         # # PROBLEM WITH input FOR RUN:
@@ -162,7 +162,7 @@ class TestInputPortSpec:
         #                INSTEAD, SEEM TO IGNORE InputPort SPECIFICATIONS AND JUST USE DEFAULT_VARIABLE
         #                NOTE:  WORKS FOR ObjectiveMechanism, BUT NOT TransferMechanism
         T = TransferMechanism(input_ports=[[32, 24], 'HELLO'])
-        assert T.defaults.variable.shape == np.array([[0, 0], [0]]).shape
+        assert T.defaults.variable.shape == np.array([[0, 0], [0]], dtype=object).shape
         assert len(T.input_ports) == 2
         assert T.input_ports[1].name == 'HELLO'
 
@@ -177,7 +177,7 @@ class TestInputPortSpec:
         #                INSTEAD, SEEM TO IGNORE InputPort SPECIFICATIONS AND JUST USE DEFAULT_VARIABLE
         #                NOTE:  WORKS FOR ObjectiveMechanism, BUT NOT TransferMechanism
         T = TransferMechanism(params={INPUT_PORTS: [[32, 24], 'HELLO']})
-        assert T.defaults.variable.shape == np.array([[0, 0], [0]]).shape
+        assert T.defaults.variable.shape == np.array([[0, 0], [0]], dtype=object).shape
         assert len(T.input_ports) == 2
         assert T.input_ports[1].name == 'HELLO'
 
@@ -453,7 +453,7 @@ class TestInputPortSpec:
                 {NAME: 'SECOND', VARIABLE: [0]}
             ]
         )
-        assert T.defaults.variable.shape == np.array([[0, 0], [0]]).shape
+        assert T.defaults.variable.shape == np.array([[0, 0], [0]], dtype=object).shape
         assert len(T.input_ports) == 2
 
     # ------------------------------------------------------------------------------------------------
@@ -511,7 +511,7 @@ class TestInputPortSpec:
             input_ports=[[0], [0]],
             params={INPUT_PORTS: [[0, 0], [0]]}
         )
-        assert T.defaults.variable.shape == np.array([[0, 0], [0]]).shape
+        assert T.defaults.variable.shape == np.array([[0, 0], [0]], dtype=object).shape
         assert len(T.input_ports) == 2
 
     # ------------------------------------------------------------------------------------------------
@@ -568,7 +568,7 @@ class TestInputPortSpec:
             T = TransferMechanism(input_ports=[p])
         assert re.match(
             mismatches_specified_matrix_pattern,
-            error_text.value.error_value
+            str(error_text.value)
         )
 
         with pytest.raises(FunctionError) as error_text:
@@ -577,7 +577,7 @@ class TestInputPortSpec:
             T2 = TransferMechanism(input_ports=[p2])
         assert re.match(
             mismatches_specified_matrix_pattern,
-            error_text.value.error_value
+            str(error_text.value)
         )
 
     # ------------------------------------------------------------------------------------------------

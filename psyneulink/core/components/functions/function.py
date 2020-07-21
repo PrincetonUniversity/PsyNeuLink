@@ -40,7 +40,7 @@ more numpy functions).  There are two reasons PsyNeuLink packages functions in a
 ..
 * **Modularity** -- by providing a standard interface, any Function assigned to a Components in PsyNeuLink can be
   replaced with other PsyNeuLink Functions, or with user-written custom functions so long as they adhere to certain
-  standards (the PsyNeuLink :ref:`Function API <LINK>`).
+  standards (the PsyNeuLink `Function API <LINK>`).
 
 .. _Function_Creation:
 
@@ -131,8 +131,8 @@ of the `function <Function_Base.function>` can be modified when it is executed, 
 `parameter specification dictionary <ParameterPort_Specification>` to the **params** argument in the
 call to the `function <Function_Base.function>`.
 
-For `Mechanisms <Mechanism>`, this can also be done by specifying `runtime_params <Run_Runtime_Parameters>` in the `Run`
-method of their `Composition`.
+For `Mechanisms <Mechanism>`, this can also be done by specifying `runtime_params <Composition_Runtime_Params>` in the
+`Run` method of their `Composition`.
 
 Class Reference
 ---------------
@@ -140,26 +140,29 @@ Class Reference
 """
 
 import abc
-import inspect
 import numbers
-import numpy as np
-import typecheck as tc
 import types
 import warnings
-
 from enum import Enum, IntEnum
 
-from psyneulink.core import llvm as pnlvm
+import numpy as np
+import typecheck as tc
+
+from psyneulink.core.components.component import ComponentError, DefaultsFlexibility
 from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import \
-    ARGUMENT_THERAPY_FUNCTION, EXAMPLE_FUNCTION_TYPE, FUNCTION, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION,\
-    NAME, PARAMETER_PORT_PARAMS, FUNCTION_COMPONENT_CATEGORY, PREFERENCE_SET_NAME
-from psyneulink.core.globals.parameters import Parameter, ParameterAlias
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
+from psyneulink.core.globals.keywords import (
+    ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, EXAMPLE_FUNCTION_TYPE, FULL_CONNECTIVITY_MATRIX,
+    FUNCTION_COMPONENT_CATEGORY, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, HOLLOW_MATRIX,
+    IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX
+)
+from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import object_has_single_value, parameter_spec, safe_len, get_global_seed
+from psyneulink.core.globals.utilities import (
+    convert_to_np_array, get_global_seed, object_has_single_value, parameter_spec, safe_len
+)
 
 __all__ = [
     'ArgumentTherapy', 'EPSILON', 'Function_Base', 'function_keywords', 'FunctionError', 'FunctionOutputType',
@@ -174,12 +177,8 @@ FunctionRegistry = {}
 function_keywords = {FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION}
 
 
-class FunctionError(Exception):
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
+class FunctionError(ComponentError):
+    pass
 
 
 class FunctionOutputType(IntEnum):
@@ -208,7 +207,7 @@ def is_function_type(x):
         return False
     elif isinstance(x, (Function, types.FunctionType, types.MethodType, types.BuiltinFunctionType, types.BuiltinMethodType)):
         return True
-    elif issubclass(x, Function):
+    elif isinstance(x, type) and issubclass(x, Function):
         return True
     else:
         return False
@@ -309,10 +308,6 @@ def _output_type_setter(value, owning_component):
     # https://github.com/PrincetonUniversity/PsyNeuLink/issues/895 is solved
     # properly(meaning Mechanism values may be something other than 2D np array)
     try:
-        # import here because if this package is not installed, we can assume
-        # the user is probably not dealing with compilation so no need to warn
-        # unecessarily
-        import llvmlite
         if (
             isinstance(owning_component.owner, Mechanism)
             and (
@@ -458,13 +453,13 @@ class Function_Base(Function):
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
 
     """
 
@@ -477,6 +472,8 @@ class Function_Base(Function):
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
     _model_spec_id_parameters = 'args'
+
+    _specified_variable_shape_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
 
     class Parameters(Function.Parameters):
         """
@@ -574,11 +571,6 @@ class Function_Base(Function):
             pass
         return new
 
-    def _initialize_parameters(self, context=None, **param_defaults):
-        super()._initialize_parameters(context=context, **param_defaults)
-        # instantiate auxiliary Functions
-        self._instantiate_parameter_classes(context)
-
     @handle_external_context()
     def function(self,
                  variable=None,
@@ -653,7 +645,7 @@ class Function_Base(Function):
             else:
                 output_type = self.output_type
 
-        value = np.asarray(value)
+        value = convert_to_np_array(value)
 
         # Type conversion (specified by output_type):
 
@@ -791,13 +783,13 @@ class ArgumentTherapy(Function_Base):
         `component <Component>` to which the Function has been assigned.
 
     name : str
-        the name of the Function; if it is not specified in the **name** argument of the constructor, a
-        default is assigned by FunctionRegistry (see `Naming` for conventions used for default and duplicate names).
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
 
     prefs : PreferenceSet or specification dict : Function.classPreferences
         the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
-        constructor, a default is assigned using `classPreferences` defined in __init__.py (see :doc:`PreferenceSet
-        <LINK>` for details).
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
 
 
     """
@@ -826,7 +818,7 @@ class ArgumentTherapy(Function_Base):
                  pertincacity=Manner.CONTRARIAN,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -987,3 +979,84 @@ class EVCAuxiliaryFunction(Function_Base):
                          context=context,
                          function=function,
                          )
+
+
+def get_matrix(specification, rows=1, cols=1, context=None):
+    """Returns matrix conforming to specification with dimensions = rows x cols or None
+
+     Specification can be a matrix keyword, filler value or np.ndarray
+
+     Specification (validated in _validate_params):
+        + single number (used to fill self.matrix)
+        + matrix keyword:
+            + AUTO_ASSIGN_MATRIX: IDENTITY_MATRIX if it is square, othwerwise FULL_CONNECTIVITY_MATRIX
+            + IDENTITY_MATRIX: 1's on diagonal, 0's elsewhere (must be square matrix), otherwise generates error
+            + HOLLOW_MATRIX: 0's on diagonal, 1's elsewhere (must be square matrix), otherwise generates error
+            + INVERSE_HOLLOW_MATRIX: 0's on diagonal, -1's elsewhere (must be square matrix), otherwise generates error
+            + FULL_CONNECTIVITY_MATRIX: all 1's
+            + RANDOM_CONNECTIVITY_MATRIX (random floats uniformly distributed between 0 and 1)
+        + 2D list or np.ndarray of numbers
+
+     Returns 2D array with length=rows in dim 0 and length=cols in dim 1, or none if specification is not recognized
+    """
+
+    # Matrix provided (and validated in _validate_params); convert to array
+    if isinstance(specification, (list, np.matrix)):
+        return convert_to_np_array(specification)
+
+    if isinstance(specification, np.ndarray):
+        if specification.ndim == 2:
+            return specification
+        # FIX: MAKE THIS AN np.array WITH THE SAME DIMENSIONS??
+        elif specification.ndim < 2:
+            return np.atleast_2d(specification)
+        else:
+            raise FunctionError("Specification of np.array for matrix ({}) is more than 2d".
+                                format(specification))
+
+    if specification == AUTO_ASSIGN_MATRIX:
+        if rows == cols:
+            specification = IDENTITY_MATRIX
+        else:
+            specification = FULL_CONNECTIVITY_MATRIX
+
+    if specification == FULL_CONNECTIVITY_MATRIX:
+        return np.full((rows, cols), 1.0)
+
+    if specification == IDENTITY_MATRIX:
+        if rows != cols:
+            raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
+                                format(rows, cols, specification))
+        return np.identity(rows)
+
+    if specification == HOLLOW_MATRIX:
+        if rows != cols:
+            raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
+                                format(rows, cols, specification))
+        return 1 - np.identity(rows)
+
+    if specification == INVERSE_HOLLOW_MATRIX:
+        if rows != cols:
+            raise FunctionError("Sender length ({}) must equal receiver length ({}) to use {}".
+                                format(rows, cols, specification))
+        return (1 - np.identity(rows)) * -1
+
+    if specification == RANDOM_CONNECTIVITY_MATRIX:
+        return np.random.rand(rows, cols)
+
+    # Function is specified, so assume it uses random.rand() and call with sender_len and receiver_len
+    if isinstance(specification, types.FunctionType):
+        return specification(rows, cols)
+
+    # (7/12/17 CW) this is a PATCH (like the one in MappingProjection) to allow users to
+    # specify 'matrix' as a string (e.g. r = RecurrentTransferMechanism(matrix='1 2; 3 4'))
+    if type(specification) == str:
+        try:
+            return np.array(np.matrix(specification))
+        except (ValueError, NameError, TypeError):
+            # np.matrix(specification) will give ValueError if specification is a bad value (e.g. 'abc', '1; 1 2')
+            #                          [JDC] actually gives NameError if specification is a string (e.g., 'abc')
+            pass
+
+    # Specification not recognized
+    return None

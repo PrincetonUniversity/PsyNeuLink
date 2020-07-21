@@ -153,9 +153,9 @@ use (e.g., `OptimizationControlMechanism`);  in those cases, they use each Contr
 `allocation_samples <ControlSignal.allocation_samples>` attribute (specified in the **allocation_samples** argument
 of the ControlSignal's constructor) to determine the allocation values to sample for that ControlSignal.  A
 ControlSignal's `allocation <ControlSignal>` attribute contains the value assigned to it by the ControlMechanism
-at the end of the previous `TRIAL` (i.e., when the ControlMechanism last executed --  see
-`ControlMechanism Execution <ControlMechanism_Execution>`); its value from the previous `TRIAL` is assigned to the
-`last_intensity` attribute.
+at the end of the previous `TRIAL <TimeScale.TRIAL>` (i.e., when the ControlMechanism last executed --  see
+`ControlMechanism Execution <ControlMechanism_Execution>`); its value from the previous `TRIAL <TimeScale.TRIAL>` is
+assigned to the `last_intensity` attribute.
 
 *Function*. A ControlSignal's `allocation <ControlSignal.allocation>` serves as its `variable
 <ModulatorySignal.variable>`, and is used by its `function <ControlSignal.function>` to generate an `intensity`.
@@ -175,8 +175,8 @@ case, the ControlSignal's costs can't be computed and will all be assigned None.
 *Intensity (value)*. The result of the function is assigned as the value of the ControlSignal's `intensity`
 attribute, which serves as the ControlSignal's `value <ControlSignal.value>` (also referred to as `control_signal`).
 The `intensity` is used by its `ControlProjection(s) <ControlProjection>` to modulate the parameter(s) for which the
-ControlSignal is responsible. The ControlSignal's `intensity` attribute  reflects its value for the current `TRIAL`;
-its value from the previous `TRIAL` is assigned to the `last_intensity` attribute.
+ControlSignal is responsible. The ControlSignal's `intensity` attribute  reflects its value for the current `TRIAL
+<TimeScale.TRIAL>`; its value from the previous `TRIAL <TimeScale.TRIAL>` is assigned to the `last_intensity` attribute.
 
 .. _ControlSignal_Costs:
 
@@ -238,9 +238,9 @@ Execution
 
 A ControlSignal cannot be executed directly.  It is executed whenever the `ControlMechanism <ControlMechanism>` to
 which it belongs is executed.  When this occurs, the ControlMechanism provides the ControlSignal with an `allocation
-<ControlSignal.allocation>`, that is used by its `function <ControlSignal.function>` to compute its `intensity` for
-that `TRIAL`.  The `intensity` is used by the ControlSignal's `ControlProjections <ControlProjection>` to set the
-`value <ParameterPort.value>` \\(s) of the `ParameterPort(s) <ParameterPort>` to which the ControlSignal projects.
+<ControlSignal.allocation>`, that is used by its `function <ControlSignal.function>` to compute its `intensity` for that
+`TRIAL <TimeScale.TRIAL>`.  The `intensity` is used by the ControlSignal's `ControlProjections <ControlProjection>` to
+set the `value <ParameterPort.value>`\\(s) of the `ParameterPort(s) <ParameterPort>` to which the ControlSignalprojects.
 
 Recall that the ParameterPort value is referenced anywhere that the controlled parameter is used in computation, and
 that it does not update until the component to which the ParameterPort belongs executes. If the distinction between the
@@ -251,12 +251,12 @@ ParameterPort is unfamiliar, see `Parameter Port documentation <ParameterPort>` 
 The ControlSignal's `intensity` is also used  by its `cost functions <ControlSignal_Costs>` to compute its `cost`
 attribute. That is used by some ControlMechanisms, along with the ControlSignal's `allocation_samples` attribute, to
 evaluate a `control_allocation <ControlMechanism.control_allocation>`, and adjust the ControlSignal's `allocation
-<ControlSignal.allocation>` for the next `TRIAL`.
+<ControlSignal.allocation>` for the next `TRIAL <TimeScale.TRIAL>`.
 
 .. note::
    The changes in a parameter in response to the execution of a ControlMechanism are not applied until the Mechanism
-   with the parameter being controlled is next executed; see :ref:`Lazy Evaluation <LINK>` for an explanation of
-   "lazy" updating).
+   with the parameter being controlled is next executed; see `Lazy Evaluation <Component_Lazy_Updating>` for an
+   explanation of "lazy" updating).
 
 .. _ControlSignal_Examples:
 
@@ -305,8 +305,8 @@ This specifies that the value of the ControlSignal should be added to, rather th
 <Logistic.gain>` parameter of the Logistic function.  Note that the **modulation** argument determines how to modify a
 *parameter* of the *Logistic* Function (in this case, its `gain <Logistic.gain>` parameter), and its input directly;
 that is, in this example, the value of the ControlSignal is added to the *gain parameter* of the Logistic function,
-*not* to its `variable <Logistic.variable>`.  If the value of the ControlSignal's **modulation** argument had been
-*OVERRIDE*, then the ControlSignal's value would have been used as (i.e., it would have replaced) the value of the
+*not* to its `variable <Lo˚gistic.variable>`.  If the value of the ControlSignal's **modulation** argument had been
+*OVERRIDE*, then the ControlSignal's value would have been used as (i.e., it would have replaced) the ˚value of the
 *Logistic* Function's `gain <Logistic.gain>` parameter, rather than being added to it.
 
 *Specify ControlSignals in a ControlMechanism's constructor*
@@ -353,10 +353,11 @@ function <ControlSignal_Costs>` can be modulated by another ControlSignal::
   ...                               control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
   ...                                                             modulation=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM))
   >>> comp = Composition()
-  >>> comp.add_linear_processing_pathway(pathway=[mech,
-  ...                                             ctl_mech_A,
-  ...                                             ctl_mech_B
-  ...                                             ])
+  >>> pway = comp.add_linear_processing_pathway(pathway=[mech,
+  ...                                              ctl_mech_A,
+  ...                                              ctl_mech_B
+  ...                                              ])
+  >>> pway.pathway
   [(ProcessingMechanism my_mech)]
 
 Here, the `ControlSignal` of ``ctl_mech_A`` is configured to monitor the output of ``mech``, modulate the
@@ -366,7 +367,9 @@ default), and to implement its `intensity_cost_fct <TransferWithCosts.intensity_
 ``mech``, but to modulate the `multiplicative_param <Function_Modulatory_Params>` of the `intensity_cost_fct
 <TransferWithCosts.intensity_cost_fct>` of ``ctl_mech_A``\\s ControlSignal.  The default for the `intensity_cost_fct
 <TransferWithCosts.intensity_cost_fct>` is `Exponential`, the `multiplicative_param <Function_Modulatory_Params>`
-of which is `rate <Exponential>`.  When the ``comp`` is run with an input of ``3``, since the default `function
+of which is `rate <Exponential>`.  (Note that the pathway returned from the call to `add_linear_processing_pathway
+<Composition.add_linear_processing_pathway>` contains only ``my_mech``, since that is the only `ProcessingMechanism`
+in the `Pathway`. When the ``comp`` is run with an input of ``3``, since the default `function
 <Mechanism_Base.function>` for ``mech`` is `Linear` with a `slope <Linear.slope>` of 1 and an `intercept <Linear>`
 of 0, its output is also ``3``, which is used by both ``ctl_mech_A`` and ``ctl_mech_B`` as their `allocation
 <ControlSignal.allocation>`.  Since the ControlSignals of both use their default `function <ControlSignal>` ——
@@ -394,12 +397,6 @@ Class Reference
 
 """
 
-import inspect
-import itertools
-import warnings
-
-from enum import IntEnum
-
 import numpy as np
 import typecheck as tc
 
@@ -425,7 +422,7 @@ from psyneulink.core.globals.sampleiterator import is_sample_spec
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType
+    is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType, convert_all_elements_to_np_array
 from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
 
 __all__ = ['ControlSignal', 'ControlSignalError', 'COST_OPTIONS']
@@ -774,6 +771,7 @@ class ControlSignal(ModulatorySignal):
             Linear,
             stateful=False,
             loggable=False,
+            function_parameter=True
         )
 
         value = Parameter(
@@ -791,33 +789,53 @@ class ControlSignal(ModulatorySignal):
             setter=_cost_options_setter,
             valid_types=(CostFunctions, list)
         )
-        intensity_cost = Parameter(None, read_only=True, getter=_intensity_cost_getter)
-        adjustment_cost = Parameter(0, read_only=True, getter=_adjustment_cost_getter)
-        duration_cost = Parameter(0, read_only=True, getter=_duration_cost_getter)
+        intensity_cost = Parameter(
+            None,
+            read_only=True,
+            getter=_intensity_cost_getter,
+            function_parameter=True
+        )
+        adjustment_cost = Parameter(
+            0,
+            read_only=True,
+            getter=_adjustment_cost_getter,
+            function_parameter=True
+        )
+        duration_cost = Parameter(
+            0,
+            read_only=True,
+            getter=_duration_cost_getter,
+            function_parameter=True
+        )
+
         cost = Parameter(None, read_only=True, getter=_cost_getter)
 
         intensity_cost_function = Parameter(
             Exponential,
             stateful=False,
             loggable=False,
+            function_parameter=True,
             getter=_intensity_cost_function_getter
         )
         adjustment_cost_function = Parameter(
             Linear,
             stateful=False,
             loggable=False,
+            function_parameter=True,
             getter=_adjustment_cost_function_getter
         )
         duration_cost_function = Parameter(
             SimpleIntegrator,
             stateful=False,
             loggable=False,
+            function_parameter=True,
             getter=_duration_cost_function_getter
         )
         combine_costs_function = Parameter(
-            Reduce(operation=SUM),
+            Reduce,
             stateful=False,
             loggable=False,
+            function_parameter=True,
             getter=_combine_costs_function_getter
         )
         _validate_intensity_cost_function = get_validator_by_function(is_function_type)
@@ -828,6 +846,21 @@ class ControlSignal(ModulatorySignal):
         # invalid. Is it that tc.typecheck only runs if an argument is specified at
         # construction?
         # _validate_modulation = get_validator_by_function(_is_modulation_param)
+
+        def _validate_allocation_samples(self, allocation_samples):
+            try:
+                samples_as_array = convert_all_elements_to_np_array(allocation_samples)
+                first_item_type = type(allocation_samples[0])
+                first_item_shape = samples_as_array[0].shape
+
+                for i in range(1, len(allocation_samples)):
+                    if not isinstance(allocation_samples[i], first_item_type):
+                        return 'all items must have the same type'
+                    if not samples_as_array[i].shape == first_item_shape:
+                        return 'all items must have the same shape'
+            except (TypeError, IndexError):
+                # not iterable, so assume single value
+                pass
 
     portAttributes = ModulatorySignal.portAttributes | {ALLOCATION_SAMPLES,
                                                           COST_OPTIONS,
@@ -859,11 +892,11 @@ class ControlSignal(ModulatorySignal):
                  size=None,
                  transfer_function=None,
                  cost_options:tc.optional(tc.any(CostFunctions, list))=None,
-                 intensity_cost_function:(is_function_type)=Exponential,
-                 adjustment_cost_function:tc.optional(is_function_type)=Linear,
-                 duration_cost_function:tc.optional(is_function_type)=SimpleIntegrator,
-                 combine_costs_function:tc.optional(is_function_type)=Reduce,
-                 allocation_samples=Parameters.allocation_samples.default_value,
+                 intensity_cost_function:tc.optional(is_function_type)=None,
+                 adjustment_cost_function:tc.optional(is_function_type)=None,
+                 duration_cost_function:tc.optional(is_function_type)=None,
+                 combine_costs_function:tc.optional(is_function_type)=None,
+                 allocation_samples=None,
                  modulation:tc.optional(str)=None,
                  modulates=None,
                  params=None,
@@ -1101,10 +1134,10 @@ class ControlSignal(ModulatorySignal):
 
         return port_spec, params_dict
 
-    def _update(self, context=None, params=None):
+    def _update(self, params=None, context=None):
         """Update value (intensity) and costs
         """
-        super()._update(context=context, params=params)
+        super()._update(params=params, context=context)
 
         if self.parameters.cost_options._get(context):
             intensity = self.parameters.value._get(context)
