@@ -82,11 +82,21 @@ def get_param_ptr(builder, component, params_ptr, param_name):
                        name="ptr_param_{}_{}".format(param_name, component.name))
 
 
-def get_state_ptr(builder, component, state_ptr, stateful_name):
+def get_state_ptr(builder, component, state_ptr, stateful_name, hist_idx=0):
     idx = ir.IntType(32)(component.llvm_state_ids.index(stateful_name))
-    return builder.gep(state_ptr, [ir.IntType(32)(0), idx],
-                       name="ptr_state_{}_{}".format(stateful_name,
-                                                     component.name))
+    ptr = builder.gep(state_ptr, [ir.IntType(32)(0), idx],
+                      name="ptr_state_{}_{}".format(stateful_name,
+                                                    component.name))
+    # The first dimension of arrays is history
+    if hist_idx is not None and isinstance(ptr.type.pointee, ir.ArrayType):
+        assert len(ptr.type.pointee) > hist_idx, \
+            "History not available: {} ({})".format(ptr.type.pointee, hist_idx)
+        ptr = builder.gep(state_ptr, [ir.IntType(32)(0), idx,
+                                      ir.IntType(32)(hist_idx)],
+                          name="ptr_state_{}_{}_hist{}".format(stateful_name,
+                                                               component.name,
+                                                               hist_idx))
+    return ptr
 
 
 def unwrap_2d_array(builder, element):

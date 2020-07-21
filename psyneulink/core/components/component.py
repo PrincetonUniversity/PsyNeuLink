@@ -1269,7 +1269,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             val = p.get(context)
             if isinstance(val, Component):
                 return val._get_state_values(context)
-            return val
+            return [val for i in range(p.history_min_length + 1)]
+
         return tuple(map(_state_values, self._get_compilation_state()))
 
     def _get_state_initializer(self, context):
