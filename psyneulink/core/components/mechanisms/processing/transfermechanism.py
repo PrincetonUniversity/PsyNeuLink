@@ -1792,6 +1792,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                     assert False, f"PROGRAM ERROR: Unable to determine length of input for" \
                                   f" {repr(TERMINATION_MEASURE)} arg of {self.name}"
 
+        self.parameters.value.history_min_length = self._termination_measure_num_items_expected - 1
+
     def _report_mechanism_execution(self, input, params, output, context=None):
         """Override super to report previous_input rather than input, and selected params
         """
@@ -1826,11 +1828,9 @@ class TransferMechanism(ProcessingMechanism_Base):
             # return True
             return self.parameters.is_finished_flag._get(context)
 
+        assert self.parameters.value.history_min_length + 1 >= self._termination_measure_num_items_expected, "History of 'value' is not guaranteed enough entries for termination_mesasure"
         measure = self.termination_measure
-        # comparator = self.parameters.termination_comparison_op._get(context)
-        comparator = comparison_operators[self.parameters.termination_comparison_op._get(context)]
         value = self.parameters.value._get(context)
-        previous_value = self.parameters.value.get_previous(context)
 
         if self._termination_measure_num_items_expected==0:
             status = self.parameters.num_executions._get(context)._get_by_time_scale(self.termination_measure)
@@ -1839,10 +1839,13 @@ class TransferMechanism(ProcessingMechanism_Base):
             # Squeeze to collapse 2d array with single item
             status = measure(np.squeeze(value))
         else:
+            previous_value = self.parameters.value.get_previous(context)
             status = measure([value, previous_value])
 
         self.parameters.termination_measure_value._set(status, context=context, override=True)
 
+        # comparator = self.parameters.termination_comparison_op._get(context)
+        comparator = comparison_operators[self.parameters.termination_comparison_op._get(context)]
         # if any(comparison_operators[comparator](np.atleast_1d(status), threshold)):
         if comparator(np.atleast_1d(status), threshold).any():
             logger.info(f'{type(self).__name__} {self.name} has reached threshold ({threshold})')
