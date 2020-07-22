@@ -2512,7 +2512,7 @@ class Mechanism_Base(Mechanism):
 
             self.parameters.num_executions_before_finished._set(num_executions, override=True, context=context)
 
-            if  num_executions >= max_executions:
+            if num_executions >= max_executions:
                 self.parameters.is_finished_flag._set(True, context)
                 warnings.warn(f"Maximum number of executions ({max_executions}) reached for {self.name}.")
                 break
@@ -3140,10 +3140,7 @@ class Mechanism_Base(Mechanism):
         except TypeError:
             input_string = input_val
 
-        print ("\n\'{}\'{} executed:\n- input:  {}".
-               format(self.name,
-                      mechanism_string,
-                      input_string))
+        print("\n\'{}\'{} executed:\n- input:  {}".format(self.name, mechanism_string, input_string))
 
         if params:
             print("- params:")
@@ -3168,14 +3165,14 @@ class Mechanism_Base(Mechanism):
                     param_is_function = True
                 else:
                     param = param_value
-                print ("\t{}: {}".format(param_name, str(param).__str__().strip("[]")))
+                print("\t{}: {}".format(param_name, str(param).__str__().strip("[]")))
                 if param_is_function:
                     # Sort for consistency of output
                     func_params_keys_sorted = sorted(self.function.parameters.names())
                     for fct_param_name in func_params_keys_sorted:
-                        print ("\t\t{}: {}".
-                               format(fct_param_name,
-                                      str(getattr(self.function.parameters, fct_param_name)).__str__().strip("[]")))
+                        print("\t\t{}: {}".
+                              format(fct_param_name,
+                                     str(getattr(self.function.parameters, fct_param_name)).__str__().strip("[]")))
 
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #   if you want more specific output, you can add conditional tests here
@@ -3794,7 +3791,7 @@ class Mechanism_Base(Mechanism):
                     i = ports[k].position_in_mechanism
                     _label_dict[i] = v
                 else:
-                    if not 0 in _label_dict:
+                    if 0 not in _label_dict:
                         _label_dict[0] = {}
                     _label_dict[0].update({k:v})
         return _label_dict
@@ -4191,4 +4188,3 @@ class MechanismList(UserList):
     def output_values(self):
         """Return dict with output_values for all Mechanisms in MechanismList"""
         return self._get_attributes_dict('values', 'value')
-

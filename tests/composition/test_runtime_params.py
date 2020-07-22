@@ -188,11 +188,11 @@ class TestCompositionRuntimeParams:
         assert T2.parameter_ports['noise'].parameters.value.get(C) == 0.0
         assert T2.function.intercept == 0.0
         assert T2.function.parameters.intercept.get(C) == 0.0
-        assert T2.input_port.weight == None
+        assert T2.input_port.weight is None
         assert T2.input_port.function.scale == 4.0
         assert T2.input_port.function.parameters.scale.get(C) == 4.0
-        assert T2.input_port.function.weights == None
-        assert T2.input_port.function.parameters.weights.get(C) == None
+        assert T2.input_port.function.weights is None
+        assert T2.input_port.function.parameters.weights.get(C) is None
 
         C.run(inputs={T1: 2.0}, )
         assert C.results == [[[1201.5]], # (2*3*20*10)+1+0.5
@@ -372,11 +372,11 @@ class TestCompositionRuntimeParams:
         assert T2.parameter_ports['noise'].parameters.value.get(C) == 0.0
         assert T2.function.intercept == 0.0
         assert T2.function.parameters.intercept.get(C) == 0.0
-        assert T2.input_port.weight == None
+        assert T2.input_port.weight is None
         assert T2.input_port.function.scale == 4.0
         assert T2.input_port.function.parameters.scale.get(C) == 4.0
-        assert T2.input_port.function.weights == None
-        assert T2.input_port.function.parameters.weights.get(C) == None
+        assert T2.input_port.function.weights is None
+        assert T2.input_port.function.parameters.weights.get(C) is None
 
         # run again to insure restored default for noise after last run
         C.run(inputs={T1: 2.0}, )
@@ -466,11 +466,11 @@ class TestCompositionRuntimeParams:
         assert T2.parameter_ports['noise'].parameters.value.get(C) == 0.0
         assert T2.function.intercept == 0.0
         assert T2.function.parameters.intercept.get(C) == 0.0
-        assert T2.input_port.weight == None
+        assert T2.input_port.weight is None
         assert T2.input_port.function.scale == 4.0
         assert T2.input_port.function.parameters.scale.get(C) == 4.0
-        assert T2.input_port.function.weights == None
-        assert T2.input_port.function.parameters.weights.get(C) == None
+        assert T2.input_port.function.weights is None
+        assert T2.input_port.function.parameters.weights.get(C) is None
 
         # Final Run: insure restored default for noise after last run
         C.run(inputs={T1: 2.0}, )
@@ -809,4 +809,3 @@ class TestCompositionRuntimeParams:
                  )
         assert ("Invalid specification in runtime_params arg for matrix of TARGET PROJECTION: 'amiby'."
                 in str(error_text.value))
-

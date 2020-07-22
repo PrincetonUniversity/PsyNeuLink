@@ -286,7 +286,7 @@ class ConditionGenerator:
         Count should be a tuple where there is a number in only one spot, and zeroes elsewhere.
         Indices greater than that of the one are zeroed.
         """
-        
+
         # Validate count tuple
         assert count.count(0) == len(count) - 1
 
@@ -421,7 +421,7 @@ class ConditionGenerator:
             current_pass = builder.extract_value(ts, 1)
             return builder.icmp_unsigned("==", current_pass,
                                          current_pass.type(pass_num))
-                                         
+
         elif isinstance(condition, EveryNCalls):
             target, count = condition.args
 
@@ -524,7 +524,7 @@ class ConditionGenerator:
                 run_cond = builder.or_(run_cond, node_is_finished)
 
             return run_cond
-        
+
         elif isinstance(condition, WhenFinishedAll):
             assert len(condition.args) > 0
 

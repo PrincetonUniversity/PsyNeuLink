@@ -1347,5 +1347,3 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             return np.array(list(zip(self._memory[KEYS],self._memory[VALS])))
         except:
             return np.array([])
-
-

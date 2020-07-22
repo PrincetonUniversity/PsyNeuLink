@@ -724,7 +724,7 @@ class OptimizationControlMechanism(ControlMechanism):
         """Implement OptimizationControlMechanism"""
 
         # If agent_rep hasn't been specified, put into deferred init
-        if agent_rep==None:
+        if agent_rep is None:
             if context.source==ContextFlags.COMMAND_LINE:
                 # Temporarily name InputPort
                 self._assign_deferred_init_name(self.__class__.__name__, context)
@@ -797,7 +797,7 @@ class OptimizationControlMechanism(ControlMechanism):
         for i in range(1, len(self.input_ports)):
             port = self.input_ports[i]
             if len(port.path_afferents) > 1:
-                raise OptimizationControlMechanismError(f"Invalid {InputPort.__name__} on {self.name}. "
+                raise OptimizationControlMechanismError(f"Invalid {type(input_port).__name__} on {self.name}. "
                                                         f"{port.name} should receive exactly one projection, "
                                                         f"but it receives {len(port.path_afferents)} projections.")
 

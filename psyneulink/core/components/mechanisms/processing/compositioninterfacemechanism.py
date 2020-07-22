@@ -167,11 +167,11 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         super(CompositionInterfaceMechanism, self).remove_ports(ports, context)
         input_ports_marked_for_deletion = set()
         for port in self.user_added_ports[INPUT_PORTS]:
-            if not port in self.input_ports:
+            if port not in self.input_ports:
                 input_ports_marked_for_deletion.add(port)
         self.user_added_ports[INPUT_PORTS] = self.user_added_ports[INPUT_PORTS] - input_ports_marked_for_deletion
         output_ports_marked_for_deletion = set()
         for port in self.user_added_ports[OUTPUT_PORTS]:
-            if not port in self.output_ports:
+            if port not in self.output_ports:
                 output_ports_marked_for_deletion.add(port)
         self.user_added_ports[OUTPUT_PORTS] = self.user_added_ports[OUTPUT_PORTS] - output_ports_marked_for_deletion

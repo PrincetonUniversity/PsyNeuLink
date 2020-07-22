@@ -1194,7 +1194,7 @@ class Distance(ObjectiveFunction):
         else:
             assert False, '{} not a recognized metric in {}'.format(self.metric, self.__class__.__name__)
 
-        if self.normalize and not self.metric in {MAX_ABS_DIFF, CORRELATION}:
+        if self.normalize and self.metric not in {MAX_ABS_DIFF, CORRELATION}:
             if self.metric == ENERGY:
                 result /= len(v1) ** 2
             else:

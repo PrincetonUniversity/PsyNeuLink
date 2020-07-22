@@ -9,12 +9,17 @@
 #
 # ******************************************   OPTIMIZATION FUNCTIONS **************************************************
 """
+Contents
+--------
 
 * `OptimizationFunction`
 * `GradientOptimization`
 * `GridSearch`
 * `GaussianProcess`
+COMMENT:
+uncomment this when ParamEstimationFunction is ready for users
 * `ParamEstimationFunction`
+COMMENT
 
 Overview
 --------

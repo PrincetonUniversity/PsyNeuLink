@@ -605,4 +605,3 @@ class UserDefinedFunction(Function_Base):
         builder.call(wrapper_ptr, [params, state, arg_in, arg_out])
 
         return builder
-

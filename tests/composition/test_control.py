@@ -143,7 +143,7 @@ class TestControlSpecification:
 
         comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
 
-        ### add the controller to the Composition before adding the relevant Mechanisms
+        # add the controller to the Composition before adding the relevant Mechanisms
         comp.add_controller(controller=pnl.OptimizationControlMechanism(
                 agent_rep=comp,
                 features=[Input.input_port, reward.input_port],
@@ -365,7 +365,7 @@ class TestControlSpecification:
         comp.add_controller(new_ocm)
 
         assert comp.controller == new_ocm
-        assert old_ocm.composition == None
+        assert old_ocm.composition is None
         assert not any(pnl.SLOPE in p_name for p_name in comp.projections.names)
         assert any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
 
@@ -1014,11 +1014,11 @@ class TestControlMechanisms:
                                             initial_value=np.array([[0.0, 0.0]]),
                                             output_ports=[pnl.RESULT],
                                             name='rtm')
-    
+
         controller = pnl.ControlMechanism(
             monitor_for_control=monitor,
             control_signals=[(pnl.NOISE, rtm)])
-        
+
         comp = pnl.Composition()
         roles = [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT]
         comp.add_node(monitor, required_roles=roles)
@@ -2207,4 +2207,3 @@ class TestSampleIterator:
         assert sample_iterator.start == 1
         assert sample_iterator.stop is None
         assert sample_iterator.num == len(sample_list)
-

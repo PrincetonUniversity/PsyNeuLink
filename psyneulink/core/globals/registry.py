@@ -125,25 +125,25 @@ def register_category(entry,
     from psyneulink.core.components.shellclasses import Port
     if inspect.isclass(entry) and issubclass(entry, Port):
         try:
-           entry.portAttributes
+            entry.portAttributes
         except AttributeError:
             raise RegistryError("PROGRAM ERROR: {} must implement a stateSpecificParams attribute".
                                 format(entry.__name__))
         try:
-           entry.connectsWith
+            entry.connectsWith
         except AttributeError:
             raise RegistryError("PROGRAM ERROR: {} must implement a connectsWith attribute".format(entry.__name__))
         try:
-           entry.connectsWithAttribute
+            entry.connectsWithAttribute
         except AttributeError:
             raise RegistryError("PROGRAM ERROR: {} must implement a connectsWithAttribute attribute".
                                 format(entry.__name__))
         try:
-           entry.projectionSocket
+            entry.projectionSocket
         except AttributeError:
             raise RegistryError("PROGRAM ERROR: {} must implement a projectionSocket attribute".format(entry.__name__))
         try:
-           entry.modulators
+            entry.modulators
         except AttributeError:
             raise RegistryError("PROGRAM ERROR: {} must implement a modulators attribute".format(entry.__name__))
 

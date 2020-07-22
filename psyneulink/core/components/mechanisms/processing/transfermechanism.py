@@ -1102,8 +1102,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                 return 'must be a float or int.'
 
         def _validate_termination_comparison_op(self, termination_comparison_op):
-            if (not termination_comparison_op in comparison_operators.keys()
-                    and not termination_comparison_op in comparison_operators.values()):
+            if (termination_comparison_op not in comparison_operators.keys()
+                    and termination_comparison_op not in comparison_operators.values()):
                 return f"must be boolean comparison operator or one of the following strings:" \
                        f" {','.join(comparison_operators.keys())}."
 

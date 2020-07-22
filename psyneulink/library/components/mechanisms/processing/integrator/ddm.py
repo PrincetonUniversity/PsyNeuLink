@@ -1229,4 +1229,3 @@ class DDM(ProcessingMechanism):
         is_prev_greater_or_equal = builder.fcmp_ordered('>=', prev_val, threshold)
 
         return is_prev_greater_or_equal
-
