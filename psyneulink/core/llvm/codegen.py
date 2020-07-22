@@ -76,7 +76,7 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         node_in = builder.alloca(node_function.args[2].type.pointee)
         incoming_projections = node.afferents
 
-    if "reset" in tags:
+    if "reset" in tags or "is_finished" in tags:
         incoming_projections = []
 
     # Execute all incoming projections
@@ -175,8 +175,11 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         output_idx = node._get_node_index(node.output_CIM)
         result = builder.gep(node_data, [zero, zero, ctx.int32_ty(output_idx)])
         builder.store(builder.load(result), node_out)
+    else:
+        # composition reset
+        ret = None
 
-    if isinstance(ret.type, ir.VoidType):
+    if ret is None or isinstance(ret.type, ir.VoidType):
         builder.ret_void()
     else:
         builder.ret(ret)
@@ -292,14 +295,11 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         builder.store(ctx.int32_ty(0), iter_ptr)
 
         # Generate pointers to 'is_finished_flags' locations
-        is_finished_flag_locs = {}
-        for idx, node in enumerate(composition.nodes):
-            node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0),
-                                             ctx.int32_ty(idx)])
-            is_finished_flag_ptr = helpers.get_state_ptr(builder, node,
-                                                         node_state,
-                                                         "is_finished_flag")
-            is_finished_flag_locs[node] = is_finished_flag_ptr
+        is_finished_callbacks = {}
+        for node in composition.nodes:
+            args = [state, params, comp_in, data, output_storage]
+            wrapper = ctx.get_node_wrapper(composition, node)
+            is_finished_callbacks[node] = (wrapper, args)
 
         loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
         builder.branch(loop_condition)
@@ -309,7 +309,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
         run_cond = cond_gen.generate_sched_condition(
             builder, composition.termination_processing[TimeScale.TRIAL],
-            cond, None, is_finished_flag_locs)
+            cond, None, is_finished_callbacks)
         run_cond = builder.not_(run_cond, name="not_run_cond")
 
         loop_body = builder.append_basic_block(name="scheduling_loop_body")
@@ -328,7 +328,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                                            name="run_cond_ptr_" + node.name)
             node_cond = cond_gen.generate_sched_condition(
                 builder, composition._get_processing_condition_set(node),
-                cond, node, is_finished_flag_locs)
+                cond, node, is_finished_callbacks)
             ran = cond_gen.generate_ran_this_pass(builder, cond, node)
             node_cond = builder.and_(node_cond, builder.not_(ran),
                                      name="run_cond_" + node.name)

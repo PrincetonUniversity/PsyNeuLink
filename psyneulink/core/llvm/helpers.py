@@ -373,7 +373,7 @@ class ConditionGenerator:
 
         return builder.icmp_signed("==", node_run, global_run)
 
-    def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_flag_locs):
+    def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_callbacks):
 
         from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
 
@@ -385,12 +385,12 @@ class ConditionGenerator:
 
         elif isinstance(condition, Not):
             condition = condition.condition
-            return builder.not_(self.generate_sched_condition(builder, condition, cond_ptr, node, is_finished_flag_locs))
+            return builder.not_(self.generate_sched_condition(builder, condition, cond_ptr, node, is_finished_callbacks))
 
         elif isinstance(condition, All):
             agg_cond = ir.IntType(1)(1)
             for cond in condition.args:
-                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_flag_locs)
+                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks)
                 agg_cond = builder.and_(agg_cond, cond_res)
             return agg_cond
 
@@ -508,21 +508,18 @@ class ConditionGenerator:
         elif isinstance(condition, WhenFinished):
             # The first argument is the target node
             assert len(condition.args) == 1
-            target_is_finished_ptr = is_finished_flag_locs[condition.args[0]]
-            target_is_finished = builder.load(target_is_finished_ptr)
-            
-            return builder.fcmp_ordered("==", target_is_finished,
-                                        target_is_finished.type(1))
+            target = is_finished_callbacks[condition.args[0]]
+            is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
+            return builder.call(is_finished_f, target[1])
 
         elif isinstance(condition, WhenFinishedAny):
             assert len(condition.args) > 0
 
             run_cond = ir.IntType(1)(0)
             for node in condition.args:
-                node_is_finished_ptr = is_finished_flag_locs[node]
-                node_is_finished = builder.load(node_is_finished_ptr)
-                node_is_finished = builder.fcmp_ordered("==", node_is_finished,
-                                                        node_is_finished.type(1))
+                target = is_finished_callbacks[node]
+                is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
+                node_is_finished = builder.call(is_finished_f, target[1])
 
                 run_cond = builder.or_(run_cond, node_is_finished)
 
@@ -533,10 +530,9 @@ class ConditionGenerator:
 
             run_cond = ir.IntType(1)(1)
             for node in condition.args:
-                node_is_finished_ptr = is_finished_flag_locs[node]
-                node_is_finished = builder.load(node_is_finished_ptr)
-                node_is_finished = builder.fcmp_ordered("==", node_is_finished,
-                                                        node_is_finished.type(1))
+                target = is_finished_callbacks[node]
+                is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
+                node_is_finished = builder.call(is_finished_f, target[1])
 
                 run_cond = builder.and_(run_cond, node_is_finished)
 
