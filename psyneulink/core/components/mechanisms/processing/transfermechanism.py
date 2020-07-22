@@ -1554,7 +1554,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             current_input[maxCapIndices] = np.max(clip)
         return current_input
 
-    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state):
+        current = pnlvm.helpers.get_state_ptr(builder, self, state, "value")
         threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                     "termination_threshold")
         if isinstance(threshold_ptr.type.pointee, pnlvm.ir.LiteralStructType):

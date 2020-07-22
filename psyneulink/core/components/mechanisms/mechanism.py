@@ -2953,7 +2953,7 @@ class Mechanism_Base(Mechanism):
 
         return fun_out, builder
 
-    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state):
         return pnlvm.ir.IntType(1)(1)
 
     def _gen_llvm_mechanism_functions(self, ctx, builder, params, state, arg_in,
@@ -3005,7 +3005,7 @@ class Mechanism_Base(Mechanism):
 
         # is_finished should be checked after output ports ran
         is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder, params,
-                                                           state, value)
+                                                           state)
         return builder, is_finished_cond
 
     def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
