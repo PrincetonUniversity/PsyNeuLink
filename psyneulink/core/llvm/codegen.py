@@ -242,9 +242,8 @@ def _gen_composition_exec_context(ctx, composition, *, tags:frozenset, suffix=""
 def gen_composition_exec(ctx, composition, *, tags:frozenset):
     simulation = "simulation" in tags
     node_tags = tags.union({"node_wrapper"})
-    extra_args = []
 
-    with _gen_composition_exec_context(ctx, composition, tags=tags, extra_args=extra_args) as (builder, data, params, cond_gen):
+    with _gen_composition_exec_context(ctx, composition, tags=tags) as (builder, data, params, cond_gen):
         state, _, comp_in, _, cond = builder.function.args
 
         # Reset internal clocks of each node
@@ -253,10 +252,13 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             from psyneulink import Composition
             if isinstance(node, Composition):
                 continue
-            node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-            num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
+            node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0),
+                                             ctx.int32_ty(idx)])
+            num_executions_ptr = helpers.get_state_ptr(builder, node,
+                                                       node_state,
+                                                       "num_executions")
             num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.TRIAL.value)])
-            builder.store(ctx.int32_ty(0), num_exec_time_ptr)
+            builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
 
         # Check if there's anything to reset
         for node in composition._all_nodes:
@@ -294,7 +296,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         iter_ptr = builder.alloca(ctx.int32_ty, name="iter_counter")
         builder.store(ctx.int32_ty(0), iter_ptr)
 
-        # Generate pointers to 'is_finished_flags' locations
+        # Generate pointers to 'is_finished' callbacks
         is_finished_callbacks = {}
         for node in composition.nodes:
             args = [state, params, comp_in, data, output_storage]
@@ -343,13 +345,14 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                 node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
                 num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
                 num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.TIME_STEP.value)])
-                builder.store(ctx.int32_ty(0), num_exec_time_ptr)
+                builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
                 # FIXME: Move pass reset to actual pass count
                 num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.PASS.value)])
-                builder.store(ctx.int32_ty(0), num_exec_time_ptr)
+                builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
 
             run_set_node_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
-            node_cond = builder.load(run_set_node_ptr, name="node_" + node.name + "_should_run")
+            node_cond = builder.load(run_set_node_ptr,
+                                     name="node_" + node.name + "_should_run")
             with builder.if_then(node_cond):
                 node_w = ctx.get_node_wrapper(composition, node)
                 node_f = ctx.import_llvm_function(node_w, tags=node_tags)
@@ -369,7 +372,9 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             run_set_node_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
             node_cond = builder.load(run_set_node_ptr, name="node_" + node.name + "_ran")
             with builder.if_then(node_cond):
-                out_ptr = builder.gep(output_storage, [zero, zero, ctx.int32_ty(idx)], name="result_ptr_" + node.name)
+                out_ptr = builder.gep(output_storage, [zero, zero,
+                                                       ctx.int32_ty(idx)],
+                                      name="result_ptr_" + node.name)
                 data_ptr = builder.gep(data, [zero, zero, ctx.int32_ty(idx)],
                                        name="data_result_" + node.name)
                 builder.store(builder.load(out_ptr), data_ptr)
