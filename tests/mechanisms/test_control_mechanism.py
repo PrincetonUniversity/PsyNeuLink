@@ -206,12 +206,19 @@ class TestLCControlMechanism:
         expected_results = [[0.96941429, 0.9837254 , 0.99217549]]
         assert np.allclose(results, expected_results)
 
-    def test_control_of_all_input_ports(self):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_control_of_all_input_ports(self, mode):
         mech = pnl.ProcessingMechanism(input_ports=['A','B','C'])
         control_mech = pnl.ControlMechanism(control=mech.input_ports)
         comp = pnl.Composition()
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
-        results = comp.run(inputs={mech:[[2],[2],[2]], control_mech:[2]}, num_trials=2)
+        results = comp.run(inputs={mech:[[2],[2],[2]], control_mech:[2]}, num_trials=2, bin_execute=mode)
         np.allclose(results, [[4],[4],[4]])
 
     @pytest.mark.parametrize('mode', ['Python',
