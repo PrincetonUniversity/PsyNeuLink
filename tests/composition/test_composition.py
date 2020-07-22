@@ -92,7 +92,7 @@ class TestConstructor:
         B = ProcessingMechanism(function=Linear(slope=2))
         C = ProcessingMechanism(function=Logistic)
         c = Composition(pathways=[[A],[B],[C]])
-        assert c() == None
+        assert c() is None
         result = c(inputs={A:[[1],[100]],B:[[2],[200]],C:[[3],[1]]})
         assert np.allclose(result, [[100],[400],[0.73105858]])
         assert np.allclose(c(), [[100],[400],[0.73105858]])
@@ -105,7 +105,7 @@ class TestConstructor:
         B = ProcessingMechanism(function=Linear(slope=0.5))
         C = ProcessingMechanism(function=Logistic)
         c = Composition(pathways=[[A],{'LEARNING_PATHWAY':([B,C], BackPropagation)}])
-        assert c() == None
+        assert c() is None
 
         # Run without learning
         result = c(inputs={A:[[1],[100]],B:[[2],[1]]})
@@ -507,13 +507,13 @@ class TestPathway:
         C = ProcessingMechanism(name='C')
         p = Pathway(pathway=[A,B,C], name='P')
         assert p.pathway == [A, B, C]
-        assert p.composition == None
+        assert p.composition is None
         assert p.name == 'P'
-        assert p.input == None
-        assert p.output == None
-        assert p.target == None
-        assert p.roles == None
-        assert p.learning_components == None
+        assert p.input is None
+        assert p.output is None
+        assert p.target is None
+        assert p.roles is None
+        assert p.learning_components is None
 
     def test_pathway_assign_composition_arg_error(self):
         c = Composition()
@@ -532,7 +532,7 @@ class TestPathway:
                 f"because it has not been assigned to a Composition" in str(error_text.value))
         c.add_linear_processing_pathway(pathway=p)
         p_c = c.pathways[0]
-        assert p_c._assign_roles(composition=c) == None
+        assert p_c._assign_roles(composition=c) is None
 
     def test_pathway_illegal_arg_error(self):
         with pytest.raises(pnl.CompositionError) as error_text:
@@ -558,13 +558,13 @@ class TestCompositionPathwayAdditionMethods:
         assert p1.name == 'P'
         assert p1.input == A
         assert p1.output == C
-        assert p1.target == None
+        assert p1.target is None
         assert p2.input == D
-        assert p2.output == None
-        assert p2.target == None
-        assert p3.input == None
+        assert p2.output is None
+        assert p2.target is None
+        assert p3.input is None
         assert p3.output == E
-        assert p3.target == None
+        assert p3.target is None
         assert l.name == 'L'
         assert l.input == F
         assert l.output == G
@@ -1088,7 +1088,7 @@ class TestCompositionPathwaysArg:
             c = Composition(pathways=[{'P1':'A'}])
         assert ("The value in a dict specified in the \'pathways\' arg of the constructor" in str(error_text.value) and
                 "must be a pathway specification (Node, list or tuple): A." in str(error_text.value))
- 
+
     def test_composition_pathways_Pathway_in_learning_tuples(self):
         pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
@@ -4474,7 +4474,7 @@ class TestNestedCompositions:
         sched = Scheduler(composition=outer_comp)
         ret = outer_comp.run(inputs={inner_comp1: [[1.0]], inner_comp2: [[1.0]]}, bin_execute=mode)
         assert np.allclose(ret, [[[0.52497918747894]],[[0.52497918747894]]])
-    
+
     @pytest.mark.nested
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
@@ -4499,7 +4499,7 @@ class TestNestedCompositions:
                 inner_mech_B : [[[0,0]],[[0,0]]],
             }
         }
-        
+
         outer.run(inputs=input, bin_execute=mode)
 
     def test_invalid_projection_deletion_when_nesting_comps(self):
@@ -5797,13 +5797,13 @@ class TestInputSpecifications:
              [0, 1],
              [1, 0],
              [1, 1]])
-    
+
         xor_targets = np.array(  # the outputs we wish to see from the model
             [[0],
              [1],
              [1],
              [0]])
-    
+
         in_to_hidden_matrix = np.random.rand(2,10)
         hidden_to_out_matrix = np.random.rand(10,1)
 
@@ -6587,7 +6587,7 @@ class TestNodeRoles:
         assert set(comp.get_nodes_by_role(NodeRole.INTERNAL)) == {B}
         assert set(comp.get_nodes_by_role(NodeRole.FEEDBACK_RECEIVER)) == {A}
 
-    def  test_branch(self):
+    def test_branch(self):
         a = TransferMechanism(default_variable=[0, 0])
         b = TransferMechanism()
         c = TransferMechanism()
@@ -6859,8 +6859,8 @@ class TestNodeRoles:
         A = RecurrentTransferMechanism(name='A', size=2, enable_learning=True)
         comp = Composition(pathways=A)
         pathway = comp.pathways[0]
-        assert pathway.target == None
-        assert pathway.learning_objective == None
+        assert pathway.target is None
+        assert pathway.learning_objective is None
         assert pathway.learning_components == {}
         roles = {NodeRole.INPUT, NodeRole.CYCLE, NodeRole.OUTPUT
             # , NodeRole.FEEDBACK_RECEIVER

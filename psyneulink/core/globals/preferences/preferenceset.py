@@ -40,11 +40,11 @@ class PreferenceLevel(IntEnum):
 
 
 class PreferenceSetError(Exception):
-     def __init__(self, error_value):
-         self.error_value = error_value
+    def __init__(self, error_value):
+        self.error_value = error_value
 
-     def __str__(self):
-         return repr(self.error_value)
+    def __str__(self):
+        return repr(self.error_value)
 
 
 @abc.abstractmethod
@@ -228,15 +228,15 @@ class PreferenceSet(object):
             name = self.__class__.__name__
             # If it belongs to a class, append name of owner's class to name
             if inspect.isclass(owner):
-                 name = name + 'DefaultsFor' + owner.__name__
+                name = name + 'DefaultsFor' + owner.__name__
             # Otherwise, it belongs to an object, so append name of the owner object's class to name
             else:
-                 name = name + 'Defaultsfor' + owner.__class__.__name__
+                name = name + 'Defaultsfor' + owner.__class__.__name__
 
         # REGISTER
         # FIX: MAKE SURE THIS MAKES SENSE
 
-        from psyneulink.core.globals.registry import  register_category
+        from psyneulink.core.globals.registry import register_category
         register_category(entry=self,
                           base_class=PreferenceSet,
                           name=name,
@@ -384,7 +384,7 @@ class PreferenceSet(object):
                                          format(owner.name, owner.__class__.__name__))
 
         if PreferenceSetVerbosity:
-            print ("Preference assignment condition {0}".format(condition))
+            print("Preference assignment condition {0}".format(condition))
 
 # FIX: ARE THESE NEEDED?? @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     @property
@@ -610,7 +610,7 @@ class PreferenceSet(object):
         # * this prevents use of LogEntry attributes not recognized by, or having different values from
         #     the LogEntry class in the owner object's module
         if (not pref_set.owner.name == DEFAULT_PREFERENCE_SET_OWNER and
-                not candidate_log_class.__module__ is pref_set.owner.__module__):
+                candidate_log_class.__module__ is not pref_set.owner.__module__):
             raise PreferenceSetError("Attempt to assign logPref setting for {0} using value ({1}) from LogEntry"
                                      " in {2} which is different than the one defined in Globals.Log"
                                      " or the module ({3}) in which the class of {0} ({4}) was declared".

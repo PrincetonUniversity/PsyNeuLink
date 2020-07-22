@@ -190,5 +190,3 @@ class MechanismPreferenceSet(BasePreferenceSet):
                   format(entry, self._runtime_param_modulation_pref))
             return
         self._runtime_param_modulation_pref = entry
-
-

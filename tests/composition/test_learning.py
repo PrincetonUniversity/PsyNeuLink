@@ -179,7 +179,7 @@ class TestTargetSpecs:
             D: [2.0, 6.0],
             p1.target: [[3.0, 4.0], [7.0, 8.0]]
         }
-        def input_function (trial_num):
+        def input_function(trial_num):
             return {
                 A: inputs[A][trial_num],
                 D: inputs[D][trial_num],
@@ -203,7 +203,7 @@ class TestTargetSpecs:
             p1.target: [2.0, 2.0],
             p2.target: [4.0, 4.0]
         }
-        def input_function (trial_num):
+        def input_function(trial_num):
             return {
                 A: inputs[A][trial_num],
                 p1.target: inputs[p1.target][trial_num],
@@ -1837,7 +1837,7 @@ class TestBackProp:
 
         comp.learn(inputs=input_dictionary,
                  num_trials=10)
-    
+
         objective_output_layer = comp.nodes[5]
 
         expected_output = [
@@ -1900,42 +1900,42 @@ class TestBackProp:
              [0, 1],
              [1, 0],
              [1, 1]])
-    
+
         xor_targets = np.array(  # the outputs we wish to see from the model
             [[0],
              [1],
              [1],
              [0]])
-    
+
         in_to_hidden_matrix = np.random.rand(2,10)
         hidden_to_out_matrix = np.random.rand(10,1)
-    
+
         # SET UP MODELS --------------------------------------------------------------------------------
 
        # STANDARD Composition
         if pnl.COMPOSITION in models:
-    
+
             input_comp = pnl.TransferMechanism(name='input_comp',
                                        default_variable=np.zeros(2))
-    
+
             hidden_comp = pnl.TransferMechanism(name='hidden_comp',
                                         default_variable=np.zeros(10),
                                         function=pnl.Logistic())
-    
+
             output_comp = pnl.TransferMechanism(name='output_comp',
                                         default_variable=np.zeros(1),
                                         function=pnl.Logistic())
-    
+
             in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
                                         matrix=in_to_hidden_matrix.copy(),
                                         sender=input_comp,
                                         receiver=hidden_comp)
-    
+
             hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
                                         matrix=hidden_to_out_matrix.copy(),
                                         sender=hidden_comp,
                                         receiver=output_comp)
-    
+
             xor_comp = pnl.Composition()
 
             backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
@@ -1952,39 +1952,39 @@ class TestBackProp:
 
         # AutodiffComposition
         if 'AUTODIFF' in models:
-    
+
             input_autodiff = pnl.TransferMechanism(name='input',
                                        default_variable=np.zeros(2))
-    
+
             hidden_autodiff = pnl.TransferMechanism(name='hidden',
                                         default_variable=np.zeros(10),
                                         function=pnl.Logistic())
-    
+
             output_autodiff = pnl.TransferMechanism(name='output',
                                         default_variable=np.zeros(1),
                                         function=pnl.Logistic())
-    
+
             in_to_hidden_autodiff = pnl.MappingProjection(name='in_to_hidden',
                                         matrix=in_to_hidden_matrix.copy(),
                                         sender=input_autodiff,
                                         receiver=hidden_autodiff)
-    
+
             hidden_to_out_autodiff = pnl.MappingProjection(name='hidden_to_out',
                                         matrix=hidden_to_out_matrix.copy(),
                                         sender=hidden_autodiff,
                                         receiver=output_autodiff)
-    
+
             xor_autodiff = pnl.AutodiffComposition(learning_rate=10,
                                                    optimizer_type='sgd')
-    
+
             xor_autodiff.add_node(input_autodiff)
             xor_autodiff.add_node(hidden_autodiff)
             xor_autodiff.add_node(output_autodiff)
-    
+
             xor_autodiff.add_projection(sender=input_autodiff, projection=in_to_hidden_autodiff, receiver=hidden_autodiff)
             xor_autodiff.add_projection(sender=hidden_autodiff, projection=hidden_to_out_autodiff, receiver=output_autodiff)
             xor_autodiff.infer_backpropagation_learning_pathways()
-    
+
             inputs_dict = {"inputs": {input_autodiff:xor_inputs},
                            "targets": {output_autodiff:xor_targets},
                            "epochs": num_epochs}
@@ -2579,7 +2579,7 @@ class TestBackProp:
 
         mnet.learn(inputs=inputs)
         mnet.run(inputs=inputs)
-        
+
         comparator = np.array([0.02288846, 0.11646781, 0.03473711, 0.0348004, 0.01679579,
                              0.04851733, 0.05857743, 0.04819957, 0.03004438, 0.05113508,
                              0.06849843, 0.0442623, 0.00967315, 0.06998125, 0.03482444,

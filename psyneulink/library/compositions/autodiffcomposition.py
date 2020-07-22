@@ -447,7 +447,7 @@ class AutodiffComposition(Composition):
         """
         ret = {}
         for node, values in nodes.items():
-            if NodeRole.INPUT in self.get_roles_by_node(node) and not NodeRole.TARGET in self.get_roles_by_node(node):
+            if NodeRole.INPUT in self.get_roles_by_node(node) and NodeRole.TARGET not in self.get_roles_by_node(node):
                 ret[node] = values
         return ret
 

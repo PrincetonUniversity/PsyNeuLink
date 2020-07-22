@@ -128,7 +128,7 @@ def test_helper_is_close(mode):
             b1.store(out_val, out_ptr)
 
         builder.ret_void()
-        
+
     vec1 = copy.deepcopy(VECTOR)
     tmp = np.random.rand(DIM_X)
     tmp[0::2] = vec1[0::2]
