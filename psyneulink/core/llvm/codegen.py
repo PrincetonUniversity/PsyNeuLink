@@ -44,7 +44,8 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         cond_ty = cond_gen.get_condition_struct_type().as_pointer()
         args.append(cond_ty)
 
-    builder = ctx.create_llvm_function(args, node, "comp_wrap_" + node_function.name)
+    builder = ctx.create_llvm_function(args, node, node_function.name, tags=tags,
+                                       return_type=node_function.type.pointee.return_type)
     llvm_func = builder.function
     for a in llvm_func.args:
         a.attributes.add('nonnull')
@@ -161,21 +162,24 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         if len(node_function.args) > 4:
             assert node is composition.controller
             call_args += [params, state, data_in]
-        builder.call(node_function, call_args)
+        ret = builder.call(node_function, call_args)
     elif "reset" not in tags:
         # FIXME: reinitialization of compositions is not supported
         # Condition and data structures includes parent first
         nested_idx = ctx.int32_ty(composition._get_node_index(node) + 1)
         node_data = builder.gep(data_in, [zero, nested_idx])
         node_cond = builder.gep(llvm_func.args[5], [zero, nested_idx])
-        builder.call(node_function, [node_state, node_params, node_in,
-                                     node_data, node_cond])
+        ret = builder.call(node_function, [node_state, node_params, node_in,
+                                           node_data, node_cond])
         # Copy output of the nested composition to its output place
         output_idx = node._get_node_index(node.output_CIM)
         result = builder.gep(node_data, [zero, zero, ctx.int32_ty(output_idx)])
         builder.store(builder.load(result), node_out)
 
-    builder.ret_void()
+    if isinstance(ret.type, ir.VoidType):
+        builder.ret_void()
+    else:
+        builder.ret(ret)
 
     return llvm_func
 
