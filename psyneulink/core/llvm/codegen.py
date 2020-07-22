@@ -246,18 +246,24 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
     with _gen_composition_exec_context(ctx, composition, tags=tags) as (builder, data, params, cond_gen):
         state, _, comp_in, _, cond = builder.function.args
 
-        # Reset internal clocks of each node
+        nodes_states = helpers.get_param_ptr(builder, composition, state, "nodes")
+
+        num_exec_locs = {}
         for idx, node in enumerate(composition._all_nodes):
-            #FIXME: This skips nested nodes
+            #FIXME: This skips nested compositions
             from psyneulink import Composition
             if isinstance(node, Composition):
                 continue
-            node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0),
-                                             ctx.int32_ty(idx)])
-            num_executions_ptr = helpers.get_state_ptr(builder, node,
-                                                       node_state,
-                                                       "num_executions")
-            num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.TRIAL.value)])
+            node_state = builder.gep(nodes_states, [ctx.int32_ty(0),
+                                                    ctx.int32_ty(idx)])
+            num_exec_locs[node] = helpers.get_state_ptr(builder, node,
+                                                        node_state,
+                                                        "num_executions")
+
+        # Reset internal TRIAL clock for each node
+        for time_loc in num_exec_locs.values():
+            num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
+                                                       ctx.int32_ty(TimeScale.TRIAL.value)])
             builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
 
         # Check if there's anything to reset
@@ -337,18 +343,17 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             any_cond = builder.or_(any_cond, node_cond, name="any_ran_cond")
             builder.store(node_cond, run_set_node_ptr)
 
+        # Reset internal TIME_STEP and PASS clock for each node
+        for time_loc in num_exec_locs.values():
+            num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
+                                                       ctx.int32_ty(TimeScale.TIME_STEP.value)])
+            builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+            # FIXME: Move pass reset to actual pass count
+            num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
+                                                       ctx.int32_ty(TimeScale.PASS.value)])
+            builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+
         for idx, node in enumerate(composition.nodes):
-            # Reset node internal clock
-            #FIXME: This skips nested nodes
-            from psyneulink import Composition
-            if not isinstance(node, Composition):
-                node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-                num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
-                num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.TIME_STEP.value)])
-                builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
-                # FIXME: Move pass reset to actual pass count
-                num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.PASS.value)])
-                builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
 
             run_set_node_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
             node_cond = builder.load(run_set_node_ptr,
