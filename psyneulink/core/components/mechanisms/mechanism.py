@@ -3004,8 +3004,9 @@ class Mechanism_Base(Mechanism):
             warnings.warn("Shape mismatch: function result does not match mechanism value: {}".format(value.type.pointee, val_ptr.type.pointee))
 
         # is_finished should be checked after output ports ran
-        is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder, params,
-                                                           state)
+        is_finished_f = ctx.import_llvm_function(self, tags=tags.union({"is_finished"}))
+        is_finished_cond = builder.call(is_finished_f, [params, state, arg_in,
+                                                        arg_out])
         return builder, is_finished_cond
 
     def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
@@ -3019,6 +3020,25 @@ class Mechanism_Base(Mechanism):
                                    reinit_out])
 
         return builder
+
+    def _gen_llvm_function(self, *, extra_args=[], ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
+        if "is_finished" not in tags:
+            return super()._gen_llvm_function(extra_args=extra_args, ctx=ctx,
+                                              tags=tags)
+
+        # Keep all 4 standard arguments to ease invocation
+        args = [ctx.get_param_struct_type(self).as_pointer(),
+                ctx.get_state_struct_type(self).as_pointer(),
+                ctx.get_input_struct_type(self).as_pointer(),
+                ctx.get_output_struct_type(self).as_pointer()]
+
+        builder = ctx.create_llvm_function(args, self,
+                                           return_type=pnlvm.ir.IntType(1),
+                                           tags=tags)
+        params, state = builder.function.args[:2]
+        finished = self._gen_llvm_is_finished_cond(ctx, builder, params, state)
+        builder.ret(finished)
+        return builder.function
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reset" not in tags
