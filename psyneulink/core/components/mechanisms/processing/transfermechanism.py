@@ -1555,13 +1555,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         return current_input
 
     def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
-        prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "value")
-
-        # preserve the old prev value
-        prev_val = builder.load(prev_val_ptr)
-        # Update previous value to make sure that repeated executions work
-        builder.store(builder.load(current), prev_val_ptr)
-
         threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                     "termination_threshold")
         if isinstance(threshold_ptr.type.pointee, pnlvm.ir.LiteralStructType):
@@ -1593,7 +1586,11 @@ class TransferMechanism(ProcessingMechanism_Base):
                 cond = b.fcmp_ordered(">=", test_val, max_val)
                 max_val = b.select(cond, test_val, max_val)
                 b.store(max_val, cmp_val_ptr)
+
         elif isinstance(self.termination_measure, Function):
+            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "value", 1)
+            prev_val = builder.load(prev_val_ptr)
+
             expected = np.empty_like([self.defaults.value[0], self.defaults.value[0]])
             got = np.empty_like(self.termination_measure.defaults.variable)
             if expected.shape != got.shape:

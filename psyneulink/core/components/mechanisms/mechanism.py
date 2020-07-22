@@ -2996,6 +2996,13 @@ class Mechanism_Base(Mechanism):
 
         builder = self._gen_llvm_output_ports(ctx, builder, value, params, state, arg_in, arg_out)
 
+        val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "value")
+        if val_ptr.type.pointee == value.type.pointee:
+            pnlvm.helpers.push_state_val(builder, self, state, "value", value)
+        else:
+            # FIXME: Does this need some sort of parsing?
+            warnings.warn("Shape mismatch: function result does not match mechanism value: {}".format(value.type.pointee, val_ptr.type.pointee))
+
         # is_finished should be checked after output ports ran
         is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder, params,
                                                            state, value)
