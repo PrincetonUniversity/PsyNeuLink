@@ -68,7 +68,7 @@ def _cpu_jit_constructor():
     __pass_manager_builder = binding.PassManagerBuilder()
     __pass_manager_builder.loop_vectorize = False
     __pass_manager_builder.slp_vectorize = False
-    __pass_manager_builder.opt_level = 0  # No optimizations
+    __pass_manager_builder.opt_level = 2
 
     __cpu_features = binding.get_host_cpu_features().flatten()
     __cpu_name = binding.get_host_cpu_name()
@@ -77,7 +77,7 @@ def _cpu_jit_constructor():
     __cpu_target = binding.Target.from_default_triple()
     # FIXME: reloc='static' is needed to avoid crashes on win64
     # see: https://github.com/numba/llvmlite/issues/457
-    __cpu_target_machine = __cpu_target.create_target_machine(cpu=__cpu_name, features=__cpu_features, opt=0, reloc='static')
+    __cpu_target_machine = __cpu_target.create_target_machine(cpu=__cpu_name, features=__cpu_features, opt=2, reloc='static')
 
     __cpu_pass_manager = binding.ModulePassManager()
     __cpu_target_machine.add_analysis_passes(__cpu_pass_manager)
