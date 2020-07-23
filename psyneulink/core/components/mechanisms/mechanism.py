@@ -3544,7 +3544,7 @@ class Mechanism_Base(Mechanism):
 
     @tc.typecheck
     @handle_external_context()
-    def add_ports(self, ports, context=None):
+    def add_ports(self, ports, update_variable=True, context=None):
         """
         add_ports(ports)
 
@@ -3624,7 +3624,8 @@ class Mechanism_Base(Mechanism):
         if output_ports:
             instantiated_output_ports = _instantiate_output_ports(self, output_ports, context=context)
 
-        self.defaults.variable = self.input_values
+        if update_variable:
+            self._update_default_variable(self.input_values, context)
 
         return {INPUT_PORTS: instantiated_input_ports,
                 OUTPUT_PORTS: instantiated_output_ports}
