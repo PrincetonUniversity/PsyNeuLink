@@ -2909,8 +2909,10 @@ class Mechanism_Base(Mechanism):
             if port_spec == OWNER_VALUE:
                 return value
             elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
-                assert port_spec[1] < len(value.type.pointee)
-                return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(port_spec[1])])
+                index = port_spec[1]() if callable(port_spec[1]) else port_spec[1]
+
+                assert index < len(value.type.pointee)
+                return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(index)])
             elif port_spec == OWNER_EXECUTION_COUNT:
                 execution_count = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "execution_count")
                 return execution_count

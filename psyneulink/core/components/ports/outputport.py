@@ -681,12 +681,14 @@ def _parse_output_port_variable(variable, owner, context=None, output_port_name=
                 owner_param_name = spec[0]
 
             try:
+                index = spec[1]() if callable(spec[1]) else spec[1]
+
                 # context is None during initialization, and we don't want to
                 # incur the cost of .get during execution
                 if context is None:
-                    return getattr(owner.parameters, owner_param_name).get(context)[spec[1]]
+                    return getattr(owner.parameters, owner_param_name).get(context)[index]
                 else:
-                    return getattr(owner.parameters, owner_param_name)._get(context)[spec[1]]
+                    return getattr(owner.parameters, owner_param_name)._get(context)[index]
             except TypeError:
                 if context is None:
                     if getattr(owner.parameters, owner_param_name).get(context) is None:
