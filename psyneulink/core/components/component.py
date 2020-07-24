@@ -1095,16 +1095,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             k: v for k, v in parameter_values.items() if k in self.parameters.names() and getattr(self.parameters, k).function_parameter
         }
 
-        v = call_with_pruned_args(
+        var = call_with_pruned_args(
             self._handle_default_variable,
             default_variable=default_variable,
             size=size,
             **parameter_values
         )
-        if v is None:
+        if var is None:
             default_variable = self.defaults.variable
         else:
-            default_variable = v
+            default_variable = var
             self.defaults.variable = default_variable
             self.parameters.variable._user_specified = True
 
