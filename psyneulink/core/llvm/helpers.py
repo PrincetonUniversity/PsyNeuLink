@@ -82,11 +82,32 @@ def get_param_ptr(builder, component, params_ptr, param_name):
                        name="ptr_param_{}_{}".format(param_name, component.name))
 
 
-def get_state_ptr(builder, component, state_ptr, stateful_name):
+def get_state_ptr(builder, component, state_ptr, stateful_name, hist_idx=0):
     idx = ir.IntType(32)(component.llvm_state_ids.index(stateful_name))
-    return builder.gep(state_ptr, [ir.IntType(32)(0), idx],
-                       name="ptr_state_{}_{}".format(stateful_name,
-                                                     component.name))
+    ptr = builder.gep(state_ptr, [ir.IntType(32)(0), idx],
+                      name="ptr_state_{}_{}".format(stateful_name,
+                                                    component.name))
+    # The first dimension of arrays is history
+    if hist_idx is not None and isinstance(ptr.type.pointee, ir.ArrayType):
+        assert len(ptr.type.pointee) > hist_idx, \
+            "History not available: {} ({})".format(ptr.type.pointee, hist_idx)
+        ptr = builder.gep(state_ptr, [ir.IntType(32)(0), idx,
+                                      ir.IntType(32)(hist_idx)],
+                          name="ptr_state_{}_{}_hist{}".format(stateful_name,
+                                                               component.name,
+                                                               hist_idx))
+    return ptr
+
+
+def push_state_val(builder, component, state_ptr, name, new_val):
+    val_ptr = get_state_ptr(builder, component, state_ptr, name, None)
+    for i in range(len(val_ptr.type.pointee) - 1, 0, -1):
+        dest_ptr = get_state_ptr(builder, component, state_ptr, name, i)
+        src_ptr = get_state_ptr(builder, component, state_ptr, name, i - 1)
+        builder.store(builder.load(src_ptr), dest_ptr)
+
+    dest_ptr = get_state_ptr(builder, component, state_ptr, name)
+    builder.store(builder.load(new_val), dest_ptr)
 
 
 def unwrap_2d_array(builder, element):
@@ -352,7 +373,7 @@ class ConditionGenerator:
 
         return builder.icmp_signed("==", node_run, global_run)
 
-    def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_flag_locs):
+    def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_callbacks):
 
         from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
 
@@ -364,12 +385,12 @@ class ConditionGenerator:
 
         elif isinstance(condition, Not):
             condition = condition.condition
-            return builder.not_(self.generate_sched_condition(builder, condition, cond_ptr, node, is_finished_flag_locs))
+            return builder.not_(self.generate_sched_condition(builder, condition, cond_ptr, node, is_finished_callbacks))
 
         elif isinstance(condition, All):
             agg_cond = ir.IntType(1)(1)
             for cond in condition.args:
-                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_flag_locs)
+                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks)
                 agg_cond = builder.and_(agg_cond, cond_res)
             return agg_cond
 
@@ -487,21 +508,18 @@ class ConditionGenerator:
         elif isinstance(condition, WhenFinished):
             # The first argument is the target node
             assert len(condition.args) == 1
-            target_is_finished_ptr = is_finished_flag_locs[condition.args[0]]
-            target_is_finished = builder.load(target_is_finished_ptr)
-
-            return builder.fcmp_ordered("==", target_is_finished,
-                                        target_is_finished.type(1))
+            target = is_finished_callbacks[condition.args[0]]
+            is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
+            return builder.call(is_finished_f, target[1])
 
         elif isinstance(condition, WhenFinishedAny):
             assert len(condition.args) > 0
 
             run_cond = ir.IntType(1)(0)
             for node in condition.args:
-                node_is_finished_ptr = is_finished_flag_locs[node]
-                node_is_finished = builder.load(node_is_finished_ptr)
-                node_is_finished = builder.fcmp_ordered("==", node_is_finished,
-                                                        node_is_finished.type(1))
+                target = is_finished_callbacks[node]
+                is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
+                node_is_finished = builder.call(is_finished_f, target[1])
 
                 run_cond = builder.or_(run_cond, node_is_finished)
 
@@ -512,10 +530,9 @@ class ConditionGenerator:
 
             run_cond = ir.IntType(1)(1)
             for node in condition.args:
-                node_is_finished_ptr = is_finished_flag_locs[node]
-                node_is_finished = builder.load(node_is_finished_ptr)
-                node_is_finished = builder.fcmp_ordered("==", node_is_finished,
-                                                        node_is_finished.type(1))
+                target = is_finished_callbacks[node]
+                is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
+                node_is_finished = builder.call(is_finished_f, target[1])
 
                 run_cond = builder.and_(run_cond, node_is_finished)
 

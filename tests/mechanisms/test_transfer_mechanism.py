@@ -1566,7 +1566,7 @@ class TestTransferMechanismMultipleInputPorts:
             val = benchmark(e.execute, [[1], [2], [3]])
         elif mode == 'PTX':
             e = pnlvm.execution.MechExecution(T)
-            val = benchmark(e.execute, [[1], [2], [3]])
+            val = benchmark(e.cuda_execute, [[1], [2], [3]])
 
         assert len(T.variable)==3
         assert all(a==b for a,b in zip(val, [[ 1.],[ 2.],[ 3.]]))
@@ -2009,20 +2009,56 @@ class TestOnResumeIntegratorMode:
 
 
 class TestClip:
-    def test_clip_float(self):
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_clip_float(self, mode):
         T = TransferMechanism(clip=[-2.0, 2.0])
-        assert np.allclose(T.execute(3.0), 2.0)
-        assert np.allclose(T.execute(-3.0), -2.0)
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            EX = pnlvm.execution.MechExecution(T).execute
+        elif mode == 'PTX':
+            EX = pnlvm.execution.MechExecution(T).cuda_execute
 
-    def test_clip_array(self):
+        assert np.allclose(EX(3.0), 2.0)
+        assert np.allclose(EX(1.0), 1.0)
+        assert np.allclose(EX(-3.0), -2.0)
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_clip_array(self, mode):
         T = TransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
                               clip=[-2.0, 2.0])
-        assert np.allclose(T.execute([3.0, 0.0, -3.0]), [2.0, 0.0, -2.0])
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            EX = pnlvm.execution.MechExecution(T).execute
+        elif mode == 'PTX':
+            EX = pnlvm.execution.MechExecution(T).cuda_execute
+        assert np.allclose(EX([3.0, 0.0, -3.0]), [2.0, 0.0, -2.0])
 
-    def test_clip_2d_array(self):
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_clip_2d_array(self, mode):
         T = TransferMechanism(default_variable=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
                               clip=[-2.0, 2.0])
-        assert np.allclose(T.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            EX = pnlvm.execution.MechExecution(T).execute
+        elif mode == 'PTX':
+            EX = pnlvm.execution.MechExecution(T).cuda_execute
+
+        assert np.allclose(EX([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
 
 
