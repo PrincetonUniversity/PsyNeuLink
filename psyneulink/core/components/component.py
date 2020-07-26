@@ -1314,7 +1314,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 #FIXME: this should use defaults
                 val = p.get()
                 # Check if the value type is valid for compilation
-                return not isinstance(val, (str, dict, ComponentsMeta,
+                return not isinstance(val, (str, ComponentsMeta,
                                             ContentAddressableList, type(max),
                                             type(_is_compilation_param),
                                             type(self._get_compilation_params)))
