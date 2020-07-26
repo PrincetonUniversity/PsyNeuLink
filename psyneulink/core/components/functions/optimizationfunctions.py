@@ -1352,10 +1352,10 @@ class GridSearch(OptimizationFunction):
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "select_min" in tags:
             return self._gen_llvm_select_min_function(ctx=ctx, tags=tags)
-        if self._is_composition_optimize():
-            # self.objective_function may be bound method of
-            # an OptimizationControlMechanism
-            ocm = self.objective_function.__self__
+        ocm = self._get_optimized_composition()
+        if ocm is not None:
+            # self.objective_function may be a bound method of
+            # OptimizationControlMechanism
             extra_args = [ctx.get_param_struct_type(ocm.agent_rep).as_pointer(),
                           ctx.get_state_struct_type(ocm.agent_rep).as_pointer(),
                           ctx.get_data_struct_type(ocm.agent_rep).as_pointer()]
@@ -1382,14 +1382,14 @@ class GridSearch(OptimizationFunction):
 
         return ctx.convert_python_struct_to_llvm_ir(variable)
 
-    def _is_composition_optimize(self):
-        # self.objective_function may be bound method of
-        # an OptimizationControlMechanism
-        return hasattr(self.objective_function, '__self__')
+    def _get_optimized_composition(self):
+        # self.objective_function may be a bound method of
+        # OptimizationControlMechanism
+        return getattr(self.objective_function, '__self__', None)
 
     def _get_param_ids(self):
         ids = super()._get_param_ids() + ["search_space"]
-        if self._is_composition_optimize():
+        if self._get_optimized_composition() is not None:
             ids.append("objective_function")
 
         return ids
@@ -1407,10 +1407,10 @@ class GridSearch(OptimizationFunction):
         search_space = (self._get_search_dim_type(ctx, d) for d in self.search_space)
         search_space_struct = pnlvm.ir.LiteralStructType(search_space)
 
-        if self._is_composition_optimize():
+        ocm = self._get_optimized_composition()
+        if ocm is not None:
             # self.objective_function is a bound method of
-            # an OptimizationControlMechanism
-            ocm = self.objective_function.__self__
+            # OptimizationControlMechanism
             obj_func_params = ocm._get_evaluate_param_struct_type(ctx)
             return pnlvm.ir.LiteralStructType([*param_struct,
                                                search_space_struct,
@@ -1430,10 +1430,10 @@ class GridSearch(OptimizationFunction):
         param_initializer = super()._get_param_initializer(context)
         grid_init = (self._get_search_dim_init(context, d) for d in self.search_space)
 
-        if self._is_composition_optimize():
+        ocm = self._get_optimized_composition()
+        if ocm is not None:
             # self.objective_function is a bound method of
-            # an OptimizationControlMechanism
-            ocm = self.objective_function.__self__
+            # OptimizationControlMechanism
             obj_func_param_init = ocm._get_evaluate_param_initializer(context)
             return (*param_initializer, tuple(grid_init), obj_func_param_init)
 
@@ -1441,7 +1441,7 @@ class GridSearch(OptimizationFunction):
 
     def _get_state_ids(self):
         ids = super()._get_state_ids()
-        if self._is_composition_optimize():
+        if self._get_optimized_composition() is not None:
             ids.append("objective_function")
 
         return ids
@@ -1449,10 +1449,10 @@ class GridSearch(OptimizationFunction):
     def _get_state_struct_type(self, ctx):
         state_struct = ctx.get_state_struct_type(super())
 
-        if self._is_composition_optimize():
+        ocm = self._get_optimized_composition()
+        if ocm is not None:
             # self.objective_function is a bound method of
-            # an OptimizationControlMechanism
-            ocm = self.objective_function.__self__
+            # OptimizationControlMechanism
             obj_func_state = ocm._get_evaluate_state_struct_type(ctx)
             state_struct = pnlvm.ir.LiteralStructType([*state_struct,
                                                        obj_func_state])
@@ -1462,10 +1462,10 @@ class GridSearch(OptimizationFunction):
     def _get_state_initializer(self, context):
         state_initializer = super()._get_state_initializer(context)
 
-        if self._is_composition_optimize():
+        ocm = self._get_optimized_composition()
+        if ocm is not None:
             # self.objective_function is a bound method of
-            # an OptimizationControlMechanism
-            ocm = self.objective_function.__self__
+            # OptimizationControlMechanism
             obj_func_state_init = ocm._get_evaluate_state_initializer(context)
             state_initializer = (*state_initializer, obj_func_state_init)
 
@@ -1792,7 +1792,7 @@ class GridSearch(OptimizationFunction):
                     format(repr(DIRECTION), self.name, direction)
 
 
-            ocm = self.objective_function.__self__ if self._is_composition_optimize() else None
+            ocm = self._get_optimized_composition()
             if ocm is not None and \
                ocm.parameters.comp_execution_mode._get(context).startswith("PTX"):
                     opt_sample, opt_value, all_samples, all_values = self._run_cuda_grid(ocm, variable, context)
