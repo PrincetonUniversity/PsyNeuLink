@@ -732,7 +732,6 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             self.parameters.val_size._set(len(self.previous_value[VALS][0]), Context())
 
         self.has_initializers = True
-        self.stateful_attributes = ["random_state", "previous_value"]
 
     def _get_state_ids(self):
         return super()._get_state_ids() + ["ring_memory"]
