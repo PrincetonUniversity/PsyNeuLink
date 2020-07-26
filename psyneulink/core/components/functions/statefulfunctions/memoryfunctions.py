@@ -771,14 +771,9 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         var_val_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
         # Zero output
+        builder.store(arg_out.type.pointee(None), arg_out)
         out_key_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         out_val_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        with pnlvm.helpers.array_ptr_loop(builder, out_key_ptr, "zero_key") as (b, i):
-            out_ptr = b.gep(out_key_ptr, [ctx.int32_ty(0), i])
-            b.store(out_ptr.type.pointee(0), out_ptr)
-        with pnlvm.helpers.array_ptr_loop(builder, out_val_ptr, "zero_val") as (b, i):
-            out_ptr = b.gep(out_val_ptr, [ctx.int32_ty(0), i])
-            b.store(out_ptr.type.pointee(0), out_ptr)
 
         # Check retrieval probability
         retr_ptr = builder.alloca(pnlvm.ir.IntType(1))
@@ -812,7 +807,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                           builder.gep(distance_arg_in, [ctx.int32_ty(0),
                                                         ctx.int32_ty(0)]))
             selection_arg_in = builder.alloca(pnlvm.ir.ArrayType(distance_f.args[3].type.pointee, max_entries))
-            with pnlvm.helpers.for_loop_zero_inc(builder, entries, "distance_loop") as (b,idx):
+            with pnlvm.helpers.for_loop_zero_inc(builder, entries, "distance_loop") as (b, idx):
                 compare_ptr = b.gep(keys_ptr, [ctx.int32_ty(0), idx])
                 b.store(b.load(compare_ptr),
                         b.gep(distance_arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)]))
@@ -832,7 +827,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             builder.store(ctx.int32_ty(0), selected_idx_ptr)
             with pnlvm.helpers.for_loop_zero_inc(builder, entries, "distance_loop") as (b,idx):
                 selection_val = b.load(b.gep(selection_arg_out, [ctx.int32_ty(0), idx]))
-                non_zero = b.fcmp_ordered('!=', selection_val, ctx.float_ty(0))
+                non_zero = b.fcmp_ordered('!=', selection_val, selection_val.type(0))
                 with b.if_then(non_zero):
                     b.store(idx, selected_idx_ptr)
 
@@ -841,8 +836,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                                                                selected_idx]))
             selected_val = builder.load(builder.gep(vals_ptr, [ctx.int32_ty(0),
                                                                selected_idx]))
-            builder.store(selected_key, builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)]))
-            builder.store(selected_val, builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(1)]))
+            builder.store(selected_key, out_key_ptr)
+            builder.store(selected_val, out_val_ptr)
 
         # Check storage probability
         store_ptr = builder.alloca(pnlvm.ir.IntType(1))
