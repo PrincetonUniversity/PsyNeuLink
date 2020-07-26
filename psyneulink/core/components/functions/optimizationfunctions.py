@@ -1388,24 +1388,14 @@ class GridSearch(OptimizationFunction):
         return getattr(self.objective_function, '__self__', None)
 
     def _get_param_ids(self):
-        ids = super()._get_param_ids() + ["search_space"]
+        ids = super()._get_param_ids()
         if self._get_optimized_composition() is not None:
             ids.append("objective_function")
 
         return ids
 
-    def _get_search_dim_type(self, ctx, d):
-        if isinstance(d.generator, list):
-            # Make sure we only generate float values
-            return ctx.convert_python_struct_to_llvm_ir([float(x) for x in d.generator])
-        if isinstance(d, SampleIterator):
-            return pnlvm.ir.LiteralStructType((ctx.float_ty, ctx.float_ty, ctx.int32_ty))
-        assert False, "Unsupported dimension type: {}".format(d)
-
     def _get_param_struct_type(self, ctx):
         param_struct = ctx.get_param_struct_type(super())
-        search_space = (self._get_search_dim_type(ctx, d) for d in self.search_space)
-        search_space_struct = pnlvm.ir.LiteralStructType(search_space)
 
         ocm = self._get_optimized_composition()
         if ocm is not None:
@@ -1413,31 +1403,21 @@ class GridSearch(OptimizationFunction):
             # OptimizationControlMechanism
             obj_func_params = ocm._get_evaluate_param_struct_type(ctx)
             return pnlvm.ir.LiteralStructType([*param_struct,
-                                               search_space_struct,
                                                obj_func_params])
 
-        return pnlvm.ir.LiteralStructType([*param_struct, search_space_struct])
-
-    def _get_search_dim_init(self, context, d):
-        if isinstance(d.generator, list):
-            return tuple(d.generator)
-        if isinstance(d, SampleIterator):
-            return (d.start, d.step, d.num)
-
-        assert False, "Unsupported dimension type: {}".format(d)
+        return param_struct
 
     def _get_param_initializer(self, context):
         param_initializer = super()._get_param_initializer(context)
-        grid_init = (self._get_search_dim_init(context, d) for d in self.search_space)
 
         ocm = self._get_optimized_composition()
         if ocm is not None:
             # self.objective_function is a bound method of
             # OptimizationControlMechanism
             obj_func_param_init = ocm._get_evaluate_param_initializer(context)
-            return (*param_initializer, tuple(grid_init), obj_func_param_init)
+            return (*param_initializer, obj_func_param_init)
 
-        return (*param_initializer, tuple(grid_init))
+        return param_initializer
 
     def _get_state_ids(self):
         ids = super()._get_state_ids()
