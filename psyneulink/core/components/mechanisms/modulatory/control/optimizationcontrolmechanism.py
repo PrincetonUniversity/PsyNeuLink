@@ -1025,8 +1025,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _get_evaluate_param_initializer(self, context):
         num_estimates = self.parameters.num_estimates.get(context) or 0
-        # FIXME: The intensity cost function is not setup with the right execution id
-        intensity_cost = tuple(op.intensity_cost_function._get_param_initializer(None) for op in self.output_ports)
+        intensity_cost = tuple(op.intensity_cost_function._get_param_initializer(context) for op in self.output_ports)
         return (intensity_cost, num_estimates)
 
     def _get_evaluate_state_struct_type(self, ctx):
@@ -1230,10 +1229,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable, *, tags:frozenset):
         fun = ctx.import_llvm_function(function)
-        fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
         fun_out = builder.alloca(fun.args[3].type.pointee)
 
-        args = [params, context, fun_in, fun_out]
+        args = [params, context, variable, fun_out]
         # If we're calling compiled version of Composition.evaluate,
         # we need to pass extra arguments
         if len(fun.args) > 4:

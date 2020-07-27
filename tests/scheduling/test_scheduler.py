@@ -1470,3 +1470,47 @@ class TestFeedback:
             csiController: set([cueInterval])
         }
         assert comp.scheduler.dependency_dict == expected_dependencies
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.parametrize('mode', ['Python',
+                                      # 'LLVM' mode is not supported
+                                      # the comparison values and checks
+                                      # are not synced between binary
+                                      # and Python structures
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                     ])
+    @pytest.mark.parametrize('timescale, expected',
+                             [(TimeScale.TIME_STEP, [[0.5], [0.4375]]),
+                              (TimeScale.PASS, [[0.5], [0.4375]]),
+                              (TimeScale.TRIAL, [[1.5], [0.4375]]),
+                              (TimeScale.RUN, [[1.5], [0.4375]])],
+                              ids=lambda x: x if isinstance(x, TimeScale) else "")
+    def test_time_termination_measures(self, mode, timescale, expected):
+        in_one_pass = timescale in {TimeScale.TIME_STEP, TimeScale.PASS}
+        attention = pnl.TransferMechanism(name='Attention',
+                                 integrator_mode=True,
+                                 termination_threshold=3,
+                                 termination_measure=timescale,
+                                 execute_until_finished=in_one_pass)
+        counter = pnl.IntegratorMechanism(
+            function=pnl.AdaptiveIntegrator(rate=0.0, offset=1.0))
+
+        response = pnl.IntegratorMechanism(
+            function=pnl.AdaptiveIntegrator(rate=0.5))
+
+        comp = Composition()
+        comp.add_linear_processing_pathway([counter, response])
+        comp.add_node(attention)
+        comp.scheduler.add_condition(response, pnl.WhenFinished(attention))
+        comp.scheduler.add_condition(counter, pnl.Always())
+        inputs = {attention: [[0.5]], counter: [[2.0]]}
+        result = comp.run(inputs=inputs, bin_execute=mode)
+        if mode == 'Python':
+            assert attention.execution_count == 3
+            assert counter.execution_count == 1 if in_one_pass else 3
+            assert response.execution_count == 1
+        assert np.allclose(result, expected)

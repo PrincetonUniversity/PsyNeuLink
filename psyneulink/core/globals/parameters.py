@@ -1342,6 +1342,9 @@ class Parameter(types.SimpleNamespace):
         """
             Clears the log of this Parameter for every context in **contexts**
         """
+        if self.log is None:
+            return
+
         if contexts is NotImplemented:
             self.log.clear()
             return

@@ -20,6 +20,7 @@ import re
 from typing import Set
 import weakref
 from psyneulink.core.scheduling.time import Time
+from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core import llvm as pnlvm
 from . import codegen
 from .debug import debug_env
@@ -305,6 +306,11 @@ class LLVMBuilderContext:
             return pnlvm.builtins.get_mersenne_twister_state_struct(self)
         elif isinstance(t, Time):
             return ir.ArrayType(self.int32_ty, len(Time._time_scale_attr_map))
+        elif isinstance(t, SampleIterator):
+            if isinstance(t.generator, list):
+                return ir.ArrayType(self.float_ty, len(t.generator))
+            # Generic iterator is {start, increment, count}
+            return ir.LiteralStructType((self.float_ty, self.float_ty, self.int32_ty))
         assert False, "Don't know how to convert {}".format(type(t))
 
 
