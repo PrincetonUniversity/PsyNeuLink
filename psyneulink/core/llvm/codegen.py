@@ -44,7 +44,8 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         cond_ty = cond_gen.get_condition_struct_type().as_pointer()
         args.append(cond_ty)
 
-    builder = ctx.create_llvm_function(args, node, "comp_wrap_" + node_function.name)
+    builder = ctx.create_llvm_function(args, node, node_function.name, tags=tags,
+                                       return_type=node_function.type.pointee.return_type)
     llvm_func = builder.function
     for a in llvm_func.args:
         a.attributes.add('nonnull')
@@ -75,7 +76,7 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         node_in = builder.alloca(node_function.args[2].type.pointee)
         incoming_projections = node.afferents
 
-    if "reset" in tags:
+    if "reset" in tags or "is_finished" in tags:
         incoming_projections = []
 
     # Execute all incoming projections
@@ -161,21 +162,27 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         if len(node_function.args) > 4:
             assert node is composition.controller
             call_args += [params, state, data_in]
-        builder.call(node_function, call_args)
+        ret = builder.call(node_function, call_args)
     elif "reset" not in tags:
         # FIXME: reinitialization of compositions is not supported
         # Condition and data structures includes parent first
         nested_idx = ctx.int32_ty(composition._get_node_index(node) + 1)
         node_data = builder.gep(data_in, [zero, nested_idx])
         node_cond = builder.gep(llvm_func.args[5], [zero, nested_idx])
-        builder.call(node_function, [node_state, node_params, node_in,
-                                     node_data, node_cond])
+        ret = builder.call(node_function, [node_state, node_params, node_in,
+                                           node_data, node_cond])
         # Copy output of the nested composition to its output place
         output_idx = node._get_node_index(node.output_CIM)
         result = builder.gep(node_data, [zero, zero, ctx.int32_ty(output_idx)])
         builder.store(builder.load(result), node_out)
+    else:
+        # composition reset
+        ret = None
 
-    builder.ret_void()
+    if ret is None or isinstance(ret.type, ir.VoidType):
+        builder.ret_void()
+    else:
+        builder.ret(ret)
 
     return llvm_func
 
@@ -235,21 +242,29 @@ def _gen_composition_exec_context(ctx, composition, *, tags:frozenset, suffix=""
 def gen_composition_exec(ctx, composition, *, tags:frozenset):
     simulation = "simulation" in tags
     node_tags = tags.union({"node_wrapper"})
-    extra_args = []
 
-    with _gen_composition_exec_context(ctx, composition, tags=tags, extra_args=extra_args) as (builder, data, params, cond_gen):
+    with _gen_composition_exec_context(ctx, composition, tags=tags) as (builder, data, params, cond_gen):
         state, _, comp_in, _, cond = builder.function.args
 
-        # Reset internal clocks of each node
+        nodes_states = helpers.get_param_ptr(builder, composition, state, "nodes")
+
+        num_exec_locs = {}
         for idx, node in enumerate(composition._all_nodes):
-            #FIXME: This skips nested nodes
+            #FIXME: This skips nested compositions
             from psyneulink import Composition
             if isinstance(node, Composition):
                 continue
-            node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-            num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
-            num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.TRIAL.value)])
-            builder.store(ctx.int32_ty(0), num_exec_time_ptr)
+            node_state = builder.gep(nodes_states, [ctx.int32_ty(0),
+                                                    ctx.int32_ty(idx)])
+            num_exec_locs[node] = helpers.get_state_ptr(builder, node,
+                                                        node_state,
+                                                        "num_executions")
+
+        # Reset internal TRIAL clock for each node
+        for time_loc in num_exec_locs.values():
+            num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
+                                                       ctx.int32_ty(TimeScale.TRIAL.value)])
+            builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
 
         # Check if there's anything to reset
         for node in composition._all_nodes:
@@ -287,15 +302,12 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         iter_ptr = builder.alloca(ctx.int32_ty, name="iter_counter")
         builder.store(ctx.int32_ty(0), iter_ptr)
 
-        # Generate pointers to 'is_finished_flags' locations
-        is_finished_flag_locs = {}
-        for idx, node in enumerate(composition.nodes):
-            node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0),
-                                             ctx.int32_ty(idx)])
-            is_finished_flag_ptr = helpers.get_state_ptr(builder, node,
-                                                         node_state,
-                                                         "is_finished_flag")
-            is_finished_flag_locs[node] = is_finished_flag_ptr
+        # Generate pointers to 'is_finished' callbacks
+        is_finished_callbacks = {}
+        for node in composition.nodes:
+            args = [state, params, comp_in, data, output_storage]
+            wrapper = ctx.get_node_wrapper(composition, node)
+            is_finished_callbacks[node] = (wrapper, args)
 
         loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
         builder.branch(loop_condition)
@@ -305,7 +317,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
         run_cond = cond_gen.generate_sched_condition(
             builder, composition.termination_processing[TimeScale.TRIAL],
-            cond, None, is_finished_flag_locs)
+            cond, None, is_finished_callbacks)
         run_cond = builder.not_(run_cond, name="not_run_cond")
 
         loop_body = builder.append_basic_block(name="scheduling_loop_body")
@@ -324,28 +336,28 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                                            name="run_cond_ptr_" + node.name)
             node_cond = cond_gen.generate_sched_condition(
                 builder, composition._get_processing_condition_set(node),
-                cond, node, is_finished_flag_locs)
+                cond, node, is_finished_callbacks)
             ran = cond_gen.generate_ran_this_pass(builder, cond, node)
             node_cond = builder.and_(node_cond, builder.not_(ran),
                                      name="run_cond_" + node.name)
             any_cond = builder.or_(any_cond, node_cond, name="any_ran_cond")
             builder.store(node_cond, run_set_node_ptr)
 
+        # Reset internal TIME_STEP and PASS clock for each node
+        for time_loc in num_exec_locs.values():
+            num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
+                                                       ctx.int32_ty(TimeScale.TIME_STEP.value)])
+            builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+            # FIXME: Move pass reset to actual pass count
+            num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
+                                                       ctx.int32_ty(TimeScale.PASS.value)])
+            builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+
         for idx, node in enumerate(composition.nodes):
-            # Reset node internal clock
-            #FIXME: This skips nested nodes
-            from psyneulink import Composition
-            if not isinstance(node, Composition):
-                node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-                num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
-                num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.TIME_STEP.value)])
-                builder.store(ctx.int32_ty(0), num_exec_time_ptr)
-                # FIXME: Move pass reset to actual pass count
-                num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.PASS.value)])
-                builder.store(ctx.int32_ty(0), num_exec_time_ptr)
 
             run_set_node_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
-            node_cond = builder.load(run_set_node_ptr, name="node_" + node.name + "_should_run")
+            node_cond = builder.load(run_set_node_ptr,
+                                     name="node_" + node.name + "_should_run")
             with builder.if_then(node_cond):
                 node_w = ctx.get_node_wrapper(composition, node)
                 node_f = ctx.import_llvm_function(node_w, tags=node_tags)
@@ -365,7 +377,9 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             run_set_node_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
             node_cond = builder.load(run_set_node_ptr, name="node_" + node.name + "_ran")
             with builder.if_then(node_cond):
-                out_ptr = builder.gep(output_storage, [zero, zero, ctx.int32_ty(idx)], name="result_ptr_" + node.name)
+                out_ptr = builder.gep(output_storage, [zero, zero,
+                                                       ctx.int32_ty(idx)],
+                                      name="result_ptr_" + node.name)
                 data_ptr = builder.gep(data, [zero, zero, ctx.int32_ty(idx)],
                                        name="data_result_" + node.name)
                 builder.store(builder.load(out_ptr), data_ptr)

@@ -1105,7 +1105,7 @@ from psyneulink.core.globals.keywords import \
     PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.scheduling.condition import Condition
+from psyneulink.core.scheduling.condition import Condition, TimeScale
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.utilities import \
@@ -2947,27 +2947,38 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, *, tags:frozenset):
         fun = ctx.import_llvm_function(function, tags=tags)
-        fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
         fun_out = builder.alloca(fun.args[3].type.pointee)
 
-        builder.call(fun, [params, state, fun_in, fun_out])
+        builder.call(fun, [params, state, variable, fun_out])
 
         return fun_out, builder
 
-    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state):
         return pnlvm.ir.IntType(1)(1)
 
-    def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_mechanism_functions(self, ctx, builder, params, state, arg_in,
+                                      ip_output, *, tags:frozenset):
+
+        # Default mechanism runs only the main function
+        f_params_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
+        f_params, builder = self._gen_llvm_param_ports_for_obj(
+                self.function, f_params_ptr, ctx, builder, params, state, arg_in)
+        f_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
+
+        return self._gen_llvm_invoke_function(ctx, builder, self.function,
+                                              f_params, f_state, ip_output,
+                                              tags=tags)
+
+    def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in,
+                                    arg_out, *, tags:frozenset):
 
         ip_output, builder = self._gen_llvm_input_ports(ctx, builder,
                                                         params, state, arg_in)
 
-        f_params_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
-        f_params, builder = self._gen_llvm_param_ports_for_obj(
-                self.function, f_params_ptr, ctx, builder, params, state, arg_in)
-
-        f_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
-        value, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, f_params, f_state, ip_output, tags=tags)
+        value, builder = self._gen_llvm_mechanism_functions(ctx, builder, params,
+                                                            state, arg_in,
+                                                            ip_output,
+                                                            tags=tags)
 
         # Update execution counter
         exec_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "execution_count")
@@ -2975,13 +2986,28 @@ class Mechanism_Base(Mechanism):
         exec_count = builder.fadd(exec_count, exec_count.type(1))
         builder.store(exec_count, exec_count_ptr)
 
-        builder = self._gen_llvm_output_ports(ctx, builder, value, params, state, arg_in, arg_out)
-        is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder, params,
-                                                           state, value)
-        return builder, is_finished_cond
+        # Update internal clock (i.e. num_executions parameter)
+        num_executions_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "num_executions")
+        for scale in [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN]:
+            num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(scale.value)])
+            new_val = builder.load(num_exec_time_ptr)
+            new_val = builder.add(new_val, ctx.int32_ty(1))
+            builder.store(new_val, num_exec_time_ptr)
 
-    def _gen_llvm_function_input_parse(self, builder, ctx, func, func_in):
-        return func_in, builder
+        builder = self._gen_llvm_output_ports(ctx, builder, value, params, state, arg_in, arg_out)
+
+        val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "value")
+        if val_ptr.type.pointee == value.type.pointee:
+            pnlvm.helpers.push_state_val(builder, self, state, "value", value)
+        else:
+            # FIXME: Does this need some sort of parsing?
+            warnings.warn("Shape mismatch: function result does not match mechanism value: {}".format(value.type.pointee, val_ptr.type.pointee))
+
+        # is_finished should be checked after output ports ran
+        is_finished_f = ctx.import_llvm_function(self, tags=tags.union({"is_finished"}))
+        is_finished_cond = builder.call(is_finished_f, [params, state, arg_in,
+                                                        arg_out])
+        return builder, is_finished_cond
 
     def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reset" in tags
@@ -2994,6 +3020,25 @@ class Mechanism_Base(Mechanism):
                                    reinit_out])
 
         return builder
+
+    def _gen_llvm_function(self, *, extra_args=[], ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
+        if "is_finished" not in tags:
+            return super()._gen_llvm_function(extra_args=extra_args, ctx=ctx,
+                                              tags=tags)
+
+        # Keep all 4 standard arguments to ease invocation
+        args = [ctx.get_param_struct_type(self).as_pointer(),
+                ctx.get_state_struct_type(self).as_pointer(),
+                ctx.get_input_struct_type(self).as_pointer(),
+                ctx.get_output_struct_type(self).as_pointer()]
+
+        builder = ctx.create_llvm_function(args, self,
+                                           return_type=pnlvm.ir.IntType(1),
+                                           tags=tags)
+        params, state = builder.function.args[:2]
+        finished = self._gen_llvm_is_finished_cond(ctx, builder, params, state)
+        builder.ret(finished)
+        return builder.function
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reset" not in tags

@@ -1554,14 +1554,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             current_input[maxCapIndices] = np.max(clip)
         return current_input
 
-    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
-        prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "value")
-
-        # preserve the old prev value
-        prev_val = builder.load(prev_val_ptr)
-        # Update previous value to make sure that repeated executions work
-        builder.store(builder.load(current), prev_val_ptr)
-
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state):
+        current = pnlvm.helpers.get_state_ptr(builder, self, state, "value")
         threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                     "termination_threshold")
         if isinstance(threshold_ptr.type.pointee, pnlvm.ir.LiteralStructType):
@@ -1593,7 +1587,11 @@ class TransferMechanism(ProcessingMechanism_Base):
                 cond = b.fcmp_ordered(">=", test_val, max_val)
                 max_val = b.select(cond, test_val, max_val)
                 b.store(max_val, cmp_val_ptr)
+
         elif isinstance(self.termination_measure, Function):
+            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "value", 1)
+            prev_val = builder.load(prev_val_ptr)
+
             expected = np.empty_like([self.defaults.value[0], self.defaults.value[0]])
             got = np.empty_like(self.termination_measure.defaults.variable)
             if expected.shape != got.shape:
@@ -1628,8 +1626,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         cmp_str = self.parameters.termination_comparison_op.get(None)
         return builder.fcmp_ordered(cmp_str, cmp_val, threshold)
 
-    def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        ip_out, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
+    def _gen_llvm_mechanism_functions(self, ctx, builder, params, state, arg_in,
+                                      ip_out, *, tags:frozenset):
 
         if self.integrator_mode:
             if_state = pnlvm.helpers.get_state_ptr(builder, self, state,
@@ -1652,9 +1650,13 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, mf_in, tags=tags)
 
-        # FIXME: Convert to runtime instead of compile time
-        clip = self.parameters.clip.get()
-        if clip is not None:
+        clip_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "clip")
+        if len(clip_ptr.type.pointee) != 0:
+            assert len(clip_ptr.type.pointee) == 2
+            clip_lo = builder.load(builder.gep(clip_ptr, [ctx.int32_ty(0),
+                                                          ctx.int32_ty(0)]))
+            clip_hi = builder.load(builder.gep(clip_ptr, [ctx.int32_ty(0),
+                                                          ctx.int32_ty(1)]))
             for i in range(mf_out.type.pointee.count):
                 mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 with pnlvm.helpers.array_ptr_loop(builder, mf_out_local, "clip") as (b1, index):
@@ -1662,28 +1664,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                     ptro = b1.gep(mf_out_local, [ctx.int32_ty(0), index])
 
                     val = b1.load(ptri)
-                    val = pnlvm.helpers.fclamp(b1, val, clip[0], clip[1])
+                    val = pnlvm.helpers.fclamp(b1, val, clip_lo, clip_hi)
                     b1.store(val, ptro)
 
-        # Update execution counter
-        exec_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "execution_count")
-        exec_count = builder.load(exec_count_ptr)
-        exec_count = builder.fadd(exec_count, exec_count.type(1))
-        builder.store(exec_count, exec_count_ptr)
-
-        # Update internal clock (i.e. num_executions parameter)
-        num_executions_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "num_executions")
-        for scale in [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN]:
-            num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(scale.value)])
-            new_val = builder.load(num_exec_time_ptr)
-            new_val = builder.add(new_val, ctx.int32_ty(1))
-            builder.store(new_val, num_exec_time_ptr)
-
-        builder = self._gen_llvm_output_ports(ctx, builder, mf_out, params, state, arg_in, arg_out)
-        is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder, params,
-                                                           state, mf_out)
-
-        return builder, is_finished_cond
+        return mf_out, builder
 
     def _execute(self,
         variable=None,
@@ -1806,6 +1790,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                     assert False, f"PROGRAM ERROR: Unable to determine length of input for" \
                                   f" {repr(TERMINATION_MEASURE)} arg of {self.name}"
 
+        self.parameters.value.history_min_length = self._termination_measure_num_items_expected - 1
+
     def _report_mechanism_execution(self, input, params, output, context=None):
         """Override super to report previous_input rather than input, and selected params
         """
@@ -1840,11 +1826,9 @@ class TransferMechanism(ProcessingMechanism_Base):
             # return True
             return self.parameters.is_finished_flag._get(context)
 
+        assert self.parameters.value.history_min_length + 1 >= self._termination_measure_num_items_expected, "History of 'value' is not guaranteed enough entries for termination_mesasure"
         measure = self.termination_measure
-        # comparator = self.parameters.termination_comparison_op._get(context)
-        comparator = comparison_operators[self.parameters.termination_comparison_op._get(context)]
         value = self.parameters.value._get(context)
-        previous_value = self.parameters.value.get_previous(context)
 
         if self._termination_measure_num_items_expected==0:
             status = self.parameters.num_executions._get(context)._get_by_time_scale(self.termination_measure)
@@ -1853,10 +1837,13 @@ class TransferMechanism(ProcessingMechanism_Base):
             # Squeeze to collapse 2d array with single item
             status = measure(np.squeeze(value))
         else:
+            previous_value = self.parameters.value.get_previous(context)
             status = measure([value, previous_value])
 
         self.parameters.termination_measure_value._set(status, context=context, override=True)
 
+        # comparator = self.parameters.termination_comparison_op._get(context)
+        comparator = comparison_operators[self.parameters.termination_comparison_op._get(context)]
         # if any(comparison_operators[comparator](np.atleast_1d(status), threshold)):
         if comparator(np.atleast_1d(status), threshold).any():
             logger.info(f'{type(self).__name__} {self.name} has reached threshold ({threshold})')
