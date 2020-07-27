@@ -969,8 +969,7 @@ class Distance(ObjectiveFunction):
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
         assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
-        # FIXME python version also ignores other vectors
-        assert arg_in.type.pointee.count >= 2
+        assert arg_in.type.pointee.count == 2
 
         v1 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
         v2 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(0)])
