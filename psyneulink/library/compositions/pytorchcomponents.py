@@ -195,7 +195,7 @@ class PytorchMechanismWrapper(PytorchWrapper):
     def __repr__(self):
         return "PytorchWrapper for: " +self._mechanism.__repr__()
 
-class PytorchLSTMMechanismWrapper(PytorchMechanismWrapper):
+class PytorchLSTMMechanismWrapper(PytorchMechanismWrapper): #lgtm [py/missing-call-to-init]
     """
     An interpretation of a LSTM mechanism as an equivalent pytorch object
     """
