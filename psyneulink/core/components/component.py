@@ -506,6 +506,7 @@ from psyneulink.core.globals.keywords import \
     RESET_STATEFUL_FUNCTION_WHEN, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.scheduling.time import Time, TimeScale
+from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.parameters import \
     Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
@@ -1297,7 +1298,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict",
-                     "modulated_mechanisms", "search_space", "grid",
+                     "modulated_mechanisms", "grid",
                      "activation_derivative_fct", "input_specification",
                      # Shape mismatch
                      "costs", "auto", "hetero",
@@ -1314,7 +1315,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 #FIXME: this should use defaults
                 val = p.get()
                 # Check if the value type is valid for compilation
-                return not isinstance(val, (str, dict, ComponentsMeta,
+                return not isinstance(val, (str, ComponentsMeta,
                                             ContentAddressableList, type(max),
                                             type(_is_compilation_param),
                                             type(self._get_compilation_params)))
@@ -1369,6 +1370,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         def _convert(x):
             if isinstance(x, Enum):
                 return x.value
+            elif isinstance(x, SampleIterator):
+                if isinstance(x.generator, list):
+                    return (float(v) for v in x.generator)
+                else:
+                    return (float(x.start), float(x.step), int(x.num))
             try:
                 return (_convert(i) for i in x)
             except TypeError:
