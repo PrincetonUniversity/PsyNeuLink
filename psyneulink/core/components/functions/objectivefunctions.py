@@ -1111,10 +1111,10 @@ class Distance(ObjectiveFunction):
             if self.metric == ENERGY:
                 norm_factor = norm_factor ** 2
             ret = builder.fdiv(ret, ctx.float_ty(norm_factor), name="normalized")
-        # Get rid of nesting
-        # TODO: fix this properly
-        while arg_out.type.pointee != ret.type:
-            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        if arg_out.type.pointee != ret.type:
+            # Some instance use 2d output values
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0),
+                                            ctx.int32_ty(0)])
         builder.store(ret, arg_out)
 
         return builder
