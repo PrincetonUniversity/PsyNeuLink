@@ -2797,6 +2797,9 @@ class Mechanism_Base(Mechanism):
         # Avoid recreating combined list in every iteration
         # FIXME: This should be converted to more standard memoization approach
         all_ports = self.ports
+        ports_param = pnlvm.helpers.get_param_ptr(builder, self, mech_params, "ports")
+        ports_state = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "ports")
+
         mod_afferents = self.mod_afferents
         for i, port in enumerate(ports):
             p_function = ctx.import_llvm_function(port)
@@ -2821,10 +2824,8 @@ class Mechanism_Base(Mechanism):
                 builder.store(afferent_val, mod_out_ptr)
 
             port_idx = all_ports.index(port)
-            ports_param = pnlvm.helpers.get_param_ptr(builder, self, mech_params, "ports")
             p_params = builder.gep(ports_param, [ctx.int32_ty(0),
                                                  ctx.int32_ty(port_idx)])
-            ports_state = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "ports")
             p_state = builder.gep(ports_state, [ctx.int32_ty(0),
                                                 ctx.int32_ty(port_idx)])
 
