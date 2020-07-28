@@ -1377,6 +1377,8 @@ class GridSearch(OptimizationFunction):
             if all(type(x) == np.ndarray for x in variable) and not all(len(x) == len(variable[0]) for x in variable):
                 variable = tuple(variable)
 
+            warnings.warn("Shape mismatch: {} variable expected: {} vs. got: {}".format(self, variable, self.defaults.variable))
+
         else:
             variable = self.defaults.variable
 
