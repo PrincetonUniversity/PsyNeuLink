@@ -250,7 +250,7 @@ from psyneulink.core.globals.graph_pb2 import Entry, DoubleMatrix
 from psyneulink.core.globals.keywords import MULTIPLICATIVE
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
-from psyneulink.core.globals.log import DeliveryCondition, LogCondition, LogEntry, LogError
+from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
 from psyneulink.core.globals.utilities import call_with_pruned_args, copy_iterable_with_shared, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy
 
 __all__ = [
@@ -632,10 +632,10 @@ class Parameter(types.SimpleNamespace):
             :default: `OFF <LogCondition.OFF>`
 
         delivery_condition
-            the DeliveryCondition for which the parameter shoud be delivered.
+            the LogCondition for which the parameter shoud be delivered.
 
-            :type: `DeliveryCondition`
-            :default: `OFF <DeliveryCondition.OFF>`
+            :type: `LogCondition`
+            :default: `OFF <LogCondition.OFF>`
 
         history
             stores the history of the parameter (previous values). Also see `get_previous`.
@@ -742,7 +742,7 @@ class Parameter(types.SimpleNamespace):
         loggable=True,
         log=None,
         log_condition=LogCondition.OFF,
-        delivery_condition=DeliveryCondition.OFF,
+        delivery_condition=LogCondition.OFF,
         history=None,
         history_max_length=1,
         history_min_length=0,
@@ -1288,14 +1288,11 @@ class Parameter(types.SimpleNamespace):
         # if a context is attached and a pipeline is attached to the context
         if context and context.rpc_pipeline:
             # manual delivery
-            if context is not None and context.source is ContextFlags.COMMAND_LINE:
+            if context.source is ContextFlags.COMMAND_LINE:
                 try:
                     time = _get_time(self._owner._owner, context)
                 except (AttributeError, ContextError):
                     time = time_object(None, None, None, None)
-
-                # this branch only ran previously when context was ContextFlags.COMMAND_LINE
-                context_str = ContextFlags._get_context_string(ContextFlags.COMMAND_LINE)
                 delivery_condition_satisfied = True
 
             # standard logging
@@ -1307,7 +1304,6 @@ class Parameter(types.SimpleNamespace):
                     context = self._owner._owner.most_recent_context
 
                 time = _get_time(self._owner._owner, context)
-                context_str = ContextFlags._get_context_string(context.flags)
                 delivery_condition_satisfied = self.delivery_condition & context.flags
 
             if (
@@ -1329,7 +1325,7 @@ class Parameter(types.SimpleNamespace):
                         componentName=self._owner._owner.name,
                         parameterName=self.name,
                         time=f'{time.run}:{time.trial}:{time.pass_}:{time.time_step}',
-                        context=context.execution_id,
+                        context=execution_id,
                         value=DoubleMatrix(
                             rows=value.shape[0],
                             cols=value.shape[1],

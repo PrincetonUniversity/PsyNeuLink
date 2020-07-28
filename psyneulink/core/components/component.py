@@ -504,7 +504,7 @@ from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, OWNER, PARAMS, PREFS_ARG, \
     RESET_STATEFUL_FUNCTION_WHEN, VALUE, VARIABLE
-from psyneulink.core.globals.log import LogCondition, DeliveryCondition
+from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.parameters import \
@@ -3178,7 +3178,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """
         self.log.set_log_conditions(items=items, log_condition=log_condition)
 
-    def set_delivery_conditions(self, items, delivery_condition=DeliveryCondition.EXECUTION):
+    def set_delivery_conditions(self, items, delivery_condition=LogCondition.EXECUTION):
         """
         set_delivery_conditions(          \
             items                    \

@@ -400,7 +400,6 @@ __all__ = [
 
 
 LogEntry = namedtuple('LogEntry', 'time, context, value')
-DeliveryEntry = namedtuple('DeliveryEntry', 'time, context, value')
 
 class LogCondition(enum.IntFlag):
     """Used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
@@ -470,10 +469,6 @@ class LogCondition(enum.IntFlag):
             return LogCondition[string.upper()]
         except KeyError:
             raise LogError("\'{}\' is not a value of {}".format(string, LogCondition))
-
-# Alias LogCondition
-DeliveryCondition = LogCondition
-DeliveryCondition._get_delivery_condition_string = DeliveryCondition._get_log_condition_string
 
 TIME_NOT_SPECIFIED = 'Time Not Specified'
 EXECUTION_CONDITION_NAMES = {LogCondition.PROCESSING.name,
@@ -837,7 +832,7 @@ class Log:
                 assign_log_condition(item[0], item[1])
     
     def set_delivery_conditions(self, items, delivery_condition=LogCondition.EXECUTION):
-        """Specifies items to be delivered via gRPC under the specified `DeliveryCondition`\\(s).
+        """Specifies items to be delivered via gRPC under the specified `LogCondition`\\(s).
 
         Arguments
         ---------
@@ -849,10 +844,10 @@ class Log:
             * a reference to a Component;
             * tuple, the first item of which is one of the above, and the second a `ContextFlags` to use for the item.
 
-        delivery_condition : DeliveryCondition : default DeliveryCondition.EXECUTION
-            specifies `DeliveryCondition` to use as the default for items not specified in tuples (see above).
-            For convenience, the name of a DeliveryCondition can be used in place of its full specification
-            (e.g., *EXECUTION* instead of `DeliveryCondition.EXECUTION`).
+        delivery_condition : LogCondition : default LogCondition.EXECUTION
+            specifies `LogCondition` to use as the default for items not specified in tuples (see above).
+            For convenience, the name of a LogCondition can be used in place of its full specification
+            (e.g., *EXECUTION* instead of `LogCondition.EXECUTION`).
 
         params_set : list : default None
             list of parameters to include as loggable items;  these must be attributes of the `owner <Log.owner>`
@@ -868,10 +863,10 @@ class Log:
             # Handle multiple level assignments (as LogCondition or strings in a list)
             if not isinstance(level, list):
                 level = [level]
-            levels = DeliveryCondition.OFF
+            levels = LogCondition.OFF
             for l in level:
                 if isinstance(l, str):
-                    l = DeliveryCondition.from_string(l)
+                    l = LogCondition.from_string(l)
                 levels |= l
             level = levels
 
