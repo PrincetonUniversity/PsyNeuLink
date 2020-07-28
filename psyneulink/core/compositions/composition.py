@@ -2329,6 +2329,7 @@ Class Reference
 
 import collections
 import enum
+import functools
 import inspect
 import itertools
 import logging
@@ -2348,9 +2349,9 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.functions.interfacefunctions import InterfacePortMap
 from psyneulink.core.components.functions.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
+from psyneulink.core.components.functions.transferfunctions import Identity
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
@@ -4482,9 +4483,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # instantiate the output port on the input CIM to correspond to the node's input port
                     interface_output_port = OutputPort(owner=self.input_CIM,
-                                                       variable=OWNER_VALUE,
-                                                       function=InterfacePortMap(
-                                                            corresponding_input_port=interface_input_port),
+                                                       variable=(OWNER_VALUE, functools.partial(self.input_CIM.get_input_port_position, interface_input_port)),
+                                                       function=Identity,
                                                        name=INPUT_CIM_NAME + "_" + node.name + "_" + input_port.name,
                                                        context=context)
 
@@ -4552,8 +4552,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # instantiate the output port on the output CIM to correspond to the node's output port
                     interface_output_port = OutputPort(
                             owner=self.output_CIM,
-                            variable=OWNER_VALUE,
-                            function=InterfacePortMap(corresponding_input_port=interface_input_port),
+                            variable=(OWNER_VALUE, functools.partial(self.output_CIM.get_input_port_position, interface_input_port)),
+                            function=Identity,
                             reference_value=output_port.defaults.value,
                             name=OUTPUT_CIM_NAME + "_" + node.name + "_" + output_port.name,
                             context=context)
@@ -4620,10 +4620,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # control signal for parameter CIM that will project directly to inner Composition's parameter
                 control_signal = ControlSignal(
                         modulation=modulation,
-                        variable=OWNER_VALUE,
-                        transfer_function=InterfacePortMap(
-                                corresponding_input_port=interface_input_port
-                        ),
+                        variable=(OWNER_VALUE, functools.partial(self.parameter_CIM.get_input_port_position, interface_input_port)),
+                        transfer_function=Identity,
                         modulates=receiver,
                         name = PARAMETER_CIM_NAME + "_"  + owner.name + "_" + receiver.name,
                 )
@@ -4859,10 +4857,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # control signal for parameter CIM that will project directly to inner Composition's parameter
         control_signal = ControlSignal(
             modulation=modulation,
-            variable=OWNER_VALUE,
-            transfer_function=InterfacePortMap(
-                corresponding_input_port=interface_input_port
-            ),
+            variable=(OWNER_VALUE, functools.partial(graph_receiver.parameter_CIM.get_input_port_position, interface_input_port)),
+            transfer_function=Identity,
             modulates=receiver,
             name=PARAMETER_CIM_NAME + "_" + receiver.owner.name + "_" + receiver.name,
         )

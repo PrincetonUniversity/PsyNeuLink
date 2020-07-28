@@ -2909,8 +2909,10 @@ class Mechanism_Base(Mechanism):
             if port_spec == OWNER_VALUE:
                 return value
             elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
-                assert port_spec[1] < len(value.type.pointee)
-                return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(port_spec[1])])
+                index = port_spec[1]() if callable(port_spec[1]) else port_spec[1]
+
+                assert index < len(value.type.pointee)
+                return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(index)])
             elif port_spec == OWNER_EXECUTION_COUNT:
                 execution_count = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "execution_count")
                 return execution_count
@@ -3542,7 +3544,7 @@ class Mechanism_Base(Mechanism):
 
     @tc.typecheck
     @handle_external_context()
-    def add_ports(self, ports, context=None):
+    def add_ports(self, ports, update_variable=True, context=None):
         """
         add_ports(ports)
 
@@ -3622,7 +3624,8 @@ class Mechanism_Base(Mechanism):
         if output_ports:
             instantiated_output_ports = _instantiate_output_ports(self, output_ports, context=context)
 
-        self.defaults.variable = self.input_values
+        if update_variable:
+            self._update_default_variable(self.input_values, context)
 
         return {INPUT_PORTS: instantiated_input_ports,
                 OUTPUT_PORTS: instantiated_output_ports}

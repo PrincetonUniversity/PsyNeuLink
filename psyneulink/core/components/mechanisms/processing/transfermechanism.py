@@ -1849,3 +1849,11 @@ class TransferMechanism(ProcessingMechanism_Base):
             logger.info(f'{type(self).__name__} {self.name} has reached threshold ({threshold})')
             return True
         return False
+
+    @handle_external_context()
+    def _update_default_variable(self, new_default_variable, context=None):
+        if not self.parameters.initial_value._user_specified:
+            self.defaults.initial_value = copy.deepcopy(new_default_variable)
+            self.parameters.initial_value._set(copy.deepcopy(new_default_variable), context)
+
+        super()._update_default_variable(new_default_variable, context=context)
