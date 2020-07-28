@@ -1248,6 +1248,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "execution_count", "value"}
         # mechanism functions are handled separately
         blacklist = {"function"} if hasattr(self, 'ports') else {"value"}
+        # 'objective_mechanism' parameter is just for reference
+        blacklist.add("objective_mechanism")
         def _is_compilation_state(p):
             val = p.get()   # memoize for this function
             return val is not None and p.name not in blacklist and \
@@ -1311,6 +1313,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # * integration rate -- shape mismatch with param port input
         if hasattr(self, 'ports'):
             blacklist.update(["function", "matrix", "integration_rate"])
+        # 'objective_mechanism' parameter is just for reference
+        blacklist.add("objective_mechanism")
         def _is_compilation_param(p):
             if p.name not in blacklist and not isinstance(p, ParameterAlias):
                 #FIXME: this should use defaults
