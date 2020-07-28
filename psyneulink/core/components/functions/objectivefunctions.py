@@ -1149,15 +1149,15 @@ class Distance(ObjectiveFunction):
 
         # Maximum of Hadamard (elementwise) difference of v1 and v2
         if self.metric == MAX_ABS_DIFF:
-            result = np.max(abs(v1 - v2))
+            result = np.max(np.fabs(v1 - v2))
 
         # Simple Hadamard (elementwise) difference of v1 and v2
         elif self.metric == DIFFERENCE:
-            result = np.sum(np.abs(v1 - v2))
+            result = np.sum(np.fabs(v1 - v2))
 
         # Similarity (used specifically for testing Compilation of Predator-Prey Model)
         elif self.metric == NORMED_L0_SIMILARITY:
-            result = 1 - np.sum(np.abs(v1 - v2)) / 4
+            result = 1.0 - np.sum(np.abs(v1 - v2)) / 4.0
 
         # Euclidean distance between v1 and v2
         elif self.metric == EUCLIDEAN:
@@ -1166,13 +1166,13 @@ class Distance(ObjectiveFunction):
         # Cosine similarity of v1 and v2
         elif self.metric == COSINE:
             # result = np.correlate(v1, v2)
-            result = 1 - np.abs(Distance.cosine(v1, v2))
+            result = 1.0 - np.fabs(Distance.cosine(v1, v2))
             return self.convert_output_type(result)
 
         # Correlation of v1 and v2
         elif self.metric == CORRELATION:
             # result = np.correlate(v1, v2)
-            result = 1 - np.abs(Distance.correlation(v1, v2))
+            result = 1.0 - np.fabs(Distance.correlation(v1, v2))
             return self.convert_output_type(result)
 
         # Cross-entropy of v1 and v2
@@ -1184,18 +1184,18 @@ class Distance(ObjectiveFunction):
             # MODIFIED CW 3/20/18: avoid divide by zero error by plugging in two zeros
             # FIX: unsure about desired behavior when v2 = 0 and v1 != 0
             # JDC: returns [inf]; leave, and let it generate a warning or error message for user
-            result = -np.sum(np.where(np.logical_and(v1 == 0, v2 == 0), 0, v1 * np.log(v2)))
+            result = -np.sum(np.where(np.logical_and(v1 == 0, v2 == 0), 0.0, v1 * np.log(v2)))
 
         # Energy
         elif self.metric == ENERGY:
-            result = -np.sum(v1 * v2) / 2
+            result = -np.sum(v1 * v2) / 2.0
 
         else:
             assert False, '{} not a recognized metric in {}'.format(self.metric, self.__class__.__name__)
 
         if self.normalize and self.metric not in {MAX_ABS_DIFF, CORRELATION}:
             if self.metric == ENERGY:
-                result /= len(v1) ** 2
+                result /= len(v1) ** 2.0
             else:
                 result /= len(v1)
 
