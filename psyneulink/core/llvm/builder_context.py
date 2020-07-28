@@ -21,6 +21,7 @@ from typing import Set
 import weakref
 from psyneulink.core.scheduling.time import Time
 from psyneulink.core.globals.sampleiterator import SampleIterator
+from psyneulink.core.globals.utilities import ContentAddressableList
 from psyneulink.core import llvm as pnlvm
 from . import codegen
 from .debug import debug_env
@@ -258,7 +259,9 @@ class LLVMBuilderContext:
             if hasattr(val, "_get_compilation_params") or \
                hasattr(val, "_get_param_struct_type"):
                 return self.get_param_struct_type(val)
-            if p.name == 'matrix':   # Flatten matrix
+            if isinstance(val, ContentAddressableList):
+                return ir.LiteralStructType(self.get_param_struct_type(x) for x in val)
+            elif p.name == 'matrix':   # Flatten matrix
                 val = np.asfarray(val).flatten()
             elif np.isscalar(val) and component._is_param_modulated(p):
                 val = [val]   # modulation adds array wrap
@@ -278,6 +281,8 @@ class LLVMBuilderContext:
             if hasattr(val, "_get_compilation_state") or \
                hasattr(val, "_get_state_struct_type"):
                 return self.get_state_struct_type(val)
+            if isinstance(val, ContentAddressableList):
+                return ir.LiteralStructType(self.get_state_struct_type(x) for x in val)
             struct = self.convert_python_struct_to_llvm_ir(val)
             return ir.ArrayType(struct, p.history_min_length + 1)
 

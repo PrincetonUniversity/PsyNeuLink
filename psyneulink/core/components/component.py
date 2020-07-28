@@ -1245,7 +1245,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         whitelist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
                      "num_executions_before_finished", "num_executions",
-                     "execution_count", "value"}
+                     "execution_count", "value", "input_ports", "output_ports"}
         blacklist = set() if hasattr(self, 'ports') else {"value"}
         # 'objective_mechanism' parameter is just for reference
         blacklist.add("objective_mechanism")
@@ -1279,6 +1279,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 val = tuple(getattr(x, Time._time_scale_attr_map[t]) for t in TimeScale)
             elif isinstance(x, Component):
                 return x._get_state_initializer(context)
+            elif isinstance(x, ContentAddressableList):
+                return tuple(p._get_state_initializer(context) for p in x)
             else:
                 val = pnlvm._tupleize(x)
 
@@ -1318,7 +1320,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 val = p.get()
                 # Check if the value type is valid for compilation
                 return not isinstance(val, (str, ComponentsMeta,
-                                            ContentAddressableList, type(max),
+                                            type(max),
                                             type(_is_compilation_param),
                                             type(self._get_compilation_params)))
             return False
