@@ -298,8 +298,11 @@ class LLVMBuilderContext:
             # FIXME: Consider enums of non-int type
             assert all(round(x.value) == x.value for x in type(t))
             return self.int32_ty
-        elif isinstance(t, (int, float, np.number)):
+        elif isinstance(t, (int, float, np.floating)):
             return self.float_ty
+        elif isinstance(t, np.integer):
+            # Python 'int' is handled above as it is the default type for '0'
+            return ir.IntType(t.nbytes * 8)
         elif isinstance(t, np.ndarray):
             return self.convert_python_struct_to_llvm_ir(t.tolist())
         elif isinstance(t, np.random.RandomState):
