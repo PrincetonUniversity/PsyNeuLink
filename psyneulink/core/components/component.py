@@ -480,6 +480,7 @@ COMMENT
 import base64
 import copy
 import dill
+import functools
 import inspect
 import logging
 import numbers
@@ -1882,7 +1883,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             Process_Base,
             Composition_Base,
             ComponentsMeta,
-            types.MethodType
+            types.MethodType,
+            functools.partial,
         )
         alias_names = {p.name for p in self.class_parameters if isinstance(p, ParameterAlias)}
 

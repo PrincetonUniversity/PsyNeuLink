@@ -150,7 +150,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
 
     @handle_external_context()
     def add_ports(self, ports, context=None):
-        ports = super(CompositionInterfaceMechanism, self).add_ports(ports, context)
+        ports = super(CompositionInterfaceMechanism, self).add_ports(ports, context=context)
         if context.source == ContextFlags.COMMAND_LINE:
             warnings.warn(
                 'You are attempting to add custom ports to a CIM, which can result in unpredictable behavior and '
