@@ -1360,34 +1360,34 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         return False
 
-    def _get_param_values(self, context=None):
-        def _get_values(p):
-            param = p.get(context)
-            # Modulated parameters change shape to array
-            if np.isscalar(param) and self._is_param_modulated(p):
-                param = [param]
-            elif p.name == 'matrix': # Flatten matrix
-                param = np.asfarray(param).flatten().tolist()
-            elif isinstance(param, Component):
-                param = param._get_param_values(context)
-            return param
-
-        return tuple(map(_get_values, self._get_compilation_params()))
-
     def _get_param_initializer(self, context):
         def _convert(x):
             if isinstance(x, Enum):
                 return x.value
             elif isinstance(x, SampleIterator):
                 if isinstance(x.generator, list):
-                    return (float(v) for v in x.generator)
+                    return tuple(v for v in x.generator)
                 else:
-                    return (float(x.start), float(x.step), int(x.num))
-            try:
-                return (_convert(i) for i in x)
+                    return (x.start, x.step, x.num)
+            elif isinstance(x, Component):
+                return x._get_param_initializer(context)
+
+            try:   # This can't use tupleize and needs to recurse to handle
+                   # 'search_space' list of SampleIterators
+                return tuple(_convert(i) for i in x)
             except TypeError:
-                return x
-        return pnlvm._tupleize(_convert(self._get_param_values(context)))
+                return x if x is not None else tuple()
+
+        def _get_values(p):
+            param = p.get(context)
+            # Modulated parameters change shape to array
+            if np.isscalar(param) and self._is_param_modulated(p):
+                return (param,)
+            elif p.name == 'matrix': # Flatten matrix
+                return tuple(np.asfarray(param).flatten())
+            return _convert(param)
+
+        return tuple(map(_get_values, self._get_compilation_params()))
 
     def _gen_llvm_function_reset(self, ctx, builder, *_, tags):
         assert "reset" in tags
