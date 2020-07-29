@@ -1338,29 +1338,33 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             setattr(self, "_param_ids", ids)
         return ids
 
+    def _is_param_modulated(self, p):
+        try:
+            if p.name in self.owner.parameter_ports:
+                return True
+        except AttributeError:
+            pass
+        try:
+            if p.name in self.parameter_ports:
+                return True
+        except AttributeError:
+            pass
+        try:
+            modulated_params = (
+                getattr(self.parameters, p.sender.modulation).source
+                for p in self.owner.mod_afferents)
+            if p in modulated_params:
+                return True
+        except AttributeError:
+            pass
+
+        return False
+
     def _get_param_values(self, context=None):
         def _get_values(p):
             param = p.get(context)
-            is_modulated = False
-            try:
-                is_modulated = is_modulated or p.name in self.owner.parameter_ports
-            except AttributeError:
-                pass
-            if not is_modulated:
-                try:
-                    is_modulated = is_modulated or p.name in self.parameter_ports
-                except AttributeError:
-                    pass
-            if not is_modulated:
-                try:
-                    modulated_params = (
-                        getattr(self.parameters, p.sender.modulation).source
-                        for p in self.owner.mod_afferents)
-                    is_modulated = is_modulated or p in modulated_params
-                except AttributeError:
-                    pass
             # Modulated parameters change shape to array
-            if is_modulated and np.isscalar(param):
+            if np.isscalar(param) and self._is_param_modulated(p):
                 param = [param]
             elif p.name == 'matrix': # Flatten matrix
                 param = np.asfarray(param).flatten().tolist()
