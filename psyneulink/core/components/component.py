@@ -1270,27 +1270,22 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             setattr(self, "_state_ids", ids)
         return ids
 
-    def _get_state_values(self, context=None):
-        def _state_values(p):
-            val = p.get(context)
-            if isinstance(val, Component):
-                return val._get_state_values(context)
-            return [val for i in range(p.history_min_length + 1)]
-
-        return tuple(map(_state_values, self._get_compilation_state()))
-
     def _get_state_initializer(self, context):
-        def _convert(x):
+        def _convert(p):
+            x = p.get(context)
             if isinstance(x, np.random.RandomState):
                 # Skip first element of random state (id string)
-                return x.get_state()[1:]
+                val = pnlvm._tupleize(x.get_state()[1:])
             elif isinstance(x, Time):
-                return (getattr(x, Time._time_scale_attr_map[t]) for t in TimeScale)
-            try:
-                return (_convert(i) for i in x)
-            except TypeError:
-                return x
-        return pnlvm._tupleize(_convert(self._get_state_values(context)))
+                val = tuple(getattr(x, Time._time_scale_attr_map[t]) for t in TimeScale)
+            elif isinstance(x, Component):
+                return x._get_state_initializer(context)
+            else:
+                val = pnlvm._tupleize(x)
+
+            return tuple(val for _ in range(p.history_min_length + 1))
+
+        return tuple(map(_convert, self._get_compilation_state()))
 
     def _get_compilation_params(self):
         # FIXME: MAGIC LIST, detect used parameters automatically
