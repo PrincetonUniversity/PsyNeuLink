@@ -2743,31 +2743,27 @@ class Mechanism_Base(Mechanism):
         return port_param_dicts
 
     def _get_param_ids(self):
-        #FIXME: ports and function should be part of generated params
-        return ["ports", "function"] + super()._get_param_ids()
+        # FIXME: ports should be part of generated params
+        return ["ports"] + super()._get_param_ids()
 
     def _get_param_struct_type(self, ctx):
         ports_params = (ctx.get_param_struct_type(s) for s in self.ports)
         ports_param_struct = pnlvm.ir.LiteralStructType(ports_params)
-        function_param_struct = ctx.get_param_struct_type(self.function)
         mech_param_struct = ctx.get_param_struct_type(super())
 
         return pnlvm.ir.LiteralStructType((ports_param_struct,
-                                           function_param_struct,
                                            *mech_param_struct))
 
     def _get_state_ids(self):
-        #FIXME: ports and function should be part of generated state
-        return ["ports", "function"] + super()._get_state_ids()
+        # FIXME: ports should be part of generated state
+        return ["ports"] + super()._get_state_ids()
 
     def _get_state_struct_type(self, ctx):
         ports_state = (ctx.get_state_struct_type(s) for s in self.ports)
         ports_state_struct = pnlvm.ir.LiteralStructType(ports_state)
-        function_state_struct = ctx.get_state_struct_type(self.function)
         mech_state_struct = ctx.get_state_struct_type(super())
 
         return pnlvm.ir.LiteralStructType((ports_state_struct,
-                                           function_state_struct,
                                            *mech_state_struct))
 
     def _get_output_struct_type(self, ctx):
@@ -2785,17 +2781,15 @@ class Mechanism_Base(Mechanism):
 
     def _get_param_initializer(self, context):
         port_param_init = tuple(s._get_param_initializer(context) for s in self.ports)
-        function_param_init = self.function._get_param_initializer(context)
         mech_param_init = super()._get_param_initializer(context)
 
-        return (port_param_init, function_param_init, *mech_param_init)
+        return (port_param_init, *mech_param_init)
 
     def _get_state_initializer(self, context):
         port_state_init = tuple(s._get_state_initializer(context) for s in self.ports)
-        function_state_init = self.function._get_state_initializer(context)
         mech_state_init = super()._get_state_initializer(context)
 
-        return (port_state_init, function_state_init, *mech_state_init)
+        return (port_state_init, *mech_state_init)
 
     def _gen_llvm_ports(self, ctx, builder, ports,
                         get_output_ptr, fill_input_data,

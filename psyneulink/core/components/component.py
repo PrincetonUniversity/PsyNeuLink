@@ -1246,8 +1246,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "previous_w", "random_state", "is_finished_flag",
                      "num_executions_before_finished", "num_executions",
                      "execution_count", "value"}
-        # mechanism functions are handled separately
-        blacklist = {"function"} if hasattr(self, 'ports') else {"value"}
+        blacklist = set() if hasattr(self, 'ports') else {"value"}
         # 'objective_mechanism' parameter is just for reference
         blacklist.add("objective_mechanism")
         # 'agent_rep'is for reference to enclosing composition
@@ -1305,11 +1304,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      # autodiff specific types
                      "pytorch_representation", "optimizer"}
         # Mechanism's need few extra entires:
-        # * function -- might overload _get_{param,state}_struct_type
         # * matrix -- is never used directly, and is flatened below
         # * integration rate -- shape mismatch with param port input
         if hasattr(self, 'ports'):
-            blacklist.update(["function", "matrix", "integration_rate"])
+            blacklist.update(["matrix", "integration_rate"])
         # 'objective_mechanism' parameter is just for reference
         blacklist.add("objective_mechanism")
         # 'agent_rep'is for reference to enclosing composition
