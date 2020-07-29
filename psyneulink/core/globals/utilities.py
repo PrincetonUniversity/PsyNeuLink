@@ -1111,6 +1111,8 @@ class ContentAddressableList(UserList):
 
     """
 
+    legal_key_type_strings = ['int', 'str', 'Port']
+
     def __init__(self, component_type, key=None, list=None, name=None, **kwargs):
         self.component_type = component_type
         self.key = key or 'name'
@@ -1154,7 +1156,6 @@ class ContentAddressableList(UserList):
                                 format(key, self.name))
             return self.data[key_num]
 
-
     def __setitem__(self, key, value):
         # For efficiency, first assume the key is numeric (duck typing in action!)
         try:
@@ -1166,7 +1167,7 @@ class ContentAddressableList(UserList):
                 raise UtilitiesError("Non-numeric key used for {} ({}) must be "
                                      "a string)".format(self.name, key))
             # The specified string must also match the value of the attribute of the class used for addressing
-            if not key == value.name:
+            if not key.startswith(value.name):
             # if not key == type(value).__name__:
                 raise UtilitiesError("The key of the entry for {} {} ({}) "
                                      "must match the value of its {} attribute "
@@ -1201,9 +1202,13 @@ class ContentAddressableList(UserList):
         elif isinstance(key, self.component_type):
             return self.data.index(key)
         else:
-            raise UtilitiesError("{} is not a legal key for {} (must be "
-                                 "number, string or Port)".format(key,
-                                                                   self.key))
+            raise UtilitiesError(
+                "{} is not a legal key for {} (must be {})".format(
+                    key,
+                    self.key,
+                    gen_friendly_comma_str(self.legal_key_type_strings)
+                )
+            )
 
     def __delitem__(self, key):
         if key is None:
@@ -1753,3 +1758,24 @@ def merge_dictionaries(a: dict, b: dict) -> typing.Tuple[dict, bool]:
     new_dict.update({k: create_union_set(a[k], b[k]) for k in shared_keys})
 
     return new_dict, len(new_dict) < (len(a) + len(b))
+
+
+def gen_friendly_comma_str(items):
+    """
+        Returns:
+            a proper English comma-separated string of each item in
+            **items**
+    """
+    if isinstance(items, str) or not is_iterable(items):
+        return str(items)
+
+    items = [str(x) for x in items]
+
+    if len(items) < 2:
+        return ''.join(items)
+    else:
+        divider = ' or '
+        if len(items) > 2:
+            divider = f',{divider}'
+
+        return f"{', '.join(items[:-1])}{divider}{items[-1]}"

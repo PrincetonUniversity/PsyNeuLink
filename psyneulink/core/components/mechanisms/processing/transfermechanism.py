@@ -636,7 +636,7 @@ from psyneulink.core.globals.keywords import \
     INITIALIZER, INSTANTANEOUS_MODE_VALUE, LESS_THAN_OR_EQUAL, MAX_ABS_DIFF, \
     NAME, NOISE, NUM_EXECUTIONS_BEFORE_FINISHED, OWNER_VALUE, RATE, RESET, RESULT, RESULTS, \
     SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, FunctionParameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
@@ -1053,14 +1053,25 @@ class TransferMechanism(ProcessingMechanism_Base):
                     :type:
         """
         integrator_mode = Parameter(False, setter=_integrator_mode_setter)
-        integration_rate = Parameter(0.5, modulable=True)
+        integration_rate = FunctionParameter(
+            0.5,
+            function_name='integrator_function',
+            function_parameter_name='rate'
+        )
+        # TODO: replace initial_value with this FunctionParameter
+        # it's complicated.
+        # initial_value = FunctionParameter(
+        #     None,
+        #     function_name='integrator_function',
+        #     function_parameter_name='initializer'
+        # )
         initial_value = None
         integrator_function = Parameter(AdaptiveIntegrator, stateful=False, loggable=False)
         integrator_function_value = Parameter([[0]], read_only=True)
         has_integrated = Parameter(False, user=False)
         on_resume_integrator_mode = Parameter(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)
         clip = None
-        noise = Parameter(0.0, modulable=True)
+        noise = FunctionParameter(0.0, function_name='integrator_function')
         termination_measure = Parameter(
             Distance(metric=MAX_ABS_DIFF),
             modulable=False,
@@ -1237,7 +1248,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             noise = target_set[NOISE]
             # If assigned as a Function, set TransferMechanism as its owner, and assign its actual function to noise
             if isinstance(noise, DistributionFunction):
-                noise.owner = self
                 target_set[NOISE] = noise.execute
             self._validate_noise(target_set[NOISE])
 
@@ -1517,7 +1527,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _get_integrated_function_input(self, function_variable, initial_value, noise, context, **kwargs):
 
-        integration_rate = self._get_current_mechanism_param(INTEGRATION_RATE, context)
+        integration_rate = self._get_current_parameter_value(self.parameters.integration_rate, context)
 
         if (
             self.initialization_status == ContextFlags.INITIALIZING
@@ -1742,12 +1752,12 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
         integrator_mode = self.parameters.integrator_mode._get(context)
-        noise = self._get_current_mechanism_param(NOISE, context)
+        noise = self._get_current_parameter_value(self.parameters.noise, context)
 
         # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
         # Update according to time-scale of integration
         if integrator_mode:
-            initial_value = self._get_current_mechanism_param(INITIAL_VALUE, context)
+            initial_value = self._get_current_parameter_value(self.parameters.initial_value, context)
 
             value = self._get_integrated_function_input(variable,
                                                         initial_value,

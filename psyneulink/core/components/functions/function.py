@@ -618,17 +618,16 @@ class Function_Base(Function):
                                 f"the {param_name} argument of {self.__class__.__name__}{owner_name}.")
 
     def _get_current_function_param(self, param_name, context=None):
-        if param_name == "variable":
-            raise FunctionError(f"The method '_get_current_function_param' is intended for retrieving "
-                                f"the current value of a function parameter. 'variable' is not a function parameter. "
-                                f"If looking for {self.name}'s default variable, try {self.name}.defaults.variable.")
         try:
-            return self.owner._parameter_ports[param_name].parameters.value._get(context)
-        except (AttributeError, TypeError):
-            try:
-                return getattr(self.parameters, param_name)._get(context)
-            except AttributeError:
-                raise FunctionError(f"{self} has no parameter '{param_name}'.")
+            param = getattr(self.parameters, param_name)
+        except TypeError:
+            param = param_name
+        except AttributeError:
+            # don't accept strings that don't correspond to Parameters
+            # on this function
+            raise
+
+        return super()._get_current_parameter_value(param, context)
 
     def get_previous_value(self, context=None):
         # temporary method until previous values are integrated for all parameters
