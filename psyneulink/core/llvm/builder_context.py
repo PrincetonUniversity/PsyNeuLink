@@ -253,8 +253,19 @@ class LLVMBuilderContext:
         if hasattr(component, '_get_param_struct_type'):
             return component._get_param_struct_type(self)
 
-        params = component._get_param_values()
-        return self.convert_python_struct_to_llvm_ir(params)
+        def _param_struct(p):
+            val = p.get(None)   # this should use defaults
+            if hasattr(val, "_get_compilation_params") or \
+               hasattr(val, "_get_param_struct_type"):
+                return self.get_param_struct_type(val)
+            if p.name == 'matrix':   # Flatten matrix
+                val = np.asfarray(val).flatten()
+            elif np.isscalar(val) and component._is_param_modulated(p):
+                val = [val]   # modulation adds array wrap
+            return self.convert_python_struct_to_llvm_ir(val)
+
+        elements = map(_param_struct, component._get_compilation_params())
+        return ir.LiteralStructType(elements)
 
     @_comp_cached
     def get_state_struct_type(self, component):
