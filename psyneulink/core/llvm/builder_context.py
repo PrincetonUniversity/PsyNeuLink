@@ -262,8 +262,16 @@ class LLVMBuilderContext:
         if hasattr(component, '_get_state_struct_type'):
             return component._get_state_struct_type(self)
 
-        stateful = component._get_state_values()
-        return self.convert_python_struct_to_llvm_ir(stateful)
+        def _state_struct(p):
+            val = p.get(None)   # this should use defaults
+            if hasattr(val, "_get_compilation_state") or \
+               hasattr(val, "_get_state_struct_type"):
+                return self.get_state_struct_type(val)
+            struct = self.convert_python_struct_to_llvm_ir(val)
+            return ir.ArrayType(struct, p.history_min_length + 1)
+
+        elements = map(_state_struct, component._get_compilation_state())
+        return ir.LiteralStructType(elements)
 
     @_comp_cached
     def get_data_struct_type(self, component):
