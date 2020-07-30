@@ -246,6 +246,8 @@ import types
 import typing
 import weakref
 
+import numpy as np
+
 from psyneulink.core.globals.graph_pb2 import Entry, DoubleMatrix
 from psyneulink.core.globals.keywords import MULTIPLICATIVE
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
@@ -1319,17 +1321,19 @@ class Parameter(types.SimpleNamespace):
                 else:
                     execution_id = context.execution_id
 
+                deliver_value = np.atleast_2d(value)
+
                 ##### ADD TO PIPELINE HERE #####
                 context.rpc_pipeline.put(
                     Entry(
-                        componentName=self._owner._owner.name,
+                        componentName=self._owner._owner._owner.name,
                         parameterName=self.name,
                         time=f'{time.run}:{time.trial}:{time.pass_}:{time.time_step}',
                         context=execution_id,
                         value=DoubleMatrix(
-                            rows=value.shape[0],
-                            cols=value.shape[1],
-                            data=value.flatten().tolist()
+                            rows=deliver_value.shape[0],
+                            cols=deliver_value.shape[1],
+                            data=deliver_value.flatten().tolist()
                         )
                     )
                 )
