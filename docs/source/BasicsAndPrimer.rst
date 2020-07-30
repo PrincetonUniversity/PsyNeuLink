@@ -568,6 +568,128 @@ If included in the script above, then the following would return the ``output`` 
 
 Notice that this is the value from Trial 1 in the example above.
 
+.. _setting-parameters:
+
+Setting Parameters
+^^^^^^^^^^^^^^^^^^
+There are two different ways to set parameter values in PsyNeuLink:
+
+- "dot notation" -- that is, ``<Component>.<parameter> = some_new_value``
+- The `set <Parameter.set>` method of the Parameter class (e.g. ``<Component>.parameters.<parameter>.set(<value>, <context>)``).
+
+In the case of `non-stateful parameters <Parameter_Statefulness>`, these two approaches behave equivalently, which means
+the briefer and clearer of the two -- dot notation -- should be used preferentially.
+
+.. warning::
+    In most cases, non-stateful parameters are intended to be configured automatically for a component upon instantiation
+    by PsyNeuLink. Oftentimes, there are additional steps of validation and setup beyond simply assigning a value to
+    some attribute of the component instance. Be cautious if you decide to manually set a non-stateful parameter.
+
+In the case of `stateful parameters <Parameter_Statefulness>`, however, the two approaches will behave differently
+under certain circumstances.
+
+Dot notation can be seen as a convenient shorthand that
+that assumes the `context <Context>` for which the specified value should apply
+is the most recent context under which the Parameter's owner component has executed. In contrast, users have the option
+to explicitly specify context when using the `set <Parameter.set>` method, giving them greater control and flexibility
+(as well as the additional burden of specificity). See below for examples of appropriate use cases for both.
+
+.. warning::
+    If a given component has not yet been executed, or has only been executed standalone without a user-provided
+    context, then dot notation will set the Parameter's default value. Analogously, calling the set method without providing
+    a context will also set the Parameter's default value. In either of these cases, any new context that the Component
+    executes in after that point will use the newly-provided value as its baseline.
+
+Example use-cases for dot notation
+**********************************
+
+- Run a Composition, then change the value of a component's parameter, then run the Composition again with the new parameter value
+
+    >>> # instantiate the mechanism
+    >>> m = ProcessingMechanism(name='m')
+    >>> # create a Composition containing the Mechanism
+    >>> comp1 = Composition(name='comp1', nodes=[m])
+    >>> comp1.run(inputs={m:1})
+    >>> # returns: [array([1.])]
+    >>> # set m1's function's slope to 2 for the most recent context (which is now comp1)
+    >>> m.function.slope = 2
+    >>> comp1.run(inputs={m:1})
+    >>> # returns: [array([2.])]
+    >>> # we can see that changing the slope of m's function caused a different result to be produced
+    >>> comp2 = Composition(name='comp2', nodes=[m])
+    >>> comp2.run(inputs={m:1})
+    >>> # returns: [array([1.])]
+    >>> # because the slope is a stateful parameter, the value of executing the Mechanism in a different context is unaffected by the change
+
+- Cautionary example: using dot notation before a component has been executed in a non-default context will change
+  its value in the default context, which will in turn propagate to new contexts that it executes in
+
+    >>> # instantiate the mechanism
+    >>> m = ProcessingMechanism(name='m')
+    >>> # create two Compositions, each containing m
+    >>> comp1 = Composition(name='comp1', nodes=[m])
+    >>> comp2 = Composition(name='comp2', nodes=[m])
+    >>> m.execute([1])
+    >>> # returns: [array([1.])]
+    >>> # executing m outside of a Composition uses its default context
+    >>> m.function.slope = 2
+    >>> m.execute([1])
+    >>> # returns: [array([2.])]
+    >>> comp1.run(inputs={m:1})
+    >>> # returns: [array([2.])]
+    >>> comp2.run(inputs={m:1})
+    >>> # returns: [array([2.])]
+    >>> # the change in the slope of m's function has propagated to the new Contexts that it executes in
+
+Example use-cases for Parameter set method
+******************************************
+
+- Change the value of a parameter for a context that was not the last context the parameter owner executed in
+
+    >>> # instantiate the mechanism
+    >>> m = ProcessingMechanism(name='m')
+    >>> # create two Compositions, each containing m
+    >>> comp1 = Composition(name='comp1', nodes=[m])
+    >>> comp2 = Composition(name='comp2', nodes=[m])
+    >>> comp1.run({m:[1]})
+    >>> # returns: [array([1.])]
+    >>> comp2.run({m:[1]})
+    >>> # returns: [array([1.])]
+    >>> # the last context that m was executed in was comp2, so using dot notation here to change a parameter of m would
+    >>> # apply for the comp2 context only
+    >>> # if we want to change the parameter value for the comp1 context instead, we need to use the set method
+    >>> m.function_parameters.slope.set(2, comp1)
+    >>> comp1.run({m:[1]})
+    >>> # returns: [array([2.])]
+    >>> comp2.run({m:[1]})
+    >>> # returns: [array([1.])]
+
+- Cautionary example: calling the set method of a parameter without a context specified will change
+  its value in the default context, which will in turn propagate to new contexts that it executes in
+
+    >>> # instantiate the mechanism
+    >>> m = ProcessingMechanism(name='m')
+    >>> # create two Compositions, each containing m
+    >>> comp1 = Composition(name='comp1', nodes=[m])
+    >>> comp2 = Composition(name='comp2', nodes=[m])
+    >>> comp1.run({m:[1]})
+    >>> # returns: [array([1.])]
+    >>> comp2.run({m:[1]})
+    >>> # returns: [array([1.])]
+    >>> # calling the set method without specifying a context will change the default value for new contexts
+    >>> m.function_parameters.slope.set(2)
+    >>> comp1.run({m: [1]})
+    >>> # returns: [array([1.])]
+    >>> # no change because the context had already been set up before the call to set
+    >>> comp2.run({m:[1]})
+    >>> # returns: [array([1.])]
+    >>> # no change because the context had already been set up before the call to set
+    >>> # set up a new context
+    >>> comp3 = Composition(name='comp3', nodes=[m])
+    >>> comp3.run({m: [1]})
+    >>> # returns: [array([2.])]
+    >>> # 2 is now the default value for m's function's slope, so we get different results
+
 Function Parameters
 ^^^^^^^^^^^^^^^^^^^
 The `parameters <Component_Parameters>` attribute of a Component contains a list of all of its parameters. It is

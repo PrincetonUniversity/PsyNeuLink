@@ -73,7 +73,10 @@ different execution contexts and can be modified by modulated `ModulatorySignal_
 .. note::
     The "dot notation" version - ``t.value`` - refers to the most recent execution context in which *t* was executed. In
     many cases, you can use this to get or set using the execution context you'd expect. However, in complex situations,
-    if there is doubt, it is best to explicitly specify the execution context.
+    if there is doubt, it is best to explicitly specify the execution context using the parameter's `set <Parameter.set>`
+    method.
+
+    for a thorough breakdown on the differences between dot notation and `set <Parameter.set>`, see :ref:`here.<setting-parameters>`
 
 For Developers
 --------------
