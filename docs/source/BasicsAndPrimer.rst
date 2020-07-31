@@ -601,10 +601,10 @@ See below for examples of appropriate use cases for each, as well as explanation
 
 .. warning::
    If a given component has not yet been executed, or has only been executed standalone without a user-provided context,
-   then dot notation will set the Parameter's `default value <Parameter_Defaults>`. Analogously, calling the `set
-   <Parameter.set>` method without providing a context will also set the Parameter's default value. In either of
-   these cases, any new context in which the Component executes after that will use the newly-provided value as the
-   Parameter's default.
+   then dot notation will set the Parameter's value in the baseline context. Analogously, calling the `set
+   <Parameter.set>` method without providing a context will also set the Parameter's value in the baseline
+   context. In either of these cases, any new context in which the Component executes after that will use the
+   newly-provided value as the Parameter's baseline.
 
 Example use-cases for dot notation
 **********************************
@@ -652,7 +652,7 @@ Example use-cases for dot notation
 Example use-cases for Parameter set method
 ******************************************
 
-- Change the value of a parameter for a context that was not the last context in which the parameter's owner execute:
+- Change the value of a parameter for a context that was not the last context in which the parameter's owner executed:
 
     >>> # instantiate the mechanism
     >>> m = ProcessingMechanism(name='m')
