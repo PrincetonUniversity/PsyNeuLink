@@ -77,11 +77,12 @@ different execution contexts and can be modified by modulated `ModulatorySignal_
     <Parameter.set>` method (for a more complete descritpion of the differences between dot notation and the `set
     <Parameter.set>` method, see `BasicsAndPrimer_Parameters`.
 
-For Developers
---------------
 
-Developers must keep in mind state when writing new components for PNL. Any parameters or values that may change during a `run <Run_Overview>`
-must become stateful Parameters, or they are at risk of computational errors like those encountered in parallel programming.
+.. _technical_note::
+
+    Developers must keep in mind state when writing new Components for PsyNeuLink. Any parameters or values that may
+    change during a `run <Run_Overview>` must become stateful Parameters, or they are at risk of computational
+    errors like those encountered in parallel programming.
 
 
 Creating Parameters
