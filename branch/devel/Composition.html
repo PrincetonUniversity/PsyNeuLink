@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.8.2.7+23.g47db6fa documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.8.2.7+31.gfa9b9bf documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.2.7+23
+                  0.8.2.7+31
                 </div>
               
             
@@ -1295,12 +1295,12 @@ Projection in a Composition is returned by its <a class="reference internal" hre
 <div class="section" id="execution-contexts">
 <span id="composition-execution-context"></span><h3><em>Execution Contexts</em><a class="headerlink" href="#execution-contexts" title="Permalink to this headline">¶</a></h3>
 <p>A Composition is always executed in a designated <em>execution context</em>, specified by an <a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><code class="xref any py py-attr docutils literal"><span class="pre">execution_id</span></code></a> that can be provided to the <strong>context</strong> argument of the method used to execute the
-Composition. Execution contexts make several capabilities possible:</p>
+Composition. Execution contexts make several capabilities possible, the two most important of which are:</p>
 <blockquote>
 <div><ul class="simple">
-<li>A <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> can be assigned to, and executed in more than one Composition, preserving its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> and that of its <a class="reference internal" href="Parameters.html#parameter-statefulness"><span class="std std-ref">parameters</span></a> independently for each of
-the Compositions to which it is assigned.</li>
-<li>The same Composition can be exectued independently in different contexts; this can be used for
+<li>a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> can be assigned to, and executed in more than one Composition, preserving its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> and that of its <a class="reference internal" href="Parameters.html#parameter-statefulness"><span class="std std-ref">parameters</span></a> independently for each of
+the Compositions to which it is assigned;</li>
+<li>the same Composition can be exectued independently in different contexts; this can be used for
 parallelizing parameter estimation, both for data fitting (see <code class="xref any docutils literal"><span class="pre">ParamEstimationFunction</span></code>), and for
 simulating the Composition in <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-model-based"><span class="std std-ref">model-based optimization</span></a>
 (see <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>).</li>
@@ -3918,7 +3918,7 @@ Any reduction less than this value is considered to be a bad epoch.
 Used for early stopping of training, in combination with <code class="xref any docutils literal"><span class="pre">patience</span></code>.</li>
 <li><strong>scheduler</strong> (<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler" title="psyneulink.core.scheduling.scheduler.Scheduler"><em>Scheduler</em></a>) – the scheduler object that owns the conditions that will instruct the execution of the Composition
 If not specified, the Composition will use its automatically generated scheduler.</li>
-<li><strong>context</strong> (<code class="xref py py-data docutils literal"><span class="pre">Optional</span></code>[&lt;typecheck.framework.optional object at 0x11f49a8d0&gt;]) – context will be set to self.default_execution_id if unspecified</li>
+<li><strong>context</strong> (<code class="xref py py-data docutils literal"><span class="pre">Optional</span></code>[&lt;typecheck.framework.optional object at 0x118c43978&gt;]) – context will be set to self.default_execution_id if unspecified</li>
 <li><strong>call_before_minibatch</strong> (<em>callable</em>) – called before each minibatch is executed</li>
 <li><strong>call_after_minibatch</strong> (<em>callable</em>) – called after each minibatch is executed</li>
 </ul>
@@ -4386,7 +4386,7 @@ This role cannot be modified programmatically.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.2.7+23.g47db6fa',
+               VERSION:'0.8.2.7+31.gfa9b9bf',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

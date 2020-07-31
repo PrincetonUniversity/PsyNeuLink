@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.8.2.7+23.g47db6fa documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.8.2.7+31.gfa9b9bf documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.2.7+23
+                  0.8.2.7+31
                 </div>
               
             
@@ -256,14 +256,10 @@ different execution contexts and can be modified by modulated <a class="referenc
 <p class="first admonition-title">Note</p>
 <p class="last">The “dot notation” version - <code class="docutils literal"><span class="pre">t.value</span></code> - refers to the most recent execution context in which <em>t</em> was executed. In
 many cases, you can use this to get or set using the execution context you’d expect. However, in complex situations,
-if there is doubt, it is best to explicitly specify the execution context.</p>
+or  if there is any doubt, it is best to explicitly specify the execution context using the parameter’s <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.set" title="psyneulink.core.globals.parameters.Parameter.set"><code class="xref any py py-meth docutils literal"><span class="pre">set</span></code></a> method (for a more complete descritpion of the differences between dot notation and the <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.set" title="psyneulink.core.globals.parameters.Parameter.set"><code class="xref any py py-meth docutils literal"><span class="pre">set</span></code></a> method, see <a class="reference internal" href="BasicsAndPrimer.html#basicsandprimer-parameters"><span class="std std-ref">Parameters</span></a>.</p>
 </div>
-<div class="section" id="for-developers">
-<h3>For Developers<a class="headerlink" href="#for-developers" title="Permalink to this headline">¶</a></h3>
-<p>Developers must keep in mind state when writing new components for PNL. Any parameters or values that may change during a <code class="xref any docutils literal"><span class="pre">run</span></code>
-must become stateful Parameters, or they are at risk of computational errors like those encountered in parallel programming.</p>
 <div class="section" id="creating-parameters">
-<h4>Creating Parameters<a class="headerlink" href="#creating-parameters" title="Permalink to this headline">¶</a></h4>
+<h3>Creating Parameters<a class="headerlink" href="#creating-parameters" title="Permalink to this headline">¶</a></h3>
 <p>To create new Parameters, reference this example of a new class <em>B</em></p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">B</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
     <span class="k">class</span> <span class="nc">Parameters</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">Parameters</span><span class="p">):</span>
@@ -345,7 +341,7 @@ from parents, but will be overridden if necessary, without affecting the parents
 </div>
 </div>
 <div class="section" id="using-parameters">
-<h4>Using Parameters<a class="headerlink" href="#using-parameters" title="Permalink to this headline">¶</a></h4>
+<h3>Using Parameters<a class="headerlink" href="#using-parameters" title="Permalink to this headline">¶</a></h3>
 <p>Methods that are called during runtime in general must take <em>context</em> as an argument and must pass this <em>context</em> along to other
 PNL methods. The most likely place this will come up would be for the <em>function</em> method on a PNL <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> class, or <em>_execute</em> method on other
 <a class="reference internal" href="Components.html"><span class="doc">Components</span></a>. Any getting and setting of stateful parameter values must use this <em>context</em>, and using standard attributes to store data
@@ -353,7 +349,6 @@ must be avoided at risk of causing computation errors. You may use standard attr
 <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">Run</span></code></a>.</p>
 <p>You should avoid using <a class="reference internal" href="#parameter-dot-notation"><span class="std std-ref">dot notation</span></a> in internal code, as it is ambiguous and can potentially break statefulness.</p>
 <p id="parameter-attributes-table"><a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a> <strong>attributes</strong>:</p>
-</div>
 </div>
 </div>
 <div class="section" id="class-reference">
@@ -998,11 +993,8 @@ refers to another <a class="reference internal" href="#psyneulink.core.globals.p
 <li><a class="reference internal" href="#">Parameters</a><ul>
 <li><a class="reference internal" href="#defaults">Defaults</a></li>
 <li><a class="reference internal" href="#statefulness-of-parameters">Statefulness of Parameters</a><ul>
-<li><a class="reference internal" href="#for-developers">For Developers</a><ul>
 <li><a class="reference internal" href="#creating-parameters">Creating Parameters</a></li>
 <li><a class="reference internal" href="#using-parameters">Using Parameters</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#class-reference">Class Reference</a></li>
@@ -1025,7 +1017,7 @@ refers to another <a class="reference internal" href="#psyneulink.core.globals.p
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.2.7+23.g47db6fa',
+               VERSION:'0.8.2.7+31.gfa9b9bf',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

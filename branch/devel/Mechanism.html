@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanism &mdash; PsyNeuLink 0.8.2.7+23.g47db6fa documentation</title>
+  <title>Mechanism &mdash; PsyNeuLink 0.8.2.7+31.gfa9b9bf documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.2.7+23
+                  0.8.2.7+31
                 </div>
               
             
@@ -867,20 +867,20 @@ Mechanism’s <a class="reference internal" href="#psyneulink.core.components.me
 in the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal"><span class="pre">output_values</span></code></a> attribute.</li>
 </ul>
 </div></blockquote>
-<p>A Mechanism may be executed by calling its execute method directly:</p>
+<p>A Mechanism may be executed by calling its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method directly:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_simple_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">()</span>      
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_simple_mechanism</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>                     
 </pre></div>
 </div>
-<p>A Mechanism can be executed using its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method.  This can be useful for testing a
-Mechanism and/or debugging.  However, more typically, Mechanisms are <a class="reference internal" href="Composition.html#composition-execution"><span class="std std-ref">executed as part of a Composition</span></a>.</p>
+<p>This can be useful for testing a Mechanism and/or debugging.  However, more typically, Mechanisms are <a class="reference internal" href="Composition.html#composition-execution"><span class="std std-ref">executed as
+part of a Composition</span></a>.</p>
 <div class="section" id="execution-in-a-composition">
 <span id="mechanism-execution-composition"></span><h3><em>Execution in a Composition</em><a class="headerlink" href="#execution-in-a-composition" title="Permalink to this headline">¶</a></h3>
 <p>A Mechanism can be assigned to one or more Compositions;  the values of its <a class="reference internal" href="Component.html#component-parameters"><span class="std std-ref">parameters</span></a>,
 including its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> attributes, are maintained
 separately for each <a class="reference internal" href="Composition.html#composition-execution-context"><span class="std std-ref">context in which it is executed</span></a> which, by default, is distinct
 for each Composition in which it is executed;  these execution-specific values can be accessed using the parameter’s
-<a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.get" title="psyneulink.core.globals.parameters.Parameter.get"><code class="xref any py py-meth docutils literal"><span class="pre">get</span></code></a> method.  A parameter’s value can also be accessed using standard <a class="reference internal" href="Parameters.html#parameter-dot-notation"><span class="std std-ref">dot</span></a>,
+<a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.get" title="psyneulink.core.globals.parameters.Parameter.get"><code class="xref any py py-meth docutils literal"><span class="pre">get</span></code></a> method. A parameter’s value can also be accessed using standard <a class="reference internal" href="Parameters.html#parameter-dot-notation"><span class="std std-ref">dot</span></a>,
 which returns its most recenty assigned value, irrespective of the context (including Composition) in which it was
 assigned.</p>
 </div>
@@ -2073,7 +2073,7 @@ as well as other reinitialization steps that the reset method may carry out.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.2.7+23.g47db6fa',
+               VERSION:'0.8.2.7+31.gfa9b9bf',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
