@@ -1245,9 +1245,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         whitelist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
                      "num_executions_before_finished", "num_executions",
-                     "execution_count", "value"}
-        # mechanism functions are handled separately
-        blacklist = {"function"} if hasattr(self, 'ports') else {"value"}
+                     "execution_count", "value", "input_ports", "output_ports"}
+        blacklist = set() if hasattr(self, 'ports') else {"value"}
+        # 'objective_mechanism' parameter is just for reference
+        blacklist.add("objective_mechanism")
+        # 'agent_rep'is for reference to enclosing composition
+        blacklist.add("agent_rep")
         def _is_compilation_state(p):
             val = p.get()   # memoize for this function
             return val is not None and p.name not in blacklist and \
@@ -1266,27 +1269,24 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             setattr(self, "_state_ids", ids)
         return ids
 
-    def _get_state_values(self, context=None):
-        def _state_values(p):
-            val = p.get(context)
-            if isinstance(val, Component):
-                return val._get_state_values(context)
-            return [val for i in range(p.history_min_length + 1)]
-
-        return tuple(map(_state_values, self._get_compilation_state()))
-
     def _get_state_initializer(self, context):
-        def _convert(x):
+        def _convert(p):
+            x = p.get(context)
             if isinstance(x, np.random.RandomState):
                 # Skip first element of random state (id string)
-                return x.get_state()[1:]
+                val = pnlvm._tupleize(x.get_state()[1:])
             elif isinstance(x, Time):
-                return (getattr(x, Time._time_scale_attr_map[t]) for t in TimeScale)
-            try:
-                return (_convert(i) for i in x)
-            except TypeError:
-                return x
-        return pnlvm._tupleize(_convert(self._get_state_values(context)))
+                val = tuple(getattr(x, Time._time_scale_attr_map[t]) for t in TimeScale)
+            elif isinstance(x, Component):
+                return x._get_state_initializer(context)
+            elif isinstance(x, ContentAddressableList):
+                return tuple(p._get_state_initializer(context) for p in x)
+            else:
+                val = pnlvm._tupleize(x)
+
+            return tuple(val for _ in range(p.history_min_length + 1))
+
+        return tuple(map(_convert, self._get_compilation_state()))
 
     def _get_compilation_params(self):
         # FIXME: MAGIC LIST, detect used parameters automatically
@@ -1306,18 +1306,21 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      # autodiff specific types
                      "pytorch_representation", "optimizer"}
         # Mechanism's need few extra entires:
-        # * function -- might overload _get_{param,state}_struct_type
         # * matrix -- is never used directly, and is flatened below
         # * integration rate -- shape mismatch with param port input
         if hasattr(self, 'ports'):
-            blacklist.update(["function", "matrix", "integration_rate"])
+            blacklist.update(["matrix", "integration_rate"])
+        # 'objective_mechanism' parameter is just for reference
+        blacklist.add("objective_mechanism")
+        # 'agent_rep'is for reference to enclosing composition
+        blacklist.add("agent_rep")
         def _is_compilation_param(p):
             if p.name not in blacklist and not isinstance(p, ParameterAlias):
                 #FIXME: this should use defaults
                 val = p.get()
                 # Check if the value type is valid for compilation
                 return not isinstance(val, (str, ComponentsMeta,
-                                            ContentAddressableList, type(max),
+                                            type(max),
                                             type(_is_compilation_param),
                                             type(self._get_compilation_params)))
             return False
@@ -1335,37 +1338,27 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             setattr(self, "_param_ids", ids)
         return ids
 
-    def _get_param_values(self, context=None):
-        def _get_values(p):
-            param = p.get(context)
-            is_modulated = False
-            try:
-                is_modulated = is_modulated or p.name in self.owner.parameter_ports
-            except AttributeError:
-                pass
-            if not is_modulated:
-                try:
-                    is_modulated = is_modulated or p.name in self.parameter_ports
-                except AttributeError:
-                    pass
-            if not is_modulated:
-                try:
-                    modulated_params = (
-                        getattr(self.parameters, p.sender.modulation).source
-                        for p in self.owner.mod_afferents)
-                    is_modulated = is_modulated or p in modulated_params
-                except AttributeError:
-                    pass
-            # Modulated parameters change shape to array
-            if is_modulated and np.isscalar(param):
-                param = [param]
-            elif p.name == 'matrix': # Flatten matrix
-                param = np.asfarray(param).flatten().tolist()
-            elif isinstance(param, Component):
-                param = param._get_param_values(context)
-            return param
+    def _is_param_modulated(self, p):
+        try:
+            if p.name in self.owner.parameter_ports:
+                return True
+        except AttributeError:
+            pass
+        try:
+            if p.name in self.parameter_ports:
+                return True
+        except AttributeError:
+            pass
+        try:
+            modulated_params = (
+                getattr(self.parameters, p.sender.modulation).source
+                for p in self.owner.mod_afferents)
+            if p in modulated_params:
+                return True
+        except AttributeError:
+            pass
 
-        return tuple(map(_get_values, self._get_compilation_params()))
+        return False
 
     def _get_param_initializer(self, context):
         def _convert(x):
@@ -1373,14 +1366,28 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 return x.value
             elif isinstance(x, SampleIterator):
                 if isinstance(x.generator, list):
-                    return (float(v) for v in x.generator)
+                    return tuple(v for v in x.generator)
                 else:
-                    return (float(x.start), float(x.step), int(x.num))
-            try:
-                return (_convert(i) for i in x)
+                    return (x.start, x.step, x.num)
+            elif isinstance(x, Component):
+                return x._get_param_initializer(context)
+
+            try:   # This can't use tupleize and needs to recurse to handle
+                   # 'search_space' list of SampleIterators
+                return tuple(_convert(i) for i in x)
             except TypeError:
-                return x
-        return pnlvm._tupleize(_convert(self._get_param_values(context)))
+                return x if x is not None else tuple()
+
+        def _get_values(p):
+            param = p.get(context)
+            # Modulated parameters change shape to array
+            if np.isscalar(param) and self._is_param_modulated(p):
+                return (param,)
+            elif p.name == 'matrix': # Flatten matrix
+                return tuple(np.asfarray(param).flatten())
+            return _convert(param)
+
+        return tuple(map(_get_values, self._get_compilation_params()))
 
     def _gen_llvm_function_reset(self, ctx, builder, *_, tags):
         assert "reset" in tags

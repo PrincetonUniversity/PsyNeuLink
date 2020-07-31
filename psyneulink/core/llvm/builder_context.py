@@ -21,6 +21,7 @@ from typing import Set
 import weakref
 from psyneulink.core.scheduling.time import Time
 from psyneulink.core.globals.sampleiterator import SampleIterator
+from psyneulink.core.globals.utilities import ContentAddressableList
 from psyneulink.core import llvm as pnlvm
 from . import codegen
 from .debug import debug_env
@@ -253,8 +254,21 @@ class LLVMBuilderContext:
         if hasattr(component, '_get_param_struct_type'):
             return component._get_param_struct_type(self)
 
-        params = component._get_param_values()
-        return self.convert_python_struct_to_llvm_ir(params)
+        def _param_struct(p):
+            val = p.get(None)   # this should use defaults
+            if hasattr(val, "_get_compilation_params") or \
+               hasattr(val, "_get_param_struct_type"):
+                return self.get_param_struct_type(val)
+            if isinstance(val, ContentAddressableList):
+                return ir.LiteralStructType(self.get_param_struct_type(x) for x in val)
+            elif p.name == 'matrix':   # Flatten matrix
+                val = np.asfarray(val).flatten()
+            elif np.isscalar(val) and component._is_param_modulated(p):
+                val = [val]   # modulation adds array wrap
+            return self.convert_python_struct_to_llvm_ir(val)
+
+        elements = map(_param_struct, component._get_compilation_params())
+        return ir.LiteralStructType(elements)
 
     @_comp_cached
     def get_state_struct_type(self, component):
@@ -262,8 +276,18 @@ class LLVMBuilderContext:
         if hasattr(component, '_get_state_struct_type'):
             return component._get_state_struct_type(self)
 
-        stateful = component._get_state_values()
-        return self.convert_python_struct_to_llvm_ir(stateful)
+        def _state_struct(p):
+            val = p.get(None)   # this should use defaults
+            if hasattr(val, "_get_compilation_state") or \
+               hasattr(val, "_get_state_struct_type"):
+                return self.get_state_struct_type(val)
+            if isinstance(val, ContentAddressableList):
+                return ir.LiteralStructType(self.get_state_struct_type(x) for x in val)
+            struct = self.convert_python_struct_to_llvm_ir(val)
+            return ir.ArrayType(struct, p.history_min_length + 1)
+
+        elements = map(_state_struct, component._get_compilation_state())
+        return ir.LiteralStructType(elements)
 
     @_comp_cached
     def get_data_struct_type(self, component):
@@ -298,8 +322,11 @@ class LLVMBuilderContext:
             # FIXME: Consider enums of non-int type
             assert all(round(x.value) == x.value for x in type(t))
             return self.int32_ty
-        elif isinstance(t, (int, float, np.number)):
+        elif isinstance(t, (int, float, np.floating)):
             return self.float_ty
+        elif isinstance(t, np.integer):
+            # Python 'int' is handled above as it is the default type for '0'
+            return ir.IntType(t.nbytes * 8)
         elif isinstance(t, np.ndarray):
             return self.convert_python_struct_to_llvm_ir(t.tolist())
         elif isinstance(t, np.random.RandomState):
