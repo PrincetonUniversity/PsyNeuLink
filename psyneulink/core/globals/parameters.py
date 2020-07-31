@@ -1175,7 +1175,7 @@ class Parameter(types.SimpleNamespace):
         if not override and self.read_only:
             raise ParameterError('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to force set.'.format(self.name))
 
-        self._set(self._parse(value), context, skip_history, skip_log, **kwargs)
+        return self._set(self._parse(value), context, skip_history, skip_log, **kwargs)
 
     def _set(self, value, context=None, skip_history=False, skip_log=False, **kwargs):
         if not self.stateful:
@@ -1198,6 +1198,7 @@ class Parameter(types.SimpleNamespace):
             value = call_with_pruned_args(self.setter, value, context=context, **kwargs)
 
         self._set_value(value, execution_id=execution_id, context=context, skip_history=skip_history, skip_log=skip_log)
+        return value
 
     def _set_value(self, value, execution_id=None, context=None, skip_history=False, skip_log=False):
         # store history
