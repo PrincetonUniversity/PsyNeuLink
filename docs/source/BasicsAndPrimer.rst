@@ -570,40 +570,45 @@ Notice that this is the value from Trial 1 in the example above.
 
 .. _setting-parameters:
 
-Setting Parameters
-^^^^^^^^^^^^^^^^^^
-There are two different ways to set parameter values in PsyNeuLink:
+Setting Parameter Values
+^^^^^^^^^^^^^^^^^^^^^^^^
+There are two different ways to set parameter values in PsyNeuLink, that correspond to the two ways of accessing
+their values discussed in the preceding section:
 
 - "dot notation" -- that is, ``<Component>.<parameter> = some_new_value``
-- The `set <Parameter.set>` method of the Parameter class (e.g. ``<Component>.parameters.<parameter>.set(<value>, <context>)``).
+- the `set <Parameter.set>` method of the Parameter class; that is
+  ``<Component>.parameters.<parameter>.set(<value>, <context>)``).
 
-In the case of `non-stateful parameters <Parameter_Statefulness>`, these two approaches behave equivalently, which means
-the briefer and clearer of the two -- dot notation -- should be used preferentially.
-
-.. warning::
-    In most cases, non-stateful parameters are intended to be configured automatically for a component upon instantiation
-    by PsyNeuLink. Oftentimes, there are additional steps of validation and setup beyond simply assigning a value to
-    some attribute of the component instance. Be cautious if you decide to manually set a non-stateful parameter.
-
-In the case of `stateful parameters <Parameter_Statefulness>`, however, the two approaches will behave differently
-under certain circumstances.
-
-Dot notation can be seen as a convenient shorthand that
-that assumes the `context <Context>` for which the specified value should apply
-is the most recent context under which the Parameter's owner component has executed. In contrast, users have the option
-to explicitly specify context when using the `set <Parameter.set>` method, giving them greater control and flexibility
-(as well as the additional burden of specificity). See below for examples of appropriate use cases for both.
+In the case of `non-stateful parameters <Parameter_Statefulness>`, these two approaches behave equivalently, in which
+case it is easier and clearer to use dot notation.
 
 .. warning::
-    If a given component has not yet been executed, or has only been executed standalone without a user-provided
-    context, then dot notation will set the Parameter's default value. Analogously, calling the set method without providing
-    a context will also set the Parameter's default value. In either of these cases, any new context that the Component
-    executes in after that point will use the newly-provided value as its baseline.
+    In most cases, non-stateful parameters are intended to be configured automatically for a component upon
+    instantiation by PsyNeuLink. Oftentimes, there are additional steps of validation and setup beyond simply
+    assigning a value to some attribute of the component instance. Be cautious if you decide to manually set a
+    non-stateful parameter.
+
+In the case of `stateful parameters <Parameter_Statefulness>` (the most common type), assigning a value using dot
+notation and the `set <Parameter.set>` method can behave differently under some circumstances.
+
+Dot notation is simpler, but assumes that the `context <Context>` for which the specified value should apply is the
+most recent context in which the Parameter's owner Component has executed.  If the value should apply to a different
+context, then the `set <Parameter.set>` method must be used, which allows explicit specification of the context.
+See below for examples of appropriate use cases for each, as well as explanations of contexts when executing
+`Mechanisms <Mechanism_Execution_Composition>` and `Compositions <Composition_Execution_Context>`, respectively.
+
+.. warning::
+   If a given component has not yet been executed, or has only been executed standalone without a user-provided context,
+   then dot notation will set the Parameter's `default value <Parameter_Defaults>`. Analogously, calling the `set
+   <Parameter.set>` method without providing a context will also set the Parameter's default value. In either of
+   these cases, any new context in which the Component executes after that will use the newly-provided value as the
+   Parameter's default.
 
 Example use-cases for dot notation
 **********************************
 
-- Run a Composition, then change the value of a component's parameter, then run the Composition again with the new parameter value
+- Run a Composition, then change the value of a component's parameter, then run the Composition again with the new
+  parameter value:
 
     >>> # instantiate the mechanism
     >>> m = ProcessingMechanism(name='m')
@@ -611,18 +616,19 @@ Example use-cases for dot notation
     >>> comp1 = Composition(name='comp1', nodes=[m])
     >>> comp1.run(inputs={m:1})
     >>> # returns: [array([1.])]
-    >>> # set m1's function's slope to 2 for the most recent context (which is now comp1)
+    >>> # set slope of m1's function to 2 for the most recent context (which is now comp1)
     >>> m.function.slope = 2
     >>> comp1.run(inputs={m:1})
     >>> # returns: [array([2.])]
-    >>> # we can see that changing the slope of m's function caused a different result to be produced
+    >>> # note that changing the slope of m's function produced a different result
     >>> comp2 = Composition(name='comp2', nodes=[m])
     >>> comp2.run(inputs={m:1})
     >>> # returns: [array([1.])]
-    >>> # because the slope is a stateful parameter, the value of executing the Mechanism in a different context is unaffected by the change
+    >>> # because slope is a stateful parameter,
+    >>> # executing the Mechanism in a different context is unaffected by the change
 
 - Cautionary example: using dot notation before a component has been executed in a non-default context will change
-  its value in the default context, which will in turn propagate to new contexts that it executes in
+  its value in the default context, which will in turn propagate to new contexts in which it is executed:
 
     >>> # instantiate the mechanism
     >>> m = ProcessingMechanism(name='m')
@@ -639,12 +645,12 @@ Example use-cases for dot notation
     >>> # returns: [array([2.])]
     >>> comp2.run(inputs={m:1})
     >>> # returns: [array([2.])]
-    >>> # the change in the slope of m's function has propagated to the new Contexts that it executes in
+    >>> # the change of the slope of m's function propagated to the new Contexts in which it executes
 
 Example use-cases for Parameter set method
 ******************************************
 
-- Change the value of a parameter for a context that was not the last context the parameter owner executed in
+- Change the value of a parameter for a context that was not the last context in which the parameter's owner execute:
 
     >>> # instantiate the mechanism
     >>> m = ProcessingMechanism(name='m')
@@ -655,17 +661,17 @@ Example use-cases for Parameter set method
     >>> # returns: [array([1.])]
     >>> comp2.run({m:[1]})
     >>> # returns: [array([1.])]
-    >>> # the last context that m was executed in was comp2, so using dot notation here to change a parameter of m would
-    >>> # apply for the comp2 context only
-    >>> # if we want to change the parameter value for the comp1 context instead, we need to use the set method
+    >>> # the last context in which m was executed was comp2,
+    >>> # so using dot notation to change a parameter of m would apply only for the comp2 context;
+    >>> # changing the parameter value for the comp1 context requires use of the set method
     >>> m.function_parameters.slope.set(2, comp1)
     >>> comp1.run({m:[1]})
     >>> # returns: [array([2.])]
     >>> comp2.run({m:[1]})
     >>> # returns: [array([1.])]
 
-- Cautionary example: calling the set method of a parameter without a context specified will change
-  its value in the default context, which will in turn propagate to new contexts that it executes in
+- Cautionary example: calling the set method of a parameter without a context specified changes its value in the
+  default context which, in turn, will propagate to new contexts in which it is executed:
 
     >>> # instantiate the mechanism
     >>> m = ProcessingMechanism(name='m')
@@ -688,7 +694,7 @@ Example use-cases for Parameter set method
     >>> comp3 = Composition(name='comp3', nodes=[m])
     >>> comp3.run({m: [1]})
     >>> # returns: [array([2.])]
-    >>> # 2 is now the default value for m's function's slope, so we get different results
+    >>> # 2 is now the default value for the slope of m's function, so it now produces a different result
 
 Function Parameters
 ^^^^^^^^^^^^^^^^^^^
