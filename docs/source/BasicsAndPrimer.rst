@@ -523,6 +523,8 @@ different contexts (often referred to as `"statefulness" <Parameter_Statefulness
 previous values, and the ability to be `modulated <ModulatorySignal_Modulation>` by other Components in PsyNeuLink.
 These features are supported by methods on the Parameter class, as described below.
 
+.. _BasicsAndPrimer_Accessing_Parameters:
+
 Accessing Parameter Values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 The most recently assigned value of a parameter can be accessed like any other attrribute in Python,
@@ -568,7 +570,7 @@ If included in the script above, then the following would return the ``output`` 
 
 Notice that this is the value from Trial 1 in the example above.
 
-.. _setting-parameters:
+.. _BasicsAndPrimer_Setting_Parameters:
 
 Setting Parameter Values
 ^^^^^^^^^^^^^^^^^^^^^^^^
