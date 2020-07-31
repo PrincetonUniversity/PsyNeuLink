@@ -1200,8 +1200,8 @@ class DDM(ProcessingMechanism):
 
     def _gen_llvm_is_finished_cond(self, ctx, builder, params, state):
         # Setup pointers to internal function
-        func_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, 'function')
-        func_param_ptr = pnlvm.helpers.get_state_ptr(builder, self, params, 'function')
+        func_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
+        func_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
 
         # Find the single numeric entry in previous_value
         try:

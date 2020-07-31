@@ -2741,31 +2741,27 @@ class Mechanism_Base(Mechanism):
         return port_param_dicts
 
     def _get_param_ids(self):
-        #FIXME: ports and function should be part of generated params
-        return ["ports", "function"] + super()._get_param_ids()
+        # FIXME: parameter ports should be part of generated params
+        return ["_parameter_ports"] + super()._get_param_ids()
 
     def _get_param_struct_type(self, ctx):
-        ports_params = (ctx.get_param_struct_type(s) for s in self.ports)
+        ports_params = (ctx.get_param_struct_type(s) for s in self._parameter_ports)
         ports_param_struct = pnlvm.ir.LiteralStructType(ports_params)
-        function_param_struct = ctx.get_param_struct_type(self.function)
         mech_param_struct = ctx.get_param_struct_type(super())
 
         return pnlvm.ir.LiteralStructType((ports_param_struct,
-                                           function_param_struct,
                                            *mech_param_struct))
 
     def _get_state_ids(self):
-        #FIXME: ports and function should be part of generated state
-        return ["ports", "function"] + super()._get_state_ids()
+        # FIXME: parameter ports should be part of generated state
+        return ["_parameter_ports"] + super()._get_state_ids()
 
     def _get_state_struct_type(self, ctx):
-        ports_state = (ctx.get_state_struct_type(s) for s in self.ports)
+        ports_state = (ctx.get_state_struct_type(s) for s in self._parameter_ports)
         ports_state_struct = pnlvm.ir.LiteralStructType(ports_state)
-        function_state_struct = ctx.get_state_struct_type(self.function)
         mech_state_struct = ctx.get_state_struct_type(super())
 
         return pnlvm.ir.LiteralStructType((ports_state_struct,
-                                           function_state_struct,
                                            *mech_state_struct))
 
     def _get_output_struct_type(self, ctx):
@@ -2782,25 +2778,24 @@ class Mechanism_Base(Mechanism):
         return pnlvm.ir.LiteralStructType(input_type_list)
 
     def _get_param_initializer(self, context):
-        port_param_init = tuple(s._get_param_initializer(context) for s in self.ports)
-        function_param_init = self.function._get_param_initializer(context)
+        port_param_init = tuple(s._get_param_initializer(context) for s in self._parameter_ports)
         mech_param_init = super()._get_param_initializer(context)
 
-        return (port_param_init, function_param_init, *mech_param_init)
+        return (port_param_init, *mech_param_init)
 
     def _get_state_initializer(self, context):
-        port_state_init = tuple(s._get_state_initializer(context) for s in self.ports)
-        function_state_init = self.function._get_state_initializer(context)
+        port_state_init = tuple(s._get_state_initializer(context) for s in self._parameter_ports)
         mech_state_init = super()._get_state_initializer(context)
 
-        return (port_state_init, function_state_init, *mech_state_init)
+        return (port_state_init, *mech_state_init)
 
-    def _gen_llvm_ports(self, ctx, builder, ports,
+    def _gen_llvm_ports(self, ctx, builder, ports, group,
                         get_output_ptr, fill_input_data,
                         mech_params, mech_state, mech_input):
-        # Avoid recreating combined list in every iteration
-        # FIXME: This should be converted to more standard memoization approach
-        all_ports = self.ports
+        group_ports = getattr(self, group)
+        ports_param = pnlvm.helpers.get_param_ptr(builder, self, mech_params, group)
+        ports_state = pnlvm.helpers.get_state_ptr(builder, self, mech_state, group, None)
+
         mod_afferents = self.mod_afferents
         for i, port in enumerate(ports):
             p_function = ctx.import_llvm_function(port)
@@ -2824,11 +2819,9 @@ class Mechanism_Base(Mechanism):
                 afferent_val = builder.load(mod_in_ptr)
                 builder.store(afferent_val, mod_out_ptr)
 
-            port_idx = all_ports.index(port)
-            ports_param = pnlvm.helpers.get_param_ptr(builder, self, mech_params, "ports")
+            port_idx = group_ports.index(port)
             p_params = builder.gep(ports_param, [ctx.int32_ty(0),
                                                  ctx.int32_ty(port_idx)])
-            ports_state = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "ports")
             p_state = builder.gep(ports_state, [ctx.int32_ty(0),
                                                 ctx.int32_ty(port_idx)])
 
@@ -2865,7 +2858,7 @@ class Mechanism_Base(Mechanism):
             b.store(b.load(ip_in), data_ptr)
             return b
 
-        builder = self._gen_llvm_ports(ctx, builder, self.input_ports,
+        builder = self._gen_llvm_ports(ctx, builder, self.input_ports, "input_ports",
                                        _get_output_ptr, _fill_input,
                                        mech_params, mech_state, mech_input)
 
@@ -2896,7 +2889,7 @@ class Mechanism_Base(Mechanism):
             b.store(b.load(param_in_ptr), data_ptr)
             return b
 
-        builder = self._gen_llvm_ports(ctx, builder, param_ports,
+        builder = self._gen_llvm_ports(ctx, builder, param_ports, "_parameter_ports",
                                        _get_output_ptr, _fill_input,
                                        mech_params, mech_state, mech_input)
         return params_out, builder
@@ -2940,7 +2933,7 @@ class Mechanism_Base(Mechanism):
             b.store(b.load(data_ptr), input_ptr)
             return b
 
-        builder = self._gen_llvm_ports(ctx, builder, self.output_ports,
+        builder = self._gen_llvm_ports(ctx, builder, self.output_ports, "output_ports",
                                        _get_output_ptr, _fill_input,
                                        mech_params, mech_state, mech_in)
         return builder
@@ -3001,7 +2994,7 @@ class Mechanism_Base(Mechanism):
             pnlvm.helpers.push_state_val(builder, self, state, "value", value)
         else:
             # FIXME: Does this need some sort of parsing?
-            warnings.warn("Shape mismatch: function result does not match mechanism value: {}".format(value.type.pointee, val_ptr.type.pointee))
+            warnings.warn("Shape mismatch: function result does not match mechanism value param: {} vs. {}".format(value.type.pointee, val_ptr.type.pointee))
 
         # is_finished should be checked after output ports ran
         is_finished_f = ctx.import_llvm_function(self, tags=tags.union({"is_finished"}))
