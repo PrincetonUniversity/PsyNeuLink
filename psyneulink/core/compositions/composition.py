@@ -1358,13 +1358,13 @@ Projection in a Composition is returned by its `get_feedback_status<Composition.
 
 A Composition is always executed in a designated *execution context*, specified by an `execution_id
 <Context.execution_id>` that can be provided to the **context** argument of the method used to execute the
-Composition. Execution contexts make several capabilities possible:
+Composition. Execution contexts make several capabilities possible, the two most important of which are:
 
-  * A `Component` can be assigned to, and executed in more than one Composition, preserving its `value
+  * a `Component` can be assigned to, and executed in more than one Composition, preserving its `value
     <Component.value>` and that of its `parameters <Parameter_Statefulness>` independently for each of
-    the Compositions to which it is assigned.
+    the Compositions to which it is assigned;
 
-  * The same Composition can be exectued independently in different contexts; this can be used for
+  * the same Composition can be exectued independently in different contexts; this can be used for
     parallelizing parameter estimation, both for data fitting (see `ParamEstimationFunction`), and for
     simulating the Composition in `model-based optimization <OptimizationControlMechanism_Model_Based>`
     (see `OptimizationControlMechanism`).

@@ -865,14 +865,13 @@ When a Mechanism executes, the following sequence of actions is carried out:
       `function <OutputPort.function>` of each. The resulting `value <OutputPort.value>` for each Outport is placed
       in the Mechanism's `output_values <Mechanism_Base.output_values>` attribute.
 
-A Mechanism may be executed by calling its execute method directly:
+A Mechanism may be executed by calling its `execute <Mechanism_Base.execute>` method directly:
 
     >>> my_simple_mechanism = pnl.ProcessingMechanism()      #doctest: +SKIP
     >>> my_simple_mechanism.execute(1.0)                     #doctest: +SKIP
 
-A Mechanism can be executed using its `execute <Mechanism_Base.execute>` method.  This can be useful for testing a
-Mechanism and/or debugging.  However, more typically, Mechanisms are `executed as part of a Composition
-<Composition_Execution>`.
+This can be useful for testing a Mechanism and/or debugging.  However, more typically, Mechanisms are `executed as
+part of a Composition <Composition_Execution>`.
 
 .. _Mechanism_Execution_Composition:
 
@@ -883,10 +882,9 @@ A Mechanism can be assigned to one or more Compositions;  the values of its `par
 including its `variable <Mechanism_Base.variable>` and `value <Mechanism_Base.value>` attributes, are maintained
 separately for each `context in which it is executed <Composition_Execution_Context>` which, by default, is distinct
 for each Composition in which it is executed;  these execution-specific values can be accessed using the parameter's
-`get <Parameter.get>` method.  A parameter's value can also be accessed using standard `dot <Parameter_Dot_Notation>`,
+`get <Parameter.get>` method. A parameter's value can also be accessed using standard `dot <Parameter_Dot_Notation>`,
 which returns its most recenty assigned value, irrespective of the context (including Composition) in which it was
 assigned.
-
 
 .. _Mechanism_Runtime_Params:
 
