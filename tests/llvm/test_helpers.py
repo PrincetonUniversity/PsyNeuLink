@@ -128,7 +128,7 @@ def test_helper_is_close(mode):
             b1.store(out_val, out_ptr)
 
         builder.ret_void()
-        
+
     vec1 = copy.deepcopy(VECTOR)
     tmp = np.random.rand(DIM_X)
     tmp[0::2] = vec1[0::2]
@@ -196,7 +196,7 @@ def test_helper_all_close(mode):
     (pnlvm.ir.IntType(32), "%u", range(0, 100)),
     (pnlvm.ir.IntType(64), "%ld", [int(-4E10), int(-3E10), int(-2E10)]),
     (pnlvm.ir.DoubleType(), "%lf", [x *.5 for x in range(0, 10)]),
-    ])
+    ], ids=["i32", "i64", "double"])
 @pytest.mark.skipif(sys.platform == 'win32', reason="Loading C library is complicated on windows")
 def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):
     format_str = f"Hello {(format_spec+' ')*len(values_to_check)} \n"

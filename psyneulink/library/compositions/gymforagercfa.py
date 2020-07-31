@@ -75,14 +75,10 @@ Class Reference
 
 """
 
-import itertools
 import numpy as np
 import typecheck as tc
 
 import gym_forager
-
-from enum import Enum
-from itertools import product
 
 from psyneulink.library.compositions.regressioncfa import RegressionCFA
 from psyneulink.core.components.functions.learningfunctions import BayesGLM

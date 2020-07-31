@@ -587,7 +587,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, copy_iterable_with_shared, is_iterable
+from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, convert_to_np_array, copy_iterable_with_shared, is_iterable
 
 __all__ = [
     'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry',
@@ -674,9 +674,13 @@ def validate_monitored_port_spec(owner, spec_list):
 def _control_mechanism_costs_getter(owning_component=None, context=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
     try:
-        costs = [c.compute_costs(c.parameters.value._get(context), context=context)
-                 for c in owning_component.control_signals
-                 if hasattr(c, 'compute_costs')] # GatingSignals don't have cost fcts
+        costs = [
+            convert_to_np_array(
+                c.compute_costs(c.parameters.value._get(context), context=context)
+            )
+            for c in owning_component.control_signals
+            if hasattr(c, 'compute_costs')
+        ] # GatingSignals don't have cost fcts
         return costs
 
     except TypeError:
@@ -692,8 +696,10 @@ def _net_outcome_getter(owning_component=None, context=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not included in the net_outcome
     try:
         c = owning_component
-        return c.compute_net_outcome(c.parameters.outcome._get(context),
-                                     c.combine_costs(c.parameters.costs._get(context)))
+        return c.compute_net_outcome(
+            c.parameters.outcome._get(context),
+            c.combine_costs()
+        )
     except TypeError:
         return [0]
 
@@ -1183,13 +1189,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                             InputPort,
                                             OutputPort,
                                             ControlSignal))=None,
-                 modulation:tc.optional(str)=MULTIPLICATIVE,
-                 combine_costs:is_function_type=np.sum,
+                 modulation:tc.optional(str)=None,
+                 combine_costs:tc.optional(is_function_type)=None,
                  compute_reconfiguration_cost:tc.optional(is_function_type)=None,
                  compute_net_outcome=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs:tc.optional(is_pref_set)=None,
                  **kwargs
                  ):
 
@@ -1589,32 +1595,32 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 weight = self.monitored_output_ports_weights_and_exponents[monitored_port_index][0]
                 exponent = self.monitored_output_ports_weights_and_exponents[monitored_port_index][1]
 
-                print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
-                       format(monitored_port_Mech.name, monitored_port.name, weight, exponent))
+                print("\t\t{0}: {1} (exp: {2}; wt: {3})".
+                      format(monitored_port_Mech.name, monitored_port.name, weight, exponent))
 
         try:
             if self.control_signals:
-                print ("\n\tControlling the following Mechanism parameters:".format(self.name))
+                print("\n\tControlling the following Mechanism parameters:".format(self.name))
                 # Sort for consistency of output:
                 port_Names_sorted = sorted(self.control_signals.names)
                 for port_Name in port_Names_sorted:
                     for projection in self.control_signals[port_Name].efferents:
-                        print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+                        print("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
         except:
             pass
 
         try:
             if self.gating_signals:
-                print ("\n\tGating the following Ports:".format(self.name))
+                print("\n\tGating the following Ports:".format(self.name))
                 # Sort for consistency of output:
                 port_Names_sorted = sorted(self.gating_signals.names)
                 for port_Name in port_Names_sorted:
                     for projection in self.gating_signals[port_Name].efferents:
-                        print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+                        print("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
         except:
             pass
 
-        print ("\n---------------------------------------------------------")
+        print("\n---------------------------------------------------------")
 
     def add_to_monitor(self, monitor_specs, context=None):
         """Instantiate OutputPorts to be monitored by ControlMechanism's `objective_mechanism
@@ -1687,8 +1693,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
         for eff in self.efferents:
             dependent_projections.add(eff)
 
+        if composition:
+            deeply_nested_aux_components = composition._get_deeply_nested_aux_projections(self)
+            dependent_projections -= set(deeply_nested_aux_components.values())
+
         for proj in dependent_projections:
             proj._activate_for_compositions(composition)
+
+        for proj in deeply_nested_aux_components.values():
+            composition.add_projection(proj, sender=proj.sender, receiver=proj.receiver)
 
     def _apply_control_allocation(self, control_allocation, runtime_params, context):
         """Update values to `control_signals <ControlMechanism.control_signals>`

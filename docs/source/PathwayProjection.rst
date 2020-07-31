@@ -1,14 +1,16 @@
 PathwayProjection
 =================
 
-*Subclasses:*
+.. container:: subclasses
 
-.. toctree::
-   :maxdepth: 1
+    *Subclasses*
 
-   MappingProjection
-   MaskedMappingProjection
-   AutoAssociativeProjection
+    .. toctree::
+       :maxdepth: 1
+
+       MappingProjection
+       MaskedMappingProjection
+       AutoAssociativeProjection
 
 .. automodule:: psyneulink.core.components.projections.pathway.pathwayprojection
    :members:

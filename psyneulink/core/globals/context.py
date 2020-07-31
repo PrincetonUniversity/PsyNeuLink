@@ -228,14 +228,14 @@ class ContextFlags(enum.IntFlag):
                     flagged_items.append(ContextFlags.IDLE.name)
                     break
                 if c & condition_flags:
-                   flagged_items.append(c.name)
+                    flagged_items.append(c.name)
         if SOURCE in fields:
             for c in SOURCE_FLAGS:
                 if not condition_flags & ContextFlags.SOURCE_MASK:
                     flagged_items.append(ContextFlags.NONE.name)
                     break
                 if c & condition_flags:
-                   flagged_items.append(c.name)
+                    flagged_items.append(c.name)
         string += ", ".join(flagged_items)
         return string
 

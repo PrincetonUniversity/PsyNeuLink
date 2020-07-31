@@ -413,6 +413,7 @@ from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, \
     OPTIMIZATION_CONTROL_MECHANISM, OBJECTIVE_MECHANISM, OUTCOME, PRODUCT, PARAMS, \
     CONTROL, AUTO_ASSIGN_MATRIX
+from psyneulink.core.globals.utilities import convert_to_np_array
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.context import handle_external_context
@@ -712,18 +713,18 @@ class OptimizationControlMechanism(ControlMechanism):
     def __init__(self,
                  agent_rep=None,
                  function=None,
-                 features: tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort)) = None,
-                 feature_function: tc.optional(tc.any(is_function_type)) = None,
+                 features: tc.optional(tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))) = None,
+                 feature_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  num_estimates = None,
-                 search_function: tc.optional(tc.any(is_function_type)) = None,
-                 search_termination_function: tc.optional(tc.any(is_function_type)) = None,
+                 search_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
+                 search_termination_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  search_statefulness=None,
                  context=None,
                  **kwargs):
         """Implement OptimizationControlMechanism"""
 
         # If agent_rep hasn't been specified, put into deferred init
-        if agent_rep==None:
+        if agent_rep is None:
             if context.source==ContextFlags.COMMAND_LINE:
                 # Temporarily name InputPort
                 self._assign_deferred_init_name(self.__class__.__name__, context)
@@ -796,7 +797,7 @@ class OptimizationControlMechanism(ControlMechanism):
         for i in range(1, len(self.input_ports)):
             port = self.input_ports[i]
             if len(port.path_afferents) > 1:
-                raise OptimizationControlMechanismError(f"Invalid {InputPort.__name__} on {self.name}. "
+                raise OptimizationControlMechanismError(f"Invalid {type(input_port).__name__} on {self.name}. "
                                                         f"{port.name} should receive exactly one projection, "
                                                         f"but it receives {len(port.path_afferents)} projections.")
 
@@ -873,7 +874,7 @@ class OptimizationControlMechanism(ControlMechanism):
             port = self.input_ports[i]
             port._update(params=runtime_params, context=context)
             port_values.append(port.parameters.value._get(context))
-        return np.array(port_values)
+        return convert_to_np_array(port_values)
         # # MODIFIED 5/8/20 NEW:
         # input_port_values = super()._update_input_ports(runtime_params, context)
         # port_values.append(input_port_values)
@@ -983,12 +984,15 @@ class OptimizationControlMechanism(ControlMechanism):
             old_composition = context.composition
             context.composition = self.agent_rep
 
+            # We shouldn't get this far if execution mode is not Python
+            exec_mode = self.parameters.comp_execution_mode._get(context)
+            assert exec_mode == "Python"
             result = self.agent_rep.evaluate(self.parameters.feature_values._get(context),
                                              control_allocation,
                                              self.parameters.num_estimates._get(context),
                                              base_context=context,
                                              context=new_context,
-                                             execution_mode=self.parameters.comp_execution_mode._get(context),
+                                             execution_mode=exec_mode,
                                              return_results=return_results)
             context.composition = old_composition
 
@@ -1021,8 +1025,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _get_evaluate_param_initializer(self, context):
         num_estimates = self.parameters.num_estimates.get(context) or 0
-        # FIXME: The intensity cost function is not setup with the right execution id
-        intensity_cost = tuple(op.intensity_cost_function._get_param_initializer(None) for op in self.output_ports)
+        intensity_cost = tuple(op.intensity_cost_function._get_param_initializer(context) for op in self.output_ports)
         return (intensity_cost, num_estimates)
 
     def _get_evaluate_state_struct_type(self, ctx):
@@ -1224,12 +1227,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return f
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable, *, tags:frozenset):
         fun = ctx.import_llvm_function(function)
-        fun_in, builder = self._gen_llvm_function_input_parse(builder, ctx, fun, variable)
         fun_out = builder.alloca(fun.args[3].type.pointee)
 
-        args = [params, context, fun_in, fun_out]
+        args = [params, context, variable, fun_out]
         # If we're calling compiled version of Composition.evaluate,
         # we need to pass extra arguments
         if len(fun.args) > 4:

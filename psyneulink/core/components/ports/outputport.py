@@ -615,12 +615,10 @@ Class Reference
 """
 
 import copy
-import inspect
 import numpy as np
 import typecheck as tc
 import types
 import warnings
-from collections import OrderedDict
 
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function
@@ -638,7 +636,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    is_numeric, iscompatible, make_readonly_property, recursive_update, ContentAddressableList
+    convert_to_np_array, is_numeric, iscompatible, make_readonly_property, recursive_update, ContentAddressableList
 
 __all__ = [
     'OutputPort', 'OutputPortError', 'PRIMARY', 'SEQUENTIAL', 'StandardOutputPorts', 'StandardOutputPortsError',
@@ -683,12 +681,14 @@ def _parse_output_port_variable(variable, owner, context=None, output_port_name=
                 owner_param_name = spec[0]
 
             try:
+                index = spec[1]() if callable(spec[1]) else spec[1]
+
                 # context is None during initialization, and we don't want to
                 # incur the cost of .get during execution
                 if context is None:
-                    return getattr(owner.parameters, owner_param_name).get(context)[spec[1]]
+                    return getattr(owner.parameters, owner_param_name).get(context)[index]
                 else:
-                    return getattr(owner.parameters, owner_param_name)._get(context)[spec[1]]
+                    return getattr(owner.parameters, owner_param_name)._get(context)[index]
             except TypeError:
                 if context is None:
                     if getattr(owner.parameters, owner_param_name).get(context) is None:
@@ -1029,7 +1029,7 @@ class OutputPort(Port_Base):
         self._instantiate_projections_to_port(projections=modulatory_projections, context=context)
 
         # Treat all remaining specifications in projections as ones for outgoing MappingProjections
-        pathway_projections = [proj for proj in projections if not proj in modulatory_projections]
+        pathway_projections = [proj for proj in projections if proj not in modulatory_projections]
         for proj in pathway_projections:
             self._instantiate_projection_from_port(projection_spec=MappingProjection,
                                                     receiver=proj,
@@ -1117,7 +1117,7 @@ class OutputPort(Port_Base):
                 # (actual assignment is made in _parse_port_spec)
                 if reference_value is None:
                     port_dict[REFERENCE_VALUE]=port_spec
-                elif  not iscompatible(port_spec, reference_value):
+                elif not iscompatible(port_spec, reference_value):
                     raise OutputPortError("Value in first item of 2-item tuple specification for {} of {} ({}) "
                                      "is not compatible with its {} ({})".
                                      format(OutputPort.__name__, owner.name, port_spec,
@@ -1350,7 +1350,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
                     for item in owner_value))):
         pass
     else:
-        converted_to_2d = np.atleast_2d(owner.value)
+        converted_to_2d = convert_to_np_array(owner.value, dimension=2)
         # If owner_value is a list of heterogenous elements, use as is
         if converted_to_2d.dtype == object:
             owner_value = owner.defaults.value

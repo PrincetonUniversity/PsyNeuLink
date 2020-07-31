@@ -407,8 +407,6 @@ Class Reference
 ---------------
 """
 
-import itertools
-
 from psyneulink.core.components.component import component_keywords
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
@@ -627,7 +625,7 @@ class ModulatorySignal(OutputPort):
         if self.owner and self.modulation is None:
             self.modulation = self.owner.modulation
         if self.modulation is not None:
-            if not self.modulation in modulation_type_keywords:
+            if self.modulation not in modulation_type_keywords:
                 try:
                     getattr(self.function.parameters, self.modulation)
                 except:

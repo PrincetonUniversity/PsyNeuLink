@@ -13,6 +13,8 @@ import ctypes
 import numpy as np
 import typecheck as tc
 
+from inspect import signature, _empty
+
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import FunctionError, Function_Base
 from psyneulink.core.globals.context import ContextFlags
@@ -384,7 +386,7 @@ class UserDefinedFunction(Function_Base):
                  default_variable=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  **kwargs):
 
         def get_cust_fct_args(custom_function):
@@ -394,7 +396,6 @@ class UserDefinedFunction(Function_Base):
                 - dict with all others (to be assigned as params of UDF)
                 - dict with default values (from function definition, else set to None)
             """
-            from inspect import signature, _empty
             try:
                 arg_names = custom_function.__code__.co_varnames
             except AttributeError:
@@ -604,4 +605,3 @@ class UserDefinedFunction(Function_Base):
         builder.call(wrapper_ptr, [params, state, arg_in, arg_out])
 
         return builder
-

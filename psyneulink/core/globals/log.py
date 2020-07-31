@@ -381,10 +381,10 @@ Class Reference
 
 """
 import enum
-import inspect
 import warnings
 
 from collections import OrderedDict, namedtuple
+from collections.abc import MutableMapping
 
 import numpy as np
 import typecheck as tc
@@ -506,7 +506,6 @@ def _time_string(time):
 
 #region Custom Entries Dict
 # Modified from: http://stackoverflow.com/questions/7760916/correct-useage-of-getter-setter-for-dictionary-values
-from collections.abc import MutableMapping
 class EntriesDict(MutableMapping,dict):
     """Maintains a Dict of Log entries; assignment of a LogEntry to an entry appends it to the list for that entry.
 
@@ -806,7 +805,7 @@ class Log:
                 levels |= l
             level = levels
 
-            if not item in self.loggable_items:
+            if item not in self.loggable_items:
                 # KDM 8/13/18: NOTE: add_entries is not defined anywhere
                 raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
                                format(item, self.owner.name))
@@ -1154,7 +1153,6 @@ class Log:
                 warnings.warn("{0} is not an entry in the Log for {1}".
                       format(entry_name, self.owner.name))
             else:
-                import numpy as np
                 multiple_eids = len(datum)>1
                 for eid in datum:
                     if multiple_eids:

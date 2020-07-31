@@ -275,13 +275,11 @@ Class Reference
 
 """
 
-import collections
 import copy
 import datetime
 import logging
-import warnings
 
-from toposort import toposort, toposort_flatten
+from toposort import toposort
 
 from psyneulink.core.globals.context import Context, handle_external_context
 from psyneulink.core.globals.json import JSONDumpable

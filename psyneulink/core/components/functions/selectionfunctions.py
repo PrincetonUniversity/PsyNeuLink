@@ -203,13 +203,13 @@ class OneHot(SelectionFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 mode: tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
+                 mode: tc.optional(tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
                                MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR,
-                               PROB, PROB_INDICATOR)=MAX_VAL,
+                               PROB, PROB_INDICATOR))=None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if seed is None:
             seed = get_global_seed()

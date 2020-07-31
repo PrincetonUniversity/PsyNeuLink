@@ -330,7 +330,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                  sample: tc.optional(tc.any(OutputPort, Mechanism_Base, dict, is_numeric, str))=None,
                  target: tc.optional(tc.any(OutputPort, Mechanism_Base, dict, is_numeric, str))=None,
                  function=None,
-                 output_ports:tc.optional(tc.any(str, Iterable)) = None,
+                 output_ports:tc.optional(tc.optional(tc.any(str, Iterable))) = None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,

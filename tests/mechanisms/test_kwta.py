@@ -7,7 +7,7 @@ from psyneulink.core.components.functions.transferfunctions import Linear, Logis
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
-from psyneulink.core.globals.utilities import UtilitiesError
+from psyneulink.core.globals.parameters import ParameterError
 from psyneulink.library.components.mechanisms.processing.transfer.kwtamechanism import KWTAError, KWTAMechanism
 
 class TestKWTAInputs:
@@ -60,13 +60,13 @@ class TestKWTAInputs:
         assert("which is not supported for KWTA" in str(error_text.value))
 
     def test_kwta_var_list_of_strings(self):
-        with pytest.raises(UtilitiesError) as error_text:
+        with pytest.raises(ParameterError) as error_text:
             K = KWTAMechanism(
                 name='K',
                 default_variable=['a', 'b', 'c', 'd'],
                 integrator_mode=True
             )
-        assert("has non-numeric entries" in str(error_text.value))
+        assert("non-numeric entries" in str(error_text.value))
 
     def test_recurrent_mech_inputs_mismatched_with_default_longer(self):
         with pytest.raises(MechanismError) as error_text:

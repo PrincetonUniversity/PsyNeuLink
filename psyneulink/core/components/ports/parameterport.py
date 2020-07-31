@@ -359,8 +359,8 @@ Class Reference
 
 """
 
+from copy import deepcopy
 import inspect
-import itertools
 import types
 import warnings
 
@@ -625,7 +625,7 @@ class ParameterPort(Port_Base):
                     # (actual assignment is made in _parse_port_spec)
                     if reference_value is None:
                         port_dict[REFERENCE_VALUE]=port_spec
-                    elif  not iscompatible(port_spec, reference_value):
+                    elif not iscompatible(port_spec, reference_value):
                         raise PortError("Value in first item of 2-item tuple specification for {} of {} ({}) "
                                          "is not compatible with its {} ({})".
                                          format(ParameterPort.__name__, owner.name, port_spec,
@@ -871,13 +871,13 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
         """Return (<default param value>, <modulatory spec>) for modulatory spec
         """
         try:
-            param_default_value = obj.get_constructor_defaults()[name]
+            param_default_value = getattr(obj.defaults, name)
             # Only assign default value if it is not None
             if param_default_value is not None:
                 return (param_default_value, value)
             else:
                 return value
-        except KeyError:
+        except AttributeError:
             raise ParameterPortError("Unrecognized specification for {} paramater of {} ({})".
                                       format(param_name, owner.name, param_value))
 
@@ -1002,7 +1002,6 @@ def _instantiate_parameter_port(owner, param_name, param_value, context, functio
         ):
             reference_value = function_param_value
         else:
-            from copy import deepcopy
             reference_value = deepcopy(function_param_value)
 
         # Assign parameterPort for function_param to the component
@@ -1090,7 +1089,7 @@ def _get_parameter_port(sender_owner, sender_type, param_name, component):
                                         "of {} or its function"
                                         .format(param_name, sender_type, sender_owner.name, component))
         # Check that the Mechanism has a ParameterPort for the param
-        if not param_name in component._parameter_ports.names:
+        if param_name not in component._parameter_ports.names:
             raise ParameterPortError("There is no ParameterPort for the parameter ({}) of {} "
                                         "specified in {} for {}".
                                         format(param_name, component.name, sender_type, sender_owner.name))

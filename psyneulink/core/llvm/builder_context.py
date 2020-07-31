@@ -20,6 +20,8 @@ import re
 from typing import Set
 import weakref
 from psyneulink.core.scheduling.time import Time
+from psyneulink.core.globals.sampleiterator import SampleIterator
+from psyneulink.core.globals.utilities import ContentAddressableList
 from psyneulink.core import llvm as pnlvm
 from . import codegen
 from .debug import debug_env
@@ -252,8 +254,21 @@ class LLVMBuilderContext:
         if hasattr(component, '_get_param_struct_type'):
             return component._get_param_struct_type(self)
 
-        params = component._get_param_values()
-        return self.convert_python_struct_to_llvm_ir(params)
+        def _param_struct(p):
+            val = p.get(None)   # this should use defaults
+            if hasattr(val, "_get_compilation_params") or \
+               hasattr(val, "_get_param_struct_type"):
+                return self.get_param_struct_type(val)
+            if isinstance(val, ContentAddressableList):
+                return ir.LiteralStructType(self.get_param_struct_type(x) for x in val)
+            elif p.name == 'matrix':   # Flatten matrix
+                val = np.asfarray(val).flatten()
+            elif np.isscalar(val) and component._is_param_modulated(p):
+                val = [val]   # modulation adds array wrap
+            return self.convert_python_struct_to_llvm_ir(val)
+
+        elements = map(_param_struct, component._get_compilation_params())
+        return ir.LiteralStructType(elements)
 
     @_comp_cached
     def get_state_struct_type(self, component):
@@ -261,8 +276,18 @@ class LLVMBuilderContext:
         if hasattr(component, '_get_state_struct_type'):
             return component._get_state_struct_type(self)
 
-        stateful = component._get_state_values()
-        return self.convert_python_struct_to_llvm_ir(stateful)
+        def _state_struct(p):
+            val = p.get(None)   # this should use defaults
+            if hasattr(val, "_get_compilation_state") or \
+               hasattr(val, "_get_state_struct_type"):
+                return self.get_state_struct_type(val)
+            if isinstance(val, ContentAddressableList):
+                return ir.LiteralStructType(self.get_state_struct_type(x) for x in val)
+            struct = self.convert_python_struct_to_llvm_ir(val)
+            return ir.ArrayType(struct, p.history_min_length + 1)
+
+        elements = map(_state_struct, component._get_compilation_state())
+        return ir.LiteralStructType(elements)
 
     @_comp_cached
     def get_data_struct_type(self, component):
@@ -297,14 +322,22 @@ class LLVMBuilderContext:
             # FIXME: Consider enums of non-int type
             assert all(round(x.value) == x.value for x in type(t))
             return self.int32_ty
-        elif isinstance(t, (int, float, np.number)):
+        elif isinstance(t, (int, float, np.floating)):
             return self.float_ty
+        elif isinstance(t, np.integer):
+            # Python 'int' is handled above as it is the default type for '0'
+            return ir.IntType(t.nbytes * 8)
         elif isinstance(t, np.ndarray):
             return self.convert_python_struct_to_llvm_ir(t.tolist())
         elif isinstance(t, np.random.RandomState):
             return pnlvm.builtins.get_mersenne_twister_state_struct(self)
         elif isinstance(t, Time):
             return ir.ArrayType(self.int32_ty, len(Time._time_scale_attr_map))
+        elif isinstance(t, SampleIterator):
+            if isinstance(t.generator, list):
+                return ir.ArrayType(self.float_ty, len(t.generator))
+            # Generic iterator is {start, increment, count}
+            return ir.LiteralStructType((self.float_ty, self.float_ty, self.int32_ty))
         assert False, "Don't know how to convert {}".format(type(t))
 
 
@@ -324,7 +357,10 @@ def _gen_cuda_kernel_wrapper_module(function):
 
     decl_f = ir.Function(module, function.type.pointee, function.name)
     assert decl_f.is_declaration
-    kernel_func = ir.Function(module, function.type.pointee, function.name + "_cuda_kernel")
+
+    wrapper_type = ir.FunctionType(ir.VoidType(), (*function.type.pointee.args,
+                                                   ir.IntType(32)))
+    kernel_func = ir.Function(module, wrapper_type, function.name + "_cuda_kernel")
     block = kernel_func.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
 
@@ -336,27 +372,48 @@ def _gen_cuda_kernel_wrapper_module(function):
     global_id = builder.mul(builder.call(ctaid_x_f, []), builder.call(ntid_x_f, []))
     global_id = builder.add(global_id, builder.call(tid_x_f, []))
 
+    # Check global id and exit if we're over
+    should_quit = builder.icmp_unsigned(">=", global_id, kernel_func.args[-1])
+    with builder.if_then(should_quit):
+        builder.ret_void()
+
+    # Index all pointer arguments. Ignore the thread count argument
+    args = list(kernel_func.args)[:-1]
+    indexed_args = []
+
+    is_grid_evaluate = len(args) == 8
+    if is_grid_evaluate:
+        # There are 8 arguments to evaluate:
+        # param, state, allocations, output, input, comp_state, comp_param, comp_data
+        # state (#1) needs to be copied, compoition state and data are copied in evaluate
+        private_state = builder.alloca(args[0].type.pointee)
+        builder.store(builder.load(args[0]), private_state)
+        args[0] = private_state
+
     # Runs need special handling. data_in and data_out are one dimensional,
     # but hold entries for all parallel invocations.
-    is_comp_run = len(kernel_func.args) == 7
+    is_comp_run = len(args) == 7
     if is_comp_run:
-        runs_count = kernel_func.args[5]
-        input_count = kernel_func.args[6]
+        runs_count = args[5]
+        input_count = args[6]
 
-    # Index all pointer arguments
-    indexed_args = []
-    for i, arg in enumerate(kernel_func.args):
+    for i, arg in enumerate(args):
         # Don't adjust #inputs and #trials
         if isinstance(arg.type, ir.PointerType):
             offset = global_id
-            # #runs and #trials needs to be the same
-            if is_comp_run and i >= 5:
-                offset = ir.IntType(32)(0)
-            # data arrays need special handling
-            elif is_comp_run and i == 4:  # data_out
-                offset = builder.mul(global_id, builder.load(runs_count))
-            elif is_comp_run and i == 3:  # data_in
-                offset = builder.mul(global_id, builder.load(input_count))
+            if is_comp_run:
+                # #runs and #trials needs to be the same
+                if i >= 5:
+                    offset = ir.IntType(32)(0)
+                # data arrays need special handling
+                elif is_comp_run and i == 4:  # data_out
+                    offset = builder.mul(global_id, builder.load(runs_count))
+                elif is_comp_run and i == 3:  # data_in
+                    offset = builder.mul(global_id, builder.load(input_count))
+            elif is_grid_evaluate:
+                # all but #2 and #3 are shared
+                if i != 2 and i != 3:
+                    offset = ir.IntType(32)(0)
 
             arg = builder.gep(arg, [offset])
 

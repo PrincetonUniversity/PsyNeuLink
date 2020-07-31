@@ -149,11 +149,11 @@ class TestLCControlMechanism:
         Hidden_Layer_1 = pnl.TransferMechanism(name='Hidden Layer_1', function=pnl.Logistic, size=5)
         Hidden_Layer_2 = pnl.TransferMechanism(name='Hidden Layer_2', function=pnl.Logistic, size=4)
         Output_Layer = pnl.TransferMechanism(name='Output Layer', function=pnl.Logistic, size=3)
-    
+
         Control_Mechanism = pnl.ControlMechanism(size=[1], control=[Hidden_Layer_1.input_port,
                                                                     Hidden_Layer_2.input_port,
                                                                     Output_Layer.input_port])
-    
+
         Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
         Middle_Weights_matrix = (np.arange(5 * 4).reshape((5, 4)) + 1) / (5 * 4)
         Output_Weights_matrix = (np.arange(4 * 3).reshape((4, 3)) + 1) / (4 * 3)
@@ -174,7 +174,7 @@ class TestLCControlMechanism:
         Output_Weights = pnl.MappingProjection(sender=Hidden_Layer_2,
                                            receiver=Output_Layer,
                                            matrix=Output_Weights_matrix)
-    
+
         pathway = [Input_Layer, Input_Weights, Hidden_Layer_1, Hidden_Layer_2, Output_Layer]
         comp = pnl.Composition()
         backprop_pathway = comp.add_backpropagation_learning_pathway(
@@ -183,42 +183,48 @@ class TestLCControlMechanism:
         )
         # c.add_linear_processing_pathway(pathway=z)
         comp.add_node(Control_Mechanism)
-    
+
         stim_list = {
             Input_Layer: [[-1, 30]],
             Control_Mechanism: [1.0],
             backprop_pathway.target: [[0, 0, 1]]}
-    
+
         comp.learn(num_trials=3, inputs=stim_list)
 
         expected_results =[[[0.81493513, 0.85129046, 0.88154205]],
                            [[0.81331773, 0.85008207, 0.88157851]],
                            [[0.81168332, 0.84886047, 0.88161468]]]
         assert np.allclose(comp.results, expected_results)
-    
+
         stim_list[Control_Mechanism]=[0.0]
         results = comp.learn(num_trials=1, inputs=stim_list)
         expected_results = [[[0.5, 0.5, 0.5]]]
         assert np.allclose(results, expected_results)
-    
+
         stim_list[Control_Mechanism]=[2.0]
         results = comp.learn(num_trials=1, inputs=stim_list)
         expected_results = [[0.96941429, 0.9837254 , 0.99217549]]
         assert np.allclose(results, expected_results)
-
-    def test_control_of_all_input_ports(self):
-        mech = pnl.ProcessingMechanism(input_ports=['A','B','C'])
-        control_mech = pnl.ControlMechanism(control=mech.input_ports)
-        comp = pnl.Composition()
-        comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
-        results = comp.run(inputs={mech:[[2],[2],[2]], control_mech:[2]}, num_trials=2)
-        np.allclose(results, [[4],[4],[4]])
 
     @pytest.mark.parametrize('mode', ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_control_of_all_input_ports(self, mode):
+        mech = pnl.ProcessingMechanism(input_ports=['A','B','C'])
+        control_mech = pnl.ControlMechanism(control=mech.input_ports)
+        comp = pnl.Composition()
+        comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
+        results = comp.run(inputs={mech:[[2],[2],[2]], control_mech:[2]}, num_trials=2, bin_execute=mode)
+        np.allclose(results, [[4],[4],[4]])
+
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_control_of_all_output_ports(self, mode):

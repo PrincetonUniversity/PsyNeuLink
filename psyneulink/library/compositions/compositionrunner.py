@@ -8,7 +8,6 @@
 
 # ********************************************* AutodiffComposition *************************************************
 import numpy as np
-import collections.abc
 
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.keywords import OBJECTIVE_MECHANISM, TRAINING_SET
@@ -70,7 +69,7 @@ class CompositionRunner():
                     yield chunk
                 if call_after_minibatch:
                     call_after_minibatch()
-                
+
                 if not self._is_llvm_mode:
                     self._composition._update_learning_parameters(context)
             if (not self._is_llvm_mode and early_stopper is not None
