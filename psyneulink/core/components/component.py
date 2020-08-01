@@ -1381,6 +1381,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             # Modulated parameters change shape to array
             if np.isscalar(param) and self._is_param_modulated(p):
                 return (param,)
+            elif p.name == 'num_estimates':
+                return 0 if param is None else param
             elif p.name == 'matrix': # Flatten matrix
                 return tuple(np.asfarray(param).flatten())
             return _convert(param)
