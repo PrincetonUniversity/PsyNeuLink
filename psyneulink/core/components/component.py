@@ -1246,11 +1246,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "previous_w", "random_state", "is_finished_flag",
                      "num_executions_before_finished", "num_executions",
                      "execution_count", "value", "input_ports", "output_ports"}
-        blacklist = set() if hasattr(self, 'ports') else {"value"}
-        # 'objective_mechanism' parameter is just for reference
-        blacklist.add("objective_mechanism")
-        # 'agent_rep'is for reference to enclosing composition
-        blacklist.add("agent_rep")
+        blacklist = { # References to other components
+                     "objective_mechanism", "agent_rep"}
+        # Only mechanisms use "value" state
+        if not hasattr(self, 'ports'):
+            blacklist.add("value")
         def _is_compilation_state(p):
             val = p.get()   # memoize for this function
             return val is not None and p.name not in blacklist and \
@@ -1301,6 +1301,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "input_labels_dict", "output_labels_dict",
                      "modulated_mechanisms", "grid",
                      "activation_derivative_fct", "input_specification",
+                     # Reference to other components
+                     "objective_mechanism", "agent_rep",
                      # Shape mismatch
                      "costs", "auto", "hetero",
                      # autodiff specific types
@@ -1310,10 +1312,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # * integration rate -- shape mismatch with param port input
         if hasattr(self, 'ports'):
             blacklist.update(["matrix", "integration_rate"])
-        # 'objective_mechanism' parameter is just for reference
-        blacklist.add("objective_mechanism")
-        # 'agent_rep'is for reference to enclosing composition
-        blacklist.add("agent_rep")
         def _is_compilation_param(p):
             if p.name not in blacklist and not isinstance(p, ParameterAlias):
                 #FIXME: this should use defaults
