@@ -2261,12 +2261,6 @@ class Port_Base(Port):
             input_types.append(ctx.get_output_struct_type(mod))
         return pnlvm.ir.LiteralStructType(input_types)
 
-    def _get_compilation_params(self):
-        return [self.parameters.function]
-
-    def _get_compilation_state(self):
-        return [self.parameters.function]
-
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         state_f = ctx.import_llvm_function(self.function)
 

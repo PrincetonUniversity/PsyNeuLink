@@ -1247,7 +1247,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "num_executions_before_finished", "num_executions",
                      "execution_count", "value", "input_ports", "output_ports"}
         blacklist = { # References to other components
-                     "objective_mechanism", "agent_rep"}
+                     "objective_mechanism", "agent_rep", "projections"}
         # Only mechanisms use "value" state
         if not hasattr(self, 'ports'):
             blacklist.add("value")
@@ -1302,7 +1302,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "modulated_mechanisms", "grid",
                      "activation_derivative_fct", "input_specification",
                      # Reference to other components
-                     "objective_mechanism", "agent_rep",
+                     "objective_mechanism", "agent_rep", "projections",
                      # Shape mismatch
                      "costs", "auto", "hetero",
                      # autodiff specific types
