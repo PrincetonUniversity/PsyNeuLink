@@ -219,7 +219,7 @@ In the following example, a `MappingProjection` is created, and its
 .. note::
    The `matrix <MappingProjection.MappingProjection.matrix>` parameter belongs to the MappingProjection's `function
    <Projection_Base.function>`;  however, since it has only one standard function, its arguments are available in the
-   constructor for the Projection (see `Component_Specifying_Functions_and_Parameters` for a more detailed explanation).
+   constructor for the Projection (see `here <User_Modifiable_Parameters>` for a more detailed explanation).
 
 The example below shows how to specify the parameters in the first example using a parameter specification dictionary::
 
