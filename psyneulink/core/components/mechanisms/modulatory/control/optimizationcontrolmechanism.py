@@ -1052,34 +1052,28 @@ class OptimizationControlMechanism(ControlMechanism):
         total_cost = builder.alloca(ctx.float_ty)
         builder.store(ctx.float_ty(-0.0), total_cost)
         for i, op in enumerate(self.output_ports):
-            # FIXME: Add support for other cost types
-            assert op.cost_options == CostFunctions.INTENSITY
-
             op_i_params = builder.gep(op_params, [ctx.int32_ty(0),
                                                   ctx.int32_ty(i)])
             op_i_state = builder.gep(op_states, [ctx.int32_ty(0),
                                                  ctx.int32_ty(i)])
 
-            func = ctx.import_llvm_function(op.intensity_cost_function)
-            func_params = pnlvm.helpers.get_param_ptr(builder, op, op_i_params,
-                                                      "intensity_cost_function")
-            func_state = pnlvm.helpers.get_state_ptr(builder, op, op_i_state,
-                                                     "intensity_cost_function")
-            func_out = builder.alloca(func.args[3].type.pointee)
-            func_in = builder.alloca(func.args[2].type.pointee)
+            op_f = ctx.import_llvm_function(op, tags=frozenset({"costs"}))
 
-            # copy allocation_sample, the input is 1-element array
-            data_in = builder.gep(allocation_sample, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            data_out = builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            op_in = builder.alloca(op_f.args[2].type.pointee)
+
+            # copy allocation_sample, the input is 1-element array in a struct
+            data_in = builder.gep(allocation_sample, [ctx.int32_ty(0),
+                                                      ctx.int32_ty(i)])
+            data_out = builder.gep(op_in, [ctx.int32_ty(0), ctx.int32_ty(0),
+                                           ctx.int32_ty(0)])
             builder.store(builder.load(data_in), data_out)
-            builder.call(func, [func_params, func_state, func_in, func_out])
 
-            # extract cost result
-            res_in = builder.gep(func_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            cost = builder.load(res_in)
+            # Invoke cost function
+            cost = builder.call(op_f, [op_i_params, op_i_state, op_in])
+
             # simplified version of combination fmax(cost, 0)
             ltz = builder.fcmp_ordered("<", cost, cost.type(0))
-            cost = builder.select(ltz, ctx.float_ty(0), cost)
+            cost = builder.select(ltz, cost.type(0), cost)
 
             # combine is not a PNL function
             assert self.combine_costs is np.sum
