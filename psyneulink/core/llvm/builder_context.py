@@ -263,6 +263,8 @@ class LLVMBuilderContext:
                 return ir.LiteralStructType(self.get_param_struct_type(x) for x in val)
             elif p.name == 'matrix':   # Flatten matrix
                 val = np.asfarray(val).flatten()
+            elif p.name == 'num_estimates':  # Should always be int
+                val = np.int32(0) if val is None else np.int32(val)
             elif np.isscalar(val) and component._is_param_modulated(p):
                 val = [val]   # modulation adds array wrap
             return self.convert_python_struct_to_llvm_ir(val)
@@ -381,14 +383,9 @@ def _gen_cuda_kernel_wrapper_module(function):
     args = list(kernel_func.args)[:-1]
     indexed_args = []
 
-    is_grid_evaluate = len(args) == 8
-    if is_grid_evaluate:
-        # There are 8 arguments to evaluate:
-        # param, state, allocations, output, input, comp_state, comp_param, comp_data
-        # state (#1) needs to be copied, compoition state and data are copied in evaluate
-        private_state = builder.alloca(args[0].type.pointee)
-        builder.store(builder.load(args[0]), private_state)
-        args[0] = private_state
+    # There are 6 arguments to evaluate:
+    # comp_param, comp_state, allocations, output, input, comp_data
+    is_grid_evaluate = len(args) == 6
 
     # Runs need special handling. data_in and data_out are one dimensional,
     # but hold entries for all parallel invocations.
