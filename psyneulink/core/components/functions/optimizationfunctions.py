@@ -1417,8 +1417,7 @@ class GridSearch(OptimizationFunction):
                 value_t.as_pointer(),
                 ctx.float_ty.as_pointer(),
                 ctx.int32_ty]
-        builder = ctx.create_llvm_function(args, self, tags=tags,
-                                           return_type=pnlvm.ir.VoidType())
+        builder = ctx.create_llvm_function(args, self, tags=tags)
 
         params, state, min_sample_ptr, samples_ptr, min_value_ptr, values_ptr, opt_count_ptr, count = builder.function.args
         for p in builder.function.args[:-1]:
