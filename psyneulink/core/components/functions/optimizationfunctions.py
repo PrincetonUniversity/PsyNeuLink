@@ -1349,6 +1349,11 @@ class GridSearch(OptimizationFunction):
             s.reset()
         self.grid = itertools.product(*[s for s in self.search_space])
 
+    def _get_optimized_composition(self):
+        # self.objective_function may be a bound method of
+        # OptimizationControlMechanism
+        return getattr(self.objective_function, '__self__', None)
+
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "select_min" in tags:
             return self._gen_llvm_select_min_function(ctx=ctx, tags=tags)
@@ -1384,11 +1389,6 @@ class GridSearch(OptimizationFunction):
 
         return ctx.convert_python_struct_to_llvm_ir(variable)
 
-    def _get_optimized_composition(self):
-        # self.objective_function may be a bound method of
-        # OptimizationControlMechanism
-        return getattr(self.objective_function, '__self__', None)
-
     def _get_output_struct_type(self, ctx):
         val = self.defaults.value
         # compiled version should never return 'all values'
@@ -1399,7 +1399,7 @@ class GridSearch(OptimizationFunction):
 
     def _gen_llvm_select_min_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         assert "select_min" in tags
-        ocm = getattr(self.objective_function, '__self__', None)
+        ocm = self._get_optimized_composition()
         if ocm is not None:
             assert ocm.function is self
             sample_t = ocm._get_evaluate_alloc_struct_type(ctx)
@@ -1480,7 +1480,7 @@ class GridSearch(OptimizationFunction):
         return builder.function
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        ocm = getattr(self.objective_function, '__self__', None)
+        ocm = self._get_optimized_composition()
         if ocm is not None:
             assert ocm.function is self
             obj_func = ctx.import_llvm_function(ocm, tags=tags.union({"evaluate"}))
