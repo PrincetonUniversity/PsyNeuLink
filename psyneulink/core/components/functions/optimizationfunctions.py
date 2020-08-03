@@ -1349,6 +1349,11 @@ class GridSearch(OptimizationFunction):
             s.reset()
         self.grid = itertools.product(*[s for s in self.search_space])
 
+    def _get_optimized_composition(self):
+        # self.objective_function may be a bound method of
+        # OptimizationControlMechanism
+        return getattr(self.objective_function, '__self__', None)
+
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "select_min" in tags:
             return self._gen_llvm_select_min_function(ctx=ctx, tags=tags)
@@ -1377,79 +1382,12 @@ class GridSearch(OptimizationFunction):
             if all(type(x) == np.ndarray for x in variable) and not all(len(x) == len(variable[0]) for x in variable):
                 variable = tuple(variable)
 
+            warnings.warn("Shape mismatch: {} variable expected: {} vs. got: {}".format(self, variable, self.defaults.variable))
+
         else:
             variable = self.defaults.variable
 
         return ctx.convert_python_struct_to_llvm_ir(variable)
-
-    def _get_optimized_composition(self):
-        # self.objective_function may be a bound method of
-        # OptimizationControlMechanism
-        return getattr(self.objective_function, '__self__', None)
-
-    def _get_param_ids(self):
-        ids = super()._get_param_ids()
-        if self._get_optimized_composition() is not None:
-            ids.append("objective_function")
-
-        return ids
-
-    def _get_param_struct_type(self, ctx):
-        param_struct = ctx.get_param_struct_type(super())
-
-        ocm = self._get_optimized_composition()
-        if ocm is not None:
-            # self.objective_function is a bound method of
-            # OptimizationControlMechanism
-            obj_func_params = ocm._get_evaluate_param_struct_type(ctx)
-            return pnlvm.ir.LiteralStructType([*param_struct,
-                                               obj_func_params])
-
-        return param_struct
-
-    def _get_param_initializer(self, context):
-        param_initializer = super()._get_param_initializer(context)
-
-        ocm = self._get_optimized_composition()
-        if ocm is not None:
-            # self.objective_function is a bound method of
-            # OptimizationControlMechanism
-            obj_func_param_init = ocm._get_evaluate_param_initializer(context)
-            return (*param_initializer, obj_func_param_init)
-
-        return param_initializer
-
-    def _get_state_ids(self):
-        ids = super()._get_state_ids()
-        if self._get_optimized_composition() is not None:
-            ids.append("objective_function")
-
-        return ids
-
-    def _get_state_struct_type(self, ctx):
-        state_struct = ctx.get_state_struct_type(super())
-
-        ocm = self._get_optimized_composition()
-        if ocm is not None:
-            # self.objective_function is a bound method of
-            # OptimizationControlMechanism
-            obj_func_state = ocm._get_evaluate_state_struct_type(ctx)
-            state_struct = pnlvm.ir.LiteralStructType([*state_struct,
-                                                       obj_func_state])
-
-        return state_struct
-
-    def _get_state_initializer(self, context):
-        state_initializer = super()._get_state_initializer(context)
-
-        ocm = self._get_optimized_composition()
-        if ocm is not None:
-            # self.objective_function is a bound method of
-            # OptimizationControlMechanism
-            obj_func_state_init = ocm._get_evaluate_state_initializer(context)
-            state_initializer = (*state_initializer, obj_func_state_init)
-
-        return state_initializer
 
     def _get_output_struct_type(self, ctx):
         val = self.defaults.value
@@ -1461,7 +1399,7 @@ class GridSearch(OptimizationFunction):
 
     def _gen_llvm_select_min_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         assert "select_min" in tags
-        ocm = getattr(self.objective_function, '__self__', None)
+        ocm = self._get_optimized_composition()
         if ocm is not None:
             assert ocm.function is self
             sample_t = ocm._get_evaluate_alloc_struct_type(ctx)
@@ -1479,8 +1417,7 @@ class GridSearch(OptimizationFunction):
                 value_t.as_pointer(),
                 ctx.float_ty.as_pointer(),
                 ctx.int32_ty]
-        builder = ctx.create_llvm_function(args, self, tags=tags,
-                                           return_type=pnlvm.ir.VoidType())
+        builder = ctx.create_llvm_function(args, self, tags=tags)
 
         params, state, min_sample_ptr, samples_ptr, min_value_ptr, values_ptr, opt_count_ptr, count = builder.function.args
         for p in builder.function.args[:-1]:
@@ -1542,28 +1479,29 @@ class GridSearch(OptimizationFunction):
         return builder.function
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        ocm = getattr(self.objective_function, '__self__', None)
+        ocm = self._get_optimized_composition()
         if ocm is not None:
             assert ocm.function is self
             obj_func = ctx.import_llvm_function(ocm, tags=tags.union({"evaluate"}))
-            sample_t = ocm._get_evaluate_alloc_struct_type(ctx)
-            value_t = ocm._get_evaluate_output_struct_type(ctx)
-            extra_args = [arg_in] + list(builder.function.args[-3:])
+            comp_args = builder.function.args[-3:]
+            obj_param_ptr = comp_args[0]
+            obj_state_ptr = comp_args[1]
+            extra_args = [arg_in, comp_args[2]]
         else:
             obj_func = ctx.import_llvm_function(self.objective_function)
-            sample_t = obj_func.args[2].type.pointee
-            value_t = obj_func.args[3].type.pointee
+            obj_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
+                                                        "objective_function")
+            obj_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                        "objective_function")
             extra_args = []
 
+        sample_t = obj_func.args[2].type.pointee
+        value_t = obj_func.args[3].type.pointee
         min_sample_ptr = builder.alloca(sample_t)
         min_value_ptr = builder.alloca(value_t)
         sample_ptr = builder.alloca(sample_t)
         value_ptr = builder.alloca(value_t)
 
-        obj_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                    self.parameters.objective_function.name)
-        obj_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                    self.parameters.objective_function.name)
         search_space_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                        self.parameters.search_space.name)
 

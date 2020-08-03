@@ -2261,17 +2261,12 @@ class Port_Base(Port):
             input_types.append(ctx.get_output_struct_type(mod))
         return pnlvm.ir.LiteralStructType(input_types)
 
-    def _get_compilation_params(self):
-        return [self.parameters.function]
-
-    def _get_compilation_state(self):
-        return [self.parameters.function]
-
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         state_f = ctx.import_llvm_function(self.function)
 
         # Create a local copy of the function parameters
-        base_params = pnlvm.helpers.get_param_ptr(builder, self, params, self.parameters.function.name)
+        base_params = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                  "function")
         f_params = builder.alloca(state_f.args[0].type.pointee)
         builder.store(builder.load(base_params), f_params)
 
@@ -2298,7 +2293,7 @@ class Port_Base(Port):
                 # Directly store the value in the output array
                 if f_mod_ptr.type != arg_out.type:
                     assert len(f_mod_ptr.type.pointee) == 1
-                    warnings.warn("Shape mismatch Overriding modulation should match parameter port output: {} vs. {}".format(
+                    warnings.warn("Shape mismatch: Overriding modulation should match parameter port output: {} vs. {}".format(
                                   afferent.defaults.value, self.defaults.value))
                     f_mod_ptr = builder.gep(f_mod_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
                 builder.store(builder.load(f_mod_ptr), arg_out)
@@ -2312,7 +2307,7 @@ class Port_Base(Port):
                                                               self.function,
                                                               f_params, name)
                 if f_mod_param_ptr.type != f_mod_ptr.type:
-                    warnings.warn("Shape mismatch between modulation and modulated parameter: {} vs. {}".format(
+                    warnings.warn("Shape mismatch: Modulation vs. modulated parameter: {} vs. {}".format(
                                   afferent.defaults.value,
                                   getattr(self.function.parameters, name).get(None)))
                     param_val = pnlvm.helpers.load_extract_scalar_array_one(builder, f_mod_ptr)
@@ -2326,7 +2321,7 @@ class Port_Base(Port):
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         # Extract the data part of input
         f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        f_state = pnlvm.helpers.get_state_ptr(builder, self, state, self.parameters.function.name)
+        f_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
         builder.call(state_f, [f_params, f_state, f_input, arg_out])
         return builder
 
