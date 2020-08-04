@@ -248,8 +248,7 @@ import weakref
 
 import numpy as np
 
-from psyneulink.core.globals.graph_pb2 import Entry, DoubleMatrix
-from psyneulink.core.globals.keywords import MULTIPLICATIVE
+from psyneulink.core.rpc.graph_pb2 import Entry, ndArray
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
@@ -1320,23 +1319,29 @@ class Parameter(types.SimpleNamespace):
                     execution_id = None
                 else:
                     execution_id = context.execution_id
-
-                deliver_value = np.atleast_2d(value)
-
+                print(self._get_root_owner())
+                print(value)
                 ##### ADD TO PIPELINE HERE #####
                 context.rpc_pipeline.put(
                     Entry(
-                        componentName=self._owner._owner._owner.name,
+                        componentName=self._get_root_owner().name,
                         parameterName=self.name,
                         time=f'{time.run}:{time.trial}:{time.pass_}:{time.time_step}',
                         context=execution_id,
-                        value=DoubleMatrix(
-                            rows=deliver_value.shape[0],
-                            cols=deliver_value.shape[1],
-                            data=deliver_value.flatten().tolist()
+                        value=ndArray(
+                            shape=list(value.shape),
+                            data=list(value.flatten())
                         )
                     )
                 )
+
+    def _get_root_owner(self):
+        owner = self
+        while True:
+            if hasattr(owner, '_owner'):
+                owner = owner._owner
+            else:
+                return owner
 
     def clear_log(self, contexts=NotImplemented):
         """
