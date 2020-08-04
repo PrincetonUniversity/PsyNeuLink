@@ -805,7 +805,7 @@ class Log:
                 levels |= l
             level = levels
 
-            if not item in self.loggable_items:
+            if item not in self.loggable_items:
                 # KDM 8/13/18: NOTE: add_entries is not defined anywhere
                 raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
                                format(item, self.owner.name))

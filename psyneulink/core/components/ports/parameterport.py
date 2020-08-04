@@ -219,7 +219,7 @@ In the following example, a `MappingProjection` is created, and its
 .. note::
    The `matrix <MappingProjection.MappingProjection.matrix>` parameter belongs to the MappingProjection's `function
    <Projection_Base.function>`;  however, since it has only one standard function, its arguments are available in the
-   constructor for the Projection (see `Component_Specifying_Functions_and_Parameters` for a more detailed explanation).
+   constructor for the Projection (see `here <User_Modifiable_Parameters>` for a more detailed explanation).
 
 The example below shows how to specify the parameters in the first example using a parameter specification dictionary::
 
@@ -625,7 +625,7 @@ class ParameterPort(Port_Base):
                     # (actual assignment is made in _parse_port_spec)
                     if reference_value is None:
                         port_dict[REFERENCE_VALUE]=port_spec
-                    elif  not iscompatible(port_spec, reference_value):
+                    elif not iscompatible(port_spec, reference_value):
                         raise PortError("Value in first item of 2-item tuple specification for {} of {} ({}) "
                                          "is not compatible with its {} ({})".
                                          format(ParameterPort.__name__, owner.name, port_spec,
@@ -1089,7 +1089,7 @@ def _get_parameter_port(sender_owner, sender_type, param_name, component):
                                         "of {} or its function"
                                         .format(param_name, sender_type, sender_owner.name, component))
         # Check that the Mechanism has a ParameterPort for the param
-        if not param_name in component._parameter_ports.names:
+        if param_name not in component._parameter_ports.names:
             raise ParameterPortError("There is no ParameterPort for the parameter ({}) of {} "
                                         "specified in {} for {}".
                                         format(param_name, component.name, sender_type, sender_owner.name))

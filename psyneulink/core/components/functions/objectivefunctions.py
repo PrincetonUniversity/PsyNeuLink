@@ -969,8 +969,7 @@ class Distance(ObjectiveFunction):
     def _gen_llvm_function_body(self, ctx, builder, params, _, arg_in, arg_out, *, tags:frozenset):
         assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
         assert isinstance(arg_in.type.pointee.element, pnlvm.ir.ArrayType)
-        # FIXME python version also ignores other vectors
-        assert arg_in.type.pointee.count >= 2
+        assert arg_in.type.pointee.count == 2
 
         v1 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
         v2 = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1), ctx.int32_ty(0)])
@@ -1112,10 +1111,10 @@ class Distance(ObjectiveFunction):
             if self.metric == ENERGY:
                 norm_factor = norm_factor ** 2
             ret = builder.fdiv(ret, ctx.float_ty(norm_factor), name="normalized")
-        # Get rid of nesting
-        # TODO: fix this properly
-        while arg_out.type.pointee != ret.type:
-            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        if arg_out.type.pointee != ret.type:
+            # Some instance use 2d output values
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0),
+                                            ctx.int32_ty(0)])
         builder.store(ret, arg_out)
 
         return builder
@@ -1150,15 +1149,15 @@ class Distance(ObjectiveFunction):
 
         # Maximum of Hadamard (elementwise) difference of v1 and v2
         if self.metric == MAX_ABS_DIFF:
-            result = np.max(abs(v1 - v2))
+            result = np.max(np.fabs(v1 - v2))
 
         # Simple Hadamard (elementwise) difference of v1 and v2
         elif self.metric == DIFFERENCE:
-            result = np.sum(np.abs(v1 - v2))
+            result = np.sum(np.fabs(v1 - v2))
 
         # Similarity (used specifically for testing Compilation of Predator-Prey Model)
         elif self.metric == NORMED_L0_SIMILARITY:
-            result = 1 - np.sum(np.abs(v1 - v2)) / 4
+            result = 1.0 - np.sum(np.abs(v1 - v2)) / 4.0
 
         # Euclidean distance between v1 and v2
         elif self.metric == EUCLIDEAN:
@@ -1167,13 +1166,13 @@ class Distance(ObjectiveFunction):
         # Cosine similarity of v1 and v2
         elif self.metric == COSINE:
             # result = np.correlate(v1, v2)
-            result = 1 - np.abs(Distance.cosine(v1, v2))
+            result = 1.0 - np.fabs(Distance.cosine(v1, v2))
             return self.convert_output_type(result)
 
         # Correlation of v1 and v2
         elif self.metric == CORRELATION:
             # result = np.correlate(v1, v2)
-            result = 1 - np.abs(Distance.correlation(v1, v2))
+            result = 1.0 - np.fabs(Distance.correlation(v1, v2))
             return self.convert_output_type(result)
 
         # Cross-entropy of v1 and v2
@@ -1185,18 +1184,18 @@ class Distance(ObjectiveFunction):
             # MODIFIED CW 3/20/18: avoid divide by zero error by plugging in two zeros
             # FIX: unsure about desired behavior when v2 = 0 and v1 != 0
             # JDC: returns [inf]; leave, and let it generate a warning or error message for user
-            result = -np.sum(np.where(np.logical_and(v1 == 0, v2 == 0), 0, v1 * np.log(v2)))
+            result = -np.sum(np.where(np.logical_and(v1 == 0, v2 == 0), 0.0, v1 * np.log(v2)))
 
         # Energy
         elif self.metric == ENERGY:
-            result = -np.sum(v1 * v2) / 2
+            result = -np.sum(v1 * v2) / 2.0
 
         else:
             assert False, '{} not a recognized metric in {}'.format(self.metric, self.__class__.__name__)
 
-        if self.normalize and not self.metric in {MAX_ABS_DIFF, CORRELATION}:
+        if self.normalize and self.metric not in {MAX_ABS_DIFF, CORRELATION}:
             if self.metric == ENERGY:
-                result /= len(v1) ** 2
+                result /= len(v1) ** 2.0
             else:
                 result /= len(v1)
 

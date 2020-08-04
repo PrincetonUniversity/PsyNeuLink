@@ -1198,10 +1198,10 @@ class DDM(ProcessingMechanism):
             return True
         return False
 
-    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state):
         # Setup pointers to internal function
-        func_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, 'function')
-        func_param_ptr = pnlvm.helpers.get_state_ptr(builder, self, params, 'function')
+        func_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
+        func_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
 
         # Find the single numeric entry in previous_value
         try:
@@ -1229,4 +1229,3 @@ class DDM(ProcessingMechanism):
         is_prev_greater_or_equal = builder.fcmp_ordered('>=', prev_val, threshold)
 
         return is_prev_greater_or_equal
-

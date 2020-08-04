@@ -386,4 +386,3 @@ class LearningSignal(ModulatorySignal):
         # Otherwise, allow ModulatorySignal to construct default name as usual
         else:
             super()._assign_default_port_Name(context=context)
-

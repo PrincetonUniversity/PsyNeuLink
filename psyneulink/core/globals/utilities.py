@@ -601,7 +601,7 @@ def tensor_power(items, levels:tc.optional(range)=None, flat=False):
     levels = levels or range(1,max_levels)
     max_spec = max(list(levels))
     min_spec = min(list(levels))
-    if  max_spec > max_levels:
+    if max_spec > max_levels:
         raise UtilitiesError("range ({},{}) specified for {} arg of tensor_power() "
                              "exceeds max for items specified ({})".
                              format(min_spec, max_spec + 1, repr('levels'), max_levels + 1))
@@ -609,7 +609,7 @@ def tensor_power(items, levels:tc.optional(range)=None, flat=False):
     pp = []
     for s in ps:
         order = len(s)
-        if not order in list(levels):
+        if order not in list(levels):
             continue
         if order==1:
             pp.append(np.array(s[0]))
@@ -1011,7 +1011,7 @@ class ReadOnlyOrderedDict(UserDict):
         raise UtilitiesError("{} is read-only".format(self.name))
     def __additem__(self, key, value):
         self.data[key] = value
-        if not key in self._ordered_keys:
+        if key not in self._ordered_keys:
             self._ordered_keys.append(key)
     def __deleteitem__(self, key):
         del self.data[key]

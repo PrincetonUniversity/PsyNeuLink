@@ -1595,32 +1595,32 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 weight = self.monitored_output_ports_weights_and_exponents[monitored_port_index][0]
                 exponent = self.monitored_output_ports_weights_and_exponents[monitored_port_index][1]
 
-                print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
-                       format(monitored_port_Mech.name, monitored_port.name, weight, exponent))
+                print("\t\t{0}: {1} (exp: {2}; wt: {3})".
+                      format(monitored_port_Mech.name, monitored_port.name, weight, exponent))
 
         try:
             if self.control_signals:
-                print ("\n\tControlling the following Mechanism parameters:".format(self.name))
+                print("\n\tControlling the following Mechanism parameters:".format(self.name))
                 # Sort for consistency of output:
                 port_Names_sorted = sorted(self.control_signals.names)
                 for port_Name in port_Names_sorted:
                     for projection in self.control_signals[port_Name].efferents:
-                        print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+                        print("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
         except:
             pass
 
         try:
             if self.gating_signals:
-                print ("\n\tGating the following Ports:".format(self.name))
+                print("\n\tGating the following Ports:".format(self.name))
                 # Sort for consistency of output:
                 port_Names_sorted = sorted(self.gating_signals.names)
                 for port_Name in port_Names_sorted:
                     for projection in self.gating_signals[port_Name].efferents:
-                        print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+                        print("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
         except:
             pass
 
-        print ("\n---------------------------------------------------------")
+        print("\n---------------------------------------------------------")
 
     def add_to_monitor(self, monitor_specs, context=None):
         """Instantiate OutputPorts to be monitored by ControlMechanism's `objective_mechanism
@@ -1693,8 +1693,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
         for eff in self.efferents:
             dependent_projections.add(eff)
 
+        if composition:
+            deeply_nested_aux_components = composition._get_deeply_nested_aux_projections(self)
+            dependent_projections -= set(deeply_nested_aux_components.values())
+
         for proj in dependent_projections:
             proj._activate_for_compositions(composition)
+
+        for proj in deeply_nested_aux_components.values():
+            composition.add_projection(proj, sender=proj.sender, receiver=proj.receiver)
 
     def _apply_control_allocation(self, control_allocation, runtime_params, context):
         """Update values to `control_signals <ControlMechanism.control_signals>`

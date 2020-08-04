@@ -1160,7 +1160,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
             for error_source in error_sources:
                 if (not isinstance(error_source, (ObjectiveMechanism, LearningMechanism, OutputPort))
                         or (isinstance(error_source, OutputPort)
-                            and not error_source in error_source.owner.output_ports[ERROR_SIGNAL])):
+                            and error_source not in error_source.owner.output_ports[ERROR_SIGNAL])):
                     raise LearningMechanismError(f"{repr(ERROR_SOURCES)} arg for {self.name} ({error_source}) "
                                                  f"must be an {ObjectiveMechanism.__name__}, "
                                                  f"another {LearningMechanism.__name__}, an {repr(ERROR_SIGNAL)} "
@@ -1178,7 +1178,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                 # Validate that the receiver of the LearningProjection (if specified)
                 #     is a MappingProjection and in the same System as self (if specified)
                 if learning_signal[PARAMS] and PROJECTIONS in learning_signal[PARAMS]:
-                    for learning_projection in  learning_signal[PARAMS][PROJECTIONS]:
+                    for learning_projection in learning_signal[PARAMS][PROJECTIONS]:
                         _validate_receiver(sender_mech=self,
                                            projection=learning_projection,
                                            expected_owner_type=MappingProjection,
@@ -1275,7 +1275,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
     def add_ports(self, error_sources, context=None):
         """Add error_source and error_matrix for each InputPort added"""
 
-        ports = super().add_ports(ports=error_sources)
+        ports = super().add_ports(ports=error_sources, update_variable=False, context=context)
         instantiated_input_ports = []
         for input_port in ports[INPUT_PORTS]:
             error_source = input_port.path_afferents[0].sender.owner
@@ -1283,6 +1283,10 @@ class LearningMechanism(ModulatoryMechanism_Base):
             if ERROR_SIGNAL in input_port.name:
                 self._error_signal_input_ports.append(input_port)
             instantiated_input_ports.append(input_port)
+
+        # TODO: enable this. fails because LearningMechanism does not have a
+        # consistent _parse_function_variable
+        # self._update_default_variable(np.asarray(self.input_values, dtype=int), context)
 
         return instantiated_input_ports
 

@@ -38,7 +38,7 @@ class PytorchModelCreator(torch.nn.Module):
         self.params = nn.ParameterList()
         self.device = device
         self._composition = composition
-        
+
         # Instantiate pytorch mechanisms
         for node in set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)):
             pytorch_node = PytorchMechanismWrapper(node, self._composition._get_node_index(node), device, context=context)
@@ -149,12 +149,12 @@ class PytorchModelCreator(torch.nn.Module):
         # 2) call forward computation
         z_values = self._gen_llvm_forward_function_body(
             ctx, builder, state, params, model_input, data)
-        
+
         # 3) compute errors
         loss_fn = ctx.import_llvm_function(loss)
         total_loss = builder.alloca(ctx.float_ty)
         builder.store(ctx.float_ty(0), total_loss)
-        
+
         error_dict = {}
         for exec_set in reversed(self.execution_sets):
             for node in exec_set:
@@ -168,7 +168,7 @@ class PytorchModelCreator(torch.nn.Module):
                 if NodeRole.OUTPUT in self._composition.get_roles_by_node(node._mechanism):
                     # We handle output layer here
                     # compute  dC/da = a_l - y(x) (TODO: Allow other cost functions! This only applies to MSE)
-                    
+
                     # 1) Lookup desired target value
                     terminal_sequence = self._composition._terminal_backprop_sequences[node._mechanism]
                     target_idx = self._composition.get_nodes_by_role(

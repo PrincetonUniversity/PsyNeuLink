@@ -180,11 +180,11 @@ class AdamOptimizer(Optimizer):
                 delta_w, [zero, proj_idx_ir])
 
             pnlvm.helpers.printf_float_matrix(builder, delta_w_ptr, prefix=f"grad val: {proj.sender._mechanism} -> {proj.receiver._mechanism}\n", override_debug=False)
-            
+
             # this is messy - #TODO - cleanup this
             weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, params)
             dim_x, dim_y = proj.matrix.shape
-            
+
             weight_row = None
             pnlvm.helpers.printf(builder, "biascorr2 %.20f\n", one_minus_b2_pow, override_debug=False)
             with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(dim_x), "optimizer_w_upd_outer") as (b1, weight_row):

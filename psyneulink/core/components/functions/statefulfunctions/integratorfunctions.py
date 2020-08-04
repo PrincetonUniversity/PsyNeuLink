@@ -4425,6 +4425,3 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         res = builder.fdiv(sum, param_vals["time_constant_w"])
         return res
-
-
-

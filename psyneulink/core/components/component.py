@@ -480,6 +480,7 @@ COMMENT
 import base64
 import copy
 import dill
+import functools
 import inspect
 import logging
 import numbers
@@ -506,6 +507,7 @@ from psyneulink.core.globals.keywords import \
     RESET_STATEFUL_FUNCTION_WHEN, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.scheduling.time import Time, TimeScale
+from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.parameters import \
     Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
@@ -1095,16 +1097,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             k: v for k, v in parameter_values.items() if k in self.parameters.names() and getattr(self.parameters, k).function_parameter
         }
 
-        v = call_with_pruned_args(
+        var = call_with_pruned_args(
             self._handle_default_variable,
             default_variable=default_variable,
             size=size,
             **parameter_values
         )
-        if v is None:
+        if var is None:
             default_variable = self.defaults.variable
         else:
-            default_variable = v
+            default_variable = var
             self.defaults.variable = default_variable
             self.parameters.variable._user_specified = True
 
@@ -1243,9 +1245,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         whitelist = {"previous_time", "previous_value", "previous_v",
                      "previous_w", "random_state", "is_finished_flag",
                      "num_executions_before_finished", "num_executions",
-                     "execution_count", "value"}
-        # mechanism functions are handled separately
-        blacklist = {"function"} if hasattr(self, 'ports') else {"value"}
+                     "execution_count", "value", "input_ports", "output_ports"}
+        blacklist = { # References to other components
+                     "objective_mechanism", "agent_rep", "projections"}
+        # Only mechanisms use "value" state
+        if not hasattr(self, 'ports'):
+            blacklist.add("value")
         def _is_compilation_state(p):
             val = p.get()   # memoize for this function
             return val is not None and p.name not in blacklist and \
@@ -1264,26 +1269,24 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             setattr(self, "_state_ids", ids)
         return ids
 
-    def _get_state_values(self, context=None):
-        def _state_values(p):
-            val = p.get(context)
-            if isinstance(val, Component):
-                return val._get_state_values(context)
-            return val
-        return tuple(map(_state_values, self._get_compilation_state()))
-
     def _get_state_initializer(self, context):
-        def _convert(x):
+        def _convert(p):
+            x = p.get(context)
             if isinstance(x, np.random.RandomState):
                 # Skip first element of random state (id string)
-                return x.get_state()[1:]
+                val = pnlvm._tupleize(x.get_state()[1:])
             elif isinstance(x, Time):
-                return (getattr(x, Time._time_scale_attr_map[t]) for t in TimeScale)
-            try:
-                return (_convert(i) for i in x)
-            except TypeError:
-                return x
-        return pnlvm._tupleize(_convert(self._get_state_values(context)))
+                val = tuple(getattr(x, Time._time_scale_attr_map[t]) for t in TimeScale)
+            elif isinstance(x, Component):
+                return x._get_state_initializer(context)
+            elif isinstance(x, ContentAddressableList):
+                return tuple(p._get_state_initializer(context) for p in x)
+            else:
+                val = pnlvm._tupleize(x)
+
+            return tuple(val for _ in range(p.history_min_length + 1))
+
+        return tuple(map(_convert, self._get_compilation_state()))
 
     def _get_compilation_params(self):
         # FIXME: MAGIC LIST, detect used parameters automatically
@@ -1296,25 +1299,26 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict",
-                     "modulated_mechanisms", "search_space", "grid",
+                     "modulated_mechanisms", "grid",
                      "activation_derivative_fct", "input_specification",
+                     # Reference to other components
+                     "objective_mechanism", "agent_rep", "projections",
                      # Shape mismatch
                      "costs", "auto", "hetero",
                      # autodiff specific types
                      "pytorch_representation", "optimizer"}
         # Mechanism's need few extra entires:
-        # * function -- might overload _get_{param,state}_struct_type
         # * matrix -- is never used directly, and is flatened below
         # * integration rate -- shape mismatch with param port input
         if hasattr(self, 'ports'):
-            blacklist.update(["function", "matrix", "integration_rate"])
+            blacklist.update(["matrix", "integration_rate"])
         def _is_compilation_param(p):
             if p.name not in blacklist and not isinstance(p, ParameterAlias):
                 #FIXME: this should use defaults
                 val = p.get()
                 # Check if the value type is valid for compilation
-                return not isinstance(val, (str, dict, ComponentsMeta,
-                                            ContentAddressableList, type(max),
+                return not isinstance(val, (str, ComponentsMeta,
+                                            type(max),
                                             type(_is_compilation_param),
                                             type(self._get_compilation_params)))
             return False
@@ -1332,47 +1336,58 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             setattr(self, "_param_ids", ids)
         return ids
 
-    def _get_param_values(self, context=None):
-        def _get_values(p):
-            param = p.get(context)
-            is_modulated = False
-            try:
-                is_modulated = is_modulated or p.name in self.owner.parameter_ports
-            except AttributeError:
-                pass
-            if not is_modulated:
-                try:
-                    is_modulated = is_modulated or p.name in self.parameter_ports
-                except AttributeError:
-                    pass
-            if not is_modulated:
-                try:
-                    modulated_params = (
-                        getattr(self.parameters, p.sender.modulation).source
-                        for p in self.owner.mod_afferents)
-                    is_modulated = is_modulated or p in modulated_params
-                except AttributeError:
-                    pass
-            # Modulated parameters change shape to array
-            if is_modulated and np.isscalar(param):
-                param = [param]
-            elif p.name == 'matrix': # Flatten matrix
-                param = np.asfarray(param).flatten().tolist()
-            elif isinstance(param, Component):
-                param = param._get_param_values(context)
-            return param
+    def _is_param_modulated(self, p):
+        try:
+            if p.name in self.owner.parameter_ports:
+                return True
+        except AttributeError:
+            pass
+        try:
+            if p.name in self.parameter_ports:
+                return True
+        except AttributeError:
+            pass
+        try:
+            modulated_params = (
+                getattr(self.parameters, p.sender.modulation).source
+                for p in self.owner.mod_afferents)
+            if p in modulated_params:
+                return True
+        except AttributeError:
+            pass
 
-        return tuple(map(_get_values, self._get_compilation_params()))
+        return False
 
     def _get_param_initializer(self, context):
         def _convert(x):
             if isinstance(x, Enum):
                 return x.value
-            try:
-                return (_convert(i) for i in x)
+            elif isinstance(x, SampleIterator):
+                if isinstance(x.generator, list):
+                    return tuple(v for v in x.generator)
+                else:
+                    return (x.start, x.step, x.num)
+            elif isinstance(x, Component):
+                return x._get_param_initializer(context)
+
+            try:   # This can't use tupleize and needs to recurse to handle
+                   # 'search_space' list of SampleIterators
+                return tuple(_convert(i) for i in x)
             except TypeError:
-                return x
-        return pnlvm._tupleize(_convert(self._get_param_values(context)))
+                return x if x is not None else tuple()
+
+        def _get_values(p):
+            param = p.get(context)
+            # Modulated parameters change shape to array
+            if np.isscalar(param) and self._is_param_modulated(p):
+                return (param,)
+            elif p.name == 'num_estimates':
+                return 0 if param is None else param
+            elif p.name == 'matrix': # Flatten matrix
+                return tuple(np.asfarray(param).flatten())
+            return _convert(param)
+
+        return tuple(map(_get_values, self._get_compilation_params()))
 
     def _gen_llvm_function_reset(self, ctx, builder, *_, tags):
         assert "reset" in tags
@@ -1875,7 +1890,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             Process_Base,
             Composition_Base,
             ComponentsMeta,
-            types.MethodType
+            types.MethodType,
+            functools.partial,
         )
         alias_names = {p.name for p in self.class_parameters if isinstance(p, ParameterAlias)}
 
@@ -1884,7 +1900,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # assign defaults based on pass in params and class defaults
         defaults = {
             k: v for (k, v) in self.class_defaults.values(show_all=True).items()
-            if not k in alias_names
+            if k not in alias_names
         }
 
         if param_defaults is not None:
@@ -1945,25 +1961,22 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 and param_defaults[parameter.name] is not None
             )
 
-        for p in self.parameters:
+        for p in filter(lambda x: isinstance(x, ParameterAlias), self.parameters):
+            if _is_user_specified(p):
+                if _is_user_specified(p.source):
+                    if param_defaults[p.name] is not param_defaults[p.source.name]:
+                        raise ComponentError(
+                            f"Multiple values ({p.name}: {param_defaults[p.name]}"
+                            f"\t{p.source.name}: {param_defaults[p.source.name]} "
+                            f"assigned to identical Parameters. {p.name} is an alias "
+                            f"of {p.source.name}",
+                            component=self,
+                        )
+                else:
+                    param_defaults[p.source.name] = param_defaults[p.name]
+
+        for p in filter(lambda x: not isinstance(x, ParameterAlias), self.parameters):
             p._user_specified = _is_user_specified(p)
-
-            if isinstance(p, ParameterAlias):
-                if p._user_specified:
-                    if _is_user_specified(p.source):
-                        if param_defaults[p.name] is not param_defaults[p.source.name]:
-                            raise ComponentError(
-                                f"Multiple values ({p.name}: {param_defaults[p.name]}"
-                                f"\t{p.source.name}: {param_defaults[p.source.name]} "
-                                f"assigned to identical Parameters. {p.name} is an alias "
-                                f"of {p.source.name}",
-                                component=self,
-                            )
-
-                    else:
-                        param_defaults[p.source.name] = param_defaults[p.name]
-
-                continue
 
             # copy spec so it is not overwritten later
             # TODO: check if this is necessary
@@ -2311,7 +2324,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             # setattr(self, "_"+param_name, param_value)
 
             # Check that param is in self.defaults (if not, it is assumed to be invalid for this object)
-            if not param_name in self.defaults.names(show_all=True):
+            if param_name not in self.defaults.names(show_all=True):
                 continue
 
             # The default value of the param is None: suppress type checking
@@ -2538,7 +2551,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         else:
             raise ComponentError("PROGRAM ERROR: got {} instead of string, Component, or Class".format(param_value))
 
-        if not param_spec in MODULATORY_SPEC_KEYWORDS:
+        if param_spec not in MODULATORY_SPEC_KEYWORDS:
             return(param_value)
 
         try:
