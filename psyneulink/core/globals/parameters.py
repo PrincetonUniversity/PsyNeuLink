@@ -768,7 +768,7 @@ class Parameter(types.SimpleNamespace):
             log = {}
 
         if valid_types is not None:
-            if isinstance(valid_types, list):
+            if isinstance(valid_types, (list, tuple)):
                 valid_types = tuple(valid_types)
             else:
                 valid_types = (valid_types, )
