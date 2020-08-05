@@ -1256,7 +1256,7 @@ class Parameter(types.SimpleNamespace):
             context_str = ContextFlags._get_context_string(ContextFlags.COMMAND_LINE)
             log_condition_satisfied = True
 
-        # standard logging
+        # standard loggingd
         else:
             if self.log_condition is None or self.log_condition is LogCondition.OFF:
                 return
@@ -1322,13 +1322,11 @@ class Parameter(types.SimpleNamespace):
                     execution_id = None
                 else:
                     execution_id = context.execution_id
-                print(self._get_root_owner())
-                print(value)
                 ##### ADD TO PIPELINE HERE #####
                 context.rpc_pipeline.put(
                     Entry(
                         componentName=self._get_root_owner().name,
-                        parameterName=self.name,
+                        parameterName=self._get_root_parameter().name,
                         time=f'{time.run}:{time.trial}:{time.pass_}:{time.time_step}',
                         context=execution_id,
                         value=ndArray(
@@ -1345,6 +1343,10 @@ class Parameter(types.SimpleNamespace):
                 owner = owner._owner
             else:
                 return owner
+
+    def _get_root_parameter(self):
+        root = self._get_root_owner()
+        return self._owner._owner if not self._owner._owner == root else self
 
     def clear_log(self, contexts=NotImplemented):
         """
