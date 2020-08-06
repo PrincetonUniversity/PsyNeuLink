@@ -418,17 +418,24 @@ class TestRPC:
         actual = []
         while not pipeline.empty(): actual.append(pipeline.get())
         integration_end_dict = {i.time: i for i in actual}
-        assert list(integration_end_dict.keys()) == ['0:0:0:1', '0:1:0:1', '0:2:0:1']
+        if scheduler_conditions:
+            expected_times = ['0:0:1:1', '0:1:1:1', '0:2:1:1']
+        else:
+            expected_times = ['0:0:0:1', '0:1:0:1', '0:2:0:1']
+        assert list(integration_end_dict.keys()) == expected_times
         vals = [i.value.data for i in integration_end_dict.values()]
         # floats in value, so use np.allclose
         assert np.allclose(vals, [[[0.52466739, 0.47533261]] * 3])
         if multi_run:
-            comp.run(inputs={m0: [[1, 0], [1, 0], [1, 0]]})
+            comp.run(inputs={m0: [[1, 0], [1, 0], [1, 0]]}, context=con_with_rpc_pipeline)
             actual = []
             while not pipeline.empty(): actual.append(pipeline.get())
             integration_end_dict.update({i.time: i for i in actual})
-            assert list(integration_end_dict.keys()) == ['0:0:0:1', '0:1:0:1', '0:2:0:1', '1:0:0:1', '1:1:0:1',
-                                                         '1:2:0:1']
+            if scheduler_conditions:
+                expected_times = ['0:0:1:1', '0:1:1:1', '0:2:1:1', '1:0:1:1', '1:1:1:1', '1:2:1:1']
+            else:
+                expected_times = ['0:0:0:1', '0:1:0:1', '0:2:0:1', '1:0:0:1', '1:1:0:1', '1:2:0:1']
+            assert list(integration_end_dict.keys()) == expected_times
             vals = [i.value.data for i in integration_end_dict.values()]
             # floats in value, so use np.allclose
             assert np.allclose(vals, [[[0.52466739, 0.47533261]] * 6])
