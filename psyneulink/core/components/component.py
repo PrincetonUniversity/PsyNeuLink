@@ -3189,16 +3189,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     def set_delivery_conditions(self, items, delivery_condition=LogCondition.EXECUTION):
         """
-        set_delivery_conditions(          \
+        _set_delivery_conditions(          \
             items                    \
             delivery_condition=EXECUTION  \
         )
 
         Specifies items to be delivered to external application via gRPC; these must be be `loggable_items <Component.loggable_items>`
-        of the Component's `log <Component.log>`. This is a convenience method that calls the `set_delivery_conditions <Log.set_delivery_conditions>`
+        of the Component's `log <Component.log>`. This is a convenience method that calls the `_set_delivery_conditions <Log._set_delivery_conditions>`
         method of the Component's `log <Component.log>`.
         """
-        self.log.set_delivery_conditions(items=items, delivery_condition=delivery_condition)
+        self.log._set_delivery_conditions(items=items, delivery_condition=delivery_condition)
 
     def log_values(self, entries):
         """

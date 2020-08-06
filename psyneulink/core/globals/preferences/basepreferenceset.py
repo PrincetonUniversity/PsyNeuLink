@@ -386,8 +386,8 @@ class BasePreferenceSet(PreferenceSet):
         return self.get_pref_setting_for_level(LOG_PREF, self._log_pref.level)[0]
 
     @property
-    def deliveryPref(self):
-        """Return setting of owner's deliveryPref at level specified in its PreferenceEntry.level
+    def _deliveryPref(self):
+        """Return setting of owner's _deliveryPref at level specified in its PreferenceEntry.level
         :param level:
         :return:
         """

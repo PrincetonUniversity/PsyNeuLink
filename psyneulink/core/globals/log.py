@@ -831,7 +831,7 @@ class Log:
             else:
                 assign_log_condition(item[0], item[1])
     
-    def set_delivery_conditions(self, items, delivery_condition=LogCondition.EXECUTION):
+    def _set_delivery_conditions(self, items, delivery_condition=LogCondition.EXECUTION):
         """Specifies items to be delivered via gRPC under the specified `LogCondition`\\(s).
 
         Arguments
