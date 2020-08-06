@@ -113,7 +113,7 @@ from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import AUTO_ASSOCIATIVE_PROJECTION, DEFAULT_MATRIX, HOLLOW_MATRIX, MATRIX, FUNCTION, OWNER_MECH
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import SharedParameter, Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -128,33 +128,6 @@ projection_keywords.update({AUTO_ASSOCIATIVE_PROJECTION})
 class AutoAssociativeError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
-
-
-def _matrix_getter(owning_component=None, context=None):
-    return owning_component.owner_mech.parameters.matrix._get(context)
-
-
-def _matrix_setter(value, owning_component=None, context=None):
-    owning_component.owner_mech.parameters.matrix._set(value, context)
-    return value
-
-
-def _auto_getter(owning_component=None, context=None):
-    return owning_component.owner_mech.parameters.auto._get(context)
-
-
-def _auto_setter(value, owning_component=None, context=None):
-    owning_component.owner_mech.parameters.auto._set(value, context)
-    return value
-
-
-def _hetero_getter(owning_component=None, context=None):
-    return owning_component.owner_mech.parameters.hetero._get(context)
-
-
-def _hetero_setter(value, owning_component=None, context=None):
-    owning_component.owner_mech.parameters.hetero._set(value, context)
-    return value
 
 
 class AutoAssociativeProjection(MappingProjection):
@@ -258,9 +231,9 @@ class AutoAssociativeProjection(MappingProjection):
         # function is always LinearMatrix that requires 1D input
         function = Parameter(LinearMatrix, stateful=False, loggable=False)
 
-        auto = Parameter(1, getter=_auto_getter, setter=_auto_setter, modulable=True)
-        hetero = Parameter(0, getter=_hetero_getter, setter=_hetero_setter, modulable=True)
-        matrix = Parameter(DEFAULT_MATRIX, getter=_matrix_getter, setter=_matrix_setter, modulable=True)
+        auto = SharedParameter(1, attribute_name=OWNER_MECH)
+        hetero = SharedParameter(0, attribute_name=OWNER_MECH)
+        matrix = SharedParameter(DEFAULT_MATRIX, attribute_name=OWNER_MECH)
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
