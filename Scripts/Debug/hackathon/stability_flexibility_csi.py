@@ -76,9 +76,9 @@ COMP = 7.5
 AUTOMATICITY = .15 # Automaticity Weight
 
 STARTING_POINT = 0.0  # Starting Point
-THRESHOLD = 1  # Threshold
-NOISE = 0.025  # Noise
-SCALE = .05 # Scales DDM inputs so threshold can be set to 1
+THRESHOLD = 0.2  # Threshold
+NOISE = 0.1  # Noise
+SCALE = 1 # Scales DDM inputs so threshold can be set to 1
 
 # Task Layer: [Color, Motion] {0, 1} Mutually Exclusive
 # Origin Node
@@ -146,14 +146,16 @@ ddmInputScale = pnl.TransferMechanism(size=1,
 # Decision Module
 decisionMaker = pnl.DDM(function=pnl.DriftDiffusionIntegrator(starting_point=STARTING_POINT,
                                                               threshold=THRESHOLD,
-                                                              noise=NOISE),
+                                                              noise=NOISE,
+                                                              time_step_size=0.001),
                         reset_stateful_function_when=pnl.AtTrialStart(),
                         output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME],
                         name='DDM')
 
 taskLayer.set_log_conditions([pnl.RESULT])
 stimulusInfo.set_log_conditions([pnl.RESULT])
-controlModule.set_log_conditions([pnl.RESULT, 'termination_threshold'])
+#controlModule.set_log_conditions([pnl.RESULT, 'termination_threshold'])
+controlModule.set_log_conditions([pnl.RESULT])
 nonAutomaticComponent.set_log_conditions([pnl.RESULT])
 congruenceWeighting.set_log_conditions([pnl.RESULT])
 ddmCombination.set_log_conditions([pnl.RESULT])
@@ -207,12 +209,21 @@ USE_GPU = False
 
 taskTrain, stimulusTrain, cueTrain = generateTrialSequence(80, 0.5)
 
-inputs = {taskLayer: taskTrain[0:10], stimulusInfo: stimulusTrain[0:10], cueInterval: cueTrain[0:10]}
+#taskTrain = np.array([[1.0, 0.0], [0., 1.], [1., 0.]])
+#stimulusTrain = np.array([[-1.,  1.], [ 1.,  1.], [-1., -1.]])
+#cueTrain = np.array([60., 60., 80.])
 
-#stabilityFlexibility.show_graph()
+inputs = {taskLayer: taskTrain, stimulusInfo: stimulusTrain, cueInterval: cueTrain}
+
+# stabilityFlexibility.show_graph()
 
 if not USE_GPU:
-    stabilityFlexibility.run(inputs, bin_execute=False)
+    stabilityFlexibility.run(inputs, bin_execute=True)
+
+    import time
+    t0 = time.time()
+    stabilityFlexibility.run(inputs, bin_execute="LLVMRun", )
+
     res = stabilityFlexibility.results
 else:
     stabilityFlexibility._analyze_graph()
@@ -223,29 +234,21 @@ else:
     e = pnlvm.execution.CompExecution(stabilityFlexibility, [None for _ in range(num_executions)])
     res = e.cuda_run(var, 1, num_input_sets)
 
-# mechanisms
-# A = pnl.ProcessingMechanism(name="A",
-#                         function=pnl.AdaptiveIntegrator(rate=0.1))
-# B = pnl.ProcessingMechanism(name="B",
-#                         function=pnl.Logistic)
-#
-# comp = pnl.Composition(name="comp")
-# comp.add_linear_processing_pathway([A, B])
-# comp._analyze_graph()
-# var = {A: [[[2.0]], [[3.0]]]}
-# var = [var for _ in range(num_executions)]
-# e = pnlvm.execution.CompExecution(comp, [None for _ in range(num_executions)])
-# res = e.cuda_run(var, 4, 2)
-# print(np.array(res))
-
 # taskLayer.log.print_entries()
 # stimulusInfo.log.print_entries()
-controlModule.log.print_entries()
+# controlModule.log.print_entries()
 # nonAutomaticComponent.log.print_entries()
 # congruenceWeighting.log.print_entries()
 # ddmCombination.log.print_entries()
 # ddmInputScale.log.print_entries()
 # decisionMaker.log.print_entries()
+
+# from matplotlib import pyplot as plt
+# ddm_log = ddmInputScale.log.nparray_dictionary()
+# lca_log = controlModule.log.nparray_dictionary()
+# plt.plot(lca_log['Composition-0']['RESULT'][:,0], lw=2, color='orange')
+# plt.plot(lca_log['Composition-0']['RESULT'][:,1], lw=2, color='red')
+# plt.plot(ddm_log['Composition-0']['RESULT'], lw=2, color='green')
 #
 # for trial in stabilityFlexibility.results:
 #     print(trial)
