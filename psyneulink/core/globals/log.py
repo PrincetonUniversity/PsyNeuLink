@@ -898,6 +898,40 @@ class Log:
             else:
                 assign_delivery_condition(item[0], item[1])
 
+    @tc.typecheck
+    @handle_external_context()
+    def _deliver_values(self, entries, context=None):
+        from psyneulink.core.globals.parameters import parse_context
+        """Deliver the value of one or more Components programmatically.
+
+        This can be used to "manually" prepare the `value <Component.value>` of any of a Component's `loggable_items
+        <Component.loggable_items>` (including its own `value <Component.value>`) for delivery to an external application via gRPC.
+        The context item of its `LogEntry` is assigned *COMMAND_LINE*.  If the call to _deliver_values is made while a
+        Composition to which the Component belongs is being run (e.g., in a **call_before..** or **call_after...** argument
+        of its `run <Composition.run>` method), then the time of the LogEntry is assigned the value of the `Clock` of
+        the Composition's `scheduler` or `scheduler_learning`, whichever is currently executing
+        (see `System_Scheduler`).
+
+        Arguments
+        ---------
+
+        entries : string, Component or list containing either : default ALL
+            specifies the Components, the current `value <Component.value>`\\s of which should be added prepared for 
+            transmission to an external application via gRPC.
+            they must be `loggable_items <Log.loggable_items>` of the owner's Log. If **entries** is *ALL* or is not
+            specified, then the `value <Component.value>`\\s of all `loggable_items <Log.loggable_items>` are logged.
+        """
+        entries = self._validate_entries_arg(entries)
+        original_source = context.source
+        context.source = ContextFlags.COMMAND_LINE
+
+        # Validate the Component field of each LogEntry
+        for entry in entries:
+            param = self._get_parameter_from_item_string(entry)
+            context = parse_context(context)
+            param._deliver_value(param._get(context), context)
+
+        context.source = original_source
 
     @tc.typecheck
     def _log_value(
