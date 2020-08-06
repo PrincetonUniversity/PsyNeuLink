@@ -830,7 +830,7 @@ class Log:
                 assign_log_condition(item, log_condition)
             else:
                 assign_log_condition(item[0], item[1])
-    
+
     def _set_delivery_conditions(self, items, delivery_condition=LogCondition.EXECUTION):
         """Specifies items to be delivered via gRPC under the specified `LogCondition`\\(s).
 
@@ -870,7 +870,7 @@ class Log:
                 levels |= l
             level = levels
 
-            if not item in self.loggable_items:
+            if item not in self.loggable_items:
                 # KDM 8/13/18: NOTE: add_entries is not defined anywhere
                 raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
                                format(item, self.owner.name))
@@ -906,16 +906,16 @@ class Log:
 
         This can be used to "manually" prepare the `value <Component.value>` of any of a Component's `loggable_items
         <Component.loggable_items>` (including its own `value <Component.value>`) for delivery to an external application via gRPC.
-        If the call to _deliver_values is made while a Composition to which the Component belongs is being run (e.g., 
-        in a **call_before..** or **call_after...** argument of its `run <Composition.run>` method), then the time of 
-        the LogEntry is assigned the value of the `Clock` of the Composition's `scheduler` or `scheduler_learning`, 
+        If the call to _deliver_values is made while a Composition to which the Component belongs is being run (e.g.,
+        in a **call_before..** or **call_after...** argument of its `run <Composition.run>` method), then the time of
+        the LogEntry is assigned the value of the `Clock` of the Composition's `scheduler` or `scheduler_learning`,
         whichever is currently executing (see `Composition_Scheduler`).
 
         Arguments
         ---------
 
         entries : string, Component or list containing either : default ALL
-            specifies the Components, the current `value <Component.value>`\\s of which should be added prepared for 
+            specifies the Components, the current `value <Component.value>`\\s of which should be added prepared for
             transmission to an external application via gRPC.
             they must be `loggable_items <Log.loggable_items>` of the owner's Log. If **entries** is *ALL* or is not
             specified, then the `value <Component.value>`\\s of all `loggable_items <Log.loggable_items>` are logged.

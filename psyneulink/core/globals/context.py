@@ -332,7 +332,7 @@ class Context():
     rpc_pipeline : Queue
       queue to populate with messages for external environment in cases where execution was triggered via RPC call
       (e.g. through PsyNeuLinkView).
-      
+
     """
 
     __name__ = 'Context'
@@ -347,7 +347,7 @@ class Context():
                  source=ContextFlags.NONE,
                  runmode=ContextFlags.DEFAULT_MODE,
                  execution_id=None,
-                 string:str='', 
+                 string:str='',
                  time=None,
                  rpc_pipeline:Queue=None):
 

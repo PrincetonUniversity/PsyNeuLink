@@ -49,7 +49,8 @@ class TestRPC:
 
         actual = []
         pipeline = con_with_rpc_pipeline.rpc_pipeline
-        while not pipeline.empty(): actual.append(pipeline.get())
+        while not pipeline.empty():
+            actual.append(pipeline.get())
         t_1_entries = [i for i in actual if i.componentName == 'log_test_T_1']
         noise = [i for i in t_1_entries if i.parameterName == 'noise']
         results = [i for i in t_1_entries if i.parameterName == 'RESULT']
@@ -68,7 +69,8 @@ class TestRPC:
         comp = pnl.Composition(name='comp', nodes=[T])
         comp.run([1], context=con_with_rpc_pipeline)
         actual = []
-        while not pipeline.empty(): actual.append(pipeline.get())
+        while not pipeline.empty():
+            actual.append(pipeline.get())
         assert all([
             len(actual) == 1,
             actual[0].time == '0:0:0:0',
@@ -90,7 +92,8 @@ class TestRPC:
                  context=con_with_rpc_pipeline)
         pipeline = con_with_rpc_pipeline.rpc_pipeline
         actual = []
-        while not pipeline.empty(): actual.append(pipeline.get())
+        while not pipeline.empty():
+            actual.append(pipeline.get())
         assert all([i.context == 'COMP' for i in actual])
         assert np.allclose([
             np.ndarray(shape=np.array(actual[1].value.shape), buffer=np.array(actual[1].value.data)),
@@ -101,7 +104,8 @@ class TestRPC:
         COMP.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]},
                  context=con_with_rpc_pipeline)
         actual = []
-        while not pipeline.empty(): actual.append(pipeline.get())
+        while not pipeline.empty():
+            actual.append(pipeline.get())
         assert np.allclose([
             np.ndarray(shape=np.array(actual[1].value.shape), buffer=np.array(actual[1].value.data)),
             np.ndarray(shape=np.array(actual[3].value.shape), buffer=np.array(actual[3].value.data)),
@@ -132,7 +136,8 @@ class TestRPC:
                  context=con_with_rpc_pipeline)
 
         actual = []
-        while not pipeline.empty(): actual.append(pipeline.get())
+        while not pipeline.empty():
+            actual.append(pipeline.get())
 
         t1_slope_entries = [i for i in actual if i.parameterName == pnl.SLOPE and i.componentName == 'log_test_T1']
         t1_slope_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t1_slope_entries]
@@ -192,7 +197,8 @@ class TestRPC:
                  context=con_with_rpc_pipeline)
 
         actual = []
-        while not pipeline.empty(): actual.append(pipeline.get())
+        while not pipeline.empty():
+            actual.append(pipeline.get())
 
         t1_slope_entries = [i for i in actual if i.parameterName == pnl.SLOPE and i.componentName == 'log_test_T1']
         t1_slope_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t1_slope_entries]
@@ -277,7 +283,8 @@ class TestRPC:
                  context=con_with_rpc_pipeline)
 
         actual = []
-        while not pipeline.empty(): actual.append(pipeline.get())
+        while not pipeline.empty():
+            actual.append(pipeline.get())
         assert all([True if i.context == COMP.default_execution_id else False for i in actual])
 
         t1_slope_entries = [i for i in actual if i.parameterName == pnl.SLOPE and i.componentName == 'log_test_T1']
@@ -305,7 +312,7 @@ class TestRPC:
         expected_times_T1 = ['0:0:0:0', '0:0:1:0', '0:0:2:0']
         expected_results_T1 = [[0.5], [0.75], [0.875]]
         expected_values_T1 = [[[0.5]], [[0.75]], [[0.875]]]
-        expected_slopes_T1 =  [[1], [1], [1]]
+        expected_slopes_T1 = [[1], [1], [1]]
         assert expected_times_T1 == t1_result_times == t1_slope_times == t1_value_times
         assert np.allclose(expected_values_T1, t1_value_values)
         assert np.allclose(expected_results_T1, t1_result_values)
@@ -315,7 +322,7 @@ class TestRPC:
 
         expected_times_T2 = ['0:0:0:1', '0:0:1:1', '0:0:2:1']
         expected_values_T2 = [[[3]], [[4.5]], [[5.25]]]
-        expected_slopes_T2 =  [[6], [6], [6]]
+        expected_slopes_T2 = [[6], [6], [6]]
         assert expected_times_T2 == t2_slope_times == t2_value_times
         assert np.allclose(expected_values_T2, t2_value_values)
         assert np.allclose(expected_slopes_T2, t2_slope_values)
@@ -344,7 +351,8 @@ class TestRPC:
         COMP.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial, context=con_with_rpc_pipeline)
 
         actual = []
-        while not pipeline.empty(): actual.append(pipeline.get())
+        while not pipeline.empty():
+            actual.append(pipeline.get())
         assert all([True if i.context == COMP.default_execution_id else False for i in actual])
 
         t1_value_entries = [i for i in actual if i.parameterName == pnl.VALUE and i.componentName == 'log_test_T1']
@@ -380,7 +388,8 @@ class TestRPC:
         Y.run(inputs={B: 2}, context=con_Y)
 
         actual = []
-        while not pipeline.empty(): actual.append(pipeline.get())
+        while not pipeline.empty():
+            actual.append(pipeline.get())
 
         assert actual[0].context == 'comp X'
         assert actual[0].time == '0:0:0:1'
@@ -416,7 +425,8 @@ class TestRPC:
         comp.run(inputs={m0: [[1, 0], [1, 0], [1, 0]]}, context=con_with_rpc_pipeline)
 
         actual = []
-        while not pipeline.empty(): actual.append(pipeline.get())
+        while not pipeline.empty():
+            actual.append(pipeline.get())
         integration_end_dict = {i.time: i for i in actual}
         if scheduler_conditions:
             expected_times = ['0:0:1:1', '0:1:1:1', '0:2:1:1']
@@ -429,7 +439,8 @@ class TestRPC:
         if multi_run:
             comp.run(inputs={m0: [[1, 0], [1, 0], [1, 0]]}, context=con_with_rpc_pipeline)
             actual = []
-            while not pipeline.empty(): actual.append(pipeline.get())
+            while not pipeline.empty():
+                actual.append(pipeline.get())
             integration_end_dict.update({i.time: i for i in actual})
             if scheduler_conditions:
                 expected_times = ['0:0:1:1', '0:1:1:1', '0:2:1:1', '1:0:1:1', '1:1:1:1', '1:2:1:1']
@@ -569,7 +580,8 @@ class TestFullModels:
             dtype=object
         )
         actual = []
-        while not pipeline.empty(): actual.append(pipeline.get())
+        while not pipeline.empty():
+            actual.append(pipeline.get())
         log_val = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in actual]
         assert all([True if i.context == 'multilayer' else False for i in actual])
         assert np.allclose(log_val, expected_log_val[1][0][4])
@@ -577,7 +589,8 @@ class TestFullModels:
         # Test Programatic logging
         hidden_layer_2.log._deliver_values(pnl.VALUE, con_with_rpc_pipeline)
         actual = []
-        while not pipeline.empty(): actual.append(pipeline.get())
+        while not pipeline.empty():
+            actual.append(pipeline.get())
         log_val = np.ndarray(shape=np.array(actual[0].value.shape), buffer=np.array(actual[0].value.data))
         expected_log_val = np.array(
             [
@@ -607,7 +620,8 @@ class TestFullModels:
             context=con_with_rpc_pipeline
         )
         actual = []
-        while not pipeline.empty(): actual.append(pipeline.get())
+        while not pipeline.empty():
+            actual.append(pipeline.get())
         assert all([True if i.context == 'multilayer' else False for i in actual])
         matrices = [i for i in actual if i.parameterName == 'matrix']
         log_val = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in matrices]
