@@ -109,263 +109,151 @@ class TestRPC:
         ], [[[1.0, 2.0]], [[3.0, 4.0]], [[5.0, 6.0]]])
 
     def test_log_dictionary_with_time(self):
-
+        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue())
+        pipeline = con_with_rpc_pipeline.rpc_pipeline
         T1 = pnl.TransferMechanism(name='log_test_T1',
                                    size=2)
         T2 = pnl.TransferMechanism(name='log_test_T2',
-                                   function=psyneulink.core.components.functions.transferfunctions.Linear(slope=2.0),
+                                   function=pnl.Linear(slope=2.0),
                                    size=2)
         COMP = pnl.Composition(name='log_test_COMP', pathways=[T1, T2])
 
-        assert T1.loggable_items == {
-            'InputPort-0': 'OFF',
-            'RESULT': 'OFF',
-            'clip': 'OFF',
-            'termination_threshold': 'OFF',
-            'execute_until_finished': 'OFF',
-            'func_additive_param': 'OFF',
-            'func_bounds': 'OFF',
-            'func_execute_until_finished': 'OFF',
-            'func_has_initializers': 'OFF',
-            'func_intercept': 'OFF',
-            'func_max_executions_before_finished': 'OFF',
-            'func_multiplicative_param': 'OFF',
-            'func_num_executions_before_finished': 'OFF',
-            'func_slope': 'OFF',
-            'func_value': 'OFF',
-            'func_variable': 'OFF',
-            'has_initializers': 'OFF',
-            'initial_value': 'OFF',
-            'integration_rate': 'OFF',
-            'integrator_function_value': 'OFF',
-            'integrator_mode': 'OFF',
-            'max_executions_before_finished': 'OFF',
-            'mod_integration_rate': 'OFF',
-            'mod_intercept': 'OFF',
-            'mod_noise': 'OFF',
-            'mod_slope': 'OFF',
-            'noise': 'OFF',
-            'num_executions_before_finished': 'OFF',
-            'termination_measure_value': 'OFF',
-            'value': 'OFF',
-            'variable': 'OFF'
-        }
-        assert T2.loggable_items == {
-            'InputPort-0': 'OFF',
-            'RESULT': 'OFF',
-            'clip': 'OFF',
-            'termination_threshold': 'OFF',
-            'execute_until_finished': 'OFF',
-            'func_additive_param': 'OFF',
-            'func_bounds': 'OFF',
-            'func_execute_until_finished': 'OFF',
-            'func_has_initializers': 'OFF',
-            'func_intercept': 'OFF',
-            'func_max_executions_before_finished': 'OFF',
-            'func_multiplicative_param': 'OFF',
-            'func_num_executions_before_finished': 'OFF',
-            'func_slope': 'OFF',
-            'func_value': 'OFF',
-            'func_variable': 'OFF',
-            'has_initializers': 'OFF',
-            'initial_value': 'OFF',
-            'integration_rate': 'OFF',
-            'integrator_function_value': 'OFF',
-            'integrator_mode': 'OFF',
-            'max_executions_before_finished': 'OFF',
-            'mod_integration_rate': 'OFF',
-            'mod_intercept': 'OFF',
-            'mod_noise': 'OFF',
-            'mod_slope': 'OFF',
-            'noise': 'OFF',
-            'num_executions_before_finished': 'OFF',
-            'termination_measure_value': 'OFF',
-            'value': 'OFF',
-            'variable': 'OFF'
-        }
+        T1.set_delivery_conditions('mod_slope')
+        T1.set_delivery_conditions(pnl.RESULT)
+        T1.set_delivery_conditions(pnl.VALUE)
 
-        T1.set_log_conditions('mod_slope')
-        T1.set_log_conditions(pnl.RESULT)
-        T1.set_log_conditions(pnl.VALUE)
-
-        assert T1.loggable_items == {
-            'execute_until_finished': 'OFF',
-            'InputPort-0': 'OFF',
-            'RESULT': 'EXECUTION',
-            'clip': 'OFF',
-            'termination_threshold': 'OFF',
-            'func_additive_param': 'OFF',
-            'func_bounds': 'OFF',
-            'func_execute_until_finished': 'OFF',
-            'func_has_initializers': 'OFF',
-            'func_intercept': 'OFF',
-            'func_max_executions_before_finished': 'OFF',
-            'func_multiplicative_param': 'OFF',
-            'func_num_executions_before_finished': 'OFF',
-            'func_slope': 'OFF',
-            'func_value': 'OFF',
-            'func_variable': 'OFF',
-            'has_initializers': 'OFF',
-            'initial_value': 'OFF',
-            'integration_rate': 'OFF',
-            'integrator_function_value': 'OFF',
-            'integrator_mode': 'OFF',
-            'max_executions_before_finished': 'OFF',
-            'mod_integration_rate': 'OFF',
-            'mod_intercept': 'OFF',
-            'mod_noise': 'OFF',
-            'mod_slope': 'EXECUTION',
-            'noise': 'OFF',
-            'num_executions_before_finished': 'OFF',
-            'termination_measure_value': 'OFF',
-            'value': 'EXECUTION',
-            'variable': 'OFF'
-        }
-
-        T2.set_log_conditions('mod_slope')
-        T2.set_log_conditions(pnl.RESULT)
-        T2.set_log_conditions(pnl.VALUE)
-
-        assert T2.loggable_items == {
-            'InputPort-0': 'OFF',
-            'RESULT': 'EXECUTION',
-            'clip': 'OFF',
-            'termination_threshold': 'OFF',
-            'execute_until_finished': 'OFF',
-            'func_additive_param': 'OFF',
-            'func_bounds': 'OFF',
-            'func_execute_until_finished': 'OFF',
-            'func_has_initializers': 'OFF',
-            'func_intercept': 'OFF',
-            'func_max_executions_before_finished': 'OFF',
-            'func_multiplicative_param': 'OFF',
-            'func_num_executions_before_finished': 'OFF',
-            'func_slope': 'OFF',
-            'func_value': 'OFF',
-            'func_variable': 'OFF',
-            'has_initializers': 'OFF',
-            'initial_value': 'OFF',
-            'integration_rate': 'OFF',
-            'integrator_function_value': 'OFF',
-            'integrator_mode': 'OFF',
-            'max_executions_before_finished': 'OFF',
-            'mod_integration_rate': 'OFF',
-            'mod_intercept': 'OFF',
-            'mod_noise': 'OFF',
-            'mod_slope': 'EXECUTION',
-            'noise': 'OFF',
-            'num_executions_before_finished': 'OFF',
-            'termination_measure_value': 'OFF',
-            'value': 'EXECUTION',
-            'variable': 'OFF'
-        }
+        T2.set_delivery_conditions('mod_slope')
+        T2.set_delivery_conditions(pnl.RESULT)
+        T2.set_delivery_conditions(pnl.VALUE)
 
         # RUN ZERO  |  TRIALS ZERO, ONE, TWO ----------------------------------
 
-        COMP.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]})
+        COMP.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]},
+                 context=con_with_rpc_pipeline)
 
-        assert T1.logged_items == {'RESULT': 'EXECUTION',
-                                   'mod_slope': 'EXECUTION',
-                                   'value': 'EXECUTION'}
-        assert T2.logged_items == {'RESULT': 'EXECUTION',
-                                   'mod_slope': 'EXECUTION',
-                                   'value': 'EXECUTION'}
+        actual = []
+        while not pipeline.empty(): actual.append(pipeline.get())
+
+        t1_slope_entries = [i for i in actual if i.parameterName == pnl.SLOPE and i.componentName == 'log_test_T1']
+        t1_slope_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t1_slope_entries]
+        t1_slope_times = [i.time for i in t1_slope_entries]
+
+        t2_slope_entries = [i for i in actual if i.parameterName == pnl.SLOPE and i.componentName == 'log_test_T2']
+        t2_slope_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t2_slope_entries]
+        t2_slope_times = [i.time for i in t2_slope_entries]
+
+        t1_result_entries = [i for i in actual if i.parameterName == pnl.RESULT and i.componentName == 'log_test_T1']
+        t1_result_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t1_result_entries]
+        t1_result_times = [i.time for i in t1_result_entries]
+
+        t2_result_entries = [i for i in actual if i.parameterName == pnl.RESULT and i.componentName == 'log_test_T2']
+        t2_result_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t2_result_entries]
+        t2_result_times = [i.time for i in t2_result_entries]
+
+        t1_value_entries = [i for i in actual if i.parameterName == pnl.VALUE and i.componentName == 'log_test_T1']
+        t1_value_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t1_value_entries]
+        t1_value_times = [i.time for i in t1_value_entries]
+
+        t2_value_entries = [i for i in actual if i.parameterName == pnl.VALUE and i.componentName == 'log_test_T2']
+        t2_value_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t2_value_entries]
+        t2_value_times = [i.time for i in t2_value_entries]
+
+        # Test execution contexts for all entries
+
+        assert all([True if i.context == COMP.default_execution_id else False for i in actual])
 
         # T1 log after zero-th run -------------------------------------------
 
-        log_dict_T1 = T1.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULT'])
-
-        expected_run_T1 = [[0], [0], [0]]
-        expected_trial_T1 = [[0], [1], [2]]
-        expected_time_step_T1 = [[0], [0], [0]]
+        expected_times_T1 = ['0:0:0:0', '0:1:0:0', '0:2:0:0']
         expected_values_T1 = [[[1.0, 2.0]], [[3.0, 4.0]], [[5.0, 6.0]]]
         expected_slopes_T1 = [[1.0], [1.0], [1.0]]
         expected_results_T1 = [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]
 
-        assert list(log_dict_T1.keys()) == [COMP.default_execution_id]
-        sys_log_dict = log_dict_T1[COMP.default_execution_id]
-
-        assert np.allclose(expected_run_T1, sys_log_dict['Run'])
-        assert np.allclose(expected_trial_T1, sys_log_dict['Trial'])
-        assert np.allclose(expected_time_step_T1, sys_log_dict['Time_step'])
-        assert np.allclose(expected_values_T1, sys_log_dict['value'])
-        assert np.allclose(expected_slopes_T1, sys_log_dict['mod_slope'])
-        assert np.allclose(expected_results_T1, sys_log_dict['RESULT'])
+        assert expected_times_T1 == t1_result_times == t1_slope_times == t1_value_times
+        assert np.allclose(expected_values_T1, t1_value_values)
+        assert np.allclose(expected_results_T1, t1_result_values)
+        assert np.allclose(expected_slopes_T1, t1_slope_values)
 
         # T2 log after zero-th run --------------------------------------------
 
-        log_dict_T2 = T2.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULT'])
-
-        expected_run_T2 = [[0], [0], [0]]
-        expected_trial_T2 = [[0], [1], [2]]
-        expected_time_step_T2 = [[1], [1], [1]]
+        expected_times_T2 = ['0:0:0:1', '0:1:0:1', '0:2:0:1']
         expected_values_T2 = [[[2.0, 4.0]], [[6.0, 8.0]], [[10.0, 12.0]]]
         expected_slopes_T2 = [[2.0], [2.0], [2.0]]
         expected_results_T2 = [[2.0, 4.0], [6.0, 8.0], [10.0, 12.0]]
 
-        assert list(log_dict_T2.keys()) == [COMP.default_execution_id]
-        sys_log_dict = log_dict_T2[COMP.default_execution_id]
-
-        assert np.allclose(expected_run_T2, sys_log_dict['Run'])
-        assert np.allclose(expected_trial_T2, sys_log_dict['Trial'])
-        assert np.allclose(expected_time_step_T2, sys_log_dict['Time_step'])
-        assert np.allclose(expected_values_T2, sys_log_dict['value'])
-        assert np.allclose(expected_slopes_T2, sys_log_dict['mod_slope'])
-        assert np.allclose(expected_results_T2, sys_log_dict['RESULT'])
+        assert expected_times_T2 == t2_result_times == t2_slope_times == t2_value_times
+        assert np.allclose(expected_values_T2, t2_value_values)
+        assert np.allclose(expected_results_T2, t2_result_values)
+        assert np.allclose(expected_slopes_T2, t2_slope_values)
 
         # RUN ONE  |  TRIALS ZERO, ONE, TWO -------------------------------------
 
-        COMP.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]})
+        COMP.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]},
+                 context=con_with_rpc_pipeline)
+
+        actual = []
+        while not pipeline.empty(): actual.append(pipeline.get())
+
+        t1_slope_entries = [i for i in actual if i.parameterName == pnl.SLOPE and i.componentName == 'log_test_T1']
+        t1_slope_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t1_slope_entries]
+        t1_slope_times = [i.time for i in t1_slope_entries]
+
+        t2_slope_entries = [i for i in actual if i.parameterName == pnl.SLOPE and i.componentName == 'log_test_T2']
+        t2_slope_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t2_slope_entries]
+        t2_slope_times = [i.time for i in t2_slope_entries]
+
+        t1_result_entries = [i for i in actual if i.parameterName == pnl.RESULT and i.componentName == 'log_test_T1']
+        t1_result_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t1_result_entries]
+        t1_result_times = [i.time for i in t1_result_entries]
+
+        t2_result_entries = [i for i in actual if i.parameterName == pnl.RESULT and i.componentName == 'log_test_T2']
+        t2_result_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t2_result_entries]
+        t2_result_times = [i.time for i in t2_result_entries]
+
+        t1_value_entries = [i for i in actual if i.parameterName == pnl.VALUE and i.componentName == 'log_test_T1']
+        t1_value_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t1_value_entries]
+        t1_value_times = [i.time for i in t1_value_entries]
+
+        t2_value_entries = [i for i in actual if i.parameterName == pnl.VALUE and i.componentName == 'log_test_T2']
+        t2_value_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t2_value_entries]
+        t2_value_times = [i.time for i in t2_value_entries]
 
         # T1 log after first run -------------------------------------------
 
-        log_dict_T1 = T1.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULT'])
+        # Test execution contexts for all entries
 
-        assert list(log_dict_T1.keys()) == [COMP.default_execution_id]
-        sys_log_dict = log_dict_T1[COMP.default_execution_id]
+        assert all([True if i.context == COMP.default_execution_id else False for i in actual])
 
-        # expected_run_T1_2 = [[1], [1], [1]]
-        expected_run_T1_2 = [[0], [0], [0]] + expected_run_T1
-        expected_trial_T1_2 = [[0], [1], [2]] + expected_trial_T1
-        expected_time_step_T1_2 = [[0], [0], [0]] + expected_time_step_T1
-        expected_values_T1_2 = expected_values_T1 + expected_values_T1
-        expected_slopes_T1_2 = expected_slopes_T1 + expected_slopes_T1
-        expected_results_T1_2 = expected_results_T1 + expected_results_T1
+        expected_times_T1 = ['1:0:0:0', '1:1:0:0', '1:2:0:0']
+        expected_values_T1 = [[[1.0, 2.0]], [[3.0, 4.0]], [[5.0, 6.0]]]
+        expected_slopes_T1 = [[1.0], [1.0], [1.0]]
+        expected_results_T1 = [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]
 
-        # assert np.allclose(expected_run_T1_2, sys_log_dict['Run'])
-        # assert np.allclose(expected_trial_T1_2, sys_log_dict['Trial'])
-        # assert np.allclose(expected_time_step_T1_2, sys_log_dict['Time_step'])
-        assert np.allclose(expected_values_T1_2, sys_log_dict['value'])
-        assert np.allclose(expected_slopes_T1_2, sys_log_dict['mod_slope'])
-        assert np.allclose(expected_results_T1_2, sys_log_dict['RESULT'])
+        assert expected_times_T1 == t1_result_times == t1_slope_times == t1_value_times
+        assert np.allclose(expected_values_T1, t1_value_values)
+        assert np.allclose(expected_results_T1, t1_result_values)
+        assert np.allclose(expected_slopes_T1, t1_slope_values)
 
         # T2 log after first run -------------------------------------------
 
-        log_dict_T2_2 = T2.log.nparray_dictionary(entries=['value', 'mod_slope', 'RESULT'])
+        expected_times_T2 = ['1:0:0:1', '1:1:0:1', '1:2:0:1']
+        expected_values_T2 = [[[2.0, 4.0]], [[6.0, 8.0]], [[10.0, 12.0]]]
+        expected_slopes_T2 = [[2.0], [2.0], [2.0]]
+        expected_results_T2 = [[2.0, 4.0], [6.0, 8.0], [10.0, 12.0]]
 
-        assert list(log_dict_T2_2.keys()) == [COMP.default_execution_id]
-        sys_log_dict = log_dict_T2_2[COMP.default_execution_id]
-
-        expected_run_T2_2 = [[0], [0], [0]] + expected_run_T2
-        expected_trial_T2_2 = [[0], [1], [2]] + expected_trial_T2
-        expected_time_step_T2_2 = [[1], [1], [1]] + expected_time_step_T2
-        expected_values_T2_2 = [[[2.0, 4.0]], [[6.0, 8.0]], [[10.0, 12.0]]] + expected_values_T2
-        expected_slopes_T2_2 = [[2.0], [2.0], [2.0]] + expected_slopes_T2
-        expected_results_T2_2 = [[2.0, 4.0], [6.0, 8.0], [10.0, 12.0]] + expected_results_T2
-
-        # assert np.allclose(expected_run_T2_2, sys_log_dict['Run'])
-        # assert np.allclose(expected_trial_T2_2, sys_log_dict['Trial'])
-        # assert np.allclose(expected_time_step_T2_2, sys_log_dict['Time_step'])
-        assert np.allclose(expected_values_T2_2, sys_log_dict['value'])
-        assert np.allclose(expected_slopes_T2_2, sys_log_dict['mod_slope'])
-        assert np.allclose(expected_results_T2_2, sys_log_dict['RESULT'])
+        assert expected_times_T2 == t2_result_times == t2_slope_times == t2_value_times
+        assert np.allclose(expected_values_T2, t2_value_values)
+        assert np.allclose(expected_results_T2, t2_result_values)
+        assert np.allclose(expected_slopes_T2, t2_slope_values)
 
     def test_log_dictionary_with_scheduler(self):
+        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue())
+        pipeline = con_with_rpc_pipeline.rpc_pipeline
         T1 = pnl.TransferMechanism(name='log_test_T1',
                                    integrator_mode=True,
                                    integration_rate=0.5)
         T2 = pnl.TransferMechanism(name='log_test_T2',
-                                   function=psyneulink.core.components.functions.transferfunctions.Linear(slope=6.0))
+                                   function=pnl.Linear(slope=6.0))
         COMP = pnl.Composition(name='log_test_COMP', pathways=[T1, T2])
 
         def pass_threshold(mech, thresh):
@@ -379,116 +267,58 @@ class TestRPC:
             pnl.TimeScale.TRIAL: pnl.While(pass_threshold, T2, 5.0)
         }
 
-        T1.set_log_conditions(pnl.VALUE)
-        T1.set_log_conditions('mod_slope')
-        T1.set_log_conditions(pnl.RESULT)
-        T2.set_log_conditions(pnl.VALUE)
-        T2.set_log_conditions('mod_slope')
+        T1.set_delivery_conditions(pnl.VALUE)
+        T1.set_delivery_conditions('mod_slope')
+        T1.set_delivery_conditions(pnl.RESULT)
+        T2.set_delivery_conditions(pnl.VALUE)
+        T2.set_delivery_conditions('mod_slope')
 
-        COMP.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial)
+        COMP.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial,
+                 context=con_with_rpc_pipeline)
 
-        log_dict_T1 = T1.log.nparray_dictionary(entries=['RESULT', 'mod_slope', 'value'])
-        log_dict_T2 = T2.log.nparray_dictionary(entries=['value', 'mod_slope'])
+        actual = []
+        while not pipeline.empty(): actual.append(pipeline.get())
+        assert all([True if i.context == COMP.default_execution_id else False for i in actual])
 
-        assert list(log_dict_T1.keys()) == [COMP.default_execution_id]
-        sys_log_dict = log_dict_T1[COMP.default_execution_id]
+        t1_slope_entries = [i for i in actual if i.parameterName == pnl.SLOPE and i.componentName == 'log_test_T1']
+        t1_slope_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t1_slope_entries]
+        t1_slope_times = [i.time for i in t1_slope_entries]
 
-        # Check order of keys (must match order of specification)
-        assert list(sys_log_dict.keys()) == ['Run', 'Trial', 'Pass', 'Time_step', 'RESULT', 'mod_slope', 'value']
-        assert list(log_dict_T2[COMP.default_execution_id].keys()) == ['Run', 'Trial', 'Pass', 'Time_step', 'value',
-                                                                       'mod_slope']
+        t2_slope_entries = [i for i in actual if i.parameterName == pnl.SLOPE and i.componentName == 'log_test_T2']
+        t2_slope_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t2_slope_entries]
+        t2_slope_times = [i.time for i in t2_slope_entries]
+
+        t1_result_entries = [i for i in actual if i.parameterName == pnl.RESULT and i.componentName == 'log_test_T1']
+        t1_result_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t1_result_entries]
+        t1_result_times = [i.time for i in t1_result_entries]
+
+        t1_value_entries = [i for i in actual if i.parameterName == pnl.VALUE and i.componentName == 'log_test_T1']
+        t1_value_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t1_value_entries]
+        t1_value_times = [i.time for i in t1_value_entries]
+
+        t2_value_entries = [i for i in actual if i.parameterName == pnl.VALUE and i.componentName == 'log_test_T2']
+        t2_value_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in t2_value_entries]
+        t2_value_times = [i.time for i in t2_value_entries]
 
         # Check values T1
-        assert np.allclose(sys_log_dict["Run"], [[0], [0], [0]])
-        assert np.allclose(sys_log_dict["Trial"], [[0], [0], [0]])
-        assert np.allclose(sys_log_dict["Time_step"], [[0], [0], [0]])
-        assert np.allclose(sys_log_dict["RESULT"], [[0.5], [0.75], [0.875]])
-        assert np.allclose(sys_log_dict["value"], [[[0.5]], [[0.75]], [[0.875]]])
-        assert np.allclose(sys_log_dict["mod_slope"], [[1], [1], [1]])
+
+        expected_times_T1 = ['0:0:0:0', '0:0:1:0', '0:0:2:0']
+        expected_results_T1 = [[0.5], [0.75], [0.875]]
+        expected_values_T1 = [[[0.5]], [[0.75]], [[0.875]]]
+        expected_slopes_T1 =  [[1], [1], [1]]
+        assert expected_times_T1 == t1_result_times == t1_slope_times == t1_value_times
+        assert np.allclose(expected_values_T1, t1_value_values)
+        assert np.allclose(expected_results_T1, t1_result_values)
+        assert np.allclose(expected_slopes_T1, t1_slope_values)
 
         # Check values T2
-        assert np.allclose(log_dict_T2[COMP.default_execution_id]["Run"], [[0], [0], [0]])
-        assert np.allclose(log_dict_T2[COMP.default_execution_id]["Trial"], [[0], [0], [0]])
-        assert np.allclose(log_dict_T2[COMP.default_execution_id]["Time_step"], [[1], [1], [1]])
-        assert np.allclose(log_dict_T2[COMP.default_execution_id]["value"], [[[3]], [[4.5]], [[5.25]]])
-        assert np.allclose(log_dict_T2[COMP.default_execution_id]["mod_slope"], [[6], [6], [6]])
 
-    def test_log_array_with_scheduler(self):
-        T1 = pnl.TransferMechanism(name='log_test_T1',
-                                   integrator_mode=True,
-                                   integration_rate=0.5)
-        T2 = pnl.TransferMechanism(name='log_test_T2',
-                                   function=psyneulink.core.components.functions.transferfunctions.Linear(slope=6.0))
-        COMP = pnl.Composition(name='log_test_COMP', pathways=[T1, T2])
-
-        def pass_threshold(mech, thresh):
-            results = mech.output_ports[0].parameters.value.get(COMP)
-            for val in results:
-                if abs(val) >= thresh:
-                    return True
-            return False
-
-        terminate_trial = {
-            pnl.TimeScale.TRIAL: pnl.While(pass_threshold, T2, 5.0)
-        }
-
-        T1.set_log_conditions(pnl.VALUE)
-        T1.set_log_conditions('mod_slope')
-        T1.set_log_conditions(pnl.RESULT)
-        T2.set_log_conditions(pnl.VALUE)
-        T2.set_log_conditions('mod_slope')
-
-        COMP.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial)
-
-        log_array_T1 = T1.log.nparray(entries=['RESULT', 'mod_slope', 'value'])
-        log_array_T2 = T2.log.nparray(entries=['value', 'mod_slope'])
-
-        context_results = [pnl.Log.context_header, COMP.default_execution_id]
-        # Check values
-        run_results = [["Run"], [0], [0], [0]]
-        trial_results = [["Trial"], [0], [0], [0]]
-        pass_results = [["Pass"], [0], [1], [2]]
-        time_step_results = [["Time_step"], [0], [0], [0]]
-        results_results = ["RESULT", [0.5], [0.75], [0.875]]
-        slope_results = ["mod_slope", [1], [1], [1]]
-        value_results = ["value", [[0.5]], [[0.75]], [[0.875]]]
-
-        for i in range(2):
-            assert log_array_T1[0][i] == context_results[i]
-
-        assert log_array_T1[1][0] == pnl.Log.data_header
-        data_array = log_array_T1[1][1]
-        j = 0
-        for i in range(4):
-            assert data_array[j][i] == run_results[i]
-            assert data_array[j + 1][i] == trial_results[i]
-            assert data_array[j + 2][i] == pass_results[i]
-            assert data_array[j + 3][i] == time_step_results[i]
-            assert data_array[j + 4][i] == results_results[i]
-            assert data_array[j + 5][i] == slope_results[i]
-            assert data_array[j + 6][i] == value_results[i]
-
-        # Check values
-        run_results = [["Run"], [0], [0], [0]]
-        trial_results = [["Trial"], [0], [0], [0]]
-        pass_results = [["Pass"], [0], [1], [2]]
-        time_step_results = [["Time_step"], [1], [1], [1]]
-        value_results = ["value", [[3]], [[4.5]], [[5.25]]]
-        slope_results = ["mod_slope", [6], [6], [6]]
-
-        for i in range(2):
-            assert log_array_T1[0][i] == context_results[i]
-
-        assert log_array_T2[1][0] == pnl.Log.data_header
-        data_array = log_array_T2[1][1]
-        j = 0
-        for i in range(4):
-            assert data_array[j][i] == run_results[i]
-            assert data_array[j + 1][i] == trial_results[i]
-            assert data_array[j + 2][i] == pass_results[i]
-            assert data_array[j + 3][i] == time_step_results[i]
-            assert data_array[j + 4][i] == value_results[i]
-            assert data_array[j + 5][i] == slope_results[i]
+        expected_times_T2 = ['0:0:0:1', '0:0:1:1', '0:0:2:1']
+        expected_values_T2 = [[[3]], [[4.5]], [[5.25]]]
+        expected_slopes_T2 =  [[6], [6], [6]]
+        assert expected_times_T2 == t2_slope_times == t2_value_times
+        assert np.allclose(expected_values_T2, t2_value_values)
+        assert np.allclose(expected_slopes_T2, t2_slope_values)
 
     def test_log_dictionary_with_scheduler_many_time_step_increments(self):
         T1 = pnl.TransferMechanism(name='log_test_T1',
@@ -589,217 +419,6 @@ class TestRPC:
             log_dict = lca.log.nparray_dictionary()['Composition-0']
             assert log_dict['Run'] == [[0], [0], [0], [1], [1], [1]]
             assert np.allclose(log_dict['value'], [[[0.52466739, 0.47533261]] * 6])
-
-
-class TestClearLog:
-
-    def test_clear_log(self):
-
-        # Create System
-        T_1 = pnl.TransferMechanism(name='log_test_T_1', size=2)
-        T_2 = pnl.TransferMechanism(name='log_test_T_2', size=2)
-        COMP = pnl.Composition(name="log_test_COMP", pathways=[T_1, T_2])
-        PJ = T_2.path_afferents[0]
-
-        # Set log conditions on each component
-        T_1.set_log_conditions('mod_noise')
-        T_1.set_log_conditions(pnl.RESULT)
-        T_2.set_log_conditions('mod_slope')
-        T_2.set_log_conditions(pnl.RESULT)
-        PJ.set_log_conditions('mod_matrix')
-
-        # Run system
-        COMP.run(inputs={T_1: [1.0, 1.0]})
-
-        # Create log dict for each component
-        log_dict_T_1 = T_1.log.nparray_dictionary()
-        log_dict_T_2 = T_2.log.nparray_dictionary()
-        log_dict_PJ = PJ.log.nparray_dictionary()
-
-        assert list(log_dict_T_1.keys()) == [COMP.default_execution_id]
-        assert list(log_dict_T_2.keys()) == [COMP.default_execution_id]
-        assert list(log_dict_PJ.keys()) == [COMP.default_execution_id]
-
-        # Confirm that values were logged correctly
-        sys_log_dict = log_dict_T_1[COMP.default_execution_id]
-        assert np.allclose(sys_log_dict['RESULT'], np.array([[1.0, 1.0]]))
-        assert np.allclose(sys_log_dict['mod_noise'], np.array([[0.0]]))
-
-        sys_log_dict = log_dict_T_2[COMP.default_execution_id]
-        assert np.allclose(sys_log_dict['RESULT'], np.array([[1.0, 1.0]]))
-        assert np.allclose(sys_log_dict['mod_slope'], np.array([[1.0]]))
-
-        sys_log_dict = log_dict_PJ[COMP.default_execution_id]
-        assert np.allclose(sys_log_dict['mod_matrix'], np.array([[1.0, 0.0], [0.0, 1.0]]))
-
-        # KDM 10/3/18: below was changed to delete_entry=True because it's not implemented in Parameter logs,
-        # and it's not clear this option results in much difference than just deleting the entries and
-        # is stated to be included only for future use
-        # Clear T_1s log and DO NOT delete entries
-        T_1.log.clear_entries(delete_entry=True)
-
-        # Clear T_2s log and delete entries
-        T_2.log.clear_entries(delete_entry=True)
-
-        # Create new log dict for each component
-        log_dict_T_1 = T_1.log.nparray_dictionary()
-        log_dict_T_2 = T_2.log.nparray_dictionary()
-        log_dict_PJ = PJ.log.nparray_dictionary()
-
-        # Confirm that T_1 log values were removed
-        assert log_dict_T_1 == OrderedDict()
-
-        # Confirm that T_2 log values were removed and dictionary entries were destroyed
-        assert log_dict_T_2 == OrderedDict()
-
-        # Confirm that PJ log values were not affected by changes to T_1 and T_2's logs
-        assert np.allclose(log_dict_PJ[COMP.default_execution_id]['mod_matrix'], np.array([[1.0, 0.0], [0.0, 1.0]]))
-
-        # Run system again
-        COMP.run(inputs={T_1: [2.0, 2.0]})
-
-        # Create new log dict for each component
-        log_dict_T_1 = T_1.log.nparray_dictionary()
-        log_dict_T_2 = T_2.log.nparray_dictionary()
-        log_dict_PJ = PJ.log.nparray_dictionary()
-
-        # Confirm that T_1 log values only include most recent run
-        sys_log_dict = log_dict_T_1[COMP.default_execution_id]
-        assert np.allclose(sys_log_dict['RESULT'], np.array([[2.0, 2.0]]))
-        assert np.allclose(sys_log_dict['mod_noise'], np.array([[0.0]]))
-        # NOTE: "Run" value still incremented, but only the most recent one is returned (# runs does not reset to zero)
-        assert np.allclose(sys_log_dict['Run'], np.array([[1]]))
-
-        # Confirm that T_2 log values only include most recent run
-        sys_log_dict = log_dict_T_2[COMP.default_execution_id]
-        assert np.allclose(sys_log_dict['RESULT'], np.array([[2.0, 2.0]]))
-        assert np.allclose(sys_log_dict['mod_slope'], np.array([[1.0]]))
-        assert np.allclose(sys_log_dict['Run'], np.array([[1]]))
-
-        # Confirm that PJ log values include all runs
-        sys_log_dict = log_dict_PJ[COMP.default_execution_id]
-        assert np.allclose(sys_log_dict['mod_matrix'], np.array([[[1.0, 0.0], [0.0, 1.0]], [[1.0, 0.0], [0.0, 1.0]]]))
-        assert np.allclose(sys_log_dict['Run'], np.array([[0], [1]]))
-
-    @pytest.mark.parametrize(
-        'insertion_eids, deletion_eids, log_is_empty',
-        [
-            (['context'], 'context', True),  # fails if string handling not correct due to str being Iterable
-            (['context'], ['context'], True),
-        ]
-    )
-    def test_clear_log_arguments(self, insertion_eids, deletion_eids, log_is_empty):
-        t = pnl.TransferMechanism()
-        c = pnl.Composition()
-        c.add_node(t)
-
-        t.parameters.value.log_condition = True
-
-        for eid in insertion_eids:
-            c.run({t: 0}, context=eid)
-
-        t.parameters.value.clear_log(deletion_eids)
-
-        if log_is_empty:
-            assert len(t.parameters.value.log) == 0
-        else:
-            assert len(t.parameters.value.log) != 0
-
-
-class TestFiltering:
-
-    @pytest.fixture(scope='module')
-    def node_logged_in_simulation(self):
-        Input = pnl.TransferMechanism(name='Input')
-        reward = pnl.TransferMechanism(
-            output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE], name='reward')
-        Decision = pnl.DDM(
-            function=pnl.DriftDiffusionAnalytical(
-                drift_rate=(1.0, pnl.ControlProjection(
-                    function=pnl.Linear,
-                    control_signal_params={pnl.ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)})
-                            ),
-                threshold=(1.0, pnl.ControlProjection(
-                    function=pnl.Linear,
-                    control_signal_params={pnl.ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)})
-                           ),
-                noise=0.5,
-                starting_point=0,
-                t0=0.45
-            ),
-            output_ports=[
-                pnl.DECISION_VARIABLE,
-                pnl.RESPONSE_TIME,
-                pnl.PROBABILITY_UPPER_THRESHOLD],
-            name='Decision'
-        )
-
-        comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
-        comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
-        comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
-        task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
-        comp.add_linear_processing_pathway(task_execution_pathway)
-
-        comp.add_controller(
-            controller=pnl.OptimizationControlMechanism(
-                agent_rep=comp,
-                features=[Input.input_port, reward.input_port],
-                feature_function=pnl.AdaptiveIntegrator(rate=0.5),
-                objective_mechanism=pnl.ObjectiveMechanism(
-                    function=pnl.LinearCombination(operation=pnl.PRODUCT),
-                    monitor=[
-                        reward,
-                        Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
-                        (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)
-                    ]
-                ),
-                function=pnl.GridSearch(),
-                control_signals=[
-                    {PROJECTIONS: ("drift_rate", Decision),
-                     ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                    {PROJECTIONS: ("threshold", Decision),
-                     ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}
-                ]
-            )
-        )
-
-        comp.enable_controller = True
-
-        stim_list_dict = {
-            Input: [0.5, 0.123],
-            reward: [20, 20]
-        }
-
-        Input.parameters.value.log_condition = True
-
-        comp.run(inputs=stim_list_dict)
-
-        return Input
-
-    def test_node_has_logged_sims(self, node_logged_in_simulation):
-        for logged_value, eid_dict in node_logged_in_simulation.log.logged_entries.items():
-            for eid in eid_dict:
-                if pnl.EID_SIMULATION in str(eid):
-                    return
-        else:
-            assert False, 'No simulation execution_id found in log'
-
-    def test_nparray(self, node_logged_in_simulation):
-        for eid in node_logged_in_simulation.log.nparray(exclude_sims=True)[0]:
-            assert pnl.EID_SIMULATION not in str(eid)
-
-    def test_nparray_dictionary(self, node_logged_in_simulation):
-        for eid in node_logged_in_simulation.log.nparray_dictionary(exclude_sims=True):
-            assert pnl.EID_SIMULATION not in str(eid)
-
-    def test_csv(self, node_logged_in_simulation):
-        full_csv = node_logged_in_simulation.log.csv(exclude_sims=True)
-
-        # get each row, excluding header
-        for row in full_csv.split('\n')[1:]:
-            # if present in a row, context will be in the first cell
-            assert pnl.EID_SIMULATION not in row.replace("'", '').split(',')[0]
-
 
 class TestFullModels:
     def test_multilayer(self):
