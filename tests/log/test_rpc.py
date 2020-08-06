@@ -321,6 +321,8 @@ class TestRPC:
         assert np.allclose(expected_slopes_T2, t2_slope_values)
 
     def test_log_dictionary_with_scheduler_many_time_step_increments(self):
+        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue())
+        pipeline = con_with_rpc_pipeline.rpc_pipeline
         T1 = pnl.TransferMechanism(name='log_test_T1',
                                    integrator_mode=True,
                                    integration_rate=0.05)
@@ -337,31 +339,34 @@ class TestRPC:
             pnl.TimeScale.TRIAL: pnl.While(pass_threshold, T1, 0.95)
         }
 
-        T1.set_log_conditions(pnl.VALUE)
+        T1.set_delivery_conditions(pnl.VALUE)
 
-        COMP.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial)
+        COMP.run(inputs={T1: [[1.0]]}, termination_processing=terminate_trial, context=con_with_rpc_pipeline)
 
-        log_dict_T1 = T1.log.nparray_dictionary(entries=['value'])
+        actual = []
+        while not pipeline.empty(): actual.append(pipeline.get())
+        assert all([True if i.context == COMP.default_execution_id else False for i in actual])
 
-        assert list(log_dict_T1.keys()) == [COMP.default_execution_id]
-        sys_log_dict = log_dict_T1[COMP.default_execution_id]
+        t1_value_entries = [i for i in actual if i.parameterName == pnl.VALUE and i.componentName == 'log_test_T1']
+        t1_value_values = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in
+                           t1_value_entries]
 
-        # Check order of keys (must match order of specification)
-        assert list(sys_log_dict.keys()) == ['Run', 'Trial', 'Pass', 'Time_step', 'value']
-
-        # # Check values T1
-        assert len(sys_log_dict["Run"]) == 59
-        assert np.allclose(sys_log_dict["Pass"][30], 30)
-        assert np.allclose(sys_log_dict["Time_step"][30], 0)
-        assert abs(sys_log_dict["value"][58]) >= 0.95
-        assert abs(sys_log_dict["value"][57]) < 0.95
+        # Check values T1
+        assert len(actual) == 59
+        assert actual[30].time == '0:0:30:0'
+        assert t1_value_values[58] >= 0.95
+        assert t1_value_values[57] < 0.95
 
     def test_log_csv_multiple_contexts(self):
+        pipeline = Queue()
+        con_X = pnl.Context(execution_id='comp X', rpc_pipeline=pipeline)
+        con_Y = pnl.Context(execution_id='comp Y', rpc_pipeline=pipeline)
+
         A = pnl.TransferMechanism(name='A')
         B = pnl.TransferMechanism(name='B')
         C = pnl.TransferMechanism(name='C')
 
-        C.set_log_conditions(pnl.VALUE)
+        C.set_delivery_conditions(pnl.VALUE)
 
         X = pnl.Composition(name='comp X')
         Y = pnl.Composition(name='comp Y')
@@ -371,18 +376,18 @@ class TestRPC:
 
         # running with manual contexts for consistent output
         # because output is sorted by context
-        X.run(inputs={A: 1}, context='comp X')
-        Y.run(inputs={B: 2}, context='comp Y')
+        X.run(inputs={A: 1}, context=con_X)
+        Y.run(inputs={B: 2}, context=con_Y)
 
-        expected_str = "'Execution Context', 'Data'\n" \
-                       + "'comp X', 'Run', 'Trial', 'Pass', 'Time_step', 'value'\n" \
-                       + ", '0', '0', '0', '1', '1.0'\n" \
-                       + "'comp Y', 'Run', 'Trial', 'Pass', 'Time_step', 'value'\n" \
-                       + ", '0', '0', '0', '1', '2.0'\n"
-        assert C.log.csv() == expected_str
+        actual = []
+        while not pipeline.empty(): actual.append(pipeline.get())
 
-        print()
-        print()
+        assert actual[0].context == 'comp X'
+        assert actual[0].time == '0:0:0:1'
+        assert actual[0].value.data == [1]
+        assert actual[1].context == 'comp Y'
+        assert actual[1].time == '0:0:0:1'
+        assert actual[1].value.data == [2]
 
     @pytest.mark.parametrize(
         'scheduler_conditions, multi_run', [
@@ -392,13 +397,15 @@ class TestRPC:
         ]
     )
     def test_log_multi_calls_single_timestep(self, scheduler_conditions, multi_run):
+        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue())
+        pipeline = con_with_rpc_pipeline.rpc_pipeline
         lca = pnl.LCAMechanism(
             size=2,
             leak=0.5,
             threshold=0.515,
             reset_stateful_function_when=pnl.AtTrialStart()
         )
-        lca.set_log_conditions(pnl.VALUE)
+        lca.set_delivery_conditions(pnl.VALUE)
         m0 = pnl.ProcessingMechanism(
             size=2
         )
@@ -406,23 +413,30 @@ class TestRPC:
         comp.add_linear_processing_pathway([m0, lca])
         if scheduler_conditions:
             comp.scheduler.add_condition(lca, pnl.AfterNCalls(m0, 2))
-        comp.run(inputs={m0: [[1, 0], [1, 0], [1, 0]]})
-        log_dict = lca.log.nparray_dictionary()['Composition-0']
-        assert log_dict['Run'] == [[0], [0], [0]]
-        assert log_dict['Trial'] == [[0], [1], [2]]
-        assert log_dict['Pass'] == [[1], [1], [1]] if scheduler_conditions else [[0], [0], [0]]
-        assert log_dict['Time_step'] == [[1], [1], [1]]
+        comp.run(inputs={m0: [[1, 0], [1, 0], [1, 0]]}, context=con_with_rpc_pipeline)
+
+        actual = []
+        while not pipeline.empty(): actual.append(pipeline.get())
+        integration_end_dict = {i.time: i for i in actual}
+        assert list(integration_end_dict.keys()) == ['0:0:0:1', '0:1:0:1', '0:2:0:1']
+        vals = [i.value.data for i in integration_end_dict.values()]
         # floats in value, so use np.allclose
-        assert np.allclose(log_dict['value'], [[[0.52466739, 0.47533261]] * 3])
+        assert np.allclose(vals, [[[0.52466739, 0.47533261]] * 3])
         if multi_run:
             comp.run(inputs={m0: [[1, 0], [1, 0], [1, 0]]})
-            log_dict = lca.log.nparray_dictionary()['Composition-0']
-            assert log_dict['Run'] == [[0], [0], [0], [1], [1], [1]]
-            assert np.allclose(log_dict['value'], [[[0.52466739, 0.47533261]] * 6])
+            actual = []
+            while not pipeline.empty(): actual.append(pipeline.get())
+            integration_end_dict.update({i.time: i for i in actual})
+            assert list(integration_end_dict.keys()) == ['0:0:0:1', '0:1:0:1', '0:2:0:1', '1:0:0:1', '1:1:0:1',
+                                                         '1:2:0:1']
+            vals = [i.value.data for i in integration_end_dict.values()]
+            # floats in value, so use np.allclose
+            assert np.allclose(vals, [[[0.52466739, 0.47533261]] * 6])
 
 class TestFullModels:
     def test_multilayer(self):
-
+        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue())
+        pipeline = con_with_rpc_pipeline.rpc_pipeline
         input_layer = pnl.TransferMechanism(name='input_layer',
                                             function=pnl.Logistic,
                                             size=2)
@@ -479,10 +493,11 @@ class TestFullModels:
         input_dictionary = {backprop_pathway.target: [[0., 0., 1.]],
                             input_layer: [[-1., 30.]]}
 
-        middle_weights.set_log_conditions(('mod_matrix', pnl.PROCESSING))
+        middle_weights.set_delivery_conditions(('mod_matrix', pnl.PROCESSING))
 
         comp.learn(inputs=input_dictionary,
-                   num_trials=10)
+                   num_trials=10,
+                   context=con_with_rpc_pipeline)
 
         expected_log_val = np.array(
             [
@@ -546,27 +561,17 @@ class TestFullModels:
             ],
             dtype=object
         )
-        log_val = middle_weights.log.nparray(entries='mod_matrix', header=False)
-
-        assert log_val[0] == expected_log_val[0]
-
-        for i in range(1, len(log_val)):
-            try:
-                np.testing.assert_allclose(log_val[i], expected_log_val[i])
-            except TypeError:
-                for j in range(len(log_val[i])):
-                    np.testing.assert_allclose(
-                        np.array(log_val[i][j][0]),
-                        np.array(expected_log_val[i][j][0]),
-                        atol=1e-08,
-                        err_msg='Failed on test item {0} of logged values'.format(i)
-                    )
-
-        middle_weights.log.print_entries()
+        actual = []
+        while not pipeline.empty(): actual.append(pipeline.get())
+        log_val = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in actual]
+        assert all([True if i.context == 'multilayer' else False for i in actual])
+        assert np.allclose(log_val, expected_log_val[1][0][4])
 
         # Test Programatic logging
-        hidden_layer_2.log.log_values(pnl.VALUE, comp)
-        log_val = hidden_layer_2.log.nparray(header=False)
+        hidden_layer_2.log._deliver_values(pnl.VALUE, con_with_rpc_pipeline)
+        actual = []
+        while not pipeline.empty(): actual.append(pipeline.get())
+        log_val = np.ndarray(shape=np.array(actual[0].value.shape), buffer=np.array(actual[0].value.data))
         expected_log_val = np.array(
             [
                 ['multilayer'],
@@ -580,29 +585,25 @@ class TestFullModels:
             ],
             dtype=object
         )
-        assert log_val[0] == expected_log_val[0]
-
-        for i in range(1, len(log_val)):
-            try:
-                np.testing.assert_allclose(log_val[i], expected_log_val[i])
-            except TypeError:
-                for j in range(len(log_val[i])):
-                    np.testing.assert_allclose(
-                        np.array(log_val[i][j][0]),
-                        np.array(expected_log_val[i][j][0]),
-                        atol=1e-08,
-                        err_msg='Failed on test item {0} of logged values'.format(i)
-                    )
-        hidden_layer_2.log.print_entries()
+        assert actual[0].context == 'multilayer'
+        assert actual[0].time == '1:0:0:0'
+        assert np.allclose(
+            expected_log_val[1][0][4],
+            log_val
+        )
 
         # Clear log and test with logging of weights set to LEARNING for another 5 trials of learning
-        middle_weights.log.clear_entries(entries=None, confirm=False)
-        middle_weights.set_log_conditions(('mod_matrix', pnl.LEARNING))
+        middle_weights.set_delivery_conditions(('mod_matrix', pnl.LEARNING))
         comp.learn(
             num_trials=5,
             inputs=input_dictionary,
+            context=con_with_rpc_pipeline
         )
-        log_val = middle_weights.log.nparray(entries='mod_matrix', header=False)
+        actual = []
+        while not pipeline.empty(): actual.append(pipeline.get())
+        assert all([True if i.context == 'multilayer' else False for i in actual])
+        matrices = [i for i in actual if i.parameterName == 'matrix']
+        log_val = [np.ndarray(shape=np.array(i.value.shape), buffer=np.array(i.value.data)) for i in matrices]
         expected_log_val = np.array(
             [
                 ['multilayer'],
@@ -644,22 +645,8 @@ class TestFullModels:
             dtype=object
         )
 
-        assert log_val.shape == expected_log_val.shape
-        assert log_val[0] == expected_log_val[0]
-        assert len(log_val[1]) == len(expected_log_val[1]) == 1
-
-        for i in range(len(log_val[1][0])):
-            try:
-                np.testing.assert_allclose(
-                    log_val[1][0][i],
-                    expected_log_val[1][0][i],
-                    err_msg='Failed on test item {0} of logged values'.format(i)
-                )
-            except TypeError:
-                for j in range(len(log_val[1][0][i])):
-                    np.testing.assert_allclose(
-                        np.array(log_val[1][0][i][j]),
-                        np.array(expected_log_val[1][0][i][j]),
-                        atol=1e-08,
-                        err_msg='Failed on test item {0} of logged values'.format(i)
-                    )
+        assert [i.time for i in matrices] == ['1:0:1:0', '1:1:1:0', '1:2:1:0', '1:3:1:0', '1:4:1:0']
+        assert np.allclose(
+            expected_log_val[1][0][4],
+            log_val
+        )
