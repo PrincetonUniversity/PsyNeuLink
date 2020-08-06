@@ -906,11 +906,10 @@ class Log:
 
         This can be used to "manually" prepare the `value <Component.value>` of any of a Component's `loggable_items
         <Component.loggable_items>` (including its own `value <Component.value>`) for delivery to an external application via gRPC.
-        The context item of its `LogEntry` is assigned *COMMAND_LINE*.  If the call to _deliver_values is made while a
-        Composition to which the Component belongs is being run (e.g., in a **call_before..** or **call_after...** argument
-        of its `run <Composition.run>` method), then the time of the LogEntry is assigned the value of the `Clock` of
-        the Composition's `scheduler` or `scheduler_learning`, whichever is currently executing
-        (see `System_Scheduler`).
+        If the call to _deliver_values is made while a Composition to which the Component belongs is being run (e.g., 
+        in a **call_before..** or **call_after...** argument of its `run <Composition.run>` method), then the time of 
+        the LogEntry is assigned the value of the `Clock` of the Composition's `scheduler` or `scheduler_learning`, 
+        whichever is currently executing (see `Composition_Scheduler`).
 
         Arguments
         ---------
