@@ -12,7 +12,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import graph_pb2 as graph__pb2
+from . import graph_pb2 as graph__pb2
 
 
 class ServeGraphStub(object):
