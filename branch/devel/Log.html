@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.8.2.8+3.geee20ba documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.8.2.8+29.gea36a61 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.2.8+3
+                  0.8.2.8+29
                 </div>
               
             
@@ -483,6 +483,32 @@ If <strong>value</strong> is specified, that is the value logged; otherwise the 
 </dd></dl>
 
 <dl class="method">
+<dt id="psyneulink.core.globals.log.Log._set_delivery_conditions">
+<code class="descname">_set_delivery_conditions</code><span class="sig-paren">(</span><em>items</em>, <em>delivery_condition=&lt;LogCondition.EXECUTION: 896&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log._set_delivery_conditions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specifies items to be delivered via gRPC under the specified <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal"><span class="pre">LogCondition</span></code></a>(s).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>items</strong> (<em>str</em><em>, </em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>, </em><em>tuple</em><em> or </em><em>List of these</em>) – specifies items to be logged;  these must be be <a class="reference internal" href="#psyneulink.core.globals.log.Log.loggable_items" title="psyneulink.core.globals.log.Log.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> of the Log.
+Each item must be a:
+* string that is the name of a <code class="xref any docutils literal"><span class="pre">loggable_item</span></code> &lt;Log.loggable_item&gt;` of the Log’s <a class="reference internal" href="#psyneulink.core.globals.log.Log.owner" title="psyneulink.core.globals.log.Log.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>;
+* a reference to a Component;
+* tuple, the first item of which is one of the above, and the second a <a class="reference internal" href="Context.html#psyneulink.core.globals.context.ContextFlags" title="psyneulink.core.globals.context.ContextFlags"><code class="xref any py py-class docutils literal"><span class="pre">ContextFlags</span></code></a> to use for the item.</li>
+<li><strong>delivery_condition</strong> (<em>LogCondition : default LogCondition.EXECUTION</em>) – specifies <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal"><span class="pre">LogCondition</span></code></a> to use as the default for items not specified in tuples (see above).
+For convenience, the name of a LogCondition can be used in place of its full specification
+(e.g., <em>EXECUTION</em> instead of <code class="xref any docutils literal"><span class="pre">LogCondition.EXECUTION</span></code>).</li>
+<li><strong>params_set</strong> (<em>list : default None</em>) – list of parameters to include as loggable items;  these must be attributes of the <a class="reference internal" href="#psyneulink.core.globals.log.Log.owner" title="psyneulink.core.globals.log.Log.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>
+(for example, Mechanism</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.core.globals.log.Log.clear_entries">
 <code class="descname">clear_entries</code><span class="sig-paren">(</span><em>entries='all'</em>, <em>delete_entry=True</em>, <em>confirm=False</em>, <em>contexts=NotImplemented</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.log.Log.clear_entries" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clear one or more entries either by deleting the entry or just removing its data.</p>
@@ -866,7 +892,7 @@ last_value: the last value assigned or None</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.2.8+3.geee20ba',
+               VERSION:'0.8.2.8+29.gea36a61',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

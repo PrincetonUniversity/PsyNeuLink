@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.8.2.8+3.geee20ba documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.8.2.8+29.gea36a61 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.2.8+3
+                  0.8.2.8+29
                 </div>
               
             
@@ -385,7 +385,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 
 <dl class="class">
 <dt id="psyneulink.core.globals.parameters.Parameter">
-<em class="property">class </em><code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">Parameter</code><span class="sig-paren">(</span><em>default_value=None</em>, <em>name=None</em>, <em>stateful=True</em>, <em>modulable=False</em>, <em>structural=False</em>, <em>modulation_combination_function=None</em>, <em>read_only=False</em>, <em>function_arg=True</em>, <em>function_parameter=False</em>, <em>pnl_internal=False</em>, <em>aliases=None</em>, <em>user=True</em>, <em>values=None</em>, <em>getter=None</em>, <em>setter=None</em>, <em>loggable=True</em>, <em>log=None</em>, <em>log_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>history=None</em>, <em>history_max_length=1</em>, <em>history_min_length=0</em>, <em>fallback_default=False</em>, <em>retain_old_simulation_data=False</em>, <em>constructor_argument=None</em>, <em>spec=None</em>, <em>parse_spec=False</em>, <em>valid_types=None</em>, <em>reference=False</em>, <em>_owner=None</em>, <em>_inherited=False</em>, <em>_inherited_source=None</em>, <em>_user_specified=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">Parameter</code><span class="sig-paren">(</span><em>default_value=None</em>, <em>name=None</em>, <em>stateful=True</em>, <em>modulable=False</em>, <em>structural=False</em>, <em>modulation_combination_function=None</em>, <em>read_only=False</em>, <em>function_arg=True</em>, <em>function_parameter=False</em>, <em>pnl_internal=False</em>, <em>aliases=None</em>, <em>user=True</em>, <em>values=None</em>, <em>getter=None</em>, <em>setter=None</em>, <em>loggable=True</em>, <em>log=None</em>, <em>log_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>delivery_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>history=None</em>, <em>history_max_length=1</em>, <em>history_min_length=0</em>, <em>fallback_default=False</em>, <em>retain_old_simulation_data=False</em>, <em>constructor_argument=None</em>, <em>spec=None</em>, <em>parse_spec=False</em>, <em>valid_types=None</em>, <em>reference=False</em>, <em>_owner=None</em>, <em>_inherited=False</em>, <em>_inherited_source=None</em>, <em>_user_specified=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.default_value">
 <code class="descname">default_value</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.default_value" title="Permalink to this definition">¶</a></dt>
@@ -656,6 +656,22 @@ of the Component on which it resides</p>
 <dt id="psyneulink.core.globals.parameters.Parameter.log_condition">
 <code class="descname">log_condition</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.log_condition" title="Permalink to this definition">¶</a></dt>
 <dd><p>the LogCondition for which the parameter should be logged.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body"><a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal"><span class="pre">LogCondition</span></code></a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Default:</th><td class="field-body"><code class="xref any docutils literal"><span class="pre">OFF</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.globals.parameters.Parameter.delivery_condition">
+<code class="descname">delivery_condition</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.delivery_condition" title="Permalink to this definition">¶</a></dt>
+<dd><p>the LogCondition for which the parameter shoud be delivered.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1017,7 +1033,7 @@ refers to another <a class="reference internal" href="#psyneulink.core.globals.p
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.2.8+3.geee20ba',
+               VERSION:'0.8.2.8+29.gea36a61',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Context &mdash; PsyNeuLink 0.8.2.8+3.geee20ba documentation</title>
+  <title>Context &mdash; PsyNeuLink 0.8.2.8+29.gea36a61 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.2.8+3
+                  0.8.2.8+29
                 </div>
               
             
@@ -251,7 +251,7 @@ information as the string returned by the <a class="reference internal" href="#p
 <span id="context-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.globals.context.Context">
-<em class="property">class </em><code class="descclassname">psyneulink.core.globals.context.</code><code class="descname">Context</code><span class="sig-paren">(</span><em>owner=None</em>, <em>composition=None</em>, <em>flags=None</em>, <em>execution_phase=&lt;ContextFlags.IDLE: 1024&gt;</em>, <em>source=&lt;ContextFlags.NONE: 262144&gt;</em>, <em>runmode=&lt;ContextFlags.DEFAULT_MODE: 524288&gt;</em>, <em>execution_id=None</em>, <em>string=''</em>, <em>time=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.context.Context" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.context.</code><code class="descname">Context</code><span class="sig-paren">(</span><em>owner=None</em>, <em>composition=None</em>, <em>flags=None</em>, <em>execution_phase=&lt;ContextFlags.IDLE: 1024&gt;</em>, <em>source=&lt;ContextFlags.NONE: 262144&gt;</em>, <em>runmode=&lt;ContextFlags.DEFAULT_MODE: 524288&gt;</em>, <em>execution_id=None</em>, <em>string=''</em>, <em>time=None</em>, <em>rpc_pipeline=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.context.Context" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used to indicate the state of initialization and phase of execution of a Component, as well as the source of
 call of a method;  also used to specify and identify <a class="reference internal" href="Log.html#log-conditions"><span class="std std-ref">conditions</span></a> for <a class="reference internal" href="Log.html"><span class="doc">logging</span></a>.</p>
 <dl class="attribute">
@@ -334,6 +334,13 @@ one of the following flags is always set:</p>
 In general, this contains a copy of the <strong>context</strong> argument passed to method of the Component or one that
 references it, but it is possible that future uses will involve other messages.  Note that this is <em>not</em> the
 same as the <a class="reference internal" href="#psyneulink.core.globals.context.Context.flags_string" title="psyneulink.core.globals.context.Context.flags_string"><code class="xref any py py-attr docutils literal"><span class="pre">flags_string</span></code></a> attribute (see <a class="reference internal" href="#context-string-note"><span class="std std-ref">note</span></a>).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.globals.context.Context.rpc_pipeline">
+<code class="descname">rpc_pipeline</code><a class="headerlink" href="#psyneulink.core.globals.context.Context.rpc_pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Queue</em> – queue to populate with messages for external environment in cases where execution was triggered via RPC call
+(e.g. through PsyNeuLinkView).</p>
 </dd></dl>
 
 </dd></dl>
@@ -467,7 +474,7 @@ Context is not specified</li>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.2.8+3.geee20ba',
+               VERSION:'0.8.2.8+29.gea36a61',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
