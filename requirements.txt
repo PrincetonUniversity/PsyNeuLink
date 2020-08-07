@@ -2,6 +2,8 @@ autograd
 dill
 elfi
 graphviz
+grpcio
+grpcio-tools
 llvmlite
 matplotlib
 networkx==1.11

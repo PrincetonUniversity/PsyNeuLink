@@ -21,7 +21,7 @@ from psyneulink.core.globals.utilities import Modulation
 __all__ = [
     'CategoryDefaultPreferencesDict',
     'ComponentDefaultPrefDicts', 'BasePreferenceSet', 'BasePreferenceSetPrefs',
-    'CompositionDefaultPreferencesDict',
+    'CompositionDefaultPreferencesDict', 'DELIVERY_PREF',
     'InstanceDefaultPreferencesDict', 'is_pref', 'is_pref_set',
     'CATEGORY_DEFAULT_PREFERENCES', 'INSTANCE_DEFAULT_PREFERENCES', 'SUBTYPE_DEFAULT_PREFERENCES',
     'TYPE_DEFAULT_PREFERENCES', 'LOG_PREF', 'PARAM_VALIDATION_PREF',
@@ -32,6 +32,7 @@ __all__ = [
 # Keypaths for preferences:
 REPORT_OUTPUT_PREF = '_report_output_pref'
 LOG_PREF = '_log_pref'
+DELIVERY_PREF = '_delivery_pref'
 PARAM_VALIDATION_PREF = '_param_validation_pref'
 VERBOSE_PREF = '_verbose_pref'
 RUNTIME_PARAM_MODULATION_PREF = '_runtime_param_modulation_pref'
@@ -50,6 +51,7 @@ BasePreferenceSetPrefs = {
     PARAM_VALIDATION_PREF,
     REPORT_OUTPUT_PREF,
     LOG_PREF,
+    DELIVERY_PREF,
     RUNTIME_PARAM_MODULATION_PREF
 }
 
@@ -59,6 +61,7 @@ CompositionDefaultPreferencesDict = {
     PARAM_VALIDATION_PREF: PreferenceEntry(True, PreferenceLevel.COMPOSITION),
     REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.COMPOSITION),
     LOG_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
+    DELIVERY_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
     RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.COMPOSITION)}
 
 CategoryDefaultPreferencesDict = {
@@ -67,6 +70,7 @@ CategoryDefaultPreferencesDict = {
     PARAM_VALIDATION_PREF: PreferenceEntry(True, PreferenceLevel.CATEGORY),
     REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.CATEGORY),
     LOG_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
+    DELIVERY_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
     RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.MULTIPLY,PreferenceLevel.CATEGORY)}
 
 TypeDefaultPreferencesDict = {
@@ -75,6 +79,7 @@ TypeDefaultPreferencesDict = {
     PARAM_VALIDATION_PREF: PreferenceEntry(True, PreferenceLevel.TYPE),
     REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.TYPE),
     LOG_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
+    DELIVERY_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
     RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.ADD,PreferenceLevel.TYPE)}
 
 SubtypeDefaultPreferencesDict = {
@@ -83,6 +88,7 @@ SubtypeDefaultPreferencesDict = {
     PARAM_VALIDATION_PREF: PreferenceEntry(True, PreferenceLevel.SUBTYPE),
     REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.SUBTYPE),
     LOG_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
+    DELIVERY_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
     RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.ADD,PreferenceLevel.SUBTYPE)}
 
 InstanceDefaultPreferencesDict = {
@@ -91,6 +97,7 @@ InstanceDefaultPreferencesDict = {
     PARAM_VALIDATION_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
     LOG_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),   # This gives control to Mechanisms
+    DELIVERY_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
     RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.OVERRIDE, PreferenceLevel.INSTANCE)}
 
 # Dict of default dicts
@@ -169,6 +176,7 @@ class BasePreferenceSet(PreferenceSet):
                 + PARAM_VALIDATION_PREF: validate parameters during execution
                 + REPORT_OUTPUT_PREF: report object's ouptut during execution
                 + LOG_PREF: record attribute data for the object during execution
+                + DELIVERY_PREF: add attribute data to context rpc pipeline for delivery to external applications
                 + RUNTIME_PARAM_MODULATION_PREF: modulate parameters using runtime specification (in pathway)
             value that is either a PreferenceSet, valid setting for the preference, or a PreferenceLevel; defaults
         - level (PreferenceLevel): ??
@@ -220,6 +228,7 @@ class BasePreferenceSet(PreferenceSet):
             PARAM_VALIDATION_PREF: PreferenceEntry(True, PreferenceLevel.COMPOSITION),
             REPORT_OUTPUT_PREF: PreferenceEntry(True, PreferenceLevel.COMPOSITION),
             LOG_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
+            DELIVERY_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
             RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.COMPOSITION)
 
     }
@@ -375,6 +384,16 @@ class BasePreferenceSet(PreferenceSet):
         # If the level of the object is below the Preference level,
         #    recursively calls base (super) classes to get preference at specified level
         return self.get_pref_setting_for_level(LOG_PREF, self._log_pref.level)[0]
+
+    @property
+    def _deliveryPref(self):
+        """Return setting of owner's _deliveryPref at level specified in its PreferenceEntry.level
+        :param level:
+        :return:
+        """
+        # If the level of the object is below the Preference level,
+        #    recursively calls base (super) classes to get preference at specified level
+        return self.get_pref_setting_for_level(DELIVERY_PREF, self._delivery_pref.level)[0]
 
     # # VERSION THAT USES OWNER'S logPref TO LIST ENTRIES TO BE RECORDED
     # @logPref.setter
