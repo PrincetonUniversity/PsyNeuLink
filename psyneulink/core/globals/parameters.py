@@ -1305,9 +1305,6 @@ class Parameter(types.SimpleNamespace):
                 if self.delivery_condition is None or self.delivery_condition is LogCondition.OFF:
                     return
 
-                if context is None:
-                    context = self._owner._owner.most_recent_context
-
                 time = _get_time(self._owner._owner, context)
                 delivery_condition_satisfied = self.delivery_condition & context.flags
 
