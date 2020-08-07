@@ -2387,7 +2387,7 @@ from psyneulink.core.globals.keywords import \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, \
     ROLES, SAMPLE, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
-    TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
+    TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
@@ -7226,14 +7226,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not component:
                 continue
             if isinstance(component, Projection):
-                if hasattr(component.sender,'owner_mech'):
+                if hasattr(component.sender, OWNER_MECH):
                     sender_node = component.sender.owner_mech
                 else:
                     if isinstance(component.sender.owner, CompositionInterfaceMechanism):
                         sender_node = component.sender.owner.composition
                     else:
                         sender_node = component.sender.owner
-                if hasattr(component.receiver, 'owner_mech'):
+                if hasattr(component.receiver, OWNER_MECH):
                     receiver_node = component.receiver.owner_mech
                 else:
                     if isinstance(component.receiver.owner, CompositionInterfaceMechanism):
@@ -7306,7 +7306,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 invalid_aux_components = self._get_invalid_aux_components(self.controller)
                 for component in invalid_aux_components:
                     if isinstance(component, Projection):
-                        if hasattr(component.receiver, 'owner_mech'):
+                        if hasattr(component.receiver, OWNER_MECH):
                             owner = component.receiver.owner_mech
                         else:
                             owner = component.receiver.owner
