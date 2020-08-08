@@ -3749,12 +3749,10 @@ class TransferWithCosts(TransferFunction):
         _validate_intensity_cost_fct = get_validator_by_function(is_function_type)
         intensity_cost_fct_mult_param = Parameter(modulable=True,
                                                   modulation_combination_function=PRODUCT,
-                                                  aliases=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM,
                                                   getter=_intensity_cost_fct_mult_param_getter,
                                                   setter=_intensity_cost_fct_mult_param_setter)
         intensity_cost_fct_add_param = Parameter(modulable=True,
                                                  modulation_combination_function=SUM,
-                                                 aliases=INTENSITY_COST_FCT_ADDITIVE_PARAM,
                                                  getter=_intensity_cost_fct_add_param_getter,
                                                  setter=_intensity_cost_fct_add_param_setter)
 
@@ -3763,12 +3761,10 @@ class TransferWithCosts(TransferFunction):
         _validate_adjustment_cost_fct = get_validator_by_function(is_function_type)
         adjustment_cost_fct_mult_param = Parameter(modulable=True,
                                                    modulation_combination_function=PRODUCT,
-                                                   aliases=ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM,
                                                    getter=_adjustment_cost_fct_mult_param_getter,
                                                    setter=_adjustment_cost_fct_mult_param_setter)
         adjustment_cost_fct_add_param = Parameter(modulable=True,
                                                   modulation_combination_function=SUM,
-                                                  aliases=ADJUSTMENT_COST_FCT_ADDITIVE_PARAM,
                                                   getter=_adjustment_cost_fct_add_param_getter,
                                                   setter=_adjustment_cost_fct_add_param_setter)
 
@@ -3777,12 +3773,10 @@ class TransferWithCosts(TransferFunction):
         _validate_duration_cost_fct = get_validator_by_function(is_function_type)
         duration_cost_fct_mult_param = Parameter(modulable=True,
                                                  modulation_combination_function=PRODUCT,
-                                                 aliases=DURATION_COST_FCT_MULTIPLICATIVE_PARAM,
                                                  getter=_duration_cost_fct_mult_param_getter,
                                                  setter=_duration_cost_fct_mult_param_setter)
         duration_cost_fct_add_param = Parameter(modulable=True,
                                                 modulation_combination_function=SUM,
-                                                aliases=DURATION_COST_FCT_ADDITIVE_PARAM,
                                                 getter=_duration_cost_fct_add_param_getter,
                                                 setter=_duration_cost_fct_add_param_setter)
 
@@ -3791,12 +3785,10 @@ class TransferWithCosts(TransferFunction):
         _validate_combine_costs_fct = get_validator_by_function(is_function_type)
         combine_costs_fct_mult_param=Parameter(modulable=True,
                                                modulation_combination_function=PRODUCT,
-                                               aliases=COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM,
                                                getter=_combine_costs_fct_mult_param_getter,
                                                setter=_combine_costs_fct_mult_param_setter)
         combine_costs_fct_add_param=Parameter(modulable=True,
                                               modulation_combination_function=SUM,
-                                              aliases=COMBINE_COSTS_FCT_ADDITIVE_PARAM,
                                               getter=_combine_costs_fct_add_param_getter,
                                               setter=_combine_costs_fct_add_param_setter)
 
