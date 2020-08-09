@@ -14,7 +14,9 @@ arch:
   - amd64
   - arm64
   - ppc64le
-  - s390x
+# Disabled until the scheduling issues are fixed:
+# https://travis-ci.community/t/s390x-build-fails-to-get-queued/9533
+#  - s390x
 
 stages:
   - precache
