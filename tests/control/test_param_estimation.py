@@ -68,10 +68,6 @@ def test_moving_average():
     # time series. We will use this function to compute the summary statistics
     # for generated and observed data so that we can compute a metric between the
     # two. In PsyNeuLink terms, this will be part of an ObjectiveMechanism.
-    # A function to calculate the auto-covariance with specific lag for a
-    # time series. We will use this function to compute the summary statistics
-    # for generated and observed data so that we can compute a metric between the
-    # two. In PsyNeuLink terms, this will be part of an ObjectiveMechanism.
     def autocov(agent_rep, x=None, lag=1):
         if x is None:
             return np.asarray(0.0)
