@@ -199,7 +199,7 @@ from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.globals.keywords import \
     CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INITIALIZER, LCA_MECHANISM, LEAK, LESS_THAN_OR_EQUAL, MATRIX, NAME, \
-    NOISE, RATE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, VALUE, INVERSE_HOLLOW_MATRIX
+    NOISE, RATE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, VALUE, INVERSE_HOLLOW_MATRIX, AUTO
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -463,6 +463,23 @@ class LCAMechanism(RecurrentTransferMechanism):
         else:
             matrix = None
         # MODIFIED 1/22/20 END
+
+        try:
+            if self_excitation is not None and kwargs[AUTO] is not None:
+                if kwargs[AUTO] != self_excitation:
+                    raise LCAError(
+                        'Both self_excitation and auto are specified with'
+                        ' different values. self_excitation is an alias of auto.'
+                        ' Provided values: self_excitation = {0} , auto = {1}'.format(
+                            self_excitation,
+                            kwargs[AUTO]
+                        )
+                    )
+            elif kwargs[AUTO] is not None:
+                self_excitation = kwargs[AUTO]
+                del kwargs[AUTO]
+        except KeyError:
+            pass
 
         if competition is not None and hetero is not None:
             if competition != -1.0 * hetero:
