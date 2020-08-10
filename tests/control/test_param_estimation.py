@@ -43,7 +43,7 @@ def test_moving_average():
         return x
 
     # Lets make some observed data. This will be the data we try to fit parameters for.
-    y_obs = MA2(t1_true, t2_true)
+    y_obs = MA2(t1=t1_true, t2=t2_true)
 
     # Make a processing mechanism out of our simulator.
     ma_mech = ProcessingMechanism(function=MA2,
@@ -113,7 +113,4 @@ def test_moving_average():
 
     comp.run(inputs=stim_list_dict)
 
-    # FIXME: The final test should be to check if the true parameters set above are
-    # recovered approximately. Not sure how to get all the samples out from
-    # above yet though so just pass for now.
-    assert True
+    assert np.allclose(comp.controller.value, [[0.5314349], [0.19140103]])
