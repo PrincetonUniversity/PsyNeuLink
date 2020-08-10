@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.8.2.8 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.8.2.8+32.gc1c423b documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.2.8
+                  0.8.2.8+32
                 </div>
               
             
@@ -1124,6 +1124,15 @@ value based on its default_variable.</p>
 </dd></dl>
 
 <dl class="method">
+<dt id="psyneulink.core.components.component.Component.set_delivery_conditions">
+<code class="descname">set_delivery_conditions</code><span class="sig-paren">(</span><em>items</em>, <em>delivery_condition=&lt;LogCondition.EXECUTION: 896&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.set_delivery_conditions" title="Permalink to this definition">¶</a></dt>
+<dd><p>_set_delivery_conditions(                      items                                delivery_condition=EXECUTION          )</p>
+<p>Specifies items to be delivered to external application via gRPC; these must be be <a class="reference internal" href="#psyneulink.core.components.component.Component.loggable_items" title="psyneulink.core.components.component.Component.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a>
+of the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>. This is a convenience method that calls the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.Log._set_delivery_conditions" title="psyneulink.core.globals.log.Log._set_delivery_conditions"><code class="xref any py py-meth docutils literal"><span class="pre">_set_delivery_conditions</span></code></a>
+method of the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.core.components.component.Component.set_log_conditions">
 <code class="descname">set_log_conditions</code><span class="sig-paren">(</span><em>items</em>, <em>log_condition=&lt;LogCondition.EXECUTION: 896&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.set_log_conditions" title="Permalink to this definition">¶</a></dt>
 <dd><p>Specifies items to be logged; these must be be <a class="reference internal" href="#psyneulink.core.components.component.Component.loggable_items" title="psyneulink.core.components.component.Component.loggable_items"><code class="xref any py py-attr docutils literal"><span class="pre">loggable_items</span></code></a> of the Component’s
@@ -1216,7 +1225,7 @@ may change during runtime</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.2.8',
+               VERSION:'0.8.2.8+32.gc1c423b',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
