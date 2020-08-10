@@ -1246,11 +1246,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "previous_w", "random_state", "is_finished_flag",
                      "num_executions_before_finished", "num_executions",
                      "execution_count", "value", "input_ports", "output_ports"}
-        blacklist = set() if hasattr(self, 'ports') else {"value"}
-        # 'objective_mechanism' parameter is just for reference
-        blacklist.add("objective_mechanism")
-        # 'agent_rep'is for reference to enclosing composition
-        blacklist.add("agent_rep")
+        blacklist = { # References to other components
+                     "objective_mechanism", "agent_rep", "projections"}
+        # Only mechanisms use "value" state
+        if not hasattr(self, 'ports'):
+            blacklist.add("value")
         def _is_compilation_state(p):
             val = p.get()   # memoize for this function
             return val is not None and p.name not in blacklist and \
@@ -1301,6 +1301,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "input_labels_dict", "output_labels_dict",
                      "modulated_mechanisms", "grid",
                      "activation_derivative_fct", "input_specification",
+                     # Reference to other components
+                     "objective_mechanism", "agent_rep", "projections",
                      # Shape mismatch
                      "costs", "auto", "hetero",
                      # autodiff specific types
@@ -1310,10 +1312,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # * integration rate -- shape mismatch with param port input
         if hasattr(self, 'ports'):
             blacklist.update(["matrix", "integration_rate"])
-        # 'objective_mechanism' parameter is just for reference
-        blacklist.add("objective_mechanism")
-        # 'agent_rep'is for reference to enclosing composition
-        blacklist.add("agent_rep")
         def _is_compilation_param(p):
             if p.name not in blacklist and not isinstance(p, ParameterAlias):
                 #FIXME: this should use defaults
@@ -1383,6 +1381,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             # Modulated parameters change shape to array
             if np.isscalar(param) and self._is_param_modulated(p):
                 return (param,)
+            elif p.name == 'num_estimates':
+                return 0 if param is None else param
             elif p.name == 'matrix': # Flatten matrix
                 return tuple(np.asfarray(param).flatten())
             return _convert(param)
@@ -3186,6 +3186,19 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         method of the Component's `log <Component.log>`.
         """
         self.log.set_log_conditions(items=items, log_condition=log_condition)
+
+    def set_delivery_conditions(self, items, delivery_condition=LogCondition.EXECUTION):
+        """
+        _set_delivery_conditions(          \
+            items                    \
+            delivery_condition=EXECUTION  \
+        )
+
+        Specifies items to be delivered to external application via gRPC; these must be be `loggable_items <Component.loggable_items>`
+        of the Component's `log <Component.log>`. This is a convenience method that calls the `_set_delivery_conditions <Log._set_delivery_conditions>`
+        method of the Component's `log <Component.log>`.
+        """
+        self.log._set_delivery_conditions(items=items, delivery_condition=delivery_condition)
 
     def log_values(self, entries):
         """

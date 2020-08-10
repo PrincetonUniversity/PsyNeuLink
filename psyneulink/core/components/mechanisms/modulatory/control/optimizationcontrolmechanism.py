@@ -1017,26 +1017,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return result
 
-    def _get_evaluate_param_struct_type(self, ctx):
-        num_estimates = ctx.int32_ty
-        intensity_cost = (ctx.get_param_struct_type(op.intensity_cost_function) for op in self.output_ports)
-        intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
-        return pnlvm.ir.LiteralStructType([intensity_cost_struct, num_estimates])
-
-    def _get_evaluate_param_initializer(self, context):
-        num_estimates = self.parameters.num_estimates.get(context) or 0
-        intensity_cost = tuple(op.intensity_cost_function._get_param_initializer(context) for op in self.output_ports)
-        return (intensity_cost, num_estimates)
-
-    def _get_evaluate_state_struct_type(self, ctx):
-        intensity_cost = (ctx.get_state_struct_type(op.intensity_cost_function) for op in self.output_ports)
-        intensity_cost_struct = pnlvm.ir.LiteralStructType(intensity_cost)
-        return pnlvm.ir.LiteralStructType([intensity_cost_struct])
-
-    def _get_evaluate_state_initializer(self, context):
-        intensity_cost = tuple(op.intensity_cost_function._get_state_initializer(context) for op in self.output_ports)
-        return (intensity_cost,)
-
     def _get_evaluate_input_struct_type(self, ctx):
         # We construct input from optimization function input
         return ctx.get_input_struct_type(self.function)
@@ -1051,8 +1031,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _gen_llvm_net_outcome_function(self, *, ctx, tags=frozenset()):
         assert "net_outcome" in tags
-        args = [self._get_evaluate_param_struct_type(ctx).as_pointer(),
-                self._get_evaluate_state_struct_type(ctx).as_pointer(),
+        args = [ctx.get_param_struct_type(self).as_pointer(),
+                ctx.get_state_struct_type(self).as_pointer(),
                 self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
                 ctx.float_ty.as_pointer(),
                 ctx.float_ty.as_pointer()]
@@ -1063,31 +1043,37 @@ class OptimizationControlMechanism(ControlMechanism):
             p.attributes.add('nonnull')
         params, state, allocation_sample, objective_ptr, arg_out = llvm_func.args
 
+        op_params = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                "output_ports")
+        op_states = pnlvm.helpers.get_state_ptr(builder, self, state,
+                                                "output_ports", None)
+
         # calculate cost function
         total_cost = builder.alloca(ctx.float_ty)
         builder.store(ctx.float_ty(-0.0), total_cost)
         for i, op in enumerate(self.output_ports):
-            # FIXME: Add support for other cost types
-            assert op.cost_options == CostFunctions.INTENSITY
+            op_i_params = builder.gep(op_params, [ctx.int32_ty(0),
+                                                  ctx.int32_ty(i)])
+            op_i_state = builder.gep(op_states, [ctx.int32_ty(0),
+                                                 ctx.int32_ty(i)])
 
-            func = ctx.import_llvm_function(op.intensity_cost_function)
-            func_params = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-            func_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-            func_out = builder.alloca(func.args[3].type.pointee)
-            func_in = builder.alloca(func.args[2].type.pointee)
+            op_f = ctx.import_llvm_function(op, tags=frozenset({"costs"}))
 
-            # copy allocation_sample, the input is 1-element array
-            data_in = builder.gep(allocation_sample, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            data_out = builder.gep(func_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            op_in = builder.alloca(op_f.args[2].type.pointee)
+
+            # copy allocation_sample, the input is 1-element array in a struct
+            data_in = builder.gep(allocation_sample, [ctx.int32_ty(0),
+                                                      ctx.int32_ty(i)])
+            data_out = builder.gep(op_in, [ctx.int32_ty(0), ctx.int32_ty(0),
+                                           ctx.int32_ty(0)])
             builder.store(builder.load(data_in), data_out)
-            builder.call(func, [func_params, func_state, func_in, func_out])
 
-            # extract cost result
-            res_in = builder.gep(func_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            cost = builder.load(res_in)
+            # Invoke cost function
+            cost = builder.call(op_f, [op_i_params, op_i_state, op_in])
+
             # simplified version of combination fmax(cost, 0)
             ltz = builder.fcmp_ordered("<", cost, cost.type(0))
-            cost = builder.select(ltz, ctx.float_ty(0), cost)
+            cost = builder.select(ltz, cost.type(0), cost)
 
             # combine is not a PNL function
             assert self.combine_costs is np.sum
@@ -1106,13 +1092,11 @@ class OptimizationControlMechanism(ControlMechanism):
     def _gen_llvm_evaluate_function(self, *, ctx:pnlvm.LLVMBuilderContext,
                                              tags=frozenset()):
         assert "evaluate" in tags
-        args = [self._get_evaluate_param_struct_type(ctx).as_pointer(),
-                self._get_evaluate_state_struct_type(ctx).as_pointer(),
+        args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
+                ctx.get_state_struct_type(self.agent_rep).as_pointer(),
                 self._get_evaluate_alloc_struct_type(ctx).as_pointer(),
                 self._get_evaluate_output_struct_type(ctx).as_pointer(),
                 self._get_evaluate_input_struct_type(ctx).as_pointer(),
-                ctx.get_param_struct_type(self.agent_rep).as_pointer(),
-                ctx.get_state_struct_type(self.agent_rep).as_pointer(),
                 ctx.get_data_struct_type(self.agent_rep).as_pointer()]
 
         builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate")
@@ -1120,10 +1104,7 @@ class OptimizationControlMechanism(ControlMechanism):
         for p in llvm_func.args:
             p.attributes.add('nonnull')
 
-        params, state, allocation_sample, arg_out, arg_in, comp_params, base_comp_state, base_comp_data = llvm_func.args
-
-        sim_f = ctx.import_llvm_function(self.agent_rep,
-                                         tags=frozenset({"run", "simulation"}))
+        comp_params, base_comp_state, allocation_sample, arg_out, arg_in, base_comp_data = llvm_func.args
 
         # Create a simulation copy of composition state
         comp_state = builder.alloca(base_comp_state.type.pointee, name="state_copy")
@@ -1132,6 +1113,24 @@ class OptimizationControlMechanism(ControlMechanism):
         # Create a simulation copy of composition data
         comp_data = builder.alloca(base_comp_data.type.pointee, name="data_copy")
         builder.store(builder.load(base_comp_data), comp_data)
+
+        # Evaluate is called on composition controller
+        assert self.composition.controller is self
+        assert self.composition is self.agent_rep
+        nodes_states = pnlvm.helpers.get_state_ptr(builder, self.composition,
+                                                   comp_state, "nodes", None)
+        nodes_params = pnlvm.helpers.get_param_ptr(builder, self.composition,
+                                                   comp_params, "nodes")
+
+        controller_idx = self.composition._get_node_index(self)
+        controller_state = builder.gep(nodes_states, [ctx.int32_ty(0),
+                                                      ctx.int32_ty(controller_idx)])
+        controller_params = builder.gep(nodes_params, [ctx.int32_ty(0),
+                                                       ctx.int32_ty(controller_idx)])
+
+        # Get simulation function
+        sim_f = ctx.import_llvm_function(self.agent_rep,
+                                         tags=frozenset({"run", "simulation"}))
 
         # Apply allocation sample to simulation data
         assert len(self.output_ports) == len(allocation_sample.type.pointee)
@@ -1166,7 +1165,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
 
         # Determine simulation counts
-        num_estimates_ptr = builder.gep(params, [ctx.int32_ty(0), ctx.int32_ty(1)])
+        num_estimates_ptr = pnlvm.helpers.get_param_ptr(builder, self,
+                                                        controller_params,
+                                                        "num_estimates")
+
         num_estimates = builder.load(num_estimates_ptr, "num_estimates")
 
         # if num_estimates is 0, run 1 trial
@@ -1199,8 +1201,9 @@ class OptimizationControlMechanism(ControlMechanism):
                                          ctx.int32_ty(0)], "obj_val_ptr")
 
         net_outcome_f = ctx.import_llvm_function(self, tags=tags.union({"net_outcome"}))
-        builder.call(net_outcome_f, [params, state, allocation_sample,
-                                     objective_val_ptr, arg_out])
+        builder.call(net_outcome_f, [controller_params, controller_state,
+                                     allocation_sample, objective_val_ptr,
+                                     arg_out])
 
         builder.ret_void()
 

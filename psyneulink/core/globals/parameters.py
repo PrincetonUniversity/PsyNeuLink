@@ -73,13 +73,16 @@ different execution contexts and can be modified by modulated `ModulatorySignal_
 .. note::
     The "dot notation" version - ``t.value`` - refers to the most recent execution context in which *t* was executed. In
     many cases, you can use this to get or set using the execution context you'd expect. However, in complex situations,
-    if there is doubt, it is best to explicitly specify the execution context.
+    or  if there is any doubt, it is best to explicitly specify the execution context using the parameter's `set
+    <Parameter.set>` method (for a more complete descritpion of the differences between dot notation and the `set
+    <Parameter.set>` method, see `BasicsAndPrimer_Parameters`.
 
-For Developers
---------------
 
-Developers must keep in mind state when writing new components for PNL. Any parameters or values that may change during a `run <Run_Overview>`
-must become stateful Parameters, or they are at risk of computational errors like those encountered in parallel programming.
+.. _technical_note::
+
+    Developers must keep in mind state when writing new Components for PsyNeuLink. Any parameters or values that may
+    change during a `run <Run_Overview>` must become stateful Parameters, or they are at risk of computational
+    errors like those encountered in parallel programming.
 
 
 Creating Parameters
@@ -246,7 +249,9 @@ import types
 import typing
 import weakref
 
-from psyneulink.core.globals.keywords import MULTIPLICATIVE
+import numpy as np
+
+from psyneulink.core.rpc.graph_pb2 import Entry, ndArray
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
@@ -630,6 +635,12 @@ class Parameter(types.SimpleNamespace):
             :type: `LogCondition`
             :default: `OFF <LogCondition.OFF>`
 
+        delivery_condition
+            the LogCondition for which the parameter shoud be delivered.
+
+            :type: `LogCondition`
+            :default: `OFF <LogCondition.OFF>`
+
         history
             stores the history of the parameter (previous values). Also see `get_previous`.
 
@@ -711,6 +722,7 @@ class Parameter(types.SimpleNamespace):
         'default_value',
         'history_max_length',
         'log_condition',
+        'delivery_condition',
         'spec',
     }
 
@@ -734,6 +746,7 @@ class Parameter(types.SimpleNamespace):
         loggable=True,
         log=None,
         log_condition=LogCondition.OFF,
+        delivery_condition=LogCondition.OFF,
         history=None,
         history_max_length=1,
         history_min_length=0,
@@ -765,7 +778,7 @@ class Parameter(types.SimpleNamespace):
             log = {}
 
         if valid_types is not None:
-            if isinstance(valid_types, list):
+            if isinstance(valid_types, (list, tuple)):
                 valid_types = tuple(valid_types)
             else:
                 valid_types = (valid_types, )
@@ -789,6 +802,7 @@ class Parameter(types.SimpleNamespace):
             loggable=loggable,
             log=log,
             log_condition=log_condition,
+            delivery_condition=delivery_condition,
             history=history,
             history_max_length=history_max_length,
             history_min_length=history_min_length,
@@ -1172,7 +1186,7 @@ class Parameter(types.SimpleNamespace):
         if not override and self.read_only:
             raise ParameterError('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to force set.'.format(self.name))
 
-        self._set(self._parse(value), context, skip_history, skip_log, **kwargs)
+        return self._set(self._parse(value), context, skip_history, skip_log, **kwargs)
 
     def _set(self, value, context=None, skip_history=False, skip_log=False, **kwargs):
         if not self.stateful:
@@ -1195,8 +1209,9 @@ class Parameter(types.SimpleNamespace):
             value = call_with_pruned_args(self.setter, value, context=context, **kwargs)
 
         self._set_value(value, execution_id=execution_id, context=context, skip_history=skip_history, skip_log=skip_log)
+        return value
 
-    def _set_value(self, value, execution_id=None, context=None, skip_history=False, skip_log=False):
+    def _set_value(self, value, execution_id=None, context=None, skip_history=False, skip_log=False, skip_delivery=False):
         # store history
         if not skip_history:
             if execution_id in self.values:
@@ -1205,9 +1220,13 @@ class Parameter(types.SimpleNamespace):
                 except KeyError:
                     self.history[execution_id] = collections.deque([self.values[execution_id]], maxlen=self.history_max_length)
 
-        # log value
-        if not skip_log and self.loggable:
-            self._log_value(value, context)
+        if self.loggable:
+            # log value
+            if not skip_log:
+                self._log_value(value, context)
+            # Deliver value to external application
+            if not skip_delivery:
+                self._deliver_value(value, context)
 
         # set value
         self.values[execution_id] = value
@@ -1238,7 +1257,7 @@ class Parameter(types.SimpleNamespace):
             context_str = ContextFlags._get_context_string(ContextFlags.COMMAND_LINE)
             log_condition_satisfied = True
 
-        # standard logging
+        # standard loggingd
         else:
             if self.log_condition is None or self.log_condition is LogCondition.OFF:
                 return
@@ -1269,6 +1288,63 @@ class Parameter(types.SimpleNamespace):
             self.log[execution_id].append(
                 LogEntry(time, context_str, value)
             )
+
+    def _deliver_value(self, value, context=None):
+        # if a context is attached and a pipeline is attached to the context
+        if context and context.rpc_pipeline:
+            # manual delivery
+            if context.source is ContextFlags.COMMAND_LINE:
+                try:
+                    time = _get_time(self._owner._owner, context)
+                except (AttributeError, ContextError):
+                    time = time_object(None, None, None, None)
+                delivery_condition_satisfied = True
+
+            # standard logging
+            else:
+                if self.delivery_condition is None or self.delivery_condition is LogCondition.OFF:
+                    return
+
+                time = _get_time(self._owner._owner, context)
+                delivery_condition_satisfied = self.delivery_condition & context.flags
+
+            if (
+                not delivery_condition_satisfied
+                and self.delivery_condition & LogCondition.INITIALIZATION
+                and self._owner._owner.initialization_status is ContextFlags.INITIALIZING
+            ):
+                delivery_condition_satisfied = True
+
+            if delivery_condition_satisfied:
+                if not self.stateful:
+                    execution_id = None
+                else:
+                    execution_id = context.execution_id
+                # ADD TO PIPELINE HERE
+                context.rpc_pipeline.put(
+                    Entry(
+                        componentName=self._get_root_owner().name,
+                        parameterName=self._get_root_parameter().name,
+                        time=f'{time.run}:{time.trial}:{time.pass_}:{time.time_step}',
+                        context=execution_id,
+                        value=ndArray(
+                            shape=list(value.shape),
+                            data=list(value.flatten())
+                        )
+                    )
+                )
+
+    def _get_root_owner(self):
+        owner = self
+        while True:
+            if hasattr(owner, '_owner'):
+                owner = owner._owner
+            else:
+                return owner
+
+    def _get_root_parameter(self):
+        root = self._get_root_owner()
+        return self._owner._owner if not self._owner._owner == root else self
 
     def clear_log(self, contexts=NotImplemented):
         """

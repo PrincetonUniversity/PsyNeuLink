@@ -848,3 +848,9 @@ def _assign_prefs(object, prefs, prefs_class:PreferenceSet):
             object.parameters.value.log_condition = object.prefs._log_pref.setting
         except AttributeError:
             pass
+
+        try:
+            # assign delivery conditions from preferences
+            object.parameters.value.delivery_condition = object.prefs._delivery_pref.setting
+        except AttributeError:
+            pass
