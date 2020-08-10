@@ -1632,16 +1632,32 @@ class ParametersBase(ParametersTemplate):
                 super().__setattr__(attr, value)
 
                 if value.aliases is not None:
+                    conflicts = []
                     for alias in value.aliases:
-                        # the alias doesn't exist, or it's an alias on the
-                        # parent
-                        if (
-                            not hasattr(self, alias)
-                            or not hasattr(getattr(self, alias), '_owner')
-                            or unproxy_weakproxy(getattr(self, alias)._owner) is not self
-                        ):
-                            super().__setattr__(alias, ParameterAlias(source=getattr(self, attr), name=alias))
-                            self._register_parameter(alias)
+                        # there is a conflict if a non-ParameterAlias exists
+                        # with the same name as the planned alias
+                        try:
+                            if not isinstance(getattr(self, alias), ParameterAlias):
+                                conflicts.append(alias)
+                        except AttributeError:
+                            pass
+
+                        super().__setattr__(alias, ParameterAlias(source=getattr(self, attr), name=alias))
+                        self._register_parameter(alias)
+
+                    if len(conflicts) == 1:
+                        raise ParameterError(
+                            f'Attempting to create an alias for the {value.name}'
+                            f' Parameter on {self._owner.__name__} that would'
+                            f' override the {conflicts[0]} Parameter. Instead,'
+                            f' create a {conflicts[0]} Parameter with alias {value.name}.'
+                        )
+                    elif len(conflicts) > 1:
+                        raise ParameterError(
+                            f'Attempting to create aliases for the {value.name}'
+                            f' Parameter on {self._owner.__name__} that would'
+                            f' override other Parameters: {sorted(conflicts)}'
+                        )
 
             elif isinstance(value, ParameterAlias):
                 if value.name is None:
