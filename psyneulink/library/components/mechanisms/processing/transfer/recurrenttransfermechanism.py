@@ -938,9 +938,6 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 self.combination_function = comb_fct
 
-        else:
-            self.combination_function = None
-
         if self.auto is None and self.hetero is None:
             self.matrix = matrix
             if self.matrix is None:
