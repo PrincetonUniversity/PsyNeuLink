@@ -619,7 +619,6 @@ class RecurrentTransferMechanism(TransferMechanism):
         auto = Parameter(1, modulable=True)
         hetero = Parameter(0, modulable=True)
         combination_function = LinearCombination
-        integration_rate = Parameter(0.5, modulable=True)
         noise = Parameter(0.0, modulable=True)
         smoothing_factor = Parameter(0.5, modulable=True)
         enable_learning = False
