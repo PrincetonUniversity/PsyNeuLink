@@ -1023,7 +1023,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                     :type: ``float``
         """
         variable = Parameter(np.array([0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
-        learning_rate = 0.05
+        learning_rate = Parameter(0.05, modulable=True)
     default_learning_rate = 0.05
 
     def __init__(self,
