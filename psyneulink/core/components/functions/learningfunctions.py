@@ -880,10 +880,6 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         if learning_rate is not None:
             learning_rate_dim = np.array(learning_rate).ndim
 
-        # If learning_rate is a 1d array, multiply it by variable
-        if learning_rate_dim == 1:
-            variable = variable * learning_rate
-
         input_pattern = np.atleast_2d(variable[0]).transpose()
         activities = np.atleast_2d(variable[1]).transpose()
         matrix = variable[2]
@@ -892,6 +888,10 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         # Calculate I-w[j]
         input_cols = np.repeat(input_pattern,len(input_pattern),1)
         differences = matrix - input_cols
+
+        # If learning_rate is a 1d array, multiply it by variable
+        if learning_rate_dim == 1:
+            variable = variable * learning_rate
 
         # Calculate distances
         index_of_max = list(activities).index(max(activities))
@@ -1115,16 +1115,18 @@ class Hebbian(LearningFunction):  # --------------------------------------------
             variable = np.squeeze(variable)
         # MODIFIED 9/21/17 END
 
+        # Generate the column array from the variable
+        # col = variable.reshape(len(variable),1)
+        col = np.atleast_2d(variable).transpose()
+
         # If learning_rate is a 1d array, multiply it by variable
         # KDM 11/21/19: if learning_rate comes from a parameter_port, it will
         # be 1 dimensional even if it "should" be a float. This causes test
         # failures
+        # KDM 8/17/20: fix by determining col first. learning_rate otherwise
+        # would be multiplied twice
         if learning_rate_dim == 1:
             variable = variable * learning_rate
-
-        # Generate the column array from the variable
-        # col = variable.reshape(len(variable),1)
-        col = np.atleast_2d(variable).transpose()
 
         # Calculate weight chhange matrix
         weight_change_matrix = variable * col
@@ -1343,15 +1345,15 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
             variable = np.squeeze(variable)
         # MODIFIED 9/21/17 END
 
-        # If learning_rate is a 1d array, multiply it by variable
-        if learning_rate_dim == 1:
-            variable = variable * learning_rate
-
         # IMPLEMENTATION NOTE:  THE FOLLOWING NEEDS TO BE REPLACED BY THE CONTRASTIVE HEBBIAN LEARNING RULE:
 
         # Generate the column array from the variable
         # col = variable.reshape(len(variable),1)
         col = convert_to_np_array(variable, 2).transpose()
+
+        # If learning_rate is a 1d array, multiply it by variable
+        if learning_rate_dim == 1:
+            variable = variable * learning_rate
 
         # Calculate weight chhange matrix
         weight_change_matrix = variable * col
