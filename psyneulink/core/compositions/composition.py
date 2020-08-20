@@ -7335,7 +7335,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                 )
 
             # Get control signal costs
-            all_costs = convert_to_np_array(self.controller.parameters.costs._get(context) + [reconfiguration_cost])
+            other_costs = self.controller.parameters.costs._get(context) or []
+            all_costs = convert_to_np_array(other_costs + [reconfiguration_cost])
             # Compute a total for the candidate control signal(s)
             total_cost = self.controller.combine_costs(all_costs)
         return total_cost
