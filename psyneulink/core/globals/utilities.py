@@ -1185,7 +1185,11 @@ class ContentAddressableList(UserList):
         if super().__contains__(item):
             return True
         else:
-            return any(item == obj.name for obj in self.data)
+            try:
+                self.__getitem__(item)
+                return True
+            except (KeyError, TypeError, UtilitiesError, ValueError):
+                return False
 
     def _get_key_for_item(self, key):
         if isinstance(key, str):
