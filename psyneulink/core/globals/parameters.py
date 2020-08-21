@@ -510,7 +510,18 @@ class Defaults(ParametersTemplate):
         return {k: v.default_value for (k, v) in self._owner.parameters.values(show_all=show_all).items()}
 
 
-class Parameter(types.SimpleNamespace):
+class ParameterBase(types.SimpleNamespace):
+    def __lt__(self, other):
+        return self.name < other.name
+
+    def __eq__(self, other):
+        return object.__eq__(self, other)
+
+    def __hash__(self):
+        return object.__hash__(self)
+
+
+class Parameter(ParameterBase):
     """
     COMMENT:
         KDM 11/30/18: using nonstandard formatting below to ensure developer notes is below type in html
@@ -841,9 +852,6 @@ class Parameter(types.SimpleNamespace):
             return "{}(\n\t\t{}\n\t)".format(type(self).__name__, "\n\t\t".join(items))
         except AttributeError:
             return super().__str__()
-
-    def __lt__(self, other):
-        return self.name < other.name
 
     def __deepcopy__(self, memo):
         if 'no_shared' in memo and memo['no_shared']:
@@ -1493,7 +1501,7 @@ class _ParameterAliasMeta(type):
 
 
 # TODO: may not completely work with history/history_max_length
-class ParameterAlias(types.SimpleNamespace, metaclass=_ParameterAliasMeta):
+class ParameterAlias(ParameterBase, metaclass=_ParameterAliasMeta):
     """
         A counterpart to `Parameter` that represents a pseudo-Parameter alias that
         refers to another `Parameter`, but has a different name
@@ -1507,9 +1515,6 @@ class ParameterAlias(types.SimpleNamespace, metaclass=_ParameterAliasMeta):
             source._register_alias(name)
         except AttributeError:
             pass
-
-    def __lt__(self, other):
-        return self.name < other.name
 
     def __getattr__(self, attr):
         return getattr(self.source, attr)
