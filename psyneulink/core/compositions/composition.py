@@ -8753,6 +8753,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # ASSIGNMENTS **************************************************************************************************
 
+        assert not str(bin_execute).endswith("Run")
         if bin_execute == 'Python':
             bin_execute = False
 

@@ -3157,9 +3157,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_execute_composition(self, mode):
         comp = Composition()
@@ -3195,7 +3193,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [[1]]}
         sched = Scheduler(composition=comp)
-        output = benchmark(comp.execute, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
+        output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
         assert np.allclose(89., output)
 
     @pytest.mark.composition
@@ -3219,7 +3217,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [[1]]}
         sched = Scheduler(composition=comp)
-        output = comp.execute(inputs=inputs_dict, scheduler=sched, bin_execute=mode)
+        output = comp.run(inputs=inputs_dict, scheduler=sched, bin_execute=mode)
         assert np.allclose(32., output)
 
     def test_LPP_end_with_projection(self):
@@ -3284,7 +3282,7 @@ class TestRun:
         inner_comp = Composition(pathways=[m_inner])
         m_outer = ProcessingMechanism(size=2)
         outer_comp = Composition(pathways=[m_outer, inner_comp])
-        result = outer_comp.execute(bin_execute=mode)
+        result = outer_comp.run(bin_execute=mode)
         assert np.allclose(result, [[0.0],[0.0]])
 
     @pytest.mark.composition
@@ -3607,9 +3605,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_hetero(self, benchmark, mode):
         comp = Composition()
@@ -3639,9 +3635,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_integrator(self, benchmark, mode):
         comp = Composition()
@@ -3673,9 +3667,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_vector_2(self, benchmark, mode):
         comp = Composition()
@@ -3702,9 +3694,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_hetero_2(self, benchmark, mode):
         comp = Composition()
@@ -3734,9 +3724,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_integrator_2(self, benchmark, mode):
         comp = Composition()
