@@ -2084,7 +2084,9 @@ class TestExecutionOrder:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, bin_execute=mode)
         assert np.allclose(output, 320)
-        benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2127,14 +2129,11 @@ class TestExecutionOrder:
 
 
         inputs_dict = {B: [4.0]}
-        # sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict,
-                          # scheduler=sched,
-                          bin_execute=mode)
+        output = comp.run(inputs=inputs_dict, bin_execute=mode)
         assert np.allclose(output, 354.19328716)
-        benchmark(comp.run, inputs=inputs_dict,
-                  # scheduler=sched,
-                  bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(comp.run, inputs=inputs_dict, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2179,7 +2178,9 @@ class TestExecutionOrder:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, bin_execute=mode)
         assert np.allclose(output, 650.83865743)
-        benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2222,14 +2223,10 @@ class TestExecutionOrder:
 
 
         inputs_dict = {B: [4.0]}
-        # sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict,
-                          # scheduler=sched,
-                          bin_execute=mode)
+        output = comp.run(inputs=inputs_dict, bin_execute=mode)
         assert np.allclose(output, 150.83865743)
-        benchmark(comp.run, inputs=inputs_dict,
-                  # scheduler=sched,
-                  bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.run, inputs=inputs_dict, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2275,7 +2272,9 @@ class TestExecutionOrder:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, bin_execute=mode)
         assert np.allclose(output, 600)
-        benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Transfer")
@@ -3600,7 +3599,8 @@ class TestRun:
         #                          ( 5 + 15 + 2) * 5 = 110,
         #                          ( 5 + 10 + 3) * 5 = 90
         assert np.allclose([130.0, 110.0, 90.0], output2)
-        benchmark(comp.run, inputs={A: [[1.0, 2.0, 3.0]]}, scheduler=sched, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.run, inputs={A: [[1.0, 2.0, 3.0]]}, scheduler=sched, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
@@ -3631,7 +3631,8 @@ class TestRun:
 
         assert np.allclose(val, [[0.99330715]])
 
-        benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
@@ -3664,7 +3665,8 @@ class TestRun:
 
         assert np.allclose(val, [[0.6320741]])
 
-        benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
@@ -3692,7 +3694,8 @@ class TestRun:
 
         assert np.allclose(val, [[0.87507549,  0.94660049]])
 
-        benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
@@ -3723,7 +3726,8 @@ class TestRun:
 
         assert np.allclose(val, [[0.36286875, 0.78146724]])
 
-        benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
@@ -3756,7 +3760,8 @@ class TestRun:
 
         assert np.allclose(val, [[0.49922843, 0.52838607]])
 
-        benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
     def test_run_termination_condition_custom_context(self):
         D = pnl.DDM(function=pnl.DriftDiffusionIntegrator)
