@@ -338,9 +338,10 @@ class TestMiscTrainingFunctionality:
                                               "targets": {xor_out:xor_targets},
                                               "epochs": 10}, bin_execute=mode)
 
-        benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
-                                   "targets": {xor_out:xor_targets},
-                                   "epochs": 10}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
+                                         "targets": {xor_out:xor_targets},
+                                         "epochs": 10}, bin_execute=mode)
 
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
@@ -469,9 +470,10 @@ class TestTrainingCorrectness:
         for r, t in zip(results, expected):
             assert np.allclose(r[0], t)
 
-        benchmark(xor.learn, inputs={"inputs": {xor_in: xor_inputs},
-                                     "targets": {xor_out: xor_targets},
-                                     "epochs": eps}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(xor.learn, inputs={"inputs": {xor_in: xor_inputs},
+                                         "targets": {xor_out: xor_targets},
+                                         "epochs": eps}, bin_execute=mode)
 
 
     # tests whether semantic network created as autodiff composition learns properly
@@ -775,13 +777,14 @@ class TestTrainingCorrectness:
         for res, exp in zip(results, expected):
             for r, e in zip(res, exp):
                 assert np.allclose(r, e)
-        benchmark(sem_net.learn, inputs={'inputs': inputs_dict,
-                                         'targets': targets_dict,
-                                         'epochs': eps}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(sem_net.learn, inputs={'inputs': inputs_dict,
+                                             'targets': targets_dict,
+                                             'epochs': eps}, bin_execute=mode)
 
     @pytest.mark.parametrize("mode", ['Python',
-                                pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                ])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                     ])
     def test_pytorch_equivalence_with_autodiff_composition(self, mode):
         iSs = np.array(
             [np.array([0.47360805, 0.8009108, 0.5204775, 0.53737324, 0.7586156,
