@@ -16,6 +16,7 @@ from itertools import product
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Simplified Necker Cube")
+@pytest.mark.parametrize("n_nodes,n_time_steps", [(3, 10)])
 @pytest.mark.parametrize("mode", [
     'Python',
     pytest.param('LLVM', marks=[pytest.mark.llvm]),
@@ -24,12 +25,12 @@ from itertools import product
     pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
-def test_simplified_necker_cube(benchmark, mode):
+def test_simplified_necker_cube(benchmark, mode, n_nodes, n_time_steps):
     # this code only works for N_PERCEPTS == 2
     ALL_PERCEPTS = ['a', 'b']
 
     # variables
-    n_nodes_per_percepts = 3
+    n_nodes_per_percepts = n_nodes
     excit_level = 1
     inhib_level = 1
     node_dict = {percept: None for percept in ALL_PERCEPTS}
@@ -112,35 +113,27 @@ def test_simplified_necker_cube(benchmark, mode):
 
     # bp_comp.show_graph()
 
-    n_time_steps = 10
     input_dict = {
         node_: np.random.normal(size=(n_time_steps,))
         for node_ in bp_comp.nodes
     }
 
     # run the model
-    res = bp_comp.run(input_dict, num_trials=10, bin_execute=mode)
-    np.testing.assert_allclose(
-        res,
-        [[205.67990124], [205.536034], [206.29612605], [-204.87230198], [-204.98539771], [-205.35434273]]
-    )
+    res = bp_comp.run(input_dict, num_trials=n_time_steps, bin_execute=mode)
+    expected = {(3, 10): [[ 205.67990124], [ 205.536034],   [ 206.29612605],
+                          [-204.87230198], [-204.98539771], [-205.35434273]]}
+    np.testing.assert_allclose(res, expected[(n_nodes, n_time_steps)])
 
     # Test that order of CIM ports follows order of Nodes in self.nodes
-    assert 'a-0' in bp_comp.input_CIM.input_ports.names[0]
-    assert 'a-1' in bp_comp.input_CIM.input_ports.names[1]
-    assert 'a-2' in bp_comp.input_CIM.input_ports.names[2]
-    assert 'b-0' in bp_comp.input_CIM.input_ports.names[3]
-    assert 'b-1' in bp_comp.input_CIM.input_ports.names[4]
-    assert 'b-2' in bp_comp.input_CIM.input_ports.names[5]
+    for i in range(n_nodes):
+        a_name = "a-{}".format(i)
+        assert a_name in bp_comp.input_CIM.input_ports.names[i]
+        assert a_name in bp_comp.output_CIM.output_ports.names[i]
+        b_name = "b-{}".format(i)
+        assert b_name in bp_comp.input_CIM.input_ports.names[i + n_nodes]
+        assert b_name in bp_comp.output_CIM.output_ports.names[i + n_nodes]
 
-    assert 'a-0' in bp_comp.output_CIM.output_ports.names[0]
-    assert 'a-1' in bp_comp.output_CIM.output_ports.names[1]
-    assert 'a-2' in bp_comp.output_CIM.output_ports.names[2]
-    assert 'b-0' in bp_comp.output_CIM.output_ports.names[3]
-    assert 'b-1' in bp_comp.output_CIM.output_ports.names[4]
-    assert 'b-2' in bp_comp.output_CIM.output_ports.names[5]
-
-    benchmark(bp_comp.run, input_dict, num_trials=10, bin_execute=mode)
+    benchmark(bp_comp.run, input_dict, num_trials=n_time_steps, bin_execute=mode)
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Necker Cube")
