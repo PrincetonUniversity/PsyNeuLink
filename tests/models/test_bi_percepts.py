@@ -151,7 +151,7 @@ def test_simplified_necker_cube(benchmark, mode):
                                   pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                   pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                   ])
-def test_necker_cube(benchmark, mode):
+def test_vectorized_necker_cube(benchmark, mode):
 
     Build_N_Matrix = np.zeros((16,5))
     Build_N_Matrix[0,:] = [0, 1, 3, 4, 8]
