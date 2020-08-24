@@ -140,7 +140,8 @@ class TestThreshold:
 
         # time accumulation does not stop
         assert np.allclose(time_points, [1.0, 2.0, 3.0, 4.0, 5.0])
-        benchmark(ex, [variable])
+        if benchmark.enabled:
+            benchmark(ex, [variable])
 
     # def test_threshold_stops_accumulation_multiple_variables(self):
     #     D = IntegratorMechanism(name='DDM',
@@ -262,7 +263,8 @@ def test_DDM_Integrator_Bogacz(benchmark, mode):
         ex = pnlvm.execution.MechExecution(T).cuda_execute
     val = ex(stim)[0]
     assert np.allclose(val, [1.0])
-    benchmark(ex, stim)
+    if benchmark.enabled:
+        benchmark(ex, stim)
 
 # ------------------------------------------------------------------------------------------------
 # # TEST 3
@@ -319,7 +321,8 @@ def test_DDM_noise(mode, benchmark, noise, expected):
 
     val = ex([10])
     assert np.allclose(val[0][0][0], expected)
-    benchmark(ex, [10])
+    if benchmark.enabled:
+        benchmark(ex, [10])
 
 # ------------------------------------------------------------------------------------------------
 
@@ -455,7 +458,8 @@ def test_DDM_rate(benchmark, rate, expected, mode):
         ex = pnlvm.execution.MechExecution(T).cuda_execute
     val = float(ex(stim)[0][0][0])
     assert val == expected
-    benchmark(ex, stim)
+    if benchmark.enabled:
+        benchmark(ex, stim)
 
 # ------------------------------------------------------------------------------------------------
 # INVALID RATES:
@@ -668,7 +672,8 @@ def test_DDM_in_composition(benchmark, mode):
     val = np.asfarray(val)
     assert np.allclose(val[0], [2.0])
     assert np.allclose(val[1], [0.2])
-    benchmark(C.run, inputs, num_trials=2, bin_execute=mode)
+    if benchmark.enabled:
+        benchmark(C.run, inputs, num_trials=2, bin_execute=mode)
 
 
 @pytest.mark.ddm_mechanism
