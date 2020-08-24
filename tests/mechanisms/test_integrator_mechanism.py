@@ -410,8 +410,9 @@ class TestIntegratorFunctions:
         ex = _get_mechanism_execution(I, mode)
 
         val = ex([[1], [2]])
-        benchmark(ex, [[1], [2]])
         assert np.allclose(val, [[3]])
+        if benchmark.enabled:
+            benchmark(ex, [[1], [2]])
 
     @pytest.mark.mimo
     @pytest.mark.mechanism
@@ -428,8 +429,9 @@ class TestIntegratorFunctions:
         ex = _get_mechanism_execution(I, mode)
 
         val = ex([5])
-        benchmark(ex, [5])
         assert np.allclose(val, [[2.5], [2.5]])
+        if benchmark.enabled:
+            benchmark(ex, [5])
 
     @pytest.mark.mimo
     @pytest.mark.mechanism
@@ -444,13 +446,14 @@ class TestIntegratorFunctions:
             default_variable=[[1], [2]],
             input_ports=['a', 'b'],
             output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 1)},
-                           {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}],
+                          {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}],
         )
         ex = _get_mechanism_execution(I, mode)
 
         val = ex([[1], [2]])
-        benchmark(ex, [[1], [2]])
         assert np.allclose(val, [[5], [3]])
+        if benchmark.enabled:
+            benchmark(ex, [[1], [2]])
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -466,8 +469,9 @@ class TestIntegratorFunctions:
         ex = _get_mechanism_execution(I, mode)
 
         val = ex(var)
-        benchmark(ex, var)
         assert np.allclose(val[0], [0.05127053])
+        if benchmark.enabled:
+            benchmark(ex, var)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -483,8 +487,9 @@ class TestIntegratorFunctions:
         ex = _get_mechanism_execution(I, mode)
 
         val = ex(var)
-        benchmark(ex, var)
         assert np.allclose(val[0], [0.05127053, 0.15379818])
+        if benchmark.enabled:
+            benchmark(ex, var)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -633,8 +638,9 @@ class TestIntegratorFunctions:
         ex = _get_mechanism_execution(I, mode)
 
         val = ex([10])
-        benchmark(ex, [10])
         assert np.allclose(val, [[5.0]])
+        if benchmark.enabled:
+            benchmark(ex, [10])
 
 class TestIntegratorInputs:
     # Part 1: VALID INPUT:
