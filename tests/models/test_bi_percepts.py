@@ -140,7 +140,8 @@ def test_simplified_necker_cube(benchmark, mode):
     assert 'b-1' in bp_comp.output_CIM.output_ports.names[4]
     assert 'b-2' in bp_comp.output_CIM.output_ports.names[5]
 
-    benchmark(bp_comp.run, input_dict, num_trials=10, bin_execute=mode)
+    if benchmark.enabled:
+        benchmark(bp_comp.run, input_dict, num_trials=10, bin_execute=mode)
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Necker Cube")
@@ -248,4 +249,5 @@ def test_necker_cube(benchmark, mode):
                    -750.45164969, -357.23030678, -523.68504698, -230.35280883,
                    -312.48416776, -793.679849  , -482.15125099, -661.96753723]])
 
-    benchmark(comp2.run, input_dict, num_trials=10, bin_execute=mode)
+    if benchmark.enabled:
+        benchmark(comp2.run, input_dict, num_trials=10, bin_execute=mode)
