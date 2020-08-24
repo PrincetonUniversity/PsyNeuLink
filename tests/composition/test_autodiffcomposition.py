@@ -291,14 +291,16 @@ class TestMiscTrainingFunctionality:
 
     @pytest.mark.benchmark(group="Optimizer specs")
     @pytest.mark.parametrize(
-        'learning_rate, weight_decay, optimizer_type', [
-            (10, 0, 'sgd'), (1.5, 1, 'sgd'),  (1.5, 1, 'adam'),
+        'learning_rate, weight_decay, optimizer_type, expected', [
+            (10, 0, 'sgd', [[[0.9863038667851067]], [[0.9944287263151904]], [[0.9934801466163382]], [[0.9979153035411085]]]),
+            (1.5, 1, 'sgd', None),
+            (1.5, 1, 'adam', None),
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
-    def test_optimizer_specs(self, learning_rate, weight_decay, optimizer_type, mode, benchmark):
+    def test_optimizer_specs(self, learning_rate, weight_decay, optimizer_type, expected, mode, benchmark):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -335,8 +337,11 @@ class TestMiscTrainingFunctionality:
         #                               targets={xor_out:xor_targets},
         #                               epochs=10)
         results_before_proc = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
-                                              "targets": {xor_out:xor_targets},
-                                              "epochs": 10}, bin_execute=mode)
+                                                "targets": {xor_out:xor_targets},
+                                                "epochs": 10}, bin_execute=mode)
+
+        if expected is not None:
+            assert np.allclose(results_before_proc, expected)
 
         if benchmark.enabled:
             benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
