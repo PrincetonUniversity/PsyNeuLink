@@ -48,59 +48,29 @@ names = [
 @pytest.mark.function
 @pytest.mark.integrator_function
 @pytest.mark.fitzHughNagumo_integrator_function
-@pytest.mark.parametrize("func, variable, integration_method, params, expected", test_data, ids=names)
 @pytest.mark.benchmark(group="FitzHughNagumoIntegrator")
-def test_basic(func, variable, integration_method, params, expected, benchmark):
+@pytest.mark.parametrize("func, variable, integration_method, params, expected", test_data, ids=names)
+@pytest.mark.parametrize('mode', ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_basic(func, variable, integration_method, params, expected, benchmark, mode):
     f = func(default_variable=variable, integration_method=integration_method, params=params)
-    res = f(variable)
-    res = f(variable)
-    res = f(variable)
+    if mode == 'Python':
+        EX = f.function
+    elif mode == 'LLVM':
+        e = pnlvm.execution.FuncExecution(f)
+        EX = e.execute
+    elif mode == 'PTX':
+        e = pnlvm.execution.FuncExecution(f)
+        EX = e.cuda_execute
 
-    benchmark(f, variable)
+    res = EX(variable)
+    res = EX(variable)
+    res = EX(variable)
 
     assert np.allclose(res[0], expected[0])
     assert np.allclose(res[1], expected[1])
     assert np.allclose(res[2], expected[2])
 
-
-@pytest.mark.llvm
-@pytest.mark.function
-@pytest.mark.integrator_function
-@pytest.mark.fitzHughNagumo_integrator_function
-@pytest.mark.parametrize("func, variable, integration_method, params, expected", test_data, ids=names)
-@pytest.mark.benchmark(group="FitzHughNagumoIntegrator")
-def test_llvm(func, variable, integration_method, params, expected, benchmark):
-    f = func(default_variable=variable, integration_method=integration_method, params=params)
-
-    e = pnlvm.execution.FuncExecution(f)
-    res = e.execute(variable)
-    res = e.execute(variable)
-    res = e.execute(variable)
-
-    benchmark(e.execute, variable)
-
-    assert np.allclose(res[0], expected[0])
-    assert np.allclose(res[1], expected[1])
-    assert np.allclose(res[2], expected[2])
-
-
-@pytest.mark.llvm
-@pytest.mark.cuda
-@pytest.mark.function
-@pytest.mark.integrator_function
-@pytest.mark.fitzHughNagumo_integrator_function
-@pytest.mark.parametrize("func, variable, integration_method, params, expected", test_data, ids=names)
-@pytest.mark.benchmark(group="FitzHughNagumoIntegrator")
-def test_cuda_ptx(func, variable, integration_method, params, expected, benchmark):
-    f = func(default_variable=variable, integration_method=integration_method, params=params)
-
-    e = pnlvm.execution.FuncExecution(f)
-    res = e.execute(variable)
-    res = e.execute(variable)
-    res = e.execute(variable)
-
-    benchmark(e.execute, variable)
-
-    assert np.allclose(res[0], expected[0])
-    assert np.allclose(res[1], expected[1])
-    assert np.allclose(res[2], expected[2])
+    if benchmark.enabled:
+        benchmark(f, variable)

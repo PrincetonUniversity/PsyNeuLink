@@ -35,47 +35,26 @@ names = [
 
 @pytest.mark.function
 @pytest.mark.memory_function
-@pytest.mark.parametrize("variable, func, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
-def test_basic(variable, func, params, expected, benchmark):
-    f= func(seed=0, **params)
+@pytest.mark.parametrize('variable, func, params, expected', test_data, ids=names)
+@pytest.mark.parametrize('mode', ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_basic(variable, func, params, expected, benchmark, mode):
+    f = func(seed=0, **params)
     m = EpisodicMemoryMechanism(content_size=len(variable[0]), assoc_size=len(variable[1]), function=f)
-    m.execute(variable)
-    m.execute(variable)
-    res = [s.value for s in m.output_ports]
+    if mode == 'Python':
+        def EX(variable):
+            m.execute(variable)
+            return m.output_values
+    elif mode == 'LLVM':
+        EX = pnlvm.execution.MechExecution(m).execute
+    elif mode == 'PTX':
+        EX = pnlvm.execution.MechExecution(m).cuda_execute
+
+    EX(variable)
+    res = EX(variable)
     assert np.allclose(res[0], expected[0])
     assert np.allclose(res[1], expected[1])
-    benchmark(m.execute, variable)
-
-
-@pytest.mark.llvm
-@pytest.mark.function
-@pytest.mark.memory_function
-@pytest.mark.parametrize("variable, func, params, expected", test_data, ids=names)
-@pytest.mark.benchmark
-def test_llvm(variable, func, params, expected, benchmark):
-    f= func(seed=0, **params)
-    m = EpisodicMemoryMechanism(content_size=len(variable[0]), assoc_size=len(variable[1]), function=f)
-    e = pnlvm.execution.MechExecution(m)
-    e.execute(variable)
-    res = e.execute(variable)
-    assert np.allclose(res[0], expected[0])
-    assert np.allclose(res[1], expected[1])
-    benchmark(e.execute, variable)
-
-
-@pytest.mark.llvm
-@pytest.mark.cuda
-@pytest.mark.function
-@pytest.mark.memory_function
-@pytest.mark.parametrize("variable, func, params, expected", test_data, ids=names)
-@pytest.mark.benchmark
-def test_ptx_cuda(variable, func, params, expected, benchmark):
-    f= func(seed=0, **params)
-    m = EpisodicMemoryMechanism(content_size=len(variable[0]), assoc_size=len(variable[1]), function=f)
-    e = pnlvm.execution.MechExecution(m)
-    e.cuda_execute(variable)
-    res = e.cuda_execute(variable)
-    assert np.allclose(res[0], expected[0])
-    assert np.allclose(res[1], expected[1])
-    benchmark(e.cuda_execute, variable)
+    if benchmark.enabled:
+        benchmark(EX, variable)

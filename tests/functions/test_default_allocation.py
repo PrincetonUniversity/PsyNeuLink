@@ -15,11 +15,13 @@ def test_basic(benchmark, mode):
     variable = np.random.rand(1)
     f = DefaultAllocationFunction()
     if mode == 'Python':
-        res = benchmark(f.function, variable)
+        EX = f.function
     elif mode == 'LLVM':
-        m = pnlvm.execution.FuncExecution(f)
-        res = benchmark(m.execute, variable)
+        e = pnlvm.execution.FuncExecution(f)
+        EX = e.execute
     elif mode == 'PTX':
-        m = pnlvm.execution.FuncExecution(f)
-        res = benchmark(m.cuda_execute, variable)
+        e = pnlvm.execution.FuncExecution(f)
+        EX = e.cuda_execute
+
+    res = benchmark(EX, variable)
     assert np.allclose(res, variable)
