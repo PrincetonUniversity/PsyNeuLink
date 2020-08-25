@@ -617,7 +617,7 @@ class Function_Base(Function):
             raise FunctionError(f"{param} is not a valid specification for "
                                 f"the {param_name} argument of {self.__class__.__name__}{owner_name}.")
 
-    def _get_current_function_param(self, param_name, context=None):
+    def _get_current_parameter_value(self, param_name, context=None):
         try:
             param = getattr(self.parameters, param_name)
         except TypeError:
@@ -913,8 +913,8 @@ class ArgumentTherapy(Function_Base):
         """
         # Compute the function
         statement = variable
-        propensity = self._get_current_function_param(PROPENSITY, context)
-        pertinacity = self._get_current_function_param(PERTINACITY, context)
+        propensity = self._get_current_parameter_value(PROPENSITY, context)
+        pertinacity = self._get_current_parameter_value(PERTINACITY, context)
         whim = np.random.randint(-10, 10)
 
         if propensity == self.Manner.OBSEQUIOUS:

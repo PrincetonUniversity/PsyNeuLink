@@ -430,8 +430,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
         linear transformation of variable : number or array
 
         """
-        slope = self._get_current_function_param(SLOPE, context)
-        intercept = self._get_current_function_param(INTERCEPT, context)
+        slope = self._get_current_parameter_value(SLOPE, context)
+        intercept = self._get_current_parameter_value(INTERCEPT, context)
 
         # MODIFIED 11/9/17 NEW:
         try:
@@ -478,7 +478,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         """
 
-        return self._get_current_function_param(SLOPE, context)
+        return self._get_current_parameter_value(SLOPE, context)
 
     def _is_identity(self, context=None):
         return (
@@ -701,10 +701,10 @@ class Exponential(TransferFunction):  # ----------------------------------------
         Exponential transformation of variable : number or array
 
         """
-        rate = self._get_current_function_param(RATE, context)
-        bias = self._get_current_function_param(BIAS, context)
-        scale = self._get_current_function_param(SCALE, context)
-        offset = self._get_current_function_param(OFFSET, context)
+        rate = self._get_current_parameter_value(RATE, context)
+        bias = self._get_current_parameter_value(BIAS, context)
+        scale = self._get_current_parameter_value(SCALE, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = scale * np.exp(rate * variable + bias) + offset
@@ -731,9 +731,9 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
 
         """
-        rate = self._get_current_function_param(RATE, context)
-        scale = self._get_current_function_param(SCALE, context)
-        bias = self._get_current_function_param(BIAS, context)
+        rate = self._get_current_parameter_value(RATE, context)
+        scale = self._get_current_parameter_value(SCALE, context)
+        bias = self._get_current_parameter_value(BIAS, context)
 
         return rate * scale * e**(rate * input + bias)
 
@@ -988,11 +988,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         Logistic transformation of variable : number or array
 
         """
-        gain = self._get_current_function_param(GAIN, context)
-        bias = self._get_current_function_param(BIAS, context)
-        x_0 = self._get_current_function_param(X_0, context)
-        offset = self._get_current_function_param(OFFSET, context)
-        scale = self._get_current_function_param(SCALE, context)
+        gain = self._get_current_parameter_value(GAIN, context)
+        bias = self._get_current_parameter_value(BIAS, context)
+        x_0 = self._get_current_parameter_value(X_0, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
+        scale = self._get_current_parameter_value(SCALE, context)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
@@ -1037,8 +1037,8 @@ class Logistic(TransferFunction):  # -------------------------------------------
                                     format(repr('output'), self.__class__.__name__ + '.' + 'derivative', output,
                                            repr('input'), input))
 
-        gain = self._get_current_function_param(GAIN, context)
-        scale = self._get_current_function_param(SCALE, context)
+        gain = self._get_current_parameter_value(GAIN, context)
+        scale = self._get_current_parameter_value(SCALE, context)
 
         if output is None:
             output = self.function(input, context=context)
@@ -1307,11 +1307,11 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         hyperbolic tangent of variable : number or array
 
         """
-        gain = self._get_current_function_param(GAIN, context)
-        bias = self._get_current_function_param(BIAS, context)
-        x_0 = self._get_current_function_param(X_0, context)
-        offset = self._get_current_function_param(OFFSET, context)
-        scale = self._get_current_function_param(SCALE, context)
+        gain = self._get_current_parameter_value(GAIN, context)
+        bias = self._get_current_parameter_value(BIAS, context)
+        x_0 = self._get_current_parameter_value(X_0, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
+        scale = self._get_current_parameter_value(SCALE, context)
 
         # The following probably doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         #   (since np.exp doesn't work)
@@ -1340,11 +1340,11 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         derivative :  number or array
 
         """
-        gain = self._get_current_function_param(GAIN, context)
-        bias = self._get_current_function_param(BIAS, context)
-        x_0 = self._get_current_function_param(X_0, context)
-        offset = self._get_current_function_param(OFFSET, context)
-        scale = self._get_current_function_param(SCALE, context)
+        gain = self._get_current_parameter_value(GAIN, context)
+        bias = self._get_current_parameter_value(BIAS, context)
+        x_0 = self._get_current_parameter_value(X_0, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
+        scale = self._get_current_parameter_value(SCALE, context)
 
         exponent = -2 * (gain * (input + bias - x_0) + offset)
         mult = -2 * gain * scale
@@ -1513,9 +1513,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         ReLU transformation of variable : number or array
         """
-        gain = self._get_current_function_param(GAIN, context)
-        bias = self._get_current_function_param(BIAS, context)
-        leak = self._get_current_function_param(LEAK, context)
+        gain = self._get_current_parameter_value(GAIN, context)
+        bias = self._get_current_parameter_value(BIAS, context)
+        leak = self._get_current_parameter_value(LEAK, context)
 
         # KAM modified 2/15/19 to match https://en.wikipedia.org/wiki/Rectifier_(neural_networks)#Leaky_ReLUs
         x = gain * (variable - bias)
@@ -1570,8 +1570,8 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         derivative :  number or array
 
         """
-        gain = self._get_current_function_param(GAIN, context)
-        leak = self._get_current_function_param(LEAK, context)
+        gain = self._get_current_parameter_value(GAIN, context)
+        leak = self._get_current_parameter_value(LEAK, context)
 
         input = np.asarray(input).copy()
         input[input>0] = gain
@@ -1801,10 +1801,10 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Gaussian transformation of variable : number or array
 
         """
-        standard_deviation = self._get_current_function_param(STANDARD_DEVIATION, context)
-        bias = self._get_current_function_param(BIAS, context)
-        scale = self._get_current_function_param(SCALE, context)
-        offset = self._get_current_function_param(OFFSET, context)
+        standard_deviation = self._get_current_parameter_value(STANDARD_DEVIATION, context)
+        bias = self._get_current_parameter_value(BIAS, context)
+        scale = self._get_current_parameter_value(SCALE, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
 
         gaussian = e**(-(variable - bias)**2 / (2 * standard_deviation**2)) / sqrt(2 * pi * standard_deviation)
         result = scale * gaussian + offset
@@ -1832,8 +1832,8 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Derivative of Guassian of variable :  number or array
 
         """
-        sigma = self._get_current_function_param(STANDARD_DEVIATION, context)
-        bias = self._get_current_function_param(BIAS, context)
+        sigma = self._get_current_parameter_value(STANDARD_DEVIATION, context)
+        bias = self._get_current_parameter_value(BIAS, context)
 
         adjusted_input = input - bias
         result = (-adjusted_input * e**(-(adjusted_input**2 / (2 * sigma**2)))) / sqrt(2 * pi * sigma**3)
@@ -2075,11 +2075,11 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         Sample from Gaussian distribution for each element of variable : number or array
 
         """
-        variance = self._get_current_function_param(VARIANCE, context)
-        bias = self._get_current_function_param(BIAS, context)
-        scale = self._get_current_function_param(SCALE, context)
-        offset = self._get_current_function_param(OFFSET, context)
-        random_state = self._get_current_function_param('random_state', context)
+        variance = self._get_current_parameter_value(VARIANCE, context)
+        bias = self._get_current_parameter_value(BIAS, context)
+        scale = self._get_current_parameter_value(SCALE, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
+        random_state = self._get_current_parameter_value('random_state', context)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         result = scale * random_state.normal(variable + bias, variance) + offset
@@ -2101,10 +2101,10 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     #     Derivative of Guassian of variable :  number or array
     #
     #     """
-    #     variance = self._get_current_function_param(VARIANCE, context)
-    #     bias = self._get_current_function_param(BIAS, context)
-    #     scale = self._get_current_function_param(SCALE, context)
-    #     offset = self._get_current_function_param(OFFSET, context)
+    #     variance = self._get_current_parameter_value(VARIANCE, context)
+    #     bias = self._get_current_parameter_value(BIAS, context)
+    #     scale = self._get_current_parameter_value(SCALE, context)
+    #     offset = self._get_current_parameter_value(OFFSET, context)
     #
     #     # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
     #     f = scale * np.random.normal(input+bias, variance) + offset
@@ -2471,9 +2471,9 @@ class SoftMax(TransferFunction):
 
         """
         # Assign the params and return the result
-        output_type = self._get_current_function_param(OUTPUT_TYPE, context)
-        gain = self._get_current_function_param(GAIN, context)
-        per_item = self._get_current_function_param(PER_ITEM, context)
+        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
+        gain = self._get_current_parameter_value(GAIN, context)
+        per_item = self._get_current_parameter_value(PER_ITEM, context)
         # Compute softmax and assign to sm
 
         if per_item and len(np.shape(variable)) > 1:
@@ -3031,7 +3031,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             length of the array returned equals the number of columns of `matrix <LinearMatrix.matrix>`.
 
         """
-        matrix = self._get_current_function_param(MATRIX, context)
+        matrix = self._get_current_parameter_value(MATRIX, context)
         result = np.dot(variable, matrix)
         return self.convert_output_type(result)
 
@@ -3836,7 +3836,7 @@ class TransferWithCosts(TransferFunction):
         if enabled_cost_functions:
 
             # For each cost function that is enabled:
-            # - get params for the cost functon using _get_current_function_param:
+            # - get params for the cost functon using _get_current_parameter_value:
             #   - if TransferWithControl is owned by a Mechanism, get value from ParameterPort for param
             #   - otherwise, get from TransferWithControl modulation parameter (which is also subject to modulation)
 
@@ -3844,9 +3844,9 @@ class TransferWithCosts(TransferFunction):
             if enabled_cost_functions & CostFunctions.INTENSITY:
                 # Assign modulatory param values to intensity_cost_function
                 self.intensity_cost_fct_mult_param = \
-                    self._get_current_function_param(INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM, context)
+                    self._get_current_parameter_value(INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM, context)
                 self.intensity_cost_fct_add_param = \
-                    self._get_current_function_param(INTENSITY_COST_FCT_ADDITIVE_PARAM, context)
+                    self._get_current_parameter_value(INTENSITY_COST_FCT_ADDITIVE_PARAM, context)
                 # Execute intensity_cost function
                 intensity_cost = self.intensity_cost_fct(intensity, context=context)
                 self.parameters.intensity_cost._set(intensity_cost, context)
@@ -3861,9 +3861,9 @@ class TransferWithCosts(TransferFunction):
                     intensity_change = np.zeros_like(self.parameters_intensity._get(context))
                 # Assign modulatory param values to adjustment_cost_function
                 self.adjustment_cost_fct_mult_param = \
-                    self._get_current_function_param(ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM, context)
+                    self._get_current_parameter_value(ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM, context)
                 self.adjustment_cost_fct_add_param = \
-                    self._get_current_function_param(ADJUSTMENT_COST_FCT_ADDITIVE_PARAM, context)
+                    self._get_current_parameter_value(ADJUSTMENT_COST_FCT_ADDITIVE_PARAM, context)
                 # Execute adjustment_cost function
                 adjustment_cost = self.adjustment_cost_fct(intensity_change, context=context)
                 self.parameters.adjustment_cost._set(adjustment_cost, context)
@@ -3873,9 +3873,9 @@ class TransferWithCosts(TransferFunction):
             if enabled_cost_functions & CostFunctions.DURATION:
                 # Assign modulatory param values to duration_cost_function
                 self.duration_cost_fct_mult_param = \
-                    self._get_current_function_param(DURATION_COST_FCT_MULTIPLICATIVE_PARAM, context)
+                    self._get_current_parameter_value(DURATION_COST_FCT_MULTIPLICATIVE_PARAM, context)
                 self.duration_cost_fct_add_param = \
-                    self._get_current_function_param(DURATION_COST_FCT_ADDITIVE_PARAM, context)
+                    self._get_current_parameter_value(DURATION_COST_FCT_ADDITIVE_PARAM, context)
                 # Execute duration_cost function
                 duration_cost = self.duration_cost_fct(intensity, context=context)
                 self.parameters.duration_cost._set(duration_cost, context)
@@ -3885,9 +3885,9 @@ class TransferWithCosts(TransferFunction):
 
             # Assign modulatory param values to combine_costs_function
             self.combine_costs_fct_mult_param = \
-                self._get_current_function_param(COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM, context)
+                self._get_current_parameter_value(COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM, context)
             self.combine_costs_fct_add_param = \
-                self._get_current_function_param(COMBINE_COSTS_FCT_ADDITIVE_PARAM, context)
+                self._get_current_parameter_value(COMBINE_COSTS_FCT_ADDITIVE_PARAM, context)
             # Execute combine_costs function
             combined_costs = self.combine_costs_fct(enabled_costs,
                                                     context=context)

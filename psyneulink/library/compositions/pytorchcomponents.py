@@ -13,7 +13,7 @@ def pytorch_function_creator(function, device, context=None):
     NOTE: This is needed due to PyTorch limitations (see: https://github.com/PrincetonUniversity/PsyNeuLink/pull/1657#discussion_r437489990)
     """
     def get_fct_param_value(param_name):
-        val = function._get_current_function_param(
+        val = function._get_current_parameter_value(
             param_name, context=context)
         if val is None:
             val = getattr(function.defaults, param_name)
