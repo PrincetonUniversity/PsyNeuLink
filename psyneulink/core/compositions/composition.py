@@ -3496,32 +3496,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Constructs the processing graph (the graph that contains only Nodes as vertices)
         from the composition's full graph
         """
-        logger.debug('Updating processing graph')
-
         self._graph_processing = self.graph.copy()
 
         def remove_vertex(vertex):
-            logger.debug('Removing', vertex)
             for parent in vertex.parents:
                 for child in vertex.children:
                     child.source_types[parent] = vertex.feedback
                     self._graph_processing.connect_vertices(parent, child)
-
-            for node in cur_vertex.parents + cur_vertex.children:
-                logger.debug(
-                    'New parents for vertex {0}: \n\t{1}\nchildren: \n\t{2}'.format(
-                        node, node.parents, node.children
-                    )
-                )
-
-            logger.debug('Removing vertex {0}'.format(cur_vertex))
 
             self._graph_processing.remove_vertex(vertex)
 
         # copy to avoid iteration problems when deleting
         vert_list = self._graph_processing.vertices.copy()
         for cur_vertex in vert_list:
-            logger.debug('Examining', cur_vertex)
             if not cur_vertex.component.is_processing:
                 remove_vertex(cur_vertex)
 
