@@ -1719,7 +1719,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: JDC 7/2/18 - THIS SHOULD BE MOVED TO A STANDARD OUTPUT_PORT
         # Clip outputs
-        clip = self._get_current_mechanism_param("clip", context)
+        clip = self.parameters.clip._get(context)
 
         value = super(Mechanism, self)._execute(variable=variable,
                                                 context=context,
