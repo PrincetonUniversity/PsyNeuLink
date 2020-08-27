@@ -2392,7 +2392,7 @@ from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array, merge_dictionaries
+    ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array
 from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -2678,100 +2678,54 @@ class Graph(object):
         structural_dependencies = self.dependency_dict
         # wipe and reconstruct list of vertices in cycles
         self.cycle_vertices = set()
+        flexible_edges = set()
 
-        # prune all feedback projections
         for node in execution_dependencies:
-            # recurrent edges
+            # prune recurrent edges
             try:
                 execution_dependencies[node].remove(node)
                 self.cycle_vertices.add(node)
             except KeyError:
                 pass
 
-            # standard edges labeled as feedback
-            vert = self.comp_to_vertex[node]
-            execution_dependencies[node] = {
-                dep for dep in execution_dependencies[node]
-                if (
-                    self.comp_to_vertex[dep] not in vert.source_types
-                    or vert.source_types[self.comp_to_vertex[dep]] is not EdgeType.FEEDBACK
-                )
-            }
+            for dep in tuple(execution_dependencies[node]):
+                vert = self.comp_to_vertex[node]
+                dep_vert = self.comp_to_vertex[dep]
+
+                if dep_vert in vert.source_types:
+                    # prune standard edges labeled as feedback
+                    if vert.source_types[dep_vert] is EdgeType.FEEDBACK:
+                        execution_dependencies[node].remove(dep)
+                    # store flexible edges for potential pruning later
+                    elif vert.source_types[dep_vert] is EdgeType.FLEXIBLE:
+                        flexible_edges.add((dep, node))
 
         # construct a parallel networkx graph to use its cycle algorithms
         nx_graph = self._generate_networkx_graph(execution_dependencies)
+        connected_components = list(networkx.strongly_connected_components(nx_graph))
 
         # prune only one flexible edge per attempt, to remove as few
         # edges as possible
         # For now, just prune the first flexible edge each time. Maybe
         # look for "best" edges to prune in future by frequency in
         # cycles, if that occurs
-        cycles_changed = True
-        while cycles_changed:
-            cycles_changed = False
+        for parent, child in flexible_edges:
+            cycles = [c for c in connected_components if len(c) > 1]
 
-            # recompute cycles after each prune
-            for cycle in networkx.simple_cycles(nx_graph):
-                len_cycle = len(cycle)
+            if len(cycles) == 0:
+                break
 
-                for i in range(len_cycle):
-                    parent = self.comp_to_vertex[cycle[i]]
-                    child = self.comp_to_vertex[cycle[(i + 1) % len_cycle]]
-
-                    if (
-                        parent in child.source_types
-                        and child.source_types[parent] is EdgeType.FLEXIBLE
-                    ):
-                        execution_dependencies[child.component].remove(parent.component)
-                        child.source_types[parent] = EdgeType.FEEDBACK
-                        nx_graph.remove_edge(parent.component, child.component)
-                        cycles_changed = True
-                        break
-
-        def merge_intersecting_cycles(cycle_list: list) -> dict:
-            # transforms a cycle represented as a list [c_0, ... c_n]
-            # to a dependency dictionary {c_0: c_n, c_1: c_0, ..., c_n: c_{n-1}}
-            cycle_dicts = [
-                {
-                    cycle[i]: cycle[(i - 1) % len(cycle)]
-                    for i in range(len(cycle))
-                }
-                for cycle in cycle_list
-            ]
-
-            new_cycles = cycle_dicts
-            cycles_changed = True
-
-            # repeatedly join cycles that have a Node in common
-            while cycles_changed:
-                cycles_changed = False
-                i = 0
-                j = 1
-
-                while i < len(new_cycles):
-                    while j < len(new_cycles):
-                        merged, has_shared_keys = merge_dictionaries(
-                            new_cycles[i],
-                            new_cycles[j]
-                        )
-                        if has_shared_keys:
-                            cycles_changed = True
-                            new_cycles[i] = merged
-                            new_cycles.remove(new_cycles[j])
-                        else:
-                            j += 1
-                    i += 1
-
-            return new_cycles
-
-        cycles = list(networkx.simple_cycles(nx_graph))
-        # create the longest possible cycles using any smaller, connected cycles
-        cycles = merge_intersecting_cycles(cycles)
+            if any((parent in c and child in c) for c in cycles):
+                # prune
+                execution_dependencies[child].remove(parent)
+                self.comp_to_vertex[child].source_types[self.comp_to_vertex[parent]] = EdgeType.FEEDBACK
+                nx_graph.remove_edge(parent, child)
+                # recompute cycles after each prune
+                connected_components = list(networkx.strongly_connected_components(nx_graph))
 
         # find all the parent nodes for each node in a cycle, excluding
         # parents that are part of the cycle
-        for cycle in cycles:
-            len_cycle = len(cycle)
+        for cycle in [c for c in connected_components if len(c) > 1]:
             acyclic_dependencies = set()
 
             for node in cycle:
@@ -2803,11 +2757,14 @@ class Graph(object):
             structural_dependencies
         )
 
-    def get_cycles(self, nx_graph: typing.Optional[networkx.DiGraph] = None):
+    def get_strongly_connected_components(
+        self,
+        nx_graph: typing.Optional[networkx.DiGraph] = None
+    ):
         if nx_graph is None:
             nx_graph = self._generate_networkx_graph()
 
-        return list(networkx.simple_cycles(nx_graph))
+        return list(networkx.strongly_connected_components(nx_graph))
 
     def _generate_networkx_graph(self, dependency_dict=None):
         if dependency_dict is None:
@@ -3496,32 +3453,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Constructs the processing graph (the graph that contains only Nodes as vertices)
         from the composition's full graph
         """
-        logger.debug('Updating processing graph')
-
         self._graph_processing = self.graph.copy()
 
         def remove_vertex(vertex):
-            logger.debug('Removing', vertex)
             for parent in vertex.parents:
                 for child in vertex.children:
                     child.source_types[parent] = vertex.feedback
                     self._graph_processing.connect_vertices(parent, child)
-
-            for node in cur_vertex.parents + cur_vertex.children:
-                logger.debug(
-                    'New parents for vertex {0}: \n\t{1}\nchildren: \n\t{2}'.format(
-                        node, node.parents, node.children
-                    )
-                )
-
-            logger.debug('Removing vertex {0}'.format(cur_vertex))
 
             self._graph_processing.remove_vertex(vertex)
 
         # copy to avoid iteration problems when deleting
         vert_list = self._graph_processing.vertices.copy()
         for cur_vertex in vert_list:
-            logger.debug('Examining', cur_vertex)
             if not cur_vertex.component.is_processing:
                 remove_vertex(cur_vertex)
 
@@ -5490,7 +5434,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             labeled as EdgeType.FEEDBACK (True) but are not in a cycle
         """
         unnecessary_feedback_specs = []
-        cycles = self.graph.get_cycles()
+        cycles = self.graph.get_strongly_connected_components()
 
         for proj in self.projections:
             try:
@@ -8753,6 +8697,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # ASSIGNMENTS **************************************************************************************************
 
+        assert not str(bin_execute).endswith("Run")
         if bin_execute == 'Python':
             bin_execute = False
 

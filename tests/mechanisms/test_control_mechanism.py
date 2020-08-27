@@ -86,7 +86,9 @@ class TestLCControlMechanism:
             default_variable = 10.0
         )
         if mode == 'Python':
-            EX = LC.execute
+            def EX(variable):
+                LC.execute(variable)
+                return LC.output_values
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(LC)
             EX = e.execute
@@ -95,19 +97,14 @@ class TestLCControlMechanism:
             EX = e.cuda_execute
 
         val = EX([10.0])
-
-        # LLVM returns combination of all output ports so let's do that for
-        # Python as well
-        if mode == 'Python':
-            val = [s.value for s in LC.output_ports]
-
-        benchmark(EX, [10.0])
-
         # All values are the same because LCControlMechanism assigns all of its ControlSignals to the same value
         # (the 1st item of its function's value).
         # FIX: 6/6/19 - Python returns 3d array but LLVM returns 2d array
         #               (np.allclose bizarrely passes for LLVM because all the values are the same)
         assert np.allclose(val, [[[3.00139776]], [[3.00139776]], [[3.00139776]], [[3.00139776]]])
+
+        if benchmark.enabled:
+            benchmark(EX, [10.0])
 
     def test_lc_control_modulated_mechanisms_all(self):
 

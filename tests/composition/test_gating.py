@@ -56,7 +56,8 @@ def test_gating(benchmark, mode):
     ]
 
     np.testing.assert_allclose(comp.results, expected_results)
-    benchmark(comp.run, num_trials=4, inputs=stim_list, bin_execute=mode)
+    if benchmark.enabled:
+        benchmark(comp.run, num_trials=4, inputs=stim_list, bin_execute=mode)
 
 # DEPRECATED FUNCTIONALITY 9/26/19
 # @pytest.mark.composition
