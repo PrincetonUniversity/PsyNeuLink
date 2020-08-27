@@ -12,11 +12,24 @@ import pytest
 from itertools import product
 
 
+expected_3_10 = [[ 205.67990124], [ 205.536034],   [ 206.29612605],
+                 [-204.87230198], [-204.98539771], [-205.35434273]]
+expected_8_10 = [[-71427.62150144271], [-71428.44255569541],
+                 [-71427.73782852193], [-71428.18340850921],
+                 [-71428.10767225616], [-71428.22607075438],
+                 [-71427.55903615047], [-71427.81981141337],
+                  [67029.19595769834], [67028.98515147284],
+                  [67029.00062228851], [67029.22270778783],
+                  [67029.64637519913], [67028.31812638397],
+                  [67028.98446253323], [67028.45363893337]]
 
 
 @pytest.mark.model
-@pytest.mark.benchmark(group="Simplified Necker Cube")
-@pytest.mark.parametrize("n_nodes,n_time_steps", [(3, 10)])
+@pytest.mark.benchmark
+@pytest.mark.parametrize("n_nodes,n_time_steps,expected", [
+    pytest.param(3, 10, expected_3_10, id="3-10"),
+    pytest.param(8, 10, expected_8_10, id="8-10"),
+])
 @pytest.mark.parametrize("mode", [
     'Python',
     pytest.param('LLVM', marks=[pytest.mark.llvm]),
@@ -25,7 +38,7 @@ from itertools import product
     pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
-def test_simplified_necker_cube(benchmark, mode, n_nodes, n_time_steps):
+def test_necker_cube(benchmark, mode, n_nodes, n_time_steps, expected):
     # this code only works for N_PERCEPTS == 2
     ALL_PERCEPTS = ['a', 'b']
 
@@ -120,9 +133,7 @@ def test_simplified_necker_cube(benchmark, mode, n_nodes, n_time_steps):
 
     # run the model
     res = bp_comp.run(input_dict, num_trials=n_time_steps, bin_execute=mode)
-    expected = {(3, 10): [[ 205.67990124], [ 205.536034],   [ 206.29612605],
-                          [-204.87230198], [-204.98539771], [-205.35434273]]}
-    np.testing.assert_allclose(res, expected[(n_nodes, n_time_steps)])
+    np.testing.assert_allclose(res, expected)
 
     # Test that order of CIM ports follows order of Nodes in self.nodes
     for i in range(n_nodes):
@@ -134,7 +145,8 @@ def test_simplified_necker_cube(benchmark, mode, n_nodes, n_time_steps):
         assert b_name in bp_comp.output_CIM.output_ports.names[i + n_nodes]
 
     if benchmark.enabled:
-        benchmark(bp_comp.run, input_dict, num_trials=10, bin_execute=mode)
+        benchmark.group = "Necker Cube {}-{}".format(n_nodes, n_time_steps)
+        benchmark(bp_comp.run, input_dict, num_trials=n_time_steps, bin_execute=mode)
 
 
 @pytest.mark.model
