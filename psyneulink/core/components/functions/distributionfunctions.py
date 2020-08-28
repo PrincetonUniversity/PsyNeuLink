@@ -1097,7 +1097,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         starting_point = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         threshold = Parameter(1.0, modulable=True)
         noise = Parameter(0.5, modulable=True)
-        t0 = .200
+        t0 = Parameter(.200, modulable=True)
         bias = Parameter(0.5, read_only=True, getter=_DriftDiffusionAnalytical_bias_getter)
         # this is read only because conversion is disabled for this function
         # this occurs in other places as well
