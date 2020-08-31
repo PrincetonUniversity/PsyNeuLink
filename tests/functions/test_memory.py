@@ -61,56 +61,34 @@ names = [
 #    "ContentAddressableMemory Initializer Noise",
 ]
 
-GROUP_PREFIX="IntegratorFunction "
-
 @pytest.mark.function
 @pytest.mark.memory_function
-@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
-def test_basic(func, variable, params, expected, benchmark):
+@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
+@pytest.mark.parametrize('mode', ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_basic(func, variable, params, expected, benchmark, mode):
+    if func is Functions.Buffer and mode != 'Python':
+        pytest.skip("Not implemented")
+
     f = func(default_variable=variable, **params)
-    benchmark.group = GROUP_PREFIX + func.componentName
-    f(variable)
-    res = f(variable)
+    benchmark.group = func.componentName
+    if mode == 'Python':
+        EX = f.function
+    elif mode == 'LLVM':
+        e = pnlvm.execution.FuncExecution(f)
+        EX = e.execute
+    elif mode == 'PTX':
+        e = pnlvm.execution.FuncExecution(f)
+        EX = e.cuda_execute
+    EX(variable)
+    res = EX(variable)
     assert np.allclose(res[0], expected[0])
     assert np.allclose(res[1], expected[1])
-    benchmark(f, variable)
+    if benchmark.enabled:
+        benchmark(f, variable)
 
-
-@pytest.mark.llvm
-@pytest.mark.function
-@pytest.mark.memory_function
-@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
-@pytest.mark.benchmark
-def test_llvm(func, variable, params, expected, benchmark):
-    if func is Functions.Buffer:
-        pytest.skip("Not implemented")
-    benchmark.group = GROUP_PREFIX + func.componentName
-    f = func(default_variable=variable, **params)
-    m = pnlvm.execution.FuncExecution(f)
-    m.execute(variable)
-    res = m.execute(variable)
-    assert np.allclose(res[0], expected[0])
-    assert np.allclose(res[1], expected[1])
-    benchmark(m.execute, variable)
-
-
-@pytest.mark.llvm
-@pytest.mark.cuda
-@pytest.mark.function
-@pytest.mark.memory_function
-@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
-@pytest.mark.benchmark
-def test_ptx_cuda(func, variable, params, expected, benchmark):
-    if func is Functions.Buffer:
-        pytest.skip("Not implemented")
-    benchmark.group = GROUP_PREFIX + func.componentName
-    f = func(default_variable=variable, **params)
-    m = pnlvm.execution.FuncExecution(f)
-    m.cuda_execute(variable)
-    res = m.cuda_execute(variable)
-    assert np.allclose(res, expected)
-    benchmark(m.cuda_execute, variable)
 
 # Test of ContentAddressableMemory without LLVM:
 def test_ContentAddressableMemory_with_initializer_and_key_size_same_as_val_size():

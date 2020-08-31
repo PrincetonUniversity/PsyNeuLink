@@ -59,4 +59,5 @@ def test_execute(func, variable, params, llvm_skip, expected, benchmark, mode):
         ex = pnlvm.execution.FuncExecution(f).cuda_execute
     res = ex(variable)
     assert np.allclose(res, expected)
-    benchmark(f.function, variable)
+    if benchmark.enabled:
+        benchmark(f.function, variable)

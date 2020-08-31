@@ -23,7 +23,8 @@ class TestBuffer():
         B.execute([7,8,9])
         val = B.execute([10,11,12])
         assert np.allclose(deque(np.atleast_1d([ 0.04,  0.05,  0.06], [ 0.7,  0.8,  0.9], [10, 11, 12])), val)
-        benchmark(B.execute, [1, 2, 3])
+        if benchmark.enabled:
+            benchmark(B.execute, [1, 2, 3])
 
     @pytest.mark.benchmark(group="BufferFunction")
     def test_buffer_standalone_rate_list(self, benchmark):
@@ -33,7 +34,8 @@ class TestBuffer():
         B.execute([7,8,9])
         val = B.execute([10,11,12])
         assert np.allclose(deque(np.atleast_1d([ 0.04, 1.25, 4.86], [ 0.7,  4. , 8.1], [10, 11, 12])), val)
-        benchmark(B.execute, [1, 2, 3])
+        if benchmark.enabled:
+            benchmark(B.execute, [1, 2, 3])
 
     @pytest.mark.benchmark(group="BufferFunction")
     def test_buffer_standalone_rate_ndarray(self, benchmark):
@@ -43,7 +45,8 @@ class TestBuffer():
         B.execute([7,8,9])
         val = B.execute([10,11,12])
         assert np.allclose(deque(np.atleast_1d([ 0.04, 1.25, 4.86], [ 0.7,  4. , 8.1], [10, 11, 12])), val)
-        benchmark(B.execute, [1, 2, 3])
+        if benchmark.enabled:
+            benchmark(B.execute, [1, 2, 3])
 
     @pytest.mark.benchmark(group="BufferFunction")
     def test_buffer_standalone_noise_float(self, benchmark):
@@ -53,7 +56,8 @@ class TestBuffer():
         B.execute([7,8,9])
         val = B.execute([10,11,12])
         assert np.allclose(deque(np.atleast_1d([ 24.,  25.,  26.], [ 17.,  18.,  19.], [10, 11, 12])), val)
-        benchmark(B.execute, [1, 2, 3])
+        if benchmark.enabled:
+            benchmark(B.execute, [1, 2, 3])
 
     @pytest.mark.benchmark(group="BufferFunction")
     def test_buffer_standalone_noise_list(self, benchmark):
@@ -63,7 +67,8 @@ class TestBuffer():
         B.execute([7,8,9])
         val = B.execute([10,11,12])
         assert np.allclose(deque(np.atleast_1d([ 24., 45., 66.], [ 17., 28., 39.], [10, 11, 12])), val)
-        benchmark(B.execute, [1, 2, 3])
+        if benchmark.enabled:
+            benchmark(B.execute, [1, 2, 3])
 
     @pytest.mark.benchmark(group="BufferFunction")
     def test_buffer_standalone_noise_ndarray(self, benchmark):
@@ -73,7 +78,8 @@ class TestBuffer():
         B.execute([7,8,9])
         val = B.execute([10,11,12])
         assert np.allclose(deque(np.atleast_1d([ 24., 45., 66.], [ 17., 28., 39.], [10, 11, 12])), val)
-        benchmark(B.execute, [1, 2, 3])
+        if benchmark.enabled:
+            benchmark(B.execute, [1, 2, 3])
 
     @pytest.mark.benchmark(group="BufferFunction")
     def test_buffer_standalone_noise_function(self, benchmark):
@@ -85,7 +91,8 @@ class TestBuffer():
         assert np.allclose(deque(np.atleast_1d([[4.02430687, 4.91927251, 5.95087965],
                                                 [7.09586966, 7.91823773, 8.86077491],
                                                 [10, 11, 12]])), val)
-        benchmark(B.execute, [1, 2, 3])
+        if benchmark.enabled:
+            benchmark(B.execute, [1, 2, 3])
 
     @pytest.mark.benchmark(group="BufferFunction")
     def test_buffer_standalone_noise_function_in_array(self, benchmark):
@@ -101,7 +108,8 @@ class TestBuffer():
         for v_v, v_e in zip(val, expected_val):
             for v, e in zip(v_v, v_e):
                 assert np.allclose(v, e)
-        benchmark(B.execute, [1, 2, 3])
+        if benchmark.enabled:
+            benchmark(B.execute, [1, 2, 3])
 
     def test_buffer_standalone_noise_function_invocation(self):
         class CallCount:
@@ -135,7 +143,8 @@ class TestBuffer():
         assert np.allclose(B.execute(3.0), deque([[1.0], [2.0], np.array([3.])]))
         assert np.allclose(B.execute(4.0), deque([[2.0], np.array([3.]), np.array([4.])]))
         assert np.allclose(B.execute(5.0), deque([np.array([3.]), np.array([4.]), np.array([5.])]))
-        benchmark(B.execute, 5.0)
+        if benchmark.enabled:
+            benchmark(B.execute, 5.0)
 
     @pytest.mark.benchmark(group="BufferFunction")
     def test_buffer_as_function_of_processing_mech(self, benchmark):
@@ -146,7 +155,8 @@ class TestBuffer():
         val = P.execute(1.0)
 
         assert np.allclose(np.asfarray(val), [[0., 1.]])
-        benchmark(P.execute, 5.0)
+        if benchmark.enabled:
+            benchmark(P.execute, 5.0)
         # fails due to value and variable problems when Buffer is the function of a mechanism
         # P = ProcessingMechanism(function=Buffer(default_variable=[[0.0], [1.0], [2.0]],
         #                                         initializer=[[0.0], [1.0], [2.0]],

@@ -2084,7 +2084,9 @@ class TestExecutionOrder:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, bin_execute=mode)
         assert np.allclose(output, 320)
-        benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2127,14 +2129,11 @@ class TestExecutionOrder:
 
 
         inputs_dict = {B: [4.0]}
-        # sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict,
-                          # scheduler=sched,
-                          bin_execute=mode)
+        output = comp.run(inputs=inputs_dict, bin_execute=mode)
         assert np.allclose(output, 354.19328716)
-        benchmark(comp.run, inputs=inputs_dict,
-                  # scheduler=sched,
-                  bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(comp.run, inputs=inputs_dict, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2179,7 +2178,9 @@ class TestExecutionOrder:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, bin_execute=mode)
         assert np.allclose(output, 650.83865743)
-        benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2222,14 +2223,10 @@ class TestExecutionOrder:
 
 
         inputs_dict = {B: [4.0]}
-        # sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict,
-                          # scheduler=sched,
-                          bin_execute=mode)
+        output = comp.run(inputs=inputs_dict, bin_execute=mode)
         assert np.allclose(output, 150.83865743)
-        benchmark(comp.run, inputs=inputs_dict,
-                  # scheduler=sched,
-                  bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.run, inputs=inputs_dict, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2275,7 +2272,9 @@ class TestExecutionOrder:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, bin_execute=mode)
         assert np.allclose(output, 600)
-        benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Transfer")
@@ -3158,9 +3157,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_execute_composition(self, mode):
         comp = Composition()
@@ -3196,7 +3193,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [[1]]}
         sched = Scheduler(composition=comp)
-        output = benchmark(comp.execute, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
+        output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
         assert np.allclose(89., output)
 
     @pytest.mark.composition
@@ -3220,7 +3217,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [[1]]}
         sched = Scheduler(composition=comp)
-        output = comp.execute(inputs=inputs_dict, scheduler=sched, bin_execute=mode)
+        output = comp.run(inputs=inputs_dict, scheduler=sched, bin_execute=mode)
         assert np.allclose(32., output)
 
     def test_LPP_end_with_projection(self):
@@ -3285,7 +3282,7 @@ class TestRun:
         inner_comp = Composition(pathways=[m_inner])
         m_outer = ProcessingMechanism(size=2)
         outer_comp = Composition(pathways=[m_outer, inner_comp])
-        result = outer_comp.execute(bin_execute=mode)
+        result = outer_comp.run(bin_execute=mode)
         assert np.allclose(result, [[0.0],[0.0]])
 
     @pytest.mark.composition
@@ -3600,16 +3597,15 @@ class TestRun:
         #                          ( 5 + 15 + 2) * 5 = 110,
         #                          ( 5 + 10 + 3) * 5 = 90
         assert np.allclose([130.0, 110.0, 90.0], output2)
-        benchmark(comp.run, inputs={A: [[1.0, 2.0, 3.0]]}, scheduler=sched, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.run, inputs={A: [[1.0, 2.0, 3.0]]}, scheduler=sched, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_hetero(self, benchmark, mode):
         comp = Composition()
@@ -3631,16 +3627,15 @@ class TestRun:
 
         assert np.allclose(val, [[0.99330715]])
 
-        benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_integrator(self, benchmark, mode):
         comp = Composition()
@@ -3664,16 +3659,15 @@ class TestRun:
 
         assert np.allclose(val, [[0.6320741]])
 
-        benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_vector_2(self, benchmark, mode):
         comp = Composition()
@@ -3692,16 +3686,15 @@ class TestRun:
 
         assert np.allclose(val, [[0.87507549,  0.94660049]])
 
-        benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_hetero_2(self, benchmark, mode):
         comp = Composition()
@@ -3723,16 +3716,15 @@ class TestRun:
 
         assert np.allclose(val, [[0.36286875, 0.78146724]])
 
-        benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_integrator_2(self, benchmark, mode):
         comp = Composition()
@@ -3756,7 +3748,8 @@ class TestRun:
 
         assert np.allclose(val, [[0.49922843, 0.52838607]])
 
-        benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
     def test_run_termination_condition_custom_context(self):
         D = pnl.DDM(function=pnl.DriftDiffusionIntegrator)

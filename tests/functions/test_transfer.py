@@ -108,7 +108,9 @@ def test_execute(func, variable, params, fail, expected, benchmark, mode):
         ex = pnlvm.execution.FuncExecution(f).cuda_execute
     res = ex(variable)
     assert np.allclose(res, expected)
-    benchmark(f.function, variable)
+    if benchmark.enabled:
+        benchmark(f.function, variable)
+
 
 @pytest.mark.function
 @pytest.mark.transfer_function
@@ -129,7 +131,9 @@ def test_execute_derivative(func, variable, params, expected, benchmark, mode):
         ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative"})).cuda_execute
     res = ex(variable)
     assert np.allclose(res, expected)
-    benchmark(ex, variable)
+    if benchmark.enabled:
+        benchmark(ex, variable)
+
 
 def test_transfer_with_costs_function():
     f = Functions.TransferWithCosts()
