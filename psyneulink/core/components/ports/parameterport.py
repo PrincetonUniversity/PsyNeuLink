@@ -27,7 +27,8 @@ Overview
 
 ParameterPorts belong to either a `Mechanism <Mechanism>` or a `Projection <Projection>`. A ParameterPort is created
 to represent each `modulatable parameter <ParameterPort_Modulable_Parameters>` of the `Mechanism
-<Mechanism>` or a `Projection <Projection>`, as well as those of the component's `function <Component_Function>`. A
+<Mechanism>` or a `Projection <Projection>`, as well as those of the component's `function <Component_Function>` and
+any of its secondary functions (e.g. `TransferMechanism.integrator_function`). A
 ParameterPort provides the current value of the parameter it represents during any relevant computations, and serves as
 an interface for parameter modulation.
 
@@ -64,7 +65,8 @@ ParameterPorts are created automatically when the `Mechanism <Mechanism>` or `Pr
 belong is created.  The `owner <Port.owner>` of a ParameterPort must be a `Mechanism <Mechanism>` or `MappingProjection`
 (the initialization of a ParameterPort cannot be `deferred <Port_Deferred_Initialization>`). One ParameterPort is
 created for each modulable Parameter of its owner, as well as for each modulable Parameter of the owner's
-`function <Component.function>` (modulable Parameters of a Component
+`function <Component.function>` or secondary functions (modulable
+Parameters of a Component
 are listed in its `Parameters` class, and have the attribute
 `modulable <Parameter.modulable>` set to True.)
 Each ParameterPort is created using the value specified for the corresponding parameter, as described below.  The
