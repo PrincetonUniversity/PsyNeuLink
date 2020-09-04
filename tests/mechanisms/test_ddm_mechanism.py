@@ -89,10 +89,10 @@ class TestThreshold:
         D = DDM(name='DDM',
                 function=DriftDiffusionIntegrator(threshold=10.0))
 
-        assert D.function.threshold == 10.0
+        assert D.function.threshold.base == 10.0
 
-        D.function.threshold = 5.0
-        assert D.function.threshold == 5.0
+        D.function.threshold.base = 5.0
+        assert D.function.threshold.base == 5.0
 
     def test_threshold_sets_is_finished(self):
         D = DDM(name='DDM',

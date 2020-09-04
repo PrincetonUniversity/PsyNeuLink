@@ -626,12 +626,29 @@ class ComponentError(Exception):
         super().__init__(message)
 
 
-def make_parameter_property(name):
+def _get_parametervalue_attr(param):
+    return f'_{param.name}'
+
+
+def make_parameter_property(param):
     def getter(self):
-        return getattr(self.parameters, name)._get(self.most_recent_context)
+        p = getattr(self.parameters, param.name)
+
+        if p.modulable:
+            return getattr(self, _get_parametervalue_attr(p))
+        else:
+            return p._get(self.most_recent_context)
 
     def setter(self, value):
-        getattr(self.parameters, name)._set(value, self.most_recent_context)
+        p = getattr(self.parameters, param.name)
+        if p.modulable:
+            warnings.warn(
+                'Setting parameter values directly using dot notation'
+                ' may be removed in a future release. It is replaced with,'
+                f' for example, <object>.{param.name}.base = {value}',
+                FutureWarning,
+            )
+        getattr(self.parameters, p.name)._set(value, self.most_recent_context)
 
     return property(getter).setter(setter)
 
@@ -666,7 +683,7 @@ class ComponentsMeta(ABCMeta):
 
         for param in self.parameters:
             if not hasattr(self, param.name):
-                setattr(self, param.name, make_parameter_property(param.name))
+                setattr(self, param.name, make_parameter_property(param))
 
             try:
                 if param.default_value.owner is None:
@@ -2029,6 +2046,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
             if isinstance(p.default_value, Function):
                 p.default_value.owner = p
+
+        for p in self.parameters:
+            if p.stateful:
+                setattr(self, _get_parametervalue_attr(p), ParameterValue(self, p))
 
     def _instantiate_parameter_classes(self, context=None):
         """
@@ -3620,6 +3641,12 @@ def make_property_mod(param_name, parameter_port_name=None):
         parameter_port_name = param_name
 
     def getter(self):
+        warnings.warn(
+            f'Getting modulated parameter values with <object>.mod_<param_name>'
+            ' may be removed in a future release. It is replaced with,'
+            f' for example, <object>.{param_name}.modulated',
+            FutureWarning
+        )
         try:
             return self._parameter_ports[parameter_port_name].value
         except TypeError:
@@ -3647,3 +3674,48 @@ def make_stateful_getter_mod(param_name, parameter_port_name=None):
                                  .format(self.name, param_name))
 
     return getter
+
+
+class ParameterValue:
+    def __init__(self, owner, parameter):
+        self._owner = owner
+        self._parameter = parameter
+
+    def __repr__(self):
+        return f'{self._owner}:\n\t{self._parameter.name}.base: {self.base}\n\t{self._parameter.name}.modulated: {self.modulated}'
+
+    @property
+    def modulated(self):
+        try:
+            is_modulated = (self._parameter in self._owner.parameter_ports)
+        except AttributeError:
+            is_modulated = False
+
+        try:
+            is_modulated = is_modulated or (self._parameter in self._owner.owner.parameter_ports)
+        except AttributeError:
+            pass
+
+        if is_modulated:
+            return self._owner._get_current_parameter_value(
+                self._parameter,
+                self._owner.most_recent_context
+            )
+        else:
+            warnings.warn(f'{self._parameter.name} is not currently modulated.')
+            return None
+
+    @modulated.setter
+    def modulated(self, value):
+        raise ComponentError(
+            f"Cannot set {self._owner.name}'s modulated {self._parameter.name}"
+            ' value directly because it is computed by the ParameterPort.'
+        )
+
+    @property
+    def base(self):
+        return self._parameter._get(self._owner.most_recent_context)
+
+    @base.setter
+    def base(self, value):
+        self._parameter._set(value, self._owner.most_recent_context)
