@@ -232,8 +232,6 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
             prefs=prefs,
         )
 
-        self.has_initializers = True
-
     def _initialize_previous_value(self, initializer, context=None):
         initializer = initializer or []
         previous_value = deque(initializer, maxlen=self.parameters.history.get(context))
@@ -731,8 +729,6 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             self.parameters.key_size._set(len(self.previous_value[KEYS][0]), Context())
             self.parameters.val_size._set(len(self.previous_value[VALS][0]), Context())
 
-        self.has_initializers = True
-
     def _get_state_ids(self):
         return super()._get_state_ids() + ["ring_memory"]
 
@@ -999,8 +995,6 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             ),
             context
         )
-
-        self.has_initializers = True
 
         if isinstance(self.distance_function, type):
             self.distance_function = self.distance_function(context=context)

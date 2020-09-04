@@ -245,8 +245,6 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
             **kwargs
         )
 
-        self.has_initializers = True
-
     # FIX CONSIDER MOVING THIS TO THE LEVEL OF Function_Base OR EVEN Component
     def _validate_params(self, request_set, target_set=None, context=None):
         """Check inner dimension (length) of all parameters used for the function
@@ -574,8 +572,6 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
             prefs=prefs,
         )
 
-        self.has_initializers = True
-
     def _accumulator_check_args(self, variable=None, context=None, params=None, target_set=None):
         """validate params and assign any runtime params.
 
@@ -825,8 +821,6 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
             prefs=prefs,
         )
 
-        self.has_initializers = True
-
     def _function(self,
                  variable=None,
                  context=None,
@@ -1059,8 +1053,6 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
             owner=owner,
             prefs=prefs,
         )
-
-        self.has_initializers = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(
@@ -1594,8 +1586,6 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
             prefs=prefs,
         )
 
-        self.has_initializers = True
-
     def _validate_params(self, request_set, target_set=None, context=None):
 
         # Handle list or array for rate specification
@@ -2047,8 +2037,6 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
             prefs=prefs,
         )
 
-        self.has_initializers = True
-
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
@@ -2439,8 +2427,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             owner=owner,
             prefs=prefs,
         )
-
-        self.has_initializers = True
 
     def _validate_noise(self, noise):
         if noise is not None and not isinstance(noise, float) and not(isinstance(noise, np.ndarray) and np.issubdtype(noise.dtype, np.floating)):
@@ -2858,8 +2844,6 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             prefs=prefs,
         )
 
-        self.has_initializers = True
-
     def _validate_noise(self, noise):
         if noise is not None and not isinstance(noise, float):
             raise FunctionError(
@@ -3139,8 +3123,6 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
             owner=owner,
             prefs=prefs
         )
-
-        self.has_initializers = True
 
     def _function(self,
                  variable=None,
