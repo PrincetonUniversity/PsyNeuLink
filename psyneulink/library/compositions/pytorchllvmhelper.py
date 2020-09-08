@@ -12,7 +12,8 @@ __all__ = ["gen_inject_unary_function_call",
            "gen_inject_mat_hadamard",
            "gen_inject_mat_scalar_mult",
            "gen_inject_vxm",
-           "gen_inject_vxm_transposed"]
+           "gen_inject_vxm_transposed",
+           "gen_inject_vec_outer_product"]
 
 def gen_inject_unary_function_call(ctx, builder, unary_func, vector, output_vec=None):
     dim = len(vector.type.pointee)
@@ -80,6 +81,24 @@ def gen_inject_mat_binop(ctx, builder, op, m1, m2, output_mat=None):
     builtin = ctx.import_llvm_function(op)
     builder.call(builtin, [builder.bitcast(m1, ctx.float_ty.as_pointer()),
                             builder.bitcast(m2, ctx.float_ty.as_pointer()),
+                            ctx.int32_ty(x), ctx.int32_ty(y),
+                            builder.bitcast(output_mat, ctx.float_ty.as_pointer())])
+    return output_mat
+
+def gen_inject_vec_outer_product(ctx, builder, v1, v2, output_mat=None):
+    x = len(v1.type.pointee)
+    y = len(v2.type.pointee)
+
+    if output_mat is None:
+        output_mat = builder.alloca(
+            pnlvm.ir.types.ArrayType(
+                pnlvm.ir.types.ArrayType(ctx.float_ty, y), x))
+    assert len(output_mat.type.pointee) == x
+    assert len(output_mat.type.pointee.element) == y
+
+    builtin = ctx.import_llvm_function("__pnl_builtin_vec_outer_product")
+    builder.call(builtin, [builder.bitcast(v1, ctx.float_ty.as_pointer()),
+                            builder.bitcast(v2, ctx.float_ty.as_pointer()),
                             ctx.int32_ty(x), ctx.int32_ty(y),
                             builder.bitcast(output_mat, ctx.float_ty.as_pointer())])
     return output_mat

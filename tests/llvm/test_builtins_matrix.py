@@ -8,21 +8,25 @@ from llvmlite import ir
 
 DIM_X = 1000
 DIM_Y = 2000
+DIM_Z = 300
 u = np.random.rand(DIM_X, DIM_Y)
 v = np.random.rand(DIM_X, DIM_Y)
+w = np.random.rand(DIM_Y, DIM_Z)
 vector = np.random.rand(DIM_X)
 trans_vector = np.random.rand(DIM_Y)
 scalar = np.random.rand()
 
 
 llvm_mat_res = np.random.rand(DIM_X, DIM_Y)
+llvm_matmul_res = np.random.rand(DIM_X, DIM_Z)
 llvm_vec_res = np.random.rand(DIM_Y)
 llvm_tvec_res = np.random.rand(DIM_X)
 
 
 mat_add_res = np.add(u,v)
 mat_sub_res = np.subtract(u,v)
-mat_mul_res = np.multiply(u, v)
+mat_hadamard_res = np.multiply(u, v)
+mat_mul_res = np.matmul(u, w)
 dot_res = np.dot(vector, u)
 trans_dot_res = np.dot(trans_vector, u.transpose())
 mat_sadd_res = np.add(u, scalar)
@@ -31,9 +35,11 @@ mat_smul_res = np.multiply(u, scalar)
 
 ct_u = u.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 ct_v = v.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+ct_w = w.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 ct_vec = vector.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 ct_tvec = trans_vector.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 ct_mat_res = llvm_mat_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
+ct_matmul_res = llvm_matmul_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 ct_vec_res = llvm_vec_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 ct_tvec_res = llvm_tvec_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 
@@ -42,7 +48,7 @@ ct_tvec_res = llvm_tvec_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
 @pytest.mark.parametrize("op, builtin, result", [
                          (np.add, "__pnl_builtin_mat_add", mat_add_res),
                          (np.subtract, "__pnl_builtin_mat_sub", mat_sub_res),
-                         (np.multiply, "__pnl_builtin_mat_hadamard", mat_mul_res),
+                         (np.multiply, "__pnl_builtin_mat_hadamard", mat_hadamard_res),
                          ], ids=["ADD", "SUB", "MUL"])
 @pytest.mark.parametrize("mode", ['Python',
                                   pytest.param('LLVM', marks=pytest.mark.llvm)])
@@ -98,6 +104,30 @@ def test_dot_cuda(benchmark):
     benchmark(llvm_fun.cuda_call, cuda_vec, cuda_mat, np.int32(DIM_X), np.int32(DIM_Y), cuda_res)
     assert np.allclose(llvm_vec_res, dot_res)
 
+@pytest.mark.benchmark(group="Matmul")
+def test_matmul_numpy(benchmark):
+    numpy_res = benchmark(np.matmul, u, w)
+    assert np.allclose(numpy_res, mat_mul_res)
+
+
+@pytest.mark.llvm
+@pytest.mark.benchmark(group="Matmul")
+def test_matmul_llvm(benchmark):
+    llvm_fun = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_mxm")
+    benchmark(llvm_fun, ct_u, ct_w, DIM_X, DIM_Y, DIM_Z, ct_matmul_res)
+    assert np.allclose(llvm_matmul_res, mat_mul_res)
+
+
+@pytest.mark.llvm
+@pytest.mark.cuda
+@pytest.mark.benchmark(group="Matmul")
+def test_matmul_cuda(benchmark):
+    llvm_fun = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_mxm")
+    cuda_m1 = pnlvm.jit_engine.pycuda.driver.In(u)
+    cuda_m2 = pnlvm.jit_engine.pycuda.driver.In(w)
+    cuda_res = pnlvm.jit_engine.pycuda.driver.Out(llvm_matmul_res)
+    benchmark(llvm_fun.cuda_call, cuda_m1, cuda_m2, np.int32(DIM_X), np.int32(DIM_Y), np.int32(DIM_Z), cuda_res)
+    assert np.allclose(llvm_matmul_res, mat_mul_res)
 
 @pytest.mark.llvm
 @pytest.mark.benchmark(group="Dot")

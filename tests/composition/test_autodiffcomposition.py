@@ -3146,3 +3146,120 @@ class TestBatching:
 
         # Equation for loss taken from https://pytorch.org/docs/stable/nn.html#torch.nn.CrossEntropyLoss
         assert np.allclose(adc.loss(classes, target).detach().numpy(), -1 + np.log(np.exp(2) + np.exp(1)))
+
+@pytest.mark.pytorch
+class TestRecurrent:
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                     ])
+    def test_lstm_forward_equivalence(self, mode):
+        from psyneulink.library.components.mechanisms.processing.transfer.lstmmechanism import LSTMMechanism
+        size = (1,2)
+
+        f_input_matrix   = np.random.rand(2,1)
+        f_hidden_matrix  = np.random.rand(2,2)
+        i_input_matrix   = np.random.rand(2,1)
+        i_hidden_matrix  = np.random.rand(2,2)
+        g_input_matrix   = np.random.rand(2,1)
+        g_hidden_matrix  = np.random.rand(2,2)
+        o_input_matrix   = np.random.rand(2,1)
+        o_hidden_matrix  = np.random.rand(2,2)
+
+        test_mech = LSTMMechanism(size=size,
+                                  f_input_matrix=f_input_matrix,
+                                  f_hidden_matrix=f_hidden_matrix,
+                                  i_input_matrix=i_input_matrix,
+                                  i_hidden_matrix=i_hidden_matrix,
+                                  g_input_matrix=g_input_matrix,
+                                  g_hidden_matrix=g_hidden_matrix,
+                                  o_input_matrix=o_input_matrix,
+                                  o_hidden_matrix=o_hidden_matrix)
+
+        comp = AutodiffComposition(name="OUTER_COMP")
+        comp.add_node(test_mech)
+        test_input = [[1.0], [2.0]]
+
+        results = comp.run(inputs={
+            test_mech: test_input
+        }, bin_execute=mode)
+
+        import torch
+        weight_ih = torch.nn.Parameter(torch.tensor(np.vstack((i_input_matrix, f_input_matrix, g_input_matrix, o_input_matrix)).copy(), dtype=torch.double, requires_grad=True))
+        weight_hh = torch.nn.Parameter(torch.tensor(np.vstack((i_hidden_matrix, f_hidden_matrix, g_hidden_matrix, o_hidden_matrix)).copy(), dtype=torch.double, requires_grad=True))
+
+        lstm = torch.nn.LSTMCell(1, 2, bias=False)
+        lstm.weight_ih = weight_ih
+        lstm.weight_hh = weight_hh
+
+        hidden = torch.zeros(1, 2, dtype=torch.double)
+        cell = torch.zeros(1, 2, dtype=torch.double)
+        for i in range(len(test_input)):
+            inp = torch.zeros(1,1, dtype=torch.double)
+            inp[0][0] = test_input[i][0]
+            hidden, cell = lstm(inp, (hidden, cell))
+
+        lstm_results = [hidden.detach().numpy()[0], cell.detach().numpy()[0]]
+        assert np.allclose(lstm_results, results)
+
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                     ])
+    def test_lstm_learning_equivalence(self, mode):
+        from psyneulink.library.components.mechanisms.processing.transfer.lstmmechanism import LSTMMechanism
+        size = (1,2)
+
+        f_input_matrix   = np.random.rand(2,1)
+        f_hidden_matrix  = np.random.rand(2,2)
+        i_input_matrix   = np.random.rand(2,1)
+        i_hidden_matrix  = np.random.rand(2,2)
+        g_input_matrix   = np.random.rand(2,1)
+        g_hidden_matrix  = np.random.rand(2,2)
+        o_input_matrix   = np.random.rand(2,1)
+        o_hidden_matrix  = np.random.rand(2,2)
+
+        test_mech = LSTMMechanism(size=size,
+                                  f_input_matrix=f_input_matrix,
+                                  f_hidden_matrix=f_hidden_matrix,
+                                  i_input_matrix=i_input_matrix,
+                                  i_hidden_matrix=i_hidden_matrix,
+                                  g_input_matrix=g_input_matrix,
+                                  g_hidden_matrix=g_hidden_matrix,
+                                  o_input_matrix=o_input_matrix,
+                                  o_hidden_matrix=o_hidden_matrix)
+
+        comp = AutodiffComposition(name="OUTER_COMP", learning_rate=1)
+        comp.add_node(test_mech)
+        test_input = [[1.0]]
+
+        test_inputs = {
+            test_mech: test_input
+        }
+        test_targets = {
+            test_mech: [[1, 0]]
+        }
+        results = comp.learn(inputs=test_inputs, targets=test_targets, bin_execute=mode)
+
+        import torch
+        weight_ih = torch.nn.Parameter(torch.tensor(np.vstack((i_input_matrix, f_input_matrix, g_input_matrix, o_input_matrix)).copy(), dtype=torch.double, requires_grad=True))
+        weight_hh = torch.nn.Parameter(torch.tensor(np.vstack((i_hidden_matrix, f_hidden_matrix, g_hidden_matrix, o_hidden_matrix)).copy(), dtype=torch.double, requires_grad=True))
+        lstm = torch.nn.LSTMCell(1, 2, bias=False)
+        loss = torch.nn.MSELoss(reduction='mean')
+        lstm.weight_ih = weight_ih
+        lstm.weight_hh = weight_hh
+        optim = torch.optim.SGD(lstm.parameters(), lr=1, weight_decay=0)
+
+        hidden = torch.zeros(1, 2, dtype=torch.double)
+        cell = torch.zeros(1, 2, dtype=torch.double)
+        for i in range(len(test_input)):
+            optim.zero_grad()
+            inp = torch.zeros(1,1, dtype=torch.double)
+            inp[0][0] = test_input[i][0]
+            hidden, cell = lstm(inp, (hidden, cell))
+            epoch_loss = loss(cell, torch.tensor(test_targets[test_mech][i], dtype=torch.double))
+            epoch_loss.backward(retain_graph=True)
+            optim.step()
+            hidden = hidden.detach()
+            cell = cell.detach()
+        lstm_results = cell.detach().numpy()
+
+        assert np.allclose(lstm_results, results[-1][-1])

@@ -6687,7 +6687,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         pathways.append(p)
                     continue
                 for projection, efferent_node in [(p, p.receiver.owner) for p in curr_node.efferents]:
-                    if (not hasattr(projection,'learnable')) or (projection.learnable is False):
+                    if getattr(projection, 'learnable', False) is False or efferent_node in prev:
                         continue
                     prev[efferent_node] = projection
                     prev[projection] = curr_node
@@ -7451,6 +7451,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             return net_outcome
 
+    def _infer_target_node(self, node):
+        if (NodeRole.TARGET not in self.get_roles_by_node(node) and NodeRole.LEARNING not in self.get_roles_by_node(node)):
+            node_efferent_mechanisms = [x.receiver.owner for x in node.efferents if x in self.projections]
+            comparators = [x for x in node_efferent_mechanisms
+                            if (isinstance(x, ComparatorMechanism)
+                                and NodeRole.LEARNING in self.get_roles_by_node(x))]
+            comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
+            target_nodes = [t for t in comparator_afferent_mechanisms
+                            if (NodeRole.TARGET in self.get_roles_by_node(t)
+                                and NodeRole.LEARNING in self.get_roles_by_node(t))]
+
+            if len(target_nodes) != 1:
+                # Invalid specification: no valid target nodes or ambiguity in which target node to choose
+                raise Exception(f"Unable to infer learning target node from output node {node} of {self.name}")
+
+            if len(target_nodes) > 0:
+                return target_nodes[0]
 
     def _infer_target_nodes(self, targets: dict):
         """
@@ -7464,22 +7481,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         ret = {}
         for node, values in targets.items():
-            if (NodeRole.TARGET not in self.get_roles_by_node(node)
-                    and NodeRole.LEARNING not in self.get_roles_by_node(node)):
-                node_efferent_mechanisms = [x.receiver.owner for x in node.efferents if x in self.projections]
-                comparators = [x for x in node_efferent_mechanisms
-                               if (isinstance(x, ComparatorMechanism)
-                                   and NodeRole.LEARNING in self.get_roles_by_node(x))]
-                comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
-                target_nodes = [t for t in comparator_afferent_mechanisms
-                                if (NodeRole.TARGET in self.get_roles_by_node(t)
-                                    and NodeRole.LEARNING in self.get_roles_by_node(t))]
+            target_node = self._infer_target_node(node)
 
-                if len(target_nodes) != 1:
-                    # Invalid specification: no valid target nodes or ambiguity in which target node to choose
-                    raise Exception(f"Unable to infer learning target node from output node {node} of {self.name}")
-
-                ret[target_nodes[0]] = values
+            if target_node is not None:
+                ret[target_node] = values
             else:
                 ret[node] = values
         return ret

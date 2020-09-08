@@ -130,6 +130,7 @@ def init_builtins():
     with LLVMBuilderContext.get_global() as ctx:
         builtins.setup_pnl_intrinsics(ctx)
         builtins.setup_vxm(ctx)
+        builtins.setup_mxm(ctx)
         builtins.setup_vxm_transposed(ctx)
         builtins.setup_mersenne_twister(ctx)
         builtins.setup_vec_add(ctx)
@@ -139,6 +140,7 @@ def init_builtins():
         builtins.setup_vec_copy(ctx)
         builtins.setup_vec_hadamard(ctx)
         builtins.setup_mat_hadamard(ctx)
+        builtins.setup_vec_outer_product(ctx)
         builtins.setup_vec_scalar_mult(ctx)
         builtins.setup_mat_scalar_mult(ctx)
         builtins.setup_mat_scalar_add(ctx)
