@@ -16,7 +16,9 @@ service ServeGraph {
     rpc LoadCustomPnl (PNLPath) returns (NullArgument) {}
     rpc LoadScript (ScriptPath) returns (ScriptCompositions) {}
     rpc LoadGraphics (ScriptPath) returns (StyleJSON) {}
+    rpc GetLoggableParameters (ComponentName) returns (ParameterList) {}
     rpc GetCompositions (NullArgument) returns (ScriptCompositions) {}
+    rpc GetComponents (GraphName) returns (ScriptComponents) {}
     rpc GetJSON (GraphName) returns (GraphJSON) {}
     rpc HealthCheck (NullArgument) returns (HealthStatus) {}
     rpc UpdateStylesheet (stream StyleJSON) returns (NullArgument) {}
@@ -43,7 +45,19 @@ message ScriptCompositions {
     repeated string compositions = 1;
 }
 
+message ScriptComponents {
+    repeated string components = 1;
+}
+
 message GraphName {
+    string name = 1;
+}
+
+message ParameterList {
+    repeated string parameters = 1;
+}
+
+message ComponentName {
     string name = 1;
 }
 
