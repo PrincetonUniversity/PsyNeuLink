@@ -220,9 +220,9 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
 
 .. _Component_Function_Params:
 
-* **initial_function_parameters** - the `initial_function_parameters <Component.function>` attribute contains a
-  dictionary of the parameters for the Component's `function <Component.function>` and their values, to be used to
-  instantiate the function.  Each entry is the name of a parameter, and its value is the value of that parameter.
+* **initial_shared_parameters** - the `initial_shared_parameters <Component.function>` attribute contains a
+  dictionary of any parameters for the Component's functions or attributes, to be used to
+  instantiate the corresponding object.  Each entry is the name of a parameter, and its value is the value of that parameter.
   The parameters for a function can be specified when the Component is created in one of the following ways:
 
       * in an argument of the **Component's constructor** -- if all of the allowable functions for a Component's
@@ -478,6 +478,7 @@ COMMENT
 
 """
 import base64
+import collections
 import copy
 import dill
 import functools
@@ -509,7 +510,7 @@ from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.parameters import \
-    Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
+    Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceEntry, PreferenceLevel, PreferenceSet, _assign_prefs
@@ -1093,10 +1094,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             **parameter_values
         )
 
-        self.initial_function_parameters = {
-            k: v for k, v in parameter_values.items() if k in self.parameters.names() and getattr(self.parameters, k).function_parameter
-        }
-
         var = call_with_pruned_args(
             self._handle_default_variable,
             default_variable=default_variable,
@@ -1110,9 +1107,37 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             self.defaults.variable = default_variable
             self.parameters.variable._user_specified = True
 
+        # ASSIGN PREFS
+        _assign_prefs(self, prefs, BasePreferenceSet)
+
+        # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
+
+        # TODO: the below overrides setting default values to None context,
+        # at least in stateless parameters. Possibly more. Below should be
+        # removed eventually
+
+        # Validate the set passed in
+        self._instantiate_defaults(variable=default_variable,
+               request_set=parameter_values,  # requested set
+               assign_missing=True,                   # assign missing params from classPreferences to instanceDefaults
+               target_set=self.defaults.values(), # destination set to which params are being assigned
+               default_set=self.class_defaults.values(),   # source set from which missing params are assigned
+               context=context,
+               )
+
+        self.initial_shared_parameters = collections.defaultdict(dict)
+
+        for param_name, param in self.parameters.values(show_all=True).items():
+            if (
+                isinstance(param, SharedParameter)
+                and not isinstance(param.source, ParameterAlias)
+            ):
+                self.initial_shared_parameters[param.attribute_name][param.shared_parameter_name] = param.default_value
+
         # we must know the final variable shape before setting up parameter
         # Functions or they will mismatch
         self._instantiate_parameter_classes(context)
+        self._override_unspecified_shared_parameters(context)
         self._validate_subfunctions()
 
         if reset_stateful_function_when is not None:
@@ -1134,9 +1159,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 raise ComponentError("{0} is a category class and so must implement a registry".
                                     format(self.__class__.__bases__[0].__name__))
 
-        # ASSIGN PREFS
-        _assign_prefs(self, prefs, BasePreferenceSet)
-
         # ASSIGN LOG
         from psyneulink.core.globals.log import Log
         self.log = Log(owner=self)
@@ -1156,21 +1178,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 except AttributeError:
                     # assume function is a method on self
                     pass
-
-        # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
-
-        # TODO: the below overrides setting default values to None context,
-        # at least in stateless parameters. Possibly more. Below should be
-        # removed eventually
-
-        # Validate the set passed in
-        self._instantiate_defaults(variable=default_variable,
-               request_set=parameter_values,  # requested set
-               assign_missing=True,                   # assign missing params from classPreferences to instanceDefaults
-               target_set=self.defaults.values(), # destination set to which params are being assigned
-               default_set=self.class_defaults.values(),   # source set from which missing params are assigned
-               context=context,
-               )
 
         self._runtime_params_reset = {}
 
@@ -1990,16 +1997,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     if isinstance(val, Function):
                         if val.owner is not None:
                             val = copy.deepcopy(val)
-
-                        val.owner = self
                 else:
                     val = copy_parameter_value(
                         p.default_value,
                         shared_types=shared_types
                     )
 
-                    if isinstance(val, Function):
-                        val.owner = self
+                if isinstance(val, Function):
+                    val.owner = self
 
                 p.set(val, context=context, skip_history=True, override=True)
 
@@ -2020,12 +2025,20 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 if (
                     p.name != FUNCTION
                     and not p.reference
+                    and not isinstance(p, SharedParameter)
                 ):
                     if (
                         inspect.isclass(val)
                         and issubclass(val, Function)
                     ):
-                        val = val()
+                        # instantiate class val with all relevant shared parameters
+                        # some shared parameters may not be arguments (e.g.
+                        # transfer_fct additive_param when function is Identity)
+                        val = call_with_pruned_args(
+                            val,
+                            **self.initial_shared_parameters[p.name]
+                        )
+
                         val.owner = self
                         p._set(val, context)
 
@@ -2040,6 +2053,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     p.name != FUNCTION
                     and not p.reference
                     and isinstance(val, Function)
+                    and not isinstance(p, SharedParameter)
                 ):
                     try:
                         parse_variable_method = getattr(
@@ -2079,6 +2093,35 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                 function_default_variable,
                                 context
                             )
+
+    def _override_unspecified_shared_parameters(self, context):
+        for param_name, param in self.parameters.values(show_all=True).items():
+            if (
+                isinstance(param, SharedParameter)
+                and not isinstance(param.source, ParameterAlias)
+            ):
+                try:
+                    obj = getattr(self.parameters, param.attribute_name)
+                    shared_objs = [obj.default_value, obj._get(context)]
+                except AttributeError:
+                    obj = getattr(self, param.attribute_name)
+                    shared_objs = [obj]
+
+                for c in shared_objs:
+                    if isinstance(c, Component):
+                        try:
+                            shared_obj_param = getattr(c.parameters, param.shared_parameter_name)
+                        except AttributeError:
+                            continue
+
+                        if (
+                            not shared_obj_param._user_specified
+                            and param.primary
+                            and param.default_value is not None
+                        ):
+                            shared_obj_param.default_value = copy.deepcopy(param.default_value)
+                            shared_obj_param._set(copy.deepcopy(param.default_value), context)
+                            shared_obj_param._user_specified = param._user_specified
 
     @handle_external_context()
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS, context=None):
@@ -2127,7 +2170,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 visited.add(comp)
                 comp._initialize_from_context(context, base_context, override, visited=visited)
 
-        non_alias_params = [p for p in self.stateful_parameters if not isinstance(p, ParameterAlias)]
+        non_alias_params = [p for p in self.stateful_parameters if not isinstance(p, (ParameterAlias, SharedParameter))]
         for param in non_alias_params:
             if param.setter is None:
                 param._initialize_from_context(context, base_context, override)
@@ -2506,7 +2549,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 p.name != FUNCTION  # has specialized validation
                 and isinstance(p.default_value, Function)
                 and not p.reference
-                and not p.function_parameter
+                and not isinstance(p, SharedParameter)
             ):
                 # TODO: assert it's not stateful?
                 function_variable = p.default_value.defaults.variable
@@ -3284,7 +3327,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         for p in self.parameters:
             if (
                 p.name not in self._model_spec_parameter_blacklist
-                and not isinstance(p, ParameterAlias)
+                and not isinstance(p, (ParameterAlias, SharedParameter))
             ):
                 if self.initialization_status is ContextFlags.DEFERRED_INIT:
                     try:

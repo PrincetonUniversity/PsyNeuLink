@@ -200,7 +200,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import _
 from psyneulink.core.globals.keywords import \
     CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INITIALIZER, LCA_MECHANISM, LEAK, LESS_THAN_OR_EQUAL, MATRIX, NAME, \
     NOISE, RATE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, VALUE, INVERSE_HOLLOW_MATRIX, AUTO
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -397,11 +397,16 @@ class LCAMechanism(RecurrentTransferMechanism):
             getter=_recurrent_transfer_mechanism_matrix_getter,
             setter=_recurrent_transfer_mechanism_matrix_setter
         )
-        leak = Parameter(0.5, modulable=True)
+        integration_rate = FunctionParameter(
+            0.5,
+            function_name='integrator_function',
+            function_parameter_name='rate',
+            aliases='leak'
+        )
         auto = Parameter(0.0, modulable=True, aliases='self_excitation')
         hetero = Parameter(-1.0, modulable=True)
         competition = Parameter(1.0, modulable=True)
-        time_step_size = Parameter(0.1, modulable=True)
+        time_step_size = FunctionParameter(0.1, function_name='integrator_function')
 
         initial_value = None
         integrator_mode = Parameter(True, setter=_integrator_mode_setter)

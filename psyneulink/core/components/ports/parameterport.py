@@ -810,7 +810,7 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
         for p in function.parameters:
             if not skip_parameter_port(p):
                 try:
-                    value = owner.initial_function_parameters[p.name]
+                    value = owner.initial_shared_parameters['function'][p.name]
                 except (KeyError, TypeError):
                     if p.spec is not None:
                         value = p.spec

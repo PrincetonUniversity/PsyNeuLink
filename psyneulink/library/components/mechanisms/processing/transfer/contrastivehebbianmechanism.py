@@ -342,7 +342,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_MECHANISM, COUNT, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, MAX_ABS_DIFF, NAME, \
     SIZE, SOFT_CLAMP, TARGET, VARIABLE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, SharedParameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -930,11 +930,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
         minus_phase_termination_condition = Parameter(CONVERGENCE, stateful=False, loggable=False)
         plus_phase_termination_condition = Parameter(CONVERGENCE, stateful=False, loggable=False)
-        learning_function = Parameter(
+        learning_function = SharedParameter(
             ContrastiveHebbian,
-            stateful=False,
-            loggable=False,
-            reference=True
+            attribute_name='learning_mechanism',
+            shared_parameter_name='function',
         )
         max_passes = Parameter(1000, stateful=False)
 

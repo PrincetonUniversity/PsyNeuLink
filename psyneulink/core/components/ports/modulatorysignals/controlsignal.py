@@ -417,7 +417,7 @@ from psyneulink.core.globals.keywords import \
     OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
     PARAMETER_PORT, PARAMETER_PORTS, \
     PROJECTION_TYPE, RECEIVER, SUM, FUNCTION
-from psyneulink.core.globals.parameters import Parameter, get_validator_by_function
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter, get_validator_by_function
 from psyneulink.core.globals.sampleiterator import is_sample_spec
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -429,79 +429,10 @@ __all__ = ['ControlSignal', 'ControlSignalError', 'COST_OPTIONS']
 
 from psyneulink.core.components.functions.transferfunctions import \
     ENABLED_COST_FUNCTIONS, \
-    INTENSITY_COST, INTENSITY_COST_FUNCTION, ADJUSTMENT_COST, ADJUSTMENT_COST_FUNCTION, \
-    DURATION_COST, DURATION_COST_FUNCTION, COMBINED_COSTS, COMBINE_COSTS_FUNCTION, costFunctionNames
+    INTENSITY_COST_FUNCTION, ADJUSTMENT_COST_FUNCTION, \
+    DURATION_COST_FUNCTION, COMBINED_COSTS, COMBINE_COSTS_FUNCTION
 
 COST_OPTIONS = 'cost_options'
-
-def _cost_options_getter(owning_component=None, context=None):
-    try:
-        return getattr(owning_component.function.parameters, ENABLED_COST_FUNCTIONS)._get(context)
-    except (TypeError, IndexError):
-        return None
-
-
-def _cost_options_setter(value, owning_component=None, context=None):
-    if hasattr(owning_component, "function") and owning_component.function:
-        if hasattr(owning_component.function.parameters, ENABLED_COST_FUNCTIONS):
-            getattr(owning_component.function.parameters, ENABLED_COST_FUNCTIONS)._set(value, context)
-    return value
-
-
-def _intensity_cost_getter(owning_component=None, context=None):
-    try:
-        return getattr(owning_component.function.parameters, INTENSITY_COST)._get(context)
-    except (TypeError, IndexError):
-        return None
-
-
-def _adjustment_cost_getter(owning_component=None, context=None):
-    try:
-        return getattr(owning_component.function.parameters, ADJUSTMENT_COST)._get(context)
-    except (TypeError, IndexError):
-        return None
-
-
-def _duration_cost_getter(owning_component=None, context=None):
-    try:
-        return getattr(owning_component.function.parameters, DURATION_COST)._get(context)
-    except (TypeError, IndexError):
-        return None
-
-
-def _cost_getter(owning_component=None, context=None):
-    try:
-        return getattr(owning_component.function.parameters, COMBINED_COSTS)._get(context)
-    except (TypeError, IndexError):
-        return None
-
-
-def _intensity_cost_function_getter(owning_component=None, context=None):
-    try:
-        return owning_component.function.parameters.intensity_cost_fct._get(context)
-    except (TypeError, IndexError):
-        return None
-
-
-def _adjustment_cost_function_getter(owning_component=None, context=None):
-    try:
-        return owning_component.function.parameters.adjustment_cost_fct._get(context)
-    except (TypeError, IndexError):
-        return None
-
-
-def _duration_cost_function_getter(owning_component=None, context=None):
-    try:
-        return owning_component.function.parameters.duration_cost_fct._get(context)
-    except (TypeError, IndexError):
-        return None
-
-
-def _combine_costs_function_getter(owning_component=None, context=None):
-    try:
-        return owning_component.function.parameters.combine_costs_fct._get(context)
-    except (TypeError, IndexError):
-        return None
 
 
 class ControlSignalError(Exception):
@@ -767,11 +698,10 @@ class ControlSignal(ModulatorySignal):
         )
 
         function = Parameter(TransferWithCosts, stateful=False, loggable=False)
-        transfer_function = Parameter(
+        transfer_function = FunctionParameter(
             Linear,
-            stateful=False,
-            loggable=False,
-            function_parameter=True
+            function_parameter_name='transfer_fct',
+            primary=False
         )
 
         value = Parameter(
@@ -783,60 +713,32 @@ class ControlSignal(ModulatorySignal):
         )
         allocation_samples = Parameter(None, modulable=True)
 
-        cost_options = Parameter(
+        cost_options = FunctionParameter(
             CostFunctions.DEFAULTS,
-            getter=_cost_options_getter,
-            setter=_cost_options_setter,
+            function_parameter_name=ENABLED_COST_FUNCTIONS,
             valid_types=(CostFunctions, list)
         )
-        intensity_cost = Parameter(
-            None,
-            read_only=True,
-            getter=_intensity_cost_getter,
-            function_parameter=True
-        )
-        adjustment_cost = Parameter(
-            0,
-            read_only=True,
-            getter=_adjustment_cost_getter,
-            function_parameter=True
-        )
-        duration_cost = Parameter(
-            0,
-            read_only=True,
-            getter=_duration_cost_getter,
-            function_parameter=True
-        )
+        intensity_cost = FunctionParameter(None)
+        adjustment_cost = FunctionParameter(0)
+        duration_cost = FunctionParameter(0)
 
-        cost = Parameter(None, read_only=True, getter=_cost_getter)
+        cost = FunctionParameter(None, function_parameter_name=COMBINED_COSTS)
 
-        intensity_cost_function = Parameter(
+        intensity_cost_function = FunctionParameter(
             Exponential,
-            stateful=False,
-            loggable=False,
-            function_parameter=True,
-            getter=_intensity_cost_function_getter
+            function_parameter_name='intensity_cost_fct'
         )
-        adjustment_cost_function = Parameter(
+        adjustment_cost_function = FunctionParameter(
             Linear,
-            stateful=False,
-            loggable=False,
-            function_parameter=True,
-            getter=_adjustment_cost_function_getter
+            function_parameter_name='adjustment_cost_fct'
         )
-        duration_cost_function = Parameter(
+        duration_cost_function = FunctionParameter(
             SimpleIntegrator,
-            stateful=False,
-            loggable=False,
-            function_parameter=True,
-            getter=_duration_cost_function_getter
+            function_parameter_name='duration_cost_fct'
         )
-        combine_costs_function = Parameter(
+        combine_costs_function = FunctionParameter(
             Reduce,
-            stateful=False,
-            loggable=False,
-            function_parameter=True,
-            getter=_combine_costs_function_getter
+            function_parameter_name='combine_costs_fct'
         )
         _validate_intensity_cost_function = get_validator_by_function(is_function_type)
         _validate_adjustment_cost_function = get_validator_by_function(is_function_type)
