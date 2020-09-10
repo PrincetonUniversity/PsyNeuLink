@@ -3842,11 +3842,6 @@ class TransferWithCosts(TransferFunction):
 
             # Compute intensity_cost
             if enabled_cost_functions & CostFunctions.INTENSITY:
-                # Assign modulatory param values to intensity_cost_function
-                self.intensity_cost_fct_mult_param = \
-                    self._get_current_parameter_value(INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM, context)
-                self.intensity_cost_fct_add_param = \
-                    self._get_current_parameter_value(INTENSITY_COST_FCT_ADDITIVE_PARAM, context)
                 # Execute intensity_cost function
                 intensity_cost = self.intensity_cost_fct(intensity, context=context)
                 self.parameters.intensity_cost._set(intensity_cost, context)
@@ -3859,11 +3854,6 @@ class TransferWithCosts(TransferFunction):
                     intensity_change = np.abs(intensity - self.parameters.intensity._get(context))
                 except TypeError:
                     intensity_change = np.zeros_like(self.parameters_intensity._get(context))
-                # Assign modulatory param values to adjustment_cost_function
-                self.adjustment_cost_fct_mult_param = \
-                    self._get_current_parameter_value(ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM, context)
-                self.adjustment_cost_fct_add_param = \
-                    self._get_current_parameter_value(ADJUSTMENT_COST_FCT_ADDITIVE_PARAM, context)
                 # Execute adjustment_cost function
                 adjustment_cost = self.adjustment_cost_fct(intensity_change, context=context)
                 self.parameters.adjustment_cost._set(adjustment_cost, context)
@@ -3871,23 +3861,12 @@ class TransferWithCosts(TransferFunction):
 
             # Compute duration_cost
             if enabled_cost_functions & CostFunctions.DURATION:
-                # Assign modulatory param values to duration_cost_function
-                self.duration_cost_fct_mult_param = \
-                    self._get_current_parameter_value(DURATION_COST_FCT_MULTIPLICATIVE_PARAM, context)
-                self.duration_cost_fct_add_param = \
-                    self._get_current_parameter_value(DURATION_COST_FCT_ADDITIVE_PARAM, context)
                 # Execute duration_cost function
                 duration_cost = self.duration_cost_fct(intensity, context=context)
                 self.parameters.duration_cost._set(duration_cost, context)
                 enabled_costs.append(duration_cost)
 
             # Alwasy execute combined_costs_fct if *any* costs are enabled
-
-            # Assign modulatory param values to combine_costs_function
-            self.combine_costs_fct_mult_param = \
-                self._get_current_parameter_value(COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM, context)
-            self.combine_costs_fct_add_param = \
-                self._get_current_parameter_value(COMBINE_COSTS_FCT_ADDITIVE_PARAM, context)
             # Execute combine_costs function
             combined_costs = self.combine_costs_fct(enabled_costs,
                                                     context=context)
