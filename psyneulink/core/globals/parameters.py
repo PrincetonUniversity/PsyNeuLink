@@ -272,6 +272,7 @@ Class Reference
 
 import collections
 import copy
+import itertools
 import logging
 import types
 import typing
@@ -414,6 +415,9 @@ class ParametersTemplate:
             self._parent._children.remove(weakref.ref(self))
         except (AttributeError, KeyError):
             pass
+
+    def __contains__(self, item):
+        return item in itertools.chain.from_iterable(self.values(show_all=True).items())
 
     def __iter__(self):
         return iter([getattr(self, k) for k in self.values(show_all=True).keys()])
