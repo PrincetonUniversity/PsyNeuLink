@@ -112,6 +112,7 @@ jobs:
       run: |
         pip install setuptools wheel
         python setup.py sdist bdist_wheel
+        wget https://storage.googleapis.com/rbellevi-public-dev-artifacts/dynamic-stubs-windows-oserror/grpcio_tools-1.33.0.dev0-cp36-cp36m-win_amd64.whl && pip install grpcio_tools*.whl
       if: contains(github.ref, 'tags')
     - name: Upload dist packages
       uses: actions/upload-artifact@v1
