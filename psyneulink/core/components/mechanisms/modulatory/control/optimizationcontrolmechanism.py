@@ -441,6 +441,10 @@ class OptimizationControlMechanismError(Exception):
         return repr(self.error_value)
 
 
+def _control_allocation_search_space_getter(owning_component=None, context=None):
+    return [c.parameters.allocation_samples._get(context) for c in owning_component.control_signals]
+
+
 class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(         \
         objective_mechanism=None,            \
@@ -703,7 +707,7 @@ class OptimizationControlMechanism(ControlMechanism):
         )
         num_estimates = None
         # search_space = None
-        control_allocation_search_space = None
+        control_allocation_search_space = Parameter(None, read_only=True, getter=_control_allocation_search_space_getter)
 
         saved_samples = None
         saved_values = None
@@ -1027,7 +1031,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _get_evaluate_alloc_struct_type(self, ctx):
         return pnlvm.ir.ArrayType(ctx.float_ty,
-                                  len(self.control_allocation_search_space))
+                                  len(self.parameters.control_allocation_search_space.get()))
 
     def _gen_llvm_net_outcome_function(self, *, ctx, tags=frozenset()):
         assert "net_outcome" in tags
