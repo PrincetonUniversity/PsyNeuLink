@@ -74,7 +74,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip wheel
         pip install -e .[dev]
-        wget https://storage.googleapis.com/rbellevi-public-dev-artifacts/dynamic-stubs-windows-oserror/grpcio-tools/grpcio_tools-1.33.0.dev0-cp36-cp36m-win_amd64.whl && pip install grpcio_tools*.whl
+        wget https://storage.googleapis.com/rbellevi-public-dev-artifacts/dynamic-stubs-windows-oserror/grpcio-tools/grpcio_tools-1.33.0.dev0-cp36-cp36m-win_amd64.whl && wget https://storage.googleapis.com/rbellevi-public-dev-artifacts/dynamic-stubs-windows-oserror/grpcio/grpcio-1.33.0.dev0-cp36-cp36m-win_amd64.whl && pip install grpcio*.whl
         pip install --user git+https://github.com/benureau/leabra.git@master
 
     - name: Cleanup old wheels
