@@ -1786,7 +1786,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             for param_name in runtime_params:
                 if not isinstance(param_name, str):
                     generate_error(param_name)
-                elif hasattr(self, param_name):
+                elif param_name in self.parameters:
                     if param_name in {FUNCTION, INPUT_PORTS, OUTPUT_PORTS}:
                         generate_error(param_name)
                     if context.execution_id not in self._runtime_params_reset:
@@ -1797,7 +1797,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 # Any remaining params should either belong to the Component's function
                 #    or, if the Component is a Function, to it or its owner
                 elif ( # If Component is not a function, and its function doesn't have the parameter or
-                        (not is_function_type(self) and not hasattr(self.function, param_name))
+                        (not is_function_type(self) and param_name not in self.function.parameters)
                        # the Component is a standalone function:
                        or (is_function_type(self) and not self.owner)):
                     generate_error(param_name)
@@ -2856,8 +2856,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # KAM added 6/14/18 for functions that do not pass their has_initializers status up to their owner via property
         # FIX: need comprehensive solution for has_initializers; need to determine whether ports affect mechanism's
         # has_initializers status
-        if self.function.has_initializers:
-            self.has_initializers = True
+        if self.function.parameters.has_initializers._get(context):
+            self.parameters.has_initializers._set(True, context)
 
         self._parse_param_port_sources()
 

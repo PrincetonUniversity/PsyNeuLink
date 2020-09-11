@@ -607,7 +607,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         runtime_params = params
         if runtime_params:
             for param_name in runtime_params:
-                if hasattr(self, param_name):
+                if param_name in self.parameters:
                     if param_name in {FUNCTION, INPUT_PORTS, OUTPUT_PORTS}:
                         continue
                     if context.execution_id not in self._runtime_params_reset:

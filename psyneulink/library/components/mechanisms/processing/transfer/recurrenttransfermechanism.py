@@ -180,6 +180,7 @@ Class Reference
 
 """
 
+import copy
 import itertools
 import numbers
 import numpy as np
@@ -612,7 +613,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         matrix = Parameter(HOLLOW_MATRIX, modulable=True, getter=_recurrent_transfer_mechanism_matrix_getter, setter=_recurrent_transfer_mechanism_matrix_setter)
         auto = Parameter(1, modulable=True)
         hetero = Parameter(0, modulable=True)
-        combination_function = LinearCombination
+        combination_function = Parameter(LinearCombination, stateful=False, loggable=False)
         smoothing_factor = Parameter(0.5, modulable=True)
         enable_learning = False
         # learning_function is a reference because it is used for
@@ -851,7 +852,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             raise RecurrentTransferError("Matrix parameter ({}) for {} failed to produce a suitable matrix: "
                                          "if the matrix parameter does not produce a suitable matrix, the "
                                          "'auto' and 'hetero' parameters must be specified; currently, either"
-                                         "auto or hetero parameter is missing.".format(self.matrix, self))
+                                         "auto or hetero parameter is missing.".format(self.parameters.matrix._get(context), self))
 
         if AUTO not in param_keys and HETERO in param_keys:
             d = np.diagonal(matrix).copy()
@@ -862,7 +863,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                        reference_value_name=AUTO,
                                        params=None,
                                        context=context)
-            self.auto = d
+            self.parameters.auto._set(d, context)
             if port is not None:
                 self._parameter_ports[AUTO] = port
                 port.source = self.parameters.auto
@@ -873,7 +874,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             m = matrix.copy()
             np.fill_diagonal(m, 0.0)
-            self.hetero = m
+            self.parameters.hetero._set(m, context)
             port = _instantiate_port(owner=self,
                                        port_type=ParameterPort,
                                        name=HETERO,
@@ -938,9 +939,9 @@ class RecurrentTransferMechanism(TransferMechanism):
             else:
                 self.combination_function = comb_fct
 
-        if self.auto is None and self.hetero is None:
-            self.matrix = matrix
-            if self.matrix is None:
+        if self.parameters.auto._get(context) is None and self.parameters.hetero._get(context) is None:
+            self.parameters.matrix._set(matrix, context)
+            if self.parameters.matrix._get(context) is None:
                 raise RecurrentTransferError("PROGRAM ERROR: Failed to instantiate \'matrix\' param for {}".
                                              format(self.__class__.__name__))
 
@@ -951,14 +952,15 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         super()._instantiate_attributes_after_function(context=context)
 
+        matrix = self.parameters.matrix._get(context)
         # (7/19/17 CW) this line of code is now questionable, given the changes to matrix and the recurrent projection
-        if isinstance(self.matrix, AutoAssociativeProjection):
-            self.recurrent_projection = self.matrix
+        if isinstance(matrix, AutoAssociativeProjection):
+            self.recurrent_projection = matrix
 
         # IMPLEMENTATION NOTE:  THESE SHOULD BE MOVED TO COMPOSITION WHEN THAT IS IMPLEMENTED
         else:
             self.recurrent_projection = self._instantiate_recurrent_projection(self,
-                                                                               matrix=self.matrix,
+                                                                               matrix=matrix,
                                                                                context=context)
 
             # creating a recurrent_projection changes the default variable shape
@@ -1113,7 +1115,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                         matrix,
                                         context=None):
 
-        learning_mechanism = AutoAssociativeLearningMechanism(default_variable=[activity_vector.value],
+        learning_mechanism = AutoAssociativeLearningMechanism(default_variable=copy.deepcopy([activity_vector.defaults.value]),
                                                               # learning_signals=[self.recurrent_projection],
                                                               function=learning_function,
                                                               learning_rate=learning_rate,

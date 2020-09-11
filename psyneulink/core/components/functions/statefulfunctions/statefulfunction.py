@@ -442,13 +442,20 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         # use np.broadcast_to to guarantee that all initializer type attributes take on the same shape as variable
         if not np.isscalar(self.defaults.variable):
             for attr in self.initializers:
-                setattr(self, attr, np.broadcast_to(getattr(self, attr), self.defaults.variable.shape).copy())
+                param = getattr(self.parameters, attr)
+                param._set(
+                    np.broadcast_to(
+                        param._get(context),
+                        self.defaults.variable.shape
+                    ).copy(),
+                    context
+                )
 
         # create all stateful attributes and initialize their values to the current values of their
         # corresponding initializer attributes
         for i, attr_name in enumerate(self.stateful_attributes):
-            initializer_value = getattr(self, self.initializers[i]).copy()
-            setattr(self, attr_name, initializer_value)
+            initializer_value = getattr(self.parameters, self.initializers[i])._get(context).copy()
+            getattr(self.parameters, attr_name)._set(initializer_value, context)
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
@@ -551,7 +558,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 setattr(self, attr, reinitialization_values[i])
                 getattr(self.parameters, attr).set(reinitialization_values[i],
                                                    context, override=True)
-                value.append(getattr(self, self.stateful_attributes[i]))
+                value.append(getattr(self.parameters, self.stateful_attributes[i])._get(context))
 
         self.parameters.value.set(value, context, override=True)
         return value

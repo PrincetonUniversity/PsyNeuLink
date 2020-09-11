@@ -1373,7 +1373,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
     variable_item_is_OK = False
     for i, input_port in enumerate(owner.input_ports):
         try:
-            variable_item_is_OK = iscompatible(owner.defaults.variable[i], input_port.value)
+            variable_item_is_OK = iscompatible(owner.defaults.variable[i], input_port.defaults.value)
             if not variable_item_is_OK:
                 break
         except IndexError:
@@ -1382,7 +1382,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
 
     if not variable_item_is_OK:
         old_variable = owner.defaults.variable
-        owner.defaults.variable = owner._handle_default_variable(default_variable=[port.value
+        owner.defaults.variable = owner._handle_default_variable(default_variable=[port.defaults.value
                                                                                    for port in owner.input_ports])
 
         if owner.verbosePref:

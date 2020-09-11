@@ -1359,7 +1359,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     def _instantiate_attributes_before_function(self, function=None, context=None):
         super()._instantiate_attributes_before_function(function=function, context=context)
 
-        if self.initial_value is None:
+        if self.parameters.initial_value._get(context) is None:
             self.defaults.initial_value = copy.deepcopy(self.defaults.variable)
             self.parameters.initial_value._set(copy.deepcopy(self.defaults.variable), context)
 
@@ -1393,88 +1393,86 @@ class TransferMechanism(ProcessingMechanism_Base):
             if self.integrator_function.owner is None:
                 self.integrator_function.owner = self
 
-            if hasattr(self.integrator_function, NOISE):
-                fct_noise = np.array(self.integrator_function.noise)
-                mech_specified = not np.array_equal(mech_noise, np.array(self.class_defaults.noise))
-                fct_specified = not np.array_equal(np.array(self.integrator_function.noise),
-                                                   np.array(self.integrator_function.class_defaults.noise))
+            fct_noise = self.integrator_function.parameters.noise._get(context)
+            mech_specified = not np.array_equal(mech_noise, np.array(self.class_defaults.noise))
+            fct_specified = not np.array_equal(np.array(fct_noise),
+                                                np.array(self.integrator_function.class_defaults.noise))
 
-                # Mechanism and function noise are not the same
-                if not np.array_equal(mech_noise, fct_noise):
-                    # If function's noise was not specified, assign Mechanism's value to it
-                    if not fct_specified:
-                        self.integrator_function.parameters.noise._set(mech_noise, context)
-                    # Otherwise, given precedence to function's value
-                    else:
-                        if mech_specified:
-                            warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of"
-                                          " the {} parameter ({}) for its {} ({});  the Function's value will be used.".
-                                          format(repr(NOISE), self.name, mech_noise,
-                                                 repr(NOISE), self.integrator_function.noise,
-                                                 repr(INTEGRATOR_FUNCTION),
-                                                 self.integrator_function.__class__.__name__))
-                        # Assign funciton's noise to Mechanism
-                        self.parameters.noise._set(self.integrator_function.noise, context)
+            # Mechanism and function noise are not the same
+            if not np.array_equal(mech_noise, np.array(fct_noise)):
+                # If function's noise was not specified, assign Mechanism's value to it
+                if not fct_specified:
+                    self.integrator_function.parameters.noise._set(mech_noise, context)
+                # Otherwise, given precedence to function's value
+                else:
+                    if mech_specified:
+                        warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of"
+                                        " the {} parameter ({}) for its {} ({});  the Function's value will be used.".
+                                        format(repr(NOISE), self.name, mech_noise,
+                                                repr(NOISE), fct_noise,
+                                                repr(INTEGRATOR_FUNCTION),
+                                                self.integrator_function.__class__.__name__))
+                    # Assign funciton's noise to Mechanism
+                    self.parameters.noise._set(fct_noise, context)
 
-                        # KDM 12/21/18: validating here until a standard scheme is designed, because it's tested for
-                        self._validate_params(
-                            request_set={'noise': self.integrator_function.noise},
-                            target_set={'noise': self.integrator_function.noise},
-                            context=context
-                        )
+                    # KDM 12/21/18: validating here until a standard scheme is designed, because it's tested for
+                    self._validate_params(
+                        request_set={'noise': fct_noise},
+                        target_set={'noise': fct_noise},
+                        context=context
+                    )
 
-            if hasattr(self.integrator_function, INITIALIZER):
-                fct_intlzr = np.array(self.integrator_function.initializer)
-                # Check against variable, as class.default is None, but initial_value assigned to variable before here
-                mech_specified = not np.array_equal(mech_init_val, np.array(self.defaults.variable))
-                fct_specified = not np.array_equal(np.array(self.integrator_function.initializer),
-                                                   np.array(self.integrator_function.class_defaults.initializer))
 
-                # Mechanism initial_value and function initializer are not the same
-                if not np.array_equal(mech_init_val, fct_intlzr):
-                    # If function's initializer was not specified, assign Mechanism's initial_value to it
-                    if not fct_specified:
-                        self.integrator_function.parameters.initializer._set(initializer, context)
-                        self.integrator_function._initialize_previous_value(initializer, context)
-                    # Otherwise, give precedence to function's value
-                    else:
-                        if mech_specified:
-                            warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of"
-                                          " the {} parameter ({}) for its {} ({});  the Function's value will be used.".
-                                          format(repr(INITIAL_VALUE), self.name, mech_init_val,
-                                                 repr(INITIALIZER), self.integrator_function.initializer,
-                                                 repr(INTEGRATOR_FUNCTION),
-                                                 self.integrator_function.__class__.__name__))
-                        # Assign function's initializer to Mechanism
-                        self.parameters.initial_value._set(self.integrator_function.initializer, context)
+            fct_intlzr = np.array(self.integrator_function.parameters.initializer._get(context))
+            # Check against variable, as class.default is None, but initial_value assigned to variable before here
+            mech_specified = not np.array_equal(mech_init_val, np.array(self.defaults.variable))
+            fct_specified = not np.array_equal(np.array(fct_intlzr),
+                                                np.array(self.integrator_function.class_defaults.initializer))
 
-            if hasattr(self.integrator_function, RATE):
-                fct_rate = np.array(self.integrator_function.rate)
-                mech_specified = not np.array_equal(mech_rate, np.array(self.class_defaults.integration_rate))
-                fct_specified = not np.array_equal(np.array(self.integrator_function.rate),
-                                                   np.array(self.integrator_function.class_defaults.rate))
-                # Mechanism and function rate are not the same
-                if not np.array_equal(mech_rate, fct_rate):
-                    # If function's rate was not specified, assign Mechanism's value to it
-                    if not fct_specified:
-                        self.integrator_function.parameters.rate._set(rate, context)
-                    # Otherwise, warn and then give precedence to function's value
-                    else:
-                        if mech_specified:
-                            warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of"
-                                          " the {} parameter ({}) for its {} ({});  the Function's value will be used.".
-                                          format(repr(INTEGRATION_RATE), self.name, rate,
-                                                 repr(RATE), self.integrator_function.rate, repr(INTEGRATOR_FUNCTION),
-                                                 self.integrator_function.__class__.__name__))
-                        # Assign function's rate to Mechanism
-                        self.parameters.integration_rate._set(self.integrator_function.rate, context)
+            # Mechanism initial_value and function initializer are not the same
+            if not np.array_equal(mech_init_val, fct_intlzr):
+                # If function's initializer was not specified, assign Mechanism's initial_value to it
+                if not fct_specified:
+                    self.integrator_function.parameters.initializer._set(initializer, context)
+                    self.integrator_function._initialize_previous_value(initializer, context)
+                # Otherwise, give precedence to function's value
+                else:
+                    if mech_specified:
+                        warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of"
+                                        " the {} parameter ({}) for its {} ({});  the Function's value will be used.".
+                                        format(repr(INITIAL_VALUE), self.name, mech_init_val,
+                                                repr(INITIALIZER), fct_intlzr,
+                                                repr(INTEGRATOR_FUNCTION),
+                                                self.integrator_function.__class__.__name__))
+                    # Assign function's initializer to Mechanism
+                    self.parameters.initial_value._set(fct_intlzr, context)
 
-                        # KDM 12/21/18: validating here until a standard scheme is designed, because it's tested for
-                        self._validate_params(
-                            request_set={'integration_rate': self.integrator_function.rate},
-                            target_set={'integration_rate': self.integrator_function.rate},
-                            context=context
-                        )
+            fct_rate = np.array(self.integrator_function.parameters.rate._get(context))
+            mech_specified = not np.array_equal(mech_rate, np.array(self.class_defaults.integration_rate))
+            fct_specified = not np.array_equal(np.array(fct_rate),
+                                                np.array(self.integrator_function.class_defaults.rate))
+            # Mechanism and function rate are not the same
+            if not np.array_equal(mech_rate, fct_rate):
+                # If function's rate was not specified, assign Mechanism's value to it
+                if not fct_specified:
+                    self.integrator_function.parameters.rate._set(rate, context)
+                # Otherwise, warn and then give precedence to function's value
+                else:
+                    if mech_specified:
+                        warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of"
+                                        " the {} parameter ({}) for its {} ({});  the Function's value will be used.".
+                                        format(repr(INTEGRATION_RATE), self.name, rate,
+                                                repr(RATE), fct_rate, repr(INTEGRATOR_FUNCTION),
+                                                self.integrator_function.__class__.__name__))
+                    # Assign function's rate to Mechanism
+                    self.parameters.integration_rate._set(fct_rate, context)
+
+                    # KDM 12/21/18: validating here until a standard scheme is designed, because it's tested for
+                    self._validate_params(
+                        request_set={'integration_rate': fct_rate},
+                        target_set={'integration_rate': fct_rate},
+                        context=context
+                    )
 
         # MODIFIED 6/24/19 NEW:
         # Insure that integrator_function's variable and value have same shape as TransferMechanism's variable
@@ -1537,9 +1535,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                   context=context)
             # Update param assignments with ones determined to be relevant (mech vs. fct)
             #    and assigned to integrator_function in _instantiate_integrator_function
-            initial_value = self.integrator_function.initializer
-            integration_rate = self.integrator_function.rate
-            noise = self.integrator_function.noise
+            initial_value = self.integrator_function.parameters.initializer._get(context)
+            integration_rate = self.integrator_function.parameters.rate._get(context)
+            noise = self.integrator_function.parameters.noise._get(context)
             self._needs_integrator_function_init = False
 
         current_input = self.integrator_function.execute(function_variable,

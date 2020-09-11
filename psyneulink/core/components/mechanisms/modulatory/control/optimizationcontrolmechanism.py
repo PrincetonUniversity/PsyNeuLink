@@ -847,12 +847,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
         super()._instantiate_attributes_after_function(context=context)
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
-        self.function.reset({DEFAULT_VARIABLE: self.control_allocation,
-                                    OBJECTIVE_FUNCTION: self.evaluation_function,
-                                    # SEARCH_FUNCTION: self.search_function,
-                                    # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
-                                    SEARCH_SPACE: self.control_allocation_search_space
-                                    })
+        self.function.reset({
+            DEFAULT_VARIABLE: self.parameters.control_allocation._get(context),
+            OBJECTIVE_FUNCTION: self.evaluation_function,
+            # SEARCH_FUNCTION: self.search_function,
+            # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
+            SEARCH_SPACE: self.parameters.control_allocation_search_space._get(context)
+        })
 
         if isinstance(self.agent_rep, type):
             self.agent_rep = self.agent_rep()

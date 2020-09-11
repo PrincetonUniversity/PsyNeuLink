@@ -1235,10 +1235,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                 #    both the integrator_function's previous_value
                 #    and the Mechanism's current activity (which is returned as its input)
                 if not self.continuous and self.parameters.integrator_mode._get(context):
-                    self.reset(self.initial_value, context=context)
+                    self.reset(self.parameters.initial_value._get(context), context=context)
                     self.parameters.current_activity._set(self.parameters.initial_value._get(context), context)
-                self.parameters.current_termination_threshold._set(self.plus_phase_termination_threshold, context)
-                self.parameters.current_termination_condition._set(self.plus_phase_termination_condition, context)
+                self.parameters.current_termination_threshold._set(self.parameters.plus_phase_termination_threshold._get(context), context)
+                self.parameters.current_termination_condition._set(self.parameters.plus_phase_termination_condition._get(context), context)
 
             # Switch execution_phase
             self.parameters.execution_phase._set(not self.parameters.execution_phase._get(context), context)
@@ -1299,20 +1299,21 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
 
     @handle_external_context()
     def is_converged(self, value=NotImplemented, context=None):
+        phase_convergence_threshold = self.parameters.phase_convergence_threshold._get(context)
         # Check for convergence
         if (
-            self.phase_convergence_threshold is not None
+            phase_convergence_threshold is not None
             and self.parameters.value.get_previous(context) is not None
             and self.initialization_status != ContextFlags.INITIALIZING
         ):
-            if self.delta(value, context) <= self.phase_convergence_threshold:
+            if self.delta(value, context) <= phase_convergence_threshold:
                 return True
             elif self.get_current_execution_time(context).pass_ >= self.max_passes:
                 phase_str = repr('PLUS_PHASE') if self.parameters.execution_phase._get(context) == PLUS_PHASE \
                     else repr('MINUS_PHASE')
                 raise ContrastiveHebbianError(f"Maximum number of executions ({self.max_passes}) has occurred "
                                               f"before reaching convergence_threshold "
-                                              f"({self.phase_convergence_threshold}) for {self.name} in "
+                                              f"({phase_convergence_threshold}) for {self.name} in "
                                               f"{phase_str} of trial {self.get_current_execution_time(context).trial} "
                                               f"of run {self.get_current_execution_time(context).run}.")
             else:

@@ -500,7 +500,7 @@ class GatingMechanism(ControlMechanism):
                                                variable=self.default_allocation           # User specified value
                                                         or allocation_parameter_default,  # Parameter default
                                                reference_value=allocation_parameter_default,
-                                               modulation=self.modulation,
+                                               modulation=self.defaults.modulation,
                                                port_spec=gating_signal_spec,
                                                context=context)
         if not type(gating_signal) in convert_to_list(self.outputPortTypes):
