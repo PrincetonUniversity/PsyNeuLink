@@ -3,6 +3,7 @@ dill
 elfi
 graphviz
 grpcio
+protobuf
 llvmlite
 matplotlib
 networkx==1.11
