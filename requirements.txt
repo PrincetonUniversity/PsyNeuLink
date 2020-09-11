@@ -2,7 +2,6 @@ autograd
 dill
 elfi
 graphviz
-grpcio
 protobuf
 llvmlite
 matplotlib
