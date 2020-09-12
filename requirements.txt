@@ -9,6 +9,6 @@ matplotlib
 networkx==1.11
 numpy
 pillow
-toposort==1.4
+toposort
 torch; sys_platform != 'win32' and platform_machine == 'x86_64' and platform_python_implementation == 'CPython'
 typecheck-decorator==1.2
