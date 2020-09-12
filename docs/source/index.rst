@@ -153,7 +153,7 @@ switch to your preferred python3 environment, then run
 
 Dependencies that are automatically installed (except those noted as optional) include:
 
-   * numpy (version < 1.16)
+   * numpy
    * matplotlib
    * toposort (version 1.4)
    * typecheck-decorator (version 1.2)
