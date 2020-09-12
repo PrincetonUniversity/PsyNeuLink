@@ -13,56 +13,56 @@ class TestParameterPorts:
         B = TransferMechanism()
         assert A.function.slope.base == 1.0
         assert B.function.slope.base == 1.0
-        assert A.mod_slope == [1.0]
-        assert B.mod_slope == [1.0]
+        assert A.function.slope.modulated == [1.0]
+        assert B.function.slope.modulated == [1.0]
 
         assert A.noise.base == 0.0
         assert B.noise.base == 0.0
-        assert A.mod_noise == 0.0
-        assert B.mod_noise == 0.0
+        assert A.noise.modulated == 0.0
+        assert B.noise.modulated == 0.0
 
         A.function.slope.base = 0.2
 
         assert A.function.slope.base == 0.2
         assert B.function.slope.base == 1.0
-        assert A.mod_slope == [1.0]
-        assert B.mod_slope == [1.0]
+        assert A.function.slope.modulated == [1.0]
+        assert B.function.slope.modulated == [1.0]
 
         A.noise.base = 0.5
 
         assert A.noise.base == 0.5
         assert B.noise.base == 0.0
-        assert A.mod_noise == 0.0
-        assert B.mod_noise == 0.0
+        assert A.noise.modulated == 0.0
+        assert B.noise.modulated == 0.0
 
         B.function.slope.base = 0.7
 
         assert A.function.slope.base == 0.2
         assert B.function.slope.base == 0.7
-        assert A.mod_slope == [1.0]
-        assert B.mod_slope == [1.0]
+        assert A.function.slope.modulated == [1.0]
+        assert B.function.slope.modulated == [1.0]
 
         B.noise.base = 0.6
 
         assert A.noise.base == 0.5
         assert B.noise.base == 0.6
-        assert A.mod_noise == 0.0
-        assert B.mod_noise == 0.0
+        assert A.noise.modulated == 0.0
+        assert B.noise.modulated == 0.0
 
         A.execute(1.0)
-        assert A.mod_slope == [0.2]
+        assert A.function.slope.modulated == [0.2]
 
         B.execute(1.0)
 
         assert A.function.slope.base == 0.2
         assert B.function.slope.base == 0.7
-        assert A.mod_slope == [0.2]
-        assert B.mod_slope == [0.7]
+        assert A.function.slope.modulated == [0.2]
+        assert B.function.slope.modulated == [0.7]
 
         assert A.noise.base == 0.5
         assert B.noise.base == 0.6
-        assert A.mod_noise == 0.5
-        assert B.mod_noise == 0.6
+        assert A.noise.modulated == 0.5
+        assert B.noise.modulated == 0.6
 
     def test_direct_call_to_constructor_error(self):
         from psyneulink.core.components.ports.parameterport import ParameterPort, ParameterPortError
@@ -82,66 +82,66 @@ class TestConfigurableParameters:
         # SLOPE - - - - - - - -
 
         assert np.allclose(T.function.slope.base, old_value)
-        assert np.allclose(T.mod_slope, old_value)
+        assert np.allclose(T.function.slope.modulated, old_value)
 
         T.function.slope.base = new_value
 
         assert np.allclose(T.function.slope.base, new_value)
-        assert np.allclose(T.mod_slope, old_value)
+        assert np.allclose(T.function.slope.modulated, old_value)
 
         # INTERCEPT - - - - - - - -
 
         assert np.allclose(T.function.intercept.base, old_value)
-        assert np.allclose(T.mod_intercept, old_value)
+        assert np.allclose(T.function.intercept.modulated, old_value)
 
         T.function.intercept.base = new_value
 
         assert np.allclose(T.function.intercept.base, new_value)
-        assert np.allclose(T.mod_intercept, old_value)
+        assert np.allclose(T.function.intercept.modulated, old_value)
 
         # SMOOTHING FACTOR - - - - - - - -
 
         assert np.allclose(T.integration_rate.base, old_value)
-        assert np.allclose(T.mod_integration_rate, old_value)
+        assert np.allclose(T.integration_rate.modulated, old_value)
 
         T.integration_rate.base = new_value
 
         # KAM changed 3/2/18 --
         # function_params looks at ParameterPort value, so this will not update until next execution
         assert np.allclose(T.integration_rate.base, new_value)
-        assert np.allclose(T.mod_integration_rate, old_value)
+        assert np.allclose(T.integration_rate.modulated, old_value)
 
         # NOISE - - - - - - - -
 
         assert np.allclose(T.noise.base, old_value)
-        assert np.allclose(T.mod_noise, old_value)
+        assert np.allclose(T.noise.modulated, old_value)
 
         T.noise.base = new_value
 
         # KAM changed 3/2/18 --
         # function_params looks at ParameterPort value, so this will not update until next execution
         assert np.allclose(T.noise.base, new_value)
-        assert np.allclose(T.mod_noise, old_value)
+        assert np.allclose(T.noise.modulated, old_value)
 
         T.execute(1.0)
 
         assert np.allclose(T.function.slope.base, new_value)
-        assert np.allclose(T.mod_slope, new_value)
+        assert np.allclose(T.function.slope.modulated, new_value)
 
         assert np.allclose(T.function.intercept.base, new_value)
-        assert np.allclose(T.mod_intercept, new_value)
+        assert np.allclose(T.function.intercept.modulated, new_value)
 
         assert np.allclose(T.integration_rate.base, new_value)
-        assert np.allclose(T.mod_integration_rate, new_value)
+        assert np.allclose(T.integration_rate.modulated, new_value)
 
         assert np.allclose(T.noise.base, new_value)
-        assert np.allclose(T.mod_noise, new_value)
+        assert np.allclose(T.noise.modulated, new_value)
 
 class TestModParams:
     def test_mod_param_error(self):
         T = TransferMechanism()
         with pytest.raises(ComponentError) as error_text:
-            T.mod_slope = 20.0
+            T.function.slope.modulated = 20.0
         assert "directly because it is computed by the ParameterPort" in str(error_text.value)
 
 
