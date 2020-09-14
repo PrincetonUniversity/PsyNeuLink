@@ -219,10 +219,6 @@ def is_integer(x):
     return isinstance(type_t, ir.IntType)
 
 def is_scalar(x):
-    type_t = getattr(x, "type", x)
-    # dereference pointer
-    if is_pointer(x):
-        type_t = x.type.pointee
     return is_integer(x) or is_floating_point(x)
 
 def is_vector(x):
