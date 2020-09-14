@@ -130,19 +130,20 @@ def fneg(builder, val, name=""):
 
 def tanh(ctx, builder, x):
     # (e**2x - 1)/(e**2x + 1)
-    exp_f = ctx.get_builtin("exp", [x.type])
     _2x = builder.fmul(x.type(2), x)
-    e2x = builder.call(exp_f, [_2x])
+    e2x = exp(ctx, builder, _2x)
     num = builder.fsub(e2x, e2x.type(1))
     den = builder.fadd(e2x, e2x.type(1))
     return builder.fdiv(num, den)
 
+def exp(ctx, builder, x):
+    exp_f = ctx.get_builtin("exp", [x.type])
+    return builder.call(exp_f, [x])
 
 def coth(ctx, builder, x):
     # (e**2x + 1)/(e**2x - 1)
-    exp_f = ctx.get_builtin("exp", [x.type])
     _2x = builder.fmul(x.type(2), x)
-    e2x = builder.call(exp_f, [_2x])
+    e2x = exp(ctx, builder, _2x)
     num = builder.fadd(e2x, e2x.type(1))
     den = builder.fsub(e2x, e2x.type(1))
     return builder.fdiv(num, den)
@@ -150,11 +151,10 @@ def coth(ctx, builder, x):
 
 def csch(ctx, builder, x):
     # (2e**x)/(e**2x - 1)
-    exp_f = ctx.get_builtin("exp", [x.type])
-    ex = builder.call(exp_f, [x])
+    ex = exp(ctx, builder, x)
     num = builder.fmul(ex.type(2), ex)
     _2x = builder.fmul(x.type(2), x)
-    e2x = builder.call(exp_f, [_2x])
+    e2x = exp(ctx, builder, _2x)
     den = builder.fsub(e2x, e2x.type(1))
     return builder.fdiv(num, den)
 
