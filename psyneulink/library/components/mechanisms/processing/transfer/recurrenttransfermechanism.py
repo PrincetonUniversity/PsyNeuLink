@@ -207,7 +207,7 @@ from psyneulink.core.components.ports.port import _instantiate_port
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, SharedParameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -286,12 +286,6 @@ def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, co
         owning_component.parameters.auto._set(auto, context)
         owning_component.parameters.hetero._set(hetero, context)
 
-    return value
-
-
-def _recurrent_transfer_mechanism_learning_rate_setter(value, owning_component=None, context=None):
-    if hasattr(owning_component, "learning_mechanism") and owning_component.learning_mechanism:
-        owning_component.learning_mechanism.parameters.learning_rate._set(value, context)
     return value
 
 
@@ -619,20 +613,17 @@ class RecurrentTransferMechanism(TransferMechanism):
         auto = Parameter(1, modulable=True)
         hetero = Parameter(0, modulable=True)
         combination_function = LinearCombination
-        integration_rate = Parameter(0.5, modulable=True)
-        noise = Parameter(0.0, modulable=True)
         smoothing_factor = Parameter(0.5, modulable=True)
         enable_learning = False
         # learning_function is a reference because it is used for
         # an auxiliary learning mechanism
-        learning_function = Parameter(
+        learning_function = SharedParameter(
             Hebbian,
-            stateful=False,
-            loggable=False,
-            reference=True
+            attribute_name='learning_mechanism',
+            shared_parameter_name='function',
         )
-        learning_rate = Parameter(None, setter=_recurrent_transfer_mechanism_learning_rate_setter)
-        learning_condition = Parameter(None, stateful=False, loggable=False)
+        learning_rate = SharedParameter(None, attribute_name='learning_mechanism')
+        learning_condition = SharedParameter(None, attribute_name='learning_mechanism')
         has_recurrent_input_port = Parameter(False, stateful=False, loggable=False)
 
         output_ports = Parameter(
@@ -689,6 +680,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         if matrix is AutoAssociativeProjection:
             matrix = HOLLOW_MATRIX
 
+        self.learning_mechanism = None
         self._learning_enabled = enable_learning
 
         super().__init__(
@@ -1064,7 +1056,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         self._learning_enabled = value
         # Enable learning for RecurrentTransferMechanism's learning_mechanism
-        if hasattr(self, 'learning_mechanism'):
+        if self.learning_mechanism is not None:
             self.learning_mechanism.learning_enabled = value
         # If RecurrentTransferMechanism has no LearningMechanism, warn and then ignore attempt to set learning_enabled
         elif value is True:
@@ -1180,24 +1172,30 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         """
 
-        # This insures that these are validated if the method is called from the command line (i.e., by the user)
-        if learning_function:
-            self.learning_function = learning_function
-        if learning_rate:
-            self.learning_rate = learning_rate
-        if learning_condition:
-            self.learning_condition = learning_condition
+        if not isinstance(learning_condition, Condition):
+            if learning_condition == CONVERGENCE:
+                learning_condition = WhenFinished(self)
+            elif learning_condition == UPDATE:
+                learning_condition = None
 
-        if not isinstance(self.learning_condition, Condition):
-            if self.learning_condition == CONVERGENCE:
-                self.learning_condition = WhenFinished(self)
-            elif self.learning_condition == UPDATE:
-                self.learning_condition = None
+        try:
+            shared_params = self.initial_shared_parameters['learning_mechanism']
+
+            if learning_condition is None:
+                learning_condition = shared_params['learning_condition']
+
+            if learning_rate is None:
+                learning_rate = shared_params['learning_rate']
+
+            if learning_function is None:
+                learning_function = shared_params['learning_function']
+        except KeyError:
+            pass
 
         self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self._learning_signal_source,
-                                                                       learning_function=self.learning_function,
-                                                                       learning_rate=self.learning_rate,
-                                                                       learning_condition=self.learning_condition,
+                                                                       learning_function=learning_function,
+                                                                       learning_rate=learning_rate,
+                                                                       learning_condition=learning_condition,
                                                                        matrix=self.recurrent_projection,
                                                                        context=context)
 

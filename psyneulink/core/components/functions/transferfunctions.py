@@ -67,7 +67,7 @@ from psyneulink.core.globals.keywords import \
     RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,\
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import \
-    Parameter, get_validator_by_function
+    FunctionParameter, Parameter, get_validator_by_function
 from psyneulink.core.globals.utilities import parameter_spec, get_global_seed, safe_len
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.preferences.basepreferenceset import \
@@ -3190,134 +3190,6 @@ class CostFunctions(IntEnum):
     ALL           = INTENSITY | ADJUSTMENT | DURATION
     DEFAULTS      = INTENSITY
 
-# Getters and setters for transfer and cost function multiplicative and additive parameters ----------------------------
-
-def _transfer_fct_mult_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.transfer_fct.get().parameters.multiplicative_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _transfer_fct_mult_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.transfer_fct.get().parameters.multiplicative_param._set(value, context)
-    return value
-
-def _transfer_fct_add_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.transfer_fct.get().parameters.additive_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _transfer_fct_add_param_setter(value, owning_component=None, context=None):
-    try:
-        owning_component.parameters.transfer_fct.get().parameters.additive_param._set(value, context)
-        return value
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _intensity_cost_fct_mult_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.intensity_cost_fct.get().parameters.multiplicative_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _intensity_cost_fct_mult_param_setter(value, owning_component=None, context=None):
-    try:
-        owning_component.parameters.intensity_cost_fct.get().parameters.multiplicative_param._set(value, context)
-        return value
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _intensity_cost_fct_add_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.intensity_cost_fct.get().parameters.additive_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _intensity_cost_fct_add_param_setter(value, owning_component=None, context=None):
-    try:
-        owning_component.parameters.intensity_cost_fct.get().parameters.additive_param._set(value, context)
-        return value
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _adjustment_cost_fct_mult_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.adjustment_cost_fct.get().parameters.multiplicative_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _adjustment_cost_fct_mult_param_setter(value, owning_component=None, context=None):
-    try:
-        owning_component.parameters.adjustment_cost_fct.get().parameters.multiplicative_param._set(value, context)
-        return value
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _adjustment_cost_fct_add_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.adjustment_cost_fct.get().parameters.additive_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _adjustment_cost_fct_add_param_setter(value, owning_component=None, context=None):
-    try:
-        owning_component.parameters.adjustment_cost_fct.get().parameters.additive_param._set(value, context)
-        return value
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _duration_cost_fct_mult_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.duration_cost_fct.get().parameters.multiplicative_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _duration_cost_fct_mult_param_setter(value, owning_component=None, context=None):
-    try:
-        owning_component.parameters.duration_cost_fct.get().parameters.multiplicative_param._set(value, context)
-        return value
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _duration_cost_fct_add_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.duration_cost_fct.get().parameters.additive_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _duration_cost_fct_add_param_setter(value, owning_component=None, context=None):
-    try:
-        owning_component.parameters.duration_cost_fct.get().parameters.additive_param._set(value, context)
-        return value
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _combine_costs_fct_mult_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _combine_costs_fct_mult_param_setter(value, owning_component=None, context=None):
-    try:
-        owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param._set(value, context)
-        return value
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _combine_costs_fct_add_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.combine_costs_fct.get().parameters.additive_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _combine_costs_fct_add_param_setter(value, owning_component=None, context=None):
-    try:
-        owning_component.parameters.combine_costs_fct.get().parameters.additive_param._set(value, context)
-        return value
-    except (TypeError, IndexError, AttributeError):
-        return None
 
 TRANSFER_FCT = 'transfer_fct'
 INTENSITY_COST_FCT = 'intensity_cost_fct'
@@ -3728,14 +3600,18 @@ class TransferWithCosts(TransferFunction):
         # Create primary functions' modulation params for TransferWithCosts
         transfer_fct = Parameter(Linear, stateful=False)
         _validate_transfer_fct = get_validator_by_function(is_function_type)
-        transfer_fct_mult_param = Parameter(modulable=True, aliases=MULTIPLICATIVE_PARAM,
-                                            modulation_combination_function=PRODUCT,
-                                            getter=_transfer_fct_mult_param_getter,
-                                            setter=_transfer_fct_mult_param_setter)
-        transfer_fct_add_param = Parameter(modulable=True, aliases=ADDITIVE_PARAM,
-                                           modulation_combination_function=SUM,
-                                           getter=_transfer_fct_add_param_getter,
-                                           setter=_transfer_fct_add_param_setter)
+        transfer_fct_mult_param = FunctionParameter(
+            aliases=MULTIPLICATIVE_PARAM,
+            modulation_combination_function=PRODUCT,
+            function_name='transfer_fct',
+            function_parameter_name=MULTIPLICATIVE_PARAM,
+        )
+        transfer_fct_add_param = FunctionParameter(
+            aliases=ADDITIVE_PARAM,
+            modulation_combination_function=SUM,
+            function_name='transfer_fct',
+            function_parameter_name=ADDITIVE_PARAM,
+        )
 
         enabled_cost_functions = Parameter(
             CostFunctions.DEFAULTS,
@@ -3747,50 +3623,58 @@ class TransferWithCosts(TransferFunction):
         intensity_cost = None
         intensity_cost_fct = Parameter(Exponential, stateful=False)
         _validate_intensity_cost_fct = get_validator_by_function(is_function_type)
-        intensity_cost_fct_mult_param = Parameter(modulable=True,
-                                                  modulation_combination_function=PRODUCT,
-                                                  getter=_intensity_cost_fct_mult_param_getter,
-                                                  setter=_intensity_cost_fct_mult_param_setter)
-        intensity_cost_fct_add_param = Parameter(modulable=True,
-                                                 modulation_combination_function=SUM,
-                                                 getter=_intensity_cost_fct_add_param_getter,
-                                                 setter=_intensity_cost_fct_add_param_setter)
+        intensity_cost_fct_mult_param = FunctionParameter(
+            modulation_combination_function=PRODUCT,
+            function_name='intensity_cost_fct',
+            function_parameter_name=MULTIPLICATIVE_PARAM,
+        )
+        intensity_cost_fct_add_param = FunctionParameter(
+            modulation_combination_function=SUM,
+            function_name='intensity_cost_fct',
+            function_parameter_name=ADDITIVE_PARAM,
+        )
 
         adjustment_cost = None
         adjustment_cost_fct = Parameter(Linear, stateful=False)
         _validate_adjustment_cost_fct = get_validator_by_function(is_function_type)
-        adjustment_cost_fct_mult_param = Parameter(modulable=True,
-                                                   modulation_combination_function=PRODUCT,
-                                                   getter=_adjustment_cost_fct_mult_param_getter,
-                                                   setter=_adjustment_cost_fct_mult_param_setter)
-        adjustment_cost_fct_add_param = Parameter(modulable=True,
-                                                  modulation_combination_function=SUM,
-                                                  getter=_adjustment_cost_fct_add_param_getter,
-                                                  setter=_adjustment_cost_fct_add_param_setter)
+        adjustment_cost_fct_mult_param = FunctionParameter(
+            modulation_combination_function=PRODUCT,
+            function_name='adjustment_cost_fct',
+            function_parameter_name=MULTIPLICATIVE_PARAM,
+        )
+        adjustment_cost_fct_add_param = FunctionParameter(
+            modulation_combination_function=SUM,
+            function_name='adjustment_cost_fct',
+            function_parameter_name=ADDITIVE_PARAM,
+        )
 
         duration_cost = None
         duration_cost_fct = Parameter(SimpleIntegrator, stateful=False)
         _validate_duration_cost_fct = get_validator_by_function(is_function_type)
-        duration_cost_fct_mult_param = Parameter(modulable=True,
-                                                 modulation_combination_function=PRODUCT,
-                                                 getter=_duration_cost_fct_mult_param_getter,
-                                                 setter=_duration_cost_fct_mult_param_setter)
-        duration_cost_fct_add_param = Parameter(modulable=True,
-                                                modulation_combination_function=SUM,
-                                                getter=_duration_cost_fct_add_param_getter,
-                                                setter=_duration_cost_fct_add_param_setter)
+        duration_cost_fct_mult_param = FunctionParameter(
+            modulation_combination_function=PRODUCT,
+            function_name='duration_cost_fct',
+            function_parameter_name=MULTIPLICATIVE_PARAM,
+        )
+        duration_cost_fct_add_param = FunctionParameter(
+            modulation_combination_function=SUM,
+            function_name='duration_cost_fct',
+            function_parameter_name=ADDITIVE_PARAM,
+        )
 
         combined_costs = None
         combine_costs_fct = Parameter(LinearCombination, stateful=False)
         _validate_combine_costs_fct = get_validator_by_function(is_function_type)
-        combine_costs_fct_mult_param=Parameter(modulable=True,
-                                               modulation_combination_function=PRODUCT,
-                                               getter=_combine_costs_fct_mult_param_getter,
-                                               setter=_combine_costs_fct_mult_param_setter)
-        combine_costs_fct_add_param=Parameter(modulable=True,
-                                              modulation_combination_function=SUM,
-                                              getter=_combine_costs_fct_add_param_getter,
-                                              setter=_combine_costs_fct_add_param_setter)
+        combine_costs_fct_mult_param = FunctionParameter(
+            modulation_combination_function=PRODUCT,
+            function_name='combine_costs_fct',
+            function_parameter_name=MULTIPLICATIVE_PARAM,
+        )
+        combine_costs_fct_add_param = FunctionParameter(
+            modulation_combination_function=SUM,
+            function_name='combine_costs_fct',
+            function_parameter_name=ADDITIVE_PARAM,
+        )
 
     @tc.typecheck
     def __init__(self,

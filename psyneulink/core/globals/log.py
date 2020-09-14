@@ -436,12 +436,12 @@ class LogCondition(enum.IntFlag):
     """Specifies all contexts."""
 
     @classmethod
-    def _get_log_condition_string(cls, condition, string=None):
-        """Return string with the names of all flags that are set in **condition**, prepended by **string**"""
-        if string:
-            string += ": "
+    def _get_log_condition_string(cls, condition, cond_str=None):
+        """Return string with the names of all flags that are set in **condition**, prepended by **cond_str**"""
+        if cond_str:
+            cond_str += ": "
         else:
-            string = ""
+            cond_str = ""
         flagged_items = []
         # If OFF or ALL_ASSIGNMENTS, just return that
         if condition in (LogCondition.ALL_ASSIGNMENTS, LogCondition.OFF):
@@ -458,17 +458,17 @@ class LogCondition(enum.IntFlag):
                 flagged_items.append(c)
 
         if len(flagged_items) > 0:
-            string += ", ".join(flagged_items)
-            return string
+            cond_str += ", ".join(flagged_items)
+            return cond_str
         else:
             return 'invalid LogCondition'
 
     @staticmethod
-    def from_string(string):
+    def from_string(s):
         try:
-            return LogCondition[string.upper()]
+            return LogCondition[s.upper()]
         except KeyError:
-            raise LogError("\'{}\' is not a value of {}".format(string, LogCondition))
+            raise LogError("\'{}\' is not a value of {}".format(s, LogCondition))
 
 TIME_NOT_SPECIFIED = 'Time Not Specified'
 EXECUTION_CONDITION_NAMES = {LogCondition.PROCESSING.name,
@@ -734,33 +734,33 @@ class Log:
     def all_items(self):
         return sorted(self.parameter_items + self.input_port_items + self.output_port_items + self.parameter_port_items + self.function_items)
 
-    def _get_parameter_from_item_string(self, string):
+    def _get_parameter_from_item_string(self, item_str):
         # KDM 8/15/18: can easily cache these results if it occupies too much time, assuming
         # no duplicates/changing
-        if string.startswith(MODULATED_PARAMETER_PREFIX):
+        if item_str.startswith(MODULATED_PARAMETER_PREFIX):
             try:
-                return self.owner.parameter_ports[string[len(MODULATED_PARAMETER_PREFIX):]].parameters.value
+                return self.owner.parameter_ports[item_str[len(MODULATED_PARAMETER_PREFIX):]].parameters.value
             except (AttributeError, TypeError):
                 pass
 
         try:
-            return getattr(self.owner.parameters, string)
+            return getattr(self.owner.parameters, item_str)
         except AttributeError:
             pass
 
         try:
-            return self.owner.input_ports[string].parameters.value
+            return self.owner.input_ports[item_str].parameters.value
         except (AttributeError, TypeError):
             pass
 
         try:
-            return self.owner.output_ports[string].parameters.value
+            return self.owner.output_ports[item_str].parameters.value
         except (AttributeError, TypeError):
             pass
 
-        if string.startswith(FUNCTION_PARAMETER_PREFIX):
+        if item_str.startswith(FUNCTION_PARAMETER_PREFIX):
             try:
-                return getattr(self.owner.function.parameters, string[len(FUNCTION_PARAMETER_PREFIX):])
+                return getattr(self.owner.function.parameters, item_str[len(FUNCTION_PARAMETER_PREFIX):])
             except AttributeError:
                 pass
 
@@ -1845,17 +1845,17 @@ class CompositionLog(Log):
             + ([self.owner.controller.name] if self.owner.controller is not None else [])
         )
 
-    def _get_parameter_from_item_string(self, string):
-        param = super()._get_parameter_from_item_string(string)
+    def _get_parameter_from_item_string(self, item_str):
+        param = super()._get_parameter_from_item_string(item_str)
 
         if param is None:
             try:
-                return self.owner.nodes[string].parameters.value
+                return self.owner.nodes[item_str].parameters.value
             except (AttributeError, TypeError):
                 pass
 
             try:
-                return self.owner.projections[string].parameters.value
+                return self.owner.projections[item_str].parameters.value
             except (AttributeError, TypeError):
                 pass
 

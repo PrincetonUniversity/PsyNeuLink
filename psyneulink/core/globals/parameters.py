@@ -150,6 +150,34 @@ To create new Parameters, reference this example of a new class *B*
     from parents, but will be overridden if necessary, without affecting the parents.
 
 
+.. _Parameter_Special_Classes:
+
+.. technical_note::
+    Special Parameter Classes
+    -------------------------
+        `FunctionParameter` and `SharedParameter` are used to provide
+        simpler access to some parameters of auxiliary components. They
+        can be passed into the constructor of the owner, and then
+        automatically passed when constructing the auxiliary component.
+        The `values <Parameter.values>` of `SharedParameter`\\ s are
+        shared via getter and  with those of their target `Parameter`.
+
+        `SharedParameter`\\ s should only be used when there is a
+        guarantee that their target will exist, given a specific
+        Component. For example, it is acceptable that
+        `TransferMechanism.integration_rate` is a `FunctionParameter`
+        for the `rate` parameter of its
+        `integrator_function<TransferMechanism.integrator_function>`,
+        because all `TransferMechanism`\\ s have an integrator
+        function, and all integrator functions have a `rate` parameter.
+        It is also acceptable that
+        `ControlSignal.intensity_cost_function` is a `FunctionParameter`
+        corresponding to its function's
+        `intensity_cost_fct <TransferWithCosts>` parameter, because a
+        ControlSignal's function is always a `TransferWithCosts` and is
+        not user-specifiable.
+
+
 Using Parameters
 ^^^^^^^^^^^^^^^^
 
@@ -259,7 +287,7 @@ from psyneulink.core.globals.utilities import call_with_pruned_args, copy_iterab
 
 __all__ = [
     'Defaults', 'get_validator_by_function', 'Parameter', 'ParameterAlias', 'ParameterError',
-    'ParametersBase', 'parse_context',
+    'ParametersBase', 'parse_context', 'FunctionParameter', 'SharedParameter'
 ]
 
 logger = logging.getLogger(__name__)
@@ -510,7 +538,21 @@ class Defaults(ParametersTemplate):
         return {k: v.default_value for (k, v) in self._owner.parameters.values(show_all=show_all).items()}
 
 
-class Parameter(types.SimpleNamespace):
+class ParameterBase(types.SimpleNamespace):
+    def __lt__(self, other):
+        return self.name < other.name
+
+    def __gt__(self, other):
+        return self.name > other.name
+
+    def __eq__(self, other):
+        return object.__eq__(self, other)
+
+    def __hash__(self):
+        return object.__hash__(self)
+
+
+class Parameter(ParameterBase):
     """
     COMMENT:
         KDM 11/30/18: using nonstandard formatting below to ensure developer notes is below type in html
@@ -563,17 +605,6 @@ class Parameter(types.SimpleNamespace):
             TBD
 
             :default: False
-
-        function_parameter
-            indicates that this Parameter is not a "true" Parameter of a
-            Component, but a reference to an equally named Parameter on
-            the Component's function.
-
-            :default: False
-
-            :Developer Notes: In the future, these will use custom
-            default getters and setters that simply reference the
-            equivalent Parameters on the function
 
         pnl_internal
             whether the parameter is an idiosyncrasy of PsyNeuLink or it is more intrinsic to the conceptual operation
@@ -736,7 +767,6 @@ class Parameter(types.SimpleNamespace):
         modulation_combination_function=None,
         read_only=False,
         function_arg=True,
-        function_parameter=False,
         pnl_internal=False,
         aliases=None,
         user=True,
@@ -764,6 +794,7 @@ class Parameter(types.SimpleNamespace):
         # attributes will be taken from
         _inherited_source=None,
         _user_specified=False,
+        **kwargs
     ):
         if isinstance(aliases, str):
             aliases = [aliases]
@@ -792,7 +823,6 @@ class Parameter(types.SimpleNamespace):
             modulation_combination_function=modulation_combination_function,
             read_only=read_only,
             function_arg=function_arg,
-            function_parameter=function_parameter,
             pnl_internal=pnl_internal,
             aliases=aliases,
             user=user,
@@ -816,6 +846,7 @@ class Parameter(types.SimpleNamespace):
             _inherited=_inherited,
             _inherited_source=_inherited_source,
             _user_specified=_user_specified,
+            **kwargs
         )
 
         self._owner = _owner
@@ -834,7 +865,7 @@ class Parameter(types.SimpleNamespace):
         # modified from types.SimpleNamespace to exclude _-prefixed attrs
         try:
             items = (
-                "{}={!r}".format(k, getattr(self, k)) for k in self._param_attrs
+                "{}={!r}".format(k, getattr(self, k)) for k in sorted(self._param_attrs)
                 if k not in self._hidden_when or not self._hidden_when[k](self, getattr(self, k))
             )
 
@@ -842,16 +873,13 @@ class Parameter(types.SimpleNamespace):
         except AttributeError:
             return super().__str__()
 
-    def __lt__(self, other):
-        return self.name < other.name
-
     def __deepcopy__(self, memo):
         if 'no_shared' in memo and memo['no_shared']:
             shared_types = tuple()
         else:
             shared_types = None
 
-        result = Parameter(
+        result = type(self)(
             **{
                 k: copy_parameter_value(getattr(self, k), memo=memo, shared_types=shared_types)
                 for k in self._param_attrs
@@ -1493,7 +1521,7 @@ class _ParameterAliasMeta(type):
 
 
 # TODO: may not completely work with history/history_max_length
-class ParameterAlias(types.SimpleNamespace, metaclass=_ParameterAliasMeta):
+class ParameterAlias(ParameterBase, metaclass=_ParameterAliasMeta):
     """
         A counterpart to `Parameter` that represents a pseudo-Parameter alias that
         refers to another `Parameter`, but has a different name
@@ -1507,9 +1535,6 @@ class ParameterAlias(types.SimpleNamespace, metaclass=_ParameterAliasMeta):
             source._register_alias(name)
         except AttributeError:
             pass
-
-    def __lt__(self, other):
-        return self.name < other.name
 
     def __getattr__(self, attr):
         return getattr(self.source, attr)
@@ -1533,6 +1558,206 @@ class ParameterAlias(types.SimpleNamespace, metaclass=_ParameterAliasMeta):
             self._source = weakref.proxy(value)
         except TypeError:
             self._source = value
+
+
+class SharedParameter(Parameter):
+    """
+        A Parameter that is not a "true" Parameter of a Component but a
+        reference to a Parameter on one of the Component's attributes or
+        other Parameters. `Values <Parameter.values>` are shared via
+        getter and setter. Mainly used for more user-friendly access to
+        certain Parameters, as a sort of cross-object alias.
+
+        .. technical_note::
+            See `above <Parameter_Special_Classes>` for when it is
+            appropriate to use a SharedParameter
+
+        Attributes:
+
+            shared_parameter_name
+                the name of the target Parameter on the owning
+                Component's `attribute_name` Parameter or attribute
+
+                :type: str
+                :default: `Parameter.name`
+
+            attribute_name
+                the name of the owning Component's Parameter or
+                attribute on which `shared_parameter_name` is the target
+                Parameter of this object
+
+                :type: str
+                :default: 'function'
+
+            primary
+                whether the default value specified in the
+                SharedParameter should take precedence over the default
+                value specified in its target
+
+                :type: bool
+                :default: False
+
+            getter
+                :type: types.FunctionType
+                :default: a function that returns the value of the \
+                *shared_parameter_name* parameter of the \
+                *attribute_name* Parameter/attribute of this \
+                Parameter's owning Component
+
+            setter
+                :type: types.FunctionType
+                :default: a function that sets the value of the \
+                *shared_parameter_name* parameter of the \
+                *attribute_name* Parameter/attribute of this \
+                Parameter's owning Component and returns the set value
+    """
+    _additional_param_attr_properties = Parameter._additional_param_attr_properties.union({'name'})
+    _uninherited_attrs = Parameter._uninherited_attrs.union({'attribute_name', 'shared_parameter_name'})
+    # attributes that should not be inherited from source attr
+    _unsourced_attrs = {'default_value', 'primary', 'getter', 'setter', 'aliases'}
+
+    def __init__(
+        self,
+        default_value=None,
+        attribute_name=None,
+        shared_parameter_name=None,
+        primary=False,
+        getter=None,
+        setter=None,
+        **kwargs
+    ):
+
+        super().__init__(
+            default_value=default_value,
+            getter=getter,
+            setter=setter,
+            attribute_name=attribute_name,
+            shared_parameter_name=shared_parameter_name,
+            primary=primary,
+            _source_exists=False,
+            **kwargs
+        )
+
+        if getter is None:
+            def getter(self, context=None):
+                try:
+                    return self.source._get(context)
+                except (AttributeError, TypeError, IndexError):
+                    return None
+
+            self.getter = getter
+
+        if setter is None:
+            def setter(value, self, context=None):
+                try:
+                    return self.source._set(value, context)
+                except AttributeError:
+                    return None
+
+            self.setter = setter
+
+    def __getattr__(self, attr):
+        try:
+            if attr in self._unsourced_attrs:
+                raise AttributeError
+            return getattr(self.source, attr)
+        except AttributeError:
+            return super().__getattr__(attr)
+
+    def _set_name(self, name):
+        if self.shared_parameter_name is None:
+            self.shared_parameter_name = name
+
+        super(Parameter, self).__setattr__('name', name)
+
+    @property
+    def source(self):
+        try:
+            obj = getattr(self._owner._owner.parameters, self.attribute_name)
+            if obj.stateful:
+                raise ParameterError(
+                    f'Parameter {type(obj._owner._owner).__name__}.{self.attribute_name}'
+                    f' is the target object of {type(self).__name__}'
+                    f' {type(self._owner._owner).__name__}.{self.name} and'
+                    f' cannot be stateful.'
+                )
+            obj = obj.values[None]
+        except (AttributeError, KeyError):
+            try:
+                obj = getattr(self._owner._owner, self.attribute_name)
+            except AttributeError:
+                return None
+
+        try:
+            obj = getattr(obj.parameters, self.shared_parameter_name)
+            if not self._source_exists:
+                for p in self._param_attrs:
+                    if p not in self._uninherited_attrs and p not in self._unsourced_attrs:
+                        try:
+                            delattr(self, p)
+                        except AttributeError:
+                            pass
+            self._source_exists = True
+            return obj
+        except AttributeError:
+            return None
+
+
+class FunctionParameter(SharedParameter):
+    """
+        A special (and most common) case `SharedParameter` that
+        references a Parameter on one of the Component's functions.
+
+        Attributes:
+
+            function_parameter_name
+                the name of the target Parameter on the owning
+                Component's `function_name` Parameter
+
+                :type: str
+                :default: `Parameter.name`
+
+            function_name
+                the name of the owning Component's Parameter on which
+                `function_parameter_name` is the target Parameter of
+                this object
+
+                :type: str
+                :default: 'function'
+    """
+    _uninherited_attrs = SharedParameter._uninherited_attrs.union({'function_name', 'function_parameter_name'})
+
+    def __init__(
+        self,
+        default_value=None,
+        function_parameter_name=None,
+        function_name='function',
+        primary=True,
+        **kwargs
+    ):
+        super().__init__(
+            default_value=default_value,
+            function_name=function_name,
+            function_parameter_name=function_parameter_name,
+            primary=primary,
+            **kwargs
+        )
+
+    @property
+    def attribute_name(self):
+        return self.function_name
+
+    @attribute_name.setter
+    def attribute_name(self, value):
+        self.function_name = value
+
+    @property
+    def shared_parameter_name(self):
+        return self.function_parameter_name
+
+    @shared_parameter_name.setter
+    def shared_parameter_name(self, value):
+        self.function_parameter_name = value
 
 
 # KDM 6/29/18: consider assuming that ALL parameters are stateful
@@ -1569,16 +1794,18 @@ class ParametersBase(ParametersTemplate):
                 # in a class's Parameters class
                 setattr(self, param_name, param_value)
             else:
-                if isinstance(getattr(self._parent, param_name), ParameterAlias):
+                parent_param = getattr(self._parent, param_name)
+                if isinstance(parent_param, ParameterAlias):
                     # store aliases we need to create here and then create them later, because
                     # the param that the alias is going to refer to may not have been created yet
                     # (the alias then may refer to the parent Parameter instead of the Parameter associated with this
                     # Parameters class)
                     aliases_to_create.add(param_name)
                 else:
-                    new_param = Parameter(name=param_name, _owner=self, _inherited=True)
-                    # store the parent's values as the default "uninherited" attr values
-                    new_param._cache_inherited_attrs()
+                    new_param = copy.deepcopy(parent_param)
+                    new_param._owner = self
+                    new_param._inherited = True
+
                     setattr(self, param_name, new_param)
 
         for alias_name in aliases_to_create:
@@ -1632,16 +1859,32 @@ class ParametersBase(ParametersTemplate):
                 super().__setattr__(attr, value)
 
                 if value.aliases is not None:
+                    conflicts = []
                     for alias in value.aliases:
-                        # the alias doesn't exist, or it's an alias on the
-                        # parent
-                        if (
-                            not hasattr(self, alias)
-                            or not hasattr(getattr(self, alias), '_owner')
-                            or unproxy_weakproxy(getattr(self, alias)._owner) is not self
-                        ):
-                            super().__setattr__(alias, ParameterAlias(source=getattr(self, attr), name=alias))
-                            self._register_parameter(alias)
+                        # there is a conflict if a non-ParameterAlias exists
+                        # with the same name as the planned alias
+                        try:
+                            if not isinstance(getattr(self, alias), ParameterAlias):
+                                conflicts.append(alias)
+                        except AttributeError:
+                            pass
+
+                        super().__setattr__(alias, ParameterAlias(source=getattr(self, attr), name=alias))
+                        self._register_parameter(alias)
+
+                    if len(conflicts) == 1:
+                        raise ParameterError(
+                            f'Attempting to create an alias for the {value.name}'
+                            f' Parameter on {self._owner.__name__} that would'
+                            f' override the {conflicts[0]} Parameter. Instead,'
+                            f' create a {conflicts[0]} Parameter with alias {value.name}.'
+                        )
+                    elif len(conflicts) > 1:
+                        raise ParameterError(
+                            f'Attempting to create aliases for the {value.name}'
+                            f' Parameter on {self._owner.__name__} that would'
+                            f' override other Parameters: {sorted(conflicts)}'
+                        )
 
             elif isinstance(value, ParameterAlias):
                 if value.name is None:

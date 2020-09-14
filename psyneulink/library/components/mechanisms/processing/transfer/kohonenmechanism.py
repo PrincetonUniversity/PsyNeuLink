@@ -90,7 +90,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import \
     DEFAULT_MATRIX, FUNCTION, GAUSSIAN, IDENTITY_MATRIX, INITIALIZING, KOHONEN_MECHANISM, \
     LEARNED_PROJECTIONS, LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, OWNER_VARIABLE, RESULT, VARIABLE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, SharedParameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.components.mechanisms.modulatory.learning.kohonenlearningmechanism import KohonenLearningMechanism
@@ -252,13 +252,11 @@ class KohonenMechanism(TransferMechanism):
                     :type: ``list``
                     :read only: True
         """
-        learning_function = Parameter(
+        learning_function = SharedParameter(
             Kohonen(distance_function=GAUSSIAN),
-            stateful=False,
-            loggable=False,
-            reference=True
+            attribute_name='learning_mechanism',
+            shared_parameter_name='function',
         )
-        learning_rate = Parameter(None, modulable=True)
         enable_learning = True
         matrix = DEFAULT_MATRIX
 
@@ -466,7 +464,7 @@ class KohonenMechanism(TransferMechanism):
 
         self._learning_enabled = value
         # Enable learning for KohonenMechanism's learning_mechanism
-        if hasattr(self, 'learning_mechanism'):
+        if self.learning_mechanism is not None:
             self.learning_mechanism.learning_enabled = value
         # If KohonenMechanism has no LearningMechanism, warn and then ignore attempt to set learning_enabled
         elif value is True:
