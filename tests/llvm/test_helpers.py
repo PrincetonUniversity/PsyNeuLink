@@ -553,3 +553,44 @@ def test_helper_numerical(mode, op, var, expected):
         res = res[0]
 
     assert res.value == expected
+
+@pytest.mark.llvm
+@pytest.mark.parametrize('mode', ['CPU',
+                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+@pytest.mark.parametrize('var,expected', [
+    (np.array([1,2,3], dtype=np.float), np.array([2,3,4], dtype=np.float)),
+    (np.array([[1,2],[3,4]], dtype=np.float), np.array([[2,3],[4,5]], dtype=np.float)),
+])
+def test_helper_elementwise_op(mode, var, expected):
+    with pnlvm.LLVMBuilderContext() as ctx:
+        arr_ptr_ty = ctx.float_ty
+        for dim in reversed(var.shape):
+            arr_ptr_ty = ir.ArrayType(arr_ptr_ty, dim)
+        arr_ptr_ty = arr_ptr_ty.as_pointer()
+
+        func_ty = ir.FunctionType(ir.VoidType(), [arr_ptr_ty, arr_ptr_ty])
+
+        custom_name = ctx.get_unique_name("elementwise_op")
+        function = ir.Function(ctx.module, func_ty, name=custom_name)
+        inp, out = function.args
+        block = function.append_basic_block(name="entry")
+        builder = ir.IRBuilder(block)
+        pnlvm.helpers.printf_float_array(builder, inp, override_debug=True)
+        pnlvm.helpers.printf_float_array(builder, out, override_debug=True)
+
+        pnlvm.helpers.call_elementwise_operation(ctx, builder, inp, lambda ctx, builder, x: builder.fadd(ctx.float_ty(1.0), x), out)
+        builder.ret_void()
+
+    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+    res = copy.deepcopy(expected)
+    if mode == 'CPU':
+        ct_ty = pnlvm._convert_llvm_ir_to_ctype(arr_ptr_ty)
+        ct_vec = var.ctypes.data_as(ct_ty)
+        ct_res = res.ctypes.data_as(ct_ty)
+
+        bin_f(ct_vec, ct_res)
+    else:
+        bin_f.cuda_wrap_call(var, res)
+        res = res[0]
+
+    assert np.array_equal(res, expected)

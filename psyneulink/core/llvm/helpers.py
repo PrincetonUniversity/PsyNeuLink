@@ -158,6 +158,16 @@ def csch(ctx, builder, x):
     den = builder.fsub(e2x, e2x.type(1))
     return builder.fdiv(num, den)
 
+def call_elementwise_operation(ctx, builder, x, operation, output_ptr):
+    """Recurse through an array structure and call operation on each scalar element of the structure. Store result in output_ptr"""
+    if isinstance(x.type.pointee, ir.ArrayType):
+        with array_ptr_loop(builder, x, str(x) + "_elementwise_op") as (b1, idx):
+            element_ptr = b1.gep(x, [ctx.int32_ty(0), idx])
+            output_element_ptr = b1.gep(output_ptr, [ctx.int32_ty(0), idx])
+            call_elementwise_operation(ctx, b1, element_ptr, operation, output_ptr=output_element_ptr)
+    else:
+        val = operation(ctx, builder, builder.load(x))
+        builder.store(val, output_ptr)
 
 def is_close(builder, val1, val2, rtol=1e-05, atol=1e-08):
     diff = builder.fsub(val1, val2, "is_close_diff")
