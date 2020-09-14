@@ -190,6 +190,48 @@ def all_close(builder, arr1, arr2, rtol=1e-05, atol=1e-08):
 
     return builder.load(all_ptr)
 
+def is_pointer(x):
+    type_t = getattr(x, "type", x)
+    return isinstance(type_t, ir.PointerType)
+
+def is_floating_point(x):
+    type_t = getattr(x, "type", x)
+    # dereference pointer
+    if is_pointer(x):
+        type_t = x.type.pointee
+    return isinstance(type_t, (ir.DoubleType, ir.FloatType, ir.HalfType))
+
+def is_integer(x):
+    type_t = getattr(x, "type", x)
+    # dereference pointer
+    if is_pointer(x):
+        type_t = x.type.pointee
+    return isinstance(type_t, ir.IntType)
+
+def is_scalar(x):
+    type_t = getattr(x, "type", x)
+    # dereference pointer
+    if is_pointer(x):
+        type_t = x.type.pointee
+    return is_integer(x) or is_floating_point(x)
+
+def is_vector(x):
+    type_t = getattr(x, "type", x)
+    if is_pointer(x):
+        type_t = x.type.pointee
+    return isinstance(type_t, ir.ArrayType) and is_scalar(type_t.element)
+
+def is_2d_matrix(x):
+    type_t = getattr(x, "type", x)
+    if is_pointer(x):
+        type_t = x.type.pointee
+    return isinstance(type_t, ir.ArrayType) and is_vector(type_t.element)
+
+def is_boolean(x):
+    type_t = getattr(x, "type", x)
+    if is_pointer(x):
+        type_t = x.type.pointee
+    return isinstance(type_t, ir.IntType) and type_t.width == 1
 
 def printf(builder, fmt, *args, override_debug=False):
     if "print_values" not in debug_env and not override_debug:
