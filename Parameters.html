@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.8.3.2 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.8.3.2+26.ge053667 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.3.2
+                  0.8.3.2+26
                 </div>
               
             
@@ -339,6 +339,33 @@ which updates its <code class="xref any docutils literal"><span class="pre">auto
 Parameters that are new, or whose specification has changed from their parent’s. Parameters not present in a given class can be inherited
 from parents, but will be overridden if necessary, without affecting the parents.</p>
 </div>
+<div class="technical-note docutils container" id="parameter-special-classes">
+<div class="section" id="special-parameter-classes">
+<h4>Special Parameter Classes<a class="headerlink" href="#special-parameter-classes" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p><a class="reference internal" href="#psyneulink.core.globals.parameters.FunctionParameter" title="psyneulink.core.globals.parameters.FunctionParameter"><code class="xref any py py-class docutils literal"><span class="pre">FunctionParameter</span></code></a> and <a class="reference internal" href="#psyneulink.core.globals.parameters.SharedParameter" title="psyneulink.core.globals.parameters.SharedParameter"><code class="xref any py py-class docutils literal"><span class="pre">SharedParameter</span></code></a> are used to provide
+simpler access to some parameters of auxiliary components. They
+can be passed into the constructor of the owner, and then
+automatically passed when constructing the auxiliary component.
+The <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.values" title="psyneulink.core.globals.parameters.Parameter.values"><code class="xref any py py-attr docutils literal"><span class="pre">values</span></code></a> of <a class="reference internal" href="#psyneulink.core.globals.parameters.SharedParameter" title="psyneulink.core.globals.parameters.SharedParameter"><code class="xref any py py-class docutils literal"><span class="pre">SharedParameter</span></code></a>s are
+shared via getter and  with those of their target <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal"><span class="pre">Parameter</span></code></a>.</p>
+<p><a class="reference internal" href="#psyneulink.core.globals.parameters.SharedParameter" title="psyneulink.core.globals.parameters.SharedParameter"><code class="xref any py py-class docutils literal"><span class="pre">SharedParameter</span></code></a>s should only be used when there is a
+guarantee that their target will exist, given a specific
+Component. For example, it is acceptable that
+<a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate"><code class="xref any py py-attr docutils literal"><span class="pre">TransferMechanism.integration_rate</span></code></a> is a <a class="reference internal" href="#psyneulink.core.globals.parameters.FunctionParameter" title="psyneulink.core.globals.parameters.FunctionParameter"><code class="xref any py py-class docutils literal"><span class="pre">FunctionParameter</span></code></a>
+for the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> parameter of its
+<a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">integrator_function</span></code></a>,
+because all <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>s have an integrator
+function, and all integrator functions have a <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> parameter.
+It is also acceptable that
+<a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity_cost_function" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity_cost_function"><code class="xref any py py-attr docutils literal"><span class="pre">ControlSignal.intensity_cost_function</span></code></a> is a <a class="reference internal" href="#psyneulink.core.globals.parameters.FunctionParameter" title="psyneulink.core.globals.parameters.FunctionParameter"><code class="xref any py py-class docutils literal"><span class="pre">FunctionParameter</span></code></a>
+corresponding to its function’s
+<a class="reference internal" href="TransferFunctions.html#transferwithcosts"><span class="std std-ref">intensity_cost_fct</span></a> parameter, because a
+ControlSignal’s function is always a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.TransferWithCosts" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts"><code class="xref any py py-class docutils literal"><span class="pre">TransferWithCosts</span></code></a> and is
+not user-specifiable.</p>
+</div></blockquote>
+</div>
+</div>
 </div>
 <div class="section" id="using-parameters">
 <h3>Using Parameters<a class="headerlink" href="#using-parameters" title="Permalink to this headline">¶</a></h3>
@@ -385,7 +412,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 
 <dl class="class">
 <dt id="psyneulink.core.globals.parameters.Parameter">
-<em class="property">class </em><code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">Parameter</code><span class="sig-paren">(</span><em>default_value=None</em>, <em>name=None</em>, <em>stateful=True</em>, <em>modulable=False</em>, <em>structural=False</em>, <em>modulation_combination_function=None</em>, <em>read_only=False</em>, <em>function_arg=True</em>, <em>function_parameter=False</em>, <em>pnl_internal=False</em>, <em>aliases=None</em>, <em>user=True</em>, <em>values=None</em>, <em>getter=None</em>, <em>setter=None</em>, <em>loggable=True</em>, <em>log=None</em>, <em>log_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>delivery_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>history=None</em>, <em>history_max_length=1</em>, <em>history_min_length=0</em>, <em>fallback_default=False</em>, <em>retain_old_simulation_data=False</em>, <em>constructor_argument=None</em>, <em>spec=None</em>, <em>parse_spec=False</em>, <em>valid_types=None</em>, <em>reference=False</em>, <em>_owner=None</em>, <em>_inherited=False</em>, <em>_inherited_source=None</em>, <em>_user_specified=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">Parameter</code><span class="sig-paren">(</span><em>default_value=None</em>, <em>name=None</em>, <em>stateful=True</em>, <em>modulable=False</em>, <em>structural=False</em>, <em>modulation_combination_function=None</em>, <em>read_only=False</em>, <em>function_arg=True</em>, <em>pnl_internal=False</em>, <em>aliases=None</em>, <em>user=True</em>, <em>values=None</em>, <em>getter=None</em>, <em>setter=None</em>, <em>loggable=True</em>, <em>log=None</em>, <em>log_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>delivery_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>history=None</em>, <em>history_max_length=1</em>, <em>history_min_length=0</em>, <em>fallback_default=False</em>, <em>retain_old_simulation_data=False</em>, <em>constructor_argument=None</em>, <em>spec=None</em>, <em>parse_spec=False</em>, <em>valid_types=None</em>, <em>reference=False</em>, <em>_owner=None</em>, <em>_inherited=False</em>, <em>_inherited_source=None</em>, <em>_user_specified=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.default_value">
 <code class="descname">default_value</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.default_value" title="Permalink to this definition">¶</a></dt>
@@ -495,27 +522,6 @@ behavior is determined by Port._get_combined_mod_val().</p>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.globals.parameters.Parameter.function_parameter">
-<code class="descname">function_parameter</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.function_parameter" title="Permalink to this definition">¶</a></dt>
-<dd><p>indicates that this Parameter is not a “true” Parameter of a
-Component, but a reference to an equally named Parameter on
-the Component’s function.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Default:</th><td class="field-body">False</td>
-</tr>
-<tr class="field-even field"><th class="field-name" colspan="2">Developer Notes:</th></tr>
-<tr class="field-even field"><td>&#160;</td><td class="field-body">In the future, these will use custom</td>
-</tr>
-</tbody>
-</table>
-<p>default getters and setters that simply reference the
-equivalent Parameters on the function</p>
 </dd></dl>
 
 <dl class="attribute">
@@ -969,6 +975,144 @@ refers to another <a class="reference internal" href="#psyneulink.core.globals.p
 </table>
 </dd></dl>
 
+<dl class="class">
+<dt id="psyneulink.core.globals.parameters.FunctionParameter">
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">FunctionParameter</code><span class="sig-paren">(</span><em>default_value=None</em>, <em>function_parameter_name=None</em>, <em>function_name='function'</em>, <em>primary=True</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.FunctionParameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>A special (and most common) case <a class="reference internal" href="#psyneulink.core.globals.parameters.SharedParameter" title="psyneulink.core.globals.parameters.SharedParameter"><code class="xref any py py-class docutils literal"><span class="pre">SharedParameter</span></code></a> that
+references a Parameter on one of the Component’s functions.</p>
+<dl class="attribute">
+<dt id="psyneulink.core.globals.parameters.FunctionParameter.function_parameter_name">
+<code class="descname">function_parameter_name</code><a class="headerlink" href="#psyneulink.core.globals.parameters.FunctionParameter.function_parameter_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>the name of the target Parameter on the owning
+Component’s <a class="reference internal" href="#psyneulink.core.globals.parameters.FunctionParameter.function_name" title="psyneulink.core.globals.parameters.FunctionParameter.function_name"><code class="xref any py py-attr docutils literal"><span class="pre">function_name</span></code></a> Parameter</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Default:</th><td class="field-body"><a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.name" title="psyneulink.core.globals.parameters.Parameter.name"><code class="xref any py py-attr docutils literal"><span class="pre">Parameter.name</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.globals.parameters.FunctionParameter.function_name">
+<code class="descname">function_name</code><a class="headerlink" href="#psyneulink.core.globals.parameters.FunctionParameter.function_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>the name of the owning Component’s Parameter on which
+<a class="reference internal" href="#psyneulink.core.globals.parameters.FunctionParameter.function_parameter_name" title="psyneulink.core.globals.parameters.FunctionParameter.function_parameter_name"><code class="xref any py py-attr docutils literal"><span class="pre">function_parameter_name</span></code></a> is the target Parameter of
+this object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Default:</th><td class="field-body">‘function’</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.globals.parameters.SharedParameter">
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">SharedParameter</code><span class="sig-paren">(</span><em>default_value=None</em>, <em>attribute_name=None</em>, <em>shared_parameter_name=None</em>, <em>primary=False</em>, <em>getter=None</em>, <em>setter=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.SharedParameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Parameter that is not a “true” Parameter of a Component but a
+reference to a Parameter on one of the Component’s attributes or
+other Parameters. <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.values" title="psyneulink.core.globals.parameters.Parameter.values"><code class="xref any py py-attr docutils literal"><span class="pre">Values</span></code></a> are shared via
+getter and setter. Mainly used for more user-friendly access to
+certain Parameters, as a sort of cross-object alias.</p>
+<div class="technical-note docutils container">
+See <a class="reference internal" href="#parameter-special-classes"><span class="std std-ref">above</span></a> for when it is
+appropriate to use a SharedParameter</div>
+<dl class="attribute">
+<dt id="psyneulink.core.globals.parameters.SharedParameter.shared_parameter_name">
+<code class="descname">shared_parameter_name</code><a class="headerlink" href="#psyneulink.core.globals.parameters.SharedParameter.shared_parameter_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>the name of the target Parameter on the owning
+Component’s <a class="reference internal" href="#psyneulink.core.globals.parameters.SharedParameter.attribute_name" title="psyneulink.core.globals.parameters.SharedParameter.attribute_name"><code class="xref any py py-attr docutils literal"><span class="pre">attribute_name</span></code></a> Parameter or attribute</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Default:</th><td class="field-body"><a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.name" title="psyneulink.core.globals.parameters.Parameter.name"><code class="xref any py py-attr docutils literal"><span class="pre">Parameter.name</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.globals.parameters.SharedParameter.attribute_name">
+<code class="descname">attribute_name</code><a class="headerlink" href="#psyneulink.core.globals.parameters.SharedParameter.attribute_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>the name of the owning Component’s Parameter or
+attribute on which <a class="reference internal" href="#psyneulink.core.globals.parameters.SharedParameter.shared_parameter_name" title="psyneulink.core.globals.parameters.SharedParameter.shared_parameter_name"><code class="xref any py py-attr docutils literal"><span class="pre">shared_parameter_name</span></code></a> is the target
+Parameter of this object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">str</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Default:</th><td class="field-body">‘function’</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.globals.parameters.SharedParameter.primary">
+<code class="descname">primary</code><a class="headerlink" href="#psyneulink.core.globals.parameters.SharedParameter.primary" title="Permalink to this definition">¶</a></dt>
+<dd><p>whether the default value specified in the
+SharedParameter should take precedence over the default
+value specified in its target</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">bool</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Default:</th><td class="field-body">False</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.globals.parameters.SharedParameter.getter">
+<code class="descname">getter</code><a class="headerlink" href="#psyneulink.core.globals.parameters.SharedParameter.getter" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">types.FunctionType</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Default:</th><td class="field-body">a function that returns the value of the                 <em>shared_parameter_name</em> parameter of the                 <em>attribute_name</em> Parameter/attribute of this                 Parameter’s owning Component</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.globals.parameters.SharedParameter.setter">
+<code class="descname">setter</code><a class="headerlink" href="#psyneulink.core.globals.parameters.SharedParameter.setter" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Type:</th><td class="field-body">types.FunctionType</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Default:</th><td class="field-body">a function that sets the value of the                 <em>shared_parameter_name</em> parameter of the                 <em>attribute_name</em> Parameter/attribute of this                 Parameter’s owning Component and returns the set value</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
 </div>
 </div>
 
@@ -1033,7 +1177,7 @@ refers to another <a class="reference internal" href="#psyneulink.core.globals.p
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.3.2',
+               VERSION:'0.8.3.2+26.ge053667',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
