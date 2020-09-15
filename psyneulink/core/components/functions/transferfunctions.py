@@ -61,7 +61,7 @@ from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, ALL, BIAS, EXPONENTIAL_FUNCTION, \
     GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
-    IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
+    IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, LEAK, LINEAR_FUNCTION, CONV2D_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
     TANH_FUNCTION, MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, \
     OFF, OFFSET, ON, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
     RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,\
@@ -481,6 +481,140 @@ class Linear(TransferFunction):  # ---------------------------------------------
             and self.parameters.intercept._get(context) == 0
         )
 
+
+# **********************************************************************************************************************
+#                                                    Conv2d
+# **********************************************************************************************************************
+
+class Conv2d(TransferFunction):  # -------------------------------------------------------------------------------------
+    componentName = CONV2D_FUNCTION
+
+    class Parameters(TransferFunction.Parameters):
+        kernel = Parameter(np.array([[0]]), modulable=True)
+        stride = Parameter((1, 1), modulable=False)
+        padding = Parameter((0, 0), modulable=False)
+        dilation = Parameter((1, 1), modulable=False)
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 kernel=None,
+                 stride=None,
+                 padding=None,
+                 dilation=None,
+                 params=None,
+                 owner=None,
+                 prefs: tc.optional(is_pref_set) = None):
+
+        super().__init__(
+            default_variable=default_variable,
+            kernel=kernel,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+        # Pretend we have one huge array to work on
+        # TODO: should this be invoked in parts?
+        assert isinstance(arg_in.type.pointee, pnlvm.ir.ArrayType)
+
+        kernel_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "kernel")
+        stride_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "stride")
+        padding_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "padding")
+        dilation_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "dilation")
+
+        height, width = arg_in.type.pointee.count, arg_in.type.pointee.element.count
+        kernel_height, kernel_width = kernel_ptr.type.pointee.count, kernel_ptr.type.pointee.element.count
+        # result shape should have been determined
+        result_height, result_width = arg_out.type.pointee.count, arg_out.type.pointee.element.count
+
+        # zero arg_out
+        builder.store(arg_out.type.pointee(None), arg_out)
+
+        # dereference padding
+        padding_x = builder.fptoui(builder.load(builder.gep(padding_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])), ctx.int32_ty)
+        padding_y = builder.fptoui(builder.load(builder.gep(padding_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])), ctx.int32_ty)
+
+        # dereference stride
+        stride_x = builder.fptoui(builder.load(builder.gep(stride_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])), ctx.int32_ty)
+        stride_y = builder.fptoui(builder.load(builder.gep(stride_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])), ctx.int32_ty)
+
+        # dereference dilation
+        dilation_x = builder.fptoui(builder.load(builder.gep(dilation_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])), ctx.int32_ty)
+        dilation_y = builder.fptoui(builder.load(builder.gep(dilation_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])), ctx.int32_ty)
+
+        def _get_variable_idx(builder, x, y):
+            val_ptr = builder.alloca(ctx.float_ty)
+            x_padding_top = builder.icmp_unsigned('<', x, padding_x)
+            x_padding_bottom = builder.icmp_unsigned('>=', x, builder.add(ctx.int32_ty(height), padding_x))
+            y_padding_left = builder.icmp_unsigned('<', y, padding_y)
+            y_padding_right = builder.icmp_unsigned('>=', y, builder.add(ctx.int32_ty(width), padding_y))
+            pred = builder.or_(x_padding_top, x_padding_bottom)
+            pred2 = builder.or_(y_padding_left, y_padding_right)
+            pred = builder.or_(pred, pred2)
+            with builder.if_else(pred) as (then, otherwise):
+                with then:
+                    # in padding zone
+                    builder.store(ctx.float_ty(-0.0), val_ptr)
+                with otherwise:
+                    x = builder.sub(x, padding_x)
+                    y = builder.sub(y, padding_y)
+                    var_ptr = builder.gep(arg_in, [ctx.int32_ty(0), x, y])
+                    builder.store(builder.load(var_ptr), val_ptr)
+            return val_ptr
+
+        with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(result_height), "result_height") as (builder, h):
+            with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(result_width), "result_width") as (builder, w):
+                with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(kernel_height), "kernel_height") as (builder, k_h):
+                    with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(kernel_width), "kernel_width") as (builder, k_w):
+                        i_x = builder.add(builder.mul(k_h, dilation_x), builder.mul(stride_x, h))
+                        i_y = builder.add(builder.mul(k_w, dilation_y), builder.mul(stride_y, w))
+                        variable_ptr = _get_variable_idx(builder, i_x, i_y)
+                        var = builder.load(variable_ptr)
+                        kernel_ptr = builder.gep(kernel_ptr, [ctx.int32_ty(0), k_h, k_w])
+                        kernel = builder.load(kernel_ptr)
+                        result_ptr = builder.gep(arg_out, [ctx.int32_ty(0), h, w])
+                        res = builder.load(result_ptr)
+
+                        builder.store(builder.fadd(res, builder.fmul(var, kernel)), result_ptr)
+
+        return builder
+
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None,
+                 ):
+        kernel = self._get_current_parameter_value("kernel", context)
+        stride = self._get_current_parameter_value("stride", context)
+        padding = self._get_current_parameter_value("padding", context)
+        dilation = self._get_current_parameter_value("dilation", context)
+
+        height, width = variable.shape
+        kernel_height, kernel_width = kernel.shape
+
+        result_height = int(np.floor(((height + 2 *padding[0] - dilation[0] *(kernel_height - 1) - 1) / stride[0]) + 1))
+        result_width = int(np.floor(((width + 2 *padding[1] - dilation[1] *(kernel_width - 1) - 1) / stride[1]) + 1))
+
+        result = np.zeros((result_height, result_width))
+
+        # apply padding
+        variable = np.pad(variable, [(padding[0], padding[0]), (padding[1], padding[1])])
+
+        for h in range(result_height):
+            for w in range(result_width):
+                # apply kernel op.
+                for k_h in range(0, kernel_height):
+                    i_x = k_h * dilation[0] + stride[0] * h
+                    for k_w in range(0, kernel_width):
+                        i_y = k_w * dilation[1] + stride[1] * w
+                        result[h][w] += kernel[k_h][k_w] * variable[i_x][i_y]
+
+        return self.convert_output_type(result)
 
 # **********************************************************************************************************************
 #                                                    Exponential
