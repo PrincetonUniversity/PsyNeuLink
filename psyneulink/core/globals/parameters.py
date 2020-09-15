@@ -1702,6 +1702,14 @@ class SharedParameter(Parameter):
         except AttributeError:
             return None
 
+    @property
+    def final_source(self):
+        base_param = self
+        while hasattr(base_param, 'source'):
+            base_param = base_param.source
+
+        return base_param
+
 
 class FunctionParameter(SharedParameter):
     """
