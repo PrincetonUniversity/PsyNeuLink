@@ -3,7 +3,7 @@ import numpy as np
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.globals.log import LogCondition
-from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU
+from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU, Conv2d
 from psyneulink.library.compositions.pytorchllvmhelper import *
 
 __all__ = ['PytorchMechanismWrapper', 'PytorchProjectionWrapper']
@@ -103,6 +103,21 @@ def pytorch_function_creator(function, device, context=None):
         wrapper = PytorchFunctionWrapper(func, device=device, context=context)
         return wrapper
 
+    elif isinstance(function, Conv2d):
+        kernel = get_fct_param_value('kernel')
+        kernel = torch.nn.Parameter(torch.tensor(np.reshape(kernel, (1, 1, *kernel.shape)), device=device, dtype=torch.double), requires_grad=True)
+
+        stride = get_fct_param_value('stride')
+        padding = get_fct_param_value('padding')
+        dilation = get_fct_param_value('dilation')
+
+        conv2d = torch.nn.functional.conv2d
+        def func(x):
+            x = torch.reshape(x, (1, 1, *x.shape))
+            return conv2d(x, weight=kernel, stride=stride, padding=padding, dilation=dilation)[0][0]
+
+        wrapper = PytorchFunctionWrapper(func, learnable_params = [kernel], device=device, context=context)
+        return wrapper
     else:
         raise Exception(f"Function {function} is not currently supported in AutodiffCompositions!")
 

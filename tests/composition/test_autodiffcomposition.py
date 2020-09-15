@@ -7,12 +7,13 @@ import pytest
 
 import psyneulink as pnl
 
-from psyneulink.core.components.functions.transferfunctions import Logistic
+from psyneulink.core.components.functions.transferfunctions import Logistic, Conv2d
 from psyneulink.core.components.functions.learningfunctions import BackPropagation
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals import Context
 from psyneulink.core.globals.keywords import TRAINING_SET
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
 
@@ -1219,6 +1220,28 @@ class TestTrainingCorrectness:
 
         assert np.allclose(output, comparator)
 
+    def test_conv2d_pytorch_equivalence_with_autodiff_composition(self):
+        variable, kernel, stride, padding, dilation, target, comparator = (np.ones((2, 2)), np.ones((2, 2)), (1,1), (0,0), (1,1), np.ones((1,1)), [[0.98340034484863281250]])
+
+        il = ProcessingMechanism(name='input', function=Conv2d(default_variable=variable, kernel=kernel, stride=stride, padding=padding, dilation=dilation), default_variable=variable)
+        comp = AutodiffComposition(optimizer_type='adam', learning_rate=1)
+        comp.add_node(il)
+
+        input_set = {
+            'inputs': {
+                il: [variable]
+            },
+            'targets': {
+                il: [target]
+            }
+        }
+
+        results = comp.learn(
+            inputs=input_set,
+            epochs=100
+        )
+
+        assert np.allclose(comparator, results[-1][-1])
 
 @pytest.mark.pytorch
 @pytest.mark.actime
