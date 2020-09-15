@@ -401,7 +401,7 @@ class AutodiffComposition(Composition):
         self.parameters.tracked_loss_count._set(0, context=context, skip_history=True, skip_log=True)
         optimizer.step()
         self.parameters.pytorch_representation._get(context=context).detach_all()
-        self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
+        self.parameters.pytorch_representation._get(context).copy_params_to_psyneulink()
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "run" in tags:

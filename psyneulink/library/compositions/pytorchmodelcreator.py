@@ -6,7 +6,6 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss
 from psyneulink.library.compositions.pytorchllvmhelper import *
-from psyneulink.core.globals.keywords import TARGET_MECHANISM
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 from .pytorchcomponents import *
 
@@ -29,9 +28,12 @@ class PytorchModelCreator(torch.nn.Module):
 
         super(PytorchModelCreator, self).__init__()
 
+        # Stores components in one list
+        self.components = []
+
         # Maps Mechanism -> PytorchMechanismWrapper
         self.nodes = []
-        self.component_map = {}
+        self.node_map = {}
 
         # Maps Projections -> PytorchProjectionWrappers
         self.projections = []
@@ -43,31 +45,36 @@ class PytorchModelCreator(torch.nn.Module):
 
         # Instantiate pytorch mechanisms
         for node in set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)):
-            pytorch_node = PytorchMechanismWrapper(node, self._composition._get_node_index(node), device, context=context)
-            self.component_map[node] = pytorch_node
+            pytorch_node = wrap_mechanism(node, self._composition._get_node_index(node), device, context=context)
+            self.node_map[node] = pytorch_node
             self.nodes.append(pytorch_node)
+            self.components.append(pytorch_node)
 
         # Instantiate pytorch projections
         for projection in composition.projections:
-            if projection.sender.owner in self.component_map and projection.receiver.owner in self.component_map:
-                proj_send = self.component_map[projection.sender.owner]
-                proj_recv = self.component_map[projection.receiver.owner]
+            if projection.sender.owner in self.node_map and projection.receiver.owner in self.node_map:
+                proj_send = self.node_map[projection.sender.owner]
+                proj_recv = self.node_map[projection.receiver.owner]
 
-                port_idx = projection.sender.owner.output_ports.index(projection.sender)
-                new_proj = PytorchProjectionWrapper(projection, list(self._composition._inner_projections).index(projection), port_idx, device, sender=proj_send, receiver=proj_recv, context=context)
-                proj_send.add_efferent(new_proj)
-                proj_recv.add_afferent(new_proj)
-                self.projection_map[projection] = new_proj
-                self.projections.append(new_proj)
-                self.params.append(new_proj.matrix)
+                pytorch_proj = PytorchProjectionWrapper(projection, list(self._composition._inner_projections).index(projection), device, sender=proj_send, receiver=proj_recv, context=context)
+                proj_send.add_efferent(pytorch_proj)
+                proj_recv.add_afferent(pytorch_proj)
+                self.projection_map[projection] = pytorch_proj
+                self.projections.append(pytorch_proj)
+                self.components.append(pytorch_proj)
+
+        # Add component params to params list
+        for component in self.components:
+            for param in component._get_pytorch_params():
+                self.params.append(param)
 
         # Setup execution sets
         # 1) Remove all learning-specific nodes
-        self.execution_sets = [x - set(composition.get_nodes_by_role(NodeRole.LEARNING)) for x in composition.scheduler.run(context=context)]
+        non_learning_execution_sets = [x - set(composition.get_nodes_by_role(NodeRole.LEARNING)) for x in composition.scheduler.run(context=context)]
         # 2) Convert to pytorchcomponent representation
-        self.execution_sets = [{self.component_map[comp] for comp in s if comp in self.component_map} for s in self.execution_sets]
+        pytorchcomponent_execution_sets = [{self.node_map[comp] for comp in s if comp in self.node_map} for s in non_learning_execution_sets]
         # 3) Remove empty execution sets
-        self.execution_sets = [x for x in self.execution_sets if len(x) > 0]
+        self.execution_sets = [x for x in pytorchcomponent_execution_sets if len(x) > 0]
 
     __deepcopy__ = get_deepcopy_with_shared(shared_types=(Component, ComponentsMeta))
 
@@ -96,7 +103,7 @@ class PytorchModelCreator(torch.nn.Module):
                 mech_input_ty = ctx.get_input_struct_type(component._mechanism)
                 variable = builder.alloca(mech_input_ty)
                 z_values[component] = builder.alloca(mech_input_ty.elements[0].elements[0])
-                builder.store(z_values[component].type.pointee(None),z_values[component])
+                builder.store(z_values[component].type.pointee(None), z_values[component])
 
                 if NodeRole.INPUT in self._composition.get_roles_by_node(component._mechanism):
                     input_ptr = builder.gep(
@@ -104,14 +111,16 @@ class PytorchModelCreator(torch.nn.Module):
                     input_id = component._idx
                     mech_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(input_id)])
                     builder.store(builder.load(mech_in), input_ptr)
-                for (proj_idx, proj) in enumerate(component.afferents):
+                    gen_inject_vec_add(ctx, builder, input_ptr, z_values[component], z_values[component])
+                for proj in component.afferents:
                     input_ptr = builder.gep(
-                        variable, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(proj_idx)])
+                        variable, [ctx.int32_ty(0), ctx.int32_ty(proj._receiver_port_idx), ctx.int32_ty(proj._projection.receiver.path_afferents.index(proj._projection))])
                     proj_output = proj._gen_llvm_execute(ctx, builder, state, params, data)
                     # store in input ports struct
                     builder.store(builder.load(proj_output), input_ptr)
-                    # HACK: Add to z_values struct
-                    gen_inject_vec_add(ctx, builder, proj_output, z_values[component], z_values[component])
+                    # HACK: Add to z_values struct only if primary input port
+                    if proj._receiver_port_idx == 0:
+                        gen_inject_vec_add(ctx, builder, proj_output, z_values[component], z_values[component])
                 component._gen_llvm_execute(ctx, builder, state, params, variable, data)
 
         return z_values
@@ -136,8 +145,6 @@ class PytorchModelCreator(torch.nn.Module):
                                          ctx.int32_ty(0),
                                          ctx.int32_ty(self._composition._get_node_index(self._composition.input_CIM))])
         model_output = data
-        # setup useful mappings
-        input_nodes = set(self._composition.get_nodes_by_role(NodeRole.INPUT))
 
         # initialize optimizer params:
         delta_w = builder.gep(optim_struct, [ctx.int32_ty(0), ctx.int32_ty(optimizer._DELTA_W_NUM)])
@@ -154,13 +161,7 @@ class PytorchModelCreator(torch.nn.Module):
         error_dict = {}
         for exec_set in reversed(self.execution_sets):
             for node in exec_set:
-                if node._mechanism in input_nodes:
-                    continue
-                node_z_value = z_values[node]
-                activation_func_derivative = node._gen_llvm_execute_derivative_func(ctx, builder, state, params, node_z_value)
-                error_val = builder.alloca(z_values[node].type.pointee)
-                error_dict[node] = error_val
-
+                node_delta_w = builder.gep(delta_w, [ctx.int32_ty(0), ctx.int32_ty(self.components.index(node))])
                 if NodeRole.OUTPUT in self._composition.get_roles_by_node(node._mechanism):
                     # We handle output layer here
                     # compute  dC/da = a_l - y(x) (TODO: Allow other cost functions! This only applies to MSE)
@@ -181,70 +182,43 @@ class PytorchModelCreator(torch.nn.Module):
                         builder, node_target, prefix=f"{node}\ttarget:\t")
                     pnlvm.helpers.printf_float_array(
                         builder, node_output, prefix=f"{node}\tvalue:\t")
-
                     pnlvm.helpers.printf(
                         builder, f"{node}\tloss:\t%f\n", tmp_loss, override_debug=False)
+
                     builder.store(builder.fadd(builder.load(
                         total_loss), tmp_loss), total_loss)
-                    loss_derivative = loss._gen_inject_loss_differential(
+
+                    backpropagated_error = loss._gen_inject_loss_differential(
                         ctx, builder, node_output, node_target)
-                    # compute δ_l = dσ/da ⊙ σ'(z)
-
-                    gen_inject_vec_hadamard(
-                        ctx, builder, activation_func_derivative, loss_derivative, error_val)
-
                 else:
                     # We propagate error backwards from next layer
+                    backpropagated_error = builder.alloca(z_values[node].type.pointee)
                     for proj_idx, proj in enumerate(node.efferents):
                         efferent_node = proj.receiver
                         efferent_node_error = error_dict[efferent_node]
 
-                        weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, params)
+                        weights_llvmlite = proj._extract_llvm_param_ptr(ctx, builder, params, "matrix")
 
                         if proj_idx == 0:
                             gen_inject_vxm_transposed(
-                                ctx, builder, efferent_node_error, weights_llvmlite, error_val)
+                                ctx, builder, efferent_node_error, weights_llvmlite, backpropagated_error)
                         else:
                             new_val = gen_inject_vxm_transposed(
                                 ctx, builder, efferent_node_error, weights_llvmlite)
 
                             gen_inject_vec_add(
-                                ctx, builder, new_val, error_val, error_val)
+                                ctx, builder, new_val, backpropagated_error, backpropagated_error)
 
-                    gen_inject_vec_hadamard(
-                        ctx, builder, activation_func_derivative, error_val, error_val)
-
-                pnlvm.helpers.printf_float_array(
-                    builder, activation_func_derivative, prefix=f"{node}\tdSigma:\t")
-                pnlvm.helpers.printf_float_array(
-                    builder, error_val, prefix=f"{node}\terror:\t")
+                error_dict[node] = node._update_llvm_param_gradients(ctx, builder, state, params, node_delta_w, z_values[node], backpropagated_error)
 
         # 4) compute weight gradients
         for (node, err_val) in error_dict.items():
-            if node in input_nodes:
-                continue
             for proj in node.afferents:
                 # get a_(l-1)
-                afferent_node_activation = builder.gep(model_output, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(proj.sender._idx), ctx.int32_ty(0)])
-
-                # get dimensions of weight matrix
-                weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, params)
-                pnlvm.helpers.printf_float_matrix(builder, weights_llvmlite, prefix= f"{proj.sender._mechanism} -> {proj.receiver._mechanism}\n", override_debug=False)
+                proj_input = builder.gep(model_output, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(proj.sender._idx), ctx.int32_ty(0)])
+                proj_delta_w = builder.gep(delta_w, [ctx.int32_ty(0), ctx.int32_ty(self.components.index(proj))])
                 # update delta_W
-                node_delta_w = builder.gep(delta_w, [ctx.int32_ty(0), ctx.int32_ty(proj._idx)])
-
-                dim_x, dim_y = proj.matrix.shape
-                with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(dim_x), "weight_update_loop_outer") as (b1, weight_row):
-                    with pnlvm.helpers.for_loop_zero_inc(b1, ctx.int32_ty(dim_y), "weight_update_loop_inner") as (b2, weight_column):
-                        a_val = b2.load(b2.gep(afferent_node_activation,
-                                               [ctx.int32_ty(0), weight_row]))
-                        d_val = b2.load(b2.gep(err_val,
-                                               [ctx.int32_ty(0), weight_column]))
-                        old_val = b2.load(b2.gep(node_delta_w,
-                                                 [ctx.int32_ty(0), weight_row, weight_column]))
-                        new_val = b2.fadd(old_val, b2.fmul(a_val, d_val))
-                        b2.store(new_val, b2.gep(node_delta_w,
-                                                 [ctx.int32_ty(0), weight_row, weight_column]))
+                proj._update_llvm_param_gradients(ctx, builder, state, params, proj_delta_w, proj_input, err_val)
 
         pnlvm.helpers.printf(builder, "TOTAL LOSS:\t%.20f\n",
                              builder.load(total_loss), override_debug=False)
@@ -313,15 +287,12 @@ class PytorchModelCreator(torch.nn.Module):
         return outputs
 
     def detach_all(self):
-        for projection in self.projection_map.values():
-            projection.matrix.detach()
+        for param in self.params:
+            param.detach()
 
-    def copy_weights_to_psyneulink(self, context=None):
-        for projection, pytorch_rep in self.projection_map.items():
-            projection.parameters.matrix._set(
-                pytorch_rep.matrix.detach().cpu().numpy(), context)
-            projection.parameter_ports['matrix'].parameters.value._set(
-                pytorch_rep.matrix.detach().cpu().numpy(), context)
+    def copy_params_to_psyneulink(self):
+        for component in self.components:
+            component._copy_params_to_psyneulink()
 
     def log_weights(self):
         for proj in self.projections:
