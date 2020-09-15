@@ -96,10 +96,10 @@ stimulusInfo = pnl.TransferMechanism(size=2,
 
 # Cue-To-Stimulus Interval Layer
 # Origin Node
-cueInterval = pnl.TransferMechanism(size=1,
-                                    function=pnl.Linear(slope=1, intercept=0),
-                                    output_ports=[pnl.RESULT],
-                                    name='Cue-Stimulus Interval')
+# cueInterval = pnl.TransferMechanism(size=1,
+#                                     function=pnl.Linear(slope=1, intercept=0),
+#                                     output_ports=[pnl.RESULT],
+#                                     name='Cue-Stimulus Interval')
 
 # Control Module Layer: [Color Activation, Motion Activation]
 controlModule = pnl.LCAMechanism(size=2,
@@ -108,14 +108,14 @@ controlModule = pnl.LCAMechanism(size=2,
                                  competition=COMP,
                                  noise=0,
                                  termination_measure=pnl.TimeScale.TRIAL,
-                                 termination_threshold=10,
+                                 termination_threshold=60,
                                  time_step_size=.1,
                                  name='Task Activations [Act1, Act2]')
 
 # Control Mechanism Setting Cue-To-Stimulus Interval
-csiController = pnl.ControlMechanism(monitor_for_control=cueInterval,
-                                     control_signals=[(pnl.TERMINATION_THRESHOLD, controlModule)],
-                                     modulation=pnl.OVERRIDE)
+# csiController = pnl.ControlMechanism(monitor_for_control=cueInterval,
+#                                      control_signals=[(pnl.TERMINATION_THRESHOLD, controlModule)],
+#                                      modulation=pnl.OVERRIDE)
 
 # Hadamard product of controlModule and Stimulus Information
 nonAutomaticComponent = pnl.TransferMechanism(size=2,
@@ -163,14 +163,14 @@ ddmInputScale.set_log_conditions([pnl.RESULT])
 decisionMaker.set_log_conditions([pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME])
 
 # Composition Creation
-stabilityFlexibility = pnl.Composition()
+stabilityFlexibility = pnl.Composition(controller_mode=pnl.BEFORE)
 
 # Node Creation
 stabilityFlexibility.add_node(taskLayer)
 stabilityFlexibility.add_node(stimulusInfo)
-stabilityFlexibility.add_node(cueInterval)
+# stabilityFlexibility.add_node(cueInterval)
 stabilityFlexibility.add_node(controlModule)
-stabilityFlexibility.add_node(csiController)
+# stabilityFlexibility.add_node(csiController)
 stabilityFlexibility.add_node(nonAutomaticComponent)
 stabilityFlexibility.add_node(congruenceWeighting)
 stabilityFlexibility.add_node(ddmCombination)
@@ -205,15 +205,17 @@ stabilityFlexibility.scheduler.add_condition(decisionGate, pnl.WhenFinished(deci
 stabilityFlexibility.scheduler.add_condition(responseGate, pnl.WhenFinished(decisionMaker))
 
 # Origin Node Inputs
-USE_GPU = False
+USE_GPU = True
 
 taskTrain, stimulusTrain, cueTrain = generateTrialSequence(80, 0.5)
 
-#taskTrain = np.array([[1.0, 0.0], [0., 1.], [1., 0.]])
-#stimulusTrain = np.array([[-1.,  1.], [ 1.,  1.], [-1., -1.]])
-#cueTrain = np.array([60., 60., 80.])
+taskTrain = np.array([[1.0, 0.0], [0., 1.], [1., 0.]])
+stimulusTrain = np.array([[-1.,  1.], [ 1.,  1.], [-1., -1.]])
+cueTrain = np.array([60., 60., 80.])
 
-inputs = {taskLayer: taskTrain, stimulusInfo: stimulusTrain, cueInterval: cueTrain}
+# inputs = {taskLayer: taskTrain, stimulusInfo: stimulusTrain, cueInterval: cueTrain}
+inputs = {taskLayer: taskTrain, stimulusInfo: stimulusTrain}
+
 
 # stabilityFlexibility.show_graph()
 
@@ -226,13 +228,30 @@ if not USE_GPU:
 
     res = stabilityFlexibility.results
 else:
-    stabilityFlexibility._analyze_graph()
-    num_executions = 1000
-    var = [inputs for _ in range(num_executions)]
-    adjusted_inputs, num_input_sets = stabilityFlexibility._parse_run_inputs(inputs)
-    var = [adjusted_inputs for _ in range(num_executions)]
-    e = pnlvm.execution.CompExecution(stabilityFlexibility, [None for _ in range(num_executions)])
-    res = e.cuda_run(var, 1, num_input_sets)
+    ocm_mode = "PTX"
+
+    search_range = pnl.SampleSpec(start=1.0, stop=7.5, step=0.001)
+    control_signal = pnl.ControlSignal(projections=[('competition', controlModule)],
+                                       variable=1.0,
+                                       allocation_samples=search_range,
+                                       intensity_cost_function=pnl.Linear(slope=0.))
+
+    objective_mech = pnl.ObjectiveMechanism(monitor=[responseGate])
+    ocm = pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
+                                           features=[stimulusInfo.input_port],
+                                           objective_mechanism=objective_mech,
+                                           function=pnl.GridSearch(),
+                                           control_signals=[control_signal],
+                                           comp_execution_mode=ocm_mode)
+    # objective_mech.log.set_log_conditions(pnl.OUTCOME)
+
+    stabilityFlexibility.add_controller(ocm)
+
+    import time
+
+    t0 = time.time()
+    stabilityFlexibility.run(inputs, bin_execute='Python-PTX')
+    print(f"Elapsed: {time.time() - t0}")
 
 # taskLayer.log.print_entries()
 # stimulusInfo.log.print_entries()
