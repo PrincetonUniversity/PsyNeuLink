@@ -148,12 +148,12 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import SOFT_CLAMP, TRAINING_SET
+from psyneulink.core.globals.keywords import MSE, NAME, OUTCOME, SAMPLE, SOFT_CLAMP, TARGET, TRAINING_SET, VARIABLE, WEIGHT
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core import llvm as pnlvm
-
+from psyneulink.core.components import ProcessingMechanism
 
 logger = logging.getLogger(__name__)
 
@@ -426,7 +426,7 @@ class AutodiffComposition(Composition):
                 node_efferent_mechanisms = [x.receiver.owner for x in node.efferents]
                 comparators = [x for x in node_efferent_mechanisms if (isinstance(x, ComparatorMechanism) and NodeRole.LEARNING in self.get_roles_by_node(x))]
                 comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
-                output_nodes = [t for t in comparator_afferent_mechanisms if (NodeRole.OUTPUT in self.get_roles_by_node(t) and NodeRole.LEARNING not in self.get_roles_by_node(t))]
+                output_nodes = [t for t in comparator_afferent_mechanisms if t is not node]
 
                 if len(output_nodes) != 1:
                     # Invalid specification! Either we have no valid target nodes, or there is ambiguity in which target node to choose
@@ -451,11 +451,43 @@ class AutodiffComposition(Composition):
                 ret[node] = values
         return ret
 
-    def learn(self, *args, **kwargs):
+    def _create_output_target_mechanisms(self, context=None):
+        """Automatically creates output + target + comparator mechanisms (sans learning pathways) for all output nodes."""
+        self._analyze_graph()
+        context.source = ContextFlags.COMPOSITION
+        output_nodes = self.get_nodes_by_role(NodeRole.OUTPUT)
+        for node in output_nodes:
+            if NodeRole.LEARNING not in self.get_roles_by_node(node):
+                # check for existing comparator
+                node_efferent_mechanisms = [x.receiver.owner for x in node.efferents]
+                comparators = [x for x in node_efferent_mechanisms if (isinstance(x, ComparatorMechanism) and NodeRole.LEARNING in self.get_roles_by_node(x))]
+                if len(comparators) == 0:
+                    target_mechanism = ProcessingMechanism(name='Target',
+                                                   default_variable=node.output_ports[0].value)
+                    comparator = ComparatorMechanism(name='Comparator',
+                                                            target={NAME: TARGET,
+                                                                    VARIABLE: target_mechanism.output_ports[0].value},
+                                                            sample={NAME: SAMPLE,
+                                                                    VARIABLE: node.output_ports[0].value,
+                                                                    WEIGHT: -1},
+                                                            output_ports=[OUTCOME, MSE])
+                    sample_projection = MappingProjection(sender=node.output_port, receiver=comparator.input_ports[SAMPLE])
+                    target_projection = MappingProjection(sender=target_mechanism, receiver=comparator.input_ports[TARGET])
+                    self.add_nodes([(target_mechanism, [NodeRole.TARGET, NodeRole.INTERNAL]),
+                                    (comparator, [NodeRole.LEARNING_OBJECTIVE, NodeRole.INTERNAL])],
+                                    required_roles=NodeRole.LEARNING)
+                    self.add_projections([sample_projection, target_projection])
+                    self.exclude_node_roles(comparator, [NodeRole.TERMINAL, NodeRole.OUTPUT], context=context)
+                    self._add_required_node_role(node, NodeRole.OUTPUT, context)
+        self._analyze_graph()
+        context.source = ContextFlags.COMMAND_LINE
+
+    @handle_external_context()
+    def learn(self, *args, context=None, **kwargs):
         if self._built_pathways is False:
-            self.infer_backpropagation_learning_pathways()
+            self._create_output_target_mechanisms(context=context)
             self._built_pathways = True
-        return super().learn(*args, **kwargs)
+        return super().learn(*args, **kwargs, context=context)
 
     @handle_external_context()
     def execute(self,

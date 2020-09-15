@@ -166,9 +166,9 @@ class PytorchModelCreator(torch.nn.Module):
                     # compute  dC/da = a_l - y(x) (TODO: Allow other cost functions! This only applies to MSE)
 
                     # 1) Lookup desired target value
-                    terminal_sequence = self._composition._terminal_backprop_sequences[node._mechanism]
+                    target_mech = self._composition._infer_target_node(node._mechanism)
                     target_idx = self._composition.get_nodes_by_role(
-                        NodeRole.INPUT).index(terminal_sequence[TARGET_MECHANISM])
+                        NodeRole.INPUT).index(target_mech)
                     node_target = builder.gep(model_input, [ctx.int32_ty(0), ctx.int32_ty(target_idx)])
 
                     # 2) Lookup desired output value
