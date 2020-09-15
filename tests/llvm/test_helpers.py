@@ -516,3 +516,40 @@ class TestHelperTypegetters:
             res = res[0]
 
         assert res.value == expected
+
+@pytest.mark.llvm
+@pytest.mark.parametrize('mode', ['CPU',
+                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+@pytest.mark.parametrize('op,var,expected', [
+    (pnlvm.helpers.tanh, 1.0, 0.7615941559557649),
+    (pnlvm.helpers.exp, 1.0, 2.718281828459045),
+    (pnlvm.helpers.coth, 1.0, 1.3130352854993313),
+    (pnlvm.helpers.csch, 1.0, 0.8509181282393215),
+])
+def test_helper_numerical(mode, op, var, expected):
+    with pnlvm.LLVMBuilderContext() as ctx:
+        func_ty = ir.FunctionType(ir.VoidType(), [ctx.float_ty.as_pointer()])
+
+        custom_name = ctx.get_unique_name("numerical")
+        function = ir.Function(ctx.module, func_ty, name=custom_name)
+        out = function.args[0]
+        block = function.append_basic_block(name="entry")
+        builder = ir.IRBuilder(block)
+
+        variable = ctx.float_ty(var)
+        result = op(ctx, builder, variable)
+        builder.store(result, out)
+
+        builder.ret_void()
+
+    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+    if mode == 'CPU':
+        res = ctypes.c_double()
+
+        bin_f(ctypes.byref(res))
+    else:
+        res = np.array([0.0], dtype=np.float)
+        bin_f.cuda_wrap_call(res)
+        res = res[0]
+
+    assert res.value == expected
