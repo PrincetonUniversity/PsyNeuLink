@@ -345,23 +345,6 @@ class AutoAssociativeProjection(MappingProjection):
                 )
             )
 
-    # these properties allow the auto and hetero properties to live purely on the RecurrentTransferMechanism
-    @property
-    def auto(self):
-        return self.owner_mech.auto
-
-    @auto.setter
-    def auto(self, setting):
-        self.owner_mech.auto = setting
-
-    @property
-    def hetero(self):
-        return self.owner_mech.hetero
-
-    @hetero.setter
-    def hetero(self, setting):
-        self.owner_mech.hetero = setting
-
     @property
     def matrix(self):
         owner_mech = self.owner_mech
