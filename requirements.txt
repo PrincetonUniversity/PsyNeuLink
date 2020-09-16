@@ -1,14 +1,14 @@
-autograd
-dill
-elfi
-graphviz
-grpcio<1.32.0
-grpcio-tools<1.32.0
-llvmlite
-matplotlib
-networkx==1.11
-numpy
-pillow
-toposort
-torch; sys_platform != 'win32' and platform_machine == 'x86_64' and platform_python_implementation == 'CPython'
-typecheck-decorator==1.2
+autograd<=1.3
+dill<=0.32
+elfi<=0.7.6
+graphviz<=0.14.1
+grpcio<=1.31.0
+grpcio-tools<=1.31.0
+llvmlite<=0.34
+matplotlib<=3.3.2
+networkx<=1.11
+numpy<=1.19.2
+pillow<=7.2.0
+toposort<=1.5
+torch<=1.6.0; sys_platform != 'win32' and platform_machine == 'x86_64' and platform_python_implementation == 'CPython'
+typecheck-decorator<=1.2

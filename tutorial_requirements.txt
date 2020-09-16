@@ -1,3 +1,3 @@
-graphviz
-jupyter
-matplotlib
+graphviz<=0.14.1
+jupyter<=1.0.0
+matplotlib<=3.3.2
