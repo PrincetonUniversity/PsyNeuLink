@@ -1284,6 +1284,9 @@ specified in **initialize_cycle_values** will be re-initialized to the assigned 
 cycle in that run, whereas any Nodes not specified will retain the last `value <Component.value>` they were assigned
 in the uprevious call to `run <Composition.run>` or `learn <Composition.learn>`.
 
+Nodes in a cycle can also be initialized outside of a call to `run <Composition.run>` or `learn <Composition.run>` using
+the `initialize <Composition.initialize>` method.
+
 .. note::
    If a `Mechanism` belonging to a cycle in a Composition is first executed on its own (i.e., using its own `execute
    <Mechanism_Base.execute>` method), the value it is assigned will be used as its initial value when it is executed
@@ -2378,7 +2381,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
-    COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, \
+    COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, DEFAULT, \
     FEEDBACK, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, INSET, \
     LABELS, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
@@ -8200,65 +8203,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 node.parameters.num_executions._get(context)._set_by_time_scale(TimeScale.RUN, 0)
 
-        if initialize_cycle_values is not None:
-            for node in initialize_cycle_values:
-                if node not in self.nodes:
-                    raise CompositionError(f"{node.name} "
-                                           f"(entry in initialize_cycle_values arg) is not a node in '{self.name}'")
-                else:
-                    if (node not in self.get_nodes_by_role(NodeRole.CYCLE) and
-                            node not in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)):
-                        warnings.warn(
-                            f"A value is specified for {node.name} of {self.name} in the 'initialize_cycle_values' "
-                            f"argument of call to run, but it is neither part of a cycle nor a FEEDBACK_SENDER. "
-                            f"Its value will be overwritten when the node first executes, and therefore not used.")
-                    node.initialize(initialize_cycle_values[node], context)
-
-        if not reset_stateful_functions_to:
-            reset_stateful_functions_to = {}
-
-        for node, vals in reset_stateful_functions_to.items():
-            try:
-                iter(vals)
-            except TypeError:
-                vals = [vals]
-                reset_stateful_functions_to[node] = vals
-            if (isinstance(reset_stateful_functions_when, Never) or
-                    node not in reset_stateful_functions_when) and \
-                    isinstance(node.reset_stateful_function_when, Never):
-                node.reset(*vals, context=context)
-
-        # cache and set reset_stateful_function_when conditions for nodes, matching old System behavior
-        # Validate
-        valid_reset_type = True
-        if not isinstance(reset_stateful_functions_when, (Condition, dict)):
-            valid_reset_type = False
-        elif type(reset_stateful_functions_when) == dict:
-            if False in {True if isinstance(k, Mechanism) and isinstance(v, Condition) else
-                         False for k,v in reset_stateful_functions_when.items()}:
-                valid_reset_type = False
-
-        if not valid_reset_type:
-            raise CompositionError(
-                f"{reset_stateful_functions_when} is not a valid specification for reset_integrator_nodes_when of {self.name}. "
-                "reset_integrator_nodes_when must be a Condition or a dict comprised of {Node: Condition} pairs.")
-
-        self._reset_stateful_functions_when_cache = {}
-
-        # use type here to avoid another costly call to isinstance
-        if not type(reset_stateful_functions_when) == dict:
-            for node in self.nodes:
-                try:
-                    if isinstance(node.reset_stateful_function_when, Never):
-                        self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
-                        node.reset_stateful_function_when = reset_stateful_functions_when
-                except AttributeError:
-                    pass
-        else:
-            for node in reset_stateful_functions_when:
-                self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
-                node.reset_stateful_function_when = reset_stateful_functions_when[node]
-
         if ContextFlags.SIMULATION_MODE not in context.runmode:
             try:
                 self.parameters.input_specification._set(copy(inputs), context)
@@ -8343,6 +8287,54 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._initialize_from_context(context, base_context, override=False)
 
         context.composition = self
+
+        if initialize_cycle_values is not None:
+            self.initialize(values=initialize_cycle_values, include_unspecified_nodes=False, context=context)
+
+        if not reset_stateful_functions_to:
+            reset_stateful_functions_to = {}
+
+        for node, vals in reset_stateful_functions_to.items():
+            try:
+                iter(vals)
+            except TypeError:
+                vals = [vals]
+                reset_stateful_functions_to[node] = vals
+            if (isinstance(reset_stateful_functions_when, Never) or
+                    node not in reset_stateful_functions_when) and \
+                    isinstance(node.reset_stateful_function_when, Never):
+                node.reset(*vals, context=context)
+
+        # cache and set reset_stateful_function_when conditions for nodes, matching old System behavior
+        # Validate
+        valid_reset_type = True
+        if not isinstance(reset_stateful_functions_when, (Condition, dict)):
+            valid_reset_type = False
+        elif type(reset_stateful_functions_when) == dict:
+            if False in {True if isinstance(k, Mechanism) and isinstance(v, Condition) else
+                         False for k,v in reset_stateful_functions_when.items()}:
+                valid_reset_type = False
+
+        if not valid_reset_type:
+            raise CompositionError(
+                f"{reset_stateful_functions_when} is not a valid specification for reset_integrator_nodes_when of {self.name}. "
+                "reset_integrator_nodes_when must be a Condition or a dict comprised of {Node: Condition} pairs.")
+
+        self._reset_stateful_functions_when_cache = {}
+
+        # use type here to avoid another costly call to isinstance
+        if not type(reset_stateful_functions_when) == dict:
+            for node in self.nodes:
+                try:
+                    if isinstance(node.reset_stateful_function_when, Never):
+                        self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
+                        node.reset_stateful_function_when = reset_stateful_functions_when
+                except AttributeError:
+                    pass
+        else:
+            for node in reset_stateful_functions_when:
+                self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
+                node.reset_stateful_function_when = reset_stateful_functions_when[node]
 
         is_simulation = (context is not None and
                          ContextFlags.SIMULATION_MODE in context.runmode)
@@ -9263,7 +9255,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         pass
 
     @handle_external_context(execution_id=NotImplemented)
-    def reset(self, values=None, context=NotImplemented):
+    def reset(self, values=None, include_unspecified_nodes=True, context=NotImplemented):
         if context is NotImplemented:
             context = self.most_recent_context
 
@@ -9271,8 +9263,65 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             values = {}
 
         for node in self.stateful_nodes:
+            if not include_unspecified_nodes and node not in values:
+                continue
             reset_val = values.get(node)
             node.reset(reset_val, context=context)
+
+    def initialize(self, values=None, include_unspecified_nodes=True, context=NotImplemented):
+        """
+            Initializes the values of nodes within cycles. If `include_unspecified_nodes` is True and a value is
+            provided for a given node, the node will be initialized to that value. If `include_unspecified_nodes` is
+            True and a value is not provided, the node will be initialized to its default value. If
+            `include_unspecified_nodes` is False, then all nodes must have corresponding initialization values. The
+            `DEFAULT` keyword can be used in lieu of a numerical value to reset a node's value to its default.
+
+            If a context is not provided, the most recent context under which the Composition has executed will be used.
+
+            Arguments
+            ----------
+            values: Dict { Node: Node Value }
+                A dictionary contaning key-value pairs of Nodes and initialization values. Nodes within cycles that are
+                not included in this dict will be initialized to their default values.
+
+            include_unspecified_nodes: bool
+                Specifies whether all nodes within cycles should be initialized or only ones specified in the provided
+                values dictionary.
+
+            context: Context
+                The context under which the nodes should be initialized. context will be set to
+                self.most_recent_execution_context if one is not specified.
+
+        """
+        if context is NotImplemented:
+            context = self.most_recent_context
+
+        # comp must be initialized from context before cycle values are initialized
+        self._initialize_from_context(context, Context(execution_id=None), override=False)
+
+        if not values:
+            values = {}
+
+        cycle_nodes = set(self.get_nodes_by_role(NodeRole.CYCLE) + self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
+
+        for node in values:
+            if node not in self.nodes:
+                raise CompositionError(f"{node.name} "
+                                       f"(entry in initialize values arg) is not a node in '{self.name}'")
+            if node not in cycle_nodes:
+                warnings.warn(
+                    f"A value is specified for {node.name} of {self.name} in the 'initialize_cycle_values' "
+                    f"argument of call to run, but it is neither part of a cycle nor a FEEDBACK_SENDER. "
+                    f"Its value will be overwritten when the node first executes, and therefore not used."
+                )
+
+        for node in cycle_nodes:
+            if not include_unspecified_nodes:
+                if node not in values:
+                    continue
+            provided_value = values.get(node)
+            value = provided_value if not provided_value == DEFAULT else node.defaults.value
+            node.initialize(value, context)
 
     def disable_all_history(self):
         """
