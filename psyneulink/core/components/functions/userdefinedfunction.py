@@ -283,6 +283,39 @@ class UserDefinedFunction(Function_Base):
     `Function_Modulatory_Params` for gating any InputPort or OutputPort to which the function is assigned (see
     `GatingMechanism_Specifying_Gating` and `GatingSignal_Examples`).
 
+.. _UDF_Compilation:
+
+    **Compiling a User Defined Function**
+
+    User defined functions may also be `automatically compiled <Composition_Compilation>`, by adding them as a mechanism or projection function.
+    There are several restrictions to take into account:
+
+.. _UDF_Compilation_Restrictions:
+
+    * *Lambda Functions* -- User defined functions currently do not support Python Lambda functions
+
+    * *Loops* -- User defined functions currently do not support Loops
+
+    * *Python Data Types* -- User defined functions currently do not support *dict* and *class* types
+
+    * *Nested Functions* -- User defined functions currently do not support recursive calls, nested functions, or closures
+
+    * *Slicing and comprehensions* -- User defined functions currently have limited support for slicing, and do not support comprehensions
+
+    * *Libraries* -- User defined functions currently do not support libraries, aside from **NumPy** (with limited support)
+
+.. _UDF_Compilation_Numpy:
+
+    **NumPy Support for Compiled User Defined Functions**
+
+    Compiled User Defined Functions also provide access to limited compiled NumPy functionality; The supported features are listed as follows:
+
+    * *Data Types* -- Numpy Arrays and Matrices are supported, as long as their dimensionality is less than 3. In addition, the elementwise multiplication and addition of NumPy arrays and matrices is fully supported
+
+    * *Numerical functions* -- the `exp` and `tanh` methods are currently supported in compiled mode
+
+    It is highly recommended that users who require additional functionality request it as an issue `here <https://github.com/PrincetonUniversity/PsyNeuLink/issues>`_.
+
     **Class Definition:**
 
 
