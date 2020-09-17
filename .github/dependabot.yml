@@ -16,3 +16,13 @@ updates:
       include: "scope"
     labels:
       - "CI"
+
+  - package-ecosystem: "pip"
+    directory: "/" # use top dir
+    schedule:
+      interval: "daily"
+    target-branch: "devel"
+    commit-message:
+      prefix: "requirements"
+    labels:
+      - "deps"
