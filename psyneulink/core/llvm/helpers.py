@@ -130,19 +130,20 @@ def fneg(builder, val, name=""):
 
 def tanh(ctx, builder, x):
     # (e**2x - 1)/(e**2x + 1)
-    exp_f = ctx.get_builtin("exp", [x.type])
     _2x = builder.fmul(x.type(2), x)
-    e2x = builder.call(exp_f, [_2x])
+    e2x = exp(ctx, builder, _2x)
     num = builder.fsub(e2x, e2x.type(1))
     den = builder.fadd(e2x, e2x.type(1))
     return builder.fdiv(num, den)
 
+def exp(ctx, builder, x):
+    exp_f = ctx.get_builtin("exp", [x.type])
+    return builder.call(exp_f, [x])
 
 def coth(ctx, builder, x):
     # (e**2x + 1)/(e**2x - 1)
-    exp_f = ctx.get_builtin("exp", [x.type])
     _2x = builder.fmul(x.type(2), x)
-    e2x = builder.call(exp_f, [_2x])
+    e2x = exp(ctx, builder, _2x)
     num = builder.fadd(e2x, e2x.type(1))
     den = builder.fsub(e2x, e2x.type(1))
     return builder.fdiv(num, den)
@@ -150,14 +151,23 @@ def coth(ctx, builder, x):
 
 def csch(ctx, builder, x):
     # (2e**x)/(e**2x - 1)
-    exp_f = ctx.get_builtin("exp", [x.type])
-    ex = builder.call(exp_f, [x])
+    ex = exp(ctx, builder, x)
     num = builder.fmul(ex.type(2), ex)
     _2x = builder.fmul(x.type(2), x)
-    e2x = builder.call(exp_f, [_2x])
+    e2x = exp(ctx, builder, _2x)
     den = builder.fsub(e2x, e2x.type(1))
     return builder.fdiv(num, den)
 
+def call_elementwise_operation(ctx, builder, x, operation, output_ptr):
+    """Recurse through an array structure and call operation on each scalar element of the structure. Store result in output_ptr"""
+    if isinstance(x.type.pointee, ir.ArrayType):
+        with array_ptr_loop(builder, x, str(x) + "_elementwise_op") as (b1, idx):
+            element_ptr = b1.gep(x, [ctx.int32_ty(0), idx])
+            output_element_ptr = b1.gep(output_ptr, [ctx.int32_ty(0), idx])
+            call_elementwise_operation(ctx, b1, element_ptr, operation, output_ptr=output_element_ptr)
+    else:
+        val = operation(ctx, builder, builder.load(x))
+        builder.store(val, output_ptr)
 
 def is_close(builder, val1, val2, rtol=1e-05, atol=1e-08):
     diff = builder.fsub(val1, val2, "is_close_diff")
@@ -190,6 +200,44 @@ def all_close(builder, arr1, arr2, rtol=1e-05, atol=1e-08):
 
     return builder.load(all_ptr)
 
+def is_pointer(x):
+    type_t = getattr(x, "type", x)
+    return isinstance(type_t, ir.PointerType)
+
+def is_floating_point(x):
+    type_t = getattr(x, "type", x)
+    # dereference pointer
+    if is_pointer(x):
+        type_t = x.type.pointee
+    return isinstance(type_t, (ir.DoubleType, ir.FloatType, ir.HalfType))
+
+def is_integer(x):
+    type_t = getattr(x, "type", x)
+    # dereference pointer
+    if is_pointer(x):
+        type_t = x.type.pointee
+    return isinstance(type_t, ir.IntType)
+
+def is_scalar(x):
+    return is_integer(x) or is_floating_point(x)
+
+def is_vector(x):
+    type_t = getattr(x, "type", x)
+    if is_pointer(x):
+        type_t = x.type.pointee
+    return isinstance(type_t, ir.ArrayType) and is_scalar(type_t.element)
+
+def is_2d_matrix(x):
+    type_t = getattr(x, "type", x)
+    if is_pointer(x):
+        type_t = x.type.pointee
+    return isinstance(type_t, ir.ArrayType) and is_vector(type_t.element)
+
+def is_boolean(x):
+    type_t = getattr(x, "type", x)
+    if is_pointer(x):
+        type_t = x.type.pointee
+    return isinstance(type_t, ir.IntType) and type_t.width == 1
 
 def printf(builder, fmt, *args, override_debug=False):
     if "print_values" not in debug_env and not override_debug:

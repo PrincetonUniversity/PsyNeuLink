@@ -133,6 +133,7 @@ def init_builtins():
         builtins.setup_vxm_transposed(ctx)
         builtins.setup_mersenne_twister(ctx)
         builtins.setup_vec_add(ctx)
+        builtins.setup_vec_sum(ctx)
         builtins.setup_mat_add(ctx)
         builtins.setup_vec_sub(ctx)
         builtins.setup_mat_sub(ctx)
