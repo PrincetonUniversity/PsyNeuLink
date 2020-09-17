@@ -276,9 +276,6 @@ class KohonenLearningMechanism(LearningMechanism):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    learning_type = LearningType.UNSUPERVISED
-    learning_timing = LearningTiming.EXECUTION_PHASE
-
     class Parameters(LearningMechanism.Parameters):
         """
             Attributes

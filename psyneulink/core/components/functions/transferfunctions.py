@@ -190,9 +190,6 @@ class Identity(TransferFunction):  # -------------------------------------------
 
     componentName = IDENTITY_FUNCTION
 
-    bounds = None
-
-
     classPreferences = {
         PREFERENCE_SET_NAME: 'IdentityClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
@@ -337,8 +334,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
     """
 
     componentName = LINEAR_FUNCTION
-
-    bounds = None
 
     classPreferences = {
         PREFERENCE_SET_NAME: 'LinearClassPreferences',
@@ -589,8 +584,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     componentName = EXPONENTIAL_FUNCTION
 
-    bounds = (0, None)
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -624,6 +617,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
+        bounds = (0, None)
 
     @tc.typecheck
     def __init__(self,
@@ -856,10 +850,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     componentName = LOGISTIC_FUNCTION
     parameter_keywords.update({GAIN, BIAS, OFFSET})
-
-    bounds = (0, 1)
-
-
     _model_spec_class_name_is_generic = True
 
     class Parameters(TransferFunction.Parameters):
@@ -902,6 +892,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         offset = Parameter(0.0, modulable=True)
         scale = Parameter(1.0, modulable=True)
+        bounds = (0, 1)
 
     @tc.typecheck
     def __init__(self,
@@ -1165,8 +1156,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     componentName = TANH_FUNCTION
     parameter_keywords.update({GAIN, BIAS, OFFSET})
 
-    bounds = (0, 1)
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -1207,6 +1196,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         offset = Parameter(0.0, modulable=True)
         scale = Parameter(1.0, modulable=True)
+        bounds = (0, 1)
 
     @tc.typecheck
     def __init__(self,
@@ -1443,8 +1433,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     componentName = RELU_FUNCTION
     parameter_keywords.update({GAIN, BIAS, LEAK})
 
-    bounds = (None,None)
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -1471,6 +1459,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         leak = Parameter(0.0, modulable=True)
+        bounds = (None, None)
 
     @tc.typecheck
     def __init__(self,
@@ -1683,8 +1672,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     componentName = GAUSSIAN_FUNCTION
     # parameter_keywords.update({STANDARD_DEVIATION, BIAS, SCALE, OFFSET})
 
-    bounds = (None,None)
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -1718,6 +1705,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
+        bounds = (None, None)
 
     @tc.typecheck
     def __init__(self,
@@ -1949,8 +1937,6 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     componentName = GAUSSIAN_DISTORT_FUNCTION
     # parameter_keywords.update({VARIANCE, BIAS, SCALE, OFFSET})
 
-    bounds = (None,None)
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -1991,6 +1977,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
         random_state = Parameter(None, stateful=True, loggable=False)
+        bounds = (None, None)
 
     @tc.typecheck
     def __init__(self,
@@ -2226,8 +2213,6 @@ class SoftMax(TransferFunction):
     """
 
     componentName = SOFTMAX_FUNCTION
-
-    bounds = (0, 1)
 
     class Parameters(TransferFunction.Parameters):
         """
@@ -2652,8 +2637,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     """
 
     componentName = LINEAR_MATRIX_FUNCTION
-
-    bounds = None
 
     DEFAULT_FILLER_VALUE = 0
 
@@ -3434,8 +3417,6 @@ class TransferWithCosts(TransferFunction):
     """
 
     componentName = TRANSFER_WITH_COSTS_FUNCTION
-
-    bounds = None
 
     classPreferences = {
         PREFERENCE_SET_NAME: 'TransferWithCostssClassPreferences',

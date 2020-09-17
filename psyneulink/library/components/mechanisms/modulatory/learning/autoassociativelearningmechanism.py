@@ -315,11 +315,10 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
             read_only=True,
             structural=True,
         )
+        learning_type = LearningType.UNSUPERVISED
+        learning_timing = LearningTiming.EXECUTION_PHASE
 
     classPreferenceLevel = PreferenceLevel.TYPE
-
-    learning_type = LearningType.UNSUPERVISED
-    learning_timing = LearningTiming.EXECUTION_PHASE
 
     @tc.typecheck
     def __init__(self,
