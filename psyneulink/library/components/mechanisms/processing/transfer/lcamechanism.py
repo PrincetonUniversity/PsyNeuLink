@@ -595,8 +595,8 @@ class LCAMechanism(RecurrentTransferMechanism):
 
     def _get_integrated_function_input(self, function_variable, initial_value, noise, context):
 
-        leak = self._get_current_mechanism_param("leak", context)
-        time_step_size = self._get_current_mechanism_param("time_step_size", context)
+        leak = self._get_current_parameter_value(self.parameters.leak, context)
+        time_step_size = self._get_current_parameter_value(self.parameters.time_step_size, context)
 
         # if not self.integrator_function:
         if self.initialization_status == ContextFlags.INITIALIZING:

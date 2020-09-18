@@ -573,11 +573,11 @@ class BayesGLM(LearningFunction):
         # MODIFIED 10/26/18 END
 
         # Today's prior is yesterday's posterior
-        Lambda_prior = self._get_current_function_param('Lambda_n', context)
-        mu_prior = self._get_current_function_param('mu_n', context)
+        Lambda_prior = self._get_current_parameter_value('Lambda_n', context)
+        mu_prior = self._get_current_parameter_value('mu_n', context)
         # # MODIFIED 6/3/19 OLD: [JDC]: THE FOLLOWING ARE YOTAM'S ADDITION (NOT in FALK's CODE)
-        # gamma_shape_prior = self._get_current_function_param('gamma_shape_n', context)
-        # gamma_size_prior = self._get_current_function_param('gamma_size_n', context)
+        # gamma_shape_prior = self._get_current_parameter_value('gamma_shape_n', context)
+        # gamma_size_prior = self._get_current_parameter_value('gamma_size_n', context)
         # MODIFIED 6/3/19 NEW:
         gamma_shape_prior = self.parameters.gamma_shape_n.default_value
         gamma_size_prior = self.parameters.gamma_size_n.default_value
@@ -617,7 +617,7 @@ class BayesGLM(LearningFunction):
         `Lambda_n <BayesGLM.Lambda_n>`, `gamma_shape_n <BayesGLM.gamma_shape_n>`, and `gamma_size_n
         <BayesGLM.gamma_size_n>`.
         """
-        random_state = self._get_current_function_param('random_state', context)
+        random_state = self._get_current_parameter_value('random_state', context)
 
         phi = random_state.gamma(gamma_shape_n / 2, gamma_size_n / 2)
         return random_state.multivariate_normal(mu_n.reshape(-1,), phi * np.linalg.inv(Lambda_n))
@@ -871,7 +871,7 @@ class Kohonen(LearningFunction):  # --------------------------------------------
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
-        learning_rate = self._get_current_function_param(LEARNING_RATE, context)
+        learning_rate = self._get_current_parameter_value(LEARNING_RATE, context)
         if learning_rate is None:
             learning_rate = self.defaults.learning_rate
 
@@ -1100,7 +1100,7 @@ class Hebbian(LearningFunction):  # --------------------------------------------
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
-        learning_rate = self._get_current_function_param(LEARNING_RATE, context)
+        learning_rate = self._get_current_parameter_value(LEARNING_RATE, context)
         # learning_rate = self.learning_rate
         if learning_rate is None:
             learning_rate = self.defaults.learning_rate
@@ -1331,7 +1331,7 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
-        learning_rate = self._get_current_function_param(LEARNING_RATE, context)
+        learning_rate = self._get_current_parameter_value(LEARNING_RATE, context)
         if learning_rate is None:
             learning_rate = self.defaults.learning_rate
 
@@ -1632,9 +1632,9 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
         self._check_args(variable=variable, context=context, params=params)
 
-        output = self._get_current_function_param(ACTIVATION_OUTPUT, context)
-        error = self._get_current_function_param(ERROR_SIGNAL, context)
-        learning_rate = self._get_current_function_param(LEARNING_RATE, context)
+        output = self._get_current_parameter_value(ACTIVATION_OUTPUT, context)
+        error = self._get_current_parameter_value(ERROR_SIGNAL, context)
+        learning_rate = self._get_current_parameter_value(LEARNING_RATE, context)
 
         # IMPLEMENTATION NOTE: have to do this here, rather than in validate_params for the following reasons:
         #                      1) if no learning_rate is specified for the Mechanism, need to assign None
@@ -2105,26 +2105,26 @@ class BackPropagation(LearningFunction):
         #                      2) if neither the system nor the process assigns a value to the learning_rate,
         #                          then need to assign it to the default value
         # If learning_rate was not specified for instance or composition, use default value
-        learning_rate = self._get_current_function_param(LEARNING_RATE, context)
+        learning_rate = self._get_current_parameter_value(LEARNING_RATE, context)
         if learning_rate is None:
             learning_rate = self.defaults.learning_rate
 
         # make activation_input a 1D row array
-        activation_input = self._get_current_function_param(ACTIVATION_INPUT, context)
+        activation_input = self._get_current_parameter_value(ACTIVATION_INPUT, context)
         activation_input = np.array(activation_input).reshape(len(activation_input), 1)
 
         # Derivative of error with respect to output activity (contribution of each output unit to the error above)
         loss_function = self.parameters.loss_function.get(context)
         if loss_function == MSE:
-            num_output_units = self._get_current_function_param(ERROR_SIGNAL, context).shape[0]
-            dE_dA = np.dot(error_matrix, self._get_current_function_param(ERROR_SIGNAL, context)) / num_output_units * 2
+            num_output_units = self._get_current_parameter_value(ERROR_SIGNAL, context).shape[0]
+            dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) / num_output_units * 2
         elif loss_function == SSE:
-            dE_dA = np.dot(error_matrix, self._get_current_function_param(ERROR_SIGNAL, context)) * 2
+            dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context)) * 2
         else:
-            dE_dA = np.dot(error_matrix, self._get_current_function_param(ERROR_SIGNAL, context))
+            dE_dA = np.dot(error_matrix, self._get_current_parameter_value(ERROR_SIGNAL, context))
 
         # Derivative of the output activity
-        activation_output = self._get_current_function_param(ACTIVATION_OUTPUT, context)
+        activation_output = self._get_current_parameter_value(ACTIVATION_OUTPUT, context)
         # FIX: THIS ASSUMES DERIVATIVE CAN BE COMPUTED FROM output OF FUNCTION (AS IT CAN FOR THE Logistic)
         dA_dW = self.activation_derivative_fct(input=None, output=activation_output, context=context)
 

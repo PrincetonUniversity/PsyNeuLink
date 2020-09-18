@@ -719,7 +719,13 @@ class Log:
     @property
     def parameter_port_items(self):
         try:
-            return [MODULATED_PARAMETER_PREFIX + name for name in self.owner.parameter_ports.names]
+            return [
+                name for name in self.owner.__dir__()
+                if (
+                    name.startswith(MODULATED_PARAMETER_PREFIX)
+                    and name.split(MODULATED_PARAMETER_PREFIX)[1] in self.owner.parameter_ports
+                )
+            ]
         except AttributeError:
             return []
 

@@ -456,7 +456,7 @@ class Stability(ObjectiveFunction):
             variable = np.squeeze(variable)
         # MODIFIED 6/12/19 END
 
-        matrix = self._get_current_function_param(MATRIX, context)
+        matrix = self._get_current_parameter_value(MATRIX, context)
 
         current = variable
 

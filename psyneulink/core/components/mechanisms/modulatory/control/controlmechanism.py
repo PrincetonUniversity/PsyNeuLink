@@ -738,7 +738,7 @@ class DefaultAllocationFunction(Function_Base):
                  context=None,
                  params=None,
                  ):
-        num_ctl_sigs = self._get_current_function_param('num_control_signals')
+        num_ctl_sigs = self._get_current_parameter_value('num_control_signals')
         result = np.array([variable[0]] * num_ctl_sigs)
         return self.convert_output_type(result)
 

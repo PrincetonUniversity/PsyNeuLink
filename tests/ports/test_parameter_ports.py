@@ -1,9 +1,11 @@
 import numpy as np
+import psyneulink as pnl
 import pytest
 
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
+
 
 class TestParameterPorts:
     def test_inspect_function_params_slope_noise(self):
@@ -141,3 +143,53 @@ class TestModParams:
         with pytest.raises(ComponentError) as error_text:
             T.mod_slope = 20.0
         assert "directly because it is computed by the ParameterPort" in str(error_text.value)
+
+
+class TestParameterPortList:
+    @pytest.fixture
+    def transfer_mech(self):
+        return TransferMechanism(function=pnl.Logistic)
+
+    def test_duplicate(self, transfer_mech):
+        assert 'offset-function' in transfer_mech.parameter_ports
+        assert 'offset-integrator_function' in transfer_mech.parameter_ports
+
+    def test_duplicate_base_access_fails(self, transfer_mech):
+        with pytest.raises(
+            pnl.ParameterPortError,
+            match='Did you want offset-function or offset-integrator_function'
+        ):
+            transfer_mech.parameter_ports['offset']
+
+    def test_duplicate_sources(self, transfer_mech):
+        assert transfer_mech.parameter_ports['offset-function'].source is transfer_mech.function.parameters.offset
+        assert transfer_mech.parameter_ports['offset-integrator_function'].source is transfer_mech.integrator_function.parameters.offset
+
+    def test_sharedparameter_different_name(self, transfer_mech):
+        assert transfer_mech.parameter_ports['integration_rate'] is transfer_mech.parameter_ports['rate']
+        assert transfer_mech.parameter_ports['integration_rate'].source is transfer_mech.integrator_function.parameters.rate
+
+    def test_alias_unique(self):
+        mech = pnl.LCAMechanism()
+
+        assert mech.parameter_ports['leak'] is mech.parameter_ports['integration_rate']
+
+    def test_alias_duplicate(self):
+        mech = pnl.LCAMechanism(function=pnl.ReLU)
+
+        assert mech.parameter_ports['leak-function'].source is mech.function.parameters.leak
+        assert mech.parameter_ports['leak-integrator_function'] is mech.parameter_ports['integration_rate']
+        assert mech.parameter_ports['leak-integrator_function'].source is mech.integrator_function.parameters.rate
+
+    def test_alias_duplicate_base_access_fails(self):
+        mech = pnl.LCAMechanism(function=pnl.ReLU)
+
+        with pytest.raises(
+            pnl.ParameterPortError,
+            match='Did you want leak-function or rate'
+        ):
+            mech.parameter_ports['leak']
+
+    def test_multiple_ports_warning(self):
+        with pytest.warns(UserWarning, match='Multiple ParameterPorts will be created'):
+            TransferMechanism(function=pnl.Logistic)

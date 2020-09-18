@@ -301,7 +301,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     def _validate_initializers(self, default_variable, context=None):
         for initial_value_name in self.initializers:
 
-            initial_value = self._get_current_function_param(initial_value_name, context=context)
+            initial_value = self._get_current_parameter_value(initial_value_name, context=context)
 
             if isinstance(initial_value, (list, np.ndarray)):
                 if len(initial_value) != 1:
@@ -388,12 +388,6 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     if not np.isscalar(noise[i]) and not callable(noise[i]):
                         raise FunctionError("The elements of a noise list or array must be scalars or functions. "
                                             "{} is not a valid noise element for {}".format(noise[i], self.name))
-
-        # Otherwise, must be a float, int or function
-        elif noise is not None and not isinstance(noise, (float, int)) and not callable(noise):
-            raise FunctionError(
-                "Noise parameter ({}) for {} must be a float, function, or array/list of these."
-                    .format(noise, self.name))
 
     def _try_execute_param(self, param, var, context=None):
 
@@ -511,13 +505,13 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         if len(args) == 0 or args is None or all(arg is None for arg in args):
             for i in range(len(self.initializers)):
                 initializer_name = self.initializers[i]
-                reinitialization_values.append(self._get_current_function_param(initializer_name, context))
+                reinitialization_values.append(self._get_current_parameter_value(initializer_name, context))
 
         elif len(args) == len(self.initializers):
             for i in range(len(self.initializers)):
                 initializer_name = self.initializers[i]
                 if args[i] is None:
-                    reinitialization_values.append(self._get_current_function_param(initializer_name, context))
+                    reinitialization_values.append(self._get_current_parameter_value(initializer_name, context))
                 else:
                     # Not sure if np.atleast_1d is necessary here:
                     reinitialization_values.append(np.atleast_1d(args[i]))
