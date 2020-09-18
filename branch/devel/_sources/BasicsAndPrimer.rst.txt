@@ -723,7 +723,8 @@ a `ModulatorySignal <ModulatorySignal>` belonging to a `ModulatoryMechanism <Mod
 of a `Mechanism <Mechanism>` or a `Projection <Projection>` is modulable, it is assigned a `ParameterPort` -- this is a
 Component that belongs to the Mechanism or Projection and can receive a Projection from a ModulatorySignal, allowing
 another component to modulate the value of the parameter. ParameterPorts are created for every modulable parameter of
-a Mechanism or its `function <Mechanism_Base.function>`, and similarly for Projections.  These determine the value
+a Mechanism, its `function <Mechanism_Base.function>`, any of its
+secondary functions, and similarly for Projections.  These determine the value
 of the parameter that is actually used when the Component is executed, which may be different than the base value
 returned by accessing the parameter directly (as in the examples above); see `ModulatorySignal_Modulation` for a more
 complete description of modulation.  The current *modulated* value of a parameter can be accessed from the `value
@@ -738,8 +739,9 @@ the `value <ParameterPort.value>` of the ParameterPort for the parameter::
     >>> task.mod_gain
     [0.62]
 
-This works for any modulable parameters of the Mechanism or its `function <Mechanism_Base.function>`.  Note that,
-here, neither the ``parameters`` nor the ``function`` atributes of the Mechanism need to be included in the reference.
+This works for any modulable parameters of the Mechanism, its
+`function <Mechanism_Base.function>`, or secondary functions.  Note that,
+here, neither the ``parameters`` nor the ``function`` attributes of the Mechanism need to be included in the reference.
 Note also that, as explained above, the value returned is different from the base value of the function's gain
 parameter::
 

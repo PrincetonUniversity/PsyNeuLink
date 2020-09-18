@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ParameterPort &mdash; PsyNeuLink 0.8.3.3+15.g3a87f7d documentation</title>
+  <title>ParameterPort &mdash; PsyNeuLink 0.8.3.3+23.g43d850e documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.3.3+15
+                  0.8.3.3+23
                 </div>
               
             
@@ -217,7 +217,8 @@
 <div class="section" id="overview">
 <span id="parameterport-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>ParameterPorts belong to either a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>. A ParameterPort is created
-to represent each <a class="reference internal" href="#parameterport-modulable-parameters"><span class="std std-ref">modulatable parameter</span></a> of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, as well as those of the component’s <a class="reference internal" href="Component.html#component-function"><span class="std std-ref">function</span></a>. A
+to represent each <a class="reference internal" href="#parameterport-modulable-parameters"><span class="std std-ref">modulatable parameter</span></a> of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, as well as those of the component’s <a class="reference internal" href="Component.html#component-function"><span class="std std-ref">function</span></a> and
+any of its secondary functions (e.g. <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">TransferMechanism.integrator_function</span></code></a>). A
 ParameterPort provides the current value of the parameter it represents during any relevant computations, and serves as
 an interface for parameter modulation.</p>
 <p>A ParameterPort can receive one or more <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> and/or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> that modify the value returned by the ParameterPort according to the ParameterPort’s
@@ -246,7 +247,8 @@ execution #1 and execution #2, it will return the gain ParameterPort value that 
 belong is created.  The <code class="xref any docutils literal"><span class="pre">owner</span></code> of a ParameterPort must be a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>
 (the initialization of a ParameterPort cannot be <a class="reference internal" href="Port.html#port-deferred-initialization"><span class="std std-ref">deferred</span></a>). One ParameterPort is
 created for each modulable Parameter of its owner, as well as for each modulable Parameter of the owner’s
-<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (modulable Parameters of a Component
+<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> or secondary functions (modulable
+Parameters of a Component
 are listed in its <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> class, and have the attribute
 <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.modulable" title="psyneulink.core.globals.parameters.Parameter.modulable"><code class="xref any py py-attr docutils literal"><span class="pre">modulable</span></code></a> set to True.)
 Each ParameterPort is created using the value specified for the corresponding parameter, as described below.  The
@@ -489,7 +491,7 @@ additional details).</p>
 <span id="parameterport-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.components.ports.parameterport.ParameterPort">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.ports.parameterport.</code><code class="descname">ParameterPort</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value=None</em>, <em>variable=None</em>, <em>size=None</em>, <em>function=None</em>, <em>projections=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.ports.parameterport.</code><code class="descname">ParameterPort</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value=None</em>, <em>variable=None</em>, <em>size=None</em>, <em>function=None</em>, <em>projections=None</em>, <em>params=None</em>, <em>name=None</em>, <em>parameter_name=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort" title="Permalink to this definition">¶</a></dt>
 <dd><p>ParameterPort(                                                   owner,                                                       reference_value=None                                         function=LinearCombination(operation=PRODUCT),</p>
 <p>Subclass of <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> that represents and possibly modifies the parameter of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>,
 <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, or its <a class="reference internal" href="Function.html"><span class="doc">Function</span></a>. See <a class="reference internal" href="Port.html#port-class-reference"><span class="std std-ref">Class Reference</span></a> for additional arguments and attributes.</p>
@@ -672,7 +674,7 @@ Call _instantiate_projections_to_port to assign ModulatoryProjections to .mod_af
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.3.3+15.g3a87f7d',
+               VERSION:'0.8.3.3+23.g43d850e',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',

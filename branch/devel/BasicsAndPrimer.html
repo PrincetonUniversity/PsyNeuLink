@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Primer &mdash; PsyNeuLink 0.8.3.3+15.g3a87f7d documentation</title>
+  <title>Basics and Primer &mdash; PsyNeuLink 0.8.3.3+23.g43d850e documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.3.3+15
+                  0.8.3.3+23
                 </div>
               
             
@@ -845,7 +845,8 @@ a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">M
 of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> is modulable, it is assigned a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> – this is a
 Component that belongs to the Mechanism or Projection and can receive a Projection from a ModulatorySignal, allowing
 another component to modulate the value of the parameter. ParameterPorts are created for every modulable parameter of
-a Mechanism or its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and similarly for Projections.  These determine the value
+a Mechanism, its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, any of its
+secondary functions, and similarly for Projections.  These determine the value
 of the parameter that is actually used when the Component is executed, which may be different than the base value
 returned by accessing the parameter directly (as in the examples above); see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> for a more
 complete description of modulation.  The current <em>modulated</em> value of a parameter can be accessed from the <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the corresponding ParameterPort.  For instance, the print statement in the example above
@@ -859,8 +860,9 @@ the <a class="reference internal" href="ParameterPort.html#psyneulink.core.compo
 <span class="go">[0.62]</span>
 </pre></div>
 </div>
-<p>This works for any modulable parameters of the Mechanism or its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  Note that,
-here, neither the <code class="docutils literal"><span class="pre">parameters</span></code> nor the <code class="docutils literal"><span class="pre">function</span></code> atributes of the Mechanism need to be included in the reference.
+<p>This works for any modulable parameters of the Mechanism, its
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, or secondary functions.  Note that,
+here, neither the <code class="docutils literal"><span class="pre">parameters</span></code> nor the <code class="docutils literal"><span class="pre">function</span></code> attributes of the Mechanism need to be included in the reference.
 Note also that, as explained above, the value returned is different from the base value of the function’s gain
 parameter:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">task</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">gain</span>
@@ -1184,7 +1186,7 @@ a more detailed description of PsyNeuLink’s organization and capabilities.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.3.3+15.g3a87f7d',
+               VERSION:'0.8.3.3+23.g43d850e',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
