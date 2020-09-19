@@ -361,7 +361,7 @@ class TestUserDefFunc:
         if bin_execute == 'LLVM':
             e = pnlvm.execution.MechExecution(myMech).execute
         elif bin_execute == 'PTX':
-            e = pnlvm.execution.FuncExecution(U).cuda_execute
+            e = pnlvm.execution.MechExecution(myMech).cuda_execute
         else:
             e = myMech.execute
         val = benchmark(e, [-1, 2, 3, 4])
