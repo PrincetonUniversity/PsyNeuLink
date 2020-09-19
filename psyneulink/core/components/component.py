@@ -1319,7 +1319,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      # Reference to other components
                      "objective_mechanism", "agent_rep", "projections",
                      # Shape mismatch
-                     "costs", "auto", "hetero",
+                     "auto", "hetero", "cost", "costs", "combined_costs",
                      # autodiff specific types
                      "pytorch_representation", "optimizer"}
         # Mechanism's need few extra entires:

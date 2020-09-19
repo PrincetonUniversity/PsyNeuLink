@@ -251,7 +251,7 @@ class TestHelperTypegetters:
         (INT_PTR_TYPE, 1),
         (BOOL_TYPE, 0),
         (BOOL_PTR_TYPE, 1),
-    ])
+    ], ids=str)
     def test_helper_is_pointer(self, mode, ir_type, expected):
         with pnlvm.LLVMBuilderContext() as ctx:
             func_ty = ir.FunctionType(ir.VoidType(), [ir.IntType(32).as_pointer()])
@@ -264,23 +264,23 @@ class TestHelperTypegetters:
 
             variable = builder.load(builder.alloca(ir_type))
             if pnlvm.helpers.is_pointer(variable):
-                builder.store(pnlvm.ir.IntType(32)(1), out)
+                builder.store(out.type.pointee(1), out)
             else:
-                builder.store(pnlvm.ir.IntType(32)(0), out)
+                builder.store(out.type.pointee(0), out)
 
             builder.ret_void()
 
         bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
         if mode == 'CPU':
-            res = ctypes.c_int32()
-
+            res = bin_f.byref_arg_types[0](-1)
             bin_f(ctypes.byref(res))
+            res = res.value
         else:
-            res = np.array([-1], dtype=np.int)
+            res = np.array([-1], dtype=np.int32)
             bin_f.cuda_wrap_call(res)
             res = res[0]
 
-        assert res.value == expected
+        assert res == expected
 
     @pytest.mark.llvm
     @pytest.mark.parametrize('mode', ['CPU',
@@ -298,7 +298,7 @@ class TestHelperTypegetters:
         (INT_PTR_TYPE, 1),
         (BOOL_TYPE, 1),
         (BOOL_PTR_TYPE, 1),
-    ])
+    ], ids=str)
     def test_helper_is_scalar(self, mode, ir_type, expected):
         with pnlvm.LLVMBuilderContext() as ctx:
             func_ty = ir.FunctionType(ir.VoidType(), [ir.IntType(32).as_pointer()])
@@ -311,23 +311,23 @@ class TestHelperTypegetters:
 
             variable = builder.load(builder.alloca(ir_type))
             if pnlvm.helpers.is_scalar(variable):
-                builder.store(pnlvm.ir.IntType(32)(1), out)
+                builder.store(out.type.pointee(1), out)
             else:
-                builder.store(pnlvm.ir.IntType(32)(0), out)
+                builder.store(out.type.pointee(0), out)
 
             builder.ret_void()
 
         bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
         if mode == 'CPU':
-            res = ctypes.c_int32()
-
+            res = bin_f.byref_arg_types[0](-1)
             bin_f(ctypes.byref(res))
+            res = res.value
         else:
-            res = np.array([-1], dtype=np.int)
+            res = np.array([-1], dtype=np.int32)
             bin_f.cuda_wrap_call(res)
             res = res[0]
 
-        assert res.value == expected
+        assert res == expected
 
     @pytest.mark.llvm
     @pytest.mark.parametrize('mode', ['CPU',
@@ -345,7 +345,7 @@ class TestHelperTypegetters:
         (INT_PTR_TYPE, 0),
         (BOOL_TYPE, 0),
         (BOOL_PTR_TYPE, 0),
-    ])
+    ], ids=str)
     def test_helper_is_floating_point(self, mode, ir_type, expected):
         with pnlvm.LLVMBuilderContext() as ctx:
             func_ty = ir.FunctionType(ir.VoidType(), [ir.IntType(32).as_pointer()])
@@ -358,23 +358,23 @@ class TestHelperTypegetters:
 
             variable = builder.load(builder.alloca(ir_type))
             if pnlvm.helpers.is_floating_point(variable):
-                builder.store(pnlvm.ir.IntType(32)(1), out)
+                builder.store(out.type.pointee(1), out)
             else:
-                builder.store(pnlvm.ir.IntType(32)(0), out)
+                builder.store(out.type.pointee(0), out)
 
             builder.ret_void()
 
         bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
         if mode == 'CPU':
-            res = ctypes.c_int32()
-
+            res = bin_f.byref_arg_types[0](-1)
             bin_f(ctypes.byref(res))
+            res = res.value
         else:
-            res = np.array([-1], dtype=np.int)
+            res = np.array([-1], dtype=np.int32)
             bin_f.cuda_wrap_call(res)
             res = res[0]
 
-        assert res.value == expected
+        assert res == expected
 
     @pytest.mark.llvm
     @pytest.mark.parametrize('mode', ['CPU',
@@ -392,7 +392,7 @@ class TestHelperTypegetters:
         (INT_PTR_TYPE, 0),
         (BOOL_TYPE, 0),
         (BOOL_PTR_TYPE, 0),
-    ])
+    ], ids=str)
     def test_helper_is_vector(self, mode, ir_type, expected):
         with pnlvm.LLVMBuilderContext() as ctx:
             func_ty = ir.FunctionType(ir.VoidType(), [ir.IntType(32).as_pointer()])
@@ -405,23 +405,23 @@ class TestHelperTypegetters:
 
             variable = builder.load(builder.alloca(ir_type))
             if pnlvm.helpers.is_vector(variable):
-                builder.store(pnlvm.ir.IntType(32)(1), out)
+                builder.store(out.type.pointee(1), out)
             else:
-                builder.store(pnlvm.ir.IntType(32)(0), out)
+                builder.store(out.type.pointee(0), out)
 
             builder.ret_void()
 
         bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
         if mode == 'CPU':
-            res = ctypes.c_int32()
-
+            res = bin_f.byref_arg_types[0](-1)
             bin_f(ctypes.byref(res))
+            res = res.value
         else:
-            res = np.array([-1], dtype=np.int)
+            res = np.array([-1], dtype=np.int32)
             bin_f.cuda_wrap_call(res)
             res = res[0]
 
-        assert res.value == expected
+        assert res == expected
 
     @pytest.mark.llvm
     @pytest.mark.parametrize('mode', ['CPU',
@@ -439,7 +439,7 @@ class TestHelperTypegetters:
         (INT_PTR_TYPE, 0),
         (BOOL_TYPE, 0),
         (BOOL_PTR_TYPE, 0),
-    ])
+    ], ids=str)
     def test_helper_is_2d_matrix(self, mode, ir_type, expected):
         with pnlvm.LLVMBuilderContext() as ctx:
             func_ty = ir.FunctionType(ir.VoidType(), [ir.IntType(32).as_pointer()])
@@ -452,23 +452,23 @@ class TestHelperTypegetters:
 
             variable = builder.load(builder.alloca(ir_type))
             if pnlvm.helpers.is_2d_matrix(variable):
-                builder.store(pnlvm.ir.IntType(32)(1), out)
+                builder.store(out.type.pointee(1), out)
             else:
-                builder.store(pnlvm.ir.IntType(32)(0), out)
+                builder.store(out.type.pointee(0), out)
 
             builder.ret_void()
 
         bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
         if mode == 'CPU':
-            res = ctypes.c_int32()
-
+            res = bin_f.byref_arg_types[0](-1)
             bin_f(ctypes.byref(res))
+            res = res.value
         else:
-            res = np.array([-1], dtype=np.int)
+            res = np.array([-1], dtype=np.int32)
             bin_f.cuda_wrap_call(res)
             res = res[0]
 
-        assert res.value == expected
+        assert res == expected
 
     @pytest.mark.llvm
     @pytest.mark.parametrize('mode', ['CPU',
@@ -486,7 +486,7 @@ class TestHelperTypegetters:
         (INT_PTR_TYPE, 0),
         (BOOL_TYPE, 1),
         (BOOL_PTR_TYPE, 1),
-    ])
+    ], ids=str)
     def test_helper_is_boolean(self, mode, ir_type, expected):
         with pnlvm.LLVMBuilderContext() as ctx:
             func_ty = ir.FunctionType(ir.VoidType(), [ir.IntType(32).as_pointer()])
@@ -499,23 +499,23 @@ class TestHelperTypegetters:
 
             variable = builder.load(builder.alloca(ir_type))
             if pnlvm.helpers.is_boolean(variable):
-                builder.store(pnlvm.ir.IntType(32)(1), out)
+                builder.store(out.type.pointee(1), out)
             else:
-                builder.store(pnlvm.ir.IntType(32)(0), out)
+                builder.store(out.type.pointee(0), out)
 
             builder.ret_void()
 
         bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
         if mode == 'CPU':
-            res = ctypes.c_int32()
-
+            res = bin_f.byref_arg_types[0](-1)
             bin_f(ctypes.byref(res))
+            res = res.value
         else:
-            res = np.array([-1], dtype=np.int)
+            res = np.array([-1], dtype=np.int32)
             bin_f.cuda_wrap_call(res)
             res = res[0]
 
-        assert res.value == expected
+        assert res == expected
 
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
@@ -532,27 +532,28 @@ def test_helper_numerical(mode, op, var, expected):
 
         custom_name = ctx.get_unique_name("numerical")
         function = ir.Function(ctx.module, func_ty, name=custom_name)
-        out = function.args[0]
+        in_out = function.args[0]
         block = function.append_basic_block(name="entry")
         builder = ir.IRBuilder(block)
 
-        variable = ctx.float_ty(var)
+        variable = builder.load(in_out)
         result = op(ctx, builder, variable)
-        builder.store(result, out)
+        builder.store(result, in_out)
 
         builder.ret_void()
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
     if mode == 'CPU':
-        res = ctypes.c_double()
-
+        res = bin_f.byref_arg_types[0](var)
         bin_f(ctypes.byref(res))
+        res = res.value
     else:
-        res = np.array([0.0], dtype=np.float)
+        # FIXME: this needs to consider ctx.float_ty
+        res = np.array([var], dtype=np.float64)
         bin_f.cuda_wrap_call(res)
         res = res[0]
 
-    assert res.value == expected
+    assert res == expected
 
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
@@ -560,13 +561,10 @@ def test_helper_numerical(mode, op, var, expected):
 @pytest.mark.parametrize('var,expected', [
     (np.array([1,2,3], dtype=np.float), np.array([2,3,4], dtype=np.float)),
     (np.array([[1,2],[3,4]], dtype=np.float), np.array([[2,3],[4,5]], dtype=np.float)),
-])
+], ids=["vector", "matrix"])
 def test_helper_elementwise_op(mode, var, expected):
     with pnlvm.LLVMBuilderContext() as ctx:
-        arr_ptr_ty = ctx.float_ty
-        for dim in reversed(var.shape):
-            arr_ptr_ty = ir.ArrayType(arr_ptr_ty, dim)
-        arr_ptr_ty = arr_ptr_ty.as_pointer()
+        arr_ptr_ty = ctx.convert_python_struct_to_llvm_ir(var).as_pointer()
 
         func_ty = ir.FunctionType(ir.VoidType(), [arr_ptr_ty, arr_ptr_ty])
 
@@ -575,22 +573,18 @@ def test_helper_elementwise_op(mode, var, expected):
         inp, out = function.args
         block = function.append_basic_block(name="entry")
         builder = ir.IRBuilder(block)
-        pnlvm.helpers.printf_float_array(builder, inp, override_debug=True)
-        pnlvm.helpers.printf_float_array(builder, out, override_debug=True)
 
-        pnlvm.helpers.call_elementwise_operation(ctx, builder, inp, lambda ctx, builder, x: builder.fadd(ctx.float_ty(1.0), x), out)
+        pnlvm.helpers.call_elementwise_operation(ctx, builder, inp,
+            lambda ctx, builder, x: builder.fadd(x.type(1.0), x), out)
         builder.ret_void()
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
-    res = copy.deepcopy(expected)
     if mode == 'CPU':
-        ct_ty = pnlvm._convert_llvm_ir_to_ctype(arr_ptr_ty)
-        ct_vec = var.ctypes.data_as(ct_ty)
-        ct_res = res.ctypes.data_as(ct_ty)
-
-        bin_f(ct_vec, ct_res)
+        ct_vec = var.ctypes.data_as(ctypes.POINTER(bin_f.byref_arg_types[0]))
+        res = bin_f.byref_arg_types[1]()
+        bin_f(ct_vec, ctypes.byref(res))
     else:
+        res = copy.deepcopy(var)
         bin_f.cuda_wrap_call(var, res)
-        res = res[0]
 
     assert np.array_equal(res, expected)

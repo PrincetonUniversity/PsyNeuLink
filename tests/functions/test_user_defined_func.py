@@ -361,7 +361,7 @@ class TestUserDefFunc:
         if bin_execute == 'LLVM':
             e = pnlvm.execution.MechExecution(myMech).execute
         elif bin_execute == 'PTX':
-            e = pnlvm.execution.FuncExecution(U).cuda_execute
+            e = pnlvm.execution.MechExecution(myMech).cuda_execute
         else:
             e = myMech.execute
         val = benchmark(e, [-1, 2, 3, 4])
@@ -372,6 +372,8 @@ class TestUserDefFunc:
                                              pytest.param('LLVM', marks=pytest.mark.llvm),
                                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                              pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                             ])
     @pytest.mark.benchmark(group="UDF as Composition Origin")
     def test_udf_composition_origin(self, bin_execute, benchmark):
@@ -388,6 +390,8 @@ class TestUserDefFunc:
                                              pytest.param('LLVM', marks=pytest.mark.llvm),
                                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                              pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                             ])
     @pytest.mark.benchmark(group="UDF as Composition Terminal")
     def test_udf_composition_terminal(self, bin_execute, benchmark):
