@@ -372,6 +372,8 @@ class TestUserDefFunc:
                                              pytest.param('LLVM', marks=pytest.mark.llvm),
                                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                              pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                             ])
     @pytest.mark.benchmark(group="UDF as Composition Origin")
     def test_udf_composition_origin(self, bin_execute, benchmark):
@@ -388,6 +390,8 @@ class TestUserDefFunc:
                                              pytest.param('LLVM', marks=pytest.mark.llvm),
                                              pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                              pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                             ])
     @pytest.mark.benchmark(group="UDF as Composition Terminal")
     def test_udf_composition_terminal(self, bin_execute, benchmark):
