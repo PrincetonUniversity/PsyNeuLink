@@ -135,6 +135,28 @@ def setup_vec_add(ctx):
 
     builder.ret_void()
 
+# Setup vector sum builtin
+def setup_vec_sum(ctx):
+    # Setup types
+    double_ptr_ty = ctx.float_ty.as_pointer()
+
+    # builtin vector sum func (i.e. sum(vec))
+    # param1: ptr to vector 1
+    # param2: sizeof vector
+    # param3: scalar output ptr
+
+    builder = _setup_builtin_func_builder(ctx, "vec_sum", (double_ptr_ty, ctx.int32_ty, double_ptr_ty))
+    u, x, o = builder.function.args
+
+    # Sum
+    builder.store(ctx.float_ty(-0), o)
+    with helpers.for_loop_zero_inc(builder, x, "sum") as (b1, index):
+        u_ptr = b1.gep(u, [index])
+        u_val = b1.load(u_ptr)
+        u_sum = b1.fadd(u_val, builder.load(o))
+        b1.store(u_sum, o)
+
+    builder.ret_void()
 
 # Setup vector copy builtin
 def setup_vec_copy(ctx):

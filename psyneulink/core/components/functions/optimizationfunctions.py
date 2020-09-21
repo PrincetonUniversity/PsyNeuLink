@@ -1735,7 +1735,7 @@ class GridSearch(OptimizationFunction):
                         # swap with probability = 1/optimal_value_count in order to achieve
                         # uniformly random selection from identical outcomes
                         probability = 1 / optimal_value_count
-                        random_state = self._get_current_function_param("random_state", context)
+                        random_state = self._get_current_parameter_value("random_state", context)
                         random_value = random_state.rand()
 
                         if random_value < probability:
@@ -2457,7 +2457,7 @@ class ParamEstimationFunction(OptimizationFunction):
         # number of simulations. N is not the total number of simulation
         # samples. We will return a random sample from this set for the
         # "optimal" control allocation.
-        random_state = self._get_current_function_param("random_state", context)
+        random_state = self._get_current_parameter_value("random_state", context)
         sample_idx = random_state.randint(low=0, high=result.n_samples)
         return_optimal_sample = np.array(result.samples_array[sample_idx])
         return_optimal_value = result.discrepancies[sample_idx]

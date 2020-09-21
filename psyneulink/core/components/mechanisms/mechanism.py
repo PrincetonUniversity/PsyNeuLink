@@ -2132,14 +2132,15 @@ class Mechanism_Base(Mechanism):
         try:
             for param_name, param_value in self.function.cust_fct_params.items():
                 if param_name not in self.parameter_ports.names:
+                    source_param = getattr(self.function.parameters, param_name)
                     _instantiate_parameter_port(
                         self,
                         param_name,
                         param_value,
                         context=context,
-                        function=self.function
+                        function=self.function,
+                        source=source_param,
                     )
-            self._parse_param_port_sources()
         except AttributeError:
             pass
 
@@ -2283,16 +2284,6 @@ class Mechanism_Base(Mechanism):
         else:
             raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism is not stateful; "
                                  f"it does not have an accumulator to reset.")
-
-    def _get_current_mechanism_param(self, param_name, context=None):
-        if param_name == "variable":
-            raise MechanismError(f"The method '_get_current_mechanism_param' is intended for retrieving the current "
-                                 f"value of a mechanism parameter; 'variable' is not a mechanism parameter. If looking "
-                                 f"for {self.name}'s default variable, try '{self.name}.defaults.variable'.")
-        try:
-            return self._parameter_ports[param_name].parameters.value._get(context)
-        except (AttributeError, TypeError):
-            return getattr(self.parameters, param_name)._get(context)
 
     # when called externally, ContextFlags.PROCESSING is not set. Maintain this behavior here
     # even though it will not update input ports for example

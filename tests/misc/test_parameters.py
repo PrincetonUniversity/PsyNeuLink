@@ -298,6 +298,8 @@ class TestSharedParameters:
             (recurrent_mech, 'learning_function', 'stateful'),
             (recurrent_mech, 'learning_function', 'loggable'),
             (recurrent_mech.recurrent_projection, 'auto', 'modulable'),
+            (recurrent_mech, 'integration_rate', 'modulable'),
+            (recurrent_mech, 'noise', 'modulable'),
         ]
     )
     def test_param_attrs_match(self, obj, parameter_name, attr_name):

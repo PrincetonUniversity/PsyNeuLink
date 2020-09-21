@@ -42,3 +42,15 @@ def test_vector_op(benchmark, op, y, llvm_y, builtin, result, mode):
         benchmark(llvm_fun, ct_u, llvm_y, DIM_X, ct_res)
         res = llvm_res
     assert np.allclose(res, result)
+
+@pytest.mark.benchmark(group="Sum")
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm)])
+def test_vector_sum(benchmark, mode):
+    if mode == 'Python':
+        res = benchmark(np.sum, u)
+    elif mode == 'LLVM':
+        llvm_fun = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vec_sum")
+        benchmark(llvm_fun, ct_u, DIM_X, ct_res)
+        res = llvm_res[0]
+    assert np.allclose(res, sum(u))

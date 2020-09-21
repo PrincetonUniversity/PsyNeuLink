@@ -865,7 +865,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.auto = d
             if port is not None:
                 self._parameter_ports[AUTO] = port
-                port.source = self
+                port.source = self.parameters.auto
             else:
                 raise RecurrentTransferError("Failed to create ParameterPort for `auto` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
@@ -883,7 +883,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                        context=context)
             if port is not None:
                 self._parameter_ports[HETERO] = port
-                port.source = self
+                port.source = self.parameters.hetero
             else:
                 raise RecurrentTransferError("Failed to create ParameterPort for `hetero` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
@@ -937,9 +937,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                                      default_variable=self.defaults.variable)
             else:
                 self.combination_function = comb_fct
-
-        else:
-            self.combination_function = None
 
         if self.auto is None and self.hetero is None:
             self.matrix = matrix
