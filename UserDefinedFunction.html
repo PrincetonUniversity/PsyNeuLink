@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>UserDefinedFunction &mdash; PsyNeuLink 0.8.3.3 documentation</title>
+  <title>UserDefinedFunction &mdash; PsyNeuLink 0.8.3.3+29.g46a5489 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.3.3
+                  0.8.3.3+29
                 </div>
               
             
@@ -388,6 +388,30 @@ the function itself:</p>
 <p>The <code class="docutils literal"><span class="pre">phase</span></code> and <code class="docutils literal"><span class="pre">amplitude</span></code> parameters of <code class="docutils literal"><span class="pre">my_sinusoidal_fct</span></code> can now be used as the
 <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">Modulatory Parameters</span></a> for gating any InputPort or OutputPort to which the function is assigned (see
 <code class="xref any docutils literal"><span class="pre">GatingMechanism_Specifying_Gating</span></code> and <a class="reference internal" href="GatingSignal.html#gatingsignal-examples"><span class="std std-ref">Examples</span></a>).</p>
+</div></blockquote>
+<blockquote id="udf-compilation">
+<div><p><strong>Compiling a User Defined Function</strong></p>
+<p>User defined functions may also be <a class="reference internal" href="Composition.html#composition-compilation"><span class="std std-ref">automatically compiled</span></a>, by adding them as a mechanism or projection function.
+There are several restrictions to take into account:</p>
+</div></blockquote>
+<blockquote id="udf-compilation-restrictions">
+<div><ul class="simple">
+<li><em>Lambda Functions</em> – User defined functions currently do not support Python Lambda functions</li>
+<li><em>Loops</em> – User defined functions currently do not support Loops</li>
+<li><em>Python Data Types</em> – User defined functions currently do not support <em>dict</em> and <em>class</em> types</li>
+<li><em>Nested Functions</em> – User defined functions currently do not support recursive calls, nested functions, or closures</li>
+<li><em>Slicing and comprehensions</em> – User defined functions currently have limited support for slicing, and do not support comprehensions</li>
+<li><em>Libraries</em> – User defined functions currently do not support libraries, aside from <strong>NumPy</strong> (with limited support)</li>
+</ul>
+</div></blockquote>
+<blockquote id="udf-compilation-numpy">
+<div><p><strong>NumPy Support for Compiled User Defined Functions</strong></p>
+<p>Compiled User Defined Functions also provide access to limited compiled NumPy functionality; The supported features are listed as follows:</p>
+<ul class="simple">
+<li><em>Data Types</em> – Numpy Arrays and Matrices are supported, as long as their dimensionality is less than 3. In addition, the elementwise multiplication and addition of NumPy arrays and matrices is fully supported</li>
+<li><em>Numerical functions</em> – the <code class="xref any docutils literal"><span class="pre">exp</span></code> and <code class="xref any docutils literal"><span class="pre">tanh</span></code> methods are currently supported in compiled mode</li>
+</ul>
+<p>It is highly recommended that users who require additional functionality request it as an issue <a class="reference external" href="https://github.com/PrincetonUniversity/PsyNeuLink/issues">here</a>.</p>
 <p><strong>Class Definition:</strong></p>
 <dl class="docutils">
 <dt>custom_function <span class="classifier-delimiter">:</span> <span class="classifier">function</span></dt>
@@ -490,7 +514,7 @@ for details).</dd>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.3.3',
+               VERSION:'0.8.3.3+29.g46a5489',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
