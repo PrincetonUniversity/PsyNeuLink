@@ -921,7 +921,7 @@ Runtime parameter values are specified in the **runtime_params** argument of a M
 of a parameter (as the key) and the value to assign to it, as in the following example::
 
         >>> T = pnl.TransferMechanism(function=Linear)
-        >>> T.function.slope  #doctest: +SKIP
+        >>> T.function.slope.base  #doctest: +SKIP
         1.0   # Default for slope
         >>> T.clip #doctest: +SKIP
         None  # Default for clip is None
@@ -929,7 +929,7 @@ of a parameter (as the key) and the value to assign to it, as in the following e
         ...          runtime_params={"slope": 3.0,
         ...                           "clip": (0,5)}) #doctest: +SKIP
         array([[5.]])  # = 2 (input) * 3 (slope) = 6, but clipped at 5
-        >>> T.function.slope #doctest: +SKIP
+        >>> T.function.slope.base #doctest: +SKIP
         1.0   # slope is restored 1.0
         >>> T.clip     #doctest: +SKIP
         None  # clip is restored to None
@@ -942,7 +942,7 @@ as shown above).
 If a parameter is assigned a new value before the execution, that value is restored after the execution;  that is,
 the parameter is assigned its previous value and *not* its default, as shown below::
 
-        >>> T.function.slope = 10
+        >>> T.function.slope.base = 10
         >>> T.clip = (0,3)
         >>> T.function.slope
         10
@@ -952,7 +952,7 @@ the parameter is assigned its previous value and *not* its default, as shown bel
         ...          runtime_params={"slope": 4.0,
         ...                           "clip": (0,4)}) #doctest: +SKIP
         array([[4.]])  # = 3 (input) * 4 (slope) = 12, but clipped at 4
-        >>> T.function.slope #doctest: +SKIP
+        >>> T.function.slope.base #doctest: +SKIP
         10      # slope is restored 10.0, its previously assigned value
         >>> T.clip #doctest: +SKIP
         (0, 3)  # clip is restored to (0,3), its previously assigned value
