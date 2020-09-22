@@ -352,11 +352,15 @@ class AutodiffComposition(Composition):
 
         curr_tensor_inputs = {}
         curr_tensor_targets = {}
-        for component in inputs.keys():
-            input = inputs[component][0]
-            curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
-        for component in targets.keys():
-            target = targets[component][0]
+        for (component, inp) in inputs.items():
+            # we pass as single value if single input port
+            if len(component.input_ports) == 1:
+                inp = inp[0]
+            curr_tensor_inputs[component] = torch.tensor(inp, device=self.device).double()
+        for (component, target) in targets.items():
+            # if passed as trials
+            if len(component.input_ports) == 1:
+                target = target[0]
             curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
 
         # do forward computation on current inputs
