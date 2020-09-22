@@ -45,7 +45,7 @@ class PytorchModelCreator(torch.nn.Module):
 
         # Instantiate pytorch mechanisms
         for node in set(composition.nodes) - set(composition.get_nodes_by_role(NodeRole.LEARNING)):
-            pytorch_node = wrap_mechanism(node, self._composition._get_node_index(node), device, context=context)
+            pytorch_node = PytorchMechanismWrapper(node, self._composition._get_node_index(node), device, context=context)
             self.node_map[node] = pytorch_node
             self.nodes.append(pytorch_node)
             self.components.append(pytorch_node)
