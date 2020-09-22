@@ -1,8 +1,6 @@
 from psyneulink.core import llvm as pnlvm
 
-__all__ = ["gen_inject_unary_function_call",
-           "gen_inject_vec_copy",
-           "gen_inject_vec_binop",
+__all__ = ["gen_inject_vec_binop",
            "gen_inject_vec_add",
            "gen_inject_vec_sub",
            "gen_inject_vec_hadamard",
@@ -13,33 +11,6 @@ __all__ = ["gen_inject_unary_function_call",
            "gen_inject_mat_scalar_mult",
            "gen_inject_vxm",
            "gen_inject_vxm_transposed"]
-
-def gen_inject_unary_function_call(ctx, builder, unary_func, vector, output_vec=None):
-    dim = len(vector.type.pointee)
-    if output_vec is None:
-        output_vec = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
-    assert len(output_vec.type.pointee) == dim
-
-    # Get the pointer to the first element of the array to convert from [? x double]* -> double*
-    vec_in = builder.gep(vector, [ctx.int32_ty(0), ctx.int32_ty(0)])
-    vec_out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-    builder.call(unary_func, [vec_in, ctx.int32_ty(dim), vec_out])
-    return output_vec
-
-def gen_inject_vec_copy(ctx, builder, vector, output_vec=None):
-    dim = len(vector.type.pointee)
-    if output_vec is None:
-        output_vec = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
-    assert len(output_vec.type.pointee) == dim
-
-    # Get the pointer to the first element of the array to convert from [? x double]* -> double*
-    vec_in = builder.gep(vector, [ctx.int32_ty(0), ctx.int32_ty(0)])
-    vec_out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-    builtin = ctx.import_llvm_function("__pnl_builtin_vec_copy")
-    builder.call(builtin, [vec_in, ctx.int32_ty(dim), vec_out])
-    return output_vec
 
 def gen_inject_vec_binop(ctx, builder, op, u, v, output_vec=None):
     dim = len(u.type.pointee)
