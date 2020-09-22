@@ -523,6 +523,8 @@ different contexts (often referred to as `"statefulness" <Parameter_Statefulness
 previous values, and the ability to be `modulated <ModulatorySignal_Modulation>` by other Components in PsyNeuLink.
 These features are supported by methods on the Parameter class, as described below.
 
+.. _BasicsAndPrimer_Accessing_Parameters:
+
 Accessing Parameter Values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 The most recently assigned value of a parameter can be accessed like any other attrribute in Python,
@@ -568,6 +570,134 @@ If included in the script above, then the following would return the ``output`` 
 
 Notice that this is the value from Trial 1 in the example above.
 
+.. _BasicsAndPrimer_Setting_Parameters:
+
+Setting Parameter Values
+^^^^^^^^^^^^^^^^^^^^^^^^
+There are two different ways to set parameter values in PsyNeuLink, that correspond to the two ways of accessing
+their values discussed in the preceding section:
+
+- "dot notation" -- that is, ``<Component>.<parameter> = some_new_value``
+- the `set <Parameter.set>` method of the Parameter class; that is
+  ``<Component>.parameters.<parameter>.set(<value>, <context>)``).
+
+In the case of `non-stateful parameters <Parameter_Statefulness>`, these two approaches behave equivalently, in which
+case it is easier and clearer to use dot notation.
+
+.. warning::
+    In most cases, non-stateful parameters are intended to be configured automatically for a component upon
+    instantiation by PsyNeuLink. Oftentimes, there are additional steps of validation and setup beyond simply
+    assigning a value to some attribute of the component instance. Be cautious if you decide to manually set a
+    non-stateful parameter.
+
+In the case of `stateful parameters <Parameter_Statefulness>` (the most common type), assigning a value using dot
+notation and the `set <Parameter.set>` method can behave differently under some circumstances.
+
+Dot notation is simpler, but assumes that the `context <Context>` for which the specified value should apply is the
+most recent context in which the Parameter's owner Component has executed.  If the value should apply to a different
+context, then the `set <Parameter.set>` method must be used, which allows explicit specification of the context.
+See below for examples of appropriate use cases for each, as well as explanations of contexts when executing
+`Mechanisms <Mechanism_Execution_Composition>` and `Compositions <Composition_Execution_Context>`, respectively.
+
+.. warning::
+   If a given component has not yet been executed, or has only been executed standalone without a user-provided context,
+   then dot notation will set the Parameter's value in the baseline context. Analogously, calling the `set
+   <Parameter.set>` method without providing a context will also set the Parameter's value in the baseline
+   context. In either of these cases, any new context in which the Component executes after that will use the
+   newly-provided value as the Parameter's baseline.
+
+Example use-cases for dot notation
+**********************************
+
+- Run a Composition, then change the value of a component's parameter, then run the Composition again with the new
+  parameter value:
+
+    >>> # instantiate the mechanism
+    >>> m = ProcessingMechanism(name='m')
+    >>> # create a Composition containing the Mechanism
+    >>> comp1 = Composition(name='comp1', nodes=[m])
+    >>> comp1.run(inputs={m:1})
+    >>> # returns: [array([1.])]
+    >>> # set slope of m1's function to 2 for the most recent context (which is now comp1)
+    >>> m.function.slope = 2
+    >>> comp1.run(inputs={m:1})
+    >>> # returns: [array([2.])]
+    >>> # note that changing the slope of m's function produced a different result
+    >>> comp2 = Composition(name='comp2', nodes=[m])
+    >>> comp2.run(inputs={m:1})
+    >>> # returns: [array([1.])]
+    >>> # because slope is a stateful parameter,
+    >>> # executing the Mechanism in a different context is unaffected by the change
+
+- Cautionary example: using dot notation before a component has been executed in a non-default context will change
+  its value in the default context, which will in turn propagate to new contexts in which it is executed:
+
+    >>> # instantiate the mechanism
+    >>> m = ProcessingMechanism(name='m')
+    >>> # create two Compositions, each containing m
+    >>> comp1 = Composition(name='comp1', nodes=[m])
+    >>> comp2 = Composition(name='comp2', nodes=[m])
+    >>> m.execute([1])
+    >>> # returns: [array([1.])]
+    >>> # executing m outside of a Composition uses its default context
+    >>> m.function.slope = 2
+    >>> m.execute([1])
+    >>> # returns: [array([2.])]
+    >>> comp1.run(inputs={m:1})
+    >>> # returns: [array([2.])]
+    >>> comp2.run(inputs={m:1})
+    >>> # returns: [array([2.])]
+    >>> # the change of the slope of m's function propagated to the new Contexts in which it executes
+
+Example use-cases for Parameter set method
+******************************************
+
+- Change the value of a parameter for a context that was not the last context in which the parameter's owner executed:
+
+    >>> # instantiate the mechanism
+    >>> m = ProcessingMechanism(name='m')
+    >>> # create two Compositions, each containing m
+    >>> comp1 = Composition(name='comp1', nodes=[m])
+    >>> comp2 = Composition(name='comp2', nodes=[m])
+    >>> comp1.run({m:[1]})
+    >>> # returns: [array([1.])]
+    >>> comp2.run({m:[1]})
+    >>> # returns: [array([1.])]
+    >>> # the last context in which m was executed was comp2,
+    >>> # so using dot notation to change a parameter of m would apply only for the comp2 context;
+    >>> # changing the parameter value for the comp1 context requires use of the set method
+    >>> m.function_parameters.slope.set(2, comp1)
+    >>> comp1.run({m:[1]})
+    >>> # returns: [array([2.])]
+    >>> comp2.run({m:[1]})
+    >>> # returns: [array([1.])]
+
+- Cautionary example: calling the set method of a parameter without a context specified changes its value in the
+  default context which, in turn, will propagate to new contexts in which it is executed:
+
+    >>> # instantiate the mechanism
+    >>> m = ProcessingMechanism(name='m')
+    >>> # create two Compositions, each containing m
+    >>> comp1 = Composition(name='comp1', nodes=[m])
+    >>> comp2 = Composition(name='comp2', nodes=[m])
+    >>> comp1.run({m:[1]})
+    >>> # returns: [array([1.])]
+    >>> comp2.run({m:[1]})
+    >>> # returns: [array([1.])]
+    >>> # calling the set method without specifying a context will change the default value for new contexts
+    >>> m.function_parameters.slope.set(2)
+    >>> comp1.run({m: [1]})
+    >>> # returns: [array([1.])]
+    >>> # no change because the context had already been set up before the call to set
+    >>> comp2.run({m:[1]})
+    >>> # returns: [array([1.])]
+    >>> # no change because the context had already been set up before the call to set
+    >>> # set up a new context
+    >>> comp3 = Composition(name='comp3', nodes=[m])
+    >>> comp3.run({m: [1]})
+    >>> # returns: [array([2.])]
+    >>> # 2 is now the default value for the slope of m's function, so it now produces a different result
+
 Function Parameters
 ^^^^^^^^^^^^^^^^^^^
 The `parameters <Component_Parameters>` attribute of a Component contains a list of all of its parameters. It is
@@ -593,7 +723,8 @@ a `ModulatorySignal <ModulatorySignal>` belonging to a `ModulatoryMechanism <Mod
 of a `Mechanism <Mechanism>` or a `Projection <Projection>` is modulable, it is assigned a `ParameterPort` -- this is a
 Component that belongs to the Mechanism or Projection and can receive a Projection from a ModulatorySignal, allowing
 another component to modulate the value of the parameter. ParameterPorts are created for every modulable parameter of
-a Mechanism or its `function <Mechanism_Base.function>`, and similarly for Projections.  These determine the value
+a Mechanism, its `function <Mechanism_Base.function>`, any of its
+secondary functions, and similarly for Projections.  These determine the value
 of the parameter that is actually used when the Component is executed, which may be different than the base value
 returned by accessing the parameter directly (as in the examples above); see `ModulatorySignal_Modulation` for a more
 complete description of modulation.  The current *modulated* value of a parameter can be accessed from the `value
@@ -608,8 +739,9 @@ the `value <ParameterPort.value>` of the ParameterPort for the parameter::
     >>> task.mod_gain
     [0.62]
 
-This works for any modulable parameters of the Mechanism or its `function <Mechanism_Base.function>`.  Note that,
-here, neither the ``parameters`` nor the ``function`` atributes of the Mechanism need to be included in the reference.
+This works for any modulable parameters of the Mechanism, its
+`function <Mechanism_Base.function>`, or secondary functions.  Note that,
+here, neither the ``parameters`` nor the ``function`` attributes of the Mechanism need to be included in the reference.
 Note also that, as explained above, the value returned is different from the base value of the function's gain
 parameter::
 

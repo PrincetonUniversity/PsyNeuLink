@@ -91,6 +91,7 @@ CONTENTS
 
 """
 
+import collections
 import copy
 import inspect
 import logging
@@ -102,10 +103,13 @@ import warnings
 import weakref
 import types
 import typing
+import typecheck as tc
 
 from enum import Enum, EnumMeta, IntEnum
+from collections.abc import Mapping
+from collections import UserDict, UserList
+from itertools import chain, combinations
 
-import collections
 import numpy as np
 
 from psyneulink.core.globals.keywords import \
@@ -575,13 +579,12 @@ def scalar_distance(measure, value, scale=1, offset=0):
     if measure == SINUSOID:
         return sinusoid(value, frequency=scale, phase=offset)
 
-from itertools import chain, combinations
+
 def powerset(iterable):
     """powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"""
     s = list(iterable)
     return chain.from_iterable(combinations(s, r) for r in range(len(s) + 1))
 
-import typecheck as tc
 @tc.typecheck
 def tensor_power(items, levels:tc.optional(range)=None, flat=False):
     """return tensor product for all members of powerset of items
@@ -598,7 +601,7 @@ def tensor_power(items, levels:tc.optional(range)=None, flat=False):
     levels = levels or range(1,max_levels)
     max_spec = max(list(levels))
     min_spec = min(list(levels))
-    if  max_spec > max_levels:
+    if max_spec > max_levels:
         raise UtilitiesError("range ({},{}) specified for {} arg of tensor_power() "
                              "exceeds max for items specified ({})".
                              format(min_spec, max_spec + 1, repr('levels'), max_levels + 1))
@@ -606,7 +609,7 @@ def tensor_power(items, levels:tc.optional(range)=None, flat=False):
     pp = []
     for s in ps:
         order = len(s)
-        if not order in list(levels):
+        if order not in list(levels):
             continue
         if order==1:
             pp.append(np.array(s[0]))
@@ -635,7 +638,6 @@ def get_args(frame):
     return dict((key, value) for key, value in values.items() if key in args)
 
 
-from collections.abc import Mapping
 def recursive_update(d, u, non_destructive=False):
     """Recursively update entries of dictionary d with dictionary u
     From: https://stackoverflow.com/questions/3232943/update-value-of-a-nested-dictionary-of-varying-depth
@@ -847,50 +849,62 @@ def np_array_less_than_2d(array):
     else:
         return False
 
-def convert_to_np_array(value, dimension):
-    """Convert value to np.array if it is not already
-
-    Check whether value is already an np.ndarray and whether it has non-numeric elements
-
-    Return np.array of specified dimension
-
-    :param value:
-    :return:
+def convert_to_np_array(value, dimension=None):
     """
-    if value is None:
-        return None
+        Converts value to np.ndarray if it is not already. Handles
+        creation of "ragged" arrays
+        (https://numpy.org/neps/nep-0034-infer-dtype-is-object.html)
+
+        Args:
+            value
+                item to convert to np.ndarray
+
+            dimension : 1, 2, None
+                minimum dimension of np.ndarray to convert to
+
+        Returns:
+            value : np.ndarray
+    """
+    def safe_create_np_array(value):
+        with warnings.catch_warnings():
+            warnings.filterwarnings('error', category=np.VisibleDeprecationWarning)
+            # NOTE: this will raise a ValueError in the future.
+            # See https://numpy.org/neps/nep-0034-infer-dtype-is-object.html
+            try:
+                try:
+                    return np.asarray(value)
+                except np.VisibleDeprecationWarning:
+                    return np.asarray(value, dtype=object)
+            except ValueError as e:
+                msg = str(e)
+                if 'cannot guess the desired dtype from the input' in msg:
+                    return np.asarray(value, dtype=object)
+                # KDM 6/29/20: this case handles a previously noted case
+                # by KAM 6/28/18, #877:
+                # [[0.0], [0.0], np.array([[0.0, 0.0]])]
+                # but was only handled for dimension=1
+                elif 'could not broadcast' in msg:
+                    return convert_all_elements_to_np_array(value)
+                else:
+                    raise
+
+    value = safe_create_np_array(value)
 
     if dimension == 1:
-        # KAM 6/28/18: added for cases when even np does not recognize the shape/dtype
-        # Needed this specifically for the following shape: variable = [[0.0], [0.0], np.array([[0.0, 0.0]])]
-        # Which is due to a custom OutputPort variable that includes an owner value, owner param, and owner input
-        # port variable. FIX: This branch of code may erroneously catch other shapes that could be handled by np
-
-        try:
-            value = np.atleast_1d(value)
-
-        # KAM 6/28/18: added exception for cases when even np does not recognize the shape/dtype
-        # Needed this specifically for the following shape: variable = [[0.0], [0.0], np.array([[0.0, 0.0]])]
-        # Due to a custom OutputPort variable (variable = [owner value[0], owner param, owner InputPort variable])
-        # FIX: (1) is this exception specific enough? (2) this is not actually converting to an np.array but in this
-        # case (as far as I know) we cannot convert to np -- should we warn other methods that this value is "not np"?
-        except ValueError:
-            return value
-
+        value = np.atleast_1d(value)
     elif dimension == 2:
-        from numpy import ndarray
-        # if isinstance(value, ndarray) and value.dtype==object and len(value) == 2:
-        value = np.array(value)
-        # if value.dtype==object and len(value) == 2:
         # Array is made up of non-uniform elements, so treat as 2d array and pass
-        if value.dtype==object:
+        if (
+            value.ndim > 0
+            and value.dtype == object
+            and any([safe_len(x) > 1 for x in value])
+        ):
             pass
         else:
             value = np.atleast_2d(value)
-    else:
-        raise UtilitiesError("dimensions param ({0}) must be 1 or 2".format(dimension))
-    if 'U' in repr(value.dtype):
-        raise UtilitiesError("{0} has non-numeric entries".format(value))
+    elif dimension is not None:
+        raise UtilitiesError("dimension param ({0}) must be None, 1, or 2".format(dimension))
+
     return value
 
 
@@ -980,7 +994,6 @@ def append_type_to_name(object, type=None):
 #endregion
 
 
-from collections import UserDict
 class ReadOnlyOrderedDict(UserDict):
     def __init__(self, dict=None, name=None, **kwargs):
         self.name = name or self.__class__.__name__
@@ -998,7 +1011,7 @@ class ReadOnlyOrderedDict(UserDict):
         raise UtilitiesError("{} is read-only".format(self.name))
     def __additem__(self, key, value):
         self.data[key] = value
-        if not key in self._ordered_keys:
+        if key not in self._ordered_keys:
             self._ordered_keys.append(key)
     def __deleteitem__(self, key):
         del self.data[key]
@@ -1007,7 +1020,6 @@ class ReadOnlyOrderedDict(UserDict):
     def copy(self):
         return self.data.copy()
 
-from collections import UserList
 class ContentAddressableList(UserList):
     """
     ContentAddressableList( component_type, key=None, list=None)
@@ -1099,6 +1111,8 @@ class ContentAddressableList(UserList):
 
     """
 
+    legal_key_type_strings = ['int', 'str', 'Port']
+
     def __init__(self, component_type, key=None, list=None, name=None, **kwargs):
         self.component_type = component_type
         self.key = key or 'name'
@@ -1142,7 +1156,6 @@ class ContentAddressableList(UserList):
                                 format(key, self.name))
             return self.data[key_num]
 
-
     def __setitem__(self, key, value):
         # For efficiency, first assume the key is numeric (duck typing in action!)
         try:
@@ -1154,7 +1167,7 @@ class ContentAddressableList(UserList):
                 raise UtilitiesError("Non-numeric key used for {} ({}) must be "
                                      "a string)".format(self.name, key))
             # The specified string must also match the value of the attribute of the class used for addressing
-            if not key == value.name:
+            if not key.startswith(value.name):
             # if not key == type(value).__name__:
                 raise UtilitiesError("The key of the entry for {} {} ({}) "
                                      "must match the value of its {} attribute "
@@ -1173,7 +1186,11 @@ class ContentAddressableList(UserList):
         if super().__contains__(item):
             return True
         else:
-            return any(item == obj.name for obj in self.data)
+            try:
+                self.__getitem__(item)
+                return True
+            except (KeyError, TypeError, UtilitiesError, ValueError):
+                return False
 
     def _get_key_for_item(self, key):
         if isinstance(key, str):
@@ -1185,9 +1202,13 @@ class ContentAddressableList(UserList):
         elif isinstance(key, self.component_type):
             return self.data.index(key)
         else:
-            raise UtilitiesError("{} is not a legal key for {} (must be "
-                                 "number, string or Port)".format(key,
-                                                                   self.key))
+            raise UtilitiesError(
+                "{} is not a legal key for {} (must be {})".format(
+                    key,
+                    self.key,
+                    gen_friendly_comma_str(self.legal_key_type_strings)
+                )
+            )
 
     def __delitem__(self, key):
         if key is None:
@@ -1507,12 +1528,9 @@ def safe_equals(x, y):
             return np.array_equal(x, y)
 
 
-import typecheck as tc
 @tc.typecheck
 def _get_arg_from_stack(arg_name:str):
     # Get arg from the stack
-
-    import inspect
 
     curr_frame = inspect.currentframe()
     prev_frame = inspect.getouterframes(curr_frame, 2)
@@ -1740,3 +1758,24 @@ def merge_dictionaries(a: dict, b: dict) -> typing.Tuple[dict, bool]:
     new_dict.update({k: create_union_set(a[k], b[k]) for k in shared_keys})
 
     return new_dict, len(new_dict) < (len(a) + len(b))
+
+
+def gen_friendly_comma_str(items):
+    """
+        Returns:
+            a proper English comma-separated string of each item in
+            **items**
+    """
+    if isinstance(items, str) or not is_iterable(items):
+        return str(items)
+
+    items = [str(x) for x in items]
+
+    if len(items) < 2:
+        return ''.join(items)
+    else:
+        divider = ' or '
+        if len(items) > 2:
+            divider = f',{divider}'
+
+        return f"{', '.join(items[:-1])}{divider}{items[-1]}"

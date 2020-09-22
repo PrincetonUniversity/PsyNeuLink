@@ -7,8 +7,6 @@ __all__ = ['MSELoss']
 class Loss():
 
     def __init__(self):
-        self._structs = []
-
         self._DELTA_W_NUM = 0
 
 
@@ -26,7 +24,7 @@ class MSELoss(Loss):
     def __init__(self, reduction='sum'):
         if reduction not in ['sum']:
             raise Exception("Unsupported compiled reduction type " + reduction)
-        
+
         super().__init__()
         self.reduction = reduction
 
@@ -53,7 +51,7 @@ class MSELoss(Loss):
 
         # Average the values in sum by dimensionality
         builder.store(builder.fdiv(builder.load(sum),builder.uitofp(dim, ctx.float_ty)), sum)
-        
+
         builder.ret(builder.load(sum))
 
         return builder.function

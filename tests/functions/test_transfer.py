@@ -21,8 +21,8 @@ softmax_helper = RAND1 * test_var
 softmax_helper = softmax_helper - np.max(softmax_helper)
 softmax_helper = np.exp(softmax_helper) / np.sum(np.exp(softmax_helper))
 
-tanh_helper = -2 * (RAND1 * (test_var + RAND2 - RAND3) + RAND4)
-tanh_helper = (1 - e**tanh_helper)/ (1 + e**tanh_helper)
+tanh_helper = (RAND1 * (test_var + RAND2 - RAND3) + RAND4)
+tanh_helper = np.tanh(tanh_helper)
 
 gaussian_helper = e**(-(test_var - RAND2)**2 / (2 * RAND1**2)) / sqrt(2 * pi * RAND1)
 gaussian_helper = RAND3 * gaussian_helper + RAND4
@@ -51,6 +51,18 @@ test_data = [
     (Functions.LinearMatrix, test_var.tolist(), {'matrix':test_matrix_s.tolist()}, None, np.dot(test_var, test_matrix_s)),
 ]
 
+relu_derivative_helper = lambda x : RAND1 if x > 0 else RAND1 * RAND3
+logistic_helper = RAND4 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3))
+tanh_derivative_helper = (RAND1 * (test_var + RAND2) + RAND3)
+tanh_derivative_helper = (1 - np.tanh(tanh_derivative_helper)**2) * RAND4 * RAND1
+derivative_test_data = [
+    (Functions.Linear, test_var, {'slope':RAND1, 'intercept':RAND2}, RAND1),
+    (Functions.Exponential, test_var, {'scale':RAND1, 'rate':RAND2}, RAND1 * RAND2 * np.exp(RAND2 * test_var)),
+    (Functions.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3, 'scale':RAND4}, RAND1 * RAND4 * logistic_helper * (1 - logistic_helper)),
+    (Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, list(map(relu_derivative_helper, test_var))),
+    (Functions.Tanh, test_var, {'gain':RAND1, 'bias':RAND2, 'offset':RAND3, 'scale':RAND4}, tanh_derivative_helper),
+]
+
 # use list, naming function produces ugly names
 names = [
     "LINEAR",
@@ -67,6 +79,14 @@ names = [
     "LINEAR_MATRIX SQUARE",
     "LINEAR_MATRIX WIDE",
     "LINEAR_MATRIX TALL",
+]
+
+derivative_names = [
+    "LINEAR_DERIVATIVE",
+    "EXPONENTIAL_DERIVATIVE",
+    "LOGISTIC_DERIVATIVE",
+    "RELU_DERIVATIVE",
+    "TANH_DERIVATIVE",
 ]
 
 @pytest.mark.function
@@ -88,7 +108,31 @@ def test_execute(func, variable, params, fail, expected, benchmark, mode):
         ex = pnlvm.execution.FuncExecution(f).cuda_execute
     res = ex(variable)
     assert np.allclose(res, expected)
-    benchmark(f.function, variable)
+    if benchmark.enabled:
+        benchmark(f.function, variable)
+
+
+@pytest.mark.function
+@pytest.mark.transfer_function
+@pytest.mark.benchmark
+@pytest.mark.parametrize("func, variable, params, expected", derivative_test_data, ids=derivative_names)
+@pytest.mark.parametrize("mode", [
+    'Python',
+    pytest.param('LLVM', marks=pytest.mark.llvm),
+    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_execute_derivative(func, variable, params, expected, benchmark, mode):
+    f = func(default_variable=variable, **params)
+    benchmark.group = "TransferFunction " + func.componentName + " Derivative"
+    if mode == 'Python':
+        ex = f.derivative
+    elif mode == 'LLVM':
+        ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative"})).execute
+    elif mode == 'PTX':
+        ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative"})).cuda_execute
+    res = ex(variable)
+    assert np.allclose(res, expected)
+    if benchmark.enabled:
+        benchmark(ex, variable)
 
 
 def test_transfer_with_costs_function():

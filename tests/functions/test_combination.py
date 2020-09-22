@@ -44,10 +44,10 @@ class TestRearrange:
     @pytest.mark.combination_function
     def test_default_variable_has_non_numeric_index(self):
         # with pytest.raises(pnl.FunctionError) as error_text:
-        with pytest.raises(pnl.UtilitiesError) as error_text:
+        with pytest.raises(pnl.FunctionError) as error_text:
             pnl.Rearrange(default_variable=[[0],['a']], arrangement=[(1,2),0])
         # error_msg = "All elements of 'default_variable' for Rearrange must be scalar values."
-        error_msg = "[['0']\\n ['a']] has non-numeric entries"
+        error_msg = "must be scalar values"
         assert error_msg in str(error_text.value)
 
     @pytest.mark.function
@@ -216,14 +216,16 @@ def test_reduce_function(variable, operation, exponents, weights, scale, offset,
             pytest.xfail("vector offset is not supported")
         raise e from None
 
-    if (mode == 'LLVM'):
+    if mode == 'Python':
+        EX = f.function
+    elif mode == 'LLVM':
         e = pnlvm.execution.FuncExecution(f)
-        res = benchmark(e.execute, variable)
-    elif (mode == 'PTX'):
+        EX = e.execute
+    elif mode == 'PTX':
         e = pnlvm.execution.FuncExecution(f)
-        res = benchmark(e.cuda_execute, variable)
-    else:
-        res = benchmark(f.function, variable)
+        EX = e.cuda_execute
+
+    res = benchmark(EX, variable)
 
     scale = 1.0 if scale is None else scale
     offset = 0.0 if offset is None else offset
@@ -248,10 +250,10 @@ def test_reduce_function(variable, operation, exponents, weights, scale, offset,
 @pytest.mark.parametrize("weights", [None, 0.5, 'V'], ids=["W_NONE", "W_SCALAR", "W_VECTORN"])
 @pytest.mark.parametrize("scale", [None, RAND1_S, RAND1_V], ids=["S_NONE", "S_SCALAR", "S_VECTOR"])
 @pytest.mark.parametrize("offset", [None, RAND2_S, RAND2_V], ids=["O_NONE", "O_SCALAR", "O_VECTOR"])
-@pytest.mark.parametrize("bin_execute", ['Python',
-                                        pytest.param('LLVM', marks=pytest.mark.llvm),
-                                        pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-def test_linear_combination_function(variable, operation, exponents, weights, scale, offset, bin_execute, benchmark):
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_linear_combination_function(variable, operation, exponents, weights, scale, offset, mode, benchmark):
     if weights == 'V':
         weights = [[-1 ** i] for i, v in enumerate(variable)]
     if exponents == 'V':
@@ -263,14 +265,16 @@ def test_linear_combination_function(variable, operation, exponents, weights, sc
                               weights=weights,
                               scale=scale,
                               offset=offset)
-    if (bin_execute == 'LLVM'):
+    if mode == 'Python':
+        EX = f.function
+    elif mode == 'LLVM':
         e = pnlvm.execution.FuncExecution(f)
-        res = benchmark(e.execute, variable)
-    elif (bin_execute == 'PTX'):
+        EX = e.execute
+    elif mode == 'PTX':
         e = pnlvm.execution.FuncExecution(f)
-        res = benchmark(e.cuda_execute, variable)
-    else:
-        res = benchmark(f.function, variable)
+        EX = e.cuda_execute
+
+    res = benchmark(EX, variable)
 
     scale = 1.0 if scale is None else scale
     offset = 0.0 if offset is None else offset
@@ -301,14 +305,15 @@ def test_linear_combination_function_in_mechanism(operation, input, input_ports,
     p = pnl.ProcessingMechanism(size=[len(input[0])] * len(input), function=f, input_ports=input_ports)
 
     if mode == 'Python':
-        res = benchmark(f.execute, input)
+        EX = p.execute
     elif mode == 'LLVM':
-        e = pnlvm.execution.FuncExecution(f)
-        res = benchmark(e.execute, input)
+        e = pnlvm.execution.MechExecution(p)
+        EX = e.execute
     elif mode == 'PTX':
-        e = pnlvm.execution.FuncExecution(f)
-        res = benchmark(e.cuda_execute, input)
+        e = pnlvm.execution.MechExecution(p)
+        EX = e.cuda_execute
 
+    res = benchmark(EX, input)
 
     scale = 1.0 if scale is None else scale
     offset = 0.0 if offset is None else offset

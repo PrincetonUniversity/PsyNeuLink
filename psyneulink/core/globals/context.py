@@ -88,6 +88,7 @@ import inspect
 import warnings
 
 from collections import defaultdict, namedtuple
+from queue import Queue
 
 import typecheck as tc
 
@@ -228,14 +229,14 @@ class ContextFlags(enum.IntFlag):
                     flagged_items.append(ContextFlags.IDLE.name)
                     break
                 if c & condition_flags:
-                   flagged_items.append(c.name)
+                    flagged_items.append(c.name)
         if SOURCE in fields:
             for c in SOURCE_FLAGS:
                 if not condition_flags & ContextFlags.SOURCE_MASK:
                     flagged_items.append(ContextFlags.NONE.name)
                     break
                 if c & condition_flags:
-                   flagged_items.append(c.name)
+                    flagged_items.append(c.name)
         string += ", ".join(flagged_items)
         return string
 
@@ -328,6 +329,10 @@ class Context():
       references it, but it is possible that future uses will involve other messages.  Note that this is *not* the
       same as the `flags_string <Context.flags_string>` attribute (see `note <Context_String_Note>`).
 
+    rpc_pipeline : Queue
+      queue to populate with messages for external environment in cases where execution was triggered via RPC call
+      (e.g. through PsyNeuLinkView).
+
     """
 
     __name__ = 'Context'
@@ -342,7 +347,9 @@ class Context():
                  source=ContextFlags.NONE,
                  runmode=ContextFlags.DEFAULT_MODE,
                  execution_id=None,
-                 string:str='', time=None):
+                 string:str='',
+                 time=None,
+                 rpc_pipeline:Queue=None):
 
         self.owner = owner
         self.composition = composition
@@ -364,6 +371,7 @@ class Context():
         self.execution_id = execution_id
         self.execution_time = None
         self.string = string
+        self.rpc_pipeline = rpc_pipeline
 
     __deepcopy__ = get_deepcopy_with_shared(_deepcopy_shared_keys)
 

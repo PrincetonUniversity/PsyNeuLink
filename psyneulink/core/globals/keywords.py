@@ -120,6 +120,7 @@ __all__ = [
 # **********************************************************************************************************************
 # ******************************************  KEYWORD CLASSES **********************************************************
 # **********************************************************************************************************************
+import operator
 
 class MatrixKeywords:
     """
@@ -342,7 +343,6 @@ GREATER_THAN = '>'
 GREATER_THAN_OR_EQUAL = '>='
 NOT_EQUAL = '!='
 
-import operator
 comparison_operators = {LESS_THAN : operator.lt,
                         LESS_THAN_OR_EQUAL : operator.le,
                         EQUAL : operator.eq,
@@ -722,6 +722,7 @@ TERMINATION_COMPARISION_OP = 'termination_comparison_op'
 port_value = "Port value"   # Used in Port specification dict to specify Port value
 port_params = "Port params" # Used in Port specification dict to specify Port params
 
+OWNER_MECH = 'owner_mech'
 #endregion
 
 #region ----------------------------------------    MODULATORY MECHANISMS ----------------------------------------------

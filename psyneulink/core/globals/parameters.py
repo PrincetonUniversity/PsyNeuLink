@@ -73,13 +73,16 @@ different execution contexts and can be modified by modulated `ModulatorySignal_
 .. note::
     The "dot notation" version - ``t.value`` - refers to the most recent execution context in which *t* was executed. In
     many cases, you can use this to get or set using the execution context you'd expect. However, in complex situations,
-    if there is doubt, it is best to explicitly specify the execution context.
+    or  if there is any doubt, it is best to explicitly specify the execution context using the parameter's `set
+    <Parameter.set>` method (for a more complete descritpion of the differences between dot notation and the `set
+    <Parameter.set>` method, see `BasicsAndPrimer_Parameters`.
 
-For Developers
---------------
 
-Developers must keep in mind state when writing new components for PNL. Any parameters or values that may change during a `run <Run_Overview>`
-must become stateful Parameters, or they are at risk of computational errors like those encountered in parallel programming.
+.. _technical_note::
+
+    Developers must keep in mind state when writing new Components for PsyNeuLink. Any parameters or values that may
+    change during a `run <Run_Overview>` must become stateful Parameters, or they are at risk of computational
+    errors like those encountered in parallel programming.
 
 
 Creating Parameters
@@ -145,6 +148,34 @@ To create new Parameters, reference this example of a new class *B*
     The specification of Parameters is intended to mirror the PNL class hierarchy. So, it is only necessary for each new class to declare
     Parameters that are new, or whose specification has changed from their parent's. Parameters not present in a given class can be inherited
     from parents, but will be overridden if necessary, without affecting the parents.
+
+
+.. _Parameter_Special_Classes:
+
+.. technical_note::
+    Special Parameter Classes
+    -------------------------
+        `FunctionParameter` and `SharedParameter` are used to provide
+        simpler access to some parameters of auxiliary components. They
+        can be passed into the constructor of the owner, and then
+        automatically passed when constructing the auxiliary component.
+        The `values <Parameter.values>` of `SharedParameter`\\ s are
+        shared via getter and  with those of their target `Parameter`.
+
+        `SharedParameter`\\ s should only be used when there is a
+        guarantee that their target will exist, given a specific
+        Component. For example, it is acceptable that
+        `TransferMechanism.integration_rate` is a `FunctionParameter`
+        for the `rate` parameter of its
+        `integrator_function<TransferMechanism.integrator_function>`,
+        because all `TransferMechanism`\\ s have an integrator
+        function, and all integrator functions have a `rate` parameter.
+        It is also acceptable that
+        `ControlSignal.intensity_cost_function` is a `FunctionParameter`
+        corresponding to its function's
+        `intensity_cost_fct <TransferWithCosts>` parameter, because a
+        ControlSignal's function is always a `TransferWithCosts` and is
+        not user-specifiable.
 
 
 Using Parameters
@@ -241,13 +272,15 @@ Class Reference
 
 import collections
 import copy
+import itertools
 import logging
 import types
 import typing
-import warnings
 import weakref
 
-from psyneulink.core.globals.keywords import MULTIPLICATIVE
+import numpy as np
+
+from psyneulink.core.rpc.graph_pb2 import Entry, ndArray
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
@@ -255,7 +288,7 @@ from psyneulink.core.globals.utilities import call_with_pruned_args, copy_iterab
 
 __all__ = [
     'Defaults', 'get_validator_by_function', 'Parameter', 'ParameterAlias', 'ParameterError',
-    'ParametersBase', 'parse_context',
+    'ParametersBase', 'parse_context', 'FunctionParameter', 'SharedParameter'
 ]
 
 logger = logging.getLogger(__name__)
@@ -366,13 +399,25 @@ class ParametersTemplate:
     def __str__(self):
         return self.show()
 
-    __deepcopy__ = get_deepcopy_with_shared(_deepcopy_shared_keys)
+    def __deepcopy__(self, memo):
+        newone = get_deepcopy_with_shared(self._deepcopy_shared_keys)(self, memo)
+
+        for name, param in self.values(show_all=True).items():
+            if isinstance(param, ParameterAlias):
+                source_name = param.source.name
+                getattr(newone, name).source = getattr(newone, source_name)
+
+        memo[id(self)] = newone
+        return newone
 
     def __del__(self):
         try:
             self._parent._children.remove(weakref.ref(self))
         except (AttributeError, KeyError):
             pass
+
+    def __contains__(self, item):
+        return item in itertools.chain.from_iterable(self.values(show_all=True).items())
 
     def __iter__(self):
         return iter([getattr(self, k) for k in self.values(show_all=True).keys()])
@@ -497,7 +542,21 @@ class Defaults(ParametersTemplate):
         return {k: v.default_value for (k, v) in self._owner.parameters.values(show_all=show_all).items()}
 
 
-class Parameter(types.SimpleNamespace):
+class ParameterBase(types.SimpleNamespace):
+    def __lt__(self, other):
+        return self.name < other.name
+
+    def __gt__(self, other):
+        return self.name > other.name
+
+    def __eq__(self, other):
+        return object.__eq__(self, other)
+
+    def __hash__(self):
+        return object.__hash__(self)
+
+
+class Parameter(ParameterBase):
     """
     COMMENT:
         KDM 11/30/18: using nonstandard formatting below to ensure developer notes is below type in html
@@ -550,17 +609,6 @@ class Parameter(types.SimpleNamespace):
             TBD
 
             :default: False
-
-        function_parameter
-            indicates that this Parameter is not a "true" Parameter of a
-            Component, but a reference to an equally named Parameter on
-            the Component's function.
-
-            :default: False
-
-            :Developer Notes: In the future, these will use custom
-            default getters and setters that simply reference the
-            equivalent Parameters on the function
 
         pnl_internal
             whether the parameter is an idiosyncrasy of PsyNeuLink or it is more intrinsic to the conceptual operation
@@ -618,6 +666,12 @@ class Parameter(types.SimpleNamespace):
 
         log_condition
             the LogCondition for which the parameter should be logged.
+
+            :type: `LogCondition`
+            :default: `OFF <LogCondition.OFF>`
+
+        delivery_condition
+            the LogCondition for which the parameter shoud be delivered.
 
             :type: `LogCondition`
             :default: `OFF <LogCondition.OFF>`
@@ -703,6 +757,7 @@ class Parameter(types.SimpleNamespace):
         'default_value',
         'history_max_length',
         'log_condition',
+        'delivery_condition',
         'spec',
     }
 
@@ -716,7 +771,6 @@ class Parameter(types.SimpleNamespace):
         modulation_combination_function=None,
         read_only=False,
         function_arg=True,
-        function_parameter=False,
         pnl_internal=False,
         aliases=None,
         user=True,
@@ -726,6 +780,7 @@ class Parameter(types.SimpleNamespace):
         loggable=True,
         log=None,
         log_condition=LogCondition.OFF,
+        delivery_condition=LogCondition.OFF,
         history=None,
         history_max_length=1,
         history_min_length=0,
@@ -743,6 +798,7 @@ class Parameter(types.SimpleNamespace):
         # attributes will be taken from
         _inherited_source=None,
         _user_specified=False,
+        **kwargs
     ):
         if isinstance(aliases, str):
             aliases = [aliases]
@@ -757,7 +813,7 @@ class Parameter(types.SimpleNamespace):
             log = {}
 
         if valid_types is not None:
-            if isinstance(valid_types, list):
+            if isinstance(valid_types, (list, tuple)):
                 valid_types = tuple(valid_types)
             else:
                 valid_types = (valid_types, )
@@ -771,7 +827,6 @@ class Parameter(types.SimpleNamespace):
             modulation_combination_function=modulation_combination_function,
             read_only=read_only,
             function_arg=function_arg,
-            function_parameter=function_parameter,
             pnl_internal=pnl_internal,
             aliases=aliases,
             user=user,
@@ -781,6 +836,7 @@ class Parameter(types.SimpleNamespace):
             loggable=loggable,
             log=log,
             log_condition=log_condition,
+            delivery_condition=delivery_condition,
             history=history,
             history_max_length=history_max_length,
             history_min_length=history_min_length,
@@ -794,6 +850,7 @@ class Parameter(types.SimpleNamespace):
             _inherited=_inherited,
             _inherited_source=_inherited_source,
             _user_specified=_user_specified,
+            **kwargs
         )
 
         self._owner = _owner
@@ -812,7 +869,7 @@ class Parameter(types.SimpleNamespace):
         # modified from types.SimpleNamespace to exclude _-prefixed attrs
         try:
             items = (
-                "{}={!r}".format(k, getattr(self, k)) for k in self._param_attrs
+                "{}={!r}".format(k, getattr(self, k)) for k in sorted(self._param_attrs)
                 if k not in self._hidden_when or not self._hidden_when[k](self, getattr(self, k))
             )
 
@@ -820,16 +877,13 @@ class Parameter(types.SimpleNamespace):
         except AttributeError:
             return super().__str__()
 
-    def __lt__(self, other):
-        return self.name < other.name
-
     def __deepcopy__(self, memo):
         if 'no_shared' in memo and memo['no_shared']:
             shared_types = tuple()
         else:
             shared_types = None
 
-        result = Parameter(
+        result = type(self)(
             **{
                 k: copy_parameter_value(getattr(self, k), memo=memo, shared_types=shared_types)
                 for k in self._param_attrs
@@ -1164,7 +1218,7 @@ class Parameter(types.SimpleNamespace):
         if not override and self.read_only:
             raise ParameterError('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to force set.'.format(self.name))
 
-        self._set(self._parse(value), context, skip_history, skip_log, **kwargs)
+        return self._set(self._parse(value), context, skip_history, skip_log, **kwargs)
 
     def _set(self, value, context=None, skip_history=False, skip_log=False, **kwargs):
         if not self.stateful:
@@ -1187,8 +1241,9 @@ class Parameter(types.SimpleNamespace):
             value = call_with_pruned_args(self.setter, value, context=context, **kwargs)
 
         self._set_value(value, execution_id=execution_id, context=context, skip_history=skip_history, skip_log=skip_log)
+        return value
 
-    def _set_value(self, value, execution_id=None, context=None, skip_history=False, skip_log=False):
+    def _set_value(self, value, execution_id=None, context=None, skip_history=False, skip_log=False, skip_delivery=False):
         # store history
         if not skip_history:
             if execution_id in self.values:
@@ -1197,9 +1252,13 @@ class Parameter(types.SimpleNamespace):
                 except KeyError:
                     self.history[execution_id] = collections.deque([self.values[execution_id]], maxlen=self.history_max_length)
 
-        # log value
-        if not skip_log and self.loggable:
-            self._log_value(value, context)
+        if self.loggable:
+            # log value
+            if not skip_log:
+                self._log_value(value, context)
+            # Deliver value to external application
+            if not skip_delivery:
+                self._deliver_value(value, context)
 
         # set value
         self.values[execution_id] = value
@@ -1230,7 +1289,7 @@ class Parameter(types.SimpleNamespace):
             context_str = ContextFlags._get_context_string(ContextFlags.COMMAND_LINE)
             log_condition_satisfied = True
 
-        # standard logging
+        # standard loggingd
         else:
             if self.log_condition is None or self.log_condition is LogCondition.OFF:
                 return
@@ -1262,10 +1321,70 @@ class Parameter(types.SimpleNamespace):
                 LogEntry(time, context_str, value)
             )
 
+    def _deliver_value(self, value, context=None):
+        # if a context is attached and a pipeline is attached to the context
+        if context and context.rpc_pipeline:
+            # manual delivery
+            if context.source is ContextFlags.COMMAND_LINE:
+                try:
+                    time = _get_time(self._owner._owner, context)
+                except (AttributeError, ContextError):
+                    time = time_object(None, None, None, None)
+                delivery_condition_satisfied = True
+
+            # standard logging
+            else:
+                if self.delivery_condition is None or self.delivery_condition is LogCondition.OFF:
+                    return
+
+                time = _get_time(self._owner._owner, context)
+                delivery_condition_satisfied = self.delivery_condition & context.flags
+
+            if (
+                not delivery_condition_satisfied
+                and self.delivery_condition & LogCondition.INITIALIZATION
+                and self._owner._owner.initialization_status is ContextFlags.INITIALIZING
+            ):
+                delivery_condition_satisfied = True
+
+            if delivery_condition_satisfied:
+                if not self.stateful:
+                    execution_id = None
+                else:
+                    execution_id = context.execution_id
+                # ADD TO PIPELINE HERE
+                context.rpc_pipeline.put(
+                    Entry(
+                        componentName=self._get_root_owner().name,
+                        parameterName=self._get_root_parameter().name,
+                        time=f'{time.run}:{time.trial}:{time.pass_}:{time.time_step}',
+                        context=execution_id,
+                        value=ndArray(
+                            shape=list(value.shape),
+                            data=list(value.flatten())
+                        )
+                    )
+                )
+
+    def _get_root_owner(self):
+        owner = self
+        while True:
+            if hasattr(owner, '_owner'):
+                owner = owner._owner
+            else:
+                return owner
+
+    def _get_root_parameter(self):
+        root = self._get_root_owner()
+        return self._owner._owner if not self._owner._owner == root else self
+
     def clear_log(self, contexts=NotImplemented):
         """
             Clears the log of this Parameter for every context in **contexts**
         """
+        if self.log is None:
+            return
+
         if contexts is NotImplemented:
             self.log.clear()
             return
@@ -1353,9 +1472,10 @@ class Parameter(types.SimpleNamespace):
     # in the interface for user simplicity: that is, inheritable (by this Parameter's children or from its parent),
     # visible in a Parameter's repr, and easily settable by the user
     def _set_default_value(self, value):
+        value = self._parse(value)
         self._validate(value)
 
-        super().__setattr__('default_value', self._parse(value))
+        super().__setattr__('default_value', value)
 
     def _set_history_max_length(self, value):
         if value < self.history_min_length:
@@ -1405,7 +1525,7 @@ class _ParameterAliasMeta(type):
 
 
 # TODO: may not completely work with history/history_max_length
-class ParameterAlias(types.SimpleNamespace, metaclass=_ParameterAliasMeta):
+class ParameterAlias(ParameterBase, metaclass=_ParameterAliasMeta):
     """
         A counterpart to `Parameter` that represents a pseudo-Parameter alias that
         refers to another `Parameter`, but has a different name
@@ -1420,11 +1540,17 @@ class ParameterAlias(types.SimpleNamespace, metaclass=_ParameterAliasMeta):
         except AttributeError:
             pass
 
-    def __lt__(self, other):
-        return self.name < other.name
-
     def __getattr__(self, attr):
         return getattr(self.source, attr)
+
+    # must override deepcopy despite it being essentially shallow
+    # because otherwise it will default to Parameter.__deepcopy__ and
+    # return an instance of Parameter
+    def __deepcopy__(self, memo):
+        result = ParameterAlias(source=self._source, name=self.name)
+        memo[id(self)] = result
+
+        return result
 
     @property
     def source(self):
@@ -1436,6 +1562,214 @@ class ParameterAlias(types.SimpleNamespace, metaclass=_ParameterAliasMeta):
             self._source = weakref.proxy(value)
         except TypeError:
             self._source = value
+
+
+class SharedParameter(Parameter):
+    """
+        A Parameter that is not a "true" Parameter of a Component but a
+        reference to a Parameter on one of the Component's attributes or
+        other Parameters. `Values <Parameter.values>` are shared via
+        getter and setter. Mainly used for more user-friendly access to
+        certain Parameters, as a sort of cross-object alias.
+
+        .. technical_note::
+            See `above <Parameter_Special_Classes>` for when it is
+            appropriate to use a SharedParameter
+
+        Attributes:
+
+            shared_parameter_name
+                the name of the target Parameter on the owning
+                Component's `attribute_name` Parameter or attribute
+
+                :type: str
+                :default: `Parameter.name`
+
+            attribute_name
+                the name of the owning Component's Parameter or
+                attribute on which `shared_parameter_name` is the target
+                Parameter of this object
+
+                :type: str
+                :default: 'function'
+
+            primary
+                whether the default value specified in the
+                SharedParameter should take precedence over the default
+                value specified in its target
+
+                :type: bool
+                :default: False
+
+            getter
+                :type: types.FunctionType
+                :default: a function that returns the value of the \
+                *shared_parameter_name* parameter of the \
+                *attribute_name* Parameter/attribute of this \
+                Parameter's owning Component
+
+            setter
+                :type: types.FunctionType
+                :default: a function that sets the value of the \
+                *shared_parameter_name* parameter of the \
+                *attribute_name* Parameter/attribute of this \
+                Parameter's owning Component and returns the set value
+    """
+    _additional_param_attr_properties = Parameter._additional_param_attr_properties.union({'name'})
+    _uninherited_attrs = Parameter._uninherited_attrs.union({'attribute_name', 'shared_parameter_name'})
+    # attributes that should not be inherited from source attr
+    _unsourced_attrs = {'default_value', 'primary', 'getter', 'setter', 'aliases'}
+
+    def __init__(
+        self,
+        default_value=None,
+        attribute_name=None,
+        shared_parameter_name=None,
+        primary=False,
+        getter=None,
+        setter=None,
+        **kwargs
+    ):
+
+        super().__init__(
+            default_value=default_value,
+            getter=getter,
+            setter=setter,
+            attribute_name=attribute_name,
+            shared_parameter_name=shared_parameter_name,
+            primary=primary,
+            _source_exists=False,
+            **kwargs
+        )
+
+        if getter is None:
+            def getter(self, context=None):
+                try:
+                    return self.source._get(context)
+                except (AttributeError, TypeError, IndexError):
+                    return None
+
+            self.getter = getter
+
+        if setter is None:
+            def setter(value, self, context=None):
+                try:
+                    return self.source._set(value, context)
+                except AttributeError:
+                    return None
+
+            self.setter = setter
+
+    def __getattr__(self, attr):
+        try:
+            if attr in self._unsourced_attrs:
+                raise AttributeError
+            return getattr(self.source, attr)
+        except AttributeError:
+            return super().__getattr__(attr)
+
+    def _set_name(self, name):
+        if self.shared_parameter_name is None:
+            self.shared_parameter_name = name
+
+        super(Parameter, self).__setattr__('name', name)
+
+    @property
+    def source(self):
+        try:
+            obj = getattr(self._owner._owner.parameters, self.attribute_name)
+            if obj.stateful:
+                raise ParameterError(
+                    f'Parameter {type(obj._owner._owner).__name__}.{self.attribute_name}'
+                    f' is the target object of {type(self).__name__}'
+                    f' {type(self._owner._owner).__name__}.{self.name} and'
+                    f' cannot be stateful.'
+                )
+            obj = obj.values[None]
+        except (AttributeError, KeyError):
+            try:
+                obj = getattr(self._owner._owner, self.attribute_name)
+            except AttributeError:
+                return None
+
+        try:
+            obj = getattr(obj.parameters, self.shared_parameter_name)
+            if not self._source_exists:
+                for p in self._param_attrs:
+                    if p not in self._uninherited_attrs and p not in self._unsourced_attrs:
+                        try:
+                            delattr(self, p)
+                        except AttributeError:
+                            pass
+            self._source_exists = True
+            return obj
+        except AttributeError:
+            return None
+
+    @property
+    def final_source(self):
+        base_param = self
+        while hasattr(base_param, 'source'):
+            base_param = base_param.source
+
+        return base_param
+
+
+class FunctionParameter(SharedParameter):
+    """
+        A special (and most common) case `SharedParameter` that
+        references a Parameter on one of the Component's functions.
+
+        Attributes:
+
+            function_parameter_name
+                the name of the target Parameter on the owning
+                Component's `function_name` Parameter
+
+                :type: str
+                :default: `Parameter.name`
+
+            function_name
+                the name of the owning Component's Parameter on which
+                `function_parameter_name` is the target Parameter of
+                this object
+
+                :type: str
+                :default: 'function'
+    """
+    _uninherited_attrs = SharedParameter._uninherited_attrs.union({'function_name', 'function_parameter_name'})
+
+    def __init__(
+        self,
+        default_value=None,
+        function_parameter_name=None,
+        function_name='function',
+        primary=True,
+        **kwargs
+    ):
+        super().__init__(
+            default_value=default_value,
+            function_name=function_name,
+            function_parameter_name=function_parameter_name,
+            primary=primary,
+            **kwargs
+        )
+
+    @property
+    def attribute_name(self):
+        return self.function_name
+
+    @attribute_name.setter
+    def attribute_name(self, value):
+        self.function_name = value
+
+    @property
+    def shared_parameter_name(self):
+        return self.function_parameter_name
+
+    @shared_parameter_name.setter
+    def shared_parameter_name(self, value):
+        self.function_parameter_name = value
 
 
 # KDM 6/29/18: consider assuming that ALL parameters are stateful
@@ -1472,16 +1806,18 @@ class ParametersBase(ParametersTemplate):
                 # in a class's Parameters class
                 setattr(self, param_name, param_value)
             else:
-                if isinstance(getattr(self._parent, param_name), ParameterAlias):
+                parent_param = getattr(self._parent, param_name)
+                if isinstance(parent_param, ParameterAlias):
                     # store aliases we need to create here and then create them later, because
                     # the param that the alias is going to refer to may not have been created yet
                     # (the alias then may refer to the parent Parameter instead of the Parameter associated with this
                     # Parameters class)
                     aliases_to_create.add(param_name)
                 else:
-                    new_param = Parameter(name=param_name, _owner=self, _inherited=True)
-                    # store the parent's values as the default "uninherited" attr values
-                    new_param._cache_inherited_attrs()
+                    new_param = copy.deepcopy(parent_param)
+                    new_param._owner = self
+                    new_param._inherited = True
+
                     setattr(self, param_name, new_param)
 
         for alias_name in aliases_to_create:
@@ -1535,16 +1871,32 @@ class ParametersBase(ParametersTemplate):
                 super().__setattr__(attr, value)
 
                 if value.aliases is not None:
+                    conflicts = []
                     for alias in value.aliases:
-                        # the alias doesn't exist, or it's an alias on the
-                        # parent
-                        if (
-                            not hasattr(self, alias)
-                            or not hasattr(getattr(self, alias), '_owner')
-                            or unproxy_weakproxy(getattr(self, alias)._owner) is not self
-                        ):
-                            super().__setattr__(alias, ParameterAlias(source=getattr(self, attr), name=alias))
-                            self._register_parameter(alias)
+                        # there is a conflict if a non-ParameterAlias exists
+                        # with the same name as the planned alias
+                        try:
+                            if not isinstance(getattr(self, alias), ParameterAlias):
+                                conflicts.append(alias)
+                        except AttributeError:
+                            pass
+
+                        super().__setattr__(alias, ParameterAlias(source=getattr(self, attr), name=alias))
+                        self._register_parameter(alias)
+
+                    if len(conflicts) == 1:
+                        raise ParameterError(
+                            f'Attempting to create an alias for the {value.name}'
+                            f' Parameter on {self._owner.__name__} that would'
+                            f' override the {conflicts[0]} Parameter. Instead,'
+                            f' create a {conflicts[0]} Parameter with alias {value.name}.'
+                        )
+                    elif len(conflicts) > 1:
+                        raise ParameterError(
+                            f'Attempting to create aliases for the {value.name}'
+                            f' Parameter on {self._owner.__name__} that would'
+                            f' override other Parameters: {sorted(conflicts)}'
+                        )
 
             elif isinstance(value, ParameterAlias):
                 if value.name is None:

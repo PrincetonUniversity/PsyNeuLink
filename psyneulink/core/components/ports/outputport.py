@@ -615,16 +615,16 @@ Class Reference
 """
 
 import copy
-import inspect
 import numpy as np
 import typecheck as tc
 import types
 import warnings
-from collections import OrderedDict
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.selectionfunctions import OneHot
+from psyneulink.core.components.functions.transferfunctions import CostFunctions
 from psyneulink.core.components.ports.port import Port_Base, _instantiate_port_list, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -638,7 +638,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    is_numeric, iscompatible, make_readonly_property, recursive_update, ContentAddressableList
+    convert_to_np_array, is_numeric, iscompatible, make_readonly_property, recursive_update, ContentAddressableList
 
 __all__ = [
     'OutputPort', 'OutputPortError', 'PRIMARY', 'SEQUENTIAL', 'StandardOutputPorts', 'StandardOutputPortsError',
@@ -683,12 +683,14 @@ def _parse_output_port_variable(variable, owner, context=None, output_port_name=
                 owner_param_name = spec[0]
 
             try:
+                index = spec[1]() if callable(spec[1]) else spec[1]
+
                 # context is None during initialization, and we don't want to
                 # incur the cost of .get during execution
                 if context is None:
-                    return getattr(owner.parameters, owner_param_name).get(context)[spec[1]]
+                    return getattr(owner.parameters, owner_param_name).get(context)[index]
                 else:
-                    return getattr(owner.parameters, owner_param_name)._get(context)[spec[1]]
+                    return getattr(owner.parameters, owner_param_name)._get(context)[index]
             except TypeError:
                 if context is None:
                     if getattr(owner.parameters, owner_param_name).get(context) is None:
@@ -1029,7 +1031,7 @@ class OutputPort(Port_Base):
         self._instantiate_projections_to_port(projections=modulatory_projections, context=context)
 
         # Treat all remaining specifications in projections as ones for outgoing MappingProjections
-        pathway_projections = [proj for proj in projections if not proj in modulatory_projections]
+        pathway_projections = [proj for proj in projections if proj not in modulatory_projections]
         for proj in pathway_projections:
             self._instantiate_projection_from_port(projection_spec=MappingProjection,
                                                     receiver=proj,
@@ -1117,7 +1119,7 @@ class OutputPort(Port_Base):
                 # (actual assignment is made in _parse_port_spec)
                 if reference_value is None:
                     port_dict[REFERENCE_VALUE]=port_spec
-                elif  not iscompatible(port_spec, reference_value):
+                elif not iscompatible(port_spec, reference_value):
                     raise OutputPortError("Value in first item of 2-item tuple specification for {} of {} ({}) "
                                      "is not compatible with its {} ({})".
                                      format(OutputPort.__name__, owner.name, port_spec,
@@ -1292,6 +1294,48 @@ class OutputPort(Port_Base):
             }
         }
 
+    def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext,
+                                    extra_args=[], tags:frozenset):
+        if "costs" in tags:
+            assert len(extra_args) == 0
+            return self._gen_llvm_costs(ctx=ctx, tags=tags)
+
+        return super()._gen_llvm_function(ctx=ctx, extra_args=extra_args, tags=tags)
+
+    def _gen_llvm_costs(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
+        args = [ctx.get_param_struct_type(self).as_pointer(),
+                ctx.get_state_struct_type(self).as_pointer(),
+                ctx.get_input_struct_type(self).as_pointer()]
+
+        assert "costs" in tags
+        builder = ctx.create_llvm_function(args, self, str(self) + "_costs",
+                                           tags=tags,
+                                           return_type=ctx.float_ty)
+
+        params, state, arg_in = builder.function.args
+
+        # FIXME: Add support for other cost types
+        assert self.cost_options == CostFunctions.INTENSITY
+
+        func = ctx.import_llvm_function(self.intensity_cost_function)
+        func_params = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                  "intensity_cost_function")
+        func_state = pnlvm.helpers.get_state_ptr(builder, self, state,
+                                                 "intensity_cost_function")
+        func_out = builder.alloca(func.args[3].type.pointee)
+        # Port input is always struct
+        func_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+        builder.call(func, [func_params, func_state, func_in, func_out])
+
+
+        # Cost function output is 1 element array
+        ret_ptr = builder.gep(func_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        ret_val = builder.load(ret_ptr)
+        builder.ret(ret_val)
+
+        return builder.function
+
 
 def _instantiate_output_ports(owner, output_ports=None, context=None):
     """Call Port._instantiate_port_list() to instantiate ContentAddressableList of OutputPort(s)
@@ -1350,7 +1394,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
                     for item in owner_value))):
         pass
     else:
-        converted_to_2d = np.atleast_2d(owner.value)
+        converted_to_2d = convert_to_np_array(owner.value, dimension=2)
         # If owner_value is a list of heterogenous elements, use as is
         if converted_to_2d.dtype == object:
             owner_value = owner.defaults.value

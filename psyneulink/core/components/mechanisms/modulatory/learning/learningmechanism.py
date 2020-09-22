@@ -547,10 +547,10 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE, AFTER, ASSERT, CONTEXT, CONTROL_PROJECTIONS, ENABLED, INPUT_PORTS, \
     LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
     MATRIX, NAME, ONLINE, OUTPUT_PORT, OUTPUT_PORTS, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, PORT_TYPE, VARIABLE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, is_numeric, parameter_spec, convert_to_list
+from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_np_array, is_numeric, parameter_spec, convert_to_list
 
 __all__ = [
     'ACTIVATION_INPUT', 'ACTIVATION_INPUT_INDEX', 'ACTIVATION_OUTPUT', 'ACTIVATION_OUTPUT_INDEX',
@@ -662,22 +662,6 @@ def _error_signal_getter(owning_component=None, context=None):
     except (TypeError, IndexError):
         return None
 
-def _learning_mechanism_learning_rate_setter(value, owning_component=None, context=None):
-    try:
-        # this prevents overridding a specified value on the function with
-        # this mechanism's default during initialization
-        # these checks could be done universally if we make a special handler
-        # for these parameters that serve only as mirrors into function
-        # parameters of the same name
-        if (
-            owning_component.initialization_status is not ContextFlags.INITIALIZING
-            or owning_component.parameters.learning_rate._user_specified
-            or not owning_component.function.parameters.learning_rate._user_specified
-        ):
-            owning_component.function.parameters.learning_rate._set(value, context)
-    except AttributeError:
-        pass
-    return value
 
 class LearningMechanism(ModulatoryMechanism_Base):
     """
@@ -979,7 +963,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         error_matrix = Parameter(None, modulable=True)
         learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter)
         error_signal = Parameter(None, read_only=True, getter=_error_signal_getter)
-        learning_rate = Parameter(None, modulable=True, setter=_learning_mechanism_learning_rate_setter)
+        learning_rate = FunctionParameter(None)
         learning_enabled = True
         modulation = ADDITIVE
         input_ports = Parameter(
@@ -1023,11 +1007,11 @@ class LearningMechanism(ModulatoryMechanism_Base):
                  size=None,
                  error_sources:tc.optional(tc.any(Mechanism, list))=None,
                  function=None,
-                 learning_signals:tc.optional(list) = None,
+                 learning_signals:tc.optional(tc.optional(list)) = None,
                  output_ports=None,
-                 modulation:tc.optional(str)=ADDITIVE,
+                 modulation:tc.optional(str)=None,
                  learning_rate:tc.optional(parameter_spec)=None,
-                 learning_enabled:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=True,
+                 learning_enabled:tc.optional(tc.any(bool, tc.enum(ONLINE, AFTER)))=None,
                  in_composition=False,
                  params=None,
                  name=None,
@@ -1160,7 +1144,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
             for error_source in error_sources:
                 if (not isinstance(error_source, (ObjectiveMechanism, LearningMechanism, OutputPort))
                         or (isinstance(error_source, OutputPort)
-                            and not error_source in error_source.owner.output_ports[ERROR_SIGNAL])):
+                            and error_source not in error_source.owner.output_ports[ERROR_SIGNAL])):
                     raise LearningMechanismError(f"{repr(ERROR_SOURCES)} arg for {self.name} ({error_source}) "
                                                  f"must be an {ObjectiveMechanism.__name__}, "
                                                  f"another {LearningMechanism.__name__}, an {repr(ERROR_SIGNAL)} "
@@ -1178,7 +1162,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                 # Validate that the receiver of the LearningProjection (if specified)
                 #     is a MappingProjection and in the same System as self (if specified)
                 if learning_signal[PARAMS] and PROJECTIONS in learning_signal[PARAMS]:
-                    for learning_projection in  learning_signal[PARAMS][PROJECTIONS]:
+                    for learning_projection in learning_signal[PARAMS][PROJECTIONS]:
                         _validate_receiver(sender_mech=self,
                                            projection=learning_projection,
                                            expected_owner_type=MappingProjection,
@@ -1275,7 +1259,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
     def add_ports(self, error_sources, context=None):
         """Add error_source and error_matrix for each InputPort added"""
 
-        ports = super().add_ports(ports=error_sources)
+        ports = super().add_ports(ports=error_sources, update_variable=False, context=context)
         instantiated_input_ports = []
         for input_port in ports[INPUT_PORTS]:
             error_source = input_port.path_afferents[0].sender.owner
@@ -1283,6 +1267,10 @@ class LearningMechanism(ModulatoryMechanism_Base):
             if ERROR_SIGNAL in input_port.name:
                 self._error_signal_input_ports.append(input_port)
             instantiated_input_ports.append(input_port)
+
+        # TODO: enable this. fails because LearningMechanism does not have a
+        # consistent _parse_function_variable
+        # self._update_default_variable(np.asarray(self.input_values, dtype=int), context)
 
         return instantiated_input_ports
 
@@ -1352,9 +1340,13 @@ class LearningMechanism(ModulatoryMechanism_Base):
 
         # Compute learning_signal for each error_signal (and corresponding error-Matrix):
         for error_signal_input, error_matrix in zip(error_signal_inputs, error_matrices):
-            function_variable = np.array([variable[ACTIVATION_INPUT_INDEX],
-                                          variable[ACTIVATION_OUTPUT_INDEX],
-                                          error_signal_input])
+            function_variable = convert_to_np_array(
+                [
+                    variable[ACTIVATION_INPUT_INDEX],
+                    variable[ACTIVATION_OUTPUT_INDEX],
+                    error_signal_input
+                ]
+            )
             learning_signal, error_signal = super()._execute(variable=function_variable,
             # MODIFIED CROSS_PATHWAYS 7/22/19 END
                                                              context=context,

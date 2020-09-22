@@ -252,7 +252,7 @@ class ControlProjection(ModulatoryProjection_Base):
                  receiver=None,
                  weight=None,
                  exponent=None,
-                 function=Linear,
+                 function=None,
                  control_signal_params:tc.optional(dict)=None,
                  params=None,
                  name=None,

@@ -145,7 +145,7 @@ class TestLinear:
         )
 
         c = Composition(pathways=[A, B])
-        
+
         term_conds = {TimeScale.TRIAL: AfterNCalls(B, 2)}
         stim_list = {A: [[1]]}
 
@@ -191,7 +191,7 @@ class TestBranching:
         )
 
         c = Composition(pathways=[[A,B],[A,C]])
-        
+
         term_conds = {TimeScale.TRIAL: AfterNCalls(C, 1)}
         stim_list = {A: [[1]]}
 
@@ -240,7 +240,7 @@ class TestBranching:
         )
 
         c = Composition(pathways=[[A,B],[A,C]])
-        
+
         term_conds = {TimeScale.TRIAL: AfterNCalls(C, 1)}
         stim_list = {A: [[1]]}
 
@@ -287,7 +287,7 @@ class TestBranching:
         )
 
         c = Composition(pathways=[[A,B],[A,C]])
-        
+
         term_conds = {TimeScale.TRIAL: AfterNCalls(C, 2)}
         stim_list = {A: [[1]]}
 
@@ -387,7 +387,7 @@ class TestBranching:
         )
 
         c = Composition(pathways=[[A,C],[B,C]])
-        
+
         term_conds = {TimeScale.TRIAL: AfterNCalls(C, 2)}
         stim_list = {A: [[1]], B: [[2]]}
 
@@ -496,7 +496,7 @@ class TestBranching:
             default_variable=[0],
             function=Linear(slope=1.0),
         )
-        
+
         c = Composition(pathways=[[A,B,D],[A,C,D]])
 
         term_conds = {TimeScale.TRIAL: AfterNCalls(D, 1)}
@@ -785,7 +785,7 @@ class TestTermination:
         )
 
         c = Composition(pathways=[[A,B]])
-        
+
         term_conds = {TimeScale.TRIAL: AfterNCalls(B, 2)}
         stim_list = {A: [[1]]}
 

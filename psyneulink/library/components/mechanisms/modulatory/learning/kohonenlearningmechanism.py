@@ -276,9 +276,6 @@ class KohonenLearningMechanism(LearningMechanism):
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
-    learning_type = LearningType.UNSUPERVISED
-    learning_timing = LearningTiming.EXECUTION_PHASE
-
     class Parameters(LearningMechanism.Parameters):
         """
             Attributes
@@ -328,9 +325,9 @@ class KohonenLearningMechanism(LearningMechanism):
                  default_variable:tc.any(list, np.ndarray),
                  size=None,
                  matrix:tc.optional(ParameterPort)=None,
-                 function:is_function_type=Hebbian,
-                 learning_signals:tc.optional(list) = None,
-                 modulation:tc.optional(str)=ADDITIVE,
+                 function: tc.optional(is_function_type) = None,
+                 learning_signals:tc.optional(tc.optional(list)) = None,
+                 modulation:tc.optional(str)=None,
                  learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
                  name=None,

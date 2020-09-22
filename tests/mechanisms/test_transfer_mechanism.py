@@ -73,8 +73,9 @@ class TestTransferMechanismInputs:
             EX = e.cuda_execute
 
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     #@pytest.mark.mechanism
     #@pytest.mark.transfer_mechanism
@@ -111,14 +112,14 @@ class TestTransferMechanismInputs:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_inputs_list_of_strings(self):
-        with pytest.raises(UtilitiesError) as error_text:
+        with pytest.raises(FunctionError) as error_text:
             T = TransferMechanism(
                 name='T',
                 default_variable=[0, 0, 0, 0],
                 integrator_mode=True
             )
             T.execute(["one", "two", "three", "four"])
-        assert "has non-numeric entries" in str(error_text.value)
+        assert "Unrecognized type" in str(error_text.value)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -175,8 +176,9 @@ class TestTransferMechanismNoise:
 
         var = [0 for i in range(VECTOR_SIZE)]
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -192,7 +194,7 @@ class TestTransferMechanismNoise:
         )
         T.reset_stateful_function_when = Never()
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[-1.56404341, -0.51529709, -2.55352727, 0.30284592]])
+        assert np.allclose(val, [[0.90104733, 0.95869664, -0.81762271, -1.39225086]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -239,8 +241,9 @@ class TestTransferMechanismNoise:
 
         var = [0 for i in range(VECTOR_SIZE)]
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -290,7 +293,7 @@ class TestDistributionFunctions:
         )
 
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[-1.56404341, -0.51529709, -2.55352727, 0.30284592]])
+        assert np.allclose(val, [[0.90104733, 0.95869664, -0.81762271, -1.39225086]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -322,7 +325,7 @@ class TestDistributionFunctions:
             integrator_mode=True,
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.54571315, 0.29964231, 0.71595475, 0.51908319]])
+        assert np.allclose(val, [[0.7025651, 0.33105989, 1.40978493, 0.9633011]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -365,7 +368,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.42057158, 0.25891675, 0.51127472, 0.40493414]])
+        assert np.allclose(val, [[0.50468686, 0.28183784, 0.7558042, 0.618369]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -380,7 +383,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.54571315, 0.29964231, 0.71595475, 0.51908319]])
+        assert np.allclose(val, [[0.7025651, 0.33105989, 1.40978493, 0.9633011]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -395,7 +398,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.11902672, 0.73955962, 8.38161237, 0.49600183]])
+        assert np.allclose(val, [[1.0678432, 0.34512569, 1.07265769, 1.3550318]])
 
 
 class TestTransferMechanismFunctions:
@@ -458,8 +461,9 @@ class TestTransferMechanismFunctions:
 
         var = [0 for i in range(VECTOR_SIZE)]
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[0.5 for i in range(VECTOR_SIZE)]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -488,11 +492,13 @@ class TestTransferMechanismFunctions:
         val1 = EX([0 for i in range(VECTOR_SIZE)])
         val2 = EX([1 for i in range(VECTOR_SIZE)])
         val3 = EX([-1 for i in range(VECTOR_SIZE)])
-        benchmark(EX, [0 for i in range(VECTOR_SIZE)])
 
         assert np.allclose(val1, [[0.0 for i in range(VECTOR_SIZE)]])
         assert np.allclose(val2, [[1.0 for i in range(VECTOR_SIZE)]])
         assert np.allclose(val3, [[0.0 for i in range(VECTOR_SIZE)]])
+
+        if benchmark.enabled:
+            benchmark(EX, [0 for i in range(VECTOR_SIZE)])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -520,8 +526,9 @@ class TestTransferMechanismFunctions:
 
         var = [0 for i in range(VECTOR_SIZE)]
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -549,8 +556,9 @@ class TestTransferMechanismFunctions:
 
         var = [0 for i in range(VECTOR_SIZE)]
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[1.0 / VECTOR_SIZE for i in range(VECTOR_SIZE)]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -646,8 +654,9 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[ 0., 0.19, 0.36, 0.51]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -675,8 +684,9 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[ 0., 0.19, 0.36, 0.51]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -705,8 +715,9 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[ 0., 0.0975, 0.19, 0.2775]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     def test_transfer_mech_array_assignments_wrong_size_mech_rate(self):
 
@@ -763,8 +774,9 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
 
     @pytest.mark.mechanism
@@ -796,8 +808,9 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
 
     @pytest.mark.mechanism
@@ -829,10 +842,10 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
-    # def test_transfer_mech_array_assignments_wrong_size_mech_init_val(self, benchmark, mode):
     def test_transfer_mech_array_assignments_wrong_size_mech_init_val(self):
 
         with pytest.raises(TransferError) as error_text:
@@ -931,8 +944,9 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[ 0.75, 0.9, 1.05, 1.2 ]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -961,8 +975,9 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[ 0.75, 0.9, 1.05, 1.2 ]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -992,8 +1007,9 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[ 0.75, 0.825, 0.9, 0.975]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     # def test_transfer_mech_array_assignments_wrong_size_mech_noise(self, benchmark, mode):
     def test_transfer_mech_array_assignments_wrong_size_mech_noise(self):
@@ -1045,22 +1061,22 @@ class TestTransferMechanismTimeConstant:
             integrator_mode=True
         )
         if mode == 'Python':
-            val1 = T.execute([1 for i in range(VECTOR_SIZE)])
-            val2 = T.execute([1 for i in range(VECTOR_SIZE)])
-            benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+            EX = T.execute
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(T)
-            val1 = e.execute([1 for i in range(VECTOR_SIZE)])
-            val2 = e.execute([1 for i in range(VECTOR_SIZE)])
-            benchmark(e.execute, [0 for i in range(VECTOR_SIZE)])
+            EX = e.execute
         elif mode == 'PTX':
             e = pnlvm.execution.MechExecution(T)
-            val1 = e.cuda_execute([1 for i in range(VECTOR_SIZE)])
-            val2 = e.cuda_execute([1 for i in range(VECTOR_SIZE)])
-            benchmark(e.cuda_execute, [0 for i in range(VECTOR_SIZE)])
+            EX = e.cuda_execute
+
+        val1 = T.execute([1 for i in range(VECTOR_SIZE)])
+        val2 = T.execute([1 for i in range(VECTOR_SIZE)])
 
         assert np.allclose(val1, [[0.8 for i in range(VECTOR_SIZE)]])
         assert np.allclose(val2, [[0.96 for i in range(VECTOR_SIZE)]])
+
+        if benchmark.enabled:
+            benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -1547,7 +1563,7 @@ class TestTransferMechanismMultipleInputPorts:
             default_variable=[[0.0, 0.0], [0.0, 0.0]]
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
-        assert np.allclose(val, [[1.6136458, 7.00036006], [12.09938081, 7.56874402]])
+        assert np.allclose(val, [[4.80209467, 6.91739329], [5.36475458, 6.21549828]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -1566,7 +1582,7 @@ class TestTransferMechanismMultipleInputPorts:
             val = benchmark(e.execute, [[1], [2], [3]])
         elif mode == 'PTX':
             e = pnlvm.execution.MechExecution(T)
-            val = benchmark(e.execute, [[1], [2], [3]])
+            val = benchmark(e.cuda_execute, [[1], [2], [3]])
 
         assert len(T.variable)==3
         assert all(a==b for a,b in zip(val, [[ 1.],[ 2.],[ 3.]]))
@@ -2009,20 +2025,56 @@ class TestOnResumeIntegratorMode:
 
 
 class TestClip:
-    def test_clip_float(self):
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_clip_float(self, mode):
         T = TransferMechanism(clip=[-2.0, 2.0])
-        assert np.allclose(T.execute(3.0), 2.0)
-        assert np.allclose(T.execute(-3.0), -2.0)
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            EX = pnlvm.execution.MechExecution(T).execute
+        elif mode == 'PTX':
+            EX = pnlvm.execution.MechExecution(T).cuda_execute
 
-    def test_clip_array(self):
+        assert np.allclose(EX(3.0), 2.0)
+        assert np.allclose(EX(1.0), 1.0)
+        assert np.allclose(EX(-3.0), -2.0)
+
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_clip_array(self, mode):
         T = TransferMechanism(default_variable=[[0.0, 0.0, 0.0]],
                               clip=[-2.0, 2.0])
-        assert np.allclose(T.execute([3.0, 0.0, -3.0]), [2.0, 0.0, -2.0])
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            EX = pnlvm.execution.MechExecution(T).execute
+        elif mode == 'PTX':
+            EX = pnlvm.execution.MechExecution(T).cuda_execute
+        assert np.allclose(EX([3.0, 0.0, -3.0]), [2.0, 0.0, -2.0])
 
-    def test_clip_2d_array(self):
+    @pytest.mark.mechanism
+    @pytest.mark.transfer_mechanism
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_clip_2d_array(self, mode):
         T = TransferMechanism(default_variable=[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]],
                               clip=[-2.0, 2.0])
-        assert np.allclose(T.execute([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
+        if mode == 'Python':
+            EX = T.execute
+        elif mode == 'LLVM':
+            EX = pnlvm.execution.MechExecution(T).execute
+        elif mode == 'PTX':
+            EX = pnlvm.execution.MechExecution(T).cuda_execute
+
+        assert np.allclose(EX([[-5.0, -1.0, 5.0], [5.0, -5.0, 1.0], [1.0, 5.0, 5.0]]),
                            [[-2.0, -1.0, 2.0], [2.0, -2.0, 1.0], [1.0, 2.0, 2.0]])
 
 

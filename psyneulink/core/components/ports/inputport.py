@@ -516,7 +516,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import append_type_to_name, is_numeric, iscompatible, kwCompatibilityLength
+from psyneulink.core.globals.utilities import append_type_to_name, convert_to_np_array, is_numeric, iscompatible, kwCompatibilityLength
 
 __all__ = [
     'InputPort', 'InputPortError', 'port_type_keywords', 'SHADOW_INPUTS',
@@ -764,7 +764,7 @@ class InputPort(Port_Base):
                  combine:tc.optional(tc.enum(SUM,PRODUCT))=None,
                  weight=None,
                  exponent=None,
-                 internal_only:bool=False,
+                 internal_only: tc.optional(bool) = None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -976,7 +976,7 @@ class InputPort(Port_Base):
         ]
 
         if len(path_proj_values) > 0:
-            return  np.asarray(path_proj_values)
+            return convert_to_np_array(path_proj_values)
         else:
             return None
 
@@ -1045,7 +1045,7 @@ class InputPort(Port_Base):
                     # (actual assignment is made in _parse_port_spec)
                     if reference_value is None:
                         port_dict[REFERENCE_VALUE]=port_spec
-                    elif  not iscompatible(port_spec, reference_value):
+                    elif not iscompatible(port_spec, reference_value):
                         raise PortError(f"Value in first item of 2-item tuple specification {InputPort.__name__} of "
                                         f"{owner.name} ({port_spec}) is not compatible with its {REFERENCE_VALUE} "
                                         f"({reference_value}).")
@@ -1296,7 +1296,6 @@ class InputPort(Port_Base):
         can't be called by _parse_port_spec since the InputPort itself may not yet have been instantiated.
 
         """
-        import inspect
 
         if (
                 (

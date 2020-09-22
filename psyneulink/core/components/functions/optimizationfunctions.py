@@ -9,12 +9,17 @@
 #
 # ******************************************   OPTIMIZATION FUNCTIONS **************************************************
 """
+Contents
+--------
 
 * `OptimizationFunction`
 * `GradientOptimization`
 * `GridSearch`
 * `GaussianProcess`
+COMMENT:
+uncomment this when ParamEstimationFunction is ready for users
 * `ParamEstimationFunction`
+COMMENT
 
 Overview
 --------
@@ -345,8 +350,8 @@ class OptimizationFunction(Function_Base):
         search_function:tc.optional(is_function_type)=None,
         search_space=None,
         search_termination_function:tc.optional(is_function_type)=None,
-        save_samples:tc.optional(bool)=False,
-        save_values:tc.optional(bool)=False,
+        save_samples:tc.optional(bool)=None,
+        save_values:tc.optional(bool)=None,
         max_iterations:tc.optional(int)=None,
         params=None,
         owner=None,
@@ -857,15 +862,15 @@ class GradientOptimization(OptimizationFunction):
                  default_variable=None,
                  objective_function:tc.optional(is_function_type)=None,
                  gradient_function:tc.optional(is_function_type)=None,
-                 direction:tc.optional(tc.enum(ASCENT, DESCENT))=ASCENT,
+                 direction:tc.optional(tc.enum(ASCENT, DESCENT))=None,
                  search_space=None,
-                 step_size:tc.optional(tc.any(int, float))=1.0,
+                 step_size:tc.optional(tc.any(int, float))=None,
                  annealing_function:tc.optional(is_function_type)=None,
-                 convergence_criterion:tc.optional(tc.enum(VARIABLE, VALUE))=VALUE,
-                 convergence_threshold:tc.optional(tc.any(int, float))=.001,
-                 max_iterations:tc.optional(int)=1000,
-                 save_samples:tc.optional(bool)=False,
-                 save_values:tc.optional(bool)=False,
+                 convergence_criterion:tc.optional(tc.enum(VARIABLE, VALUE))=None,
+                 convergence_threshold:tc.optional(tc.any(int, float))=None,
+                 max_iterations:tc.optional(int)=None,
+                 save_samples:tc.optional(bool)=None,
+                 save_values:tc.optional(bool)=None,
                  params=None,
                  owner=None,
                  prefs=None):
@@ -1254,10 +1259,10 @@ class GridSearch(OptimizationFunction):
                  default_variable=None,
                  objective_function:tc.optional(is_function_type)=None,
                  search_space=None,
-                 direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=MAXIMIZE,
-                 save_values:tc.optional(bool)=False,
+                 direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=None,
+                 save_values:tc.optional(bool)=None,
                  # tolerance=0.,
-                 select_randomly_from_optimal_values=False,
+                 select_randomly_from_optimal_values=None,
                  seed=None,
                  params=None,
                  owner=None,
@@ -1288,7 +1293,7 @@ class GridSearch(OptimizationFunction):
             search_space=search_space,
             select_randomly_from_optimal_values=select_randomly_from_optimal_values,
             save_samples=True,
-            save_values=True,
+            save_values=save_values,
             random_state=random_state,
             direction=direction,
             params=params,
@@ -1344,13 +1349,18 @@ class GridSearch(OptimizationFunction):
             s.reset()
         self.grid = itertools.product(*[s for s in self.search_space])
 
+    def _get_optimized_composition(self):
+        # self.objective_function may be a bound method of
+        # OptimizationControlMechanism
+        return getattr(self.objective_function, '__self__', None)
+
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "select_min" in tags:
             return self._gen_llvm_select_min_function(ctx=ctx, tags=tags)
-        if self._is_composition_optimize():
-            # self.objective_function may be bound method of
-            # an OptimizationControlMechanism
-            ocm = self.objective_function.__self__
+        ocm = self._get_optimized_composition()
+        if ocm is not None:
+            # self.objective_function may be a bound method of
+            # OptimizationControlMechanism
             extra_args = [ctx.get_param_struct_type(ocm.agent_rep).as_pointer(),
                           ctx.get_state_struct_type(ocm.agent_rep).as_pointer(),
                           ctx.get_data_struct_type(ocm.agent_rep).as_pointer()]
@@ -1372,99 +1382,12 @@ class GridSearch(OptimizationFunction):
             if all(type(x) == np.ndarray for x in variable) and not all(len(x) == len(variable[0]) for x in variable):
                 variable = tuple(variable)
 
+            warnings.warn("Shape mismatch: {} variable expected: {} vs. got: {}".format(self, variable, self.defaults.variable))
+
         else:
             variable = self.defaults.variable
 
         return ctx.convert_python_struct_to_llvm_ir(variable)
-
-    def _is_composition_optimize(self):
-        # self.objective_function may be bound method of
-        # an OptimizationControlMechanism
-        return hasattr(self.objective_function, '__self__')
-
-    def _get_param_ids(self):
-        ids = super()._get_param_ids() + ["search_space"]
-        if self._is_composition_optimize():
-            ids.append("objective_function")
-
-        return ids
-
-    def _get_search_dim_type(self, ctx, d):
-        if isinstance(d.generator, list):
-            # Make sure we only generate float values
-            return ctx.convert_python_struct_to_llvm_ir([float(x) for x in d.generator])
-        if isinstance(d, SampleIterator):
-            return pnlvm.ir.LiteralStructType((ctx.float_ty, ctx.float_ty, ctx.int32_ty))
-        assert False, "Unsupported dimension type: {}".format(d)
-
-    def _get_param_struct_type(self, ctx):
-        param_struct = ctx.get_param_struct_type(super())
-        search_space = (self._get_search_dim_type(ctx, d) for d in self.search_space)
-        search_space_struct = pnlvm.ir.LiteralStructType(search_space)
-
-        if self._is_composition_optimize():
-            # self.objective_function is a bound method of
-            # an OptimizationControlMechanism
-            ocm = self.objective_function.__self__
-            obj_func_params = ocm._get_evaluate_param_struct_type(ctx)
-            return pnlvm.ir.LiteralStructType([*param_struct,
-                                               search_space_struct,
-                                               obj_func_params])
-
-        return pnlvm.ir.LiteralStructType([*param_struct, search_space_struct])
-
-    def _get_search_dim_init(self, context, d):
-        if isinstance(d.generator, list):
-            return tuple(d.generator)
-        if isinstance(d, SampleIterator):
-            return (d.start, d.step, d.num)
-
-        assert False, "Unsupported dimension type: {}".format(d)
-
-    def _get_param_initializer(self, context):
-        param_initializer = super()._get_param_initializer(context)
-        grid_init = (self._get_search_dim_init(context, d) for d in self.search_space)
-
-        if self._is_composition_optimize():
-            # self.objective_function is a bound method of
-            # an OptimizationControlMechanism
-            ocm = self.objective_function.__self__
-            obj_func_param_init = ocm._get_evaluate_param_initializer(context)
-            return (*param_initializer, tuple(grid_init), obj_func_param_init)
-
-        return (*param_initializer, tuple(grid_init))
-
-    def _get_state_ids(self):
-        ids = super()._get_state_ids()
-        if self._is_composition_optimize():
-            ids.append("objective_function")
-
-        return ids
-
-    def _get_state_struct_type(self, ctx):
-        state_struct = ctx.get_state_struct_type(super())
-
-        if self._is_composition_optimize():
-            # self.objective_function is a bound method of
-            # an OptimizationControlMechanism
-            ocm = self.objective_function.__self__
-            obj_func_state = ocm._get_evaluate_state_struct_type(ctx)
-            state_struct = pnlvm.ir.LiteralStructType([*state_struct,
-                                                       obj_func_state])
-
-        return state_struct
-
-    def _get_state_initializer(self, context):
-        state_initializer = super()._get_state_initializer(context)
-
-        if self._is_composition_optimize():
-            # self.objective_function is a bound method of
-            # an OptimizationControlMechanism
-            ocm = self.objective_function.__self__
-            obj_func_state_init = ocm._get_evaluate_state_initializer(context)
-            state_initializer = (*state_initializer, obj_func_state_init)
-
-        return state_initializer
 
     def _get_output_struct_type(self, ctx):
         val = self.defaults.value
@@ -1476,7 +1399,7 @@ class GridSearch(OptimizationFunction):
 
     def _gen_llvm_select_min_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         assert "select_min" in tags
-        ocm = getattr(self.objective_function, '__self__', None)
+        ocm = self._get_optimized_composition()
         if ocm is not None:
             assert ocm.function is self
             sample_t = ocm._get_evaluate_alloc_struct_type(ctx)
@@ -1494,8 +1417,7 @@ class GridSearch(OptimizationFunction):
                 value_t.as_pointer(),
                 ctx.float_ty.as_pointer(),
                 ctx.int32_ty]
-        builder = ctx.create_llvm_function(args, self, tags=tags,
-                                           return_type=pnlvm.ir.VoidType())
+        builder = ctx.create_llvm_function(args, self, tags=tags)
 
         params, state, min_sample_ptr, samples_ptr, min_value_ptr, values_ptr, opt_count_ptr, count = builder.function.args
         for p in builder.function.args[:-1]:
@@ -1557,28 +1479,29 @@ class GridSearch(OptimizationFunction):
         return builder.function
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        ocm = getattr(self.objective_function, '__self__', None)
+        ocm = self._get_optimized_composition()
         if ocm is not None:
             assert ocm.function is self
             obj_func = ctx.import_llvm_function(ocm, tags=tags.union({"evaluate"}))
-            sample_t = ocm._get_evaluate_alloc_struct_type(ctx)
-            value_t = ocm._get_evaluate_output_struct_type(ctx)
-            extra_args = [arg_in] + list(builder.function.args[-3:])
+            comp_args = builder.function.args[-3:]
+            obj_param_ptr = comp_args[0]
+            obj_state_ptr = comp_args[1]
+            extra_args = [arg_in, comp_args[2]]
         else:
             obj_func = ctx.import_llvm_function(self.objective_function)
-            sample_t = obj_func.args[2].type.pointee
-            value_t = obj_func.args[3].type.pointee
+            obj_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
+                                                        "objective_function")
+            obj_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                        "objective_function")
             extra_args = []
 
+        sample_t = obj_func.args[2].type.pointee
+        value_t = obj_func.args[3].type.pointee
         min_sample_ptr = builder.alloca(sample_t)
         min_value_ptr = builder.alloca(value_t)
         sample_ptr = builder.alloca(sample_t)
         value_ptr = builder.alloca(value_t)
 
-        obj_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                    self.parameters.objective_function.name)
-        obj_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                    self.parameters.objective_function.name)
         search_space_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                        self.parameters.search_space.name)
 
@@ -1639,7 +1562,7 @@ class GridSearch(OptimizationFunction):
         # Compiled evaluate expects the same variable as mech function
         new_variable = [np.asfarray(ip.parameters.value.get(context))
                         for ip in ocm.input_ports]
-        new_variable = np.atleast_2d(new_variable)
+        new_variable = np.array(new_variable, dtype=np.object)
         # Map allocations to values
         comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
         ct_alloc, ct_values = comp_exec.cuda_evaluate(new_variable,
@@ -1787,7 +1710,7 @@ class GridSearch(OptimizationFunction):
                     format(repr(DIRECTION), self.name, direction)
 
 
-            ocm = self.objective_function.__self__ if self._is_composition_optimize() else None
+            ocm = self._get_optimized_composition()
             if ocm is not None and \
                ocm.parameters.comp_execution_mode._get(context).startswith("PTX"):
                     opt_sample, opt_value, all_samples, all_values = self._run_cuda_grid(ocm, variable, context)
@@ -1812,7 +1735,7 @@ class GridSearch(OptimizationFunction):
                         # swap with probability = 1/optimal_value_count in order to achieve
                         # uniformly random selection from identical outcomes
                         probability = 1 / optimal_value_count
-                        random_state = self._get_current_function_param("random_state", context)
+                        random_state = self._get_current_parameter_value("random_state", context)
                         random_value = random_state.rand()
 
                         if random_value < probability:
@@ -2013,8 +1936,8 @@ class GaussianProcess(OptimizationFunction):
                  default_variable=None,
                  objective_function:tc.optional(is_function_type)=None,
                  search_space=None,
-                 direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=MAXIMIZE,
-                 save_values:tc.optional(bool)=False,
+                 direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=None,
+                 save_values:tc.optional(bool)=None,
                  params=None,
                  owner=None,
                  prefs=None,
@@ -2033,7 +1956,7 @@ class GaussianProcess(OptimizationFunction):
             search_space=search_space,
             search_termination_function=search_termination_function,
             save_samples=True,
-            save_values=True,
+            save_values=save_values,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -2313,8 +2236,8 @@ class ParamEstimationFunction(OptimizationFunction):
         # its crap.
         random_state = np.random.RandomState([seed])
 
-        # Has the ELFI model been setup yet. Nope!
-        self._is_model_initialized = False
+        # Our instance of elfi model
+        self._elfi_model = None
 
         # The simulator function we will pass to ELFI, this is really the objective_function
         # with some stuff wrapped around it to massage its return values and arguments.
@@ -2344,8 +2267,7 @@ class ParamEstimationFunction(OptimizationFunction):
         # https://github.com/scikit-optimize/scikit-optimize/issues/637
         # Lets import and set the backend to PS to be safe. We aren't plotting anyway
         # I guess. Only do this on Mac OS X
-        from sys import platform
-        if platform == "darwin":
+        if sys.platform == "darwin":
             import matplotlib
             matplotlib.use('PS')
 
@@ -2440,7 +2362,7 @@ class ParamEstimationFunction(OptimizationFunction):
         """
 
         # If the model has not been initialized, try to do it.
-        if not self._is_model_initialized:
+        if self._elfi_model is None:
 
             elfi = ParamEstimationFunction._import_elfi()
 
@@ -2451,6 +2373,10 @@ class ParamEstimationFunction(OptimizationFunction):
             # If it did fail, we return early without initializing, hopefully next time.
             if self._sim_func is None:
                 return
+
+            old_model = elfi.get_default_model()
+
+            my_elfi_model = elfi.new_model(self.name, True)
 
             # FIXME: A lot of checking needs to happen, here. Correct order, valid elfi prior, etc.
             # Construct the ELFI priors from the list of prior specifcations
@@ -2471,8 +2397,11 @@ class ParamEstimationFunction(OptimizationFunction):
 
             self._sampler = elfi.Rejection(d, batch_size=1, seed=self._seed)
 
-            # Mark that we are initialized
-            self._is_model_initialized = True
+            # Store our new model
+            self._elfi_model = my_elfi_model
+
+            # Restore the previous default
+            elfi.set_default_model(old_model)
 
     def function(self,
                  variable=None,
@@ -2507,15 +2436,19 @@ class ParamEstimationFunction(OptimizationFunction):
         return_optimal_value= 0.0
 
         # Try to initialize the model if it hasn't been.
-        if not self._is_model_initialized:
+        if self._elfi_model is None:
             self._initialize_model(context)
 
         # Intialization can fail for reasons silenty, mainly that PsyNeuLink needs to
         # invoke these functions multiple times during initialization. We only want
         # to proceed if this is the real deal.
-        if not self._is_model_initialized:
+        if self._elfi_model is None:
             return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
 
+        elfi = ParamEstimationFunction._import_elfi()
+
+        old_model = elfi.get_default_model()
+        elfi.set_default_model(self._elfi_model)
         # Run the sampler
         result = self._sampler.sample(**self._sampler_args)
 
@@ -2524,12 +2457,15 @@ class ParamEstimationFunction(OptimizationFunction):
         # number of simulations. N is not the total number of simulation
         # samples. We will return a random sample from this set for the
         # "optimal" control allocation.
-        random_state = self._get_current_function_param("random_state", context)
+        random_state = self._get_current_parameter_value("random_state", context)
         sample_idx = random_state.randint(low=0, high=result.n_samples)
         return_optimal_sample = np.array(result.samples_array[sample_idx])
         return_optimal_value = result.discrepancies[sample_idx]
         return_all_samples = np.array(result.samples_array)
         return_all_values = np.array(result.discrepancies)
+
+        # Restore the old default
+        elfi.set_default_model(old_model)
 
         print(result)
         return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values

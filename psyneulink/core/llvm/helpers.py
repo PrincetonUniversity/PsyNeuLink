@@ -82,11 +82,32 @@ def get_param_ptr(builder, component, params_ptr, param_name):
                        name="ptr_param_{}_{}".format(param_name, component.name))
 
 
-def get_state_ptr(builder, component, state_ptr, stateful_name):
+def get_state_ptr(builder, component, state_ptr, stateful_name, hist_idx=0):
     idx = ir.IntType(32)(component.llvm_state_ids.index(stateful_name))
-    return builder.gep(state_ptr, [ir.IntType(32)(0), idx],
-                       name="ptr_state_{}_{}".format(stateful_name,
-                                                     component.name))
+    ptr = builder.gep(state_ptr, [ir.IntType(32)(0), idx],
+                      name="ptr_state_{}_{}".format(stateful_name,
+                                                    component.name))
+    # The first dimension of arrays is history
+    if hist_idx is not None and isinstance(ptr.type.pointee, ir.ArrayType):
+        assert len(ptr.type.pointee) > hist_idx, \
+            "History not available: {} ({})".format(ptr.type.pointee, hist_idx)
+        ptr = builder.gep(state_ptr, [ir.IntType(32)(0), idx,
+                                      ir.IntType(32)(hist_idx)],
+                          name="ptr_state_{}_{}_hist{}".format(stateful_name,
+                                                               component.name,
+                                                               hist_idx))
+    return ptr
+
+
+def push_state_val(builder, component, state_ptr, name, new_val):
+    val_ptr = get_state_ptr(builder, component, state_ptr, name, None)
+    for i in range(len(val_ptr.type.pointee) - 1, 0, -1):
+        dest_ptr = get_state_ptr(builder, component, state_ptr, name, i)
+        src_ptr = get_state_ptr(builder, component, state_ptr, name, i - 1)
+        builder.store(builder.load(src_ptr), dest_ptr)
+
+    dest_ptr = get_state_ptr(builder, component, state_ptr, name)
+    builder.store(builder.load(new_val), dest_ptr)
 
 
 def unwrap_2d_array(builder, element):
@@ -109,19 +130,20 @@ def fneg(builder, val, name=""):
 
 def tanh(ctx, builder, x):
     # (e**2x - 1)/(e**2x + 1)
-    exp_f = ctx.get_builtin("exp", [x.type])
     _2x = builder.fmul(x.type(2), x)
-    e2x = builder.call(exp_f, [_2x])
+    e2x = exp(ctx, builder, _2x)
     num = builder.fsub(e2x, e2x.type(1))
     den = builder.fadd(e2x, e2x.type(1))
     return builder.fdiv(num, den)
 
+def exp(ctx, builder, x):
+    exp_f = ctx.get_builtin("exp", [x.type])
+    return builder.call(exp_f, [x])
 
 def coth(ctx, builder, x):
     # (e**2x + 1)/(e**2x - 1)
-    exp_f = ctx.get_builtin("exp", [x.type])
     _2x = builder.fmul(x.type(2), x)
-    e2x = builder.call(exp_f, [_2x])
+    e2x = exp(ctx, builder, _2x)
     num = builder.fadd(e2x, e2x.type(1))
     den = builder.fsub(e2x, e2x.type(1))
     return builder.fdiv(num, den)
@@ -129,14 +151,23 @@ def coth(ctx, builder, x):
 
 def csch(ctx, builder, x):
     # (2e**x)/(e**2x - 1)
-    exp_f = ctx.get_builtin("exp", [x.type])
-    ex = builder.call(exp_f, [x])
+    ex = exp(ctx, builder, x)
     num = builder.fmul(ex.type(2), ex)
     _2x = builder.fmul(x.type(2), x)
-    e2x = builder.call(exp_f, [_2x])
+    e2x = exp(ctx, builder, _2x)
     den = builder.fsub(e2x, e2x.type(1))
     return builder.fdiv(num, den)
 
+def call_elementwise_operation(ctx, builder, x, operation, output_ptr):
+    """Recurse through an array structure and call operation on each scalar element of the structure. Store result in output_ptr"""
+    if isinstance(x.type.pointee, ir.ArrayType):
+        with array_ptr_loop(builder, x, str(x) + "_elementwise_op") as (b1, idx):
+            element_ptr = b1.gep(x, [ctx.int32_ty(0), idx])
+            output_element_ptr = b1.gep(output_ptr, [ctx.int32_ty(0), idx])
+            call_elementwise_operation(ctx, b1, element_ptr, operation, output_ptr=output_element_ptr)
+    else:
+        val = operation(ctx, builder, builder.load(x))
+        builder.store(val, output_ptr)
 
 def is_close(builder, val1, val2, rtol=1e-05, atol=1e-08):
     diff = builder.fsub(val1, val2, "is_close_diff")
@@ -169,6 +200,44 @@ def all_close(builder, arr1, arr2, rtol=1e-05, atol=1e-08):
 
     return builder.load(all_ptr)
 
+def is_pointer(x):
+    type_t = getattr(x, "type", x)
+    return isinstance(type_t, ir.PointerType)
+
+def is_floating_point(x):
+    type_t = getattr(x, "type", x)
+    # dereference pointer
+    if is_pointer(x):
+        type_t = x.type.pointee
+    return isinstance(type_t, (ir.DoubleType, ir.FloatType, ir.HalfType))
+
+def is_integer(x):
+    type_t = getattr(x, "type", x)
+    # dereference pointer
+    if is_pointer(x):
+        type_t = x.type.pointee
+    return isinstance(type_t, ir.IntType)
+
+def is_scalar(x):
+    return is_integer(x) or is_floating_point(x)
+
+def is_vector(x):
+    type_t = getattr(x, "type", x)
+    if is_pointer(x):
+        type_t = x.type.pointee
+    return isinstance(type_t, ir.ArrayType) and is_scalar(type_t.element)
+
+def is_2d_matrix(x):
+    type_t = getattr(x, "type", x)
+    if is_pointer(x):
+        type_t = x.type.pointee
+    return isinstance(type_t, ir.ArrayType) and is_vector(type_t.element)
+
+def is_boolean(x):
+    type_t = getattr(x, "type", x)
+    if is_pointer(x):
+        type_t = x.type.pointee
+    return isinstance(type_t, ir.IntType) and type_t.width == 1
 
 def printf(builder, fmt, *args, override_debug=False):
     if "print_values" not in debug_env and not override_debug:
@@ -265,7 +334,7 @@ class ConditionGenerator:
         Count should be a tuple where there is a number in only one spot, and zeroes elsewhere.
         Indices greater than that of the one are zeroed.
         """
-        
+
         # Validate count tuple
         assert count.count(0) == len(count) - 1
 
@@ -352,7 +421,7 @@ class ConditionGenerator:
 
         return builder.icmp_signed("==", node_run, global_run)
 
-    def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_flag_locs):
+    def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_callbacks):
 
         from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
 
@@ -364,12 +433,12 @@ class ConditionGenerator:
 
         elif isinstance(condition, Not):
             condition = condition.condition
-            return builder.not_(self.generate_sched_condition(builder, condition, cond_ptr, node, is_finished_flag_locs))
+            return builder.not_(self.generate_sched_condition(builder, condition, cond_ptr, node, is_finished_callbacks))
 
         elif isinstance(condition, All):
             agg_cond = ir.IntType(1)(1)
             for cond in condition.args:
-                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_flag_locs)
+                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks)
                 agg_cond = builder.and_(agg_cond, cond_res)
             return agg_cond
 
@@ -400,7 +469,7 @@ class ConditionGenerator:
             current_pass = builder.extract_value(ts, 1)
             return builder.icmp_unsigned("==", current_pass,
                                          current_pass.type(pass_num))
-                                         
+
         elif isinstance(condition, EveryNCalls):
             target, count = condition.args
 
@@ -487,35 +556,31 @@ class ConditionGenerator:
         elif isinstance(condition, WhenFinished):
             # The first argument is the target node
             assert len(condition.args) == 1
-            target_is_finished_ptr = is_finished_flag_locs[condition.args[0]]
-            target_is_finished = builder.load(target_is_finished_ptr)
-            
-            return builder.fcmp_ordered("==", target_is_finished,
-                                        target_is_finished.type(1))
+            target = is_finished_callbacks[condition.args[0]]
+            is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
+            return builder.call(is_finished_f, target[1])
 
         elif isinstance(condition, WhenFinishedAny):
             assert len(condition.args) > 0
 
             run_cond = ir.IntType(1)(0)
             for node in condition.args:
-                node_is_finished_ptr = is_finished_flag_locs[node]
-                node_is_finished = builder.load(node_is_finished_ptr)
-                node_is_finished = builder.fcmp_ordered("==", node_is_finished,
-                                                        node_is_finished.type(1))
+                target = is_finished_callbacks[node]
+                is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
+                node_is_finished = builder.call(is_finished_f, target[1])
 
                 run_cond = builder.or_(run_cond, node_is_finished)
 
             return run_cond
-        
+
         elif isinstance(condition, WhenFinishedAll):
             assert len(condition.args) > 0
 
             run_cond = ir.IntType(1)(1)
             for node in condition.args:
-                node_is_finished_ptr = is_finished_flag_locs[node]
-                node_is_finished = builder.load(node_is_finished_ptr)
-                node_is_finished = builder.fcmp_ordered("==", node_is_finished,
-                                                        node_is_finished.type(1))
+                target = is_finished_callbacks[node]
+                is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
+                node_is_finished = builder.call(is_finished_f, target[1])
 
                 run_cond = builder.and_(run_cond, node_is_finished)
 

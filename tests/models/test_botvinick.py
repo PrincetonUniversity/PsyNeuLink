@@ -289,5 +289,5 @@ def test_botvinick_model(benchmark, mode, reps):
         assert np.allclose(res[1][-1][response_decision_energy_index], [1.87232903])
         assert np.allclose(res[2][ntrials0 - 1][response_decision_energy_index], [0.94440397])
         assert np.allclose(res[2][-1][response_decision_energy_index], [0.90033387])
-
-    benchmark(run, mode)
+    if benchmark.enabled:
+        benchmark(run, mode)

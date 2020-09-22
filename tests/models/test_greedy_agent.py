@@ -20,7 +20,6 @@ from psyneulink.core.globals.keywords import VARIANCE, NORMED_L0_SIMILARITY
     pytest.param('LLVM', marks=[pytest.mark.llvm]),
     pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
     pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
 def test_simplified_greedy_agent(benchmark, mode):
@@ -60,10 +59,11 @@ def test_simplified_greedy_agent(benchmark, mode):
                                          prey:[[419,69]]},
                                  bin_execute=mode)
     assert np.allclose(run_results, [[-200, -108]])
-    benchmark(agent_comp.run, **{'inputs':{
-        player:[[619,177]],
-        prey:[[419,69]],
-        }, 'bin_execute':mode})
+    if benchmark.enabled:
+        benchmark(agent_comp.run, **{'inputs':{
+            player:[[619,177]],
+            prey:[[419,69]],
+            }, 'bin_execute':mode})
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Greedy Agant Random")
@@ -71,7 +71,6 @@ def test_simplified_greedy_agent(benchmark, mode):
     pytest.param('LLVM', marks=[pytest.mark.llvm]),
     pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
     pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
 def test_simplified_greedy_agent_random(benchmark, mode):
@@ -112,10 +111,11 @@ def test_simplified_greedy_agent_random(benchmark, mode):
     # to produce old numbers, run get_global_seed once before creating
     # each Mechanism with GaussianDistort above
     assert np.allclose(run_results, [[-199.5484223217141, -107.79361870517444]])
-    benchmark(agent_comp.run, **{'inputs':{
-        player:[[619,177]],
-        prey:[[419,69]],
-        }, 'bin_execute':mode})
+    if benchmark.enabled:
+        benchmark(agent_comp.run, **{'inputs':{
+            player:[[619,177]],
+            prey:[[419,69]],
+            }, 'bin_execute':mode})
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Predator Prey")
@@ -124,7 +124,6 @@ def test_simplified_greedy_agent_random(benchmark, mode):
      pytest.param('LLVM', marks=[pytest.mark.llvm]),
      pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
      pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-     pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
@@ -213,4 +212,5 @@ def test_predator_prey(benchmark, mode, samples):
                                                     [-0.03479106, -0.47666293],
                                                     [-0.60836214,  0.1760381 ]])
 
-    benchmark(agent_comp.run, inputs=input_dict, bin_execute=mode)
+    if benchmark.enabled:
+        benchmark(agent_comp.run, inputs=input_dict, bin_execute=mode)

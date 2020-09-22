@@ -609,7 +609,6 @@ import inspect
 import numbers
 import warnings
 import logging
-import operator
 import types
 from collections.abc import Iterable
 
@@ -637,7 +636,7 @@ from psyneulink.core.globals.keywords import \
     INITIALIZER, INSTANTANEOUS_MODE_VALUE, LESS_THAN_OR_EQUAL, MAX_ABS_DIFF, \
     NAME, NOISE, NUM_EXECUTIONS_BEFORE_FINISHED, OWNER_VALUE, RATE, RESET, RESULT, RESULTS, \
     SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, FunctionParameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
@@ -1054,14 +1053,25 @@ class TransferMechanism(ProcessingMechanism_Base):
                     :type:
         """
         integrator_mode = Parameter(False, setter=_integrator_mode_setter)
-        integration_rate = Parameter(0.5, modulable=True)
+        integration_rate = FunctionParameter(
+            0.5,
+            function_name='integrator_function',
+            function_parameter_name='rate'
+        )
+        # TODO: replace initial_value with this FunctionParameter
+        # it's complicated.
+        # initial_value = FunctionParameter(
+        #     None,
+        #     function_name='integrator_function',
+        #     function_parameter_name='initializer'
+        # )
         initial_value = None
         integrator_function = Parameter(AdaptiveIntegrator, stateful=False, loggable=False)
         integrator_function_value = Parameter([[0]], read_only=True)
         has_integrated = Parameter(False, user=False)
         on_resume_integrator_mode = Parameter(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)
         clip = None
-        noise = Parameter(0.0, modulable=True)
+        noise = FunctionParameter(0.0, function_name='integrator_function')
         termination_measure = Parameter(
             Distance(metric=MAX_ABS_DIFF),
             modulable=False,
@@ -1069,7 +1079,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             loggable=False
         )
         termination_threshold = Parameter(None, modulable=True)
-        termination_comparison_op = Parameter(operator.le, modulable=False, loggable=False)
+        termination_comparison_op = Parameter(LESS_THAN_OR_EQUAL, modulable=False, loggable=False)
         termination_measure_value = Parameter(0.0, modulable=False, read_only=True)
 
         output_ports = Parameter(
@@ -1079,6 +1089,10 @@ class TransferMechanism(ProcessingMechanism_Base):
             read_only=True,
             structural=True,
         )
+
+        def _validate_variable(self, variable):
+            if 'U' in str(variable.dtype):
+                return 'may not contain non-numeric entries'
 
         def _validate_integrator_mode(self, integrator_mode):
             if not isinstance(integrator_mode, bool):
@@ -1099,8 +1113,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                 return 'must be a float or int.'
 
         def _validate_termination_comparison_op(self, termination_comparison_op):
-            if (not termination_comparison_op in comparison_operators.keys()
-                    and not termination_comparison_op in comparison_operators.values()):
+            if (termination_comparison_op not in comparison_operators.keys()
+                    and termination_comparison_op not in comparison_operators.values()):
                 return f"must be boolean comparison operator or one of the following strings:" \
                        f" {','.join(comparison_operators.keys())}."
 
@@ -1109,22 +1123,21 @@ class TransferMechanism(ProcessingMechanism_Base):
                  default_variable=None,
                  size=None,
                  input_ports:tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))=None,
-                 function=Linear,
-                 integrator_mode=False,
+                 function=None,
+                 integrator_mode=None,
                  integrator_function=None,
                  initial_value=None,
-                 #integration_rate=0.5,
-                 integration_rate = None,
-                 on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
-                 noise=0.0,
+                 integration_rate=None,
+                 on_resume_integrator_mode=None,
+                 noise=None,
                  clip=None,
                  termination_measure=None,
                  termination_threshold:tc.optional(tc.any(int, float))=None,
-                 termination_comparison_op:tc.any(str, is_comparison_operator)=LESS_THAN_OR_EQUAL,
+                 termination_comparison_op: tc.optional(tc.any(str, is_comparison_operator)) = None,
                  output_ports:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
-                 prefs:is_pref_set=None,
+                 prefs: tc.optional(is_pref_set) = None,
                  **kwargs):
         """Assign type-level preferences and call super.__init__
         """
@@ -1134,9 +1147,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
         if output_ports is None or output_ports == RESULTS:
             output_ports = [RESULTS]
-
-        if termination_measure is None:
-            Distance(metric=MAX_ABS_DIFF)
 
         initial_value = self._parse_arg_initial_value(initial_value)
 
@@ -1238,7 +1248,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             noise = target_set[NOISE]
             # If assigned as a Function, set TransferMechanism as its owner, and assign its actual function to noise
             if isinstance(noise, DistributionFunction):
-                noise.owner = self
                 target_set[NOISE] = noise.execute
             self._validate_noise(target_set[NOISE])
 
@@ -1301,7 +1310,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             pass
 
         # Otherwise, must be a float, int or function
-        elif not isinstance(noise, (float, int)) and not callable(noise):
+        elif noise is not None and not isinstance(noise, (float, int)) and not callable(noise):
             raise MechanismError("Noise parameter ({}) for {} must be a float, "
                                  "function, or array/list of these.".format(noise,
                                                                             self.name))
@@ -1518,7 +1527,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _get_integrated_function_input(self, function_variable, initial_value, noise, context, **kwargs):
 
-        integration_rate = self._get_current_mechanism_param(INTEGRATION_RATE, context)
+        integration_rate = self._get_current_parameter_value(self.parameters.integration_rate, context)
 
         if (
             self.initialization_status == ContextFlags.INITIALIZING
@@ -1555,14 +1564,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             current_input[maxCapIndices] = np.max(clip)
         return current_input
 
-    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
-        prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "value")
-
-        # preserve the old prev value
-        prev_val = builder.load(prev_val_ptr)
-        # Update previous value to make sure that repeated executions work
-        builder.store(builder.load(current), prev_val_ptr)
-
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state):
+        current = pnlvm.helpers.get_state_ptr(builder, self, state, "value")
         threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                     "termination_threshold")
         if isinstance(threshold_ptr.type.pointee, pnlvm.ir.LiteralStructType):
@@ -1594,7 +1597,11 @@ class TransferMechanism(ProcessingMechanism_Base):
                 cond = b.fcmp_ordered(">=", test_val, max_val)
                 max_val = b.select(cond, test_val, max_val)
                 b.store(max_val, cmp_val_ptr)
+
         elif isinstance(self.termination_measure, Function):
+            prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "value", 1)
+            prev_val = builder.load(prev_val_ptr)
+
             expected = np.empty_like([self.defaults.value[0], self.defaults.value[0]])
             got = np.empty_like(self.termination_measure.defaults.variable)
             if expected.shape != got.shape:
@@ -1629,8 +1636,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         cmp_str = self.parameters.termination_comparison_op.get(None)
         return builder.fcmp_ordered(cmp_str, cmp_val, threshold)
 
-    def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in, arg_out):
-        ip_out, builder = self._gen_llvm_input_ports(ctx, builder, params, state, arg_in)
+    def _gen_llvm_mechanism_functions(self, ctx, builder, params, state, arg_in,
+                                      ip_out, *, tags:frozenset):
 
         if self.integrator_mode:
             if_state = pnlvm.helpers.get_state_ptr(builder, self, state,
@@ -1642,7 +1649,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     params, state, arg_in)
 
             mf_in, builder = self._gen_llvm_invoke_function(
-                    ctx, builder, self.integrator_function, if_params, if_state, ip_out)
+                    ctx, builder, self.integrator_function, if_params, if_state, ip_out, tags=tags)
         else:
             mf_in = ip_out
 
@@ -1651,11 +1658,15 @@ class TransferMechanism(ProcessingMechanism_Base):
         mf_params, builder = self._gen_llvm_param_ports_for_obj(
                 self.function, mf_param_ptr, ctx, builder, params, state, arg_in)
 
-        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, mf_in)
+        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, mf_in, tags=tags)
 
-        # FIXME: Convert to runtime instead of compile time
-        clip = self.parameters.clip.get()
-        if clip is not None:
+        clip_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "clip")
+        if len(clip_ptr.type.pointee) != 0:
+            assert len(clip_ptr.type.pointee) == 2
+            clip_lo = builder.load(builder.gep(clip_ptr, [ctx.int32_ty(0),
+                                                          ctx.int32_ty(0)]))
+            clip_hi = builder.load(builder.gep(clip_ptr, [ctx.int32_ty(0),
+                                                          ctx.int32_ty(1)]))
             for i in range(mf_out.type.pointee.count):
                 mf_out_local = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
                 with pnlvm.helpers.array_ptr_loop(builder, mf_out_local, "clip") as (b1, index):
@@ -1663,28 +1674,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                     ptro = b1.gep(mf_out_local, [ctx.int32_ty(0), index])
 
                     val = b1.load(ptri)
-                    val = pnlvm.helpers.fclamp(b1, val, clip[0], clip[1])
+                    val = pnlvm.helpers.fclamp(b1, val, clip_lo, clip_hi)
                     b1.store(val, ptro)
 
-        # Update execution counter
-        exec_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "execution_count")
-        exec_count = builder.load(exec_count_ptr)
-        exec_count = builder.fadd(exec_count, exec_count.type(1))
-        builder.store(exec_count, exec_count_ptr)
-
-        # Update internal clock (i.e. num_executions parameter)
-        num_executions_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "num_executions")
-        for scale in [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN]:
-            num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(scale.value)])
-            new_val = builder.load(num_exec_time_ptr)
-            new_val = builder.add(new_val, ctx.int32_ty(1))
-            builder.store(new_val, num_exec_time_ptr)
-
-        builder = self._gen_llvm_output_ports(ctx, builder, mf_out, params, state, arg_in, arg_out)
-        is_finished_cond = self._gen_llvm_is_finished_cond(ctx, builder, params,
-                                                           state, mf_out)
-
-        return builder, is_finished_cond
+        return mf_out, builder
 
     def _execute(self,
         variable=None,
@@ -1736,7 +1729,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: JDC 7/2/18 - THIS SHOULD BE MOVED TO A STANDARD OUTPUT_PORT
         # Clip outputs
-        clip = self._get_current_mechanism_param("clip", context)
+        clip = self.parameters.clip._get(context)
 
         value = super(Mechanism, self)._execute(variable=variable,
                                                 context=context,
@@ -1759,12 +1752,12 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
         integrator_mode = self.parameters.integrator_mode._get(context)
-        noise = self._get_current_mechanism_param(NOISE, context)
+        noise = self._get_current_parameter_value(self.parameters.noise, context)
 
         # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
         # Update according to time-scale of integration
         if integrator_mode:
-            initial_value = self._get_current_mechanism_param(INITIAL_VALUE, context)
+            initial_value = self._get_current_parameter_value(self.parameters.initial_value, context)
 
             value = self._get_integrated_function_input(variable,
                                                         initial_value,
@@ -1807,6 +1800,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                     assert False, f"PROGRAM ERROR: Unable to determine length of input for" \
                                   f" {repr(TERMINATION_MEASURE)} arg of {self.name}"
 
+        self.parameters.value.history_min_length = self._termination_measure_num_items_expected - 1
+
     def _report_mechanism_execution(self, input, params, output, context=None):
         """Override super to report previous_input rather than input, and selected params
         """
@@ -1841,11 +1836,9 @@ class TransferMechanism(ProcessingMechanism_Base):
             # return True
             return self.parameters.is_finished_flag._get(context)
 
+        assert self.parameters.value.history_min_length + 1 >= self._termination_measure_num_items_expected, "History of 'value' is not guaranteed enough entries for termination_mesasure"
         measure = self.termination_measure
-        # comparator = self.parameters.termination_comparison_op._get(context)
-        comparator = comparison_operators[self.parameters.termination_comparison_op._get(context)]
         value = self.parameters.value._get(context)
-        previous_value = self.parameters.value.get_previous(context)
 
         if self._termination_measure_num_items_expected==0:
             status = self.parameters.num_executions._get(context)._get_by_time_scale(self.termination_measure)
@@ -1854,12 +1847,23 @@ class TransferMechanism(ProcessingMechanism_Base):
             # Squeeze to collapse 2d array with single item
             status = measure(np.squeeze(value))
         else:
+            previous_value = self.parameters.value.get_previous(context)
             status = measure([value, previous_value])
 
         self.parameters.termination_measure_value._set(status, context=context, override=True)
 
+        # comparator = self.parameters.termination_comparison_op._get(context)
+        comparator = comparison_operators[self.parameters.termination_comparison_op._get(context)]
         # if any(comparison_operators[comparator](np.atleast_1d(status), threshold)):
         if comparator(np.atleast_1d(status), threshold).any():
             logger.info(f'{type(self).__name__} {self.name} has reached threshold ({threshold})')
             return True
         return False
+
+    @handle_external_context()
+    def _update_default_variable(self, new_default_variable, context=None):
+        if not self.parameters.initial_value._user_specified:
+            self.defaults.initial_value = copy.deepcopy(new_default_variable)
+            self.parameters.initial_value._set(copy.deepcopy(new_default_variable), context)
+
+        super()._update_default_variable(new_default_variable, context=context)

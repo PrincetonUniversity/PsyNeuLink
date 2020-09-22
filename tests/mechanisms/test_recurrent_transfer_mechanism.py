@@ -16,6 +16,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX, RESULT
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
 from psyneulink.core.globals.utilities import UtilitiesError
+from psyneulink.core.globals.parameters import ParameterError
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferError, RecurrentTransferMechanism
@@ -118,10 +119,13 @@ class TestRecurrentTransferMechanismInputs:
 
         val1 = EX([10, 12, 0, -1])
         val2 = EX([1, 2, 3, 0])
-        benchmark(EX, [1, 2, 3, 0])
 
+        # The outputs match inputs because recurrent projection is
+        # not used when executing: mech is reset each time
         np.testing.assert_allclose(val1, [[10.0, 12.0, 0, -1]])
-        np.testing.assert_allclose(val2, [[1, 2, 3, 0]])  # because recurrent projection is not used when executing: mech is reset each time
+        np.testing.assert_allclose(val2, [[1, 2, 3, 0]])
+        if benchmark.enabled:
+            benchmark(EX, [1, 2, 3, 0])
 
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
@@ -144,7 +148,6 @@ class TestRecurrentTransferMechanismInputs:
             EX = e.cuda_execute
 
         val = benchmark(EX, [10.0, 10.0, 10.0, 10.0])
-
         np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
     @pytest.mark.mechanism
@@ -173,12 +176,13 @@ class TestRecurrentTransferMechanismInputs:
         val2 = EX([[1.0, 2.0]])
         # execute 10 times
         for i in range(10):
-            val = EX([[1.0, 2.0]])
-        benchmark(EX, [[1.0, 2.0]])
+            val10 = EX([[1.0, 2.0]])
 
         assert np.allclose(val1, [[0.50249998, 0.50499983]])
         assert np.allclose(val2, [[0.50497484, 0.50994869]])
-        assert np.allclose(val, [[0.52837327, 0.55656439]])
+        assert np.allclose(val10, [[0.52837327, 0.55656439]])
+        if benchmark.enabled:
+            benchmark(EX, [[1.0, 2.0]])
 
     # def test_recurrent_mech_inputs_list_of_fns(self):
     #     R = RecurrentTransferMechanism(
@@ -214,27 +218,28 @@ class TestRecurrentTransferMechanismInputs:
             EX = e.cuda_execute
 
         val = EX([10])
-        benchmark(EX, [1])
         np.testing.assert_allclose(val, [[10.]])
+        if benchmark.enabled:
+            benchmark(EX, [1])
 
     def test_recurrent_mech_inputs_list_of_strings(self):
-        with pytest.raises(UtilitiesError) as error_text:
+        with pytest.raises(FunctionError) as error_text:
             R = RecurrentTransferMechanism(
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 integrator_mode=True
             )
             R.execute(["one", "two", "three", "four"])
-        assert "has non-numeric entries" in str(error_text.value)
+        assert "Unrecognized type" in str(error_text.value)
 
     def test_recurrent_mech_var_list_of_strings(self):
-        with pytest.raises(UtilitiesError) as error_text:
+        with pytest.raises(ParameterError) as error_text:
             R = RecurrentTransferMechanism(
                 name='R',
                 default_variable=['a', 'b', 'c', 'd'],
                 integrator_mode=True
             )
-        assert "has non-numeric entries" in str(error_text.value)
+        assert "non-numeric entries" in str(error_text.value)
 
     def test_recurrent_mech_inputs_mismatched_with_default_longer(self):
         with pytest.raises(MechanismError) as error_text:
@@ -473,7 +478,7 @@ class TestRecurrentTransferMechanismMatrix:
         assert "must be the same as its variable" in str(error_text.value)
 
     def test_recurrent_mech_matrix_strings(self):
-        with pytest.raises(UtilitiesError) as error_text:
+        with pytest.raises(RecurrentTransferError) as error_text:
             R = RecurrentTransferMechanism(
                 name='R',
                 size=4,
@@ -1393,5 +1398,3 @@ class TestDebugProperties:
         print("\n\nMatrix Values ----------------------------------")
         print("R.matrix = ", R.matrix)
         print("R.parameters.matrix.get(eid) = ", R.parameters.matrix.get(eid))
-
-

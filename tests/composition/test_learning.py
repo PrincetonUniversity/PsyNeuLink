@@ -179,7 +179,7 @@ class TestTargetSpecs:
             D: [2.0, 6.0],
             p1.target: [[3.0, 4.0], [7.0, 8.0]]
         }
-        def input_function (trial_num):
+        def input_function(trial_num):
             return {
                 A: inputs[A][trial_num],
                 D: inputs[D][trial_num],
@@ -203,7 +203,7 @@ class TestTargetSpecs:
             p1.target: [2.0, 2.0],
             p2.target: [4.0, 4.0]
         }
-        def input_function (trial_num):
+        def input_function(trial_num):
             return {
                 A: inputs[A][trial_num],
                 p1.target: inputs[p1.target][trial_num],
@@ -1327,75 +1327,6 @@ class TestReinforcement:
             np.testing.assert_allclose(deltas, validation_deltas, atol=1e-08,
                                        err_msg="mismatch on timestep {}".format(i))
 
-    def test_td_montague_et_al_figure_a(self):
-
-        # create processing mechanisms
-        sample_mechanism = pnl.TransferMechanism(default_variable=np.zeros(60),
-                                       name=pnl.SAMPLE)
-
-        action_selection = pnl.TransferMechanism(default_variable=np.zeros(60),
-                                                 function=pnl.Linear(slope=1.0, intercept=0.01),
-                                                 name='Action Selection')
-
-        sample_to_action_selection = pnl.MappingProjection(sender=sample_mechanism,
-                                                           receiver=action_selection,
-                                                           matrix=np.zeros((60, 60)))
-
-        comp = pnl.Composition(name='TD_Learning')
-        pathway = [sample_mechanism, sample_to_action_selection, action_selection]
-        learning_pathway = comp.add_td_learning_pathway(pathway, learning_rate=0.3)
-
-        comparator_mechanism = learning_pathway.learning_objective
-        comparator_mechanism.log.set_log_conditions(pnl.VALUE)
-        target_mechanism = learning_pathway.target
-
-        # comp.show_graph()
-
-        stimulus_onset = 41
-        reward_delivery = 54
-
-        # build input dictionary
-        samples = []
-        targets = []
-        for trial in range(50):
-            target = [0.] * 60
-            target[reward_delivery] = 1.
-            # {14, 29, 44, 59, 74, 89}
-            if trial in {14, 29, 44}:
-                target[reward_delivery] = 0.
-            targets.append(target)
-
-            sample = [0.] * 60
-            for i in range(stimulus_onset, 60):
-                sample[i] =1.
-            samples.append(sample)
-
-        inputs = {sample_mechanism: samples,
-                  target_mechanism: targets}
-
-
-        comp.learn(inputs=inputs)
-
-        delta_vals = comparator_mechanism.log.nparray_dictionary()['TD_Learning'][pnl.VALUE]
-
-        trial_1_expected = [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                            0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.003,  0., 0., 0., 0.,
-                            0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., -0.003,  0.]
-
-        trial_30_expected = [0.] * 40
-        trial_30_expected +=[.0682143186, .0640966042, .0994344173, .133236921, .152270799, .145592903, .113949692,
-                             .0734420009, .0450652924, .0357386468, .0330810871, .0238007805, .0102892090, -.998098988,
-                             -.0000773996815, -.0000277845011, -.00000720338916, -.00000120056486, -.0000000965971727, 0.]
-        trial_50_expected = [0.] * 40
-        trial_50_expected += [.717416347, .0816522429, .0595516548, .0379308899, .0193587853, .00686581694,
-                              .00351883747, .00902310583, .0149133617, .000263272179, -.0407611997, -.0360124387,
-                              .0539085146,  .0723714910, -.000000550934336, -.000000111783778, -.0000000166486478,
-                              -.00000000161861854, -.0000000000770770722, 0.]
-
-        assert np.allclose(trial_1_expected, delta_vals[0][0])
-        assert np.allclose(trial_30_expected, delta_vals[29][0])
-        assert np.allclose(trial_50_expected, delta_vals[49][0])
-
     def test_rl_enable_learning_false(self):
             input_layer = pnl.TransferMechanism(size=2,
                                                 name='Input Layer')
@@ -1502,14 +1433,16 @@ class TestReinforcement:
         delta_vals = comparator_mechanism.log.nparray_dictionary()['TD_Learning'][pnl.VALUE]
 
         trial_1_expected = [0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                            0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.003,  0., 0., 0., 0.,
-                            0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., -0.003,  0.]
+                            0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,  0., 0., 0., 0.,
+                            0., 0., 0., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0.,  0.]
 
         trial_30_expected = [0.] * 40
-        trial_30_expected +=[.0682143186, .0640966042, .0994344173, .133236921, .152270799, .145592903, .113949692,
-                             .0734420009, .0450652924, .0357386468, .0330810871, .0238007805, .0102892090, -.998098988,
-                             -.0000773996815, -.0000277845011, -.00000720338916, -.00000120056486, -.0000000965971727, 0.]
-
+        trial_30_expected += [
+            0.06521536244675225, 0.0640993870383315, 0.09944290863181729, 0.13325956499595726, 0.15232363406006394,
+            0.14570077419644378, 0.11414216814982991, 0.07374140787058237, 0.04546975436471501, 0.036210519138262454,
+            0.03355295938927161, 0.024201157062338496, 0.010573534379529015, -0.9979331317238949, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0
+        ]
 
         assert np.allclose(trial_1_expected, delta_vals[0][0])
         assert np.allclose(trial_30_expected, delta_vals[29][0])
@@ -1522,10 +1455,12 @@ class TestReinforcement:
         delta_vals = comparator_mechanism.log.nparray_dictionary()['TD_Learning'][pnl.VALUE]
 
         trial_50_expected = [0.] * 40
-        trial_50_expected += [.717416347, .0816522429, .0595516548, .0379308899, .0193587853, .00686581694,
-                              .00351883747, .00902310583, .0149133617, .000263272179, -.0407611997, -.0360124387,
-                              .0539085146, .0723714910, -.000000550934336, -.000000111783778, -.0000000166486478,
-                              -.00000000161861854, -.0000000000770770722, 0.]
+        trial_50_expected += [
+            0.7149863408177357, 0.08193033235388536, 0.05988592388364977, 0.03829793050401187, 0.01972582584273075,
+            0.007198872281648616, 0.0037918828476545263, 0.009224297157983563, 0.015045769646998886,
+            0.00034051016062952577, -0.040721638768680624, -0.03599485605332753, 0.0539151932684796,
+            0.07237361605659998, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+        ]
 
         assert np.allclose(trial_50_expected, delta_vals[49][0])
 
@@ -1902,7 +1837,7 @@ class TestBackProp:
 
         comp.learn(inputs=input_dictionary,
                  num_trials=10)
-    
+
         objective_output_layer = comp.nodes[5]
 
         expected_output = [
@@ -1965,42 +1900,42 @@ class TestBackProp:
              [0, 1],
              [1, 0],
              [1, 1]])
-    
+
         xor_targets = np.array(  # the outputs we wish to see from the model
             [[0],
              [1],
              [1],
              [0]])
-    
+
         in_to_hidden_matrix = np.random.rand(2,10)
         hidden_to_out_matrix = np.random.rand(10,1)
-    
+
         # SET UP MODELS --------------------------------------------------------------------------------
 
        # STANDARD Composition
         if pnl.COMPOSITION in models:
-    
+
             input_comp = pnl.TransferMechanism(name='input_comp',
                                        default_variable=np.zeros(2))
-    
+
             hidden_comp = pnl.TransferMechanism(name='hidden_comp',
                                         default_variable=np.zeros(10),
                                         function=pnl.Logistic())
-    
+
             output_comp = pnl.TransferMechanism(name='output_comp',
                                         default_variable=np.zeros(1),
                                         function=pnl.Logistic())
-    
+
             in_to_hidden_comp = pnl.MappingProjection(name='in_to_hidden_comp',
                                         matrix=in_to_hidden_matrix.copy(),
                                         sender=input_comp,
                                         receiver=hidden_comp)
-    
+
             hidden_to_out_comp = pnl.MappingProjection(name='hidden_to_out_comp',
                                         matrix=hidden_to_out_matrix.copy(),
                                         sender=hidden_comp,
                                         receiver=output_comp)
-    
+
             xor_comp = pnl.Composition()
 
             backprop_pathway = xor_comp.add_backpropagation_learning_pathway([input_comp,
@@ -2010,60 +1945,56 @@ class TestBackProp:
                                                                               output_comp],
                                                                              learning_rate=10)
             target_mech = backprop_pathway.target
+            inputs_dict = {"inputs": {input_comp:xor_inputs},
+                           "targets": {output_comp:xor_targets},
+                           "epochs": num_epochs}
+            result_comp = xor_comp.learn(inputs=inputs_dict)
 
         # AutodiffComposition
         if 'AUTODIFF' in models:
-    
+
             input_autodiff = pnl.TransferMechanism(name='input',
                                        default_variable=np.zeros(2))
-    
+
             hidden_autodiff = pnl.TransferMechanism(name='hidden',
                                         default_variable=np.zeros(10),
                                         function=pnl.Logistic())
-    
+
             output_autodiff = pnl.TransferMechanism(name='output',
                                         default_variable=np.zeros(1),
                                         function=pnl.Logistic())
-    
+
             in_to_hidden_autodiff = pnl.MappingProjection(name='in_to_hidden',
                                         matrix=in_to_hidden_matrix.copy(),
                                         sender=input_autodiff,
                                         receiver=hidden_autodiff)
-    
+
             hidden_to_out_autodiff = pnl.MappingProjection(name='hidden_to_out',
                                         matrix=hidden_to_out_matrix.copy(),
                                         sender=hidden_autodiff,
                                         receiver=output_autodiff)
-    
-            xor_autodiff = pnl.AutodiffComposition(param_init_from_pnl=True,
-                                      learning_rate=10,
-                                      optimizer_type='sgd')
-    
+
+            xor_autodiff = pnl.AutodiffComposition(learning_rate=10,
+                                                   optimizer_type='sgd')
+
             xor_autodiff.add_node(input_autodiff)
             xor_autodiff.add_node(hidden_autodiff)
             xor_autodiff.add_node(output_autodiff)
-    
+
             xor_autodiff.add_projection(sender=input_autodiff, projection=in_to_hidden_autodiff, receiver=hidden_autodiff)
             xor_autodiff.add_projection(sender=hidden_autodiff, projection=hidden_to_out_autodiff, receiver=output_autodiff)
             xor_autodiff.infer_backpropagation_learning_pathways()
-    
+
             inputs_dict = {"inputs": {input_autodiff:xor_inputs},
                            "targets": {output_autodiff:xor_targets},
                            "epochs": num_epochs}
-        # RUN MODELS -----------------------------------------------------------------------------------
-        if pnl.COMPOSITION in models:
-            result = xor_comp.learn(inputs={input_comp:xor_inputs,
-                                            target_mech:xor_targets},
-                                    num_trials=(num_epochs * xor_inputs.shape[0]),
-                                    )
-        if 'AUTODIFF' in models:
-            result = xor_autodiff.learn(inputs=inputs_dict)
-            autodiff_weights = xor_autodiff.get_parameters()
+            result_autodiff = xor_autodiff.learn(inputs=inputs_dict)
 
         # COMPARE WEIGHTS FOR PAIRS OF MODELS ----------------------------------------------------------
         if all(m in models for m in {pnl.COMPOSITION, 'AUTODIFF'}):
-            assert np.allclose(autodiff_weights[in_to_hidden_autodiff], in_to_hidden_comp.get_mod_matrix(xor_comp))
-            assert np.allclose(autodiff_weights[hidden_to_out_autodiff], hidden_to_out_comp.get_mod_matrix(xor_comp))
+            assert np.allclose(in_to_hidden_autodiff.parameters.matrix.get(xor_autodiff), in_to_hidden_comp.get_mod_matrix(xor_comp))
+            assert np.allclose(hidden_to_out_autodiff.parameters.matrix.get(xor_autodiff), hidden_to_out_comp.get_mod_matrix(xor_comp))
+            assert np.allclose(result_comp, result_autodiff)
 
     @pytest.mark.parametrize('configuration', [
         'Y UP',
@@ -2648,7 +2579,7 @@ class TestBackProp:
 
         mnet.learn(inputs=inputs)
         mnet.run(inputs=inputs)
-        
+
         comparator = np.array([0.02288846, 0.11646781, 0.03473711, 0.0348004, 0.01679579,
                              0.04851733, 0.05857743, 0.04819957, 0.03004438, 0.05113508,
                              0.06849843, 0.0442623, 0.00967315, 0.06998125, 0.03482444,

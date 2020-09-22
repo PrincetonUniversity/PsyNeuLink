@@ -41,12 +41,13 @@ All TransferFunctions have the following attributes:
 """
 
 import numbers
-from enum import IntEnum
-
 import numpy as np
 import typecheck as tc
 import types
 import warnings
+
+from enum import IntEnum
+from math import e, pi, sqrt
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
@@ -66,9 +67,9 @@ from psyneulink.core.globals.keywords import \
     RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,\
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import \
-    Parameter, get_validator_by_function
+    FunctionParameter, Parameter, get_validator_by_function
 from psyneulink.core.globals.utilities import parameter_spec, get_global_seed, safe_len
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
 
@@ -122,10 +123,10 @@ class TransferFunction(Function_Base):
                 vo = b.gep(arg_out, [ctx.int32_ty(0), idx])
                 with pnlvm.helpers.array_ptr_loop(b, vi, "nested_transfer_loop") as args:
                     self._gen_llvm_transfer(ctx=ctx, vi=vi, vo=vo,
-                                            params=params, state=state, *args)
+                                            params=params, state=state, *args, tags=tags)
             else:
-               self._gen_llvm_transfer(b, idx, ctx=ctx, vi=arg_in, vo=arg_out,
-                                       params=params, state=state)
+                self._gen_llvm_transfer(b, idx, ctx=ctx, vi=arg_in, vo=arg_out,
+                                        params=params, state=state, tags=tags)
 
         return builder
 
@@ -189,9 +190,6 @@ class Identity(TransferFunction):  # -------------------------------------------
 
     componentName = IDENTITY_FUNCTION
 
-    bounds = None
-
-
     classPreferences = {
         PREFERENCE_SET_NAME: 'IdentityClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
@@ -202,7 +200,7 @@ class Identity(TransferFunction):  # -------------------------------------------
                  default_variable=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(default_variable=default_variable,
                          params=params,
                          owner=owner,
@@ -337,8 +335,6 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     componentName = LINEAR_FUNCTION
 
-    bounds = None
-
     classPreferences = {
         PREFERENCE_SET_NAME: 'LinearClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
@@ -369,11 +365,11 @@ class Linear(TransferFunction):  # ---------------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 slope: tc.optional(parameter_spec) = None,
-                 intercept: tc.optional(parameter_spec) = None,
+                 slope: tc.optional(tc.optional(parameter_spec)) = None,
+                 intercept: tc.optional(tc.optional(parameter_spec)) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -384,7 +380,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
         slope_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SLOPE)
@@ -393,9 +389,15 @@ class Linear(TransferFunction):  # ---------------------------------------------
         slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
         intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
 
-        val = builder.load(ptri)
-        val = builder.fmul(val, slope)
-        val = builder.fadd(val, intercept)
+
+        if "derivative" in tags:
+            # f'(x) = m
+            val = slope
+        else:
+            # f(x) = mx + b
+            val = builder.load(ptri)
+            val = builder.fmul(val, slope)
+            val = builder.fadd(val, intercept)
 
         builder.store(val, ptro)
 
@@ -423,8 +425,8 @@ class Linear(TransferFunction):  # ---------------------------------------------
         linear transformation of variable : number or array
 
         """
-        slope = self._get_current_function_param(SLOPE, context)
-        intercept = self._get_current_function_param(INTERCEPT, context)
+        slope = self._get_current_parameter_value(SLOPE, context)
+        intercept = self._get_current_parameter_value(INTERCEPT, context)
 
         # MODIFIED 11/9/17 NEW:
         try:
@@ -451,6 +453,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         return self.convert_output_type(result)
 
+    @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
         """
         derivative(input)
@@ -470,7 +473,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         """
 
-        return self._get_current_function_param(SLOPE, context)
+        return self._get_current_parameter_value(SLOPE, context)
 
     def _is_identity(self, context=None):
         return (
@@ -581,8 +584,6 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     componentName = EXPONENTIAL_FUNCTION
 
-    bounds = (0, None)
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -616,17 +617,18 @@ class Exponential(TransferFunction):  # ----------------------------------------
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
+        bounds = (0, None)
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 rate: parameter_spec = 1.0,
-                 scale: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
-                 offset: parameter_spec = 0.0,
+                 rate: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
+                 bias: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -638,7 +640,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -657,8 +659,15 @@ class Exponential(TransferFunction):  # ----------------------------------------
         val = builder.fmul(val, rate)
         val = builder.fadd(val, bias)
         val = builder.call(exp_f, [val])
-        val = builder.fmul(val, scale)
-        val = builder.fadd(val, offset)
+
+        if "derivative" in tags:
+            # f'(x) = s*r*e^(r*x + b)
+            val = builder.fmul(val, scale)
+            val = builder.fmul(val, rate)
+        else:
+            # f(x) = s*e^(r*x + b) + o
+            val = builder.fmul(val, scale)
+            val = builder.fadd(val, offset)
 
         builder.store(val, ptro)
 
@@ -686,17 +695,17 @@ class Exponential(TransferFunction):  # ----------------------------------------
         Exponential transformation of variable : number or array
 
         """
-        rate = self._get_current_function_param(RATE, context)
-        bias = self._get_current_function_param(BIAS, context)
-        scale = self._get_current_function_param(SCALE, context)
-        offset = self._get_current_function_param(OFFSET, context)
+        rate = self._get_current_parameter_value(RATE, context)
+        bias = self._get_current_parameter_value(BIAS, context)
+        scale = self._get_current_parameter_value(SCALE, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = scale * np.exp(rate * variable + bias) + offset
-        from math import e
         result = scale * e**(rate * variable + bias) + offset
         return self.convert_output_type(result)
 
+    @handle_external_context()
     def derivative(self, input, output=None, context=None):
         """
         derivative(input)
@@ -716,8 +725,11 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
 
         """
-        return self._get_current_function_param(RATE, context) * input + self._get_current_function_param(BIAS, context)
+        rate = self._get_current_parameter_value(RATE, context)
+        scale = self._get_current_parameter_value(SCALE, context)
+        bias = self._get_current_parameter_value(BIAS, context)
 
+        return rate * scale * e**(rate * input + bias)
 
 # **********************************************************************************************************************
 #                                                   Logistic
@@ -838,10 +850,6 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     componentName = LOGISTIC_FUNCTION
     parameter_keywords.update({GAIN, BIAS, OFFSET})
-
-    bounds = (0, 1)
-
-
     _model_spec_class_name_is_generic = True
 
     class Parameters(TransferFunction.Parameters):
@@ -884,18 +892,19 @@ class Logistic(TransferFunction):  # -------------------------------------------
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         offset = Parameter(0.0, modulable=True)
         scale = Parameter(1.0, modulable=True)
+        bounds = (0, 1)
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: parameter_spec = 1.0,
-                 x_0=0.0,
-                 bias=0.0,
-                 offset: parameter_spec = 0.0,
-                 scale: parameter_spec = 1.0,
+                 gain: tc.optional(parameter_spec) = None,
+                 x_0=None,
+                 bias=None,
+                 offset: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -908,7 +917,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -926,6 +935,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         exp_f = ctx.get_builtin("exp", [ctx.float_ty])
         val = builder.load(ptri)
+
         val = builder.fadd(val, bias)
         val = builder.fsub(val, x_0)
         val = builder.fmul(val, gain)
@@ -934,6 +944,14 @@ class Logistic(TransferFunction):  # -------------------------------------------
         val = builder.fadd(ctx.float_ty(1), val)
         val = builder.fdiv(ctx.float_ty(1), val)
         val = builder.fmul(val, scale)
+
+        if "derivative" in tags:
+            # f(x) = g * s * o * (1-o)
+            function_val = val
+            val = builder.fsub(ctx.float_ty(1), function_val)
+            val = builder.fmul(function_val, val)
+            val = builder.fmul(gain, val)
+            val = builder.fmul(scale, val)
 
         builder.store(val, ptro)
 
@@ -961,19 +979,19 @@ class Logistic(TransferFunction):  # -------------------------------------------
         Logistic transformation of variable : number or array
 
         """
-        gain = self._get_current_function_param(GAIN, context)
-        bias = self._get_current_function_param(BIAS, context)
-        x_0 = self._get_current_function_param(X_0, context)
-        offset = self._get_current_function_param(OFFSET, context)
-        scale = self._get_current_function_param(SCALE, context)
+        gain = self._get_current_parameter_value(GAIN, context)
+        bias = self._get_current_parameter_value(BIAS, context)
+        x_0 = self._get_current_parameter_value(X_0, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
+        scale = self._get_current_parameter_value(SCALE, context)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
-        from math import e
         result = scale * (1. / (1 + e**(-gain * (variable + bias - x_0) + offset)))
 
         return self.convert_output_type(result)
 
+    @handle_external_context()
     def derivative(self, input=None, output=None, context=None):
         """
         derivative(input=None, output=None)
@@ -1010,8 +1028,8 @@ class Logistic(TransferFunction):  # -------------------------------------------
                                     format(repr('output'), self.__class__.__name__ + '.' + 'derivative', output,
                                            repr('input'), input))
 
-        gain = self._get_current_function_param(GAIN, context)
-        scale = self._get_current_function_param(SCALE, context)
+        gain = self._get_current_parameter_value(GAIN, context)
+        scale = self._get_current_parameter_value(SCALE, context)
 
         if output is None:
             output = self.function(input, context=context)
@@ -1044,7 +1062,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
     .. math::
 
-        \\frac{1 - e^{-2(gain*(variable+bias-x\\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\\_0)+offset)}}
+        \\scale*frac{1 - e^{-2(gain*(variable+bias-x\\_0)+offset)}}{1 + e^{-2(gain*(variable+bias-x\\_0)+offset)}}
 
     .. note::
 
@@ -1138,8 +1156,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
     componentName = TANH_FUNCTION
     parameter_keywords.update({GAIN, BIAS, OFFSET})
 
-    bounds = (0, 1)
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -1180,18 +1196,19 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         offset = Parameter(0.0, modulable=True)
         scale = Parameter(1.0, modulable=True)
+        bounds = (0, 1)
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: parameter_spec = 1.0,
-                 x_0=0.0,
-                 bias=0.0,
-                 offset: parameter_spec = 0.0,
-                 scale: parameter_spec = 1.0,
+                 gain: tc.optional(parameter_spec) = None,
+                 x_0=None,
+                 bias=None,
+                 offset: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1204,7 +1221,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -1212,23 +1229,47 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         bias_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, BIAS)
         x_0_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, X_0)
         offset_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, OFFSET)
+        scale_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SCALE)
 
         gain = pnlvm.helpers.load_extract_scalar_array_one(builder, gain_ptr)
         bias = pnlvm.helpers.load_extract_scalar_array_one(builder, bias_ptr)
         x_0 = pnlvm.helpers.load_extract_scalar_array_one(builder, x_0_ptr)
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
-        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
-        exp_val = builder.load(ptri)
-        exp_val = builder.fadd(exp_val, bias)
-        exp_val = builder.fsub(exp_val, x_0)
-        exp_val = builder.fmul(exp_val, gain)
-        exp_val = builder.fadd(exp_val, offset)
-        exp_val = builder.fmul(exp_val.type(-2), exp_val)
+        scale = pnlvm.helpers.load_extract_scalar_array_one(builder, scale_ptr)
 
-        val = builder.call(exp_f, [exp_val])
-        val1 = builder.fsub(val.type(1), val)
-        val2 = builder.fadd(val.type(1), val)
-        val = builder.fdiv(val1, val2)
+        variable = builder.load(ptri)
+        exp_f = ctx.get_builtin("exp", [ctx.float_ty])
+
+        if "derivative" in tags:
+            exponent = builder.fadd(variable, bias)
+            exponent = builder.fsub(exponent, x_0)
+            exponent = builder.fmul(gain, exponent)
+            exponent = builder.fadd(exponent, offset)
+            exponent = builder.fmul(exponent.type(-2), exponent)
+
+            mult = builder.fmul(gain, scale)
+            mult = builder.fmul(mult.type(-2), mult)
+
+            exp_val = builder.call(exp_f, [exponent])
+            numerator = builder.fmul(exp_val.type(-2), exp_val)
+
+            denominator = builder.fadd(exp_val.type(1), exp_val)
+            denominator = builder.fmul(denominator, denominator)
+
+            val = builder.fdiv(numerator, denominator)
+            val = builder.fmul(val, mult)
+        else:
+            exp_val = builder.fadd(variable, bias)
+            exp_val = builder.fsub(exp_val, x_0)
+            exp_val = builder.fmul(exp_val, gain)
+            exp_val = builder.fadd(exp_val, offset)
+            exp_val = builder.fmul(exp_val.type(-2), exp_val)
+
+            val = builder.call(exp_f, [exp_val])
+            val1 = builder.fsub(val.type(1), val)
+            val2 = builder.fadd(val.type(1), val)
+            val = builder.fdiv(val1, val2)
+            val = builder.fmul(val, scale)
 
         builder.store(val, ptro)
 
@@ -1256,21 +1297,22 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         hyperbolic tangent of variable : number or array
 
         """
-        gain = self._get_current_function_param(GAIN, context)
-        bias = self._get_current_function_param(BIAS, context)
-        x_0 = self._get_current_function_param(X_0, context)
-        offset = self._get_current_function_param(OFFSET, context)
+        gain = self._get_current_parameter_value(GAIN, context)
+        bias = self._get_current_parameter_value(BIAS, context)
+        x_0 = self._get_current_parameter_value(X_0, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
+        scale = self._get_current_parameter_value(SCALE, context)
 
         # The following probably doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         #   (since np.exp doesn't work)
         # result = 1. / (1 + np.tanh(-gain * (variable - bias) + offset))
-        from math import e
         exponent = -2 * (gain * (variable + bias - x_0) + offset)
-        result = (1 - e**exponent)/ (1 + e**exponent)
+        result = scale * (1 - e**exponent)/ (1 + e**exponent)
 
         return self.convert_output_type(result)
 
 
+    @handle_external_context()
     def derivative(self, input, output=None, context=None):
         """
         derivative(input)
@@ -1288,14 +1330,18 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         derivative :  number or array
 
         """
-        gain = self._get_current_function_param(GAIN, context)
-        bias = self._get_current_function_param(BIAS, context)
-        x_0 = self._get_current_function_param(X_0, context)
-        offset = self._get_current_function_param(OFFSET, context)
-        scale = self._get_current_function_param(SCALE, context)
+        gain = self._get_current_parameter_value(GAIN, context)
+        bias = self._get_current_parameter_value(BIAS, context)
+        x_0 = self._get_current_parameter_value(X_0, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
+        scale = self._get_current_parameter_value(SCALE, context)
 
-        from math import e
-        return gain * scale / ((1 + e**(-2 * (gain * (input + bias - x_0) + offset))) / (2 * e**(-gain * (input + bias - x_0) + offset)))**2
+        exponent = -2 * (gain * (input + bias - x_0) + offset)
+        mult = -2 * gain * scale
+        numerator = -2 * e**(exponent)
+        denominator = (1 + e**(exponent))**2
+
+        return mult * (numerator / denominator)
 
 
 # **********************************************************************************************************************
@@ -1387,8 +1433,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
     componentName = RELU_FUNCTION
     parameter_keywords.update({GAIN, BIAS, LEAK})
 
-    bounds = (None,None)
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -1415,16 +1459,17 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         gain = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         leak = Parameter(0.0, modulable=True)
+        bounds = (None, None)
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
-                 leak: parameter_spec = 0.0,
+                 gain: tc.optional(parameter_spec) = None,
+                 bias: tc.optional(parameter_spec) = None,
+                 leak: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             gain=gain,
@@ -1457,9 +1502,9 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         ReLU transformation of variable : number or array
         """
-        gain = self._get_current_function_param(GAIN, context)
-        bias = self._get_current_function_param(BIAS, context)
-        leak = self._get_current_function_param(LEAK, context)
+        gain = self._get_current_parameter_value(GAIN, context)
+        bias = self._get_current_parameter_value(BIAS, context)
+        leak = self._get_current_parameter_value(LEAK, context)
 
         # KAM modified 2/15/19 to match https://en.wikipedia.org/wiki/Rectifier_(neural_networks)#Leaky_ReLUs
         x = gain * (variable - bias)
@@ -1467,7 +1512,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         return self.convert_output_type(result)
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -1482,14 +1527,20 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         # Maxnum for some reason needs full function prototype
         max_f = ctx.get_builtin("maxnum", [ctx.float_ty])
         var = builder.load(ptri)
-        val = builder.fsub(var, bias)
-        val1 = builder.fmul(val, gain)
-        val2 = builder.fmul(val1, leak)
 
-        val = builder.call(max_f, [val1, val2])
+        if "derivative" in tags:
+            predicate = builder.fcmp_ordered('>', var, var.type(0))
+            val = builder.select(predicate, gain, builder.fmul(gain, leak))
+        else:
+            val = builder.fsub(var, bias)
+            val1 = builder.fmul(val, gain)
+            val2 = builder.fmul(val1, leak)
+
+            val = builder.call(max_f, [val1, val2])
 
         builder.store(val, ptro)
 
+    @handle_external_context()
     def derivative(self, input, output=None, context=None):
         """
         derivative(input)
@@ -1508,10 +1559,14 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         derivative :  number or array
 
         """
-        gain = self._get_current_function_param(GAIN, context)
-        leak = self._get_current_function_param(LEAK, context)
+        gain = self._get_current_parameter_value(GAIN, context)
+        leak = self._get_current_parameter_value(LEAK, context)
 
-        return gain if input > 0 else gain * leak
+        input = np.asarray(input).copy()
+        input[input>0] = gain
+        input[input<=0] = gain * leak
+
+        return input
 
 
 # **********************************************************************************************************************
@@ -1617,8 +1672,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
     componentName = GAUSSIAN_FUNCTION
     # parameter_keywords.update({STANDARD_DEVIATION, BIAS, SCALE, OFFSET})
 
-    bounds = (None,None)
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -1652,17 +1705,18 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
+        bounds = (None, None)
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 standard_deviation: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 standard_deviation: tc.optional(parameter_spec) = None,
+                 bias: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         super().__init__(
             default_variable=default_variable,
             standard_deviation=standard_deviation,
@@ -1674,7 +1728,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -1701,7 +1755,6 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         exp = builder.fdiv(exp_num, exp_denom)
         numerator = builder.call(exp_f, [exp])
 
-        from math import pi
         denom = builder.fmul(standard_deviation.type(2 * pi), standard_deviation)
         denom = builder.call(sqrt_f, [denom])
         val = builder.fdiv(numerator, denom)
@@ -1736,17 +1789,17 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Gaussian transformation of variable : number or array
 
         """
-        standard_deviation = self._get_current_function_param(STANDARD_DEVIATION, context)
-        bias = self._get_current_function_param(BIAS, context)
-        scale = self._get_current_function_param(SCALE, context)
-        offset = self._get_current_function_param(OFFSET, context)
+        standard_deviation = self._get_current_parameter_value(STANDARD_DEVIATION, context)
+        bias = self._get_current_parameter_value(BIAS, context)
+        scale = self._get_current_parameter_value(SCALE, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
 
-        from math import e, pi, sqrt
         gaussian = e**(-(variable - bias)**2 / (2 * standard_deviation**2)) / sqrt(2 * pi * standard_deviation)
         result = scale * gaussian + offset
 
         return self.convert_output_type(result)
 
+    @handle_external_context()
     def derivative(self, input, output=None, context=None):
         """
         derivative(input)
@@ -1767,10 +1820,9 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Derivative of Guassian of variable :  number or array
 
         """
-        sigma = self._get_current_function_param(STANDARD_DEVIATION, context)
-        bias = self._get_current_function_param(BIAS, context)
+        sigma = self._get_current_parameter_value(STANDARD_DEVIATION, context)
+        bias = self._get_current_parameter_value(BIAS, context)
 
-        from math import e, pi, sqrt
         adjusted_input = input - bias
         result = (-adjusted_input * e**(-(adjusted_input**2 / (2 * sigma**2)))) / sqrt(2 * pi * sigma**3)
 
@@ -1885,8 +1937,6 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     componentName = GAUSSIAN_DISTORT_FUNCTION
     # parameter_keywords.update({VARIANCE, BIAS, SCALE, OFFSET})
 
-    bounds = (None,None)
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -1927,18 +1977,19 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
         random_state = Parameter(None, stateful=True, loggable=False)
+        bounds = (None, None)
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 variance: parameter_spec = 1.0,
-                 bias: parameter_spec = 0.0,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 variance: tc.optional(parameter_spec) = None,
+                 bias: tc.optional(parameter_spec) = None,
+                 scale: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if seed is None:
             seed = get_global_seed()
@@ -1957,7 +2008,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
             prefs=prefs,
         )
 
-    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state):
+    def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
         ptro = builder.gep(vo, [ctx.int32_ty(0), index])
 
@@ -2011,11 +2062,11 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         Sample from Gaussian distribution for each element of variable : number or array
 
         """
-        variance = self._get_current_function_param(VARIANCE, context)
-        bias = self._get_current_function_param(BIAS, context)
-        scale = self._get_current_function_param(SCALE, context)
-        offset = self._get_current_function_param(OFFSET, context)
-        random_state = self._get_current_function_param('random_state', context)
+        variance = self._get_current_parameter_value(VARIANCE, context)
+        bias = self._get_current_parameter_value(BIAS, context)
+        scale = self._get_current_parameter_value(SCALE, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
+        random_state = self._get_current_parameter_value('random_state', context)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         result = scale * random_state.normal(variable + bias, variance) + offset
@@ -2037,10 +2088,10 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
     #     Derivative of Guassian of variable :  number or array
     #
     #     """
-    #     variance = self._get_current_function_param(VARIANCE, context)
-    #     bias = self._get_current_function_param(BIAS, context)
-    #     scale = self._get_current_function_param(SCALE, context)
-    #     offset = self._get_current_function_param(OFFSET, context)
+    #     variance = self._get_current_parameter_value(VARIANCE, context)
+    #     bias = self._get_current_parameter_value(BIAS, context)
+    #     scale = self._get_current_parameter_value(SCALE, context)
+    #     offset = self._get_current_parameter_value(OFFSET, context)
     #
     #     # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
     #     f = scale * np.random.normal(input+bias, variance) + offset
@@ -2163,8 +2214,6 @@ class SoftMax(TransferFunction):
 
     componentName = SOFTMAX_FUNCTION
 
-    bounds = (0, 1)
-
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -2218,12 +2267,12 @@ class SoftMax(TransferFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gain: parameter_spec = 1.0,
+                 gain: tc.optional(parameter_spec) = None,
                  output=None,
-                 per_item=True,
-                 params: tc.optional(dict) = None,
+                 per_item=None,
+                 params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         try:
             # needed because one_hot_function is initialized here based
@@ -2407,9 +2456,9 @@ class SoftMax(TransferFunction):
 
         """
         # Assign the params and return the result
-        output_type = self._get_current_function_param(OUTPUT_TYPE, context)
-        gain = self._get_current_function_param(GAIN, context)
-        per_item = self._get_current_function_param(PER_ITEM, context)
+        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
+        gain = self._get_current_parameter_value(GAIN, context)
+        per_item = self._get_current_parameter_value(PER_ITEM, context)
         # Compute softmax and assign to sm
 
         if per_item and len(np.shape(variable)) > 1:
@@ -2421,6 +2470,7 @@ class SoftMax(TransferFunction):
 
         return self.convert_output_type(output)
 
+    @handle_external_context()
     def derivative(self, output, input=None, context=None):
         """
         derivative(output)
@@ -2588,8 +2638,6 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     componentName = LINEAR_MATRIX_FUNCTION
 
-    bounds = None
-
     DEFAULT_FILLER_VALUE = 0
 
     class Parameters(TransferFunction.Parameters):
@@ -2621,7 +2669,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                  matrix=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         # Note: this calls _validate_variable and _validate_params which are overridden below;
         #       the latter implements the matrix if required
@@ -2966,7 +3014,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             length of the array returned equals the number of columns of `matrix <LinearMatrix.matrix>`.
 
         """
-        matrix = self._get_current_function_param(MATRIX, context)
+        matrix = self._get_current_parameter_value(MATRIX, context)
         result = np.dot(variable, matrix)
         return self.convert_output_type(result)
 
@@ -3125,134 +3173,6 @@ class CostFunctions(IntEnum):
     ALL           = INTENSITY | ADJUSTMENT | DURATION
     DEFAULTS      = INTENSITY
 
-# Getters and setters for transfer and cost function multiplicative and additive parameters ----------------------------
-
-def _transfer_fct_mult_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.transfer_fct.get().parameters.multiplicative_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _transfer_fct_mult_param_setter(value, owning_component=None, context=None):
-    owning_component.parameters.transfer_fct.get().parameters.multiplicative_param._set(value, context)
-    return value
-
-def _transfer_fct_add_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.transfer_fct.get().parameters.additive_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _transfer_fct_add_param_setter(value, owning_component=None, context=None):
-    try:
-        owning_component.parameters.transfer_fct.get().parameters.additive_param._set(value, context)
-        return value
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _intensity_cost_fct_mult_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.intensity_cost_fct.get().parameters.multiplicative_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _intensity_cost_fct_mult_param_setter(value, owning_component=None, context=None):
-    try:
-        owning_component.parameters.intensity_cost_fct.get().parameters.multiplicative_param._set(value, context)
-        return value
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _intensity_cost_fct_add_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.intensity_cost_fct.get().parameters.additive_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _intensity_cost_fct_add_param_setter(value, owning_component=None, context=None):
-    try:
-        owning_component.parameters.intensity_cost_fct.get().parameters.additive_param._set(value, context)
-        return value
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _adjustment_cost_fct_mult_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.adjustment_cost_fct.get().parameters.multiplicative_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _adjustment_cost_fct_mult_param_setter(value, owning_component=None, context=None):
-    try:
-        owning_component.parameters.adjustment_cost_fct.get().parameters.multiplicative_param._set(value, context)
-        return value
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _adjustment_cost_fct_add_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.adjustment_cost_fct.get().parameters.additive_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _adjustment_cost_fct_add_param_setter(value, owning_component=None, context=None):
-    try:
-        owning_component.parameters.adjustment_cost_fct.get().parameters.additive_param._set(value, context)
-        return value
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _duration_cost_fct_mult_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.duration_cost_fct.get().parameters.multiplicative_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _duration_cost_fct_mult_param_setter(value, owning_component=None, context=None):
-    try:
-        owning_component.parameters.duration_cost_fct.get().parameters.multiplicative_param._set(value, context)
-        return value
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _duration_cost_fct_add_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.duration_cost_fct.get().parameters.additive_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _duration_cost_fct_add_param_setter(value, owning_component=None, context=None):
-    try:
-        owning_component.parameters.duration_cost_fct.get().parameters.additive_param._set(value, context)
-        return value
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _combine_costs_fct_mult_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _combine_costs_fct_mult_param_setter(value, owning_component=None, context=None):
-    try:
-        owning_component.parameters.combine_costs_fct.get().parameters.multiplicative_param._set(value, context)
-        return value
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _combine_costs_fct_add_param_getter(owning_component=None, context=None):
-    try:
-        return owning_component.parameters.combine_costs_fct.get().parameters.additive_param.get(context)
-    except (TypeError, IndexError, AttributeError):
-        return None
-
-def _combine_costs_fct_add_param_setter(value, owning_component=None, context=None):
-    try:
-        owning_component.parameters.combine_costs_fct.get().parameters.additive_param._set(value, context)
-        return value
-    except (TypeError, IndexError, AttributeError):
-        return None
 
 TRANSFER_FCT = 'transfer_fct'
 INTENSITY_COST_FCT = 'intensity_cost_fct'
@@ -3498,8 +3418,6 @@ class TransferWithCosts(TransferFunction):
 
     componentName = TRANSFER_WITH_COSTS_FUNCTION
 
-    bounds = None
-
     classPreferences = {
         PREFERENCE_SET_NAME: 'TransferWithCostssClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
@@ -3663,14 +3581,18 @@ class TransferWithCosts(TransferFunction):
         # Create primary functions' modulation params for TransferWithCosts
         transfer_fct = Parameter(Linear, stateful=False)
         _validate_transfer_fct = get_validator_by_function(is_function_type)
-        transfer_fct_mult_param = Parameter(modulable=True, aliases=MULTIPLICATIVE_PARAM,
-                                            modulation_combination_function=PRODUCT,
-                                            getter=_transfer_fct_mult_param_getter,
-                                            setter=_transfer_fct_mult_param_setter)
-        transfer_fct_add_param = Parameter(modulable=True, aliases=ADDITIVE_PARAM,
-                                           modulation_combination_function=SUM,
-                                           getter=_transfer_fct_add_param_getter,
-                                           setter=_transfer_fct_add_param_setter)
+        transfer_fct_mult_param = FunctionParameter(
+            aliases=MULTIPLICATIVE_PARAM,
+            modulation_combination_function=PRODUCT,
+            function_name='transfer_fct',
+            function_parameter_name=MULTIPLICATIVE_PARAM,
+        )
+        transfer_fct_add_param = FunctionParameter(
+            aliases=ADDITIVE_PARAM,
+            modulation_combination_function=SUM,
+            function_name='transfer_fct',
+            function_parameter_name=ADDITIVE_PARAM,
+        )
 
         enabled_cost_functions = Parameter(
             CostFunctions.DEFAULTS,
@@ -3682,72 +3604,72 @@ class TransferWithCosts(TransferFunction):
         intensity_cost = None
         intensity_cost_fct = Parameter(Exponential, stateful=False)
         _validate_intensity_cost_fct = get_validator_by_function(is_function_type)
-        intensity_cost_fct_mult_param = Parameter(modulable=True,
-                                                  modulation_combination_function=PRODUCT,
-                                                  aliases=INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM,
-                                                  getter=_intensity_cost_fct_mult_param_getter,
-                                                  setter=_intensity_cost_fct_mult_param_setter)
-        intensity_cost_fct_add_param = Parameter(modulable=True,
-                                                 modulation_combination_function=SUM,
-                                                 aliases=INTENSITY_COST_FCT_ADDITIVE_PARAM,
-                                                 getter=_intensity_cost_fct_add_param_getter,
-                                                 setter=_intensity_cost_fct_add_param_setter)
+        intensity_cost_fct_mult_param = FunctionParameter(
+            modulation_combination_function=PRODUCT,
+            function_name='intensity_cost_fct',
+            function_parameter_name=MULTIPLICATIVE_PARAM,
+        )
+        intensity_cost_fct_add_param = FunctionParameter(
+            modulation_combination_function=SUM,
+            function_name='intensity_cost_fct',
+            function_parameter_name=ADDITIVE_PARAM,
+        )
 
         adjustment_cost = None
         adjustment_cost_fct = Parameter(Linear, stateful=False)
         _validate_adjustment_cost_fct = get_validator_by_function(is_function_type)
-        adjustment_cost_fct_mult_param = Parameter(modulable=True,
-                                                   modulation_combination_function=PRODUCT,
-                                                   aliases=ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM,
-                                                   getter=_adjustment_cost_fct_mult_param_getter,
-                                                   setter=_adjustment_cost_fct_mult_param_setter)
-        adjustment_cost_fct_add_param = Parameter(modulable=True,
-                                                  modulation_combination_function=SUM,
-                                                  aliases=ADJUSTMENT_COST_FCT_ADDITIVE_PARAM,
-                                                  getter=_adjustment_cost_fct_add_param_getter,
-                                                  setter=_adjustment_cost_fct_add_param_setter)
+        adjustment_cost_fct_mult_param = FunctionParameter(
+            modulation_combination_function=PRODUCT,
+            function_name='adjustment_cost_fct',
+            function_parameter_name=MULTIPLICATIVE_PARAM,
+        )
+        adjustment_cost_fct_add_param = FunctionParameter(
+            modulation_combination_function=SUM,
+            function_name='adjustment_cost_fct',
+            function_parameter_name=ADDITIVE_PARAM,
+        )
 
         duration_cost = None
         duration_cost_fct = Parameter(SimpleIntegrator, stateful=False)
         _validate_duration_cost_fct = get_validator_by_function(is_function_type)
-        duration_cost_fct_mult_param = Parameter(modulable=True,
-                                                 modulation_combination_function=PRODUCT,
-                                                 aliases=DURATION_COST_FCT_MULTIPLICATIVE_PARAM,
-                                                 getter=_duration_cost_fct_mult_param_getter,
-                                                 setter=_duration_cost_fct_mult_param_setter)
-        duration_cost_fct_add_param = Parameter(modulable=True,
-                                                modulation_combination_function=SUM,
-                                                aliases=DURATION_COST_FCT_ADDITIVE_PARAM,
-                                                getter=_duration_cost_fct_add_param_getter,
-                                                setter=_duration_cost_fct_add_param_setter)
+        duration_cost_fct_mult_param = FunctionParameter(
+            modulation_combination_function=PRODUCT,
+            function_name='duration_cost_fct',
+            function_parameter_name=MULTIPLICATIVE_PARAM,
+        )
+        duration_cost_fct_add_param = FunctionParameter(
+            modulation_combination_function=SUM,
+            function_name='duration_cost_fct',
+            function_parameter_name=ADDITIVE_PARAM,
+        )
 
         combined_costs = None
         combine_costs_fct = Parameter(LinearCombination, stateful=False)
         _validate_combine_costs_fct = get_validator_by_function(is_function_type)
-        combine_costs_fct_mult_param=Parameter(modulable=True,
-                                               modulation_combination_function=PRODUCT,
-                                               aliases=COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM,
-                                               getter=_combine_costs_fct_mult_param_getter,
-                                               setter=_combine_costs_fct_mult_param_setter)
-        combine_costs_fct_add_param=Parameter(modulable=True,
-                                              modulation_combination_function=SUM,
-                                              aliases=COMBINE_COSTS_FCT_ADDITIVE_PARAM,
-                                              getter=_combine_costs_fct_add_param_getter,
-                                              setter=_combine_costs_fct_add_param_setter)
+        combine_costs_fct_mult_param = FunctionParameter(
+            modulation_combination_function=PRODUCT,
+            function_name='combine_costs_fct',
+            function_parameter_name=MULTIPLICATIVE_PARAM,
+        )
+        combine_costs_fct_add_param = FunctionParameter(
+            modulation_combination_function=SUM,
+            function_name='combine_costs_fct',
+            function_parameter_name=ADDITIVE_PARAM,
+        )
 
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 transfer_fct:(is_function_type)=Linear,
+                 transfer_fct:tc.optional(is_function_type)=None,
                  enabled_cost_functions:tc.optional(tc.any(CostFunctions, list))=None,
-                 intensity_cost_fct:(is_function_type)=Exponential,
-                 adjustment_cost_fct:tc.optional(is_function_type)=Linear,
-                 duration_cost_fct:tc.optional(is_function_type)=SimpleIntegrator,
-                 combine_costs_fct:tc.optional(is_function_type)=LinearCombination,
+                 intensity_cost_fct:tc.optional(is_function_type)=None,
+                 adjustment_cost_fct:tc.optional(is_function_type)=None,
+                 duration_cost_fct:tc.optional(is_function_type)=None,
+                 combine_costs_fct:tc.optional(is_function_type)=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         # if size:
         #     if default_variable is None:
@@ -3895,17 +3817,12 @@ class TransferWithCosts(TransferFunction):
         if enabled_cost_functions:
 
             # For each cost function that is enabled:
-            # - get params for the cost functon using _get_current_function_param:
+            # - get params for the cost functon using _get_current_parameter_value:
             #   - if TransferWithControl is owned by a Mechanism, get value from ParameterPort for param
             #   - otherwise, get from TransferWithControl modulation parameter (which is also subject to modulation)
 
             # Compute intensity_cost
             if enabled_cost_functions & CostFunctions.INTENSITY:
-                # Assign modulatory param values to intensity_cost_function
-                self.intensity_cost_fct_mult_param = \
-                    self._get_current_function_param(INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM, context)
-                self.intensity_cost_fct_add_param = \
-                    self._get_current_function_param(INTENSITY_COST_FCT_ADDITIVE_PARAM, context)
                 # Execute intensity_cost function
                 intensity_cost = self.intensity_cost_fct(intensity, context=context)
                 self.parameters.intensity_cost._set(intensity_cost, context)
@@ -3918,11 +3835,6 @@ class TransferWithCosts(TransferFunction):
                     intensity_change = np.abs(intensity - self.parameters.intensity._get(context))
                 except TypeError:
                     intensity_change = np.zeros_like(self.parameters_intensity._get(context))
-                # Assign modulatory param values to adjustment_cost_function
-                self.adjustment_cost_fct_mult_param = \
-                    self._get_current_function_param(ADJUSTMENT_COST_FCT_MULTIPLICATIVE_PARAM, context)
-                self.adjustment_cost_fct_add_param = \
-                    self._get_current_function_param(ADJUSTMENT_COST_FCT_ADDITIVE_PARAM, context)
                 # Execute adjustment_cost function
                 adjustment_cost = self.adjustment_cost_fct(intensity_change, context=context)
                 self.parameters.adjustment_cost._set(adjustment_cost, context)
@@ -3930,23 +3842,12 @@ class TransferWithCosts(TransferFunction):
 
             # Compute duration_cost
             if enabled_cost_functions & CostFunctions.DURATION:
-                # Assign modulatory param values to duration_cost_function
-                self.duration_cost_fct_mult_param = \
-                    self._get_current_function_param(DURATION_COST_FCT_MULTIPLICATIVE_PARAM, context)
-                self.duration_cost_fct_add_param = \
-                    self._get_current_function_param(DURATION_COST_FCT_ADDITIVE_PARAM, context)
                 # Execute duration_cost function
                 duration_cost = self.duration_cost_fct(intensity, context=context)
                 self.parameters.duration_cost._set(duration_cost, context)
                 enabled_costs.append(duration_cost)
 
             # Alwasy execute combined_costs_fct if *any* costs are enabled
-
-            # Assign modulatory param values to combine_costs_function
-            self.combine_costs_fct_mult_param = \
-                self._get_current_function_param(COMBINE_COSTS_FCT_MULTIPLICATIVE_PARAM, context)
-            self.combine_costs_fct_add_param = \
-                self._get_current_function_param(COMBINE_COSTS_FCT_ADDITIVE_PARAM, context)
             # Execute combine_costs function
             combined_costs = self.combine_costs_fct(enabled_costs,
                                                     context=context)
@@ -4059,7 +3960,7 @@ class TransferWithCosts(TransferFunction):
 
         enabled_cost_functions = self.parameters.enabled_cost_functions.get(execution_context)
         if assignment:
-            if not cost_function_name in self.parameters.names():
+            if cost_function_name not in self.parameters.names():
                 raise FunctionError("Unable to toggle {} ON as function assignment is \'None\'".
                                          format(cost_function_name))
             if not enabled_cost_functions:

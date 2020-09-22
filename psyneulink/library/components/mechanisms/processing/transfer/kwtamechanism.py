@@ -186,7 +186,6 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.transferfunctions import Logistic
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.globals.keywords import INITIALIZING, KWTA_MECHANISM, K_VALUE, RATIO, RESULT, THRESHOLD
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -332,6 +331,14 @@ class KWTAMechanism(RecurrentTransferMechanism):
         threshold = Parameter(0.0, modulable=True)
         ratio = Parameter(0.5, modulable=True)
 
+        output_ports = Parameter(
+            [RESULT],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+        )
+
         average_based = False
         inhibition_only = True
 
@@ -339,34 +346,28 @@ class KWTAMechanism(RecurrentTransferMechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 function=Logistic,
+                 function=None,
                  matrix=None,
                  auto: is_numeric_or_none=None,
                  hetero: is_numeric_or_none=None,
-                 integrator_function=AdaptiveIntegrator,
+                 integrator_function=None,
                  initial_value=None,
-                 noise: is_numeric_or_none = 0.0,
-                 integration_rate: is_numeric_or_none = 0.5,
-                 integrator_mode=False,
-                 k_value: is_numeric_or_none = 0.5,
-                 threshold: is_numeric_or_none = 0,
-                 ratio: is_numeric_or_none = 0.5,
-                 average_based=False,
-                 inhibition_only=True,
+                 noise: tc.optional(is_numeric_or_none) = None,
+                 integration_rate: tc.optional(is_numeric_or_none) = None,
+                 integrator_mode=None,
+                 k_value: tc.optional(is_numeric_or_none) = None,
+                 threshold: tc.optional(is_numeric_or_none) = None,
+                 ratio: tc.optional(is_numeric_or_none) = None,
+                 average_based=None,
+                 inhibition_only=None,
                  clip=None,
-                 input_ports:tc.optional(tc.any(list, dict)) = None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=RESULT,
+                 input_ports:tc.optional(tc.optional(tc.any(list, dict))) = None,
+                 output_ports:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  **kwargs
                  ):
-        # Default output_ports is specified in constructor as a string rather than a list
-        # to avoid "gotcha" associated with mutable default arguments
-        # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if output_ports is None:
-            output_ports = [RESULT]
-
         # this defaults the matrix to be an identity matrix (self excitation)
         if matrix is None:
             if auto is None:
@@ -421,11 +422,11 @@ class KWTAMechanism(RecurrentTransferMechanism):
         self.indexOfInhibitionInputPort = len(self.input_ports) - 1
 
     def _kwta_scale(self, current_input, context=None):
-        k_value = self._get_current_mechanism_param("k_value", context)
-        threshold = self._get_current_mechanism_param("threshold", context)
-        average_based = self._get_current_mechanism_param("average_based", context)
-        ratio = self._get_current_mechanism_param("ratio", context)
-        inhibition_only = self._get_current_mechanism_param("inhibition_only", context)
+        k_value = self._get_current_parameter_value(self.parameters.k_value, context)
+        threshold = self._get_current_parameter_value(self.parameters.threshold, context)
+        average_based = self._get_current_parameter_value(self.parameters.average_based, context)
+        ratio = self._get_current_parameter_value(self.parameters.ratio, context)
+        inhibition_only = self._get_current_parameter_value(self.parameters.inhibition_only, context)
 
         try:
             int_k_value = int(k_value[0])
@@ -479,7 +480,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
 
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if RATIO in target_set:
+        if RATIO in target_set and target_set[RATIO] is not None:
             ratio_param = target_set[RATIO]
             if not isinstance(ratio_param, numbers.Real):
                 if not (isinstance(ratio_param, (np.ndarray, list)) and len(ratio_param) == 1):
@@ -488,12 +489,12 @@ class KWTAMechanism(RecurrentTransferMechanism):
             if ratio_param > 1 or ratio_param < 0:
                 raise KWTAError("ratio parameter ({}) for {} must be between 0 and 1".format(ratio_param, self))
 
-        if K_VALUE in target_set:
+        if K_VALUE in target_set and target_set[K_VALUE] is not None:
             k_param = target_set[K_VALUE]
             if not isinstance(k_param, numbers.Real):
                 if not (isinstance(k_param, (np.ndarray, list)) and len(k_param) == 1):
                     raise KWTAError("k-value parameter ({}) for {} must be a single number".format(k_param, self))
-            if (isinstance(ratio_param, (np.ndarray, list)) and len(ratio_param) == 1):
+            if (isinstance(k_param, (np.ndarray, list)) and len(k_param) == 1):
                 k_num = k_param[0]
             else:
                 k_num = k_param
@@ -508,7 +509,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
                 raise KWTAError("k-value parameter ({}) for {} was larger than the total number of elements.".
                                 format(k_param, self))
 
-        if THRESHOLD in target_set:
+        if THRESHOLD in target_set and target_set[THRESHOLD] is not None:
             threshold_param = target_set[THRESHOLD]
             if not isinstance(threshold_param, numbers.Real):
                 if not (isinstance(threshold_param, (np.ndarray, list)) and len(threshold_param) == 1):

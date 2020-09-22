@@ -23,7 +23,6 @@ Overview
 Functions that return one or more samples from a distribution.
 
 """
-from enum import IntEnum
 
 import numpy as np
 import typecheck as tc
@@ -35,7 +34,7 @@ from psyneulink.core.globals.keywords import \
     EXPONENTIAL_DIST_FUNCTION, GAMMA_DIST_FUNCTION, HIGH, LOW, MULTIPLICATIVE_PARAM, NOISE, NORMAL_DIST_FUNCTION, \
     SCALE, STANDARD_DEVIATION, THRESHOLD, UNIFORM_DIST_FUNCTION, WALD_DIST_FUNCTION
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.utilities import parameter_spec, get_global_seed
+from psyneulink.core.globals.utilities import convert_to_np_array, parameter_spec, get_global_seed
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
 from psyneulink.core.globals.parameters import Parameter
@@ -154,12 +153,12 @@ class NormalDist(DistributionFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 mean=0.0,
-                 standard_deviation=1.0,
+                 mean=None,
+                 standard_deviation=None,
                  params=None,
                  owner=None,
                  seed=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if seed is None:
             seed = get_global_seed()
@@ -179,7 +178,7 @@ class NormalDist(DistributionFunction):
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
 
-        if STANDARD_DEVIATION in target_set:
+        if STANDARD_DEVIATION in target_set and target_set[STANDARD_DEVIATION] is not None:
             if target_set[STANDARD_DEVIATION] < 0.0:
                 raise FunctionError("The standard_deviation parameter ({}) of {} must be greater than zero.".
                                     format(target_set[STANDARD_DEVIATION], self.name))
@@ -189,9 +188,9 @@ class NormalDist(DistributionFunction):
                  context=None,
                  params=None,
                  ):
-        mean = self._get_current_function_param(DIST_MEAN, context)
-        standard_deviation = self._get_current_function_param(STANDARD_DEVIATION, context)
-        random_state = self._get_current_function_param("random_state", context)
+        mean = self._get_current_parameter_value(DIST_MEAN, context)
+        standard_deviation = self._get_current_parameter_value(STANDARD_DEVIATION, context)
+        random_state = self._get_current_parameter_value("random_state", context)
 
         result = random_state.normal(mean, standard_deviation)
 
@@ -340,12 +339,12 @@ class UniformToNormalDist(DistributionFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 mean=0.0,
-                 standard_deviation=1.0,
+                 mean=None,
+                 standard_deviation=None,
                  params=None,
                  owner=None,
                  seed=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if seed is None:
             seed = get_global_seed()
@@ -373,9 +372,9 @@ class UniformToNormalDist(DistributionFunction):
         except:
             raise FunctionError("The UniformToNormalDist function requires the SciPy package.")
 
-        mean = self._get_current_function_param(DIST_MEAN, context)
-        standard_deviation = self._get_current_function_param(STANDARD_DEVIATION, context)
-        random_state = self._get_current_function_param('random_state', context)
+        mean = self._get_current_parameter_value(DIST_MEAN, context)
+        standard_deviation = self._get_current_parameter_value(STANDARD_DEVIATION, context)
+        random_state = self._get_current_parameter_value('random_state', context)
 
         sample = random_state.rand(1)[0]
         result = ((np.sqrt(2) * erfinv(2 * sample - 1)) * standard_deviation) + mean
@@ -470,11 +469,11 @@ class ExponentialDist(DistributionFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 beta=1.0,
+                 beta=None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if seed is None:
             seed = get_global_seed()
@@ -495,8 +494,8 @@ class ExponentialDist(DistributionFunction):
                  context=None,
                  params=None,
                  ):
-        random_state = self._get_current_function_param('random_state', context)
-        beta = self._get_current_function_param(BETA, context)
+        random_state = self._get_current_parameter_value('random_state', context)
+        beta = self._get_current_parameter_value(BETA, context)
 
         result = random_state.exponential(beta)
 
@@ -599,12 +598,12 @@ class UniformDist(DistributionFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 low=0.0,
-                 high=1.0,
+                 low=None,
+                 high=None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if seed is None:
             seed = get_global_seed()
@@ -627,9 +626,9 @@ class UniformDist(DistributionFunction):
                  params=None,
                  ):
 
-        random_state = self._get_current_function_param('random_state', context)
-        low = self._get_current_function_param(LOW, context)
-        high = self._get_current_function_param(HIGH, context)
+        random_state = self._get_current_parameter_value('random_state', context)
+        low = self._get_current_parameter_value(LOW, context)
+        high = self._get_current_parameter_value(HIGH, context)
         result = random_state.uniform(low, high)
 
         return self.convert_output_type(result)
@@ -738,12 +737,12 @@ class GammaDist(DistributionFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 scale=1.0,
-                 dist_shape=1.0,
+                 scale=None,
+                 dist_shape=None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         if seed is None:
             seed = get_global_seed()
 
@@ -764,9 +763,9 @@ class GammaDist(DistributionFunction):
                  params=None,
                  ):
 
-        random_state = self._get_current_function_param('random_state', context)
-        scale = self._get_current_function_param(SCALE, context)
-        dist_shape = self._get_current_function_param(DIST_SHAPE, context)
+        random_state = self._get_current_parameter_value('random_state', context)
+        scale = self._get_current_parameter_value(SCALE, context)
+        dist_shape = self._get_current_parameter_value(DIST_SHAPE, context)
 
         result = random_state.gamma(dist_shape, scale)
 
@@ -874,12 +873,12 @@ class WaldDist(DistributionFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 scale=1.0,
-                 mean=1.0,
+                 scale=None,
+                 mean=None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
         if seed is None:
             seed = get_global_seed()
 
@@ -900,9 +899,9 @@ class WaldDist(DistributionFunction):
                  params=None,
                  ):
 
-        random_state = self._get_current_function_param('random_state', context)
-        scale = self._get_current_function_param(SCALE, context)
-        mean = self._get_current_function_param(DIST_MEAN, context)
+        random_state = self._get_current_parameter_value('random_state', context)
+        scale = self._get_current_parameter_value(SCALE, context)
+        mean = self._get_current_parameter_value(DIST_MEAN, context)
 
         result = random_state.wald(mean, scale)
 
@@ -1098,7 +1097,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         starting_point = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         threshold = Parameter(1.0, modulable=True)
         noise = Parameter(0.5, modulable=True)
-        t0 = .200
+        t0 = Parameter(.200, modulable=True)
         bias = Parameter(0.5, read_only=True, getter=_DriftDiffusionAnalytical_bias_getter)
         # this is read only because conversion is disabled for this function
         # this occurs in other places as well
@@ -1113,14 +1112,14 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 drift_rate: parameter_spec = 1.0,
-                 starting_point: parameter_spec = 0.0,
-                 threshold: parameter_spec = 1.0,
-                 noise: parameter_spec = 0.5,
-                 t0: parameter_spec = .200,
+                 drift_rate: tc.optional(parameter_spec) = None,
+                 starting_point: tc.optional(parameter_spec) = None,
+                 threshold: tc.optional(parameter_spec) = None,
+                 noise: tc.optional(parameter_spec) = None,
+                 t0: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  shenhav_et_al_compat_mode=False):
 
         self._shenhav_et_al_compat_mode = shenhav_et_al_compat_mode
@@ -1205,13 +1204,13 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
         """
 
-        attentional_drift_rate = float(self._get_current_function_param(DRIFT_RATE, context))
+        attentional_drift_rate = float(self._get_current_parameter_value(DRIFT_RATE, context))
         stimulus_drift_rate = float(variable)
         drift_rate = attentional_drift_rate * stimulus_drift_rate
-        threshold = self._get_current_function_param(THRESHOLD, context)
-        starting_point = float(self._get_current_function_param(STARTING_POINT, context))
-        noise = float(self._get_current_function_param(NOISE, context))
-        t0 = float(self._get_current_function_param(NON_DECISION_TIME, context))
+        threshold = self._get_current_parameter_value(THRESHOLD, context)
+        starting_point = float(self._get_current_parameter_value(STARTING_POINT, context))
+        noise = float(self._get_current_parameter_value(NOISE, context))
+        t0 = float(self._get_current_parameter_value(NON_DECISION_TIME, context))
 
         # drift_rate = float(self.drift_rate) * float(variable)
         # threshold = float(self.threshold)
@@ -1265,9 +1264,15 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                     exp_neg2_ztilde_atilde = np.exp(-2 * ztilde * atilde)
 
                     if self.shenhav_et_al_compat_mode:
-                        exp_neg2_x0tilde_atilde = np.nanmax([1e-12, exp_neg2_x0tilde_atilde])
-                        exp_2_ztilde_atilde = np.nanmin([1e12, exp_2_ztilde_atilde])
-                        exp_neg2_ztilde_atilde = np.nanmax([1e-12, exp_neg2_ztilde_atilde])
+                        exp_neg2_x0tilde_atilde = np.nanmax(
+                            convert_to_np_array([1e-12, exp_neg2_x0tilde_atilde])
+                        )
+                        exp_2_ztilde_atilde = np.nanmin(
+                            convert_to_np_array([1e12, exp_2_ztilde_atilde])
+                        )
+                        exp_neg2_ztilde_atilde = np.nanmax(
+                            convert_to_np_array([1e-12, exp_neg2_ztilde_atilde])
+                        )
 
                     rt = ztilde * np.tanh(ztilde * atilde) + \
                          ((2 * ztilde * (1 - exp_neg2_x0tilde_atilde)) / (
@@ -1694,9 +1699,9 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
             <DriftDiffusionAnalytical.drift_rate>`.
 
         """
-        Z = output or self._get_current_function_param(THRESHOLD, context)
-        A = input or self._get_current_function_param(DRIFT_RATE, context)
-        c = self._get_current_function_param(NOISE, context)
+        Z = output or self._get_current_parameter_value(THRESHOLD, context)
+        A = input or self._get_current_parameter_value(DRIFT_RATE, context)
+        c = self._get_current_parameter_value(NOISE, context)
         c_sq = c ** 2
         E = np.exp(-2 * Z * A / c_sq)
         D_iti = 0

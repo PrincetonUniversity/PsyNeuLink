@@ -143,7 +143,7 @@ class TestControlSpecification:
 
         comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
 
-        ### add the controller to the Composition before adding the relevant Mechanisms
+        # add the controller to the Composition before adding the relevant Mechanisms
         comp.add_controller(controller=pnl.OptimizationControlMechanism(
                 agent_rep=comp,
                 features=[Input.input_port, reward.input_port],
@@ -365,7 +365,7 @@ class TestControlSpecification:
         comp.add_controller(new_ocm)
 
         assert comp.controller == new_ocm
-        assert old_ocm.composition == None
+        assert old_ocm.composition is None
         assert not any(pnl.SLOPE in p_name for p_name in comp.projections.names)
         assert any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
 
@@ -627,7 +627,9 @@ class TestControlMechanisms:
         )
         results = ocomp.run([5], bin_execute=mode)
         assert np.allclose(results, [[50]])
-        benchmark(ocomp.run, [5], bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(ocomp.run, [5], bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -692,7 +694,9 @@ class TestControlMechanisms:
         )
         results = ocomp.run([5], bin_execute=mode)
         assert np.allclose(results, [[70]])
-        benchmark(ocomp.run, [5], bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(ocomp.run, [5], bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -757,7 +761,9 @@ class TestControlMechanisms:
         )
         results = ocomp.run([5], bin_execute=mode)
         assert np.allclose(results, [[5]])
-        benchmark(ocomp.run, [5], bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(ocomp.run, [5], bin_execute=mode)
 
     def test_two_tier_ocm(self):
         integrationConstant = 0.8  # Time Constant
@@ -989,7 +995,9 @@ class TestControlMechanisms:
         assert oComp.controller == oController
         res = oComp.run(inputs=[5], bin_execute=mode)
         assert np.allclose(res, [40])
-        benchmark(oComp.run, [5], bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(oComp.run, [5], bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1014,11 +1022,11 @@ class TestControlMechanisms:
                                             initial_value=np.array([[0.0, 0.0]]),
                                             output_ports=[pnl.RESULT],
                                             name='rtm')
-    
+
         controller = pnl.ControlMechanism(
             monitor_for_control=monitor,
             control_signals=[(pnl.NOISE, rtm)])
-        
+
         comp = pnl.Composition()
         roles = [pnl.NodeRole.INPUT, pnl.NodeRole.OUTPUT]
         comp.add_node(monitor, required_roles=roles)
@@ -1039,7 +1047,6 @@ class TestControlMechanisms:
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_control_of_mech_port(self, mode):
@@ -1604,7 +1611,6 @@ class TestModelBasedOptimizationControlMechanisms:
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_model_based_ocm_after(self, benchmark, mode):
@@ -1641,7 +1647,9 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
         assert np.allclose(comp.results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
-        benchmark(comp.run, inputs, bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(comp.run, inputs, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1651,7 +1659,6 @@ class TestModelBasedOptimizationControlMechanisms:
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                       pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     def test_model_based_ocm_before(self, benchmark, mode):
@@ -1688,7 +1695,9 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
         assert np.allclose(comp.results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
-        benchmark(comp.run, inputs, bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(comp.run, inputs, bin_execute=mode)
 
     def test_model_based_ocm_with_buffer(self):
 
@@ -2043,11 +2052,12 @@ class TestModelBasedOptimizationControlMechanisms:
             assert np.allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
                                log_arr['outer_comp']['mod_slope'])
 
-        # Disable logging for the benchmark run
-        A.log.set_log_conditions(items="mod_slope", log_condition=LogCondition.OFF)
-        A.log.clear_entries()
-        benchmark(comp.run, inputs=inputs, num_trials=10, context='bench_outer_comp', bin_execute=mode)
-        assert len(A.log.get_logged_entries()) == 0
+        if benchmark.enabled:
+            # Disable logging for the benchmark run
+            A.log.set_log_conditions(items="mod_slope", log_condition=LogCondition.OFF)
+            A.log.clear_entries()
+            benchmark(comp.run, inputs=inputs, num_trials=10, context='bench_outer_comp', bin_execute=mode)
+            assert len(A.log.get_logged_entries()) == 0
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2210,4 +2220,3 @@ class TestSampleIterator:
         assert sample_iterator.start == 1
         assert sample_iterator.stop is None
         assert sample_iterator.num == len(sample_list)
-

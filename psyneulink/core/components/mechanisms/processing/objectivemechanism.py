@@ -363,10 +363,8 @@ Class Reference
 
 """
 
-import itertools
 import warnings
 import typecheck as tc
-import numpy as np
 
 from collections.abc import Iterable
 from collections import namedtuple
@@ -567,7 +565,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
                  monitor=None,
                  default_variable=None,
                  size=None,
-                 function=LinearCombination,
+                 function=None,
                  output_ports:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,

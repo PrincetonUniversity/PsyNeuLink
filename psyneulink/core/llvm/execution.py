@@ -15,6 +15,7 @@ import copy
 import ctypes
 import numpy as np
 from inspect import isgenerator
+import itertools
 import sys
 
 
@@ -151,9 +152,9 @@ class CUDAExecution:
 
 class FuncExecution(CUDAExecution):
 
-    def __init__(self, component, execution_ids=[None]):
+    def __init__(self, component, execution_ids=[None], *, tags=frozenset()):
         super().__init__()
-        self._bin_func = pnlvm.LLVMBinaryFunction.from_obj(component)
+        self._bin_func = pnlvm.LLVMBinaryFunction.from_obj(component, tags=tags)
         self._execution_contexts = [
             Context(execution_id=eid) for eid in execution_ids
         ]
@@ -240,7 +241,7 @@ class MechExecution(FuncExecution):
 
 class CompExecution(CUDAExecution):
 
-    def __init__(self, composition, execution_ids=[None], additional_tags=frozenset()):
+    def __init__(self, composition, execution_ids=[None], *, additional_tags=frozenset()):
         super().__init__(buffers=['state_struct', 'param_struct', 'data_struct', 'conditions'])
         self._composition = composition
         self._execution_contexts = [
@@ -540,7 +541,7 @@ class CompExecution(CUDAExecution):
 
         assert len(inputs) == len(self._execution_contexts)
         # Extract input for each trial and execution id
-        run_inputs = ((([x] for x in self._composition._build_variable_for_input_CIM({m:inp[m][i] for m in inp.keys()})) for i in range(num_input_sets)) for inp in inputs)
+        run_inputs = ((([x] for x in self._composition._build_variable_for_input_CIM({k:v[i] for k,v in inp.items()})) for i in range(num_input_sets)) for inp in inputs)
         return c_input(*_tupleize(run_inputs))
 
     def _get_generator_run_input_struct(self, inputs, runs):
@@ -624,34 +625,29 @@ class CompExecution(CUDAExecution):
         ocm = self._composition.controller
         assert len(self._execution_contexts) == 1
         context = self._execution_contexts[0]
-        import itertools
 
         bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset({"evaluate"}))
         self.__bin_func = bin_func
-        assert len(bin_func.byref_arg_types) == 8
+        assert len(bin_func.byref_arg_types) == 6
 
-        # There are 8 arguments to evaluate:
-        # param, state, allocations, results, output, input, comp_params, comp_state, comp_data
+        # There are 6 arguments to evaluate:
+        # comp_param, comp_state, allocations, results, output, input, comp_data
         # all but #2 and #3 are shared
-        ct_param = bin_func.byref_arg_types[0](*ocm._get_evaluate_param_initializer(context))
-        ct_state = bin_func.byref_arg_types[1](*ocm._get_evaluate_state_initializer(context))
+        ct_comp_param = bin_func.byref_arg_types[0](*ocm.agent_rep._get_param_initializer(context))
+        ct_comp_state = bin_func.byref_arg_types[1](*ocm.agent_rep._get_state_initializer(context))
         # Make sure the dtype matches _gen_llvm_evaluate_function
         allocations = np.asfarray(np.atleast_2d([*itertools.product(*search_space)]))
         ct_allocations = allocations.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[2] * len(allocations)))
         out_ty = bin_func.byref_arg_types[3] * len(allocations)
         ct_in = variable.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[4]))
 
-        ct_comp_param = bin_func.byref_arg_types[5](*ocm.agent_rep._get_param_initializer(context))
-        ct_comp_state = bin_func.byref_arg_types[6](*ocm.agent_rep._get_state_initializer(context))
-        ct_comp_data = bin_func.byref_arg_types[7](*ocm.agent_rep._get_data_initializer(context))
+        ct_comp_data = bin_func.byref_arg_types[5](*ocm.agent_rep._get_data_initializer(context))
 
-        cuda_args = (self.upload_ctype(ct_param, 'params'),
-                     self.upload_ctype(ct_state, 'state'),
+        cuda_args = (self.upload_ctype(ct_comp_param, 'params'),
+                     self.upload_ctype(ct_comp_state, 'state'),
                      self.upload_ctype(ct_allocations.contents, 'input'),
                      jit_engine.pycuda.driver.mem_alloc(ctypes.sizeof(out_ty)),
                      self.upload_ctype(ct_in.contents, 'input'),
-                     self.upload_ctype(ct_comp_param, 'params'),
-                     self.upload_ctype(ct_comp_state, 'state'),
                      self.upload_ctype(ct_comp_data, 'data'),
                     )
 

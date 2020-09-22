@@ -669,9 +669,9 @@ class LCControlMechanism(ControlMechanism):
                  default_variable=None,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputPort))=None,
-                 # modulated_mechanisms:tc.optional(tc.any(list,str)) = None,
+                 # modulated_mechanisms:tc.optional(tc.optional(tc.any(list,str))) = None,
                  modulated_mechanisms=None,
-                 modulation:tc.optional(str)=MULTIPLICATIVE,
+                 modulation:tc.optional(str)=None,
                  integration_method="RK4",
                  initial_w_FitzHughNagumo=0.0,
                  initial_v_FitzHughNagumo=0.0,
@@ -691,8 +691,8 @@ class LCControlMechanism(ControlMechanism):
                  time_constant_w_FitzHughNagumo=12.5,
                  mode_FitzHughNagumo=1.0,
                  uncorrelated_activity_FitzHughNagumo=0.0,
-                 base_level_gain=0.5,
-                 scaling_factor_gain=3.0,
+                 base_level_gain=None,
+                 scaling_factor_gain=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None
@@ -836,9 +836,9 @@ class LCControlMechanism(ControlMechanism):
 
         return gain_t, output_values[0], output_values[1], output_values[2]
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, *, tags:frozenset):
         assert function is self.function
-        mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable)
+        mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable, tags=tags)
 
         # prepend gain type (matches output[1] type)
         gain_ty = mf_out.type.pointee.elements[1]
@@ -923,7 +923,7 @@ class LCControlMechanism(ControlMechanism):
         """
 
         for mech in mechanisms:
-            if not mech in self.modulated_mechanisms:
+            if mech not in self.modulated_mechanisms:
                 continue
 
             parameter_port = mech._parameter_ports[mech.multiplicative_param]
@@ -967,14 +967,14 @@ class LCControlMechanism(ControlMechanism):
                     weight = self.monitored_output_ports_weights_and_exponents[monitored_port_index][0]
                     exponent = self.monitored_output_ports_weights_and_exponents[monitored_port_index][1]
 
-                    print ("\t\t{0}: {1} (exp: {2}; wt: {3})".
-                           format(monitored_port_Mech.name, monitored_port.name, weight, exponent))
+                    print("\t\t{0}: {1} (exp: {2}; wt: {3})".
+                          format(monitored_port_Mech.name, monitored_port.name, weight, exponent))
 
-        print ("\n\tModulating the following parameters:".format(self.name))
+        print("\n\tModulating the following parameters:".format(self.name))
         # Sort for consistency of output:
         port_Names_sorted = sorted(self.output_ports.names)
         for port_Name in port_Names_sorted:
             for projection in self.output_ports[port_Name].efferents:
-                print ("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
+                print("\t\t{0}: {1}".format(projection.receiver.owner.name, projection.receiver.name))
 
-        print ("\n---------------------------------------------------------")
+        print("\n---------------------------------------------------------")

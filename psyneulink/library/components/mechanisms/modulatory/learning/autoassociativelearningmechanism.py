@@ -315,19 +315,18 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
             read_only=True,
             structural=True,
         )
+        learning_type = LearningType.UNSUPERVISED
+        learning_timing = LearningTiming.EXECUTION_PHASE
 
     classPreferenceLevel = PreferenceLevel.TYPE
-
-    learning_type = LearningType.UNSUPERVISED
-    learning_timing = LearningTiming.EXECUTION_PHASE
 
     @tc.typecheck
     def __init__(self,
                  default_variable:tc.any(list, np.ndarray),
                  size=None,
-                 function:is_function_type=Hebbian,
-                 learning_signals:tc.optional(list) = None,
-                 modulation:tc.optional(str)=ADDITIVE,
+                 function: tc.optional(is_function_type) = None,
+                 learning_signals:tc.optional(tc.optional(list)) = None,
+                 modulation:tc.optional(str)=None,
                  learning_rate:tc.optional(parameter_spec)=None,
                  params=None,
                  name=None,

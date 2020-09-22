@@ -352,7 +352,6 @@ class SampleIterator(Iterator):
                 self.generator = None                    # ??
 
                 def generate_current_value():   # return next value in range
-                    from decimal import Decimal, getcontext
                     # Save global precision for later restoration
                     _global_precision = getcontext().prec
                     # Set SampleSpec precision

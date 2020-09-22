@@ -43,7 +43,7 @@ from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EXPONENTS, LINEAR_COMBINATION_FUNCTION, MULTIPLICATIVE_PARAM, OFFSET, OPERATION, \
     PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
     PREFERENCE_SET_NAME
-from psyneulink.core.globals.utilities import is_numeric, np_array_less_than_2d, parameter_spec
+from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, np_array_less_than_2d, parameter_spec
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import \
@@ -197,11 +197,11 @@ class Concatenate(CombinationFunction):  # -------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 scale: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -271,8 +271,8 @@ class Concatenate(CombinationFunction):  # -------------------------------------
             in an array that is one dimension less than `variable <Concatenate.variable>`.
 
         """
-        scale = self._get_current_function_param(SCALE, context)
-        offset = self._get_current_function_param(OFFSET, context)
+        scale = self._get_current_parameter_value(SCALE, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
 
         result = np.hstack(variable) * scale + offset
 
@@ -416,12 +416,12 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 scale: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  arrangement:tc.optional(tc.any(int, tuple, list))=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -537,8 +537,8 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
         """
         variable = np.atleast_2d(variable)
 
-        scale = self._get_current_function_param(SCALE, context)
-        offset = self._get_current_function_param(OFFSET, context)
+        scale = self._get_current_parameter_value(SCALE, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
         arrangement = self.parameters.arrangement.get(context)
 
         if arrangement is None:
@@ -552,7 +552,7 @@ class Rearrange(CombinationFunction):  # ---------------------------------------
                     for index in item:
                         stack.append(variable[index])
                     result.append(np.hstack(tuple(stack)))
-                result = np.array(result) * scale + offset
+                result = convert_to_np_array(result) * scale + offset
             except IndexError:
                 assert False, f"PROGRAM ERROR: Bad index specified in {repr(ARRANGEMENT)} arg -- " \
                     f"should have been caught in _validate_params or _instantiate_attributes_before_function"
@@ -716,12 +716,12 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                  weights=None,
                  exponents=None,
                  default_variable=None,
-                 operation: tc.enum(SUM, PRODUCT) = SUM,
-                 scale: parameter_spec = 1.0,
-                 offset: parameter_spec = 0.0,
+                 operation: tc.optional(tc.enum(SUM, PRODUCT)) = None,
+                 scale: tc.optional(parameter_spec) = None,
+                 offset: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -820,11 +820,11 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
 
         """
-        weights = self._get_current_function_param(WEIGHTS, context)
-        exponents = self._get_current_function_param(EXPONENTS, context)
-        operation = self._get_current_function_param(OPERATION, context)
-        scale = self._get_current_function_param(SCALE, context)
-        offset = self._get_current_function_param(OFFSET, context)
+        weights = self._get_current_parameter_value(WEIGHTS, context)
+        exponents = self._get_current_parameter_value(EXPONENTS, context)
+        operation = self._get_current_parameter_value(OPERATION, context)
+        scale = self._get_current_parameter_value(SCALE, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
 
         # FIX FOR EFFICIENCY: CHANGE THIS AND WEIGHTS TO TRY/EXCEPT // OR IS IT EVEN NECESSARY, GIVEN VALIDATION ABOVE??
         # Apply exponents if they were specified
@@ -854,7 +854,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
             result = np.product(np.atleast_2d(variable), axis=1) * scale + offset
         else:
             raise FunctionError("Unrecognized operator ({0}) for Reduce function".
-                                format(self._get_current_function_param(OPERATION, context)))
+                                format(self._get_current_parameter_value(OPERATION, context)))
 
         return self.convert_output_type(result)
 
@@ -1151,12 +1151,12 @@ class LinearCombination(
                  # exponents: tc.optional(parameter_spec)=None,
                  weights=None,
                  exponents=None,
-                 operation: tc.enum(SUM, PRODUCT) = SUM,
+                 operation: tc.optional(tc.enum(SUM, PRODUCT)) = None,
                  scale=None,
                  offset=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1305,16 +1305,16 @@ class LinearCombination(
             the result of linearly combining the arrays in `variable <LinearCombination.variable>`.
 
         """
-        weights = self._get_current_function_param(WEIGHTS, context)
-        exponents = self._get_current_function_param(EXPONENTS, context)
+        weights = self._get_current_parameter_value(WEIGHTS, context)
+        exponents = self._get_current_parameter_value(EXPONENTS, context)
         # if self.initialization_status == ContextFlags.INITIALIZED:
         #     if weights is not None and weights.shape != variable.shape:
         #         weights = weights.reshape(variable.shape)
         #     if exponents is not None and exponents.shape != variable.shape:
         #         exponents = exponents.reshape(variable.shape)
-        operation = self._get_current_function_param(OPERATION, context)
-        scale = self._get_current_function_param(SCALE, context)
-        offset = self._get_current_function_param(OFFSET, context)
+        operation = self._get_current_parameter_value(OPERATION, context)
+        scale = self._get_current_parameter_value(SCALE, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
 
         # QUESTION:  WHICH IS LESS EFFICIENT:
         #                A) UNECESSARY ARITHMETIC OPERATIONS IF SCALE AND/OR OFFSET ARE 1.0 AND 0, RESPECTIVELY?
@@ -1675,12 +1675,12 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
                  # exponents:tc.optional(parameter_spec)=None,
                  weights=None,
                  exponents=None,
-                 operation: tc.enum(SUM, PRODUCT) = SUM,
+                 operation: tc.optional(tc.enum(SUM, PRODUCT)) = None,
                  scale=None,
                  offset=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1808,11 +1808,11 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
             the result of taking the means of each array in `variable <CombineMeans.variable>` and combining them.
 
         """
-        exponents = self._get_current_function_param(EXPONENTS, context)
-        weights = self._get_current_function_param(WEIGHTS, context)
-        operation = self._get_current_function_param(OPERATION, context)
-        offset = self._get_current_function_param(OFFSET, context)
-        scale = self._get_current_function_param(SCALE, context)
+        exponents = self._get_current_parameter_value(EXPONENTS, context)
+        weights = self._get_current_parameter_value(WEIGHTS, context)
+        operation = self._get_current_parameter_value(OPERATION, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
+        scale = self._get_current_parameter_value(SCALE, context)
 
         # QUESTION:  WHICH IS LESS EFFICIENT:
         #                A) UNECESSARY ARITHMETIC OPERATIONS IF SCALE AND/OR OFFSET ARE 1.0 AND 0, RESPECTIVELY?
@@ -1859,7 +1859,7 @@ class CombineMeans(CombinationFunction):  # ------------------------------------
 
         else:
             raise FunctionError("Unrecognized operator ({0}) for CombineMeans function".
-                                format(self._get_current_function_param(OPERATION, context)))
+                                format(self._get_current_parameter_value(OPERATION, context)))
 
         return self.convert_output_type(result)
 
@@ -1930,10 +1930,10 @@ class PredictionErrorDeltaFunction(CombinationFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 gamma: tc.optional(float) = 1.0,
+                 gamma: tc.optional(tc.optional(float)) = None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         super().__init__(
             default_variable=default_variable,
@@ -1942,8 +1942,6 @@ class PredictionErrorDeltaFunction(CombinationFunction):
             owner=owner,
             prefs=prefs,
         )
-
-        self.gamma = gamma
 
     def _validate_variable(self, variable, context=None):
         """
@@ -2045,7 +2043,7 @@ class PredictionErrorDeltaFunction(CombinationFunction):
         delta values : 1d np.array
 
         """
-        gamma = self._get_current_function_param(GAMMA, context)
+        gamma = self._get_current_parameter_value(GAMMA, context)
         sample = variable[0]
         reward = variable[1]
         delta = np.zeros(sample.shape)

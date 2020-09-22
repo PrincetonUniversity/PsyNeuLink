@@ -9,7 +9,7 @@
 # ********************************************* LLVM IR Generation **************************************************************
 import ast
 import warnings
-
+import numpy as np
 
 from llvmlite import ir
 from contextlib import contextmanager
@@ -21,6 +21,430 @@ from psyneulink.core.scheduling.time import TimeScale
 from . import helpers
 from .debug import debug_env
 
+class UserDefinedFunctionVisitor(ast.NodeVisitor):
+    def __init__(self, ctx, builder, func_globals, func_params, arg_in, arg_out):
+        self.ctx = ctx
+        self.builder = builder
+        self.func_params = func_params
+        self.arg_in = arg_in
+        self.arg_out = arg_out
+        self.register = {}
+
+        #setup default functions
+        def _vec_sum(x):
+            dim = len(x.type.pointee)
+            output_scalar = builder.alloca(ctx.float_ty)
+            # Get the pointer to the first element of the array to convert from [? x double]* -> double*
+            vec_u = builder.gep(x, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.call(ctx.import_llvm_function("__pnl_builtin_vec_sum"), [vec_u, ctx.int32_ty(dim), output_scalar])
+            return output_scalar
+
+        def _tanh(x):
+            output_ptr = builder.alloca(x.type.pointee)
+            helpers.call_elementwise_operation(self.ctx, self.builder, x, helpers.tanh, output_ptr)
+            return output_ptr
+
+        def _exp(x):
+            output_ptr = builder.alloca(x.type.pointee)
+            helpers.call_elementwise_operation(self.ctx, self.builder, x, helpers.exp, output_ptr)
+            return output_ptr
+
+        self.register['sum'] = _vec_sum
+
+        # setup numpy
+        numpy_handlers = {
+            'tanh': _tanh,
+            'exp': _exp
+        }
+
+        for k, v in func_globals.items():
+            if v is np:
+                self.register[k] = numpy_handlers
+
+        name_constants = {
+            True: ir.IntType(1)(1),
+            False: ir.IntType(1)(0),
+        }
+        self.name_constants = name_constants
+        super().__init__()
+
+    def visit_arguments(self, node):
+        args = node.args
+        variable = args[0]
+        # update register
+        self.register[variable.arg] = self.arg_in
+        parameters = args[1:]
+        for param in parameters:
+            assert param.arg not in ["self", "owner"], f"Unable to reference {param.arg} in a compiled UserDefinedFunction!"
+            if param.arg == 'params':
+                assert False, "Runtime parameters are not supported in compiled mode"
+            elif param.arg == 'context':
+                # Since contexts are implicit in the structs in compiled mode, we do not compile it.
+                pass
+            else:
+                self.register[param.arg] = self.func_params[param.arg]
+
+    def _generate_binop(self, x, y, callback):
+        # unpack scalars from pointers
+        if helpers.is_floating_point(x) and helpers.is_pointer(x):
+            x = self.builder.load(x)
+        if helpers.is_floating_point(y) and helpers.is_pointer(y):
+            y = self.builder.load(y)
+
+        return callback(self.ctx, self.builder, x, y)
+
+    def visit_Add(self, node):
+        def _add_vec(ctx, builder, u, v):
+            assert u.type == v.type
+
+            dim = len(u.type.pointee)
+            output_vec = builder.alloca(u.type.pointee)
+
+            # Get the pointer to the first element of the array to convert from [? x double]* -> double*
+            vec_u = builder.gep(u, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vec_v = builder.gep(v, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vec_out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            builtin = ctx.import_llvm_function("__pnl_builtin_vec_add")
+            builder.call(builtin, [vec_u, vec_v, ctx.int32_ty(dim), vec_out])
+            return output_vec
+
+        def _add_mat(ctx, builder, m1, m2):
+            assert m1.type == m2.type
+
+            x = len(m1.type.pointee)
+            y = len(m1.type.pointee.element)
+
+            output_mat = builder.alloca(m1.type.pointee)
+
+            m1_ptr = builder.gep(m1, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+            m2_ptr = builder.gep(m2, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+            output_ptr = builder.gep(output_mat, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            builtin = ctx.import_llvm_function("__pnl_builtin_mat_add")
+            builder.call(builtin, [m1_ptr, m2_ptr, ctx.int32_ty(x), ctx.int32_ty(y), output_ptr])
+            return output_mat
+
+        def _add_mat_scalar(ctx, builder, m1, s):
+            x = len(m1.type.pointee)
+            y = len(m1.type.pointee.element)
+            output_mat = builder.alloca(m1.type.pointee)
+
+            m1_ptr = builder.gep(m1, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+            output_ptr = builder.gep(output_mat, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            builtin = ctx.import_llvm_function("__pnl_builtin_mat_scalar_add")
+            builder.call(builtin, [m1_ptr, s, ctx.int32_ty(x), ctx.int32_ty(y), output_ptr])
+            return output_mat
+
+        def _add_vec_scalar(ctx, builder, u, s):
+            output_vec = builder.alloca(u.type.pointee)
+
+            helpers.call_elementwise_operation(ctx, builder, u, lambda ctx, builder, x: builder.fadd(x, s), output_vec)
+            return output_vec
+
+        def _add(x, y):
+            if helpers.is_floating_point(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fadd(x,y))
+            elif helpers.is_vector(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, _add_vec_scalar)
+            elif helpers.is_floating_point(x) and helpers.is_vector(y):
+                return self._generate_binop(y, x, _add_vec_scalar)
+            elif helpers.is_2d_matrix(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, _add_mat_scalar)
+            elif helpers.is_floating_point(x) and helpers.is_2d_matrix(y):
+                return self._generate_binop(y, x, _add_mat_scalar)
+            elif helpers.is_vector(x) and helpers.is_vector(y):
+                return self._generate_binop(x, y, _add_vec)
+            elif helpers.is_2d_matrix(x) and helpers.is_2d_matrix(y):
+                return self._generate_binop(x, y, _add_mat)
+
+        return _add
+
+    def visit_Mult(self, node):
+        def _mul_vec(ctx, builder, u, v):
+            assert u.type == v.type
+
+            dim = len(u.type.pointee)
+            output_vec = builder.alloca(u.type.pointee)
+
+            # Get the pointer to the first element of the array to convert from [? x double]* -> double*
+            vec_u = builder.gep(u, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vec_v = builder.gep(v, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vec_out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            builtin = ctx.import_llvm_function("__pnl_builtin_vec_hadamard")
+            builder.call(builtin, [vec_u, vec_v, ctx.int32_ty(dim), vec_out])
+            return output_vec
+
+        def _mul_mat(ctx, builder, m1, m2):
+            assert m1.type == m2.type
+
+            x = len(m1.type.pointee)
+            y = len(m1.type.pointee.element)
+
+            output_mat = builder.alloca(m1.type.pointee)
+
+            m1_ptr = builder.gep(m1, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+            m2_ptr = builder.gep(m2, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+            output_ptr = builder.gep(output_mat, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            builtin = ctx.import_llvm_function("__pnl_builtin_mat_hadamard")
+            builder.call(builtin, [m1_ptr, m2_ptr, ctx.int32_ty(x), ctx.int32_ty(y), output_ptr])
+            return output_mat
+
+        def _mul_mat_scalar(ctx, builder, m1, s):
+            x = len(m1.type.pointee)
+            y = len(m1.type.pointee.element)
+            output_mat = builder.alloca(m1.type.pointee)
+
+            m1_ptr = builder.gep(m1, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+            output_ptr = builder.gep(output_mat, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            builtin = ctx.import_llvm_function("__pnl_builtin_mat_scalar_mult")
+            builder.call(builtin, [m1_ptr, s, ctx.int32_ty(x), ctx.int32_ty(y), output_ptr])
+            return output_mat
+
+        def _mul_vec_scalar(ctx, builder, v, s):
+            x = len(v.type.pointee)
+            output_vec = builder.alloca(v.type.pointee)
+
+            v_ptr = builder.gep(v, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            output_ptr = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            builtin = ctx.import_llvm_function("__pnl_builtin_vec_scalar_mult")
+            builder.call(builtin, [v_ptr, s, ctx.int32_ty(x), output_ptr])
+            return output_vec
+
+        def _mul(x, y):
+            if helpers.is_floating_point(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fmul(x,y))
+            elif helpers.is_vector(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, _mul_vec_scalar)
+            elif helpers.is_floating_point(x) and helpers.is_vector(y):
+                return self._generate_binop(y, x, _mul_vec_scalar)
+            elif helpers.is_2d_matrix(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, _mul_mat_scalar)
+            elif helpers.is_floating_point(x) and helpers.is_2d_matrix(y):
+                return self._generate_binop(y, x, _mul_mat_scalar)
+            elif helpers.is_vector(x) and helpers.is_vector(y):
+                return self._generate_binop(x, y, _mul_vec)
+            elif helpers.is_2d_matrix(x) and helpers.is_2d_matrix(y):
+                return self._generate_binop(x, y, _mul_mat)
+
+        return _mul
+
+    def _generate_unop(self, x, callback):
+        if helpers.is_floating_point(x) and helpers.is_pointer(x):
+            x = self.builder.load(x)
+
+        return callback(self.ctx, self.builder, x)
+
+    def visit_USub(self, node):
+        def _usub_vec_mat(ctx, builder, x):
+            output = builder.alloca(x.type.pointee)
+
+            helpers.call_elementwise_operation(ctx, builder, x, lambda ctx, builder, x: helpers.fneg(builder, x), output)
+            return output
+
+        def _usub(x):
+            if helpers.is_floating_point(x):
+                return self._generate_unop(x, lambda ctx, builder, x: helpers.fneg(builder, x))
+            elif helpers.is_vector(x) or helpers.is_2d_matrix(x):
+                return self._generate_unop(x, _usub_vec_mat)
+
+        return _usub
+
+    def visit_Name(self, node):
+        return self.register[node.id]
+
+    def visit_Attribute(self, node):
+        val = self.visit(node.value)
+        return val[node.attr]
+
+    def visit_Num(self, node):
+        return self.ctx.float_ty(node.n)
+
+    def visit_Assign(self, node):
+        value = self.visit(node.value)
+        def _assign_target(target, value):
+            if isinstance(target, ast.Name):
+                id = target.id
+                self.register[id] = value
+            else:
+                to_store = value
+                if helpers.is_pointer(value):
+                    to_store = builder.load(value)
+
+                target = self.visit(target)
+                self.builder.store(to_store, target)
+
+        for target in node.targets:
+            _assign_target(target, value)
+
+    def visit_NameConstant(self, node):
+        val = self.name_constants[node.value]
+        assert val, f"Failed to convert NameConstant {node.value}"
+        return val
+
+    def visit_Tuple(self, node):
+        elements = [self.visit(element) for element in node.elts]
+
+        elements = [self.builder.load(element) if helpers.is_pointer(element) else element for element in elements]
+
+        element_types = [element.type for element in elements]
+        ret_list = self.builder.alloca(ir.LiteralStructType(element_types))
+
+        for idx, element in enumerate(elements):
+            self.builder.store(element, self.builder.gep(ret_list, [self.ctx.int32_ty(0), self.ctx.int32_ty(idx)]))
+
+        return ret_list
+
+    def visit_BinOp(self, node):
+        operator = self.visit(node.op)
+        return operator(self.visit(node.left), self.visit(node.right))
+
+    def visit_BoolOp(self, node):
+        operator = self.visit(node.op)
+        values = [self.visit(value) for value in node.values]
+        ret_val = values[0]
+        for value in values[1:]:
+            ret_val = operator(ret_val, value)
+        return ret_val
+
+    def visit_UnaryOp(self, node):
+        operator = self.visit(node.op)
+        return operator(self.visit(node.operand))
+
+    def visit_List(self, node):
+        elements = [self.visit(element) for element in node.elts]
+        element_ty = elements[0].type
+        assert all(element.type == element_ty for element in elements), f"Unable to convert {node} into a list! (Elements differ in type!)"
+
+        # dereference pointers
+        if helpers.is_pointer(element_ty):
+            elements = [self.builder.load(element) for element in elements]
+            element_ty = elements[0].type
+
+        ret_list = self.builder.alloca(ir.ArrayType(element_ty, len(elements)))
+
+        for idx, element in enumerate(elements):
+            self.builder.store(element, self.builder.gep(ret_list, [self.ctx.int32_ty(0), self.ctx.int32_ty(idx)]))
+        return ret_list
+
+    def visit_And(self, node):
+        def _and(x, y):
+            assert helpers.is_boolean(x), f"{x} is not a Boolean!"
+            assert helpers.is_boolean(y), f"{y} is not a Boolean!"
+            return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.and_(x, y))
+
+        return _and
+
+    def visit_Or(self, node):
+        def _or(x, y):
+            assert helpers.is_boolean(x), f"{x} is not a Boolean!"
+            assert helpers.is_boolean(y), f"{y} is not a Boolean!"
+            return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.or_(x, y))
+
+        return _or
+
+    def visit_Eq(self, node):
+        def _eq(x, y):
+            assert helpers.is_floating_point(x), f"{x} is not a floating point type!"
+            assert helpers.is_floating_point(y), f"{y} is not a floating point type!"
+            return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fcmp_ordered('==', x, y))
+
+        return _eq
+
+    def visit_NotEq(self, node):
+        def _neq(x, y):
+            assert helpers.is_floating_point(x), f"{x} is not a floating point type!"
+            assert helpers.is_floating_point(y), f"{y} is not a floating point type!"
+            return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fcmp_ordered('!=', x, y))
+
+        return _neq
+
+    def visit_Lt(self, node):
+        def _lt(x, y):
+            assert helpers.is_floating_point(x), f"{x} is not a floating point type!"
+            assert helpers.is_floating_point(y), f"{y} is not a floating point type!"
+            return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fcmp_ordered('<', x, y))
+
+        return _lt
+
+    def visit_LtE(self, node):
+        def _lte(x, y):
+            assert helpers.is_floating_point(x), f"{x} is not a floating point type!"
+            assert helpers.is_floating_point(y), f"{y} is not a floating point type!"
+            return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fcmp_ordered('<=', x, y))
+
+        return _lte
+
+    def visit_Gt(self, node):
+        def _gt(x, y):
+            assert helpers.is_floating_point(x), f"{x} is not a floating point type!"
+            assert helpers.is_floating_point(y), f"{y} is not a floating point type!"
+            return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fcmp_ordered('>', x, y))
+
+        return _gt
+
+    def visit_GtE(self, node):
+        def _gte(x, y):
+            assert helpers.is_floating_point(x), f"{x} is not a floating point type!"
+            assert helpers.is_floating_point(y), f"{y} is not a floating point type!"
+            return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fcmp_ordered('>=', x, y))
+
+        return _gte
+
+    def visit_Compare(self, node):
+        comp_val = self.visit(node.left)
+        comparators = [self.visit(comparator) for comparator in node.comparators]
+        ops = [self.visit(op) for op in node.ops]
+        for comparator, op in zip(comparators, ops):
+            comp_val = op(comp_val, comparator)
+        return comp_val
+
+    def visit_If(self, node):
+        predicate = self.visit(node.test)
+        with self.builder.if_else(predicate) as (then, otherwise):
+            with then:
+                for child in node.body:
+                    self.visit(child)
+            with otherwise:
+                for child in node.orelse:
+                    self.visit(child)
+
+    def visit_Return(self, node):
+        ret_val = self.visit(node.value)
+        arg_out = self.arg_out
+
+        # dereference pointer
+        if helpers.is_pointer(ret_val):
+            ret_val = self.builder.load(ret_val)
+
+        # get position in arg_out if types differ
+        if (helpers.is_scalar(ret_val) or helpers.is_vector(ret_val)) and helpers.is_2d_matrix(arg_out):
+            arg_out = self.builder.gep(arg_out, [self.ctx.int32_ty(0), self.ctx.int32_ty(0)])
+
+        if helpers.is_scalar(ret_val) and helpers.is_vector(arg_out):
+            arg_out = self.builder.gep(arg_out, [self.ctx.int32_ty(0), self.ctx.int32_ty(0)])
+
+        self.builder.store(ret_val, arg_out)
+
+    def visit_Call(self, node):
+        call_func = self.visit(node.func)
+        assert callable(call_func), f"Uncallable function {node.func}!"
+        node_args = [self.visit(arg) for arg in node.args]
+
+        return call_func(*node_args)
+
+    def visit_Subscript(self, node):
+        node_val = self.visit(node.value)
+        node_slice_val = self.visit(node.slice)
+        return self.builder.gep(node_val, [self.ctx.int32_ty(0), node_slice_val])
+
+    def visit_Index(self, node):
+        return self.builder.fptoui(self.visit(node.value), self.ctx.int32_ty)
 
 def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
     assert "node_wrapper" in tags
@@ -44,7 +468,8 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         cond_ty = cond_gen.get_condition_struct_type().as_pointer()
         args.append(cond_ty)
 
-    builder = ctx.create_llvm_function(args, node, "comp_wrap_" + node_function.name)
+    builder = ctx.create_llvm_function(args, node, node_function.name, tags=tags,
+                                       return_type=node_function.type.pointee.return_type)
     llvm_func = builder.function
     for a in llvm_func.args:
         a.attributes.add('nonnull')
@@ -75,7 +500,7 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         node_in = builder.alloca(node_function.args[2].type.pointee)
         incoming_projections = node.afferents
 
-    if "reset" in tags:
+    if "reset" in tags or "is_finished" in tags:
         incoming_projections = []
 
     # Execute all incoming projections
@@ -161,21 +586,27 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         if len(node_function.args) > 4:
             assert node is composition.controller
             call_args += [params, state, data_in]
-        builder.call(node_function, call_args)
+        ret = builder.call(node_function, call_args)
     elif "reset" not in tags:
         # FIXME: reinitialization of compositions is not supported
         # Condition and data structures includes parent first
         nested_idx = ctx.int32_ty(composition._get_node_index(node) + 1)
         node_data = builder.gep(data_in, [zero, nested_idx])
         node_cond = builder.gep(llvm_func.args[5], [zero, nested_idx])
-        builder.call(node_function, [node_state, node_params, node_in,
-                                     node_data, node_cond])
+        ret = builder.call(node_function, [node_state, node_params, node_in,
+                                           node_data, node_cond])
         # Copy output of the nested composition to its output place
         output_idx = node._get_node_index(node.output_CIM)
         result = builder.gep(node_data, [zero, zero, ctx.int32_ty(output_idx)])
         builder.store(builder.load(result), node_out)
+    else:
+        # composition reset
+        ret = None
 
-    builder.ret_void()
+    if ret is None or isinstance(ret.type, ir.VoidType):
+        builder.ret_void()
+    else:
+        builder.ret(ret)
 
     return llvm_func
 
@@ -235,21 +666,29 @@ def _gen_composition_exec_context(ctx, composition, *, tags:frozenset, suffix=""
 def gen_composition_exec(ctx, composition, *, tags:frozenset):
     simulation = "simulation" in tags
     node_tags = tags.union({"node_wrapper"})
-    extra_args = []
 
-    with _gen_composition_exec_context(ctx, composition, tags=tags, extra_args=extra_args) as (builder, data, params, cond_gen):
+    with _gen_composition_exec_context(ctx, composition, tags=tags) as (builder, data, params, cond_gen):
         state, _, comp_in, _, cond = builder.function.args
 
-        # Reset internal clocks of each node
+        nodes_states = helpers.get_param_ptr(builder, composition, state, "nodes")
+
+        num_exec_locs = {}
         for idx, node in enumerate(composition._all_nodes):
-            #FIXME: This skips nested nodes
+            #FIXME: This skips nested compositions
             from psyneulink import Composition
             if isinstance(node, Composition):
                 continue
-            node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-            num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
-            num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.TRIAL.value)])
-            builder.store(ctx.int32_ty(0), num_exec_time_ptr)
+            node_state = builder.gep(nodes_states, [ctx.int32_ty(0),
+                                                    ctx.int32_ty(idx)])
+            num_exec_locs[node] = helpers.get_state_ptr(builder, node,
+                                                        node_state,
+                                                        "num_executions")
+
+        # Reset internal TRIAL clock for each node
+        for time_loc in num_exec_locs.values():
+            num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
+                                                       ctx.int32_ty(TimeScale.TRIAL.value)])
+            builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
 
         # Check if there's anything to reset
         for node in composition._all_nodes:
@@ -287,15 +726,12 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         iter_ptr = builder.alloca(ctx.int32_ty, name="iter_counter")
         builder.store(ctx.int32_ty(0), iter_ptr)
 
-        # Generate pointers to 'is_finished_flags' locations
-        is_finished_flag_locs = {}
-        for idx, node in enumerate(composition.nodes):
-            node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0),
-                                             ctx.int32_ty(idx)])
-            is_finished_flag_ptr = helpers.get_state_ptr(builder, node,
-                                                         node_state,
-                                                         "is_finished_flag")
-            is_finished_flag_locs[node] = is_finished_flag_ptr
+        # Generate pointers to 'is_finished' callbacks
+        is_finished_callbacks = {}
+        for node in composition.nodes:
+            args = [state, params, comp_in, data, output_storage]
+            wrapper = ctx.get_node_wrapper(composition, node)
+            is_finished_callbacks[node] = (wrapper, args)
 
         loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
         builder.branch(loop_condition)
@@ -305,7 +741,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
         run_cond = cond_gen.generate_sched_condition(
             builder, composition.termination_processing[TimeScale.TRIAL],
-            cond, None, is_finished_flag_locs)
+            cond, None, is_finished_callbacks)
         run_cond = builder.not_(run_cond, name="not_run_cond")
 
         loop_body = builder.append_basic_block(name="scheduling_loop_body")
@@ -324,28 +760,28 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                                            name="run_cond_ptr_" + node.name)
             node_cond = cond_gen.generate_sched_condition(
                 builder, composition._get_processing_condition_set(node),
-                cond, node, is_finished_flag_locs)
+                cond, node, is_finished_callbacks)
             ran = cond_gen.generate_ran_this_pass(builder, cond, node)
             node_cond = builder.and_(node_cond, builder.not_(ran),
                                      name="run_cond_" + node.name)
             any_cond = builder.or_(any_cond, node_cond, name="any_ran_cond")
             builder.store(node_cond, run_set_node_ptr)
 
+        # Reset internal TIME_STEP and PASS clock for each node
+        for time_loc in num_exec_locs.values():
+            num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
+                                                       ctx.int32_ty(TimeScale.TIME_STEP.value)])
+            builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+            # FIXME: Move pass reset to actual pass count
+            num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
+                                                       ctx.int32_ty(TimeScale.PASS.value)])
+            builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+
         for idx, node in enumerate(composition.nodes):
-            # Reset node internal clock
-            #FIXME: This skips nested nodes
-            from psyneulink import Composition
-            if not isinstance(node, Composition):
-                node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-                num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
-                num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.TIME_STEP.value)])
-                builder.store(ctx.int32_ty(0), num_exec_time_ptr)
-                # FIXME: Move pass reset to actual pass count
-                num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.PASS.value)])
-                builder.store(ctx.int32_ty(0), num_exec_time_ptr)
 
             run_set_node_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
-            node_cond = builder.load(run_set_node_ptr, name="node_" + node.name + "_should_run")
+            node_cond = builder.load(run_set_node_ptr,
+                                     name="node_" + node.name + "_should_run")
             with builder.if_then(node_cond):
                 node_w = ctx.get_node_wrapper(composition, node)
                 node_f = ctx.import_llvm_function(node_w, tags=node_tags)
@@ -365,7 +801,9 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             run_set_node_ptr = builder.gep(run_set_ptr, [zero, ctx.int32_ty(idx)])
             node_cond = builder.load(run_set_node_ptr, name="node_" + node.name + "_ran")
             with builder.if_then(node_cond):
-                out_ptr = builder.gep(output_storage, [zero, zero, ctx.int32_ty(idx)], name="result_ptr_" + node.name)
+                out_ptr = builder.gep(output_storage, [zero, zero,
+                                                       ctx.int32_ty(idx)],
+                                      name="result_ptr_" + node.name)
                 data_ptr = builder.gep(data, [zero, zero, ctx.int32_ty(idx)],
                                        name="data_result_" + node.name)
                 builder.store(builder.load(out_ptr), data_ptr)
@@ -544,23 +982,6 @@ def gen_multirun_wrapper(ctx, function: ir.Function) -> ir.Function:
     return multirun_f
 
 
-def gen_autodiffcomp_learning_exec(ctx, composition, *, tags:frozenset):
-    composition._build_pytorch_representation(composition.default_execution_id)
-    pytorch_model = composition.parameters.pytorch_representation.get(composition.default_execution_id)
-    with _gen_composition_exec_context(ctx, composition, tags=tags) as (builder, data, params, cond_gen):
-        state, _, comp_in, data, cond, = builder.function.args
-        pytorch_model._gen_llvm_training_function_body(ctx, builder, state,
-                                                       params, data)
-        node_tags = tags.union({"node_wrapper"})
-        # Call output CIM
-        output_cim_w = ctx.get_node_wrapper(composition, composition.output_CIM)
-        output_cim_f = ctx.import_llvm_function(output_cim_w, tags=node_tags)
-        builder.block.name = "invoke_" + output_cim_f.name
-        builder.call(output_cim_f, [state, params, comp_in, data, data])
-
-        return builder.function
-
-
 def gen_autodiffcomp_exec(ctx, composition, *, tags:frozenset):
     """Creates llvm bin execute for autodiffcomp"""
     assert composition.controller is None
@@ -569,8 +990,8 @@ def gen_autodiffcomp_exec(ctx, composition, *, tags:frozenset):
     with _gen_composition_exec_context(ctx, composition, tags=tags) as (builder, data, params, cond_gen):
         state, _, comp_in, _, cond = builder.function.args
 
-        pytorch_forward_func = ctx.import_llvm_function(pytorch_model, tags=tags)
-        builder.call(pytorch_forward_func, [state, params, data])
+        pytorch_func = ctx.import_llvm_function(pytorch_model, tags=tags)
+        builder.call(pytorch_func, [state, params, data])
 
         node_tags = tags.union({"node_wrapper"})
         # Call output CIM

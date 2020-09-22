@@ -114,7 +114,7 @@ from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.globals.keywords import FUNCTION, INPUT_PORTS, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_PORTS, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
+from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.scheduling.time import TimeScale
 
@@ -490,19 +490,20 @@ class LeabraMechanism(ProcessingMechanism_Base):
         quarter_size = 50
 
         network = Parameter(None, getter=_network_getter, setter=_network_setter)
-        training_flag = Parameter(None, setter=_training_flag_setter)
+        training_flag = Parameter(False, setter=_training_flag_setter)
 
     def __init__(self,
                  network=None,
-                 input_size=1,
-                 output_size=1,
-                 hidden_layers=0,
+                 input_size=None,
+                 output_size=None,
+                 hidden_layers=None,
                  hidden_sizes=None,
                  training_flag=None,
-                 quarter_size=50,
+                 quarter_size=None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set = None):
+                 prefs=None
+    ):
         if not leabra_available:
             raise LeabraError('leabra python module is not installed. Please install it from '
                               'https://github.com/benureau/leabra')
@@ -517,14 +518,28 @@ class LeabraMechanism(ProcessingMechanism_Base):
         else:
             if hidden_sizes is None:
                 hidden_sizes = input_size
-            if training_flag is None:
-                training_flag = False
-            network = build_leabra_network(input_size, output_size, hidden_layers, hidden_sizes,
-                                                  training_flag, quarter_size)
+
+            # don't directly assign defaults to their corresponding variable
+            # because that may cause their parameter to be incorrectly assigned
+            # _user_specified=True
+            network = build_leabra_network(
+                input_size if input_size is not None else self.class_defaults.input_size,
+                output_size if output_size is not None else self.class_defaults.output_size,
+                hidden_layers if hidden_layers is not None else self.class_defaults.hidden_layers,
+                hidden_sizes if hidden_sizes is not None else self.class_defaults.hidden_sizes,
+                training_flag if training_flag is not None else self.class_defaults.training_flag,
+                quarter_size if quarter_size is not None else self.class_defaults.quarter_size,
+            )
+
+        size = [
+            input_size if input_size is not None else self.class_defaults.input_size,
+            output_size if output_size is not None else self.class_defaults.output_size
+        ]
 
         super().__init__(
+            # override instantiate_function instead of doing this?
             function=LeabraFunction(network=network),
-            size=[input_size, output_size],
+            size=size,
             network=network,
             input_size=input_size,
             output_size=output_size,

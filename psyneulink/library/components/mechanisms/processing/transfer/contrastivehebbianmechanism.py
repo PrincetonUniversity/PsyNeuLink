@@ -337,13 +337,12 @@ import typecheck as tc
 from psyneulink.core.components.functions.function import get_matrix, is_function_type
 from psyneulink.core.components.functions.learningfunctions import ContrastiveHebbian, Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Distance
-from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_MECHANISM, COUNT, FUNCTION, HARD_CLAMP, HOLLOW_MATRIX, MAX_ABS_DIFF, NAME, \
     SIZE, SOFT_CLAMP, TARGET, VARIABLE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, SharedParameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -926,16 +925,15 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         continuous = Parameter(True, stateful=False, loggable=False)
         clamp = Parameter(HARD_CLAMP, stateful=False, loggable=False)
         combination_function = Parameter(None, stateful=False, loggable=False)
-        phase_convergence_function = Parameter(Distance, stateful=False, pnl_internal=True, loggable=False)
+        phase_convergence_function = Parameter(Distance(metric=MAX_ABS_DIFF), stateful=False, pnl_internal=True, loggable=False)
         phase_convergence_threshold = Parameter(0.01, modulable=True, pnl_internal=True, loggable=False)
 
         minus_phase_termination_condition = Parameter(CONVERGENCE, stateful=False, loggable=False)
         plus_phase_termination_condition = Parameter(CONVERGENCE, stateful=False, loggable=False)
-        learning_function = Parameter(
+        learning_function = SharedParameter(
             ContrastiveHebbian,
-            stateful=False,
-            loggable=False,
-            reference=True
+            attribute_name='learning_mechanism',
+            shared_parameter_name='function',
         )
         max_passes = Parameter(1000, stateful=False)
 
@@ -972,31 +970,31 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
                  input_size:int,
                  hidden_size:tc.optional(int)=None,
                  target_size:tc.optional(int)=None,
-                 separated:bool=True,
+                 separated: tc.optional(bool) = None,
                  mode:tc.optional(tc.enum(SIMPLE_HEBBIAN))=None,
-                 continuous:bool=True,
-                 clamp:tc.enum(SOFT_CLAMP, HARD_CLAMP)=HARD_CLAMP,
+                 continuous: tc.optional(bool) = None,
+                 clamp:tc.optional(tc.enum(SOFT_CLAMP, HARD_CLAMP))=None,
                  combination_function:tc.optional(is_function_type)=None,
-                 function=Linear,
-                 matrix=HOLLOW_MATRIX,
+                 function=None,
+                 matrix=None,
                  auto=None,
                  hetero=None,
                  integrator_function=None,
                  initial_value=None,
-                 noise=0.0,
-                 integration_rate: is_numeric_or_none=0.5,
-                 integrator_mode:bool=False,
+                 noise=None,
+                 integration_rate: is_numeric_or_none=None,
+                 integrator_mode: tc.optional(bool) = None,
                  clip=None,
-                 minus_phase_termination_condition:tc.enum(CONVERGENCE, COUNT)=CONVERGENCE,
-                 minus_phase_termination_threshold:float=0.01,
-                 plus_phase_termination_condition:tc.enum(CONVERGENCE, COUNT)=CONVERGENCE,
-                 plus_phase_termination_threshold:float=0.01,
-                 phase_convergence_function:tc.any(is_function_type)=Distance(metric=MAX_ABS_DIFF),
-                 max_passes:tc.optional(int)=1000,
-                 enable_learning:bool=False,
+                 minus_phase_termination_condition:tc.optional(tc.enum(CONVERGENCE, COUNT))=None,
+                 minus_phase_termination_threshold: tc.optional(float) = None,
+                 plus_phase_termination_condition:tc.optional(tc.enum(CONVERGENCE, COUNT))=None,
+                 plus_phase_termination_threshold: tc.optional(float) = None,
+                 phase_convergence_function: tc.optional(tc.any(is_function_type)) = None,
+                 max_passes:tc.optional(int)=None,
+                 enable_learning: tc.optional(bool) = None,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
-                 learning_function: tc.any(is_function_type) = ContrastiveHebbian,
-                 additional_input_ports:tc.optional(tc.any(list, dict)) = None,
+                 learning_function: tc.optional(tc.any(is_function_type)) = None,
+                 additional_input_ports:tc.optional(tc.optional(tc.any(list, dict))) = None,
                  additional_output_ports:tc.optional(tc.any(str, Iterable))=None,
                  params=None,
                  name=None,

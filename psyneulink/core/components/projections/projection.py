@@ -396,6 +396,7 @@ import abc
 import inspect
 import itertools
 import warnings
+from collections import namedtuple, defaultdict
 
 import numpy as np
 import typecheck as tc
@@ -458,7 +459,6 @@ def projection_param_keywords():
     return set(projection_param_keyword_mapping().values())
 
 
-from collections import namedtuple
 ProjectionTuple = namedtuple("ProjectionTuple", "port, weight, exponent, projection")
 
 
@@ -1192,11 +1192,10 @@ def _parse_projection_spec(projection_spec,
     Otherwise, return Projection specification dictionary using any arguments provided as defaults
     """
 
-    bad_arg = next((key for key in kwargs if not key in PROJECTION_ARGS), None)
+    bad_arg = next((key for key in kwargs if key not in PROJECTION_ARGS), None)
     if bad_arg:
         raise ProjectionError("Illegal argument in call to _parse_port_spec: {}".format(bad_arg))
 
-    from collections import defaultdict
     proj_spec_dict = defaultdict(lambda :None)
     proj_spec_dict.update(kwargs)
 
@@ -1465,11 +1464,11 @@ def _parse_connection_specs(connectee_port_type,
             # Add default WEIGHT, EXPONENT, and/or PROJECTION specification for any that are not aleady in the dict
             #    (used as the default values for all the Ports of all Mechanisms specified for this dict;
             #    can use different dicts to implement different sets of defaults for the Ports of diff Mechanisms)
-            if not WEIGHT in connection:
+            if WEIGHT not in connection:
                 connection[WEIGHT] = DEFAULT_WEIGHT
-            if not EXPONENT in connection:
+            if EXPONENT not in connection:
                 connection[EXPONENT] = DEFAULT_EXPONENT
-            if not PROJECTION in connection:
+            if PROJECTION not in connection:
                 connection[PROJECTION] = DEFAULT_PROJECTION
 
             # Now process each entry that has *PORTS* or a Mechanism as its key
@@ -1592,9 +1591,9 @@ def _parse_connection_specs(connectee_port_type,
                      # Call _parse_connection_spec for each Port or Mechanism, to generate a conection spec for each
                     for connect_with_spec in first_item:
                         if not isinstance(connect_with_spec, (Port, Mechanism)):
-                              raise PortError(f"Item in the list used to specify a {last_item.__name__} "
-                                               f"for {owner.name} ({connect_with_spec.__name__}) "
-                                               f"is not a {Port.__name__} or {Mechanism.__name__}")
+                            raise PortError(f"Item in the list used to specify a {last_item.__name__} "
+                                            f"for {owner.name} ({connect_with_spec.__name__}) "
+                                            f"is not a {Port.__name__} or {Mechanism.__name__}")
                         c = _parse_connection_specs(connectee_port_type=connectee_port_type,
                                                     owner=owner,
                                                     connections=ProjectionTuple(connect_with_spec,
@@ -1621,10 +1620,10 @@ def _parse_connection_specs(connectee_port_type,
                      # Call _parse_connection_spec for each Port name, to generate a conection spec for each
                     for port_Name in port_item:
                         if not isinstance(port_Name, str):
-                             raise ProjectionError("Expected 1st item of the {} specification tuple for {} ({}) to be "
-                                                   "the name of a {} of its 2nd item ({})".
-                                                      format(connectee_port_type.__name__, owner.name, port_Name,
-                                                              connects_with, mech_item.name))
+                            raise ProjectionError("Expected 1st item of the {} specification tuple for {} ({}) to be "
+                                                  "the name of a {} of its 2nd item ({})".
+                                                  format(connectee_port_type.__name__, owner.name, port_Name,
+                                                         connects_with, mech_item.name))
                         c = _parse_connection_specs(connectee_port_type=connectee_port_type,
                                                     owner=owner,
                                                     connections=ProjectionTuple(port_Name,
@@ -1845,7 +1844,7 @@ def _validate_connection_request(
             if connectee_port is OutputPort and isinstance(projection_spec, (GatingProjection, ControlProjection)):
                 projection_socket = SENDER
             projection_socket_port = getattr(projection_spec, projection_socket)
-            if  issubclass(projection_socket_port.__class__, connect_with_ports):
+            if issubclass(projection_socket_port.__class__, connect_with_ports):
                 return True
 
         # None of the above worked, so must be incompatible
@@ -2166,6 +2165,3 @@ def _add_projection_from(sender, port, projection_spec, receiver, context=None):
                                                       name=sender.name + '.output_ports')
 
     output_port._instantiate_projections_to_port(projections=projection_spec, context=context)
-
-
-

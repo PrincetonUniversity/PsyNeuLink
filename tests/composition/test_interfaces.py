@@ -511,7 +511,10 @@ class TestConnectCompositionsViaCIMS:
                         'and is therefore recommended against. If suitable, you should instead add ports to the '
                        r'mechanism\(s\) that project to or are projected to from the CIM.')
         with pytest.warns(UserWarning, match=warning_text):
-            comp.input_CIM.add_ports(OutputPort())
+            # KDM 7/22/20: previously was OutputPort, but that produces
+            # an invalid CIM state that cannot be executed, and will
+            # throw an error due to new _update_default_variable call
+            comp.input_CIM.add_ports(InputPort())
 
         with pytest.warns(None) as w:
             comp._analyze_graph()

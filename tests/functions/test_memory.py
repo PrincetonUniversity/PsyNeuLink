@@ -3,6 +3,7 @@ import pytest
 
 import psyneulink.core.components.functions.statefulfunctions.memoryfunctions as Functions
 import psyneulink.core.llvm as pnlvm
+from psyneulink import *
 
 np.random.seed(0)
 SIZE=10
@@ -60,60 +61,36 @@ names = [
 #    "ContentAddressableMemory Initializer Noise",
 ]
 
-GROUP_PREFIX="IntegratorFunction "
-
 @pytest.mark.function
 @pytest.mark.memory_function
-@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
-def test_basic(func, variable, params, expected, benchmark):
+@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
+@pytest.mark.parametrize('mode', ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_basic(func, variable, params, expected, benchmark, mode):
+    if func is Functions.Buffer and mode != 'Python':
+        pytest.skip("Not implemented")
+
     f = func(default_variable=variable, **params)
-    benchmark.group = GROUP_PREFIX + func.componentName
-    f(variable)
-    res = f(variable)
+    benchmark.group = func.componentName
+    if mode == 'Python':
+        EX = f.function
+    elif mode == 'LLVM':
+        e = pnlvm.execution.FuncExecution(f)
+        EX = e.execute
+    elif mode == 'PTX':
+        e = pnlvm.execution.FuncExecution(f)
+        EX = e.cuda_execute
+    EX(variable)
+    res = EX(variable)
     assert np.allclose(res[0], expected[0])
     assert np.allclose(res[1], expected[1])
-    benchmark(f, variable)
+    if benchmark.enabled:
+        benchmark(f, variable)
 
-
-@pytest.mark.llvm
-@pytest.mark.function
-@pytest.mark.memory_function
-@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
-@pytest.mark.benchmark
-def test_llvm(func, variable, params, expected, benchmark):
-    if func is Functions.Buffer:
-        pytest.skip("Not implemented")
-    benchmark.group = GROUP_PREFIX + func.componentName
-    f = func(default_variable=variable, **params)
-    m = pnlvm.execution.FuncExecution(f)
-    m.execute(variable)
-    res = m.execute(variable)
-    assert np.allclose(res[0], expected[0])
-    assert np.allclose(res[1], expected[1])
-    benchmark(m.execute, variable)
-
-
-@pytest.mark.llvm
-@pytest.mark.cuda
-@pytest.mark.function
-@pytest.mark.memory_function
-@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
-@pytest.mark.benchmark
-def test_ptx_cuda(func, variable, params, expected, benchmark):
-    if func is Functions.Buffer:
-        pytest.skip("Not implemented")
-    benchmark.group = GROUP_PREFIX + func.componentName
-    f = func(default_variable=variable, **params)
-    m = pnlvm.execution.FuncExecution(f)
-    m.cuda_execute(variable)
-    res = m.cuda_execute(variable)
-    assert np.allclose(res, expected)
-    benchmark(m.cuda_execute, variable)
 
 # Test of ContentAddressableMemory without LLVM:
-from psyneulink import *
-
 def test_ContentAddressableMemory_with_initializer_and_key_size_same_as_val_size():
 
     stimuli = {'A': [[1,2,3],[4,5,6]],
@@ -129,7 +106,7 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_same_as_val_size
             assoc_size=3,
             function = ContentAddressableMemory(
                     seed=2,
-                    initializer=np.array([stimuli['F'], stimuli['F']]),
+                    initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
                     duplicate_keys=True,
                     equidistant_keys_select=RANDOM)
     )
@@ -137,7 +114,7 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_same_as_val_size
     retrieved_keys=[]
     for key in sorted(stimuli.keys()):
         retrieved = [i for i in em.execute(stimuli[key])]
-        retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
+        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
         retrieved_keys.append(retrieved_key)
     assert retrieved_keys == [['F'], ['A'], ['A'], ['C'], ['B'], ['F']]
 
@@ -146,19 +123,19 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_same_as_val_size
     retrieved_keys=[]
     for key in sorted(stimuli.keys()):
         retrieved = [i for i in em.execute(stimuli[key])]
-        retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
+        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
         retrieved_keys.append(retrieved_key)
     assert retrieved_keys == [['A'], ['A'], ['A'], ['A'], ['B'], ['F']]
 
     stim = 'C'
     em.function.equidistant_keys_select = OLDEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-    retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
+    retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
     assert retrieved_key == ['A']
 
     em.function.equidistant_keys_select = NEWEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-    retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
+    retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
     assert retrieved_key == ['D']
 
     # Test that after allowing dups, warning is issued and memory with zeros is returned
@@ -188,27 +165,28 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_diff_from_val_si
             content_size=3,
             assoc_size=4,
             function = ContentAddressableMemory(
-                    initializer=np.array([stimuli['F'], stimuli['F']]),
+                    initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
                     duplicate_keys=True,
                     equidistant_keys_select=RANDOM)
     )
 
     retrieved_keys=[]
     for key in sorted(stimuli.keys()):
+        print(key)
         retrieved = [i for i in em.execute(stimuli[key])]
-        retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
+        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
         retrieved_keys.append(retrieved_key)
     assert retrieved_keys == [['F'], ['A'], ['A'], ['A'], ['B'], ['F']]
 
     stim = 'C'
     em.function.equidistant_keys_select = OLDEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-    retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
+    retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
     assert retrieved_key == ['A']
 
     em.function.equidistant_keys_select = NEWEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-    retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
+    retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
     assert retrieved_key == ['D']
 
     # Test that after allowing dups, warning is issued and memory with zeros is returned
@@ -245,19 +223,19 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_same_as_val_s
     retrieved_keys=[]
     for key in sorted(stimuli.keys()):
         retrieved = [i for i in em.execute(stimuli[key])]
-        retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
+        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
         retrieved_keys.append(retrieved_key)
     assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['D']]
 
     stim = 'C'
     em.function.equidistant_keys_select = OLDEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-    retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
+    retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
     assert retrieved_key == ['A']
 
     em.function.equidistant_keys_select = NEWEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-    retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
+    retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
     assert retrieved_key == ['D']
 
     # Test that after allowing dups, warning is issued and memory with zeros is returned
@@ -294,19 +272,19 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_diff_from_val
     retrieved_keys=[]
     for key in sorted(stimuli.keys()):
         retrieved = [i for i in em.execute(stimuli[key])]
-        retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
+        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
         retrieved_keys.append(retrieved_key)
     assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['D']]
 
     stim = 'C'
     em.function.equidistant_keys_select = OLDEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-    retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
+    retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
     assert retrieved_key == ['A']
 
     em.function.equidistant_keys_select = NEWEST
     retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-    retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
+    retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
     assert retrieved_key == ['D']
 
     # Test that after allowing dups, warning is issued and memory with zeros is returned
@@ -337,7 +315,7 @@ def test_ContentAddressableMemory_without_assoc():
             name='EPISODIC MEMORY MECH',
             content_size=3,
             function = ContentAddressableMemory(
-                    # initializer=np.array([stimuli['F'], stimuli['F']]),
+                    # initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
                     duplicate_keys=True,
                     equidistant_keys_select=RANDOM,
                     retrieval_prob = 1.0
@@ -347,14 +325,14 @@ def test_ContentAddressableMemory_without_assoc():
     for key in sorted(stimuli.keys()):
         print(f'\nCurrent memory: \n{em.memory}\n')
         retrieved = [i for i in em.execute(stimuli[key])]
-        retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
+        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
         print(f'\nExecuted with stimulus {key}: {stimuli[key]};'
               f'\nRetrieved memory {retrieved_key[0]}: \n\t{retrieved}')
 
     retrieved_keys=[]
     for key in sorted(stimuli.keys()):
         retrieved = [i for i in em.execute(stimuli[key])]
-        retrieved_key = [k for k,v in stimuli.items() if np.array_equal(v, retrieved)] or [None]
+        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
         retrieved_keys.append(retrieved_key)
 
     assert retrieved_keys == [['A', 'C', 'D'], ['B'], ['A', 'C', 'D'], ['A', 'C', 'D'], ['E'], ['F']]
@@ -428,7 +406,7 @@ def test_ContentAddressableMemory_add_and_delete_from_memory():
             assert np.allclose(i,j)
 
     # Test adding memory with different size value as np.array
-    em.add_to_memory(np.array([[1,2,3],[200,201,202,203]]))
+    em.add_to_memory(np.array([[1,2,3],[200,201,202,203]], dtype=object))
     expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
                        [[10, 20, 30],[40, 50, 60]],
                        [[11, 21, 31],[41, 51, 61]],
@@ -440,7 +418,7 @@ def test_ContentAddressableMemory_add_and_delete_from_memory():
 
     # Test error for illegal key:
     with pytest.raises(FunctionError) as error_text:
-        em.add_to_memory(np.array([[1,2],[200,201,202,203]]))
+        em.add_to_memory(np.array([[1,2],[200,201,202,203]], dtype=object))
     assert "Length of 'key'" in str(error_text.value) and "must be same as others in the dict" in str(error_text.value)
 
 

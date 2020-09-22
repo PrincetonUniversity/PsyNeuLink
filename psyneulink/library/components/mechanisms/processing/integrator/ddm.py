@@ -360,7 +360,6 @@ Class Reference
 """
 import logging
 import types
-
 from collections.abc import Iterable
 
 import numpy as np
@@ -383,7 +382,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.core.globals.utilities import is_numeric, is_same_function_spec, object_has_single_value, get_global_seed
+from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, is_same_function_spec, object_has_single_value, get_global_seed
 
 from psyneulink.core import llvm as pnlvm
 
@@ -720,6 +719,13 @@ class DDM(ProcessingMechanism):
         initializer = np.array([[0]])
         random_state = Parameter(None, stateful=True, loggable=False)
 
+        output_ports = Parameter(
+            [DECISION_VARIABLE, RESPONSE_TIME],
+            stateful=False,
+            loggable=False,
+            read_only=True,
+            structural=True,
+        )
 
     standard_output_ports =[{NAME: DECISION_VARIABLE,},           # Upper or lower threshold for Analtyic function
                             {NAME: RESPONSE_TIME},                # TIME_STEP within TRIAL for Integrator function
@@ -741,11 +747,11 @@ class DDM(ProcessingMechanism):
                  input_format:tc.optional(tc.enum(SCALAR, ARRAY, VECTOR))=None,
                  function=None,
                  input_ports=None,
-                 output_ports:tc.optional(tc.any(str, Iterable))=(DECISION_VARIABLE, RESPONSE_TIME),
+                 output_ports: tc.optional(tc.any(str, Iterable)) = None,
                  seed=None,
                  params=None,
                  name=None,
-                 prefs: is_pref_set = None,
+                 prefs: tc.optional(is_pref_set) = None,
                  **kwargs):
 
         # Override instantiation of StandardOutputPorts usually done in _instantiate_output_ports
@@ -1041,7 +1047,7 @@ class DDM(ProcessingMechanism):
             if self.initialization_status != ContextFlags.INITIALIZING:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
 
-            return np.array([result[0], [result[1]]])
+            return convert_to_np_array([result[0], [result[1]]])
 
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         else:
@@ -1071,16 +1077,16 @@ class DDM(ProcessingMechanism):
                                format(self.function.name, self.name))
 
             # Convert ER to decision variable:
-            threshold = float(self.function._get_current_function_param(THRESHOLD, context))
-            random_state = self._get_current_mechanism_param("random_state", context)
+            threshold = float(self.function._get_current_parameter_value(THRESHOLD, context))
+            random_state = self._get_current_parameter_value(self.parameters.random_state, context)
             if random_state.rand() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
             return return_value
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable):
-        mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable)
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, *, tags:frozenset):
+        mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable, tags=tags)
 
         mech_out_ty = ctx.convert_python_struct_to_llvm_ir(self.defaults.value)
         mech_out = builder.alloca(mech_out_ty)
@@ -1120,7 +1126,7 @@ class DDM(ProcessingMechanism):
             prob_upper_thr = builder.fsub(prob_lower_thr.type(1),
                                           prob_lower_thr)
             builder.store(prob_upper_thr, dst)
-            
+
             # Load function threshold
             threshold_ptr = pnlvm.helpers.get_param_ptr(builder, self.function,
                                                         params, THRESHOLD)
@@ -1179,23 +1185,23 @@ class DDM(ProcessingMechanism):
                     break
 
         if (
-            abs(single_value) >= self.function._get_current_function_param(THRESHOLD, context)
+            abs(single_value) >= self.function._get_current_parameter_value(THRESHOLD, context)
             and isinstance(self.function, IntegratorFunction)
         ):
             logger.info(
                 '{0} {1} has reached threshold {2}'.format(
                     type(self).__name__,
                     self.name,
-                    self.function._get_current_function_param(THRESHOLD, context)
+                    self.function._get_current_parameter_value(THRESHOLD, context)
                 )
             )
             return True
         return False
-    
-    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state, current):
+
+    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state):
         # Setup pointers to internal function
-        func_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, 'function')
-        func_param_ptr = pnlvm.helpers.get_state_ptr(builder, self, params, 'function')
+        func_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
+        func_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
 
         # Find the single numeric entry in previous_value
         try:
@@ -1223,4 +1229,3 @@ class DDM(ProcessingMechanism):
         is_prev_greater_or_equal = builder.fcmp_ordered('>=', prev_val, threshold)
 
         return is_prev_greater_or_equal
-

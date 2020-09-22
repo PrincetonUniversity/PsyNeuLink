@@ -162,8 +162,6 @@ class OneHot(SelectionFunction):
 
     componentName = ONE_HOT_FUNCTION
 
-    bounds = None
-
     classPreferences = {
         PREFERENCE_SET_NAME: 'OneHotClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
@@ -203,13 +201,13 @@ class OneHot(SelectionFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 mode: tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
+                 mode: tc.optional(tc.enum(MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
                                MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR,
-                               PROB, PROB_INDICATOR)=MAX_VAL,
+                               PROB, PROB_INDICATOR))=None,
                  seed=None,
                  params=None,
                  owner=None,
-                 prefs: is_pref_set = None):
+                 prefs: tc.optional(is_pref_set) = None):
 
         if seed is None:
             seed = get_global_seed()
@@ -422,7 +420,7 @@ class OneHot(SelectionFunction):
             if not prob_dist.any():
                 return self.convert_output_type(v)
             cum_sum = np.cumsum(prob_dist)
-            random_state = self._get_current_function_param("random_state", context)
+            random_state = self._get_current_parameter_value("random_state", context)
             random_value = random_state.uniform()
             chosen_item = next(element for element in cum_sum if element > random_value)
             chosen_in_cum_sum = np.where(cum_sum == chosen_item, 1, 0)

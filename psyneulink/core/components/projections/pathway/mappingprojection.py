@@ -284,10 +284,8 @@ Class Reference
 
 """
 import copy
-import inspect
 
 import numpy as np
-import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
@@ -301,7 +299,7 @@ from psyneulink.core.globals.keywords import \
     HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_PORT, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, \
     OUTPUT_PORT, PROJECTION_SENDER, VALUE
 from psyneulink.core.globals.log import ContextFlags
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -420,10 +418,10 @@ class MappingProjection(PathwayProjection_Base):
                     :type: ``str``
         """
         function = Parameter(LinearMatrix, stateful=False, loggable=False)
-        matrix = Parameter(DEFAULT_MATRIX, modulable=True,
-                           function_parameter=True,
-                           getter=_mapping_projection_matrix_getter,
-                           setter=_mapping_projection_matrix_setter)
+        matrix = FunctionParameter(
+            DEFAULT_MATRIX,
+            setter=_mapping_projection_matrix_setter
+        )
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -444,13 +442,12 @@ class MappingProjection(PathwayProjection_Base):
 
     projection_sender = OutputPort
 
-    # @tc.typecheck
     def __init__(self,
                  sender=None,
                  receiver=None,
                  weight=None,
                  exponent=None,
-                 matrix=DEFAULT_MATRIX,
+                 matrix=None,
                  function=None,
                  params=None,
                  name=None,

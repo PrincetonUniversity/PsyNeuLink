@@ -193,7 +193,6 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function, get_matrix, is_function_type
 from psyneulink.core.components.functions.learningfunctions import Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Stability
-from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
@@ -208,7 +207,7 @@ from psyneulink.core.components.ports.port import _instantiate_port
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, SharedParameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.registry import register_instance, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
@@ -287,12 +286,6 @@ def _recurrent_transfer_mechanism_matrix_setter(value, owning_component=None, co
         owning_component.parameters.auto._set(auto, context)
         owning_component.parameters.hetero._set(hetero, context)
 
-    return value
-
-
-def _recurrent_transfer_mechanism_learning_rate_setter(value, owning_component=None, context=None):
-    if hasattr(owning_component, "learning_mechanism") and owning_component.learning_mechanism:
-        owning_component.learning_mechanism.parameters.learning_rate._set(value, context)
     return value
 
 
@@ -620,22 +613,26 @@ class RecurrentTransferMechanism(TransferMechanism):
         auto = Parameter(1, modulable=True)
         hetero = Parameter(0, modulable=True)
         combination_function = LinearCombination
-        integration_rate = Parameter(0.5, modulable=True)
-        noise = Parameter(0.0, modulable=True)
         smoothing_factor = Parameter(0.5, modulable=True)
         enable_learning = False
         # learning_function is a reference because it is used for
         # an auxiliary learning mechanism
-        learning_function = Parameter(
+        learning_function = SharedParameter(
             Hebbian,
+            attribute_name='learning_mechanism',
+            shared_parameter_name='function',
+        )
+        learning_rate = SharedParameter(None, attribute_name='learning_mechanism')
+        learning_condition = SharedParameter(None, attribute_name='learning_mechanism')
+        has_recurrent_input_port = Parameter(False, stateful=False, loggable=False)
+
+        output_ports = Parameter(
+            [RESULT],
             stateful=False,
             loggable=False,
-            reference=True
+            read_only=True,
+            structural=True,
         )
-        learning_rate = Parameter(None, setter=_recurrent_transfer_mechanism_learning_rate_setter)
-        learning_condition = Parameter(None, stateful=False, loggable=False)
-        has_recurrent_input_port = Parameter(None, stateful=False, loggable=False)
-
 
     standard_output_ports = TransferMechanism.standard_output_ports.copy()
     standard_output_ports.extend([{NAME:ENERGY_OUTPUT_PORT_NAME}, {NAME:ENTROPY_OUTPUT_PORT_NAME}])
@@ -646,23 +643,22 @@ class RecurrentTransferMechanism(TransferMechanism):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_ports:tc.optional(tc.any(list, dict)) = None,
-                 has_recurrent_input_port=False,
-                 combination_function:is_function_type=LinearCombination,
-                 function=Linear,
+                 input_ports:tc.optional(tc.optional(tc.any(list, dict))) = None,
+                 has_recurrent_input_port=None,
+                 combination_function: tc.optional(is_function_type) = None,
+                 function=None,
                  matrix=None,
                  auto=None,
                  hetero=None,
-                 integrator_mode=False,
+                 integrator_mode=None,
                  integrator_function=None,
                  initial_value=None,
-                 #integration_rate: is_numeric_or_none=0.5,
-                 integration_rate: is_numeric_or_none = None,
-                 noise=0.0,
+                 integration_rate: is_numeric_or_none=None,
+                 noise=None,
                  clip=None,
-                 enable_learning:bool=False,
+                 enable_learning: tc.optional(bool) = None,
                  learning_rate:tc.optional(tc.any(parameter_spec, bool))=None,
-                 learning_function: tc.any(is_function_type) = Hebbian,
+                 learning_function: tc.optional(tc.any(is_function_type)) = None,
                  learning_condition:tc.optional(tc.any(Condition, TimeScale,
                                                        tc.enum(UPDATE, CONVERGENCE)))=None,
                  output_ports:tc.optional(tc.any(str, Iterable))=None,
@@ -672,13 +668,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                  **kwargs):
         """Instantiate RecurrentTransferMechanism
         """
-
-        # Default output_ports is specified in constructor as a string rather than a list
-        # to avoid "gotcha" associated with mutable default arguments
-        # (see: bit.ly/2uID3s3 and http://docs.python-guide.org/en/latest/writing/gotchas/)
-        if output_ports is None or output_ports == RESULT:
-            output_ports = [RESULT]
-
         if isinstance(hetero, (list, np.matrix)):
             hetero = np.array(hetero)
 
@@ -691,6 +680,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         if matrix is AutoAssociativeProjection:
             matrix = HOLLOW_MATRIX
 
+        self.learning_mechanism = None
         self._learning_enabled = enable_learning
 
         super().__init__(
@@ -753,7 +743,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             try:
                 if 'U' in repr(matrix.dtype):
-                    raise RecurrentTransferMechanism("{0} has non-numeric entries".format(matrix))
+                    raise RecurrentTransferError("{0} has non-numeric entries".format(matrix))
             except AttributeError:
                 pass
 
@@ -875,7 +865,7 @@ class RecurrentTransferMechanism(TransferMechanism):
             self.auto = d
             if port is not None:
                 self._parameter_ports[AUTO] = port
-                port.source = self
+                port.source = self.parameters.auto
             else:
                 raise RecurrentTransferError("Failed to create ParameterPort for `auto` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
@@ -893,7 +883,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                        context=context)
             if port is not None:
                 self._parameter_ports[HETERO] = port
-                port.source = self
+                port.source = self.parameters.hetero
             else:
                 raise RecurrentTransferError("Failed to create ParameterPort for `hetero` attribute for {} \"{}\"".
                                            format(self.__class__.__name__, self.name))
@@ -947,9 +937,6 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                                      default_variable=self.defaults.variable)
             else:
                 self.combination_function = comb_fct
-
-        else:
-            self.combination_function = None
 
         if self.auto is None and self.hetero is None:
             self.matrix = matrix
@@ -1066,7 +1053,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         self._learning_enabled = value
         # Enable learning for RecurrentTransferMechanism's learning_mechanism
-        if hasattr(self, 'learning_mechanism'):
+        if self.learning_mechanism is not None:
             self.learning_mechanism.learning_enabled = value
         # If RecurrentTransferMechanism has no LearningMechanism, warn and then ignore attempt to set learning_enabled
         elif value is True:
@@ -1182,24 +1169,30 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         """
 
-        # This insures that these are validated if the method is called from the command line (i.e., by the user)
-        if learning_function:
-            self.learning_function = learning_function
-        if learning_rate:
-            self.learning_rate = learning_rate
-        if learning_condition:
-            self.learning_condition = learning_condition
+        if not isinstance(learning_condition, Condition):
+            if learning_condition == CONVERGENCE:
+                learning_condition = WhenFinished(self)
+            elif learning_condition == UPDATE:
+                learning_condition = None
 
-        if not isinstance(self.learning_condition, Condition):
-            if self.learning_condition == CONVERGENCE:
-                self.learning_condition = WhenFinished(self)
-            elif self.learning_condition == UPDATE:
-                self.learning_condition = None
+        try:
+            shared_params = self.initial_shared_parameters['learning_mechanism']
+
+            if learning_condition is None:
+                learning_condition = shared_params['learning_condition']
+
+            if learning_rate is None:
+                learning_rate = shared_params['learning_rate']
+
+            if learning_function is None:
+                learning_function = shared_params['learning_function']
+        except KeyError:
+            pass
 
         self.learning_mechanism = self._instantiate_learning_mechanism(activity_vector=self._learning_signal_source,
-                                                                       learning_function=self.learning_function,
-                                                                       learning_rate=self.learning_rate,
-                                                                       learning_condition=self.learning_condition,
+                                                                       learning_function=learning_function,
+                                                                       learning_rate=learning_rate,
+                                                                       learning_condition=learning_condition,
                                                                        matrix=self.recurrent_projection,
                                                                        context=context)
 

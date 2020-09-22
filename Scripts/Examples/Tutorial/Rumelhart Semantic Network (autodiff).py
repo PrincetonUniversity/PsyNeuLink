@@ -180,7 +180,6 @@ map_hm_can = pnl.MappingProjection(
 #This block of code constructs the network
 
 RumelNet = pnl.AutodiffComposition(
-        param_init_from_pnl=True,
         patience=10,
         min_delta=0.00001,
         learning_rate=1,
