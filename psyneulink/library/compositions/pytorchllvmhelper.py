@@ -16,7 +16,7 @@ def gen_inject_vec_binop(ctx, builder, op, u, v, output_vec=None):
     dim = len(u.type.pointee)
     assert len(v.type.pointee) == dim
     if output_vec is None:
-        output_vec = builder.alloca(pnlvm.ir.types.ArrayType(ctx.float_ty, dim))
+        output_vec = builder.alloca(u.type.pointee)
     assert len(output_vec.type.pointee) == dim
 
     # Get the pointer to the first element of the array to convert from [? x double]* -> double*
@@ -42,9 +42,7 @@ def gen_inject_mat_binop(ctx, builder, op, m1, m2, output_mat=None):
     assert len(m2.type.pointee) == x and len(m2.type.pointee.element) == y
 
     if output_mat is None:
-        output_mat = builder.alloca(
-            pnlvm.ir.types.ArrayType(
-                pnlvm.ir.types.ArrayType(ctx.float_ty, y), x))
+        output_mat = builder.alloca(m1.type.pointee)
     assert len(output_mat.type.pointee) == x
     assert len(output_mat.type.pointee.element) == y
 
