@@ -199,8 +199,8 @@ from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.globals.keywords import \
     CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INITIALIZER, LCA_MECHANISM, LEAK, LESS_THAN_OR_EQUAL, MATRIX, NAME, \
-    NOISE, RATE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, VALUE, INVERSE_HOLLOW_MATRIX
-from psyneulink.core.globals.parameters import Parameter
+    NOISE, RATE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, VALUE, INVERSE_HOLLOW_MATRIX, AUTO
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -397,11 +397,16 @@ class LCAMechanism(RecurrentTransferMechanism):
             getter=_recurrent_transfer_mechanism_matrix_getter,
             setter=_recurrent_transfer_mechanism_matrix_setter
         )
-        leak = Parameter(0.5, modulable=True)
+        integration_rate = FunctionParameter(
+            0.5,
+            function_name='integrator_function',
+            function_parameter_name='rate',
+            aliases='leak'
+        )
         auto = Parameter(0.0, modulable=True, aliases='self_excitation')
         hetero = Parameter(-1.0, modulable=True)
         competition = Parameter(1.0, modulable=True)
-        time_step_size = Parameter(0.1, modulable=True)
+        time_step_size = FunctionParameter(0.1, function_name='integrator_function')
 
         initial_value = None
         integrator_mode = Parameter(True, setter=_integrator_mode_setter)
@@ -463,6 +468,23 @@ class LCAMechanism(RecurrentTransferMechanism):
         else:
             matrix = None
         # MODIFIED 1/22/20 END
+
+        try:
+            if self_excitation is not None and kwargs[AUTO] is not None:
+                if kwargs[AUTO] != self_excitation:
+                    raise LCAError(
+                        'Both self_excitation and auto are specified with'
+                        ' different values. self_excitation is an alias of auto.'
+                        ' Provided values: self_excitation = {0} , auto = {1}'.format(
+                            self_excitation,
+                            kwargs[AUTO]
+                        )
+                    )
+            elif kwargs[AUTO] is not None:
+                self_excitation = kwargs[AUTO]
+                del kwargs[AUTO]
+        except KeyError:
+            pass
 
         if competition is not None and hetero is not None:
             if competition != -1.0 * hetero:
@@ -573,8 +595,8 @@ class LCAMechanism(RecurrentTransferMechanism):
 
     def _get_integrated_function_input(self, function_variable, initial_value, noise, context):
 
-        leak = self._get_current_mechanism_param("leak", context)
-        time_step_size = self._get_current_mechanism_param("time_step_size", context)
+        leak = self._get_current_parameter_value(self.parameters.leak, context)
+        time_step_size = self._get_current_parameter_value(self.parameters.time_step_size, context)
 
         # if not self.integrator_function:
         if self.initialization_status == ContextFlags.INITIALIZING:

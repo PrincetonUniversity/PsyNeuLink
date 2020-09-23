@@ -831,8 +831,7 @@ environment that supports learning can be assigned as the `function <Mechanism_B
 <Mechanism>`, in which case it is automatically  wrapped as `UserDefinedFunction`.  For example, the `forward and
 backward methods <https://pytorch.org/docs/master/notes/extending.html>`_ of a PyTorch object can be assigned in this
 way.  The advanatage of this approach is that it can be applied to any Python function that adheres to the requirements
-of a `UserDefinedFunction`.  The disadvantage is that it can't be `compiled`, so efficiency may be compromised.  It must
-also be carefully coordinated with the execution of other learning-related Components in the Composition, to insure
+of a `UserDefinedFunction`. It must be carefully coordinated with the execution of other learning-related Components in the Composition, to insure
 that each function is called at the appropriate times during execution.  Furthermore, as with an `AutodiffComposition`,
 the internal constituents of the object (e.g., intermediates layers of a neural network model) are not accessible to
 other Components in the Composition (e.g., as a source of information or for modulation).
@@ -1284,6 +1283,9 @@ specified in **initialize_cycle_values** will be re-initialized to the assigned 
 cycle in that run, whereas any Nodes not specified will retain the last `value <Component.value>` they were assigned
 in the uprevious call to `run <Composition.run>` or `learn <Composition.learn>`.
 
+Nodes in a cycle can also be initialized outside of a call to `run <Composition.run>` or `learn <Composition.run>` using
+the `initialize <Composition.initialize>` method.
+
 .. note::
    If a `Mechanism` belonging to a cycle in a Composition is first executed on its own (i.e., using its own `execute
    <Mechanism_Base.execute>` method), the value it is assigned will be used as its initial value when it is executed
@@ -1532,8 +1534,8 @@ mode can be useful for executing Compositions that are complex and/or for large 
 Compilation is supported for most CPUs (including x86, arm64, and powerpc64le).  Several modes can be specified, that
 that tradeoff power (i.e., degree of speed-up) against level of support (i.e., likelihood of success).  Most PsyNeuLink
 `Components <Component>` and methods are supported for compilation;  however, Python native functions and methods
-(e.g., used to specify the `function <Component.function>` of a Component) are not supported at present, including
-their use in a `UserDefinedFunction`.  Users are strongly urged to report any other compilation failures to
+(e.g., used to specify the `function <Component.function>` of a Component) are not supported at present. Users who wish
+to compile custom functions should refer to `compiled User Defined Functions <UserDefinedFunction>` for more information.  Users are strongly urged to report any other compilation failures to
 psyneulinkhelp@princeton.edu, or as an issue `here <https://github.com/PrincetonUniversity/PsyNeuLink/issues>`_.
 Known failure conditions are listed `here <https://github.com/PrincetonUniversity/PsyNeuLink/milestone/2>`_.
 
@@ -2378,7 +2380,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
-    COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, \
+    COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, DEFAULT, \
     FEEDBACK, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, INSET, \
     LABELS, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
@@ -2387,12 +2389,12 @@ from psyneulink.core.globals.keywords import \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, \
     ROLES, SAMPLE, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
-    TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
+    TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array, merge_dictionaries
+    ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array
 from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -2678,100 +2680,54 @@ class Graph(object):
         structural_dependencies = self.dependency_dict
         # wipe and reconstruct list of vertices in cycles
         self.cycle_vertices = set()
+        flexible_edges = set()
 
-        # prune all feedback projections
         for node in execution_dependencies:
-            # recurrent edges
+            # prune recurrent edges
             try:
                 execution_dependencies[node].remove(node)
                 self.cycle_vertices.add(node)
             except KeyError:
                 pass
 
-            # standard edges labeled as feedback
-            vert = self.comp_to_vertex[node]
-            execution_dependencies[node] = {
-                dep for dep in execution_dependencies[node]
-                if (
-                    self.comp_to_vertex[dep] not in vert.source_types
-                    or vert.source_types[self.comp_to_vertex[dep]] is not EdgeType.FEEDBACK
-                )
-            }
+            for dep in tuple(execution_dependencies[node]):
+                vert = self.comp_to_vertex[node]
+                dep_vert = self.comp_to_vertex[dep]
+
+                if dep_vert in vert.source_types:
+                    # prune standard edges labeled as feedback
+                    if vert.source_types[dep_vert] is EdgeType.FEEDBACK:
+                        execution_dependencies[node].remove(dep)
+                    # store flexible edges for potential pruning later
+                    elif vert.source_types[dep_vert] is EdgeType.FLEXIBLE:
+                        flexible_edges.add((dep, node))
 
         # construct a parallel networkx graph to use its cycle algorithms
         nx_graph = self._generate_networkx_graph(execution_dependencies)
+        connected_components = list(networkx.strongly_connected_components(nx_graph))
 
         # prune only one flexible edge per attempt, to remove as few
         # edges as possible
         # For now, just prune the first flexible edge each time. Maybe
         # look for "best" edges to prune in future by frequency in
         # cycles, if that occurs
-        cycles_changed = True
-        while cycles_changed:
-            cycles_changed = False
+        for parent, child in flexible_edges:
+            cycles = [c for c in connected_components if len(c) > 1]
 
-            # recompute cycles after each prune
-            for cycle in networkx.simple_cycles(nx_graph):
-                len_cycle = len(cycle)
+            if len(cycles) == 0:
+                break
 
-                for i in range(len_cycle):
-                    parent = self.comp_to_vertex[cycle[i]]
-                    child = self.comp_to_vertex[cycle[(i + 1) % len_cycle]]
-
-                    if (
-                        parent in child.source_types
-                        and child.source_types[parent] is EdgeType.FLEXIBLE
-                    ):
-                        execution_dependencies[child.component].remove(parent.component)
-                        child.source_types[parent] = EdgeType.FEEDBACK
-                        nx_graph.remove_edge(parent.component, child.component)
-                        cycles_changed = True
-                        break
-
-        def merge_intersecting_cycles(cycle_list: list) -> dict:
-            # transforms a cycle represented as a list [c_0, ... c_n]
-            # to a dependency dictionary {c_0: c_n, c_1: c_0, ..., c_n: c_{n-1}}
-            cycle_dicts = [
-                {
-                    cycle[i]: cycle[(i - 1) % len(cycle)]
-                    for i in range(len(cycle))
-                }
-                for cycle in cycle_list
-            ]
-
-            new_cycles = cycle_dicts
-            cycles_changed = True
-
-            # repeatedly join cycles that have a Node in common
-            while cycles_changed:
-                cycles_changed = False
-                i = 0
-                j = 1
-
-                while i < len(new_cycles):
-                    while j < len(new_cycles):
-                        merged, has_shared_keys = merge_dictionaries(
-                            new_cycles[i],
-                            new_cycles[j]
-                        )
-                        if has_shared_keys:
-                            cycles_changed = True
-                            new_cycles[i] = merged
-                            new_cycles.remove(new_cycles[j])
-                        else:
-                            j += 1
-                    i += 1
-
-            return new_cycles
-
-        cycles = list(networkx.simple_cycles(nx_graph))
-        # create the longest possible cycles using any smaller, connected cycles
-        cycles = merge_intersecting_cycles(cycles)
+            if any((parent in c and child in c) for c in cycles):
+                # prune
+                execution_dependencies[child].remove(parent)
+                self.comp_to_vertex[child].source_types[self.comp_to_vertex[parent]] = EdgeType.FEEDBACK
+                nx_graph.remove_edge(parent, child)
+                # recompute cycles after each prune
+                connected_components = list(networkx.strongly_connected_components(nx_graph))
 
         # find all the parent nodes for each node in a cycle, excluding
         # parents that are part of the cycle
-        for cycle in cycles:
-            len_cycle = len(cycle)
+        for cycle in [c for c in connected_components if len(c) > 1]:
             acyclic_dependencies = set()
 
             for node in cycle:
@@ -2803,11 +2759,14 @@ class Graph(object):
             structural_dependencies
         )
 
-    def get_cycles(self, nx_graph: typing.Optional[networkx.DiGraph] = None):
+    def get_strongly_connected_components(
+        self,
+        nx_graph: typing.Optional[networkx.DiGraph] = None
+    ):
         if nx_graph is None:
             nx_graph = self._generate_networkx_graph()
 
-        return list(networkx.simple_cycles(nx_graph))
+        return list(networkx.strongly_connected_components(nx_graph))
 
     def _generate_networkx_graph(self, dependency_dict=None):
         if dependency_dict is None:
@@ -3496,32 +3455,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Constructs the processing graph (the graph that contains only Nodes as vertices)
         from the composition's full graph
         """
-        logger.debug('Updating processing graph')
-
         self._graph_processing = self.graph.copy()
 
         def remove_vertex(vertex):
-            logger.debug('Removing', vertex)
             for parent in vertex.parents:
                 for child in vertex.children:
                     child.source_types[parent] = vertex.feedback
                     self._graph_processing.connect_vertices(parent, child)
-
-            for node in cur_vertex.parents + cur_vertex.children:
-                logger.debug(
-                    'New parents for vertex {0}: \n\t{1}\nchildren: \n\t{2}'.format(
-                        node, node.parents, node.children
-                    )
-                )
-
-            logger.debug('Removing vertex {0}'.format(cur_vertex))
 
             self._graph_processing.remove_vertex(vertex)
 
         # copy to avoid iteration problems when deleting
         vert_list = self._graph_processing.vertices.copy()
         for cur_vertex in vert_list:
-            logger.debug('Examining', cur_vertex)
             if not cur_vertex.component.is_processing:
                 remove_vertex(cur_vertex)
 
@@ -5490,7 +5436,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             labeled as EdgeType.FEEDBACK (True) but are not in a cycle
         """
         unnecessary_feedback_specs = []
-        cycles = self.graph.get_cycles()
+        cycles = self.graph.get_strongly_connected_components()
 
         for proj in self.projections:
             try:
@@ -7282,14 +7228,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not component:
                 continue
             if isinstance(component, Projection):
-                if hasattr(component.sender,'owner_mech'):
+                if hasattr(component.sender, OWNER_MECH):
                     sender_node = component.sender.owner_mech
                 else:
                     if isinstance(component.sender.owner, CompositionInterfaceMechanism):
                         sender_node = component.sender.owner.composition
                     else:
                         sender_node = component.sender.owner
-                if hasattr(component.receiver, 'owner_mech'):
+                if hasattr(component.receiver, OWNER_MECH):
                     receiver_node = component.receiver.owner_mech
                 else:
                     if isinstance(component.receiver.owner, CompositionInterfaceMechanism):
@@ -7335,7 +7281,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                 )
 
             # Get control signal costs
-            all_costs = convert_to_np_array(self.controller.parameters.costs._get(context) + [reconfiguration_cost])
+            other_costs = self.controller.parameters.costs._get(context) or []
+            all_costs = convert_to_np_array(other_costs + [reconfiguration_cost])
             # Compute a total for the candidate control signal(s)
             total_cost = self.controller.combine_costs(all_costs)
         return total_cost
@@ -7361,7 +7308,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 invalid_aux_components = self._get_invalid_aux_components(self.controller)
                 for component in invalid_aux_components:
                     if isinstance(component, Projection):
-                        if hasattr(component.receiver, 'owner_mech'):
+                        if hasattr(component.receiver, OWNER_MECH):
                             owner = component.receiver.owner_mech
                         else:
                             owner = component.receiver.owner
@@ -8255,65 +8202,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 node.parameters.num_executions._get(context)._set_by_time_scale(TimeScale.RUN, 0)
 
-        if initialize_cycle_values is not None:
-            for node in initialize_cycle_values:
-                if node not in self.nodes:
-                    raise CompositionError(f"{node.name} "
-                                           f"(entry in initialize_cycle_values arg) is not a node in '{self.name}'")
-                else:
-                    if (node not in self.get_nodes_by_role(NodeRole.CYCLE) and
-                            node not in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)):
-                        warnings.warn(
-                            f"A value is specified for {node.name} of {self.name} in the 'initialize_cycle_values' "
-                            f"argument of call to run, but it is neither part of a cycle nor a FEEDBACK_SENDER. "
-                            f"Its value will be overwritten when the node first executes, and therefore not used.")
-                    node.initialize(initialize_cycle_values[node], context)
-
-        if not reset_stateful_functions_to:
-            reset_stateful_functions_to = {}
-
-        for node, vals in reset_stateful_functions_to.items():
-            try:
-                iter(vals)
-            except TypeError:
-                vals = [vals]
-                reset_stateful_functions_to[node] = vals
-            if (isinstance(reset_stateful_functions_when, Never) or
-                    node not in reset_stateful_functions_when) and \
-                    isinstance(node.reset_stateful_function_when, Never):
-                node.reset(*vals, context=context)
-
-        # cache and set reset_stateful_function_when conditions for nodes, matching old System behavior
-        # Validate
-        valid_reset_type = True
-        if not isinstance(reset_stateful_functions_when, (Condition, dict)):
-            valid_reset_type = False
-        elif type(reset_stateful_functions_when) == dict:
-            if False in {True if isinstance(k, Mechanism) and isinstance(v, Condition) else
-                         False for k,v in reset_stateful_functions_when.items()}:
-                valid_reset_type = False
-
-        if not valid_reset_type:
-            raise CompositionError(
-                f"{reset_stateful_functions_when} is not a valid specification for reset_integrator_nodes_when of {self.name}. "
-                "reset_integrator_nodes_when must be a Condition or a dict comprised of {Node: Condition} pairs.")
-
-        self._reset_stateful_functions_when_cache = {}
-
-        # use type here to avoid another costly call to isinstance
-        if not type(reset_stateful_functions_when) == dict:
-            for node in self.nodes:
-                try:
-                    if isinstance(node.reset_stateful_function_when, Never):
-                        self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
-                        node.reset_stateful_function_when = reset_stateful_functions_when
-                except AttributeError:
-                    pass
-        else:
-            for node in reset_stateful_functions_when:
-                self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
-                node.reset_stateful_function_when = reset_stateful_functions_when[node]
-
         if ContextFlags.SIMULATION_MODE not in context.runmode:
             try:
                 self.parameters.input_specification._set(copy(inputs), context)
@@ -8398,6 +8286,54 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._initialize_from_context(context, base_context, override=False)
 
         context.composition = self
+
+        if initialize_cycle_values is not None:
+            self.initialize(values=initialize_cycle_values, include_unspecified_nodes=False, context=context)
+
+        if not reset_stateful_functions_to:
+            reset_stateful_functions_to = {}
+
+        for node, vals in reset_stateful_functions_to.items():
+            try:
+                iter(vals)
+            except TypeError:
+                vals = [vals]
+                reset_stateful_functions_to[node] = vals
+            if (isinstance(reset_stateful_functions_when, Never) or
+                    node not in reset_stateful_functions_when) and \
+                    isinstance(node.reset_stateful_function_when, Never):
+                node.reset(*vals, context=context)
+
+        # cache and set reset_stateful_function_when conditions for nodes, matching old System behavior
+        # Validate
+        valid_reset_type = True
+        if not isinstance(reset_stateful_functions_when, (Condition, dict)):
+            valid_reset_type = False
+        elif type(reset_stateful_functions_when) == dict:
+            if False in {True if isinstance(k, Mechanism) and isinstance(v, Condition) else
+                         False for k,v in reset_stateful_functions_when.items()}:
+                valid_reset_type = False
+
+        if not valid_reset_type:
+            raise CompositionError(
+                f"{reset_stateful_functions_when} is not a valid specification for reset_integrator_nodes_when of {self.name}. "
+                "reset_integrator_nodes_when must be a Condition or a dict comprised of {Node: Condition} pairs.")
+
+        self._reset_stateful_functions_when_cache = {}
+
+        # use type here to avoid another costly call to isinstance
+        if not type(reset_stateful_functions_when) == dict:
+            for node in self.nodes:
+                try:
+                    if isinstance(node.reset_stateful_function_when, Never):
+                        self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
+                        node.reset_stateful_function_when = reset_stateful_functions_when
+                except AttributeError:
+                    pass
+        else:
+            for node in reset_stateful_functions_when:
+                self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
+                node.reset_stateful_function_when = reset_stateful_functions_when[node]
 
         is_simulation = (context is not None and
                          ContextFlags.SIMULATION_MODE in context.runmode)
@@ -8752,6 +8688,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # ASSIGNMENTS **************************************************************************************************
 
+        assert not str(bin_execute).endswith("Run")
         if bin_execute == 'Python':
             bin_execute = False
 
@@ -9317,7 +9254,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         pass
 
     @handle_external_context(execution_id=NotImplemented)
-    def reset(self, values=None, context=NotImplemented):
+    def reset(self, values=None, include_unspecified_nodes=True, context=NotImplemented):
         if context is NotImplemented:
             context = self.most_recent_context
 
@@ -9325,8 +9262,65 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             values = {}
 
         for node in self.stateful_nodes:
+            if not include_unspecified_nodes and node not in values:
+                continue
             reset_val = values.get(node)
             node.reset(reset_val, context=context)
+
+    def initialize(self, values=None, include_unspecified_nodes=True, context=NotImplemented):
+        """
+            Initializes the values of nodes within cycles. If `include_unspecified_nodes` is True and a value is
+            provided for a given node, the node will be initialized to that value. If `include_unspecified_nodes` is
+            True and a value is not provided, the node will be initialized to its default value. If
+            `include_unspecified_nodes` is False, then all nodes must have corresponding initialization values. The
+            `DEFAULT` keyword can be used in lieu of a numerical value to reset a node's value to its default.
+
+            If a context is not provided, the most recent context under which the Composition has executed will be used.
+
+            Arguments
+            ----------
+            values: Dict { Node: Node Value }
+                A dictionary contaning key-value pairs of Nodes and initialization values. Nodes within cycles that are
+                not included in this dict will be initialized to their default values.
+
+            include_unspecified_nodes: bool
+                Specifies whether all nodes within cycles should be initialized or only ones specified in the provided
+                values dictionary.
+
+            context: Context
+                The context under which the nodes should be initialized. context will be set to
+                self.most_recent_execution_context if one is not specified.
+
+        """
+        if context is NotImplemented:
+            context = self.most_recent_context
+
+        # comp must be initialized from context before cycle values are initialized
+        self._initialize_from_context(context, Context(execution_id=None), override=False)
+
+        if not values:
+            values = {}
+
+        cycle_nodes = set(self.get_nodes_by_role(NodeRole.CYCLE) + self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
+
+        for node in values:
+            if node not in self.nodes:
+                raise CompositionError(f"{node.name} "
+                                       f"(entry in initialize values arg) is not a node in '{self.name}'")
+            if node not in cycle_nodes:
+                warnings.warn(
+                    f"A value is specified for {node.name} of {self.name} in the 'initialize_cycle_values' "
+                    f"argument of call to run, but it is neither part of a cycle nor a FEEDBACK_SENDER. "
+                    f"Its value will be overwritten when the node first executes, and therefore not used."
+                )
+
+        for node in cycle_nodes:
+            if not include_unspecified_nodes:
+                if node not in values:
+                    continue
+            provided_value = values.get(node)
+            value = provided_value if not provided_value == DEFAULT else node.defaults.value
+            node.initialize(value, context)
 
     def disable_all_history(self):
         """

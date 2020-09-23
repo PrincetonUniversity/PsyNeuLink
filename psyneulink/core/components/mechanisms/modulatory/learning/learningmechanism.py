@@ -547,7 +547,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE, AFTER, ASSERT, CONTEXT, CONTROL_PROJECTIONS, ENABLED, INPUT_PORTS, \
     LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
     MATRIX, NAME, ONLINE, OUTPUT_PORT, OUTPUT_PORTS, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, PORT_TYPE, VARIABLE
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_np_array, is_numeric, parameter_spec, convert_to_list
@@ -662,22 +662,6 @@ def _error_signal_getter(owning_component=None, context=None):
     except (TypeError, IndexError):
         return None
 
-def _learning_mechanism_learning_rate_setter(value, owning_component=None, context=None):
-    try:
-        # this prevents overridding a specified value on the function with
-        # this mechanism's default during initialization
-        # these checks could be done universally if we make a special handler
-        # for these parameters that serve only as mirrors into function
-        # parameters of the same name
-        if (
-            owning_component.initialization_status is not ContextFlags.INITIALIZING
-            or owning_component.parameters.learning_rate._user_specified
-            or not owning_component.function.parameters.learning_rate._user_specified
-        ):
-            owning_component.function.parameters.learning_rate._set(value, context)
-    except AttributeError:
-        pass
-    return value
 
 class LearningMechanism(ModulatoryMechanism_Base):
     """
@@ -979,7 +963,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         error_matrix = Parameter(None, modulable=True)
         learning_signal = Parameter(None, read_only=True, getter=_learning_signal_getter)
         error_signal = Parameter(None, read_only=True, getter=_error_signal_getter)
-        learning_rate = Parameter(None, modulable=True, setter=_learning_mechanism_learning_rate_setter)
+        learning_rate = FunctionParameter(None)
         learning_enabled = True
         modulation = ADDITIVE
         input_ports = Parameter(

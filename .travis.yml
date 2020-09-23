@@ -14,7 +14,9 @@ arch:
   - amd64
   - arm64
   - ppc64le
-  - s390x
+# Disabled until the scheduling issues are fixed:
+# https://travis-ci.community/t/s390x-build-fails-to-get-queued/9533
+#  - s390x
 
 stages:
   - precache
@@ -37,36 +39,6 @@ jobs:
       stage: precache
       env: PYTHON=3.6
       arch: arm64
-    - script: true
-      after_script: true
-      stage: precache
-      env: PYTHON=3.8
-      arch: ppc64le
-    - script: true
-      after_script: true
-      stage: precache
-      env: PYTHON=3.7
-      arch: ppc64le
-    - script: true
-      after_script: true
-      stage: precache
-      env: PYTHON=3.6
-      arch: ppc64le
-    - script: true
-      after_script: true
-      stage: precache
-      env: PYTHON=3.8
-      arch: s390x
-    - script: true
-      after_script: true
-      stage: precache
-      env: PYTHON=3.7
-      arch: s390x
-    - script: true
-      after_script: true
-      stage: precache
-      env: PYTHON=3.6
-      arch: s390x
 
 env:
   jobs:

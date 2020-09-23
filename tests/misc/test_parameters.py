@@ -240,3 +240,70 @@ def test_copy():
 def test_user_specified(cls_, kwargs, parameter, is_user_specified):
     c = cls_(**kwargs)
     assert getattr(c.parameters, parameter)._user_specified == is_user_specified
+
+
+class TestSharedParameters:
+
+    recurrent_mech = pnl.RecurrentTransferMechanism(default_variable=[0, 0], enable_learning=True)
+    recurrent_mech_no_learning = pnl.RecurrentTransferMechanism(default_variable=[0, 0])
+    transfer_with_costs = pnl.TransferWithCosts(default_variable=[0, 0])
+
+    test_values = [
+        (
+            recurrent_mech,
+            'learning_function',
+            recurrent_mech.learning_mechanism.parameters.function
+        ),
+        (
+            recurrent_mech,
+            'learning_rate',
+            recurrent_mech.learning_mechanism.parameters.learning_rate
+        ),
+        (
+            transfer_with_costs,
+            'transfer_fct_mult_param',
+            transfer_with_costs.transfer_fct.parameters.multiplicative_param
+        )
+    ]
+
+    @pytest.mark.parametrize(
+        'obj, parameter_name, source',
+        test_values + [
+            (recurrent_mech_no_learning, 'learning_function', None),
+        ]
+    )
+    def test_sources(self, obj, parameter_name, source):
+        assert getattr(obj.parameters, parameter_name).source is source
+
+    @pytest.mark.parametrize(
+        'obj, parameter_name, source',
+        test_values
+    )
+    def test_values(self, obj, parameter_name, source):
+        obj_param = getattr(obj.parameters, parameter_name)
+        eids = range(5)
+
+        for eid in eids:
+            obj.execute(np.array([eid, eid]), context=eid)
+
+        assert all([
+            obj_param.get(eid) is source.get(eid)
+            for eid in eids
+        ])
+
+    @pytest.mark.parametrize(
+        'obj, parameter_name, attr_name',
+        [
+            (transfer_with_costs, 'intensity_cost_fct_mult_param', 'modulable'),
+            (recurrent_mech, 'learning_function', 'stateful'),
+            (recurrent_mech, 'learning_function', 'loggable'),
+            (recurrent_mech.recurrent_projection, 'auto', 'modulable'),
+            (recurrent_mech, 'integration_rate', 'modulable'),
+            (recurrent_mech, 'noise', 'modulable'),
+        ]
+    )
+    def test_param_attrs_match(self, obj, parameter_name, attr_name):
+        shared_param = getattr(obj.parameters, parameter_name)
+        source_param = shared_param.source
+
+        assert getattr(shared_param, attr_name) == getattr(source_param, attr_name)

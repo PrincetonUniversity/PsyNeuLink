@@ -220,9 +220,9 @@ A Component defines its `parameters <Parameters>` in its *parameters* attribute,
 
 .. _Component_Function_Params:
 
-* **initial_function_parameters** - the `initial_function_parameters <Component.function>` attribute contains a
-  dictionary of the parameters for the Component's `function <Component.function>` and their values, to be used to
-  instantiate the function.  Each entry is the name of a parameter, and its value is the value of that parameter.
+* **initial_shared_parameters** - the `initial_shared_parameters <Component.function>` attribute contains a
+  dictionary of any parameters for the Component's functions or attributes, to be used to
+  instantiate the corresponding object.  Each entry is the name of a parameter, and its value is the value of that parameter.
   The parameters for a function can be specified when the Component is created in one of the following ways:
 
       * in an argument of the **Component's constructor** -- if all of the allowable functions for a Component's
@@ -478,6 +478,7 @@ COMMENT
 
 """
 import base64
+import collections
 import copy
 import dill
 import functools
@@ -509,7 +510,7 @@ from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.parameters import \
-    Defaults, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
+    Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
     PreferenceEntry, PreferenceLevel, PreferenceSet, _assign_prefs
@@ -1093,10 +1094,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             **parameter_values
         )
 
-        self.initial_function_parameters = {
-            k: v for k, v in parameter_values.items() if k in self.parameters.names() and getattr(self.parameters, k).function_parameter
-        }
-
         var = call_with_pruned_args(
             self._handle_default_variable,
             default_variable=default_variable,
@@ -1110,9 +1107,45 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             self.defaults.variable = default_variable
             self.parameters.variable._user_specified = True
 
+        # ASSIGN PREFS
+        _assign_prefs(self, prefs, BasePreferenceSet)
+
+        # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
+
+        # TODO: the below overrides setting default values to None context,
+        # at least in stateless parameters. Possibly more. Below should be
+        # removed eventually
+
+        # Validate the set passed in
+        self._instantiate_defaults(variable=default_variable,
+               request_set=parameter_values,  # requested set
+               assign_missing=True,                   # assign missing params from classPreferences to instanceDefaults
+               target_set=self.defaults.values(), # destination set to which params are being assigned
+               default_set=self.class_defaults.values(),   # source set from which missing params are assigned
+               context=context,
+               )
+
+        self.initial_shared_parameters = collections.defaultdict(dict)
+
+        for param_name, param in self.parameters.values(show_all=True).items():
+            if (
+                isinstance(param, SharedParameter)
+                and not isinstance(param.source, ParameterAlias)
+            ):
+                try:
+                    if parameter_values[param_name] is not None:
+                        isp_val = parameter_values[param_name]
+                    else:
+                        isp_val = copy.deepcopy(param.default_value)
+                except KeyError:
+                    isp_val = copy.deepcopy(param.default_value)
+
+                self.initial_shared_parameters[param.attribute_name][param.shared_parameter_name] = isp_val
+
         # we must know the final variable shape before setting up parameter
         # Functions or they will mismatch
         self._instantiate_parameter_classes(context)
+        self._override_unspecified_shared_parameters(context)
         self._validate_subfunctions()
 
         if reset_stateful_function_when is not None:
@@ -1134,9 +1167,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 raise ComponentError("{0} is a category class and so must implement a registry".
                                     format(self.__class__.__bases__[0].__name__))
 
-        # ASSIGN PREFS
-        _assign_prefs(self, prefs, BasePreferenceSet)
-
         # ASSIGN LOG
         from psyneulink.core.globals.log import Log
         self.log = Log(owner=self)
@@ -1156,21 +1186,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 except AttributeError:
                     # assume function is a method on self
                     pass
-
-        # VALIDATE VARIABLE AND PARAMS, AND ASSIGN DEFAULTS
-
-        # TODO: the below overrides setting default values to None context,
-        # at least in stateless parameters. Possibly more. Below should be
-        # removed eventually
-
-        # Validate the set passed in
-        self._instantiate_defaults(variable=default_variable,
-               request_set=parameter_values,  # requested set
-               assign_missing=True,                   # assign missing params from classPreferences to instanceDefaults
-               target_set=self.defaults.values(), # destination set to which params are being assigned
-               default_set=self.class_defaults.values(),   # source set from which missing params are assigned
-               context=context,
-               )
 
         self._runtime_params_reset = {}
 
@@ -1304,7 +1319,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      # Reference to other components
                      "objective_mechanism", "agent_rep", "projections",
                      # Shape mismatch
-                     "costs", "auto", "hetero",
+                     "auto", "hetero", "cost", "costs", "combined_costs",
                      # autodiff specific types
                      "pytorch_representation", "optimizer"}
         # Mechanism's need few extra entires:
@@ -1338,12 +1353,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     def _is_param_modulated(self, p):
         try:
-            if p.name in self.owner.parameter_ports:
+            if p in self.owner.parameter_ports:
                 return True
         except AttributeError:
             pass
         try:
-            if p.name in self.parameter_ports:
+            if p in self.parameter_ports:
                 return True
         except AttributeError:
             pass
@@ -1669,7 +1684,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         return
 
     def _set_parameter_value(self, param, val, context=None):
-        getattr(self.parameters, param)._set(val, context)
+        param = getattr(self.parameters, param)
+        param._set(val, context)
         if hasattr(self, "parameter_ports"):
             if param in self.parameter_ports:
                 new_port_value = self.parameter_ports[param].execute(
@@ -1678,7 +1694,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 self.parameter_ports[param].parameters.value._set(new_port_value, context)
         elif hasattr(self, "owner"):
             if hasattr(self.owner, "parameter_ports"):
+                # skip Components, assume they are to be run to provide the
+                # value instead of given as a variable to a parameter port
                 if param in self.owner.parameter_ports:
+                    try:
+                        if any([isinstance(v, Component) for v in val]):
+                            return
+                    except TypeError:
+                        if isinstance(val, Component):
+                            return
+
                     new_port_value = self.owner.parameter_ports[param].execute(
                         context=Context(execution_phase=ContextFlags.EXECUTING, execution_id=context.execution_id)
                     )
@@ -1975,7 +2000,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 else:
                     param_defaults[p.source.name] = param_defaults[p.name]
 
-        for p in filter(lambda x: not isinstance(x, ParameterAlias), self.parameters):
+        for p in filter(lambda x: not isinstance(x, (ParameterAlias, SharedParameter)), self.parameters):
             p._user_specified = _is_user_specified(p)
 
             # copy spec so it is not overwritten later
@@ -1990,16 +2015,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     if isinstance(val, Function):
                         if val.owner is not None:
                             val = copy.deepcopy(val)
-
-                        val.owner = self
                 else:
                     val = copy_parameter_value(
                         p.default_value,
                         shared_types=shared_types
                     )
 
-                    if isinstance(val, Function):
-                        val.owner = self
+                if isinstance(val, Function):
+                    val.owner = self
 
                 p.set(val, context=context, skip_history=True, override=True)
 
@@ -2020,12 +2043,20 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 if (
                     p.name != FUNCTION
                     and not p.reference
+                    and not isinstance(p, SharedParameter)
                 ):
                     if (
                         inspect.isclass(val)
                         and issubclass(val, Function)
                     ):
-                        val = val()
+                        # instantiate class val with all relevant shared parameters
+                        # some shared parameters may not be arguments (e.g.
+                        # transfer_fct additive_param when function is Identity)
+                        val = call_with_pruned_args(
+                            val,
+                            **self.initial_shared_parameters[p.name]
+                        )
+
                         val.owner = self
                         p._set(val, context)
 
@@ -2040,6 +2071,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     p.name != FUNCTION
                     and not p.reference
                     and isinstance(val, Function)
+                    and not isinstance(p, SharedParameter)
                 ):
                     try:
                         parse_variable_method = getattr(
@@ -2079,6 +2111,35 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                 function_default_variable,
                                 context
                             )
+
+    def _override_unspecified_shared_parameters(self, context):
+        for param_name, param in self.parameters.values(show_all=True).items():
+            if (
+                isinstance(param, SharedParameter)
+                and not isinstance(param.source, ParameterAlias)
+            ):
+                try:
+                    obj = getattr(self.parameters, param.attribute_name)
+                    shared_objs = [obj.default_value, obj._get(context)]
+                except AttributeError:
+                    obj = getattr(self, param.attribute_name)
+                    shared_objs = [obj]
+
+                for c in shared_objs:
+                    if isinstance(c, Component):
+                        try:
+                            shared_obj_param = getattr(c.parameters, param.shared_parameter_name)
+                        except AttributeError:
+                            continue
+
+                        if (
+                            not shared_obj_param._user_specified
+                            and param.primary
+                            and param.default_value is not None
+                        ):
+                            shared_obj_param.default_value = copy.deepcopy(param.default_value)
+                            shared_obj_param._set(copy.deepcopy(param.default_value), context)
+                            shared_obj_param._user_specified = param._user_specified
 
     @handle_external_context()
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS, context=None):
@@ -2127,7 +2188,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 visited.add(comp)
                 comp._initialize_from_context(context, base_context, override, visited=visited)
 
-        non_alias_params = [p for p in self.stateful_parameters if not isinstance(p, ParameterAlias)]
+        non_alias_params = [p for p in self.stateful_parameters if not isinstance(p, (ParameterAlias, SharedParameter))]
         for param in non_alias_params:
             if param.setter is None:
                 param._initialize_from_context(context, base_context, override)
@@ -2506,7 +2567,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 p.name != FUNCTION  # has specialized validation
                 and isinstance(p.default_value, Function)
                 and not p.reference
-                and not p.function_parameter
+                and not isinstance(p, SharedParameter)
             ):
                 # TODO: assert it's not stateful?
                 function_variable = p.default_value.defaults.variable
@@ -2773,6 +2834,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     except KeyError:
                         pass
 
+                try:
+                    kwargs_to_instantiate.update(self.initial_shared_parameters[FUNCTION])
+                except KeyError:
+                    pass
+
                 # matrix is determined from ParameterPort based on string value in function_params
                 # update it here if needed
                 if MATRIX in kwargs_to_instantiate:
@@ -2797,9 +2863,20 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     def _instantiate_attributes_after_function(self, context=None):
         if hasattr(self, "_parameter_ports"):
+            shared_params = [p for p in self.parameters if isinstance(p, (ParameterAlias, SharedParameter))]
+            sources = [p.source for p in shared_params]
+
             for param_port in self._parameter_ports:
-                setattr(self.__class__, "mod_" + param_port.name, make_property_mod(param_port.name))
-                setattr(self.__class__, "get_mod_" + param_port.name, make_stateful_getter_mod(param_port.name))
+                property_names = {param_port.name}
+                try:
+                    alias_index = sources.index(param_port.source)
+                    property_names.add(shared_params[alias_index].name)
+                except ValueError:
+                    pass
+
+                for property_name in property_names:
+                    setattr(self.__class__, "mod_" + property_name, make_property_mod(property_name, param_port.name))
+                    setattr(self.__class__, "get_mod_" + property_name, make_stateful_getter_mod(property_name, param_port.name))
 
     def _instantiate_value(self, context=None):
         #  - call self.execute to get value, since the value of a Component is defined as what is returned by its
@@ -2966,12 +3043,58 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         return self.parameters.is_finished_flag._get(context)
 
     def _parse_param_port_sources(self):
-        try:
+        if hasattr(self, '_parameter_ports'):
             for param_port in self._parameter_ports:
-                if param_port.source == FUNCTION:
-                    param_port.source = self.function
-        except AttributeError:
+                try:
+                    orig_source = param_port.source
+                    param_port.source = param_port.source(self)
+                    del self.parameter_ports.parameter_mapping[orig_source]
+                    self.parameter_ports.parameter_mapping[param_port.source] = param_port
+                except TypeError:
+                    pass
+
+    def _get_current_parameter_value(self, parameter, context=None):
+        from psyneulink.core.components.ports.parameterport import ParameterPortError
+
+        if parameter == "variable" or parameter == self.parameters.variable:
+            raise ComponentError(
+                f"The method '_get_current_parameter_value' is intended for retrieving the current "
+                f"value of a modulable parameter; 'variable' is not a modulable parameter. If looking "
+                f"for {self.name}'s default variable, try '{self.name}.defaults.variable'."
+            )
+
+        try:
+            parameter = getattr(self.parameters, parameter)
+        # just fail now if string and no corresponding parameter (AttributeError)
+        except TypeError:
             pass
+
+        parameter_port_list = None
+        try:
+            # parameter is SharedParameter and ultimately points to
+            # something with a corresponding ParameterPort
+            parameter_port_list = parameter.final_source._owner._owner.parameter_ports
+        except AttributeError:
+            # prefer parameter ports from self over owner
+            try:
+                parameter_port_list = self._parameter_ports
+            except AttributeError:
+                try:
+                    parameter_port_list = self.owner._parameter_ports
+                except AttributeError:
+                    pass
+
+        if parameter_port_list is not None:
+            try:
+                return parameter_port_list[parameter].parameters.value._get(context)
+            # *parameter* string or Parameter didn't correspond to a parameter port
+            except TypeError:
+                pass
+            except ParameterPortError as e:
+                if 'Multiple ParameterPorts' in str(e):
+                    raise
+
+        return parameter._get(context)
 
     def _increment_execution_count(self, count=1):
         self.parameters.execution_count.set(self.execution_count + count, override=True)
@@ -3187,6 +3310,19 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """
         self.log.set_log_conditions(items=items, log_condition=log_condition)
 
+    def set_delivery_conditions(self, items, delivery_condition=LogCondition.EXECUTION):
+        """
+        _set_delivery_conditions(          \
+            items                    \
+            delivery_condition=EXECUTION  \
+        )
+
+        Specifies items to be delivered to external application via gRPC; these must be be `loggable_items <Component.loggable_items>`
+        of the Component's `log <Component.log>`. This is a convenience method that calls the `_set_delivery_conditions <Log._set_delivery_conditions>`
+        method of the Component's `log <Component.log>`.
+        """
+        self.log._set_delivery_conditions(items=items, delivery_condition=delivery_condition)
+
     def log_values(self, entries):
         """
         log_values(              \
@@ -3204,7 +3340,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         from psyneulink.core.compositions.composition import Composition
         from psyneulink.core.components.ports.port import Port
         from psyneulink.core.components.ports.outputport import OutputPort
-        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+        from psyneulink.core.components.ports.parameterport import ParameterPortError
+        from psyneulink.core.components.functions.transferfunctions import LinearMatrix
 
         def parse_parameter_value(value):
             if isinstance(value, (list, tuple)):
@@ -3271,7 +3408,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         for p in self.parameters:
             if (
                 p.name not in self._model_spec_parameter_blacklist
-                and not isinstance(p, ParameterAlias)
+                and not isinstance(p, (ParameterAlias, SharedParameter))
             ):
                 if self.initialization_status is ContextFlags.DEFERRED_INIT:
                     try:
@@ -3280,14 +3417,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                         # class default
                         val = p.default_value
                 else:
-                    # special handling because MappingProjection matrix just
-                    # refers to its function's matrix but its default values are
-                    # PNL-specific
+                    # special handling because LinearMatrix default values
+                    # can be PNL-specific keywords. In future, generalize
+                    # this workaround
                     if (
-                        isinstance(self, MappingProjection)
+                        isinstance(self, LinearMatrix)
                         and p.name == 'matrix'
                     ):
-                        val = self.function.defaults.matrix
+                        val = self.parameters.matrix.values[None]
                     elif p.spec is not None:
                         val = p.spec
                     else:
@@ -3298,7 +3435,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 try:
                     matching_parameter_port = self.owner.parameter_ports[p.name]
 
-                    if matching_parameter_port.source is self:
+                    if matching_parameter_port.source._owner._owner is self:
                         val = {
                             MODEL_SPEC_ID_PARAMETER_SOURCE: '{0}.{1}.{2}'.format(
                                 self.owner.name,
@@ -3309,7 +3446,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                             MODEL_SPEC_ID_TYPE: type(val)
                         }
                 # ContentAddressableList uses TypeError when key not found
-                except (AttributeError, TypeError):
+                except (AttributeError, TypeError, ParameterPortError):
                     pass
 
                 # split parameters designated as PsyNeuLink-specific and
@@ -3477,11 +3614,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 COMPONENT_BASE_CLASS = Component
 
 
-def make_property_mod(param_name):
+def make_property_mod(param_name, parameter_port_name=None):
+    if parameter_port_name is None:
+        parameter_port_name = param_name
 
     def getter(self):
         try:
-            return self._parameter_ports[param_name].value
+            return self._parameter_ports[parameter_port_name].value
         except TypeError:
             raise ComponentError("{} does not have a '{}' ParameterPort."
                                  .format(self.name, param_name))
@@ -3495,11 +3634,13 @@ def make_property_mod(param_name):
     return prop
 
 
-def make_stateful_getter_mod(param_name):
+def make_stateful_getter_mod(param_name, parameter_port_name=None):
+    if parameter_port_name is None:
+        parameter_port_name = param_name
 
     def getter(self, context=None):
         try:
-            return self._parameter_ports[param_name].parameters.value.get(context)
+            return self._parameter_ports[parameter_port_name].parameters.value.get(context)
         except TypeError:
             raise ComponentError("{} does not have a '{}' ParameterPort."
                                  .format(self.name, param_name))

@@ -1077,8 +1077,8 @@ class DDM(ProcessingMechanism):
                                format(self.function.name, self.name))
 
             # Convert ER to decision variable:
-            threshold = float(self.function._get_current_function_param(THRESHOLD, context))
-            random_state = self._get_current_mechanism_param("random_state", context)
+            threshold = float(self.function._get_current_parameter_value(THRESHOLD, context))
+            random_state = self._get_current_parameter_value(self.parameters.random_state, context)
             if random_state.rand() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
@@ -1185,14 +1185,14 @@ class DDM(ProcessingMechanism):
                     break
 
         if (
-            abs(single_value) >= self.function._get_current_function_param(THRESHOLD, context)
+            abs(single_value) >= self.function._get_current_parameter_value(THRESHOLD, context)
             and isinstance(self.function, IntegratorFunction)
         ):
             logger.info(
                 '{0} {1} has reached threshold {2}'.format(
                     type(self).__name__,
                     self.name,
-                    self.function._get_current_function_param(THRESHOLD, context)
+                    self.function._get_current_parameter_value(THRESHOLD, context)
                 )
             )
             return True

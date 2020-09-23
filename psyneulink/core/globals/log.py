@@ -401,7 +401,6 @@ __all__ = [
 
 LogEntry = namedtuple('LogEntry', 'time, context, value')
 
-
 class LogCondition(enum.IntFlag):
     """Used to specify the context in which a value of the Component or its attribute is `logged <Log_Conditions>`.
 
@@ -437,12 +436,12 @@ class LogCondition(enum.IntFlag):
     """Specifies all contexts."""
 
     @classmethod
-    def _get_log_condition_string(cls, condition, string=None):
-        """Return string with the names of all flags that are set in **condition**, prepended by **string**"""
-        if string:
-            string += ": "
+    def _get_log_condition_string(cls, condition, cond_str=None):
+        """Return string with the names of all flags that are set in **condition**, prepended by **cond_str**"""
+        if cond_str:
+            cond_str += ": "
         else:
-            string = ""
+            cond_str = ""
         flagged_items = []
         # If OFF or ALL_ASSIGNMENTS, just return that
         if condition in (LogCondition.ALL_ASSIGNMENTS, LogCondition.OFF):
@@ -459,18 +458,17 @@ class LogCondition(enum.IntFlag):
                 flagged_items.append(c)
 
         if len(flagged_items) > 0:
-            string += ", ".join(flagged_items)
-            return string
+            cond_str += ", ".join(flagged_items)
+            return cond_str
         else:
             return 'invalid LogCondition'
 
     @staticmethod
-    def from_string(string):
+    def from_string(s):
         try:
-            return LogCondition[string.upper()]
+            return LogCondition[s.upper()]
         except KeyError:
-            raise LogError("\'{}\' is not a value of {}".format(string, LogCondition))
-
+            raise LogError("\'{}\' is not a value of {}".format(s, LogCondition))
 
 TIME_NOT_SPECIFIED = 'Time Not Specified'
 EXECUTION_CONDITION_NAMES = {LogCondition.PROCESSING.name,
@@ -721,7 +719,13 @@ class Log:
     @property
     def parameter_port_items(self):
         try:
-            return [MODULATED_PARAMETER_PREFIX + name for name in self.owner.parameter_ports.names]
+            return [
+                name for name in self.owner.__dir__()
+                if (
+                    name.startswith(MODULATED_PARAMETER_PREFIX)
+                    and name.split(MODULATED_PARAMETER_PREFIX)[1] in self.owner.parameter_ports
+                )
+            ]
         except AttributeError:
             return []
 
@@ -736,33 +740,33 @@ class Log:
     def all_items(self):
         return sorted(self.parameter_items + self.input_port_items + self.output_port_items + self.parameter_port_items + self.function_items)
 
-    def _get_parameter_from_item_string(self, string):
+    def _get_parameter_from_item_string(self, item_str):
         # KDM 8/15/18: can easily cache these results if it occupies too much time, assuming
         # no duplicates/changing
-        if string.startswith(MODULATED_PARAMETER_PREFIX):
+        if item_str.startswith(MODULATED_PARAMETER_PREFIX):
             try:
-                return self.owner.parameter_ports[string[len(MODULATED_PARAMETER_PREFIX):]].parameters.value
+                return self.owner.parameter_ports[item_str[len(MODULATED_PARAMETER_PREFIX):]].parameters.value
             except (AttributeError, TypeError):
                 pass
 
         try:
-            return getattr(self.owner.parameters, string)
+            return getattr(self.owner.parameters, item_str)
         except AttributeError:
             pass
 
         try:
-            return self.owner.input_ports[string].parameters.value
+            return self.owner.input_ports[item_str].parameters.value
         except (AttributeError, TypeError):
             pass
 
         try:
-            return self.owner.output_ports[string].parameters.value
+            return self.owner.output_ports[item_str].parameters.value
         except (AttributeError, TypeError):
             pass
 
-        if string.startswith(FUNCTION_PARAMETER_PREFIX):
+        if item_str.startswith(FUNCTION_PARAMETER_PREFIX):
             try:
-                return getattr(self.owner.function.parameters, string[len(FUNCTION_PARAMETER_PREFIX):])
+                return getattr(self.owner.function.parameters, item_str[len(FUNCTION_PARAMETER_PREFIX):])
             except AttributeError:
                 pass
 
@@ -832,6 +836,107 @@ class Log:
                 assign_log_condition(item, log_condition)
             else:
                 assign_log_condition(item[0], item[1])
+
+    def _set_delivery_conditions(self, items, delivery_condition=LogCondition.EXECUTION):
+        """Specifies items to be delivered via gRPC under the specified `LogCondition`\\(s).
+
+        Arguments
+        ---------
+
+        items : str, Component, tuple or List of these
+            specifies items to be logged;  these must be be `loggable_items <Log.loggable_items>` of the Log.
+            Each item must be a:
+            * string that is the name of a `loggable_item` <Log.loggable_item>` of the Log's `owner <Log.owner>`;
+            * a reference to a Component;
+            * tuple, the first item of which is one of the above, and the second a `ContextFlags` to use for the item.
+
+        delivery_condition : LogCondition : default LogCondition.EXECUTION
+            specifies `LogCondition` to use as the default for items not specified in tuples (see above).
+            For convenience, the name of a LogCondition can be used in place of its full specification
+            (e.g., *EXECUTION* instead of `LogCondition.EXECUTION`).
+
+        params_set : list : default None
+            list of parameters to include as loggable items;  these must be attributes of the `owner <Log.owner>`
+            (for example, Mechanism
+
+        """
+        from psyneulink.core.components.component import Component
+        from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+        from psyneulink.core.globals.keywords import ALL
+
+        def assign_delivery_condition(item, level):
+
+            # Handle multiple level assignments (as LogCondition or strings in a list)
+            if not isinstance(level, list):
+                level = [level]
+            levels = LogCondition.OFF
+            for l in level:
+                if isinstance(l, str):
+                    l = LogCondition.from_string(l)
+                levels |= l
+            level = levels
+
+            if item not in self.loggable_items:
+                # KDM 8/13/18: NOTE: add_entries is not defined anywhere
+                raise LogError("\'{0}\' is not a loggable item for {1} (try using \'{1}.log.add_entries()\')".
+                               format(item, self.owner.name))
+
+            self._get_parameter_from_item_string(item).delivery_condition = level
+
+        if items == ALL:
+            for component in self.loggable_components:
+                component.logPref = PreferenceEntry(delivery_condition, PreferenceLevel.INSTANCE)
+
+            for item in self.all_items:
+                self._get_parameter_from_item_string(item).delivery_condition = delivery_condition
+            # self.logPref = PreferenceEntry(log_condition, PreferenceLevel.INSTANCE)
+            return
+
+        if not isinstance(items, list):
+            items = [items]
+
+        # allow multiple sets of conditions to be set for multiple items with one call
+        for item in items:
+            if isinstance(item, (str, Component)):
+                if isinstance(item, Component):
+                    item = item.name
+                assign_delivery_condition(item, delivery_condition)
+            else:
+                assign_delivery_condition(item[0], item[1])
+
+    @tc.typecheck
+    @handle_external_context()
+    def _deliver_values(self, entries, context=None):
+        from psyneulink.core.globals.parameters import parse_context
+        """Deliver the value of one or more Components programmatically.
+
+        This can be used to "manually" prepare the `value <Component.value>` of any of a Component's `loggable_items
+        <Component.loggable_items>` (including its own `value <Component.value>`) for delivery to an external application via gRPC.
+        If the call to _deliver_values is made while a Composition to which the Component belongs is being run (e.g.,
+        in a **call_before..** or **call_after...** argument of its `run <Composition.run>` method), then the time of
+        the LogEntry is assigned the value of the `Clock` of the Composition's `scheduler` or `scheduler_learning`,
+        whichever is currently executing (see `Composition_Scheduler`).
+
+        Arguments
+        ---------
+
+        entries : string, Component or list containing either : default ALL
+            specifies the Components, the current `value <Component.value>`\\s of which should be added prepared for
+            transmission to an external application via gRPC.
+            they must be `loggable_items <Log.loggable_items>` of the owner's Log. If **entries** is *ALL* or is not
+            specified, then the `value <Component.value>`\\s of all `loggable_items <Log.loggable_items>` are logged.
+        """
+        entries = self._validate_entries_arg(entries)
+        original_source = context.source
+        context.source = ContextFlags.COMMAND_LINE
+
+        # Validate the Component field of each LogEntry
+        for entry in entries:
+            param = self._get_parameter_from_item_string(entry)
+            context = parse_context(context)
+            param._deliver_value(param._get(context), context)
+
+        context.source = original_source
 
     @tc.typecheck
     def _log_value(
@@ -1746,17 +1851,17 @@ class CompositionLog(Log):
             + ([self.owner.controller.name] if self.owner.controller is not None else [])
         )
 
-    def _get_parameter_from_item_string(self, string):
-        param = super()._get_parameter_from_item_string(string)
+    def _get_parameter_from_item_string(self, item_str):
+        param = super()._get_parameter_from_item_string(item_str)
 
         if param is None:
             try:
-                return self.owner.nodes[string].parameters.value
+                return self.owner.nodes[item_str].parameters.value
             except (AttributeError, TypeError):
                 pass
 
             try:
-                return self.owner.projections[string].parameters.value
+                return self.owner.projections[item_str].parameters.value
             except (AttributeError, TypeError):
                 pass
 

@@ -1735,7 +1735,7 @@ class GridSearch(OptimizationFunction):
                         # swap with probability = 1/optimal_value_count in order to achieve
                         # uniformly random selection from identical outcomes
                         probability = 1 / optimal_value_count
-                        random_state = self._get_current_function_param("random_state", context)
+                        random_state = self._get_current_parameter_value("random_state", context)
                         random_value = random_state.rand()
 
                         if random_value < probability:
@@ -2236,8 +2236,8 @@ class ParamEstimationFunction(OptimizationFunction):
         # its crap.
         random_state = np.random.RandomState([seed])
 
-        # Has the ELFI model been setup yet. Nope!
-        self._is_model_initialized = False
+        # Our instance of elfi model
+        self._elfi_model = None
 
         # The simulator function we will pass to ELFI, this is really the objective_function
         # with some stuff wrapped around it to massage its return values and arguments.
@@ -2362,7 +2362,7 @@ class ParamEstimationFunction(OptimizationFunction):
         """
 
         # If the model has not been initialized, try to do it.
-        if not self._is_model_initialized:
+        if self._elfi_model is None:
 
             elfi = ParamEstimationFunction._import_elfi()
 
@@ -2373,6 +2373,10 @@ class ParamEstimationFunction(OptimizationFunction):
             # If it did fail, we return early without initializing, hopefully next time.
             if self._sim_func is None:
                 return
+
+            old_model = elfi.get_default_model()
+
+            my_elfi_model = elfi.new_model(self.name, True)
 
             # FIXME: A lot of checking needs to happen, here. Correct order, valid elfi prior, etc.
             # Construct the ELFI priors from the list of prior specifcations
@@ -2393,8 +2397,11 @@ class ParamEstimationFunction(OptimizationFunction):
 
             self._sampler = elfi.Rejection(d, batch_size=1, seed=self._seed)
 
-            # Mark that we are initialized
-            self._is_model_initialized = True
+            # Store our new model
+            self._elfi_model = my_elfi_model
+
+            # Restore the previous default
+            elfi.set_default_model(old_model)
 
     def function(self,
                  variable=None,
@@ -2429,15 +2436,19 @@ class ParamEstimationFunction(OptimizationFunction):
         return_optimal_value= 0.0
 
         # Try to initialize the model if it hasn't been.
-        if not self._is_model_initialized:
+        if self._elfi_model is None:
             self._initialize_model(context)
 
         # Intialization can fail for reasons silenty, mainly that PsyNeuLink needs to
         # invoke these functions multiple times during initialization. We only want
         # to proceed if this is the real deal.
-        if not self._is_model_initialized:
+        if self._elfi_model is None:
             return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values
 
+        elfi = ParamEstimationFunction._import_elfi()
+
+        old_model = elfi.get_default_model()
+        elfi.set_default_model(self._elfi_model)
         # Run the sampler
         result = self._sampler.sample(**self._sampler_args)
 
@@ -2446,12 +2457,15 @@ class ParamEstimationFunction(OptimizationFunction):
         # number of simulations. N is not the total number of simulation
         # samples. We will return a random sample from this set for the
         # "optimal" control allocation.
-        random_state = self._get_current_function_param("random_state", context)
+        random_state = self._get_current_parameter_value("random_state", context)
         sample_idx = random_state.randint(low=0, high=result.n_samples)
         return_optimal_sample = np.array(result.samples_array[sample_idx])
         return_optimal_value = result.discrepancies[sample_idx]
         return_all_samples = np.array(result.samples_array)
         return_all_values = np.array(result.discrepancies)
+
+        # Restore the old default
+        elfi.set_default_model(old_model)
 
         print(result)
         return return_optimal_sample, return_optimal_value, return_all_samples, return_all_values

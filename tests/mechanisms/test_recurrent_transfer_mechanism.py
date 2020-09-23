@@ -119,10 +119,13 @@ class TestRecurrentTransferMechanismInputs:
 
         val1 = EX([10, 12, 0, -1])
         val2 = EX([1, 2, 3, 0])
-        benchmark(EX, [1, 2, 3, 0])
 
+        # The outputs match inputs because recurrent projection is
+        # not used when executing: mech is reset each time
         np.testing.assert_allclose(val1, [[10.0, 12.0, 0, -1]])
-        np.testing.assert_allclose(val2, [[1, 2, 3, 0]])  # because recurrent projection is not used when executing: mech is reset each time
+        np.testing.assert_allclose(val2, [[1, 2, 3, 0]])
+        if benchmark.enabled:
+            benchmark(EX, [1, 2, 3, 0])
 
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
@@ -145,7 +148,6 @@ class TestRecurrentTransferMechanismInputs:
             EX = e.cuda_execute
 
         val = benchmark(EX, [10.0, 10.0, 10.0, 10.0])
-
         np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
     @pytest.mark.mechanism
@@ -174,12 +176,13 @@ class TestRecurrentTransferMechanismInputs:
         val2 = EX([[1.0, 2.0]])
         # execute 10 times
         for i in range(10):
-            val = EX([[1.0, 2.0]])
-        benchmark(EX, [[1.0, 2.0]])
+            val10 = EX([[1.0, 2.0]])
 
         assert np.allclose(val1, [[0.50249998, 0.50499983]])
         assert np.allclose(val2, [[0.50497484, 0.50994869]])
-        assert np.allclose(val, [[0.52837327, 0.55656439]])
+        assert np.allclose(val10, [[0.52837327, 0.55656439]])
+        if benchmark.enabled:
+            benchmark(EX, [[1.0, 2.0]])
 
     # def test_recurrent_mech_inputs_list_of_fns(self):
     #     R = RecurrentTransferMechanism(
@@ -215,8 +218,9 @@ class TestRecurrentTransferMechanismInputs:
             EX = e.cuda_execute
 
         val = EX([10])
-        benchmark(EX, [1])
         np.testing.assert_allclose(val, [[10.]])
+        if benchmark.enabled:
+            benchmark(EX, [1])
 
     def test_recurrent_mech_inputs_list_of_strings(self):
         with pytest.raises(FunctionError) as error_text:

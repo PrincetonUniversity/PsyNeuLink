@@ -30,8 +30,9 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal, CostFunctions
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
+from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS, LEARNED_PROJECTIONS, \
+    ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS, LEARNED_PROJECTIONS, \
     NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, SLOPE, TARGET_MECHANISM, VARIANCE
 from psyneulink.core.scheduling.condition import AfterNCalls, AtTimeStep, AtTrial, Never
 from psyneulink.core.scheduling.condition import EveryNCalls
@@ -2084,7 +2085,9 @@ class TestExecutionOrder:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, bin_execute=mode)
         assert np.allclose(output, 320)
-        benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2127,14 +2130,11 @@ class TestExecutionOrder:
 
 
         inputs_dict = {B: [4.0]}
-        # sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict,
-                          # scheduler=sched,
-                          bin_execute=mode)
+        output = comp.run(inputs=inputs_dict, bin_execute=mode)
         assert np.allclose(output, 354.19328716)
-        benchmark(comp.run, inputs=inputs_dict,
-                  # scheduler=sched,
-                  bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(comp.run, inputs=inputs_dict, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2179,7 +2179,9 @@ class TestExecutionOrder:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, bin_execute=mode)
         assert np.allclose(output, 650.83865743)
-        benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2222,14 +2224,10 @@ class TestExecutionOrder:
 
 
         inputs_dict = {B: [4.0]}
-        # sched = Scheduler(composition=comp)
-        output = comp.run(inputs=inputs_dict,
-                          # scheduler=sched,
-                          bin_execute=mode)
+        output = comp.run(inputs=inputs_dict, bin_execute=mode)
         assert np.allclose(output, 150.83865743)
-        benchmark(comp.run, inputs=inputs_dict,
-                  # scheduler=sched,
-                  bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.run, inputs=inputs_dict, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2275,7 +2273,9 @@ class TestExecutionOrder:
         sched = Scheduler(composition=comp)
         output = comp.run(inputs=inputs_dict, scheduler=sched, bin_execute=mode)
         assert np.allclose(output, 600)
-        benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Transfer")
@@ -3158,9 +3158,7 @@ class TestRun:
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_execute_composition(self, mode):
         comp = Composition()
@@ -3196,7 +3194,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [[1]]}
         sched = Scheduler(composition=comp)
-        output = benchmark(comp.execute, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
+        output = benchmark(comp.run, inputs=inputs_dict, scheduler=sched, bin_execute=mode)
         assert np.allclose(89., output)
 
     @pytest.mark.composition
@@ -3220,7 +3218,7 @@ class TestRun:
         comp._analyze_graph()
         inputs_dict = {A: [[1]]}
         sched = Scheduler(composition=comp)
-        output = comp.execute(inputs=inputs_dict, scheduler=sched, bin_execute=mode)
+        output = comp.run(inputs=inputs_dict, scheduler=sched, bin_execute=mode)
         assert np.allclose(32., output)
 
     def test_LPP_end_with_projection(self):
@@ -3285,7 +3283,7 @@ class TestRun:
         inner_comp = Composition(pathways=[m_inner])
         m_outer = ProcessingMechanism(size=2)
         outer_comp = Composition(pathways=[m_outer, inner_comp])
-        result = outer_comp.execute(bin_execute=mode)
+        result = outer_comp.run(bin_execute=mode)
         assert np.allclose(result, [[0.0],[0.0]])
 
     @pytest.mark.composition
@@ -3600,16 +3598,15 @@ class TestRun:
         #                          ( 5 + 15 + 2) * 5 = 110,
         #                          ( 5 + 10 + 3) * 5 = 90
         assert np.allclose([130.0, 110.0, 90.0], output2)
-        benchmark(comp.run, inputs={A: [[1.0, 2.0, 3.0]]}, scheduler=sched, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.run, inputs={A: [[1.0, 2.0, 3.0]]}, scheduler=sched, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_hetero(self, benchmark, mode):
         comp = Composition()
@@ -3631,16 +3628,15 @@ class TestRun:
 
         assert np.allclose(val, [[0.99330715]])
 
-        benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_integrator(self, benchmark, mode):
         comp = Composition()
@@ -3664,16 +3660,15 @@ class TestRun:
 
         assert np.allclose(val, [[0.6320741]])
 
-        benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.execute, inputs={R: [[1.0]]}, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_vector_2(self, benchmark, mode):
         comp = Composition()
@@ -3692,16 +3687,15 @@ class TestRun:
 
         assert np.allclose(val, [[0.87507549,  0.94660049]])
 
-        benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_hetero_2(self, benchmark, mode):
         comp = Composition()
@@ -3723,16 +3717,15 @@ class TestRun:
 
         assert np.allclose(val, [[0.36286875, 0.78146724]])
 
-        benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Recurrent")
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVM', marks=pytest.mark.llvm),
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
                                       ])
     def test_run_recurrent_transfer_mechanism_integrator_2(self, benchmark, mode):
         comp = Composition()
@@ -3756,7 +3749,8 @@ class TestRun:
 
         assert np.allclose(val, [[0.49922843, 0.52838607]])
 
-        benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, bin_execute=mode)
 
     def test_run_termination_condition_custom_context(self):
         D = pnl.DDM(function=pnl.DriftDiffusionIntegrator)
@@ -6276,8 +6270,7 @@ class TestInitialize:
         abc_Composition.run(inputs={A: [1.0, 2.0, 3.0]},
                             initialize_cycle_values={C: 2.0})
 
-        abc_Composition.run(inputs={A: [1.0, 2.0, 3.0]},
-                            initialize_cycle_values={C: 2.0})
+        abc_Composition.run(inputs={A: [1.0, 2.0, 3.0]})
 
         # Run 1 --> Execution 1: 1 + 2 = 3    |    Execution 2: 3 + 2 = 5    |    Execution 3: 5 + 3 = 8
         # Run 2 --> Execution 1: 8 + 1 = 9    |    Execution 2: 9 + 2 = 11    |    Execution 3: 11 + 3 = 14
@@ -6294,29 +6287,103 @@ class TestInitialize:
             a_Composition.run(inputs={A:[1]},
                               initialize_cycle_values={A:[1]})
 
-
-class TestResetValues:
-
-    def test_initialize_all_mechanisms(self):
+    @pytest.mark.parametrize("context_specified", [True, False])
+    def test_initialize_cycles(self, context_specified):
         A = TransferMechanism(name='A')
         B = TransferMechanism(name='B')
         C = RecurrentTransferMechanism(name='C',
                                        auto=1.0)
-        comp = Composition(pathways=[A,B,C])
-        C.log.set_log_conditions('value')
 
-        comp.run(inputs={A: [1.0, 2.0, 3.0]},
-                 initialize_cycle_values={C: [2.0]})
-        comp.run(inputs={A: [1.0, 2.0, 3.0]},
-                 initialize_cycle_values={C: [2.0]})
+        context = Context(execution_id='a') if context_specified else NotImplemented
 
-        assert np.allclose(
-            C.log.nparray_dictionary('value')[comp.default_execution_id]['value'],
-            #                      Value of C:
-            # Run 1 --> Execution 1: 1 + 2 = 3    |    Execution 2: 3 + 2 = 5    |    Execution 3: 5 + 3 = 8
-            # Run 2 --> Execution 1: 8 + 1 = 9    |    Execution 2: 9 + 2 = 11    |    Execution 3: 11 + 3 = 14
-            [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]]
+        abc_Composition = Composition(pathways=[[A, B, C]])
+
+        abc_Composition.initialize({C: 2.0}, context=context)
+
+        abc_Composition.run(inputs={A: [1.0, 2.0, 3.0]}, context=context)
+
+        if not context_specified:
+            abc_Composition.run()
+
+        abc_Composition.run(inputs={A: [1.0, 2.0, 3.0]}, context=context)
+
+        # Run 1 --> Execution 1: 1 + 2 = 3    |    Execution 2: 3 + 2 = 5    |    Execution 3: 5 + 3 = 8
+        # Run 2 --> Execution 1: 8 + 1 = 9    |    Execution 2: 9 + 2 = 11    |    Execution 3: 11 + 3 = 14
+        assert abc_Composition.results == [[[3]], [[5]], [[8]], [[9]], [[11]], [[14]]]
+
+    def test_initialize_cycles_excluding_unspecified_nodes(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+
+        comp = Composition(pathways=[A, B, C, A])
+        comp.run({A: 1, B: 1, C: 1})
+        context = comp.most_recent_context
+
+        assert A.parameters.value._get(context) == 1
+        assert B.parameters.value._get(context) == 1
+        assert C.parameters.value._get(context) == 1
+
+        # ALL: value of preceding node + value from input CIM == 0 + 1 == 1
+
+        # initialize B to 0
+        comp.initialize({B: 0}, include_unspecified_nodes=False)
+
+        assert A.parameters.value._get(context) == 1
+        assert B.parameters.value._get(context) == 0
+        assert C.parameters.value._get(context) == 1
+
+        comp.run({A: 0, B: 0, C: 0})
+
+        assert A.parameters.value._get(context) == 1
+        assert B.parameters.value._get(context) == 1
+        assert C.parameters.value._get(context) == 0
+
+        # A and B: value of preceding node + value from input CIM == 1 + 0 == 1
+        # C: value of preceding node + value from input CIM == 0 + 0 == 0
+
+    def test_initialize_cycles_using_default_keyword(self):
+        A = ProcessingMechanism(name='A', default_variable=1)
+        B = ProcessingMechanism(name='B', default_variable=1)
+        C = ProcessingMechanism(name='C', default_variable=1)
+
+        comp = Composition(pathways=[A, B, C, A])
+        comp.run({A: 1, B: 1, C: 1})
+        context = comp.most_recent_context
+
+        assert A.parameters.value._get(context) == 2
+        assert B.parameters.value._get(context) == 2
+        assert C.parameters.value._get(context) == 2
+
+        # initialize all nodes to their default values
+        comp.initialize({A: DEFAULT, B: DEFAULT, C: DEFAULT})
+
+        assert A.parameters.value._get(context) == 1
+        assert B.parameters.value._get(context) == 1
+        assert C.parameters.value._get(context) == 1
+
+    def test_initialize_cycles_error(self):
+        a = ProcessingMechanism(name='mech_a')
+        b = ProcessingMechanism(name='mech_b')
+        comp = Composition(nodes=[b])
+        error_text = (
+            f"{a.name} [(]entry in initialize values arg[)] is not a node in '{comp.name}'"
         )
+        with pytest.raises(CompositionError, match=error_text):
+            comp.initialize({a: 1})
+
+    def test_initialize_cycles_warning(self):
+        a = ProcessingMechanism(name='mech_a')
+        comp = Composition(nodes=[a])
+        warning_text = (
+            f"A value is specified for {a.name} of {comp.name} in the 'initialize_cycle_values' "
+            f"argument of call to run, but it is neither part of a cycle nor a FEEDBACK_SENDER. "
+            f"Its value will be overwritten when the node first executes, and therefore not used."
+        )
+        with pytest.warns(UserWarning, match=warning_text):
+            comp.run(initialize_cycle_values={a: 1})
+
+class TestResetValues:
 
     def test_reset_one_mechanism_through_run(self):
         A = TransferMechanism(name='A')
