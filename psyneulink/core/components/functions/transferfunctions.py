@@ -2682,7 +2682,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             prefs=prefs,
         )
 
-        self.matrix = self.instantiate_matrix(self.matrix)
+        self.parameters.matrix.set(
+            self.instantiate_matrix(self.parameters.matrix.get()),
+            skip_log=True,
+        )
 
     # def _validate_variable(self, variable, context=None):
     #     """Insure that variable passed to LinearMatrix is a max 2D array
@@ -2921,10 +2924,12 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         if isinstance(self.owner, Projection):
             self.receiver = self.defaults.variable
 
-        if self.matrix is None and not hasattr(self.owner, "receiver"):
+        matrix = self.parameters.matrix._get(context)
+
+        if matrix is None and not hasattr(self.owner, "receiver"):
             variable_length = np.size(np.atleast_2d(self.defaults.variable), 1)
-            self.matrix = np.identity(variable_length)
-        self.matrix = self.instantiate_matrix(self.matrix)
+            matrix = np.identity(variable_length)
+        self.parameters.matrix._set(self.instantiate_matrix(matrix), context)
 
     def instantiate_matrix(self, specification, context=None):
         """Implements matrix indicated by specification

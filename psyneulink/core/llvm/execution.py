@@ -368,7 +368,7 @@ class CompExecution(CUDAExecution):
                 if attribute == 'matrix':
                     # special case since we have to unflatten matrix
                     # FIXME: this seems to break something when generalized for all attributes
-                    value = np.array(value).reshape(component.matrix.shape)
+                    value = np.array(value).reshape(component.parameters.matrix._get(context).shape)
                     to_set._set(value, context=context)
 
     @property

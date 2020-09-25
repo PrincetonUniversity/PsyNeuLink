@@ -1066,6 +1066,7 @@ Class Reference
 """
 
 import abc
+import copy
 import inspect
 import itertools
 import logging
@@ -1861,7 +1862,7 @@ class Mechanism_Base(Mechanism):
                         mech_variable_item = args[VARIABLE]
                 else:
                     try:
-                        mech_variable_item = parsed_input_port_spec.value
+                        mech_variable_item = parsed_input_port_spec.defaults.value
                     except AttributeError:
                         mech_variable_item = parsed_input_port_spec.defaults.mech_variable_item
             else:
@@ -2083,37 +2084,57 @@ class Mechanism_Base(Mechanism):
 
         super()._instantiate_function(function=function, function_params=function_params, context=context)
 
-        if self.input_ports and any(input_port.weight is not None for input_port in self.input_ports):
+        if (
+            self.input_ports
+            and any(
+                input_port.parameters.weight._get(context) is not None
+                for input_port in self.input_ports
+            )
+            and 'weights' in self.function.parameters
+        ):
 
             # Construct defaults:
             #    from function.weights if specified else 1's
             try:
-                default_weights = self.function.weights
+                default_weights = self.function.defaults.weights
             except AttributeError:
                 default_weights = None
             if default_weights is None:
                 default_weights = default_weights or [1.0] * len(self.input_ports)
 
             # Assign any weights specified in input_port spec
-            weights = [[input_port.weight if input_port.weight is not None else default_weight]
+            weights = [[input_port.defaults.weight if input_port.defaults.weight is not None else default_weight]
                        for input_port, default_weight in zip(self.input_ports, default_weights)]
-            self.function._weights = weights
+            self.function.parameters.weights._set(weights, context)
 
-        if self.input_ports and any(input_port.exponent is not None for input_port in self.input_ports):
+        if (
+            self.input_ports
+            and any(
+                input_port.parameters.exponent._get(context) is not None
+                for input_port in self.input_ports
+            )
+            and 'exponents' in self.function.parameters
+        ):
 
             # Construct defaults:
             #    from function.weights if specified else 1's
             try:
-                default_exponents = self.function.exponents
+                default_exponents = self.function.defaults.exponents
             except AttributeError:
                 default_exponents = None
             if default_exponents is None:
                 default_exponents = default_exponents or [1.0] * len(self.input_ports)
 
             # Assign any exponents specified in input_port spec
-            exponents = [[input_port.exponent if input_port.exponent is not None else default_exponent]
-                       for input_port, default_exponent in zip(self.input_ports, default_exponents)]
-            self.function._exponents = exponents
+            exponents = [
+                [
+                    input_port.parameters.exponent._get(context)
+                    if input_port.parameters.exponent._get(context) is not None
+                    else default_exponent
+                ]
+                for input_port, default_exponent in zip(self.input_ports, default_exponents)
+            ]
+            self.function.parameters.exponents._set(exponents, context)
 
         # this may be removed when the restriction making all Mechanism values 2D np arrays is lifted
         # ignore warnings of certain Functions that disable conversion
@@ -3607,7 +3628,10 @@ class Mechanism_Base(Mechanism):
             instantiated_output_ports = _instantiate_output_ports(self, output_ports, context=context)
 
         if update_variable:
-            self._update_default_variable(self.input_values, context)
+            self._update_default_variable(
+                [copy.deepcopy(port.defaults.value) for port in self.input_ports],
+                context
+            )
 
         return {INPUT_PORTS: instantiated_input_ports,
                 OUTPUT_PORTS: instantiated_output_ports}
@@ -3683,12 +3707,10 @@ class Mechanism_Base(Mechanism):
                                               component=port)
 
             elif port in self.output_ports:
-                if isinstance(port, OutputPort):
-                    index = self.output_ports.index(port)
-                else:
-                    index = self.output_ports.index(self.output_ports[port])
                 delete_port_Projections(port.efferents.copy(), port)
-                del self.output_values[index]
+                # NOTE: removed below del because output_values is
+                # generated on the fly. These comments can be removed
+                # del self.output_values[index]
                 del self.output_ports[port]
                 # If port is subclass of OutputPort:
                 #    check if regsistry has category for that class, and if so, use that
