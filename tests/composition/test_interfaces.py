@@ -558,7 +558,8 @@ class TestConnectCompositionsViaCIMS:
                                                ControlSignal(projections=[(NOISE, ia)]),
                                                ControlSignal(projections=[(INTERCEPT, ia)]),
                                                ControlSignal(projections=[(SLOPE, ia)]),
-                                           ]
+                                           ],
+                                           search_space=[[1], [1], [1]]
                                            )
         ocomp.add_controller(ocm)
 
@@ -598,6 +599,9 @@ class TestConnectCompositionsViaCIMS:
                                                ControlSignal(projections=[(NOISE, ia)]),
                                                ControlSignal(projections=[(INTERCEPT, ia)]),
                                                ControlSignal(projections=[(SLOPE, ia)]),
+                                           ],
+                                           search_space=[
+                                               [1], [1], [1]
                                            ]
                                            )
         ocomp.add_controller(ocm)
