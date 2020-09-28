@@ -417,6 +417,7 @@ from psyneulink.core.globals.utilities import convert_to_np_array
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.context import handle_external_context
+from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
 
 from psyneulink.core import llvm as pnlvm
 
@@ -442,8 +443,11 @@ class OptimizationControlMechanismError(Exception):
 
 
 def _control_allocation_search_space_getter(owning_component=None, context=None):
-    return [c.parameters.allocation_samples._get(context) for c in owning_component.control_signals]
-
+    search_space = owning_component.parameters.search_space._get(context)
+    if not search_space:
+        return [c.parameters.allocation_samples._get(context) for c in owning_component.control_signals]
+    else:
+        return search_space
 
 class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(         \
@@ -507,11 +511,13 @@ class OptimizationControlMechanism(ControlMechanism):
         `control_allocation <ControlMechanism.control_allocation>`, and the second the current iteration of the
         `optimization process <OptimizationFunction_Process>`);  it must return `True` or `False`.
 
-    search_space : list or ndarray
+    search_space : iterable [list, tuple, ndarray, SampleSpec, or SampleIterator] | list, tuple, ndarray, SampleSpec, or SampleIterator
         specifies the `search_space <OptimizationFunction.search_space>` parameter for `function
         <OptimizationControlMechanism.function>`, unless that is specified in a constructor for `function
-        <OptimizationControlMechanism.function>`.  Each item must have the same shape as `control_allocation
-        <ControlMechanism.control_allocation>`.
+        <OptimizationControlMechanism.function>`.  An element at index i should correspond to an element at index i in
+        `control_allocation <ControlMechanism.control_allocation>`. If
+        `control_allocation <ControlMechanism.control_allocation>` contains only one element, then search_space can be
+        specified as a single element without an enclosing iterable.
 
     function : OptimizationFunction, function or method
         specifies the function used to optimize the `control_allocation <ControlMechanism.control_allocation>`;
@@ -684,9 +690,10 @@ class OptimizationControlMechanism(ControlMechanism):
                     :default value: None
                     :type:
         """
-        function = Parameter(None, stateful=False, loggable=False)
+        function = Parameter(GridSearch, stateful=False, loggable=False)
         feature_function = Parameter(None, reference=True, stateful=False, loggable=False)
         search_function = Parameter(None, stateful=False, loggable=False)
+        search_space = Parameter(None, read_only=True)
         search_termination_function = Parameter(None, stateful=False, loggable=False)
         comp_execution_mode = Parameter('Python', stateful=False, loggable=False, pnl_internal=True)
         search_statefulness = Parameter(True, stateful=False, loggable=False)
@@ -716,7 +723,7 @@ class OptimizationControlMechanism(ControlMechanism):
     @tc.typecheck
     def __init__(self,
                  agent_rep=None,
-                 function=GridSearch,
+                 function=None,
                  features: tc.optional(tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))) = None,
                  feature_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  num_estimates = None,
@@ -726,6 +733,8 @@ class OptimizationControlMechanism(ControlMechanism):
                  context=None,
                  **kwargs):
         """Implement OptimizationControlMechanism"""
+
+        function = function or GridSearch
 
         # If agent_rep hasn't been specified, put into deferred init
         if agent_rep is None:
@@ -846,6 +855,27 @@ class OptimizationControlMechanism(ControlMechanism):
         """Instantiate OptimizationControlMechanism's OptimizatonFunction attributes"""
 
         super()._instantiate_attributes_after_function(context=context)
+
+        search_space = self.parameters.search_space._get(context)
+        if type(search_space) == np.ndarray:
+            search_space = search_space.tolist()
+        if search_space:
+            corrected_search_space = []
+            try:
+                if type(search_space) == SampleIterator:
+                    corrected_search_space.append(search_space)
+                elif type(search_space) == SampleSpec:
+                    corrected_search_space.append(SampleIterator(search_space))
+                else:
+                    for i in self.parameters.search_space._get(context):
+                        if not type(i) == SampleIterator:
+                            corrected_search_space.append(SampleIterator(specification=i))
+                            continue
+                        corrected_search_space.append(i)
+            except AssertionError:
+                corrected_search_space = [SampleIterator(specification=search_space)]
+            self.parameters.search_space._set(corrected_search_space, context)
+
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
         self.function.reset({
             DEFAULT_VARIABLE: self.parameters.control_allocation._get(context),
@@ -1310,11 +1340,6 @@ class OptimizationControlMechanism(ControlMechanism):
             parsed_features.extend(spec)
 
         return parsed_features
-
-    @property
-    def control_allocation_search_space(self):
-        """Return list of SampleIterators for allocation_samples of control_signals"""
-        return [c.allocation_samples for c in self.control_signals]
 
     @property
     def _model_spec_parameter_blacklist(self):

@@ -355,12 +355,15 @@ class TestControlSpecification:
         comp = pnl.Composition(name='comp',
                            pathways=[mech],
                            controller=pnl.OptimizationControlMechanism(agent_rep=None,
-                                                                       control_signals=(pnl.SLOPE, mech)))
+                                                                       control_signals=(pnl.SLOPE, mech),
+                                                                       search_space=[1]))
         assert comp.controller.composition == comp
         assert any(pnl.SLOPE in p_name for p_name in comp.projections.names)
         assert not any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
 
-        new_ocm = pnl.OptimizationControlMechanism(agent_rep=None, control_signals=(pnl.INTERCEPT, mech))
+        new_ocm = pnl.OptimizationControlMechanism(agent_rep=None,
+                                                   control_signals=(pnl.INTERCEPT, mech),
+                                                   search_space=[1])
         old_ocm = comp.controller
         comp.add_controller(new_ocm)
 
@@ -1080,6 +1083,69 @@ class TestModelBasedOptimizationControlMechanisms:
                 objective_mechanism=pnl.ObjectiveMechanism(
                     monitor=[a.output_port]
                 ),
+            )
+        )
+        assert type(comp.controller.function) == pnl.GridSearch
+        assert comp.run([1]) == [10]
+
+    def test_ocm_searchspace_arg(self):
+        a = pnl.ProcessingMechanism()
+        comp = pnl.Composition(
+            controller_mode=pnl.BEFORE,
+            nodes=[a],
+            controller=pnl.OptimizationControlMechanism(
+                control=pnl.ControlSignal(
+                    modulates=(pnl.SLOPE, a),
+                    intensity_cost_function=lambda x: 0,
+                    adjustment_cost_function=lambda x: 0,
+                ),
+                features=[a.input_port],
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    monitor=[a.output_port]
+                ),
+                search_space=[pnl.SampleIterator([1, 10])]
+            )
+        )
+        assert type(comp.controller.function) == pnl.GridSearch
+        assert comp.run([1]) == [10]
+
+    @pytest.mark.parametrize("format,nested",
+                             [("list", True), ("list", False),
+                              ("tuple", True), ("tuple", False),
+                              ("SampleIterator", True), ("SampleIterator", False),
+                              ("SampleSpec", True), ("SampleSpec", False),
+                              ("ndArray", True), ("ndArray", False),
+                              ],)
+    def test_ocm_searchspace_format_equivalence(self, format, nested):
+        if format == "list":
+            search_space = [1, 10]
+        elif format == "tuple":
+            search_space = (1, 10)
+        elif format == "SampleIterator":
+            search_space = SampleIterator((1,10))
+        elif format == "SampleSpec":
+            search_space = SampleSpec(1, 10, 9)
+        elif format == "ndArray":
+            search_space = np.array((1, 10))
+
+        if nested:
+            search_space = [search_space]
+
+        a = pnl.ProcessingMechanism()
+        comp = pnl.Composition(
+            controller_mode=pnl.BEFORE,
+            nodes=[a],
+            controller=pnl.OptimizationControlMechanism(
+                control=pnl.ControlSignal(
+                    modulates=(pnl.SLOPE, a),
+                    intensity_cost_function=lambda x: 0,
+                    adjustment_cost_function=lambda x: 0,
+                ),
+                features=[a.input_port],
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    monitor=[a.output_port]
+                ),
+                search_space=search_space
             )
         )
         assert type(comp.controller.function) == pnl.GridSearch
