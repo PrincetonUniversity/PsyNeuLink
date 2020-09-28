@@ -928,7 +928,7 @@ class GradientOptimization(OptimizationFunction):
         super().reset(*args)
 
         # Differentiate objective_function using autograd.grad()
-        if OBJECTIVE_FUNCTION in args[0]:
+        if OBJECTIVE_FUNCTION in args[0] and not self.gradient_function:
             try:
                 from autograd import grad
                 self.gradient_function = grad(self.objective_function)
