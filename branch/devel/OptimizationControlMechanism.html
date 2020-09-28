@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.8.4.0+11.g8708b66 documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.8.4.0+15.g98e5c2c documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.4.0+11
+                  0.8.4.0+15
                 </div>
               
             
@@ -453,7 +453,10 @@ arguments an array with the same shape as <a class="reference internal" href="Co
 integers (the first representing the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal"><span class="pre">net_outcome</span></code></a> for the current
 <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>, and the second the current iteration of the
 <code class="xref any docutils literal"><span class="pre">optimization</span> <span class="pre">process</span></code>);  it must return <code class="xref any docutils literal"><span class="pre">True</span></code> or <code class="xref any docutils literal"><span class="pre">False</span></code>.</li>
-<li><strong>search_space</strong> (<em>list</em><em> or </em><em>ndarray</em>) – specifies the <a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a> parameter for <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, unless that is specified in a constructor for <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  Each item must have the same shape as <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>.</li>
+<li><strong>search_space</strong> (<em>iterable</em><em> [</em><em>list</em><em>, </em><em>tuple</em><em>, </em><em>ndarray</em><em>, </em><em>SampleSpec</em><em>, or </em><a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.SampleIterator" title="psyneulink.core.components.functions.optimizationfunctions.SampleIterator"><em>SampleIterator</em></a><em>] </em><em>| list</em><em>, </em><em>tuple</em><em>, </em><em>ndarray</em><em>, </em><em>SampleSpec</em><em>, or </em><a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.SampleIterator" title="psyneulink.core.components.functions.optimizationfunctions.SampleIterator"><em>SampleIterator</em></a>) – specifies the <a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space"><code class="xref any py py-attr docutils literal"><span class="pre">search_space</span></code></a> parameter for <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, unless that is specified in a constructor for <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  An element at index i should correspond to an element at index i in
+<a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>. If
+<a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a> contains only one element, then search_space can be
+specified as a single element without an enclosing iterable.</li>
 <li><strong>function</strong> (<a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction"><em>OptimizationFunction</em></a><em>, </em><a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><em>function</em></a><em> or </em><em>method</em>) – specifies the function used to optimize the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>;
 must take as its sole argument an array with the same shape as <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal"><span class="pre">control_allocation</span></code></a>, and return a similar array (see <a class="reference internal" href="#optimizationcontrolmechanism-function"><span class="std std-ref">Function</span></a> for additional details).</li>
 </ul>
@@ -601,12 +604,6 @@ predict <a class="reference internal" href="ControlMechanism.html#psyneulink.cor
 <p><strong>features</strong> argument can use any of the forms of specification allowed for InputPort(s)</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt>
-<code class="descname">control_allocation_search_space</code></dt>
-<dd><p>Return list of SampleIterators for allocation_samples of control_signals</p>
-</dd></dl>
-
 <dl class="method">
 <dt>
 <code class="descname">evaluation_function</code><span class="sig-paren">(</span><em>control_allocation</em>, <em>context=None</em>, <em>return_results=False</em><span class="sig-paren">)</span></dt>
@@ -690,7 +687,7 @@ and specified <a class="reference internal" href="ControlMechanism.html#psyneuli
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.4.0+11.g8708b66',
+               VERSION:'0.8.4.0+15.g98e5c2c',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
