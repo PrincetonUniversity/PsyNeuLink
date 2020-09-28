@@ -1064,6 +1064,26 @@ class TestControlMechanisms:
 
 
 class TestModelBasedOptimizationControlMechanisms:
+    def test_ocm_default_function(self):
+        a = pnl.ProcessingMechanism()
+        comp = pnl.Composition(
+            controller_mode=pnl.BEFORE,
+            nodes=[a],
+            controller=pnl.OptimizationControlMechanism(
+                control=pnl.ControlSignal(
+                    modulates=(pnl.SLOPE, a),
+                    intensity_cost_function=lambda x: 0,
+                    adjustment_cost_function=lambda x: 0,
+                    allocation_samples=[1, 10]
+                ),
+                features=[a.input_port],
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    monitor=[a.output_port]
+                ),
+            )
+        )
+        assert type(comp.controller.function) == pnl.GridSearch
+        assert comp.run([1]) == [10]
 
     def test_evc(self):
         # Mechanisms

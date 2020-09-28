@@ -495,7 +495,11 @@ class OptimizationFunction(Function_Base):
             self._unspecified_args = []
 
         current_sample = self._check_args(variable=variable, context=context, params=params)
-        current_value = self.owner.objective_mechanism.parameters.value._get(context) if self.owner else 0.
+
+        try:
+            current_value = self.owner.objective_mechanism.parameters.value._get(context)
+        except AttributeError:
+            current_value = 0
 
         samples = []
         values = []

@@ -396,7 +396,7 @@ from collections.abc import Iterable
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import is_function_type, FunctionError
 from psyneulink.core.components.functions.optimizationfunctions import \
-    OBJECTIVE_FUNCTION, SEARCH_SPACE
+    GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.transferfunctions import CostFunctions
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -454,7 +454,7 @@ class OptimizationControlMechanism(ControlMechanism):
         terminal_objective_mechanism=False   \
         features=None,                       \
         feature_function=None,               \
-        function=None,                       \
+        function=GridSearch,                       \
         agent_rep=None,                      \
         search_function=None,                \
         search_termination_function=None,    \
@@ -716,7 +716,7 @@ class OptimizationControlMechanism(ControlMechanism):
     @tc.typecheck
     def __init__(self,
                  agent_rep=None,
-                 function=None,
+                 function=GridSearch,
                  features: tc.optional(tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))) = None,
                  feature_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  num_estimates = None,
