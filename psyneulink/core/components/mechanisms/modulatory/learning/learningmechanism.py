@@ -1232,7 +1232,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
                                                  variable=(OWNER_VALUE,0),
                                                  params=params,
                                                  reference_value=self.parameters.learning_signal._get(context),
-                                                 modulation=self.modulation,
+                                                 modulation=self.defaults.modulation,
                                                  # port_spec=self.learning_signal)
                                                  port_spec=learning_signal,
                                                  context=context)

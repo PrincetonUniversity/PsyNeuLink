@@ -339,7 +339,7 @@ class TestDistributionFunctions:
                 noise=UniformToNormalDist(),
                 integration_rate=1.0
             )
-            T.noise.parameters.random_state.get(None).seed(22)
+            T.noise.base.parameters.random_state.get(None).seed(22)
             val = T.execute([0, 0, 0, 0])
             assert np.allclose(val, [[-0.81177443, -0.04593492, -0.20051725, 1.07665147]])
 
@@ -1147,7 +1147,7 @@ class TestTransferMechanismTimeConstant:
             val = e.execute([1, 1, 1, 1])
         assert np.allclose(val, [[0.9, 0.9, 0.9, 0.9]])
 
-        T.noise = 10
+        T.noise.base = 10
 
         if mode == 'Python':
             val = T.execute([1, 2, -3, 0])

@@ -626,12 +626,29 @@ class ComponentError(Exception):
         super().__init__(message)
 
 
-def make_parameter_property(name):
+def _get_parametervalue_attr(param):
+    return f'_{param.name}'
+
+
+def make_parameter_property(param):
     def getter(self):
-        return getattr(self.parameters, name)._get(self.most_recent_context)
+        p = getattr(self.parameters, param.name)
+
+        if p.modulable:
+            return getattr(self, _get_parametervalue_attr(p))
+        else:
+            return p._get(self.most_recent_context)
 
     def setter(self, value):
-        getattr(self.parameters, name)._set(value, self.most_recent_context)
+        p = getattr(self.parameters, param.name)
+        if p.modulable:
+            warnings.warn(
+                'Setting parameter values directly using dot notation'
+                ' may be removed in a future release. It is replaced with,'
+                f' for example, <object>.{param.name}.base = {value}',
+                FutureWarning,
+            )
+        getattr(self.parameters, p.name)._set(value, self.most_recent_context)
 
     return property(getter).setter(setter)
 
@@ -666,7 +683,7 @@ class ComponentsMeta(ABCMeta):
 
         for param in self.parameters:
             if not hasattr(self, param.name):
-                setattr(self, param.name, make_parameter_property(param.name))
+                setattr(self, param.name, make_parameter_property(param))
 
             try:
                 if param.default_value.owner is None:
@@ -1652,6 +1669,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             # Complete initialization
             # MODIFIED 10/27/18 OLD:
             super(self.__class__,self).__init__(**self._init_args)
+
             # MODIFIED 10/27/18 NEW:  FOLLOWING IS NEEDED TO HANDLE FUNCTION DEFERRED INIT (JDC)
             # try:
             #     super(self.__class__,self).__init__(**self._init_args)
@@ -1786,7 +1804,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             for param_name in runtime_params:
                 if not isinstance(param_name, str):
                     generate_error(param_name)
-                elif hasattr(self, param_name):
+                elif param_name in self.parameters:
                     if param_name in {FUNCTION, INPUT_PORTS, OUTPUT_PORTS}:
                         generate_error(param_name)
                     if context.execution_id not in self._runtime_params_reset:
@@ -1797,7 +1815,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 # Any remaining params should either belong to the Component's function
                 #    or, if the Component is a Function, to it or its owner
                 elif ( # If Component is not a function, and its function doesn't have the parameter or
-                        (not is_function_type(self) and not hasattr(self.function, param_name))
+                        (not is_function_type(self) and param_name not in self.function.parameters)
                        # the Component is a standalone function:
                        or (is_function_type(self) and not self.owner)):
                     generate_error(param_name)
@@ -2028,6 +2046,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
             if isinstance(p.default_value, Function):
                 p.default_value.owner = p
+
+        for p in self.parameters:
+            if p.stateful:
+                setattr(self, _get_parametervalue_attr(p), ParameterValue(self, p))
 
     def _instantiate_parameter_classes(self, context=None):
         """
@@ -2856,8 +2878,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # KAM added 6/14/18 for functions that do not pass their has_initializers status up to their owner via property
         # FIX: need comprehensive solution for has_initializers; need to determine whether ports affect mechanism's
         # has_initializers status
-        if self.function.has_initializers:
-            self.has_initializers = True
+        if self.function.parameters.has_initializers._get(context):
+            self.parameters.has_initializers._set(True, context)
 
         self._parse_param_port_sources()
 
@@ -3619,6 +3641,12 @@ def make_property_mod(param_name, parameter_port_name=None):
         parameter_port_name = param_name
 
     def getter(self):
+        warnings.warn(
+            f'Getting modulated parameter values with <object>.mod_<param_name>'
+            ' may be removed in a future release. It is replaced with,'
+            f' for example, <object>.{param_name}.modulated',
+            FutureWarning
+        )
         try:
             return self._parameter_ports[parameter_port_name].value
         except TypeError:
@@ -3646,3 +3674,48 @@ def make_stateful_getter_mod(param_name, parameter_port_name=None):
                                  .format(self.name, param_name))
 
     return getter
+
+
+class ParameterValue:
+    def __init__(self, owner, parameter):
+        self._owner = owner
+        self._parameter = parameter
+
+    def __repr__(self):
+        return f'{self._owner}:\n\t{self._parameter.name}.base: {self.base}\n\t{self._parameter.name}.modulated: {self.modulated}'
+
+    @property
+    def modulated(self):
+        try:
+            is_modulated = (self._parameter in self._owner.parameter_ports)
+        except AttributeError:
+            is_modulated = False
+
+        try:
+            is_modulated = is_modulated or (self._parameter in self._owner.owner.parameter_ports)
+        except AttributeError:
+            pass
+
+        if is_modulated:
+            return self._owner._get_current_parameter_value(
+                self._parameter,
+                self._owner.most_recent_context
+            )
+        else:
+            warnings.warn(f'{self._parameter.name} is not currently modulated.')
+            return None
+
+    @modulated.setter
+    def modulated(self, value):
+        raise ComponentError(
+            f"Cannot set {self._owner.name}'s modulated {self._parameter.name}"
+            ' value directly because it is computed by the ParameterPort.'
+        )
+
+    @property
+    def base(self):
+        return self._parameter._get(self._owner.most_recent_context)
+
+    @base.setter
+    def base(self, value):
+        self._parameter._set(value, self._owner.most_recent_context)

@@ -405,11 +405,11 @@ class OptimizationFunction(Function_Base):
 
         if SEARCH_SPACE in request_set and request_set[SEARCH_SPACE] is not None:
             search_space = request_set[SEARCH_SPACE]
-            if not all(isinstance(s, (SampleIterator, type(None))) for s in search_space):
+            if not all(isinstance(s, (SampleIterator, type(None), list, tuple, np.ndarray)) for s in search_space):
                 raise OptimizationFunctionError("All entries in list specified for {} arg of {} must be a {}".
                                                 format(repr(SEARCH_SPACE),
                                                        self.__class__.__name__,
-                                                       SampleIterator.__name__))
+                                                       "SampleIterator, list, tuple, or ndarray"))
 
         if SEARCH_TERMINATION_FUNCTION in request_set and request_set[SEARCH_TERMINATION_FUNCTION] is not None:
             if not is_function_type(request_set[SEARCH_TERMINATION_FUNCTION]):
@@ -495,7 +495,11 @@ class OptimizationFunction(Function_Base):
             self._unspecified_args = []
 
         current_sample = self._check_args(variable=variable, context=context, params=params)
-        current_value = self.owner.objective_mechanism.parameters.value._get(context) if self.owner else 0.
+
+        try:
+            current_value = self.owner.objective_mechanism.parameters.value._get(context)
+        except AttributeError:
+            current_value = 0
 
         samples = []
         values = []
@@ -766,6 +770,7 @@ class GradientOptimization(OptimizationFunction):
     """
 
     componentName = GRADIENT_OPTIMIZATION_FUNCTION
+    bounds = None
 
     class Parameters(OptimizationFunction.Parameters):
         """
@@ -924,7 +929,7 @@ class GradientOptimization(OptimizationFunction):
         super().reset(*args)
 
         # Differentiate objective_function using autograd.grad()
-        if OBJECTIVE_FUNCTION in args[0]:
+        if OBJECTIVE_FUNCTION in args[0] and not self.gradient_function:
             try:
                 from autograd import grad
                 self.gradient_function = grad(self.objective_function)

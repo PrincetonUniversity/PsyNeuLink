@@ -66,7 +66,7 @@ class ObjectiveFunction(Function_Base):
                     :default value: False
                     :type: ``bool``
         """
-        normalize = False
+        normalize = Parameter(False, stateful=False)
         metric = Parameter(None, stateful=False)
 
 
@@ -205,7 +205,7 @@ class Stability(ObjectiveFunction):
         metric = Parameter(ENERGY, stateful=False)
         metric_fct = Parameter(None, stateful=False, loggable=False)
         transfer_fct = Parameter(None, stateful=False, loggable=False)
-        normalize = False
+        normalize = Parameter(False, stateful=False)
 
     @tc.typecheck
     def __init__(self,

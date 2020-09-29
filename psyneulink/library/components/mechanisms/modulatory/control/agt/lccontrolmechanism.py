@@ -662,7 +662,7 @@ class LCControlMechanism(ControlMechanism):
         base_level_gain = Parameter(0.5, modulable=True)
         scaling_factor_gain = Parameter(3.0, modulable=True)
 
-        modulated_mechanisms = None
+        modulated_mechanisms = Parameter(None, stateful=False, loggable=False)
 
     @tc.typecheck
     def __init__(self,

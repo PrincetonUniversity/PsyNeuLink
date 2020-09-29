@@ -17,7 +17,7 @@ class TestMechanismRuntimeParams:
     def test_mechanism_runtime_param(self):
 
         T = TransferMechanism()
-        assert T.noise == 0.0
+        assert T.noise.base == 0.0
         assert T.parameter_ports['noise'].value == 0.0
 
         # runtime param used for noise
@@ -25,17 +25,17 @@ class TestMechanismRuntimeParams:
         assert T.value == 12.0
 
         # defalut values are restored
-        assert T.noise == 0.0
+        assert T.noise.base == 0.0
         assert T.parameter_ports['noise'].value == 0.0
         T.execute(input=2.0)
-        assert T.noise == 0.0
+        assert T.noise.base == 0.0
         assert T.parameter_ports['noise'].value == 0.0
         assert T.value == 2.0
 
     def test_function_runtime_param(self):
 
         T = TransferMechanism()
-        assert T.function.slope == 1.0
+        assert T.function.slope.base == 1.0
         assert T.parameter_ports['slope'].value == 1.0
 
         # runtime param used for slope
@@ -43,10 +43,10 @@ class TestMechanismRuntimeParams:
         assert T.value == 20.0
 
         # defalut values are restored
-        assert T.function.slope == 1.0
+        assert T.function.slope.base == 1.0
         assert T.parameter_ports['slope'].value == 1.0
         T.execute(input=2.0)
-        assert T.function.slope == 1.0
+        assert T.function.slope.base == 1.0
         assert T.parameter_ports['slope'].value == 1.0
         assert T.value == 2.0
 
@@ -55,8 +55,8 @@ class TestMechanismRuntimeParams:
         T = TransferMechanism()
 
         # Intercept attr assigned
-        T.function.intercept = 2.0
-        assert T.function.intercept == 2.0
+        T.function.intercept.base = 2.0
+        assert T.function.intercept.base == 2.0
 
         # runtime param used for slope
         T.execute(runtime_params={"slope": 10.0}, input=2.0)
@@ -64,36 +64,36 @@ class TestMechanismRuntimeParams:
         assert T.value == 22.0
 
         # slope restored to default, but intercept retains assigned value
-        assert T.function.slope == 1.0
+        assert T.function.slope.base == 1.0
         assert T.parameter_ports['slope'].value == 1.0
-        assert T.function.intercept == 2.0
+        assert T.function.intercept.base == 2.0
 
         # previous runtime_param for slope not used again
         T.execute(input=2.0)
         assert T.value == 4.0
-        assert T.function.slope == 1.0
+        assert T.function.slope.base == 1.0
         assert T.parameter_ports['slope'].value == 1.0
 
     def test_reset_to_previously_assigned_val(self):
 
         T = TransferMechanism()
-        assert T.function.slope == 1.0
+        assert T.function.slope.base == 1.0
         assert T.parameter_ports['slope'].value == 1.0
 
         # set slope directly
-        T.function.slope = 2.0
-        assert T.function.slope == 2.0
+        T.function.slope.base = 2.0
+        assert T.function.slope.base == 2.0
 
         # runtime param used for slope
         T.execute(runtime_params={"slope": 10.0}, input=2.0)
         assert T.value == 20.0
 
         # slope restored to previously assigned value
-        assert T.function.slope == 2.0
+        assert T.function.slope.base == 2.0
         assert T.parameter_ports['slope'].value == 2.0
         T.execute(input=2.0)
         assert T.value == 4.0
-        assert T.function.slope == 2.0
+        assert T.function.slope.base == 2.0
 
     def test_runtime_param_error(self):
         T = TransferMechanism()
@@ -119,7 +119,7 @@ class TestCompositionRuntimeParams:
         C = Composition()
         C.add_node(T)
 
-        assert T.noise == 0.0
+        assert T.noise.base == 0.0
         assert T.parameter_ports['noise'].value == 0.0
 
         # runtime param used for noise
@@ -127,12 +127,12 @@ class TestCompositionRuntimeParams:
               runtime_params={T: {"noise": 10.0}})
         assert T.parameters.value.get(C.default_execution_id) == 12.0
         # noise restored to default
-        assert T.noise == 0.0
+        assert T.noise.base == 0.0
         assert T.parameter_ports['noise'].parameters.value.get(C) == 0.0
 
         # previous runtime_param for noise not used again
         C.run(inputs={T: 2.0}, )
-        assert T.noise == 0.0
+        assert T.noise.base == 0.0
         assert T.parameter_ports['noise'].parameters.value.get(C) == 0.0
         assert T.parameters.value.get(C.default_execution_id) == 2.0
 
@@ -142,20 +142,20 @@ class TestCompositionRuntimeParams:
         C = Composition()
         C.add_node(T)
 
-        assert T.function.slope == 1.0
+        assert T.function.slope.base == 1.0
         assert T.parameter_ports['slope'].value == 1.0
 
         C.run(inputs={T: 2.0}, runtime_params={T: {"slope": 10.0}})
         # runtime param used for slope
         assert T.parameters.value.get(C.default_execution_id) == 20.0
         # slope restored to default
-        assert T.function.slope == 1.0
+        assert T.function.slope.base == 1.0
         assert T.parameter_ports['slope'].parameters.value.get(C) == 1.0
 
         # previous runtime_param for slope not used again
         C.run(inputs={T: 2.0})
         assert T.parameters.value.get(C.default_execution_id) == 2.0
-        assert T.function.slope == 1.0
+        assert T.function.slope.base == 1.0
         assert T.parameter_ports['slope'].parameters.value.get(C) == 1.0
 
     def test_input_port_param_no_condition(self):
@@ -164,8 +164,8 @@ class TestCompositionRuntimeParams:
         T2 = TransferMechanism()
         C = Composition(pathways=[T1,T2])
 
-        T1.function.slope = 5
-        T2.input_port.function.scale = 4
+        T1.function.slope.base = 5
+        T2.input_port.function.scale.base = 4
         C.run(inputs={T1: 2.0},
               runtime_params={
                   T1: {'slope': 3},                         # Mechanism's function (Linear) parameter
@@ -186,18 +186,18 @@ class TestCompositionRuntimeParams:
         assert T1.parameter_ports['slope'].parameters.value.get(C) == 5.0
         assert T2.parameters.noise.get(C) == 0.0
         assert T2.parameter_ports['noise'].parameters.value.get(C) == 0.0
-        assert T2.function.intercept == 0.0
+        assert T2.function.intercept.base == 0.0
         assert T2.function.parameters.intercept.get(C) == 0.0
-        assert T2.input_port.weight is None
-        assert T2.input_port.function.scale == 4.0
+        assert T2.input_port.weight.base is None
+        assert T2.input_port.function.scale.base == 4.0
         assert T2.input_port.function.parameters.scale.get(C) == 4.0
-        assert T2.input_port.function.weights is None
+        assert T2.input_port.function.weights.base is None
         assert T2.input_port.function.parameters.weights.get(C) is None
 
         C.run(inputs={T1: 2.0}, )
         assert C.results == [[[1201.5]], # (2*3*20*10)+1+0.5
                              [[40.]]]    # 2*5*4
-        assert T1.function.slope == 5.0
+        assert T1.function.slope.base == 5.0
         assert T1.parameter_ports['slope'].parameters.value.get(C) == 5.0
         assert T2.input_port.function.parameters.scale.get(C.default_execution_id) == 4.0
 
@@ -209,7 +209,7 @@ class TestCompositionRuntimeParams:
         C = Composition()
         C.add_node(T)
 
-        assert T.noise == 0.0
+        assert T.noise.base == 0.0
         assert T.parameter_ports['noise'].value == 0.0
 
         # run with runtime param used for noise only on trial 1
@@ -218,7 +218,7 @@ class TestCompositionRuntimeParams:
               # scheduler=S,
               num_trials=4)
         # noise restored to default
-        assert T.noise == 0.0
+        assert T.noise.base == 0.0
         assert T.parameter_ports['noise'].parameters.value.get(C) == 0.0
 
         # run again to insure restored default for noise after last run
@@ -237,7 +237,7 @@ class TestCompositionRuntimeParams:
         C = Composition()
         C.add_node(T)
 
-        assert T.noise == 0.0
+        assert T.noise.base == 0.0
         assert T.parameter_ports['noise'].value == 0.0
 
         # run with runtime param used for noise after trial 1 (i.e., trials 2 and 3)
@@ -245,7 +245,7 @@ class TestCompositionRuntimeParams:
               runtime_params={T: {"noise": (10.0, AfterTrial(1))}},
               num_trials=4)
         # noise restored to default
-        assert T.noise == 0.0
+        assert T.noise.base == 0.0
         assert T.parameter_ports['noise'].parameters.value.get(C) == 0.0
         # run again to insure restored default for noise after last run
         C.run(inputs={T: 2.0})
@@ -268,7 +268,7 @@ class TestCompositionRuntimeParams:
               runtime_params={T: {"noise": (10.0, Any(AtTrial(1), AfterTrial(2)))}},
               num_trials=5)
         # noise restored to default
-        assert T.noise == 0.0
+        assert T.noise.base == 0.0
         assert T.parameter_ports['noise'].parameters.value.get(C) == 0.0
 
         # run again to insure restored default for noise after last run
@@ -288,7 +288,7 @@ class TestCompositionRuntimeParams:
         C = Composition()
         C.add_node(T)
 
-        assert T.function.slope == 1.0
+        assert T.function.slope.base == 1.0
         assert T.parameter_ports['slope'].value == 1.0
 
         # run with runtime param used for slope only on trial 1 and after 2 (i.e., 3 and 4)
@@ -296,7 +296,7 @@ class TestCompositionRuntimeParams:
               runtime_params={T: {"slope": (10.0, Any(AtTrial(1), AfterTrial(2)))}},
               num_trials=5)
         # slope restored to default
-        assert T.function.slope == 1.0
+        assert T.function.slope.base == 1.0
         assert T.parameter_ports['slope'].value == 1.0
 
         # run again to insure restored default for slope after last run
@@ -316,7 +316,7 @@ class TestCompositionRuntimeParams:
         C = Composition()
         C.add_node(T)
 
-        assert T.function.slope == 1.0
+        assert T.function.slope.base == 1.0
         assert T.parameter_ports['slope'].value == 1.0
 
         # run with runtime param used for slope only on trial 1 and after 2 (i.e., 3 and 4)
@@ -325,9 +325,9 @@ class TestCompositionRuntimeParams:
                                   "intercept": (1.0, AfterTrial(1))}},
               num_trials=4)
         # slope restored to default
-        assert T.function.slope == 1.0
+        assert T.function.slope.base == 1.0
         assert T.parameter_ports['slope'].value == 1.0
-        assert T.function.intercept == 0.0
+        assert T.function.intercept.base == 0.0
         assert T.parameter_ports['intercept'].value == 0.0
 
         # run again to insure restored default for slope after last run
@@ -346,8 +346,8 @@ class TestCompositionRuntimeParams:
         T2 = TransferMechanism()
         C = Composition(pathways=[T1,T2])
 
-        T1.function.slope = 5
-        T2.input_port.function.scale = 4
+        T1.function.slope.base = 5
+        T2.input_port.function.scale.base = 4
         C.run(inputs={T1: 2.0},
               runtime_params={
                   T1: {'slope': (3, AtTrial(1))},             # Condition on Mechanism's function (Linear) parameter
@@ -370,12 +370,12 @@ class TestCompositionRuntimeParams:
         assert T1.parameter_ports['slope'].parameters.value.get(C) == 5.0
         assert T2.parameters.noise.get(C) == 0.0
         assert T2.parameter_ports['noise'].parameters.value.get(C) == 0.0
-        assert T2.function.intercept == 0.0
+        assert T2.function.intercept.base == 0.0
         assert T2.function.parameters.intercept.get(C) == 0.0
-        assert T2.input_port.weight is None
-        assert T2.input_port.function.scale == 4.0
+        assert T2.input_port.weight.base is None
+        assert T2.input_port.function.scale.base == 4.0
         assert T2.input_port.function.parameters.scale.get(C) == 4.0
-        assert T2.input_port.function.weights is None
+        assert T2.input_port.function.weights.base is None
         assert T2.input_port.function.parameters.weights.get(C) is None
 
         # run again to insure restored default for noise after last run
@@ -395,8 +395,8 @@ class TestCompositionRuntimeParams:
         P = MappingProjection(sender=T1, receiver=T2, name='MY PROJECTION')
         C = Composition(pathways=[[T1,P,T2]])
 
-        T1.function.slope = 5
-        T2.input_port.function.scale = 4
+        T1.function.slope.base = 5
+        T2.input_port.function.scale.base = 4
         # Run 0: Test INPUT_PORT_PARAMS for InputPort function directly (scale) and in FUNCTION_PARAMS dict (weights)
         C.run(inputs={T1: 2.0},
               runtime_params={
@@ -464,12 +464,12 @@ class TestCompositionRuntimeParams:
         assert T1.parameter_ports['slope'].parameters.value.get(C) == 5.0
         assert T2.parameters.noise.get(C) == 0.0
         assert T2.parameter_ports['noise'].parameters.value.get(C) == 0.0
-        assert T2.function.intercept == 0.0
+        assert T2.function.intercept.base == 0.0
         assert T2.function.parameters.intercept.get(C) == 0.0
-        assert T2.input_port.weight is None
-        assert T2.input_port.function.scale == 4.0
+        assert T2.input_port.weight.base is None
+        assert T2.input_port.function.scale.base == 4.0
         assert T2.input_port.function.parameters.scale.get(C) == 4.0
-        assert T2.input_port.function.weights is None
+        assert T2.input_port.function.weights.base is None
         assert T2.input_port.function.parameters.weights.get(C) is None
 
         # Final Run: insure restored default for noise after last run
@@ -502,11 +502,11 @@ class TestCompositionRuntimeParams:
         P2 = MappingProjection(sender=TARGET_INPUT, receiver=CM.input_ports[TARGET], name='TARGET PROJECTION')
         C = Composition(nodes=[SAMPLE_INPUT, TARGET_INPUT, CM], projections=[P1,P2])
 
-        SAMPLE_INPUT.function.slope = 3
-        CM.input_ports[SAMPLE].function.scale = 2
+        SAMPLE_INPUT.function.slope.base = 3
+        CM.input_ports[SAMPLE].function.scale.base = 2
 
-        TARGET_INPUT.input_port.function.scale = 4
-        CM.input_ports[TARGET].function.scale = 1.5
+        TARGET_INPUT.input_port.function.scale.base = 4
+        CM.input_ports[TARGET].function.scale.base = 1.5
 
         C.run(inputs={SAMPLE_INPUT: 2.0,
                       TARGET_INPUT: 5.0},
@@ -603,7 +603,7 @@ class TestCompositionRuntimeParams:
         P2 = MappingProjection(sender=T1.output_ports['SECOND'], receiver=T2)
         C = Composition(nodes=[T1,T2], projections=[P1,P2])
 
-        T1.output_ports['SECOND'].function.slope = 1.5
+        T1.output_ports['SECOND'].function.slope.base = 1.5
 
         # Run 0: Test of both OutputPort variables assigned
         C.run(inputs={T1: 10.0},
@@ -680,8 +680,8 @@ class TestCompositionRuntimeParams:
         P2 = MappingProjection(sender=T2, receiver=CM.input_ports[TARGET], name='TARGET PROJECTION')
         C = Composition(nodes=[T1,T2,CM], projections=[P1,P2])
 
-        T1.function.slope = 3
-        T2.input_port.function.scale = 4
+        T1.function.slope.base = 3
+        T2.input_port.function.scale.base = 4
 
         # Bad param specified for Mechanism
         with pytest.raises(ComponentError) as error_text:
