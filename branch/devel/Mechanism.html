@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanism &mdash; PsyNeuLink 0.8.4.1 documentation</title>
+  <title>Mechanism &mdash; PsyNeuLink 0.8.4.1+5.g518e56f documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.4.1
+                  0.8.4.1+5
                 </div>
               
             
@@ -907,7 +907,7 @@ method; or for all execution contexts, by setting its default value using the Me
 <p>Runtime parameter values are specified in the <strong>runtime_params</strong> argument of a Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method using a dictionary, in which each entry contains the name of the
 of a parameter (as the key) and the value to assign to it, as in the following example:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">T</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">Linear</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span>  
+<span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span><span class="o">.</span><span class="n">base</span>  
 <span class="go">1.0   # Default for slope</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">clip</span> 
 <span class="go">None  # Default for clip is None</span>
@@ -915,7 +915,7 @@ of a parameter (as the key) and the value to assign to it, as in the following e
 <span class="gp">... </span>         <span class="n">runtime_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;slope&quot;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">,</span>
 <span class="gp">... </span>                          <span class="s2">&quot;clip&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">5</span><span class="p">)})</span> 
 <span class="go">array([[5.]])  # = 2 (input) * 3 (slope) = 6, but clipped at 5</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span><span class="o">.</span><span class="n">base</span> 
 <span class="go">1.0   # slope is restored 1.0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">clip</span>     
 <span class="go">None  # clip is restored to None</span>
@@ -927,7 +927,7 @@ does have to be used when accessing or assigning the parameter’s value using <
 as shown above).</p>
 <p>If a parameter is assigned a new value before the execution, that value is restored after the execution;  that is,
 the parameter is assigned its previous value and <em>not</em> its default, as shown below:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span> <span class="o">=</span> <span class="mi">10</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="mi">10</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">clip</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span>
 <span class="go">10</span>
@@ -937,7 +937,7 @@ the parameter is assigned its previous value and <em>not</em> its default, as sh
 <span class="gp">... </span>         <span class="n">runtime_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;slope&quot;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span>
 <span class="gp">... </span>                          <span class="s2">&quot;clip&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">4</span><span class="p">)})</span> 
 <span class="go">array([[4.]])  # = 3 (input) * 4 (slope) = 12, but clipped at 4</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span> 
+<span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span><span class="o">.</span><span class="n">base</span> 
 <span class="go">10      # slope is restored 10.0, its previously assigned value</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">T</span><span class="o">.</span><span class="n">clip</span> 
 <span class="go">(0, 3)  # clip is restored to (0,3), its previously assigned value</span>
@@ -2073,7 +2073,7 @@ as well as other reinitialization steps that the reset method may carry out.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.4.1',
+               VERSION:'0.8.4.1+5.g518e56f',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
