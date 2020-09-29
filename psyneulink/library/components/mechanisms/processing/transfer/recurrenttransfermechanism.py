@@ -191,6 +191,7 @@ import warnings
 from collections.abc import Iterable
 
 from psyneulink.core import llvm as pnlvm
+from psyneulink.core.components.component import _get_parametervalue_attr
 from psyneulink.core.components.functions.function import Function, get_matrix, is_function_type
 from psyneulink.core.components.functions.learningfunctions import Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Stability
@@ -1005,7 +1006,7 @@ class RecurrentTransferMechanism(TransferMechanism):
     # single flag to check whether to get matrix from auto and hetero?
     @property
     def matrix(self):
-        return self.parameters.matrix._get(self.most_recent_context)
+        return getattr(self, _get_parametervalue_attr(self.parameters.matrix))
 
     @matrix.setter
     def matrix(self, val): # simplified version of standard setter (in Component.py)
@@ -1014,18 +1015,13 @@ class RecurrentTransferMechanism(TransferMechanism):
         # KDM 7/1/19: reinstating below
         if hasattr(self, "recurrent_projection"):
             self.recurrent_projection.parameter_ports["matrix"].function.previous_value = val
+            self.recurrent_projection.parameter_ports["matrix"].function.reset = val
 
         self.parameters.matrix._set(val, self.most_recent_context)
 
-        if hasattr(self, '_parameter_ports') and 'matrix' in self._parameter_ports:
-            param_port = self._parameter_ports['matrix']
-
-            if hasattr(param_port.function, 'initializer'):
-                param_port.function.reset = val
-
     @property
     def auto(self):
-        return self.parameters.auto._get(self.most_recent_context)
+        return getattr(self, _get_parametervalue_attr(self.parameters.auto))
 
     @auto.setter
     def auto(self, val):
@@ -1034,10 +1030,9 @@ class RecurrentTransferMechanism(TransferMechanism):
         if hasattr(self, "recurrent_projection") and 'hetero' in self._parameter_ports:
             self.recurrent_projection.parameter_ports["matrix"].function.previous_value = self.matrix
 
-
     @property
     def hetero(self):
-        return self.parameters.hetero._get(self.most_recent_context)
+        return getattr(self, _get_parametervalue_attr(self.parameters.hetero))
 
     @hetero.setter
     def hetero(self, val):

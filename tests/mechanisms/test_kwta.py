@@ -18,7 +18,7 @@ class TestKWTAInputs:
         np.testing.assert_allclose(K.value, K.defaults.value)
         assert(K.defaults.variable == [[0]])
         assert(K.size == [1])
-        assert(K.matrix == [[5]])
+        assert(K.matrix.base == [[5]])
 
     def test_kwta_check_attrs(self):
         K = KWTAMechanism(
@@ -28,7 +28,7 @@ class TestKWTAInputs:
         np.testing.assert_allclose(K.value, K.defaults.value)
         assert(np.allclose(K.defaults.variable, [[0., 0., 0.]]))
         assert(K.size == [3])
-        assert(np.allclose(K.matrix, [[5, 0, 0], [0, 5, 0], [0, 0, 5]]))
+        assert(np.allclose(K.matrix.base, [[5, 0, 0], [0, 5, 0], [0, 0, 5]]))
         assert(K.recurrent_projection.sender is K.output_port)
         assert(K.recurrent_projection.receiver is K.input_port)
 
@@ -182,7 +182,7 @@ class TestKWTAMatrix:
             auto=3,
             hetero=2
         )
-        assert(np.allclose(K.recurrent_projection.matrix, [[3, 2, 2, 2], [2, 3, 2, 2], [2, 2, 3, 2], [2, 2, 2, 3]]))
+        assert(np.allclose(K.recurrent_projection.matrix.base, [[3, 2, 2, 2], [2, 3, 2, 2], [2, 2, 3, 2], [2, 2, 2, 3]]))
 
     def test_kwta_matrix_hetero_spec(self):
         K = KWTAMechanism(
@@ -190,7 +190,7 @@ class TestKWTAMatrix:
             size=3,
             hetero=-.5,
         )
-        assert(np.allclose(K.recurrent_projection.matrix, [[5, -.5, -.5], [-.5, 5, -.5], [-.5, -.5, 5]]))
+        assert(np.allclose(K.recurrent_projection.matrix.base, [[5, -.5, -.5], [-.5, 5, -.5], [-.5, -.5, 5]]))
 
     def test_kwta_matrix_auto_spec(self):
         K = KWTAMechanism(
@@ -198,7 +198,7 @@ class TestKWTAMatrix:
             size=3,
             auto=-.5,
         )
-        assert(np.allclose(K.recurrent_projection.matrix, [[-.5, 0, 0], [0, -.5, 0], [0, 0, -.5]]))
+        assert(np.allclose(K.recurrent_projection.matrix.base, [[-.5, 0, 0], [0, -.5, 0], [0, 0, -.5]]))
 
 
 class TestKWTARatio:
@@ -297,7 +297,7 @@ class TestKWTAKValue:
             name='K',
             size=4
         )
-        assert K.k_value == 0.5
+        assert K.k_value.base == 0.5
         c = Composition(pathways=[K],
                         prefs=TestKWTARatio.simple_prefs)
 
@@ -311,7 +311,7 @@ class TestKWTAKValue:
             name='K',
             size=6
         )
-        assert K.k_value == 0.5
+        assert K.k_value.base == 0.5
         c = Composition(pathways=[K],
                         prefs=TestKWTARatio.simple_prefs)
 
@@ -327,7 +327,7 @@ class TestKWTAKValue:
             size=5,
             k_value=3
         )
-        assert K.k_value == 3
+        assert K.k_value.base == 3
 
     # This is a deprecated test used when the int_k optimization was being used. It's no longer useful since int_k is
     # dynamically calculated as of 8/9/17 -CW
@@ -339,7 +339,7 @@ class TestKWTAKValue:
     #             size=size_val,
     #             k_value=0.4
     #         )
-    #         assert K.k_value == 0.4
+    #         assert K.k_value.base == 0.4
     #         assert K.int_k == expected_int_k
     #         p = Process(pathway=[K], prefs=TestKWTARatio.simple_prefs)
     #         s = System(processes=[p], prefs=TestKWTARatio.simple_prefs)
@@ -391,7 +391,7 @@ class TestKWTAThreshold:
             name='K',
             size=4
         )
-        assert K.threshold == 0
+        assert K.threshold.base == 0
 
     def test_kwta_threshold_int(self):
         K = KWTAMechanism(

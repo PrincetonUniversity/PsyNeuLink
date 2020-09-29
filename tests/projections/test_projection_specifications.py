@@ -43,9 +43,9 @@ class TestProjectionSpecificationFormats:
                                                  M3_M4_matrix_B,
                                                  M4])
 
-        assert np.allclose(M2_M3_proj.matrix, M2_M3_matrix)
+        assert np.allclose(M2_M3_proj.matrix.base, M2_M3_matrix)
         assert M2.efferents[0] is M2_M3_proj
-        assert np.allclose(M3.efferents[0].matrix, M3_M4_matrix_A)
+        assert np.allclose(M3.efferents[0].matrix.base, M3_M4_matrix_A)
         # This is if different Projections are allowed between the same sender and receiver in different Compositions:
         # assert np.allclose(M3.efferents[1].matrix, M3_M4_matrix_B)
         c.run(inputs={M1:[2, -30]})
@@ -141,9 +141,9 @@ class TestProjectionSpecificationFormats:
                                    output_ports=[(['InputPort-0','InputPort-1'], T1)])
         assert len(T2.output_ports)==1
         assert T2.output_ports[0].efferents[0].receiver.name == 'InputPort-0'
-        assert T2.output_ports[0].efferents[0].matrix.shape == (1,2)
+        assert T2.output_ports[0].efferents[0].matrix.base.shape == (1,2)
         assert T2.output_ports[0].efferents[1].receiver.name == 'InputPort-1'
-        assert T2.output_ports[0].efferents[1].matrix.shape == (1,3)
+        assert T2.output_ports[0].efferents[1].matrix.base.shape == (1,3)
 
     def test_mapping_projection_using_2_item_tuple_and_3_item_tuples_with_index_specs(self):
 
@@ -155,9 +155,9 @@ class TestProjectionSpecificationFormats:
                                                   (['InputPort-0','InputPort-1'], 1, T1)])
         assert len(T2.output_ports)==3
         assert T2.output_ports[0].efferents[0].receiver.name == 'InputPort-0'
-        assert T2.output_ports[0].efferents[0].matrix.shape == (1,2)
+        assert T2.output_ports[0].efferents[0].matrix.base.shape == (1,2)
         assert T2.output_ports[0].efferents[1].receiver.name == 'InputPort-1'
-        assert T2.output_ports[0].efferents[1].matrix.shape == (1,3)
+        assert T2.output_ports[0].efferents[1].matrix.base.shape == (1,3)
         assert T2.output_ports[1].owner_value_index == 2
         assert T2.output_ports[2].owner_value_index == 1
 
