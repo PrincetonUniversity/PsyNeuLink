@@ -189,7 +189,3 @@ class TestParameterPortList:
             match='Did you want leak-function or rate'
         ):
             mech.parameter_ports['leak']
-
-    def test_multiple_ports_warning(self):
-        with pytest.warns(UserWarning, match='Multiple ParameterPorts will be created'):
-            TransferMechanism(function=pnl.Logistic)
