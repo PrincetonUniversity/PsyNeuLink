@@ -24,7 +24,7 @@ import numbers
 import numpy as np
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import DefaultsFlexibility
+from psyneulink.core.components.component import DefaultsFlexibility, _has_initializers_setter
 from psyneulink.core.components.functions.function import Function_Base, FunctionError
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.globals.keywords import INITIALIZER, STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
@@ -194,7 +194,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         rate = Parameter(1.0, modulable=True)
         previous_value = Parameter(np.array([0]), pnl_internal=True)
         initializer = Parameter(np.array([0]), pnl_internal=True)
-
+        has_initializers = Parameter(True, setter=_has_initializers_setter, pnl_internal=True)
 
     @handle_external_context()
     @tc.typecheck
@@ -237,8 +237,6 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             context=context,
             **kwargs
         )
-
-        self.has_initializers = True
 
     def _validate(self, context=None):
         self._validate_rate(self.defaults.rate)
@@ -444,15 +442,20 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         # use np.broadcast_to to guarantee that all initializer type attributes take on the same shape as variable
         if not np.isscalar(self.defaults.variable):
             for attr in self.initializers:
-                setattr(self, attr, np.broadcast_to(getattr(self, attr), self.defaults.variable.shape).copy())
+                param = getattr(self.parameters, attr)
+                param._set(
+                    np.broadcast_to(
+                        param._get(context),
+                        self.defaults.variable.shape
+                    ).copy(),
+                    context
+                )
 
         # create all stateful attributes and initialize their values to the current values of their
         # corresponding initializer attributes
         for i, attr_name in enumerate(self.stateful_attributes):
-            initializer_value = getattr(self, self.initializers[i]).copy()
-            setattr(self, attr_name, initializer_value)
-
-        self.has_initializers = True
+            initializer_value = getattr(self.parameters, self.initializers[i])._get(context).copy()
+            getattr(self.parameters, attr_name)._set(initializer_value, context)
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 
@@ -555,7 +558,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 setattr(self, attr, reinitialization_values[i])
                 getattr(self.parameters, attr).set(reinitialization_values[i],
                                                    context, override=True)
-                value.append(getattr(self, self.stateful_attributes[i]))
+                value.append(getattr(self.parameters, self.stateful_attributes[i])._get(context))
 
         self.parameters.value.set(value, context, override=True)
         return value

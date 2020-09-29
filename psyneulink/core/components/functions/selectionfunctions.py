@@ -162,8 +162,6 @@ class OneHot(SelectionFunction):
 
     componentName = ONE_HOT_FUNCTION
 
-    bounds = None
-
     classPreferences = {
         PREFERENCE_SET_NAME: 'OneHotClassPreferences',
         REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),

@@ -187,7 +187,8 @@ class TestControl:
                                                ControlSignal(projections=[(NOISE, ia)]),
                                                ControlSignal(projections=[(INTERCEPT, ia)]),
                                                ControlSignal(projections=[(SLOPE, ib)])
-                                           ])
+                                           ],
+                                           search_space=[[1],[1],[1]])
         comp = Composition(name='ocomp', pathways=[ia, ib], controller=ocm)
 
         gv = comp.show_graph(show_controller=False, output_fmt='source')
@@ -277,8 +278,9 @@ class TestControl:
                                 name='CONTROLLER',
                                 objective_mechanism=ObjectiveMechanism(name='OBJECTIVE MECHANISM',
                                                                        monitor=[input_mech, output_mech]),
-                                control=(SLOPE, internal_mech))
-                            )
+                                control=(SLOPE, internal_mech),
+                                search_space=[1]
+                            ))
         ocomp.add_node(target)
         ocomp.add_projection(sender=target, receiver=p.target)
 
@@ -363,7 +365,8 @@ class TestControl:
                                                ControlSignal(projections=[(NOISE, ia)]),
                                                ControlSignal(projections=[(INTERCEPT, ia)]),
                                                ControlSignal(projections=[(SLOPE, oa)]),
-                                           ])
+                                           ],
+                                           search_space=[[1],[1],[1]])
         ocomp.add_controller(ocm)
 
         # ocomp.show_graph(show_cim=True, show_nested=INSET)
@@ -414,7 +417,8 @@ class TestControl:
                                                ControlSignal(projections=[(NOISE, ia)]),
                                                ControlSignal(projections=[(INTERCEPT, ia)]),
                                                ControlSignal(projections=[(SLOPE, oa)]),
-                                           ])
+                                           ],
+                                           search_space=[[1],[1],[1]])
         ocomp.add_controller(ocm)
 
         gv = ocomp.show_graph(show_nested=False, output_fmt='source')
@@ -461,7 +465,8 @@ class TestControl:
                                                ControlSignal(projections=[(NOISE, ia)]),
                                                ControlSignal(projections=[(INTERCEPT, ia)]),
                                                ControlSignal(projections=[(SLOPE, oa)]),
-                                           ])
+                                           ],
+                                           search_space=[[1],[1],[1]])
         ocomp.add_controller(ocm)
 
         ocomp.show_graph(show_cim=True, show_nested=INSET)

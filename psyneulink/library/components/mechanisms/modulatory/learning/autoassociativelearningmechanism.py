@@ -315,11 +315,10 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
             read_only=True,
             structural=True,
         )
+        learning_type = LearningType.UNSUPERVISED
+        learning_timing = LearningTiming.EXECUTION_PHASE
 
     classPreferenceLevel = PreferenceLevel.TYPE
-
-    learning_type = LearningType.UNSUPERVISED
-    learning_timing = LearningTiming.EXECUTION_PHASE
 
     @tc.typecheck
     def __init__(self,
@@ -361,20 +360,6 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
     def _parse_function_variable(self, variable, context=None):
         return variable
-
-    def _instantiate_attributes_after_function(self, context=None):
-        super(AutoAssociativeLearningMechanism, self)._instantiate_attributes_after_function(context=context)
-        # KAM 2/27/19 added the line below to set the learning rate of the hebbian learning function to the learning
-        # rate value passed into RecurrentTransfermechanism
-        if self.learning_rate:
-            self.function.learning_rate = self.learning_rate
-
-    def _instantiate_attributes_after_function(self, context=None):
-        super(AutoAssociativeLearningMechanism, self)._instantiate_attributes_after_function(context=context)
-        # KAM 2/27/19 added the line below to set the learning rate of the hebbian learning function to the learning
-        # rate value passed into RecurrentTransfermechanism
-        if self.learning_rate:
-            self.function.learning_rate = self.learning_rate
 
     def _validate_variable(self, variable, context=None):
         """Validate that variable has only one item: activation_input.

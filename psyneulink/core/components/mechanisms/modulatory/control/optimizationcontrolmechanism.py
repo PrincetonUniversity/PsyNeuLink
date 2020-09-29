@@ -396,7 +396,7 @@ from collections.abc import Iterable
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import is_function_type, FunctionError
 from psyneulink.core.components.functions.optimizationfunctions import \
-    OBJECTIVE_FUNCTION, SEARCH_SPACE
+    GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.transferfunctions import CostFunctions
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -417,6 +417,7 @@ from psyneulink.core.globals.utilities import convert_to_np_array
 from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.context import handle_external_context
+from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
 
 from psyneulink.core import llvm as pnlvm
 
@@ -441,6 +442,13 @@ class OptimizationControlMechanismError(Exception):
         return repr(self.error_value)
 
 
+def _control_allocation_search_space_getter(owning_component=None, context=None):
+    search_space = owning_component.parameters.search_space._get(context)
+    if not search_space:
+        return [c.parameters.allocation_samples._get(context) for c in owning_component.control_signals]
+    else:
+        return search_space
+
 class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(         \
         objective_mechanism=None,            \
@@ -450,7 +458,7 @@ class OptimizationControlMechanism(ControlMechanism):
         terminal_objective_mechanism=False   \
         features=None,                       \
         feature_function=None,               \
-        function=None,                       \
+        function=GridSearch,                       \
         agent_rep=None,                      \
         search_function=None,                \
         search_termination_function=None,    \
@@ -503,11 +511,13 @@ class OptimizationControlMechanism(ControlMechanism):
         `control_allocation <ControlMechanism.control_allocation>`, and the second the current iteration of the
         `optimization process <OptimizationFunction_Process>`);  it must return `True` or `False`.
 
-    search_space : list or ndarray
+    search_space : iterable [list, tuple, ndarray, SampleSpec, or SampleIterator] | list, tuple, ndarray, SampleSpec, or SampleIterator
         specifies the `search_space <OptimizationFunction.search_space>` parameter for `function
         <OptimizationControlMechanism.function>`, unless that is specified in a constructor for `function
-        <OptimizationControlMechanism.function>`.  Each item must have the same shape as `control_allocation
-        <ControlMechanism.control_allocation>`.
+        <OptimizationControlMechanism.function>`.  An element at index i should correspond to an element at index i in
+        `control_allocation <ControlMechanism.control_allocation>`. If
+        `control_allocation <ControlMechanism.control_allocation>` contains only one element, then search_space can be
+        specified as a single element without an enclosing iterable.
 
     function : OptimizationFunction, function or method
         specifies the function used to optimize the `control_allocation <ControlMechanism.control_allocation>`;
@@ -680,9 +690,10 @@ class OptimizationControlMechanism(ControlMechanism):
                     :default value: None
                     :type:
         """
-        function = Parameter(None, stateful=False, loggable=False)
+        function = Parameter(GridSearch, stateful=False, loggable=False)
         feature_function = Parameter(None, reference=True, stateful=False, loggable=False)
         search_function = Parameter(None, stateful=False, loggable=False)
+        search_space = Parameter(None, read_only=True)
         search_termination_function = Parameter(None, stateful=False, loggable=False)
         comp_execution_mode = Parameter('Python', stateful=False, loggable=False, pnl_internal=True)
         search_statefulness = Parameter(True, stateful=False, loggable=False)
@@ -703,7 +714,7 @@ class OptimizationControlMechanism(ControlMechanism):
         )
         num_estimates = None
         # search_space = None
-        control_allocation_search_space = None
+        control_allocation_search_space = Parameter(None, read_only=True, getter=_control_allocation_search_space_getter)
 
         saved_samples = None
         saved_values = None
@@ -722,6 +733,8 @@ class OptimizationControlMechanism(ControlMechanism):
                  context=None,
                  **kwargs):
         """Implement OptimizationControlMechanism"""
+
+        function = function or GridSearch
 
         # If agent_rep hasn't been specified, put into deferred init
         if agent_rep is None:
@@ -842,13 +855,35 @@ class OptimizationControlMechanism(ControlMechanism):
         """Instantiate OptimizationControlMechanism's OptimizatonFunction attributes"""
 
         super()._instantiate_attributes_after_function(context=context)
+
+        search_space = self.parameters.search_space._get(context)
+        if type(search_space) == np.ndarray:
+            search_space = search_space.tolist()
+        if search_space:
+            corrected_search_space = []
+            try:
+                if type(search_space) == SampleIterator:
+                    corrected_search_space.append(search_space)
+                elif type(search_space) == SampleSpec:
+                    corrected_search_space.append(SampleIterator(search_space))
+                else:
+                    for i in self.parameters.search_space._get(context):
+                        if not type(i) == SampleIterator:
+                            corrected_search_space.append(SampleIterator(specification=i))
+                            continue
+                        corrected_search_space.append(i)
+            except AssertionError:
+                corrected_search_space = [SampleIterator(specification=search_space)]
+            self.parameters.search_space._set(corrected_search_space, context)
+
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
-        self.function.reset({DEFAULT_VARIABLE: self.control_allocation,
-                                    OBJECTIVE_FUNCTION: self.evaluation_function,
-                                    # SEARCH_FUNCTION: self.search_function,
-                                    # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
-                                    SEARCH_SPACE: self.control_allocation_search_space
-                                    })
+        self.function.reset({
+            DEFAULT_VARIABLE: self.parameters.control_allocation._get(context),
+            OBJECTIVE_FUNCTION: self.evaluation_function,
+            # SEARCH_FUNCTION: self.search_function,
+            # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
+            SEARCH_SPACE: self.parameters.control_allocation_search_space._get(context)
+        })
 
         if isinstance(self.agent_rep, type):
             self.agent_rep = self.agent_rep()
@@ -1027,7 +1062,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _get_evaluate_alloc_struct_type(self, ctx):
         return pnlvm.ir.ArrayType(ctx.float_ty,
-                                  len(self.control_allocation_search_space))
+                                  len(self.parameters.control_allocation_search_space.get()))
 
     def _gen_llvm_net_outcome_function(self, *, ctx, tags=frozenset()):
         assert "net_outcome" in tags
@@ -1305,11 +1340,6 @@ class OptimizationControlMechanism(ControlMechanism):
             parsed_features.extend(spec)
 
         return parsed_features
-
-    @property
-    def control_allocation_search_space(self):
-        """Return list of SampleIterators for allocation_samples of control_signals"""
-        return [c.allocation_samples for c in self.control_signals]
 
     @property
     def _model_spec_parameter_blacklist(self):

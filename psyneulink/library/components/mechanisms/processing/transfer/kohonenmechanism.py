@@ -397,7 +397,7 @@ class KohonenMechanism(TransferMechanism):
                 self._learning_enable_deferred = True
                 return
 
-        self.matrix = self.learned_projection.parameter_ports[MATRIX]
+        self.parameters.matrix._set(self.learned_projection.parameter_ports[MATRIX], context)
 
         self.learning_mechanism = self._instantiate_learning_mechanism(learning_function=self.learning_function,
                                                                        learning_rate=self.learning_rate,

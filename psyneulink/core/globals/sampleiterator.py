@@ -262,9 +262,8 @@ class SampleIterator(Iterator):
 
     """
 
-    @tc.typecheck
     def __init__(self,
-                 specification:tc.any(*allowable_specs)):
+                 specification):
         """
 
         Arguments
@@ -314,6 +313,9 @@ class SampleIterator(Iterator):
             _validate_function(self, specification)
 
             specification = SampleSpec(function=specification)
+
+        elif isinstance(specification, np.ndarray):
+            specification = specification.tolist()
 
         if isinstance(specification, list):
             self.start = specification[0]
