@@ -1305,6 +1305,9 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         # Compute moments (mean, variance, skew) of condiational response time distributions
         moments = DriftDiffusionAnalytical._compute_conditional_rt_moments(drift_rate, noise, threshold, bias, t0)
 
+        if self.owner and self.owner.initialization_status == ContextFlags.INITIALIZED:
+            self.owner.parameters.is_finished_flag._set(True, context)
+
         return rt, er, \
                moments['mean_rt_plus'], moments['var_rt_plus'], moments['skew_rt_plus'], \
                moments['mean_rt_minus'], moments['var_rt_minus'], moments['skew_rt_minus']

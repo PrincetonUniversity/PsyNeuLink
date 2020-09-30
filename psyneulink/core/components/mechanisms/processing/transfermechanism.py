@@ -1846,6 +1846,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             status = measure(np.squeeze(value))
         else:
             previous_value = self.parameters.value.get_previous(context)
+            if previous_value is None:
+                return False
             status = measure([value, previous_value])
 
         self.parameters.termination_measure_value._set(status, context=context, override=True)

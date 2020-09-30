@@ -718,7 +718,7 @@ class DDM(ProcessingMechanism):
         input_format = Parameter(SCALAR, stateful=False, loggable=False)
         initializer = np.array([[0]])
         random_state = Parameter(None, stateful=True, loggable=False)
-
+        is_finished_flag = Parameter(False, loggable=False, stateful=True)
         output_ports = Parameter(
             [DECISION_VARIABLE, RESPONSE_TIME],
             stateful=False,
@@ -1174,7 +1174,11 @@ class DDM(ProcessingMechanism):
             single_value = self.function.get_previous_value(context)
         except AttributeError:
             # Analytical function so it is always finished after it is called
-            return True
+            is_finished = self.parameters.is_finished_flag._get(context)
+            if is_finished:
+                self.parameters.num_executions_before_finished._set(0, override=True, context=context)
+                self.parameters.is_finished_flag._set(False, context)
+            return is_finished
 
         # indexing into a matrix doesn't reduce dimensionality
         if not isinstance(single_value, (np.matrix, str)):

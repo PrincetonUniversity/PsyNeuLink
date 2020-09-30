@@ -2434,6 +2434,9 @@ class Mechanism_Base(Mechanism):
         if self.parameters.is_finished_flag._get(context) is True:
             self.parameters.num_executions_before_finished._set(0, override=True, context=context)
 
+        execute_until_finished = self.parameters.execute_until_finished._get(context)
+        is_finished = self.is_finished(context) if not execute_until_finished else False
+
         while True:
 
             # Don't bother executing Mechanism if variable and/or value has been specified for all of its OutputPorts
@@ -2488,7 +2491,7 @@ class Mechanism_Base(Mechanism):
 
                 value = self._execute(variable=variable,
                                       runtime_params=runtime_params,
-                                      context=context)
+                                      context=context) if not is_finished else self.parameters.value._get(context)
 
                 # IMPLEMENTATION NOTE:  THIS IS HERE BECAUSE IF return_value IS A LIST, AND THE LENGTH OF ALL OF ITS
                 #                       ELEMENTS ALONG ALL DIMENSIONS ARE EQUAL (E.G., A 2X2 MATRIX PAIRED WITH AN
@@ -2529,6 +2532,7 @@ class Mechanism_Base(Mechanism):
 
             if self.is_finished(context):
                 self.parameters.is_finished_flag._set(True, context)
+                self.is_finished(context)
                 break
 
             self.parameters.is_finished_flag._set(False, context)
