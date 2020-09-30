@@ -2783,10 +2783,17 @@ class Mechanism_Base(Mechanism):
     def _get_input_struct_type(self, ctx):
         # Extract the non-modulation portion of InputPort input struct
         input_type_list = [ctx.get_input_struct_type(port).elements[0] for port in self.input_ports]
+
+
         # Get modulatory inputs
-        mod_input_type_list = [ctx.get_output_struct_type(proj) for proj in self.mod_afferents]
-        if len(mod_input_type_list) > 0:
+        if len(self.mod_afferents) > 0:
+            mod_input_type_list = (ctx.get_output_struct_type(proj) for proj in self.mod_afferents)
             input_type_list.append(pnlvm.ir.LiteralStructType(mod_input_type_list))
+        # Prefer an array type if there is no modulation.
+        # This is used to keep ctypes inputs as arrays instead of structs.
+        elif all(t == input_type_list[0] for t in input_type_list):
+            return pnlvm.ir.ArrayType(input_type_list[0], len(input_type_list))
+
         return pnlvm.ir.LiteralStructType(input_type_list)
 
     def _get_param_initializer(self, context):
