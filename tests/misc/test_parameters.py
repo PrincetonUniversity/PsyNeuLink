@@ -235,6 +235,8 @@ def test_copy():
         (pnl.AdaptiveIntegrator, {'rate': None}, 'multiplicative_param', False),
         (pnl.AdaptiveIntegrator, {'rate': 0.5}, 'rate', True),
         (pnl.AdaptiveIntegrator, {'rate': 0.5}, 'multiplicative_param', True),
+        (pnl.TransferMechanism, {'integration_rate': None}, 'integration_rate', False),
+        (pnl.TransferMechanism, {'integration_rate': 0.5}, 'integration_rate', True),
     ]
 )
 def test_user_specified(cls_, kwargs, parameter, is_user_specified):
