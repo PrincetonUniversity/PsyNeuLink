@@ -210,7 +210,9 @@ class FuncExecution(CUDAExecution):
         return self._get_compilation_param('state_struct', '_get_state_initializer', 1, self._execution_contexts[0])
 
     def execute(self, variable):
-        new_variable = np.asfarray(variable)
+        # Make sure function inputs are 2d.
+        # Mechanism inptus are already 3d so the first part is nop.
+        new_variable = np.asfarray(np.atleast_2d(variable))
 
         if len(self._execution_contexts) > 1:
             # wrap_call casts the arguments so we only need contiguous data
@@ -220,7 +222,7 @@ class FuncExecution(CUDAExecution):
                                          self._state_struct,
                                          ct_vi, self._ct_vo, self._ct_len)
         else:
-            ct_vi = new_variable.ctypes.data_as(ctypes.POINTER(self._vi_ty))
+            ct_vi = np.ctypeslib.as_ctypes(new_variable)
             self._bin_func(ctypes.byref(self._param_struct),
                            ctypes.byref(self._state_struct),
                            ct_vi, ctypes.byref(self._ct_vo))
@@ -235,7 +237,8 @@ class MechExecution(FuncExecution):
         #   a) the input is vector of input ports
         #   b) input ports take vector of projection outputs
         #   c) projection output is a vector (even 1 element vector)
-        new_var = [np.atleast_2d(x) for x in np.atleast_1d(variable)]
+        new_var = np.atleast_3d(variable)
+        new_var.shape = (len(self._component.input_ports), 1, -1)
         return super().execute(new_var)
 
 
