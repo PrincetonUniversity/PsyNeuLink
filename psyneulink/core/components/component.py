@@ -2845,7 +2845,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # Specification is Function class
         # Note:  parameter_ports for function's parameters will be created in_instantiate_attributes_after_function
         elif inspect.isclass(function) and issubclass(function, Function):
-            kwargs_to_instantiate = function.class_defaults.values().copy()
+            kwargs_to_instantiate = {}
             if function_params is not None:
                 kwargs_to_instantiate.update(**function_params)
                 # default_variable should not be in any function_params but sometimes it is
