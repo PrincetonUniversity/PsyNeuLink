@@ -30,8 +30,8 @@ def _convert_ctype_to_python(x):
     if isinstance(x, ctypes.Structure):
         return [_convert_ctype_to_python(getattr(x, field_name)) for field_name, _ in x._fields_]
     if isinstance(x, ctypes.Array):
-        return [_convert_ctype_to_python(num) for num in x]
-    if isinstance(x, ctypes.c_double):
+        return [_convert_ctype_to_python(el) for el in x]
+    if isinstance(x, (ctypes.c_double, ctypes.c_float)):
         return x.value
     if isinstance(x, (float, int)):
         return x
@@ -44,6 +44,13 @@ def _tupleize(x):
         return tuple(_tupleize(y) for y in x)
     except TypeError:
         return x if x is not None else tuple()
+
+def _element_dtype(x):
+    dt = np.dtype(x)
+    while dt.subdtype is not None:
+        dt = dt.subdtype[0]
+
+    return dt
 
 def _pretty_size(size):
     units = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB']
@@ -135,8 +142,8 @@ class CUDAExecution:
         return self._buffer_cuda_out
 
     def cuda_execute(self, variable):
-        # Create input parameter
-        new_var = np.asfarray(variable)
+        # Create input argument
+        new_var = np.asfarray(variable, dtype=self._vi_dty)
         data_in = jit_engine.pycuda.driver.In(new_var)
         self._uploaded_bytes['input'] += new_var.nbytes
 
@@ -174,6 +181,7 @@ class FuncExecution(CUDAExecution):
         self._vo_ty = vo_ty
         self._ct_vo = vo_ty()
         self._vi_ty = vi_ty
+        self._vi_dty = _element_dtype(vi_ty)
 
     def _get_compilation_param(self, name, initializer, arg, context):
         param = getattr(self._component._compilation_data, name)
@@ -212,7 +220,8 @@ class FuncExecution(CUDAExecution):
     def execute(self, variable):
         # Make sure function inputs are 2d.
         # Mechanism inptus are already 3d so the first part is nop.
-        new_variable = np.asfarray(np.atleast_2d(variable))
+        new_variable = np.asfarray(np.atleast_2d(variable),
+                                   dtype=self._vi_dty)
 
         if len(self._execution_contexts) > 1:
             # wrap_call casts the arguments so we only need contiguous data
@@ -639,7 +648,8 @@ class CompExecution(CUDAExecution):
         ct_comp_param = bin_func.byref_arg_types[0](*ocm.agent_rep._get_param_initializer(context))
         ct_comp_state = bin_func.byref_arg_types[1](*ocm.agent_rep._get_state_initializer(context))
         # Make sure the dtype matches _gen_llvm_evaluate_function
-        allocations = np.asfarray(np.atleast_2d([*itertools.product(*search_space)]))
+        allocations = np.asfarray(np.atleast_2d([*itertools.product(*search_space)]),
+                                  dtype=_element_dtype(bin_func.byref_arg_types[2]))
         ct_allocations = allocations.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[2] * len(allocations)))
         out_ty = bin_func.byref_arg_types[3] * len(allocations)
         ct_in = variable.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[4]))
