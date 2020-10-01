@@ -645,16 +645,25 @@ class CompExecution(CUDAExecution):
         # There are 6 arguments to evaluate:
         # comp_param, comp_state, allocations, results, output, input, comp_data
         # all but #2 and #3 are shared
+
+        # Directly initialized structures
         ct_comp_param = bin_func.byref_arg_types[0](*ocm.agent_rep._get_param_initializer(context))
         ct_comp_state = bin_func.byref_arg_types[1](*ocm.agent_rep._get_state_initializer(context))
-        # Make sure the dtype matches _gen_llvm_evaluate_function
-        allocations = np.asfarray(np.atleast_2d([*itertools.product(*search_space)]),
-                                  dtype=_element_dtype(bin_func.byref_arg_types[2]))
-        ct_allocations = allocations.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[2] * len(allocations)))
-        out_ty = bin_func.byref_arg_types[3] * len(allocations)
-        ct_in = variable.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[4]))
-
         ct_comp_data = bin_func.byref_arg_types[5](*ocm.agent_rep._get_data_initializer(context))
+
+        # Construct the allocations array
+        alloc_vals = itertools.product(*search_space)
+        alloc_dty = _element_dtype(bin_func.byref_arg_types[2])
+        allocations = np.asfarray(np.atleast_2d([*alloc_vals]), dtype=alloc_dty)
+        ct_allocations = allocations.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[2] * len(allocations)))
+
+        # Construct input variable
+        el_dty = _element_dtype(bin_func.byref_arg_types[4])
+        converted_variable = np.array(np.asfarray(x, dtype=el_dty) for x in variable)
+        ct_in = converted_variable.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[4]))
+
+        # Ouput is allocated on device, but we need the ctype.
+        out_ty = bin_func.byref_arg_types[3] * len(allocations)
 
         cuda_args = (self.upload_ctype(ct_comp_param, 'params'),
                      self.upload_ctype(ct_comp_state, 'state'),
