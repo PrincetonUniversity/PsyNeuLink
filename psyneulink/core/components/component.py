@@ -518,7 +518,7 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared,\
     is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, \
-    get_all_explicit_arguments, call_with_pruned_args
+    get_all_explicit_arguments, call_with_pruned_args, safe_equals
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
@@ -2155,14 +2155,23 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                         except AttributeError:
                             continue
 
-                        if (
-                            not shared_obj_param._user_specified
-                            and param.primary
-                            and param.default_value is not None
+                        if not shared_obj_param._user_specified:
+                            if (
+                                param.primary
+                                and param.default_value is not None
+                            ):
+                                shared_obj_param.default_value = copy.deepcopy(param.default_value)
+                                shared_obj_param._set(copy.deepcopy(param.default_value), context)
+                                shared_obj_param._user_specified = param._user_specified
+                        elif (
+                            param._user_specified
+                            and not safe_equals(param.default_value, shared_obj_param.default_value)
+                            # only show warning one time, for the non-default value if possible
+                            and c is shared_objs[-1]
                         ):
-                            shared_obj_param.default_value = copy.deepcopy(param.default_value)
-                            shared_obj_param._set(copy.deepcopy(param.default_value), context)
-                            shared_obj_param._user_specified = param._user_specified
+                            warnings.warn(
+                                f'Specification of the "{param.name}" parameter'
+                                f' ({param.default_value}) for {self} conflicts with specification of its shared parameter "{shared_obj_param.name}" ({shared_obj_param.default_value}) for its {param.attribute_name} ({param.source._owner._owner}). The value specified on {param.source._owner._owner} will be used.')
 
     @handle_external_context()
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS, context=None):
