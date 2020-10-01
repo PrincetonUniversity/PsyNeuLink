@@ -1968,6 +1968,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     # p in param_defaults does not correspond to a Parameter
                     continue
 
+                if d[p] is not None:
+                    parameter_obj._user_specified = True
+
                 if parameter_obj.structural:
                     parameter_obj.spec = d[p]
 
@@ -2019,8 +2022,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     param_defaults[p.source.name] = param_defaults[p.name]
 
         for p in filter(lambda x: not isinstance(x, (ParameterAlias, SharedParameter)), self.parameters):
-            p._user_specified = _is_user_specified(p)
-
             # copy spec so it is not overwritten later
             # TODO: check if this is necessary
             p.spec = copy_parameter_value(p.spec)
