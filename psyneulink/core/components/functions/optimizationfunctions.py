@@ -1516,7 +1516,7 @@ class GridSearch(OptimizationFunction):
         # Use NaN here. fcmp_unordered below returns true if one of the
         # operands is a NaN. This makes sure we always set min_*
         # in the first iteration
-        builder.store(min_value_ptr.type.pointee("NaN"), min_value_ptr)
+        builder.store(min_value_ptr.type.pointee(float("NaN")), min_value_ptr)
 
         b = builder
         with contextlib.ExitStack() as stack:

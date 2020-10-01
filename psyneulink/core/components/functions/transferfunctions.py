@@ -2357,7 +2357,7 @@ class SoftMax(TransferFunction):
         builder.store(exp_sum_ptr.type.pointee(0), exp_sum_ptr)
 
         max_ptr = builder.alloca(ctx.float_ty)
-        builder.store(max_ptr.type.pointee('-inf'), max_ptr)
+        builder.store(max_ptr.type.pointee(float('-inf')), max_ptr)
 
         max_ind_ptr = builder.alloca(ctx.int32_ty)
         builder.store(max_ind_ptr.type.pointee(-1), max_ind_ptr)
