@@ -968,7 +968,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             # creating a recurrent_projection changes the default variable shape
             # so we have to reshape any Paramter Functions
-            self._update_parameter_class_variables(context)
+            self._update_default_variable(self.defaults.variable, context)
 
         self.aux_components.append(self.recurrent_projection)
 
@@ -1217,10 +1217,14 @@ class RecurrentTransferMechanism(TransferMechanism):
         return super()._execute(variable, context, runtime_params)
 
     def _parse_function_variable(self, variable, context=None):
+        variable = self._parse_integrator_function_variable(variable, context=context)
+        return super()._parse_function_variable(variable, context=context)
+
+    def _parse_integrator_function_variable(self, variable, context=None):
         if self.has_recurrent_input_port:
             variable = self.combination_function.execute(variable=variable, context=context)
 
-        return super()._parse_function_variable(variable, context=context)
+        return variable
 
     def _get_variable_from_input(self, input, context=None):
         if self.has_recurrent_input_port:

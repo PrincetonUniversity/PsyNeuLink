@@ -27,9 +27,9 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, _has_initializers_setter
 from psyneulink.core.components.functions.function import Function_Base, FunctionError
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
-from psyneulink.core.globals.keywords import INITIALIZER, STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
+from psyneulink.core.globals.keywords import STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.utilities import parameter_spec, iscompatible, object_has_single_value
+from psyneulink.core.globals.utilities import parameter_spec, iscompatible, object_has_single_value, convert_to_np_array
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 
@@ -215,16 +215,6 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
         if not hasattr(self, "stateful_attributes"):
             self.stateful_attributes = ["previous_value"]
-
-        if initializer is None:
-            if params is not None and INITIALIZER in params and params[INITIALIZER] is not None:
-                # This is only needed as long as a new copy of a function is created
-                # whenever assigning the function to a mechanism.
-                # The old values are compiled and passed in through params argument.
-                initializer = params[INITIALIZER]
-
-            else:
-                initializer = self.class_defaults.variable
 
         super().__init__(
             default_variable=default_variable,
@@ -431,13 +421,16 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         return param
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-        self.parameters.previous_value._set(
-            self._initialize_previous_value(
-                self.parameters.initializer._get(context),
-                context
-            ),
-            context
-        )
+        if not self.parameters.initializer._user_specified:
+            # TODO: remove this extra check when TransferMechanism.initial_value
+            # is made a FunctionParameter
+            try:
+                skip = self.owner.parameters.initial_value._user_specified
+            except (AttributeError, TypeError):
+                skip = False
+
+            if not skip:
+                self._initialize_previous_value(np.zeros_like(self.defaults.variable), context)
 
         # use np.broadcast_to to guarantee that all initializer type attributes take on the same shape as variable
         if not np.isscalar(self.defaults.variable):
@@ -460,17 +453,30 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         super()._instantiate_attributes_before_function(function=function, context=context)
 
     def _initialize_previous_value(self, initializer, context=None):
-        val = np.atleast_1d(initializer)
-        if context is None:
-            # Since this is run during initialization, self.parameters will refer to self.class_parameters
-            # because self.parameters has not been created yet
-            with warnings.catch_warnings():
-                warnings.filterwarnings('ignore')
-                self.previous_value = val
-        else:
-            self.parameters.previous_value.set(val, context)
+        initializer = convert_to_np_array(initializer, dimension=1)
 
-        return val
+        self.defaults.initializer = initializer.copy()
+        self.parameters.initializer._set(initializer.copy(), context)
+
+        self.defaults.previous_value = initializer.copy()
+        self.parameters.previous_value.set(initializer.copy(), context)
+
+        return initializer
+
+    @handle_external_context()
+    def _update_default_variable(self, new_default_variable, context=None):
+        if not self.parameters.initializer._user_specified:
+            # TODO: remove this extra check when TransferMechanism.initial_value
+            # is made a FunctionParameter
+            try:
+                skip = self.owner.parameters.initial_value._user_specified
+            except (AttributeError, TypeError):
+                skip = False
+
+            if not skip:
+                self._initialize_previous_value(np.zeros_like(new_default_variable), context)
+
+        super()._update_default_variable(new_default_variable, context=context)
 
     @handle_external_context(execution_id=NotImplemented)
     def reset(self, *args, context=None):

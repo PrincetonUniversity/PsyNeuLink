@@ -431,6 +431,9 @@ class LCAMechanism(RecurrentTransferMechanism):
 
             return None
 
+        def _validate_integration_rate(self, integration_rate):
+            pass
+
     standard_output_ports = RecurrentTransferMechanism.standard_output_ports.copy()
     standard_output_ports.extend([{NAME:MAX_VS_NEXT,
                                     FUNCTION:max_vs_next},

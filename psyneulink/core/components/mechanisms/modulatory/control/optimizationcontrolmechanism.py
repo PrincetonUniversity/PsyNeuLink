@@ -431,7 +431,7 @@ FEATURES = 'features'
 
 
 def _parse_feature_values_from_variable(variable):
-    return np.array(np.array(variable[1:]).tolist())
+    return convert_to_np_array(np.array(variable[1:]).tolist())
 
 
 class OptimizationControlMechanismError(Exception):
