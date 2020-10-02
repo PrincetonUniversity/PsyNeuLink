@@ -633,7 +633,7 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     COMBINE, comparison_operators, EXECUTION_COUNT, FUNCTION, GREATER_THAN_OR_EQUAL, \
-    INITIALIZER, INSTANTANEOUS_MODE_VALUE, LESS_THAN_OR_EQUAL, MAX_ABS_DIFF, \
+    INSTANTANEOUS_MODE_VALUE, LESS_THAN_OR_EQUAL, MAX_ABS_DIFF, \
     NAME, NOISE, NUM_EXECUTIONS_BEFORE_FINISHED, OWNER_VALUE, RESET, RESULT, RESULTS, \
     SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, FunctionParameter
@@ -1059,14 +1059,11 @@ class TransferMechanism(ProcessingMechanism_Base):
             function_parameter_name='rate',
             primary=True,
         )
-        # TODO: replace initial_value with this FunctionParameter
-        # it's complicated.
-        # initial_value = FunctionParameter(
-        #     None,
-        #     function_name='integrator_function',
-        #     function_parameter_name='initializer'
-        # )
-        initial_value = None
+        initial_value = FunctionParameter(
+            None,
+            function_name='integrator_function',
+            function_parameter_name='initializer'
+        )
         integrator_function = Parameter(AdaptiveIntegrator, stateful=False, loggable=False)
         function = Parameter(Linear, stateful=False, loggable=False, dependencies='integrator_function')
         integrator_function_value = Parameter([[0]], read_only=True)
@@ -1386,38 +1383,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         # If the values of any of these parameters differ from the default on either the Mechanism or function:
         #     - use the value that differs (on the assumption that that was assigned by user;
         #     - if both differ, warn and give precedence to the value specified for the Function
-        else:
-            # FIX: 12/9/18 USE CALL TO reset HERE??
-
-            # Relabel to identify parameters passed in as the Mechainsm's values,
-            #    and standardize format for comparison against values specified for functiom (by user or defaults)
-            # mech_noise = np.array(noise).squeeze()
-            # mech_init_val = np.array(initializer).squeeze()
-            # mech_rate = np.array(rate).squeeze()
-            mech_noise, mech_init_val, mech_rate = noise, initializer, rate
-
-            fct_intlzr = np.array(self.integrator_function.parameters.initializer._get(context))
-            # Check against variable, as class.default is None, but initial_value assigned to variable before here
-            mech_specified = not np.array_equal(mech_init_val, np.array(self.defaults.variable))
-            fct_specified = self.integrator_function.parameters.initializer._user_specified
-
-            # Mechanism initial_value and function initializer are not the same
-            if not np.array_equal(mech_init_val, fct_intlzr):
-                # If function's initializer was not specified, assign Mechanism's initial_value to it
-                if not fct_specified:
-                    self.integrator_function.parameters.initializer._set(initializer, context)
-                    self.integrator_function._initialize_previous_value(initializer, context)
-                # Otherwise, give precedence to function's value
-                else:
-                    if mech_specified:
-                        warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of"
-                                        " the {} parameter ({}) for its {} ({});  the Function's value will be used.".
-                                        format(repr(INITIAL_VALUE), self.name, mech_init_val,
-                                                repr(INITIALIZER), fct_intlzr,
-                                                repr(INTEGRATOR_FUNCTION),
-                                                self.integrator_function.__class__.__name__))
-                    # Assign function's initializer to Mechanism
-                    self.parameters.initial_value._set(fct_intlzr, context)
 
         self.has_integrated = True
 
@@ -1470,12 +1435,6 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         current_input = self.integrator_function.execute(function_variable,
                                                          context=context,
-                                                         # Should we handle runtime paramsd?
-                                                         # JDC: NOT SURE THEY ARE NEEDED, PARAMS ASSIGNED VALUES ABOVE
-                                                         runtime_params={
-                                                             INITIALIZER: initial_value,
-                                                         },
-
         )
 
         return current_input

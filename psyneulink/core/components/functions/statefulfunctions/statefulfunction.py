@@ -422,15 +422,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         if not self.parameters.initializer._user_specified:
-            # TODO: remove this extra check when TransferMechanism.initial_value
-            # is made a FunctionParameter
-            try:
-                skip = self.owner.parameters.initial_value._user_specified
-            except (AttributeError, TypeError):
-                skip = False
-
-            if not skip:
-                self._initialize_previous_value(np.zeros_like(self.defaults.variable), context)
+            self._initialize_previous_value(np.zeros_like(self.defaults.variable), context)
 
         # use np.broadcast_to to guarantee that all initializer type attributes take on the same shape as variable
         if not np.isscalar(self.defaults.variable):
@@ -466,15 +458,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     @handle_external_context()
     def _update_default_variable(self, new_default_variable, context=None):
         if not self.parameters.initializer._user_specified:
-            # TODO: remove this extra check when TransferMechanism.initial_value
-            # is made a FunctionParameter
-            try:
-                skip = self.owner.parameters.initial_value._user_specified
-            except (AttributeError, TypeError):
-                skip = False
-
-            if not skip:
-                self._initialize_previous_value(np.zeros_like(new_default_variable), context)
+            self._initialize_previous_value(np.zeros_like(new_default_variable), context)
 
         super()._update_default_variable(new_default_variable, context=context)
 
