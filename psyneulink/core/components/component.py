@@ -2103,7 +2103,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                             f'_parse_{p.name}_variable'
                         )
                         function_default_variable = copy.deepcopy(
-                            parse_variable_method(self.defaults.variable)
+                            call_with_pruned_args(
+                                parse_variable_method,
+                                variable=self.defaults.variable,
+                                context=context
+                            ),
                         )
                     except AttributeError:
                         # no parsing method, assume same shape as owner
