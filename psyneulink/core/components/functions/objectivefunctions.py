@@ -1000,7 +1000,7 @@ class Distance(ObjectiveFunction):
         elif self.metric == MAX_ABS_DIFF:
             del kwargs['acc']
             max_diff_ptr = builder.alloca(ctx.float_ty)
-            builder.store(ctx.float_ty("NaN"), max_diff_ptr)
+            builder.store(ctx.float_ty(float("NaN")), max_diff_ptr)
             kwargs['max_diff_ptr'] = max_diff_ptr
             inner = functools.partial(self.__gen_llvm_max_diff, **kwargs)
         elif self.metric == CORRELATION:
