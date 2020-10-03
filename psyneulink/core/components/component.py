@@ -1157,7 +1157,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 except KeyError:
                     isp_val = copy.deepcopy(param.default_value)
 
-                self.initial_shared_parameters[param.attribute_name][param.shared_parameter_name] = isp_val
+                if isp_val is not None:
+                    self.initial_shared_parameters[param.attribute_name][param.shared_parameter_name] = isp_val
 
         # we must know the final variable shape before setting up parameter
         # Functions or they will mismatch

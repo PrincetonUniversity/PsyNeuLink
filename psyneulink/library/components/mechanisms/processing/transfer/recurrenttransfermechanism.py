@@ -1175,14 +1175,23 @@ class RecurrentTransferMechanism(TransferMechanism):
         try:
             shared_params = self.initial_shared_parameters['learning_mechanism']
 
-            if learning_condition is None:
-                learning_condition = shared_params['learning_condition']
+            try:
+                if learning_condition is None:
+                    learning_condition = shared_params['learning_condition']
+            except KeyError:
+                pass
 
-            if learning_rate is None:
-                learning_rate = shared_params['learning_rate']
+            try:
+                if learning_rate is None:
+                    learning_rate = shared_params['learning_rate']
+            except KeyError:
+                pass
 
-            if learning_function is None:
-                learning_function = shared_params['learning_function']
+            try:
+                if learning_function is None:
+                    learning_function = shared_params['learning_function']
+            except KeyError:
+                pass
         except KeyError:
             pass
 
