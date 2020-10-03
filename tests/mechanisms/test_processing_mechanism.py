@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.learningfunctions import Hebbian, Reinforcement, TDLearning
 from psyneulink.core.components.functions.objectivefunctions import Stability, Distance
@@ -17,6 +18,42 @@ from psyneulink.core.globals.keywords import \
     MEAN, MEDIAN, PROB, STANDARD_DEVIATION, VARIANCE
 
 class TestProcessingMechanismFunctions:
+
+    @pytest.mark.benchmark(group="ProcessingMechanism[DefaultFunction]")
+    @pytest.mark.parametrize("variable", [[1, 2, 3, 4],
+                                          [1., 2., 3., 4.],
+                                          np.asarray([1., 2., 3., 4.], dtype=np.int8),
+                                          np.asarray([1., 2., 3., 4.], dtype=np.int16),
+                                          np.asarray([1., 2., 3., 4.], dtype=np.int32),
+                                          np.asarray([1., 2., 3., 4.], dtype=np.int64),
+                                          np.asarray([1., 2., 3., 4.], dtype=np.float32),
+                                          np.asarray([1., 2., 3., 4.], dtype=np.float64),
+                                          [[1, 2, 3, 4]],
+                                          [[1., 2., 3., 4.]],
+                                          np.asarray([[1., 2., 3., 4.]], dtype=np.int8),
+                                          np.asarray([[1., 2., 3., 4.]], dtype=np.int16),
+                                          np.asarray([[1., 2., 3., 4.]], dtype=np.int32),
+                                          np.asarray([[1., 2., 3., 4.]], dtype=np.int64),
+                                          np.asarray([[1., 2., 3., 4.]], dtype=np.float32),
+                                          np.asarray([[1., 2., 3., 4.]], dtype=np.float64),
+                                         ],
+                             ids=["list.int", "list.float", "np.1d.i8", "np.1d.i16", "np.1d.i32", "np.1d.i64", "np.1d.f32", "np.1d.f64",
+                                  "list2d.int", "list2d.float", "np.2d.i8", "np.2d.i16", "np.2d.i32", "np.2d.i64", "np.2d.f32", "np.2d.f64",
+                             ])
+    @pytest.mark.parametrize("mode", ["Python",
+                                      pytest.param("LLVM", marks=[pytest.mark.llvm]),
+                                      pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                     ])
+    def test_processing_mechanism_default_function(self, mode, variable, benchmark):
+        PM = ProcessingMechanism(default_variable=[0, 0, 0, 0])
+        if mode == "Python":
+            ex = PM.execute
+        elif mode == "LLVM":
+            ex = pnlvm.MechExecution(PM).execute
+        elif mode == "PTX":
+            ex = pnlvm.MechExecution(PM).cuda_execute
+        res = benchmark(ex, variable)
+        assert np.allclose(res, [[1., 2., 3., 4.]])
 
     def test_processing_mechanism_linear_function(self):
 
