@@ -362,7 +362,7 @@ class TestAddProjection:
         assert np.allclose(A.parameters.value.get(comp), [[1.1, 1.2, 1.3]])
         assert np.allclose(B.get_input_values(comp), [[11.2,  14.8]])
         assert np.allclose(B.parameters.value.get(comp), [[22.4,  29.6]])
-        assert np.allclose(proj.matrix, weights)
+        assert np.allclose(proj.matrix.base, weights)
 
     def test_add_linear_processing_pathway_with_noderole_specified_in_tuple(self):
         comp = Composition()

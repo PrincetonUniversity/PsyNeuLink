@@ -28,11 +28,11 @@ def check_drift_diffusion_analytical(B, data, degenerate_cases=False):
         r_stim, r_drift_rate, r_threshold, r_starting_point, r_bias, r_t0, r_noise = data[i, 0:7].tolist()
         ground_truth = data[i,7:]
 
-        B.function.drift_rate = r_drift_rate
-        B.function.threshold = r_threshold
-        B.function.starting_point = r_starting_point
-        B.function.t0 = r_t0
-        B.function.noise = r_noise
+        B.function.drift_rate.base = r_drift_rate
+        B.function.threshold.base = r_threshold
+        B.function.starting_point.base = r_starting_point
+        B.function.t0.base = r_t0
+        B.function.noise.base = r_noise
 
         results_b = B.execute(r_stim)
 

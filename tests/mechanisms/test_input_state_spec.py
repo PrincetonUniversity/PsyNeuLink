@@ -745,21 +745,21 @@ class TestInputPortSpec:
         assert len(T2.input_ports[0].path_afferents)==2
         assert T2.input_ports[0].path_afferents[0].sender.owner.name=='T0'
         assert T2.input_ports[0].path_afferents[1].sender.owner.name=='T1'
-        assert T2.input_ports[0].path_afferents[1].matrix.shape == (2,1)
+        assert T2.input_ports[0].path_afferents[1].matrix.base.shape == (2,1)
 
         # Test list of Mechanisms in 4-item tuple specification
         T3 = TransferMechanism(name='T3', input_ports=[([T0, T1], None, None, InputPort)])
         assert len(T3.input_ports[0].path_afferents)==2
         assert T3.input_ports[0].path_afferents[0].sender.owner.name=='T0'
         assert T3.input_ports[0].path_afferents[1].sender.owner.name=='T1'
-        assert T3.input_ports[0].path_afferents[1].matrix.shape == (2,1)
+        assert T3.input_ports[0].path_afferents[1].matrix.base.shape == (2,1)
 
         # Test "bare" list of OutputPorts
         T4= TransferMechanism(name='T4', input_ports=[[T0.output_ports[0], T1.output_ports[1]]])
         assert len(T4.input_ports[0].path_afferents)==2
         assert T4.input_ports[0].path_afferents[0].sender.owner.name=='T0'
         assert T4.input_ports[0].path_afferents[1].sender.owner.name=='T1'
-        assert T4.input_ports[0].path_afferents[1].matrix.shape == (3,1)
+        assert T4.input_ports[0].path_afferents[1].matrix.base.shape == (3,1)
 
         # Test list of OutputPorts in 4-item tuple specification
         T5 = TransferMechanism(name='T5', input_ports=[([T0.output_ports[0], T1.output_ports[1]],
@@ -768,7 +768,7 @@ class TestInputPortSpec:
         assert len(T5.input_ports[0].path_afferents)==2
         assert T5.input_ports[0].path_afferents[0].sender.owner.name=='T0'
         assert T5.input_ports[0].path_afferents[1].sender.owner.name=='T1'
-        assert T5.input_ports[0].path_afferents[1].matrix.shape == (3,1)
+        assert T5.input_ports[0].path_afferents[1].matrix.base.shape == (3,1)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 35
