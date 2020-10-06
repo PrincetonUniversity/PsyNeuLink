@@ -619,7 +619,7 @@ Example use-cases for dot notation
     >>> comp1.run(inputs={m:1})
     >>> # returns: [array([1.])]
     >>> # set slope of m1's function to 2 for the most recent context (which is now comp1)
-    >>> m.function.slope = 2
+    >>> m.function.slope.base = 2
     >>> comp1.run(inputs={m:1})
     >>> # returns: [array([2.])]
     >>> # note that changing the slope of m's function produced a different result
@@ -640,7 +640,7 @@ Example use-cases for dot notation
     >>> m.execute([1])
     >>> # returns: [array([1.])]
     >>> # executing m outside of a Composition uses its default context
-    >>> m.function.slope = 2
+    >>> m.function.slope.base = 2
     >>> m.execute([1])
     >>> # returns: [array([2.])]
     >>> comp1.run(inputs={m:1})
@@ -711,7 +711,7 @@ parameters.  For example, the ``output`` Mechanism was assigned the `Logistic` `
 specification.  For example, the current value of the `gain <Logistic.gain>` parameter of the ``output``\'s Logistic
 Function can be accessed in either of the following ways::
 
-    >>> output.function.gain
+    >>> output.function.gain.base
     1.0
     >>> output.function.parameters.gain.get()
     1.0
@@ -731,12 +731,20 @@ complete description of modulation.  The current *modulated* value of a paramete
 <ParameterPort.value>` of the corresponding ParameterPort.  For instance, the print statement in the example above
 used ``task.parameter_ports[GAIN].value`` to report the modulated value of the `gain <Logistic.gain>` parameter of
 the ``task`` Mechanism's `Logistic` function when the simulation was run.  For convenience, it is also possible to
-access the value of a modulable parameter by adding the prefix ``mod_`` to the name of the parameter;  this returns
-the `value <ParameterPort.value>` of the ParameterPort for the parameter::
+access the value of a modulable parameter via dot notation. Dot notation for modulable parameters is slightly different
+than for non-modulable parameters to provide easy access to both base and modulated values::
+
+    >>> task.function.gain
+    (Logistic Logistic Function-5):
+        gain.base: 1.0
+        gain.modulated: [0.55]
+
+Instead of just returning a value, the dot notation returns an object with `base` and `modulated` attributes.
+`modulated` refers to the `value <ParameterPort.value>` of the ParameterPort for the parameter::
 
     >>> task.parameter_ports[GAIN].value
     [0.62]
-    >>> task.mod_gain
+    >>> task.gain.modulated
     [0.62]
 
 This works for any modulable parameters of the Mechanism, its
@@ -745,8 +753,8 @@ here, neither the ``parameters`` nor the ``function`` attributes of the Mechanis
 Note also that, as explained above, the value returned is different from the base value of the function's gain
 parameter::
 
-    >>> task.function.gain
-    [1.0]
+    >>> task.function.gain.base
+    1.0
 
 This is because when the Compoistion was run, the ``control`` Mechanism modulated the value of the gain parameter.
 

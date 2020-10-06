@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Primer &mdash; PsyNeuLink 0.8.4.1 documentation</title>
+  <title>Basics and Primer &mdash; PsyNeuLink 0.8.4.1+26.ge415857 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.4.1
+                  0.8.4.1+26
                 </div>
               
             
@@ -733,7 +733,7 @@ parameter value:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp1</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">m</span><span class="p">:</span><span class="mi">1</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([1.])]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># set slope of m1&#39;s function to 2 for the most recent context (which is now comp1)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="mi">2</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp1</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">m</span><span class="p">:</span><span class="mi">1</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([2.])]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># note that changing the slope of m&#39;s function produced a different result</span>
@@ -755,7 +755,7 @@ its value in the default context, which will in turn propagate to new contexts i
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([1.])]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># executing m outside of a Composition uses its default context</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="mi">2</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([2.])]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp1</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">m</span><span class="p">:</span><span class="mi">1</span><span class="p">})</span>
@@ -831,7 +831,7 @@ parameters.  For example, the <code class="docutils literal"><span class="pre">o
 <a class="reference internal" href="Component.html#component-function"><span class="std std-ref">function</span></a> can also be accessed using dot notation, by referencing the function in the
 specification.  For example, the current value of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter of the <code class="docutils literal"><span class="pre">output</span></code>’s Logistic
 Function can be accessed in either of the following ways:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">output</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">gain</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">output</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">gain</span><span class="o">.</span><span class="n">base</span>
 <span class="go">1.0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">output</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">gain</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
 <span class="go">1.0</span>
@@ -852,11 +852,19 @@ returned by accessing the parameter directly (as in the examples above); see <a 
 complete description of modulation.  The current <em>modulated</em> value of a parameter can be accessed from the <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the corresponding ParameterPort.  For instance, the print statement in the example above
 used <code class="docutils literal"><span class="pre">task.parameter_ports[GAIN].value</span></code> to report the modulated value of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter of
 the <code class="docutils literal"><span class="pre">task</span></code> Mechanism’s <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function when the simulation was run.  For convenience, it is also possible to
-access the value of a modulable parameter by adding the prefix <code class="docutils literal"><span class="pre">mod_</span></code> to the name of the parameter;  this returns
-the <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the ParameterPort for the parameter:</p>
+access the value of a modulable parameter via dot notation. Dot notation for modulable parameters is slightly different
+than for non-modulable parameters to provide easy access to both base and modulated values:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">task</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">gain</span>
+<span class="go">(Logistic Logistic Function-5):</span>
+<span class="go">    gain.base: 1.0</span>
+<span class="go">    gain.modulated: [0.55]</span>
+</pre></div>
+</div>
+<p>Instead of just returning a value, the dot notation returns an object with <code class="xref any docutils literal"><span class="pre">base</span></code> and <code class="xref any docutils literal"><span class="pre">modulated</span></code> attributes.
+<code class="xref any docutils literal"><span class="pre">modulated</span></code> refers to the <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the ParameterPort for the parameter:</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">task</span><span class="o">.</span><span class="n">parameter_ports</span><span class="p">[</span><span class="n">GAIN</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
 <span class="go">[0.62]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">task</span><span class="o">.</span><span class="n">mod_gain</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">task</span><span class="o">.</span><span class="n">gain</span><span class="o">.</span><span class="n">modulated</span>
 <span class="go">[0.62]</span>
 </pre></div>
 </div>
@@ -865,8 +873,8 @@ the <a class="reference internal" href="ParameterPort.html#psyneulink.core.compo
 here, neither the <code class="docutils literal"><span class="pre">parameters</span></code> nor the <code class="docutils literal"><span class="pre">function</span></code> attributes of the Mechanism need to be included in the reference.
 Note also that, as explained above, the value returned is different from the base value of the function’s gain
 parameter:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">task</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">gain</span>
-<span class="go">[1.0]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">task</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">gain</span><span class="o">.</span><span class="n">base</span>
+<span class="go">1.0</span>
 </pre></div>
 </div>
 <p>This is because when the Compoistion was run, the <code class="docutils literal"><span class="pre">control</span></code> Mechanism modulated the value of the gain parameter.</p>
@@ -1186,7 +1194,7 @@ a more detailed description of PsyNeuLink’s organization and capabilities.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.4.1',
+               VERSION:'0.8.4.1+26.ge415857',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
