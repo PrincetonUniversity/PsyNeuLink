@@ -793,3 +793,20 @@ def test_sequence_of_DDM_mechs_in_Composition_Pathway():
         # if you do not specify, assert_allcose will use a relative tolerance of 1e-07,
         # which WILL FAIL unless you gather higher precision values to use as reference
         np.testing.assert_allclose(val, expected, atol=1e-08, err_msg='Failed on expected_output[{0}]'.format(i))
+
+
+@pytest.mark.mechanism
+@pytest.mark.ddm_mechanism
+@pytest.mark.parametrize('mode', ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                  pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                  pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                  pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_DDMMechanism_LCA_equivalent(mode):
+    ddm = DDM(default_variable=[0], function=DriftDiffusionIntegrator(rate=1, time_step_size=0.1))
+    comp2 = Composition()
+    comp2.add_node(ddm)
+    result2 = comp2.run(inputs={ddm:[1]}, bin_execute=mode)
+    assert np.allclose(np.asfarray(result2[0]), [0.1])
+    assert np.allclose(np.asfarray(result2[1]), [0.1])
