@@ -1067,6 +1067,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         # )
         initial_value = None
         integrator_function = Parameter(AdaptiveIntegrator, stateful=False, loggable=False)
+        function = Parameter(Linear, stateful=False, loggable=False, dependencies='integrator_function')
         integrator_function_value = Parameter([[0]], read_only=True)
         has_integrated = Parameter(False, user=False)
         on_resume_integrator_mode = Parameter(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)

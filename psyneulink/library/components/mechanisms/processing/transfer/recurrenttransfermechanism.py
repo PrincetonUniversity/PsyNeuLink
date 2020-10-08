@@ -193,6 +193,7 @@ from collections.abc import Iterable
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import _get_parametervalue_attr
 from psyneulink.core.components.functions.function import Function, get_matrix, is_function_type
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.learningfunctions import Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Stability
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
@@ -614,6 +615,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         matrix = Parameter(HOLLOW_MATRIX, modulable=True, getter=_recurrent_transfer_mechanism_matrix_getter, setter=_recurrent_transfer_mechanism_matrix_setter)
         auto = Parameter(1, modulable=True)
         hetero = Parameter(0, modulable=True)
+        integrator_function = Parameter(AdaptiveIntegrator, stateful=False, loggable=False, dependencies='combination_function')
         combination_function = Parameter(LinearCombination, stateful=False, loggable=False)
         smoothing_factor = Parameter(0.5, modulable=True)
         enable_learning = False
