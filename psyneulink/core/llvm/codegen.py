@@ -916,7 +916,7 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
             node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
             num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
             num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.RUN.value)])
-            builder.store(ctx.int32_ty(0), num_exec_time_ptr)
+            builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
 
         # Call execution
         exec_tags = tags.difference({"run"})
