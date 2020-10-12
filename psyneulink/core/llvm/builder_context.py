@@ -431,12 +431,16 @@ def _convert_llvm_ir_to_ctype(t: ir.Type):
     if type_t is ir.VoidType:
         return None
     elif type_t is ir.IntType:
-        if t.width == 32:
-            return ctypes.c_int
+        if t.width == 8:
+            return ctypes.c_int8
+        elif t.width == 16:
+            return ctypes.c_int16
+        elif t.width == 32:
+            return ctypes.c_int32
         elif t.width == 64:
-            return ctypes.c_longlong
+            return ctypes.c_int64
         else:
-            assert False, "Integer type too big!"
+            assert False, "Unknown integer type: {}".format(type_t)
     elif type_t is ir.DoubleType:
         return ctypes.c_double
     elif type_t is ir.FloatType:

@@ -66,111 +66,44 @@ class TestProcessingMechanismFunctions:
         PM2.execute(1.0)
         assert np.allclose(PM2.value, 3.0)
 
-    def test_processing_mechanism_LinearCombination_function(self):
-
-        PM1 = ProcessingMechanism(function=LinearCombination)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
-
-    def test_processing_mechanism_Reduce_function(self):
-        PM1 = ProcessingMechanism(function=Reduce)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
-
-    def test_processing_mechanism_CombineMeans_function(self):
-        PM1 = ProcessingMechanism(function=CombineMeans)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
-
-    def test_processing_mechanism_Exponential_function(self):
-        PM1 = ProcessingMechanism(function=Exponential)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
-
-    def test_processing_mechanism_Logistic_function(self):
-        PM1 = ProcessingMechanism(function=Logistic)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
-
-    def test_processing_mechanism_SoftMax_function(self):
-        PM1 = ProcessingMechanism(function=SoftMax(per_item=False))
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
-
-    def test_processing_mechanism_SimpleIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=SimpleIntegrator)
-        PM1.execute(1.0)
-
-    def test_processing_mechanism_AdaptiveIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=AdaptiveIntegrator)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
-
-    def test_processing_mechanism_DriftDiffusionIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=DriftDiffusionIntegrator)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
-
-    def test_processing_mechanism_OrnsteinUhlenbeckIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=OrnsteinUhlenbeckIntegrator)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
-
-    def test_processing_mechanism_AccumulatorIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=AccumulatorIntegrator)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
-
-    def test_processing_mechanism_FitzHughNagumoIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=FitzHughNagumoIntegrator)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
-
-    def test_processing_mechanism_DualAdaptiveIntegrator_function(self):
-        PM1 = ProcessingMechanism(function=DualAdaptiveIntegrator)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
-
-    def test_processing_mechanism_BogaczEtAl_function(self):
-        PM1 = ProcessingMechanism(function=DriftDiffusionAnalytical)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
+    @pytest.mark.parametrize("function,expected", [(LinearCombination, [[1.]]),
+                                                   (Reduce, [[1.]]),
+                                                   (CombineMeans, [1.0]),
+                                                   (Exponential, [[2.71828183]]),
+                                                   (Logistic, [[0.73105858]]),
+                                                   (SoftMax, [[1,]]),
+                                                   (SimpleIntegrator, [[1.]]),
+                                                   (AdaptiveIntegrator, [[1.]]),
+                                                   (DriftDiffusionIntegrator, [[[1.]], [[1.]]]),
+                                                   (OrnsteinUhlenbeckIntegrator, [[[-1.]], [[1.]]]),
+                                                   (AccumulatorIntegrator, [[0.]]),
+                                                   (FitzHughNagumoIntegrator, [[[0.05127053]], [[0.00279552]], [[0.05]]]),
+                                                   (DualAdaptiveIntegrator, [[0.1517455]]),
+                                                   (DriftDiffusionAnalytical, [[1.19932930e+00],
+                                                                               [3.35350130e-04],
+                                                                               [1.19932930e+00],
+                                                                               [2.48491374e-01],
+                                                                               [1.48291009e+00],
+                                                                               [1.19932930e+00],
+                                                                               [2.48491374e-01],
+                                                                               [1.48291009e+00]]),
+                                                   (NormalDist, [[-0.51529709]]),
+                                                   (ExponentialDist, [[0.29964231]]),
+                                                   (UniformDist, [[0.25891675]]),
+                                                   (GammaDist, [[0.29964231]]),
+                                                   (WaldDist, [[0.73955962]]),
+                                                  ],
+                             ids=lambda x: getattr(x, "componentName", ""))
+    def test_processing_mechanism_function(self, function, expected):
+        PM = ProcessingMechanism(function=function)
+        res = PM.execute(1.0)
+        assert np.allclose(np.asfarray(res), expected)
 
     # COMMENTED OUT BECAUSE OF MATLAB ENGINE:
     # def test_processing_mechanism_NavarroAndFuss_function(self):
     #     PM1 = ProcessingMechanism(function=NavarroAndFuss)
     #     PM1.execute(1.0)
     #     # assert np.allclose(PM1.value, 1.0)
-
-    def test_processing_mechanism_NormalDist_function(self):
-        PM1 = ProcessingMechanism(function=NormalDist)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
-
-    def test_processing_mechanism_ExponentialDist_function(self):
-        PM1 = ProcessingMechanism(function=ExponentialDist)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
-
-    def test_processing_mechanism_UniformDist_function(self):
-        PM1 = ProcessingMechanism(function=UniformDist)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
-
-    def test_processing_mechanism_GammaDist_function(self):
-        PM1 = ProcessingMechanism(function=GammaDist)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
-
-    def test_processing_mechanism_WaldDist_function(self):
-        PM1 = ProcessingMechanism(function=WaldDist)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
-
-    def test_processing_mechanism_Stability_function(self):
-        PM1 = ProcessingMechanism(function=Stability)
-        PM1.execute(1.0)
-        # assert np.allclose(PM1.value, 1.0)
 
     def test_processing_mechanism_Distance_function(self):
         PM1 = ProcessingMechanism(function=Distance,
@@ -317,59 +250,43 @@ class TestLinearMatrixFunction:
 
 class TestProcessingMechanismStandardOutputPorts:
 
-    def test_mean(self):
-        PM1 = ProcessingMechanism(default_variable=[0,0,0], output_ports=[MEAN])
-        PM1.execute([1,2,4])
-        assert np.allclose(PM1.output_ports[0].value,[2.33333333])
+    @pytest.mark.benchmark
+    @pytest.mark.parametrize("op, expected", [(MAX_ONE_HOT, [0, 2, 0]),
+                                              (MAX_INDICATOR, [0, 1, 0]),
+                                              (MAX_ABS_INDICATOR, [0, 0, 1]),
+                                             ],
+                             ids=lambda x: x if isinstance(x, str) else "")
+    @pytest.mark.parametrize("mode", ["Python",
+                                      pytest.param("LLVM", marks=[pytest.mark.llvm]),
+                                      pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                     ])
+    def test_output_ports(self, mode, op, expected, benchmark):
+        benchmark.group = "Output Port Op: {}".format(op)
+        PM1 = ProcessingMechanism(default_variable=[0, 0, 0], output_ports=[op])
+        var = [1, 2, 4] if op in {MEAN, MEDIAN, STANDARD_DEVIATION, VARIANCE} else [1, 2, -4]
+        if mode == "Python":
+            ex = PM1.execute
+        elif mode == "LLVM":
+            ex = pnlvm.MechExecution(PM1).execute
+        elif mode == "PTX":
+            ex = pnlvm.MechExecution(PM1).cuda_execute
+        res = benchmark(ex, var)
+        res = PM1.output_ports[0].value if mode == "Python" else res
+        assert np.allclose(res, expected)
 
-    def test_median(self):
-        PM1 = ProcessingMechanism(default_variable=[0,0,0], output_ports=[MEDIAN])
-        PM1.execute([1,2,4])
-        assert np.allclose(PM1.output_ports[0].value,[2])
-
-    def test_std_dev(self):
-        PM1 = ProcessingMechanism(default_variable=[0,0,0], output_ports=[STANDARD_DEVIATION])
-        PM1.execute([1,2,4])
-        assert np.allclose(PM1.output_ports[0].value,[1.24721913])
-
-    def test_variance(self):
-        PM1 = ProcessingMechanism(default_variable=[0,0,0], output_ports=[VARIANCE])
-        PM1.execute([1,2,4])
-        assert np.allclose(PM1.output_ports[0].value,[1.55555556])
-
-    def test_max_val(self):
-        PM1 = ProcessingMechanism(default_variable=[0,0,0], output_ports=[MAX_VAL])
-        PM1.execute([1,2,-4])
-        # assert np.allclose(PM1.output_ports[0].value,[0,2,0])
-        assert np.allclose(PM1.output_ports[0].value,[2])
-
-    def test_max_abs_val(self):
-        PM1 = ProcessingMechanism(default_variable=[0,0,0], output_ports=[MAX_ABS_VAL])
-        PM1.execute([1,2,-4])
-        # assert np.allclose(PM1.output_ports[0].value,[0,0,-4])
-        assert np.allclose(PM1.output_ports[0].value,[4])
-
-    def test_max_one_hot(self):
-        PM1 = ProcessingMechanism(default_variable=[0,0,0], output_ports=[MAX_ONE_HOT])
-        PM1.execute([1,2,-4])
-        assert np.allclose(PM1.output_ports[0].value,[0,2,0])
-
-    def test_max_abs_one_hot(self):
-        PM1 = ProcessingMechanism(default_variable=[0,0,0], output_ports=[MAX_ABS_ONE_HOT])
-        PM1.execute([1,2,-4])
-        assert np.allclose(PM1.output_ports[0].value,[0,0,4])
-
-    def test_max_indicator(self):
-        PM1 = ProcessingMechanism(default_variable=[0,0,0], output_ports=[MAX_INDICATOR])
-        PM1.execute([1,2,-4])
-        assert np.allclose(PM1.output_ports[0].value,[0,1,0])
-
-    def test_max_abs_indicator(self):
-        PM1 = ProcessingMechanism(default_variable=[0,0,0], output_ports=[MAX_ABS_INDICATOR])
-        PM1.execute([1,2,-4])
-        assert np.allclose(PM1.output_ports[0].value,[0,0,1])
-
-    def test_prob(self):
-        PM1 = ProcessingMechanism(default_variable=[0,0,0], output_ports=[PROB])
-        PM1.execute([1,2,4])
-        assert np.allclose(PM1.output_ports[0].value,[0,0,4])
+    # FIXME: These variants don't compile (use UDFs)
+    @pytest.mark.parametrize("op, expected", [(MEAN, [2.33333333]),
+                                              (MEDIAN, [2]),
+                                              (STANDARD_DEVIATION, [1.24721913]),
+                                              (VARIANCE, [1.55555556]),
+                                              (MAX_VAL, [2]),
+                                              (MAX_ABS_VAL, [4]),
+                                              (MAX_ABS_ONE_HOT, [0, 0, 4]),
+                                              (PROB, [0, 2, 0]),
+                                             ],
+                             ids=lambda x: x if isinstance(x, str) else "")
+    def test_output_ports2(self, op, expected):
+        PM1 = ProcessingMechanism(default_variable=[0, 0, 0], output_ports=[op])
+        var = [1, 2, 4] if op in {MEAN, MEDIAN, STANDARD_DEVIATION, VARIANCE} else [1, 2, -4]
+        PM1.execute(var)
+        assert np.allclose(PM1.output_ports[0].value, expected)

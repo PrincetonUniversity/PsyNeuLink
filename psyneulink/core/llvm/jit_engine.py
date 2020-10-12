@@ -24,6 +24,8 @@ try:
             if pycuda.driver.get_version()[0] > 5:
                 from pycuda import autoinit as pycuda_default
                 import pycuda.compiler
+                assert pycuda_default.context is not None
+                pycuda_default.context.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
                 ptx_enabled = True
             else:
                 raise UserWarning("CUDA driver too old (need 6+): " + str(pycuda.driver.get_version()))
@@ -316,5 +318,5 @@ class ptx_jit_engine(jit_engine):
             wrapper_mod = _gen_cuda_kernel_wrapper_module(function)
             self.compile_modules([wrapper_mod], set())
             kernel = self._engine._find_kernel(name + "_cuda_kernel")
-
+        kernel.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
         return kernel

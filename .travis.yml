@@ -67,9 +67,9 @@ before_install:
     if [ "$TRAVIS_CPU_ARCH" != "amd64" ]; then
       # There are a lot fewer wheels distributed for non-x86 architectures.
       # We end up building a lot of them locally, install dev packages
-      export EXTRA_PKGS="build-essential gfortran llvm-9-dev libfreetype6-dev libjpeg-dev liblapack-dev zlib1g-dev"
+      export EXTRA_PKGS="build-essential gfortran llvm-10-dev libfreetype6-dev libjpeg-dev liblapack-dev zlib1g-dev"
       # Export LLVM_CONFIG for llvmlite
-      export LLVM_CONFIG=llvm-config-9
+      export LLVM_CONFIG=llvm-config-10
       # Disable coverage
       export RUN_COV=""
     fi
