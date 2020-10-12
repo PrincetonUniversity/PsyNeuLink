@@ -3445,7 +3445,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         for p in self.parameters:
             if (
                 p.name not in self._model_spec_parameter_blacklist
-                and not isinstance(p, (ParameterAlias, SharedParameter))
+                and not isinstance(p, ParameterAlias)
             ):
                 if self.initialization_status is ContextFlags.DEFERRED_INIT:
                     try:
