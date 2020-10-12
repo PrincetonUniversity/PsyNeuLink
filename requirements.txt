@@ -6,7 +6,7 @@ grpcio<=1.31.0
 grpcio-tools<=1.31.0
 llvmlite<=0.34
 matplotlib<=3.3.2
-networkx<=1.11
+networkx<2.6
 numpy<=1.19.2
 pillow<=7.2.0
 toposort<=1.5
