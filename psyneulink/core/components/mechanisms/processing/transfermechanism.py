@@ -634,7 +634,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import \
     COMBINE, comparison_operators, EXECUTION_COUNT, FUNCTION, GREATER_THAN_OR_EQUAL, \
     INITIALIZER, INSTANTANEOUS_MODE_VALUE, LESS_THAN_OR_EQUAL, MAX_ABS_DIFF, \
-    NAME, NOISE, NUM_EXECUTIONS_BEFORE_FINISHED, OWNER_VALUE, RATE, RESET, RESULT, RESULTS, \
+    NAME, NOISE, NUM_EXECUTIONS_BEFORE_FINISHED, OWNER_VALUE, RESET, RESULT, RESULTS, \
     SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, FunctionParameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -1056,7 +1056,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         integration_rate = FunctionParameter(
             0.5,
             function_name='integrator_function',
-            function_parameter_name='rate'
+            function_parameter_name='rate',
+            primary=True,
         )
         # TODO: replace initial_value with this FunctionParameter
         # it's complicated.
@@ -1386,7 +1387,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         #     - use the value that differs (on the assumption that that was assigned by user;
         #     - if both differ, warn and give precedence to the value specified for the Function
         else:
-
             # FIX: 12/9/18 USE CALL TO reset HERE??
 
             # Relabel to identify parameters passed in as the Mechainsm's values,
@@ -1395,39 +1395,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             # mech_init_val = np.array(initializer).squeeze()
             # mech_rate = np.array(rate).squeeze()
             mech_noise, mech_init_val, mech_rate = noise, initializer, rate
-
-            if self.integrator_function.owner is None:
-                self.integrator_function.owner = self
-
-            fct_noise = self.integrator_function.parameters.noise._get(context)
-            mech_specified = not np.array_equal(mech_noise, np.array(self.class_defaults.noise))
-            fct_specified = not np.array_equal(np.array(fct_noise),
-                                                np.array(self.integrator_function.class_defaults.noise))
-
-            # Mechanism and function noise are not the same
-            if not np.array_equal(mech_noise, np.array(fct_noise)):
-                # If function's noise was not specified, assign Mechanism's value to it
-                if not fct_specified:
-                    self.integrator_function.parameters.noise._set(mech_noise, context)
-                # Otherwise, given precedence to function's value
-                else:
-                    if mech_specified:
-                        warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of"
-                                        " the {} parameter ({}) for its {} ({});  the Function's value will be used.".
-                                        format(repr(NOISE), self.name, mech_noise,
-                                                repr(NOISE), fct_noise,
-                                                repr(INTEGRATOR_FUNCTION),
-                                                self.integrator_function.__class__.__name__))
-                    # Assign funciton's noise to Mechanism
-                    self.parameters.noise._set(fct_noise, context)
-
-                    # KDM 12/21/18: validating here until a standard scheme is designed, because it's tested for
-                    self._validate_params(
-                        request_set={'noise': fct_noise},
-                        target_set={'noise': fct_noise},
-                        context=context
-                    )
-
 
             fct_intlzr = np.array(self.integrator_function.parameters.initializer._get(context))
             # Check against variable, as class.default is None, but initial_value assigned to variable before here
@@ -1451,50 +1418,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                 self.integrator_function.__class__.__name__))
                     # Assign function's initializer to Mechanism
                     self.parameters.initial_value._set(fct_intlzr, context)
-
-            fct_rate = np.array(self.integrator_function.parameters.rate._get(context))
-            mech_specified = not np.array_equal(mech_rate, np.array(self.class_defaults.integration_rate))
-            fct_specified = not np.array_equal(np.array(fct_rate),
-                                                np.array(self.integrator_function.class_defaults.rate))
-            # Mechanism and function rate are not the same
-            if not np.array_equal(mech_rate, fct_rate):
-                # If function's rate was not specified, assign Mechanism's value to it
-                if not fct_specified:
-                    self.integrator_function.parameters.rate._set(rate, context)
-                # Otherwise, warn and then give precedence to function's value
-                else:
-                    if mech_specified:
-                        warnings.warn("Specification of the {} argument for {} ({}) conflicts with specification of"
-                                        " the {} parameter ({}) for its {} ({});  the Function's value will be used.".
-                                        format(repr(INTEGRATION_RATE), self.name, rate,
-                                                repr(RATE), fct_rate, repr(INTEGRATOR_FUNCTION),
-                                                self.integrator_function.__class__.__name__))
-                    # Assign function's rate to Mechanism
-                    self.parameters.integration_rate._set(fct_rate, context)
-
-                    # KDM 12/21/18: validating here until a standard scheme is designed, because it's tested for
-                    self._validate_params(
-                        request_set={'integration_rate': fct_rate},
-                        target_set={'integration_rate': fct_rate},
-                        context=context
-                    )
-
-        # MODIFIED 6/24/19 NEW:
-        # Insure that integrator_function's variable and value have same shape as TransferMechanism's variable
-        integrator_fct_variable = self.integrator_function.parameters.variable.default_value
-        if integrator_fct_variable.shape != variable.shape:
-            fct_var_inner_dim = integrator_fct_variable.shape[-1]
-            # If inner dimension of function's variable is not same as Mechanism's and is user_specified, raise error
-            if integrator_fct_variable.shape[-1] != variable.shape[-1] and\
-                    self.integrator_function.parameters.variable._user_specified:
-                raise TransferError(f"The length ({fct_var_inner_dim}) of the {repr(VARIABLE)} or one of the parameters"
-                                    f" specified for the {repr(INTEGRATOR_FUNCTION)} of {self.name} doesn't match the "
-                                    f"size ({variable.shape[-1]}) of the innermost dimension (axis 0) of its "
-                                    f"{repr(VARIABLE)} (i.e., the length of its items .")
-            self.integrator_function.parameters.variable.default_value = variable
-            self.integrator_function.parameters.value.default_value = \
-                self.integrator_function(variable, context=context)
-        # MODIFIED 6/24/19 END
 
         self.has_integrated = True
 
@@ -1551,8 +1474,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                          # JDC: NOT SURE THEY ARE NEEDED, PARAMS ASSIGNED VALUES ABOVE
                                                          runtime_params={
                                                              INITIALIZER: initial_value,
-                                                             NOISE: noise,
-                                                             RATE: integration_rate
                                                          },
 
         )
