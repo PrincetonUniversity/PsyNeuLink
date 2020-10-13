@@ -641,7 +641,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
     all_within_range, append_type_to_name, iscompatible, is_comparison_operator, convert_to_np_array
-from psyneulink.core.scheduling.condition import Never, TimeScale
+from psyneulink.core.scheduling.condition import TimeScale
 from psyneulink.core.globals.registry import remove_instance_from_registry, register_instance
 
 __all__ = [
@@ -681,12 +681,14 @@ class TransferError(Exception):
 
 
 def _integrator_mode_setter(value, owning_component=None, context=None):
-    if value is True:
-        if (
-            not owning_component.parameters.integrator_mode._get(context)
-            and owning_component.parameters.has_integrated._get(context)
-        ):
-            if owning_component.integrator_function is not None:
+    if value:
+        if not owning_component.parameters.integrator_mode._get(context):
+            # when first creating parameters, integrator_function is not
+            # instantiated yet
+            if (
+                not owning_component.is_initializing
+                and owning_component.integrator_function.parameters.execution_count._get(context) > 0
+            ):
                 # force, because integrator_mode is currently False
                 # (will be set after exiting this method)
                 if owning_component.on_resume_integrator_mode == INSTANTANEOUS_MODE_VALUE:
@@ -697,19 +699,8 @@ def _integrator_mode_setter(value, owning_component=None, context=None):
                     )
                 elif owning_component.on_resume_integrator_mode == RESET:
                     owning_component.reset(force=True, context=context)
-            owning_component._parameter_components.add(owning_component.integrator_function)
-        owning_component.parameters.has_initializers._set(True, context)
-        if (
-            not isinstance(
-                owning_component.integrator_function,
-                IntegratorFunction
-            )
-        ):
-            owning_component._needs_integrator_function_init = True
-    elif value is False:
-        owning_component.parameters.has_initializers._set(False, context)
-        if not hasattr(owning_component, "reset_stateful_function_when"):
-            owning_component.reset_stateful_function_when = Never()
+
+    owning_component.parameters.has_initializers._set(value, context)
 
     return value
 
@@ -1052,7 +1043,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     :default value: None
                     :type:
         """
-        integrator_mode = Parameter(False, setter=_integrator_mode_setter)
+        integrator_mode = Parameter(False, setter=_integrator_mode_setter, valid_types=bool)
         integration_rate = FunctionParameter(
             0.5,
             function_name='integrator_function',
@@ -1067,7 +1058,6 @@ class TransferMechanism(ProcessingMechanism_Base):
         integrator_function = Parameter(AdaptiveIntegrator, stateful=False, loggable=False)
         function = Parameter(Linear, stateful=False, loggable=False, dependencies='integrator_function')
         integrator_function_value = Parameter([[0]], read_only=True)
-        has_integrated = Parameter(False, user=False)
         on_resume_integrator_mode = Parameter(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)
         clip = None
         noise = FunctionParameter(0.0, function_name='integrator_function')
@@ -1154,12 +1144,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         initial_value = self._parse_arg_initial_value(initial_value)
 
-        # self.integrator_function = None
         self._current_variable_index = 0
-
-        # this is checked during execution to see if integrator_mode was set
-        # to True after initialization
-        self._needs_integrator_function_init = False
 
         super(TransferMechanism, self).__init__(
             default_variable=default_variable,
@@ -1367,25 +1352,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             self.defaults.initial_value = copy.deepcopy(self.defaults.variable)
             self.parameters.initial_value._set(copy.deepcopy(self.defaults.variable), context)
 
-    def _instantiate_integrator_function(self, variable, context):
-
-        noise = copy.deepcopy(self.defaults.noise)
-        rate = copy.deepcopy(self.defaults.integration_rate)
-        initializer = copy.deepcopy(self.defaults.initial_value)
-
-        if isinstance(self.integrator_function, type):
-            self.integrator_function = self.integrator_function(default_variable=variable,
-                                                                initializer=initializer,
-                                                                noise=noise,
-                                                                rate=rate,
-                                                                owner=self)
-        # User specified integrator_function in constructor
-        # If the values of any of these parameters differ from the default on either the Mechanism or function:
-        #     - use the value that differs (on the assumption that that was assigned by user;
-        #     - if both differ, warn and give precedence to the value specified for the Function
-
-        self.has_integrated = True
-
     def _instantiate_output_ports(self, context=None):
         # If user specified more than one item for variable, but did not specify any custom OutputPorts,
         # then assign one OutputPort (with the default name, indexed by the number of the item) per item of variable
@@ -1413,29 +1379,6 @@ class TransferMechanism(ProcessingMechanism_Base):
             current_input = function_variable + noise
         else:
             current_input = function_variable
-
-        return current_input
-
-    def _get_integrated_function_input(self, function_variable, initial_value, noise, context, **kwargs):
-
-        integration_rate = self._get_current_parameter_value(self.parameters.integration_rate, context)
-
-        if (
-            self.initialization_status == ContextFlags.INITIALIZING
-            or self._needs_integrator_function_init
-        ):
-            self._instantiate_integrator_function(variable=function_variable,
-                                                  context=context)
-            # Update param assignments with ones determined to be relevant (mech vs. fct)
-            #    and assigned to integrator_function in _instantiate_integrator_function
-            initial_value = self.integrator_function.parameters.initializer._get(context)
-            integration_rate = self.integrator_function.parameters.rate._get(context)
-            noise = self.integrator_function.parameters.noise._get(context)
-            self._needs_integrator_function_init = False
-
-        current_input = self.integrator_function.execute(function_variable,
-                                                         context=context,
-        )
 
         return current_input
 
@@ -1637,17 +1580,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         integrator_mode = self.parameters.integrator_mode._get(context)
         noise = self._get_current_parameter_value(self.parameters.noise, context)
 
-        # FIX: SHOULD UPDATE PARAMS PASSED TO integrator_function WITH ANY RUNTIME PARAMS THAT ARE RELEVANT TO IT
         # Update according to time-scale of integration
         if integrator_mode:
-            initial_value = self._get_current_parameter_value(self.parameters.initial_value, context)
-
-            value = self._get_integrated_function_input(variable,
-                                                        initial_value,
-                                                        noise,
-                                                        context,
-                                                        )
-
+            value = self.integrator_function.execute(variable, context=context)
             self.parameters.integrator_function_value._set(value, context)
             return value
 

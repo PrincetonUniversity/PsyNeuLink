@@ -1092,6 +1092,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             execution_id=None,
         )
 
+        if reset_stateful_function_when is not None:
+            self.reset_stateful_function_when = reset_stateful_function_when
+        else:
+            self.reset_stateful_function_when = Never()
+
         try:
             function_params = copy.copy(param_defaults[FUNCTION_PARAMS])
         except (KeyError, TypeError):
@@ -1166,11 +1171,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # we must know the final variable shape before setting up parameter
         # Functions or they will mismatch
         self._instantiate_parameter_classes(context)
-
-        if reset_stateful_function_when is not None:
-            self.reset_stateful_function_when = reset_stateful_function_when
-        else:
-            self.reset_stateful_function_when = Never()
 
         # self.componentName = self.componentType
         try:

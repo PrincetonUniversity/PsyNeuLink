@@ -407,7 +407,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         competition = Parameter(1.0, modulable=True)
         time_step_size = FunctionParameter(0.1, function_name='integrator_function')
 
-        integrator_mode = Parameter(True, setter=_integrator_mode_setter)
+        integrator_mode = Parameter(True, setter=_integrator_mode_setter, valid_types=bool)
         integrator_function = Parameter(LeakyCompetingIntegrator, stateful=False, loggable=False)
         termination_measure = Parameter(max, stateful=False, loggable=False)
 
