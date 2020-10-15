@@ -8,7 +8,7 @@ llvmlite<=0.34
 matplotlib<=3.3.2
 networkx<2.6
 numpy<=1.19.2
-pillow<=7.2.0
+pillow<8.1.0
 toposort<=1.5
 torch<=1.6.0; sys_platform != 'win32' and platform_machine == 'x86_64' and platform_python_implementation == 'CPython'
 typecheck-decorator<=1.2
