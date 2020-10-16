@@ -62,6 +62,7 @@ addons:
       - graphviz
 
 before_install:
+  - lscpu
   - |
     # Install venv on Linux using Ubuntu distributed python
     if [ "$TRAVIS_CPU_ARCH" != "amd64" ]; then
