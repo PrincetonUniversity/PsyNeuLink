@@ -468,7 +468,7 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         cond_ty = cond_gen.get_condition_struct_type().as_pointer()
         args.append(cond_ty)
 
-    builder = ctx.create_llvm_function(args, node, node_function.name, tags=tags,
+    builder = ctx.create_llvm_function(args, node, tags=tags,
                                        return_type=node_function.type.pointee.return_type)
     llvm_func = builder.function
     for a in llvm_func.args:
