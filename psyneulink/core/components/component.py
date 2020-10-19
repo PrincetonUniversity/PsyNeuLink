@@ -518,7 +518,7 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared,\
     is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, \
-    get_all_explicit_arguments, call_with_pruned_args
+    get_all_explicit_arguments, call_with_pruned_args, safe_equals
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
@@ -1157,7 +1157,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 except KeyError:
                     isp_val = copy.deepcopy(param.default_value)
 
-                self.initial_shared_parameters[param.attribute_name][param.shared_parameter_name] = isp_val
+                if isp_val is not None:
+                    self.initial_shared_parameters[param.attribute_name][param.shared_parameter_name] = isp_val
 
         # we must know the final variable shape before setting up parameter
         # Functions or they will mismatch
@@ -1968,6 +1969,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     # p in param_defaults does not correspond to a Parameter
                     continue
 
+                if d[p] is not None:
+                    parameter_obj._user_specified = True
+
                 if parameter_obj.structural:
                     parameter_obj.spec = d[p]
 
@@ -2019,8 +2023,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     param_defaults[p.source.name] = param_defaults[p.name]
 
         for p in filter(lambda x: not isinstance(x, (ParameterAlias, SharedParameter)), self.parameters):
-            p._user_specified = _is_user_specified(p)
-
             # copy spec so it is not overwritten later
             # TODO: check if this is necessary
             p.spec = copy_parameter_value(p.spec)
@@ -2101,7 +2103,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                             f'_parse_{p.name}_variable'
                         )
                         function_default_variable = copy.deepcopy(
-                            parse_variable_method(self.defaults.variable)
+                            call_with_pruned_args(
+                                parse_variable_method,
+                                variable=self.defaults.variable,
+                                context=context
+                            ),
                         )
                     except AttributeError:
                         # no parsing method, assume same shape as owner
@@ -2154,14 +2160,23 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                         except AttributeError:
                             continue
 
-                        if (
-                            not shared_obj_param._user_specified
-                            and param.primary
-                            and param.default_value is not None
+                        if not shared_obj_param._user_specified:
+                            if (
+                                param.primary
+                                and param.default_value is not None
+                            ):
+                                shared_obj_param.default_value = copy.deepcopy(param.default_value)
+                                shared_obj_param._set(copy.deepcopy(param.default_value), context)
+                                shared_obj_param._user_specified = param._user_specified
+                        elif (
+                            param._user_specified
+                            and not safe_equals(param.default_value, shared_obj_param.default_value)
+                            # only show warning one time, for the non-default value if possible
+                            and c is shared_objs[-1]
                         ):
-                            shared_obj_param.default_value = copy.deepcopy(param.default_value)
-                            shared_obj_param._set(copy.deepcopy(param.default_value), context)
-                            shared_obj_param._user_specified = param._user_specified
+                            warnings.warn(
+                                f'Specification of the "{param.name}" parameter'
+                                f' ({param.default_value}) for {self} conflicts with specification of its shared parameter "{shared_obj_param.name}" ({shared_obj_param.default_value}) for its {param.attribute_name} ({param.source._owner._owner}). The value specified on {param.source._owner._owner} will be used.')
 
     @handle_external_context()
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS, context=None):
@@ -2844,7 +2859,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # Specification is Function class
         # Note:  parameter_ports for function's parameters will be created in_instantiate_attributes_after_function
         elif inspect.isclass(function) and issubclass(function, Function):
-            kwargs_to_instantiate = function.class_defaults.values().copy()
+            kwargs_to_instantiate = {}
             if function_params is not None:
                 kwargs_to_instantiate.update(**function_params)
                 # default_variable should not be in any function_params but sometimes it is
@@ -3430,7 +3445,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         for p in self.parameters:
             if (
                 p.name not in self._model_spec_parameter_blacklist
-                and not isinstance(p, (ParameterAlias, SharedParameter))
+                and not isinstance(p, ParameterAlias)
             ):
                 if self.initialization_status is ContextFlags.DEFERRED_INIT:
                     try:
