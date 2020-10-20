@@ -323,6 +323,19 @@ class TestSharedParameters:
 
         assert getattr(shared_param, attr_name) == getattr(source_param, attr_name)
 
+    @pytest.mark.parametrize(
+        'integrator_function, expected_rate',
+        [
+            (pnl.AdaptiveIntegrator, pnl.TransferMechanism.defaults.integration_rate),
+            (pnl.AdaptiveIntegrator(), pnl.TransferMechanism.defaults.integration_rate),
+            (pnl.AdaptiveIntegrator(rate=.75), .75)
+        ]
+    )
+    def test_override_tmech(self, integrator_function, expected_rate):
+        t = pnl.TransferMechanism(integrator_function=integrator_function)
+        assert t.integrator_function.defaults.rate == expected_rate
+        assert t.integration_rate.modulated == t.integration_rate.base == expected_rate
+
     def test_conflict_warning(self):
         with pytest.warns(
             UserWarning,
