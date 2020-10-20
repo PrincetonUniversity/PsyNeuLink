@@ -68,8 +68,8 @@ def _cpu_jit_constructor():
 
     # PassManagerBuilder can be shared
     __pass_manager_builder = binding.PassManagerBuilder()
-    __pass_manager_builder.loop_vectorize = False
-    __pass_manager_builder.slp_vectorize = False
+    __pass_manager_builder.loop_vectorize = True
+    __pass_manager_builder.slp_vectorize = True
     __pass_manager_builder.opt_level = 2
 
     __cpu_features = binding.get_host_cpu_features().flatten()
