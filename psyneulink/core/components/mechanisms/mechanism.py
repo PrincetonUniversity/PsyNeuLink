@@ -3589,7 +3589,10 @@ class Mechanism_Base(Mechanism):
         from psyneulink.core.components.ports.inputport import InputPort, _instantiate_input_ports
         from psyneulink.core.components.ports.outputport import OutputPort, _instantiate_output_ports
 
-        context = Context(source=ContextFlags.METHOD)
+        # not transferring execution_id here because later function calls
+        # need execution_id=None to succeed.
+        # TODO: remove context passing for init methods if they don't need it
+        context = Context(source=ContextFlags.METHOD, execution_id=None)
 
         # Put in list to standardize treatment below
         if not isinstance(ports, list):

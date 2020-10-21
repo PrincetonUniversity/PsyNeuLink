@@ -726,8 +726,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         )
 
         if self.previous_value.size != 0:
-            self.parameters.key_size._set(len(self.previous_value[KEYS][0]), Context())
-            self.parameters.val_size._set(len(self.previous_value[VALS][0]), Context())
+            self.parameters.key_size._set(len(self.previous_value[KEYS][0]), Context(execution_id=None))
+            self.parameters.val_size._set(len(self.previous_value[VALS][0]), Context(execution_id=None))
 
     def _parse_distance_function_variable(self, variable):
         # actual used variable in execution (get_memory) checks distance

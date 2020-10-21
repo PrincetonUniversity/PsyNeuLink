@@ -1089,6 +1089,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         context = Context(
             source=ContextFlags.COMPONENT,
             execution_phase=ContextFlags.IDLE,
+            execution_id=None,
         )
 
         try:
@@ -2781,7 +2782,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 self.defaults.variable,
                 # we can't just pass context here, because this specifically tries to bypass a
                 # branch in TransferMechanism._parse_function_variable
-                context=Context(source=ContextFlags.INSTANTIATE)
+                context=Context(source=ContextFlags.INSTANTIATE, execution_id=context.execution_id)
             )
         )
 
@@ -3639,7 +3640,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         try:
             return self._most_recent_context
         except AttributeError:
-            self._most_recent_context = Context(source=ContextFlags.COMMAND_LINE)
+            self._most_recent_context = Context(source=ContextFlags.COMMAND_LINE, execution_id=None)
             return self._most_recent_context
 
     @most_recent_context.setter
