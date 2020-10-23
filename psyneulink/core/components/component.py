@@ -2990,7 +2990,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """
         pass
 
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(fallback_most_recent=True)
     def reset(self, *args, context=None):
         """
             If the component's execute method involves execution of an `IntegratorFunction` Function, this method
@@ -3000,8 +3000,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
         if isinstance(self.function, IntegratorFunction):
-            if context is NotImplemented:
-                context = self.most_recent_context
             new_value = self.function.reset(*args, context=context)
             self.parameters.value.set(np.atleast_2d(new_value), context, override=True)
         else:

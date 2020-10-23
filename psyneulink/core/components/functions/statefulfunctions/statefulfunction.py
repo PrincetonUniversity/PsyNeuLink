@@ -478,7 +478,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
         super()._update_default_variable(new_default_variable, context=context)
 
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(fallback_most_recent=True)
     def reset(self, *args, context=None):
         """
             Resets `value <StatefulFunction.previous_value>`  and `previous_value <StatefulFunction.previous_value>`
@@ -504,10 +504,6 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             reinitialization steps.
 
         """
-
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.most_recent_context.execution_id
-
         reinitialization_values = []
 
         # no arguments were passed in -- use current values of initializer attributes

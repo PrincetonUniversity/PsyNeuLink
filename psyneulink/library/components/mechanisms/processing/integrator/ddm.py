@@ -1154,12 +1154,9 @@ class DDM(ProcessingMechanism):
 
         return mech_out, builder
 
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(fallback_most_recent=True)
     def reset(self, *args, force=False, context=None):
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
-
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.most_recent_context.execution_id
 
         # (1) reset function, (2) update mechanism value, (3) update output ports
         if isinstance(self.function, IntegratorFunction):

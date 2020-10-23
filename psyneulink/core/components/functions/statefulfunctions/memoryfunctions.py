@@ -252,7 +252,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
             context
         )
 
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(fallback_most_recent=True)
     def reset(self, *args, context=None):
         """
 
@@ -265,9 +265,6 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         `value <Buffer.value>` takes on the same value as  `previous_value <Buffer.previous_value>`.
 
         """
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.most_recent_context.execution_id
-
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:
             reinitialization_value = self._get_current_parameter_value("initializer", context)
@@ -1021,7 +1018,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         if isinstance(self.selection_function, type):
             self.selection_function = self.selection_function(context=context)
 
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(fallback_most_recent=True)
     def reset(self, *args, context=None):
         """
         reset(<new_dictionary> default={})
@@ -1036,9 +1033,6 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         `value <ContentAddressableMemory.value>` takes on the same value as
         `previous_value <ContentAddressableMemory.previous_value>`.
         """
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.most_recent_context.execution_id
-
         # no arguments were passed in -- use current values of initializer attributes
         if len(args) == 0 or args is None:
             reinitialization_value = self._get_current_parameter_value("initializer", context)

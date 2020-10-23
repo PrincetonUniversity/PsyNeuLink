@@ -9341,11 +9341,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _update_learning_parameters(self, context):
         pass
 
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(fallback_most_recent=True)
     def reset(self, values=None, include_unspecified_nodes=True, context=NotImplemented):
-        if context is NotImplemented:
-            context = self.most_recent_context
-
         if not values:
             values = {}
 

@@ -631,6 +631,7 @@ def handle_external_context(
     source=ContextFlags.COMMAND_LINE,
     execution_phase=ContextFlags.IDLE,
     execution_id=None,
+    fallback_most_recent=False,
     **context_kwargs
 ):
     """
@@ -702,6 +703,13 @@ def handle_external_context(
                     pass
 
             if context is None:
+                if eid is None:
+                    # assume first positional arg when fallback_most_recent
+                    # true is the object that has the relevant context
+
+                    if fallback_most_recent:
+                        eid = args[0].most_recent_context.execution_id
+
                 context = Context(
                     execution_id=eid,
                     source=source,
