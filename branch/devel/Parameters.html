@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.8.4.4+6.gda6b16b documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.8.4.4+13.g971ee83 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.4.4+6
+                  0.8.4.4+13
                 </div>
               
             
@@ -412,7 +412,7 @@ get or set the default value of the associated <code class="xref py py-class doc
 
 <dl class="class">
 <dt id="psyneulink.core.globals.parameters.Parameter">
-<em class="property">class </em><code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">Parameter</code><span class="sig-paren">(</span><em>default_value=None</em>, <em>name=None</em>, <em>stateful=True</em>, <em>modulable=False</em>, <em>structural=False</em>, <em>modulation_combination_function=None</em>, <em>read_only=False</em>, <em>function_arg=True</em>, <em>pnl_internal=False</em>, <em>aliases=None</em>, <em>user=True</em>, <em>values=None</em>, <em>getter=None</em>, <em>setter=None</em>, <em>loggable=True</em>, <em>log=None</em>, <em>log_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>delivery_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>history=None</em>, <em>history_max_length=1</em>, <em>history_min_length=0</em>, <em>fallback_default=False</em>, <em>retain_old_simulation_data=False</em>, <em>constructor_argument=None</em>, <em>spec=None</em>, <em>parse_spec=False</em>, <em>valid_types=None</em>, <em>reference=False</em>, <em>_owner=None</em>, <em>_inherited=False</em>, <em>_inherited_source=None</em>, <em>_user_specified=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.parameters.</code><code class="descname">Parameter</code><span class="sig-paren">(</span><em>default_value=None</em>, <em>name=None</em>, <em>stateful=True</em>, <em>modulable=False</em>, <em>structural=False</em>, <em>modulation_combination_function=None</em>, <em>read_only=False</em>, <em>function_arg=True</em>, <em>pnl_internal=False</em>, <em>aliases=None</em>, <em>user=True</em>, <em>values=None</em>, <em>getter=None</em>, <em>setter=None</em>, <em>loggable=True</em>, <em>log=None</em>, <em>log_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>delivery_condition=&lt;LogCondition.OFF: 0&gt;</em>, <em>history=None</em>, <em>history_max_length=1</em>, <em>history_min_length=0</em>, <em>fallback_default=False</em>, <em>retain_old_simulation_data=False</em>, <em>constructor_argument=None</em>, <em>spec=None</em>, <em>parse_spec=False</em>, <em>valid_types=None</em>, <em>reference=False</em>, <em>dependencies=None</em>, <em>_owner=None</em>, <em>_inherited=False</em>, <em>_inherited_source=None</em>, <em>_user_specified=False</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="attribute">
 <dt id="psyneulink.core.globals.parameters.Parameter.default_value">
 <code class="descname">default_value</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.default_value" title="Permalink to this definition">¶</a></dt>
@@ -818,6 +818,22 @@ _instantiate_parameter_classes or validated for variable
 shape</p>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="psyneulink.core.globals.parameters.Parameter.dependencies">
+<code class="descname">dependencies</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.dependencies" title="Permalink to this definition">¶</a></dt>
+<dd><p>for Functions; if not None, this contains a set of Parameter
+names corresponding to Parameters whose values must be
+instantiated before that of this Parameter</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Default:</th><td class="field-body">None</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
 <dl class="method">
 <dt id="psyneulink.core.globals.parameters.Parameter.clear_history">
 <code class="descname">clear_history</code><span class="sig-paren">(</span><em>contexts=NotImplemented</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.clear_history" title="Permalink to this definition">¶</a></dt>
@@ -1177,7 +1193,7 @@ value specified in its target</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.4.4+6.gda6b16b',
+               VERSION:'0.8.4.4+13.g971ee83',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
