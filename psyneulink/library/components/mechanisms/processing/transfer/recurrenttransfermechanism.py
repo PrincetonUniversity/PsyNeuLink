@@ -193,6 +193,7 @@ from collections.abc import Iterable
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import _get_parametervalue_attr
 from psyneulink.core.components.functions.function import Function, get_matrix, is_function_type
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.learningfunctions import Hebbian
 from psyneulink.core.components.functions.objectivefunctions import Stability
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
@@ -614,6 +615,7 @@ class RecurrentTransferMechanism(TransferMechanism):
         matrix = Parameter(HOLLOW_MATRIX, modulable=True, getter=_recurrent_transfer_mechanism_matrix_getter, setter=_recurrent_transfer_mechanism_matrix_setter)
         auto = Parameter(1, modulable=True)
         hetero = Parameter(0, modulable=True)
+        integrator_function = Parameter(AdaptiveIntegrator, stateful=False, loggable=False, dependencies='combination_function')
         combination_function = Parameter(LinearCombination, stateful=False, loggable=False)
         smoothing_factor = Parameter(0.5, modulable=True)
         enable_learning = False
@@ -966,7 +968,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
             # creating a recurrent_projection changes the default variable shape
             # so we have to reshape any Paramter Functions
-            self._update_parameter_class_variables(context)
+            self._update_default_variable(self.defaults.variable, context)
 
         self.aux_components.append(self.recurrent_projection)
 
@@ -1215,10 +1217,14 @@ class RecurrentTransferMechanism(TransferMechanism):
         return super()._execute(variable, context, runtime_params)
 
     def _parse_function_variable(self, variable, context=None):
+        variable = self._parse_integrator_function_variable(variable, context=context)
+        return super()._parse_function_variable(variable, context=context)
+
+    def _parse_integrator_function_variable(self, variable, context=None):
         if self.has_recurrent_input_port:
             variable = self.combination_function.execute(variable=variable, context=context)
 
-        return super()._parse_function_variable(variable, context=context)
+        return variable
 
     def _get_variable_from_input(self, input, context=None):
         if self.has_recurrent_input_port:

@@ -2272,7 +2272,7 @@ class Mechanism_Base(Mechanism):
         # (1) reset it, (2) update value, (3) update output ports
         if isinstance(self.function, StatefulFunction):
             new_value = self.function.reset(*args, context=context)
-            self.parameters.value._set(np.atleast_2d(new_value), context=context)
+            self.parameters.value._set(convert_to_np_array(new_value, dimension=2), context=context)
             self._update_output_ports(context=context)
 
         # If the mechanism has an auxiliary integrator function:

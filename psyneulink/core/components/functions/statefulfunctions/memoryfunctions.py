@@ -233,7 +233,10 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         )
 
     def _initialize_previous_value(self, initializer, context=None):
-        initializer = initializer or []
+        try:
+            initializer = initializer.any() or []
+        except AttributeError:
+            initializer = initializer or []
         previous_value = deque(initializer, maxlen=self.parameters.history.get(context))
 
         self.parameters.previous_value.set(previous_value, context, override=True)
@@ -728,6 +731,22 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         if self.previous_value.size != 0:
             self.parameters.key_size._set(len(self.previous_value[KEYS][0]), Context())
             self.parameters.val_size._set(len(self.previous_value[VALS][0]), Context())
+
+    def _parse_distance_function_variable(self, variable):
+        # actual used variable in execution (get_memory) checks distance
+        # between key and key, not key and val as implied in _validate
+        return convert_to_np_array([variable[KEYS], variable[KEYS]])
+
+    def _parse_selection_function_variable(self, variable, context=None):
+        # this should be replaced in the future with the variable
+        # argument when function ordering (and so ordering of parsers)
+        # is made explicit
+        distance_result = self.distance_function.parameters.value._get(context)
+        print(distance_result, self.distance_function.defaults.value)
+        return np.asfarray([
+            distance_result if i == 0 else np.zeros_like(distance_result)
+            for i in range(self.defaults.max_entries)
+        ])
 
     def _get_state_ids(self):
         return super()._get_state_ids() + ["ring_memory"]
