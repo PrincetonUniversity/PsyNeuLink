@@ -632,6 +632,7 @@ def handle_external_context(
     execution_phase=ContextFlags.IDLE,
     execution_id=None,
     fallback_most_recent=False,
+    fallback_default=False,
     **context_kwargs
 ):
     """
@@ -656,6 +657,8 @@ def handle_external_context(
 
     """
     def decorator(func):
+        assert not fallback_most_recent or not fallback_default
+
         # try to detect the position of the 'context' argument in function's
         # signature, to handle non-keyword specification in calls
         try:
@@ -704,11 +707,13 @@ def handle_external_context(
 
             if context is None:
                 if eid is None:
-                    # assume first positional arg when fallback_most_recent
+                    # assume first positional arg when fallback_most_recent or fallback_default
                     # true is the object that has the relevant context
 
                     if fallback_most_recent:
                         eid = args[0].most_recent_context.execution_id
+                    if fallback_default:
+                        eid = args[0].default_execution_id
 
                 context = Context(
                     execution_id=eid,

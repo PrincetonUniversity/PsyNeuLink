@@ -447,7 +447,7 @@ class ShowGraph():
         self.output_rank = output_rank
 
     @tc.typecheck
-    @handle_external_context(execution_id=NotImplemented, source=ContextFlags.COMPOSITION)
+    @handle_external_context(source=ContextFlags.COMPOSITION)
     def show_graph(self,
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
@@ -612,7 +612,7 @@ class ShowGraph():
 
         composition = self.composition
 
-        if context.execution_id is NotImplemented:
+        if context.execution_id is None:
             context.execution_id = composition.default_execution_id
 
         # Args not specified by user but used in calls to show_graph for nested Compositions
