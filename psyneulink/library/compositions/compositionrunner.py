@@ -52,6 +52,11 @@ class CompositionRunner():
         Chunks input dict into pieces where each chunk is a dict with values of length batch_size
         (or for the last chunk, the remainder)
         """
+
+        assert early_stopper is None or not self._is_llvm_mode, "Early stopper doesn't work in compiled mode"
+        assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
+        assert call_after_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
+
         #This is a generator for performance reasons,
         #    since we don't want to copy any data (especially for very large inputs or epoch counts!)
         for epoch in range(epochs):
@@ -78,6 +83,11 @@ class CompositionRunner():
                 pass
 
     def _batch_function_inputs(self, inputs: dict, epochs: int, num_trials: int, batch_size: int = 1, call_before_minibatch=None, call_after_minibatch=None, early_stopper=None, context=None):
+
+        assert early_stopper is None or not self._is_llvm_mode, "Early stopper doesn't work in compiled mode"
+        assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
+        assert call_after_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
+
         for epoch in range(epochs):
             for i in range(0, num_trials, batch_size):
                 batch_ran = False
