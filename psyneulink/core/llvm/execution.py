@@ -166,6 +166,7 @@ class FuncExecution(CUDAExecution):
             Context(execution_id=eid) for eid in execution_ids
         ]
         self._component = component
+        self.__debug_env = debug_env
 
         par_struct_ty, ctx_struct_ty, vi_ty, vo_ty = self._bin_func.byref_arg_types
 
@@ -182,6 +183,11 @@ class FuncExecution(CUDAExecution):
         self._ct_vo = vo_ty()
         self._vi_ty = vi_ty
         self._vi_dty = _element_dtype(vi_ty)
+        if "stat" in self.__debug_env:
+            print("Input struct size:", _pretty_size(ctypes.sizeof(vi_ty)),
+                  "for", self._component.name)
+            print("Output struct size:", _pretty_size(ctypes.sizeof(vo_ty)),
+                  "for", self._component.name)
 
     def _get_compilation_param(self, name, initializer, arg, context):
         param = getattr(self._component._compilation_data, name)
@@ -191,6 +197,10 @@ class FuncExecution(CUDAExecution):
             struct_ty = self._bin_func.byref_arg_types[arg]
             struct = struct_ty(*initializer)
             param._set(struct, context=context)
+            if "stat" in self.__debug_env:
+                print("Instantiated struct:", name, "( size:" ,
+                      _pretty_size(ctypes.sizeof(struct_ty)), ")",
+                      "for", self._component.name)
 
         return struct
 
@@ -320,6 +330,10 @@ class CompExecution(CUDAExecution):
             cond_initializer = gen.get_condition_initializer()
             conds = cond_type(*cond_initializer)
             self._composition._compilation_data.scheduler_conditions._set(conds, context=self._execution_contexts[0])
+            if "stat" in self.__debug_env:
+                print("Instantiated condition struct ( size:" ,
+                      _pretty_size(ctypes.sizeof(struct_ty)), ")",
+                      "for", self._composition.name)
         return conds
 
     def _get_compilation_param(self, name, initializer, arg, context):
@@ -330,6 +344,10 @@ class CompExecution(CUDAExecution):
             struct_ty = self._bin_func.byref_arg_types[arg]
             struct = struct_ty(*initializer)
             param._set(struct, context=context)
+            if "stat" in self.__debug_env:
+                print("Instantiated struct:", name, "( size:" ,
+                      _pretty_size(ctypes.sizeof(struct_ty)), ")",
+                      "for", self._composition.name)
 
         return struct
 
@@ -463,6 +481,9 @@ class CompExecution(CUDAExecution):
         else:
             input_data = ([x] for x in self._composition._build_variable_for_input_CIM(inputs))
 
+        if "stat" in self.__debug_env:
+            print("Input struct size:", _pretty_size(ctypes.sizeof(c_input)),
+                  "for", self._composition.name)
         return c_input(*_tupleize(input_data))
 
     def freeze_values(self):
@@ -593,6 +614,13 @@ class CompExecution(CUDAExecution):
         if len(self._execution_contexts) > 1:
             ct_vo = ct_vo * len(self._execution_contexts)
         outputs = ct_vo()
+
+        if "stat" in self.__debug_env:
+            print("Input struct size:", _pretty_size(ctypes.sizeof(inputs)),
+                  "for", self._composition.name)
+            print("Output struct size:", _pretty_size(ctypes.sizeof(outputs)),
+                  "for", self._composition.name)
+
         runs_count = ctypes.c_int(runs)
         input_count = ctypes.c_int(num_input_sets)
         if len(self._execution_contexts) > 1:
