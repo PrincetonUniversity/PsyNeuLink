@@ -1164,7 +1164,7 @@ class DDM(ProcessingMechanism):
         # (1) reset function, (2) update mechanism value, (3) update output ports
         if isinstance(self.function, IntegratorFunction):
             new_values = self.function.reset(*args, context=context)
-            self.parameters.value._set(np.array(new_values), context)
+            self.parameters.value._set(convert_to_np_array(new_values), context)
             self._update_output_ports(context=context)
 
     @handle_external_context()

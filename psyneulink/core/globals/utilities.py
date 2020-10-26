@@ -713,7 +713,10 @@ def get_deepcopy_with_shared(shared_keys=frozenset(), shared_types=()):
             if k in shared_keys or isinstance(v, shared_types):
                 res_val = v
             else:
-                res_val = copy.deepcopy(v, memo)
+                try:
+                    res_val = copy_iterable_with_shared(v, shared_types, memo)
+                except TypeError:
+                    res_val = copy.deepcopy(v, memo)
             setattr(result, k, res_val)
         return result
 

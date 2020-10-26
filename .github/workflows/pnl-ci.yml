@@ -108,11 +108,13 @@ jobs:
         path: tests_out.xml
       if: success() || failure()
 
+    # Actions below build bdist wheel. Run only for tags.
     - name: Build dist
       run: |
         pip install setuptools wheel
         python setup.py sdist bdist_wheel
       if: contains(github.ref, 'tags')
+
     - name: Upload dist packages
       uses: actions/upload-artifact@v2.2.0
       with:

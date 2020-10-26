@@ -1247,9 +1247,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         return current_activity
         # return self.current_activity
 
-    def _parse_function_variable(self, variable, context=None):
-        function_variable = self.combination_function(variable=variable, context=context)
-        return super(RecurrentTransferMechanism, self)._parse_function_variable(function_variable, context=context)
+    # TODO: remove this override after making combination_function its
+    # own Component?
+    def _parse_integrator_function_variable(self, variable, context=None):
+        return self.combination_function(variable=variable, context=context)
 
     def _parse_phase_convergence_function_variable(self, variable):
         # determines shape only

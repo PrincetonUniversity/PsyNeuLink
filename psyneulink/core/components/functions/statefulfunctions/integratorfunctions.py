@@ -272,7 +272,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         for param in request_set:
             value = request_set[param]
             # If param is in Parameter class for function and it is a function_arg:
-            if param in self.parameters.names() and getattr(self.parameters, param).function_arg:
+            if param in self.parameters.names() and getattr(self.parameters, param).function_arg and getattr(self.parameters, param)._user_specified:
                 if value is not None and isinstance(value, (list, np.ndarray)) and len(value)>1:
                     # Store ones with length > 1 in dict for evaluation below
                     params_to_check.update({param:value})
