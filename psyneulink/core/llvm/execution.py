@@ -584,6 +584,8 @@ class CompExecution(CUDAExecution):
     def run(self, inputs, runs=0, num_input_sets=0):
         if isgenerator(inputs):
             inputs, runs = self._get_generator_run_input_struct(inputs, runs)
+            assert num_input_sets == 0 or num_input_sets == sys.maxsize
+            num_input_sets = len(inputs)
         else:
             inputs = self._get_run_input_struct(inputs, num_input_sets)
 
@@ -607,6 +609,8 @@ class CompExecution(CUDAExecution):
         # Create input buffer
         if isgenerator(inputs):
             inputs, runs = self._get_generator_run_input_struct(inputs, runs)
+            assert num_input_sets == 0 or num_input_sets == sys.maxsize
+            num_input_sets = len(inputs)
         else:
             inputs = self._get_run_input_struct(inputs, num_input_sets)
         data_in = self.upload_ctype(inputs, 'input')
