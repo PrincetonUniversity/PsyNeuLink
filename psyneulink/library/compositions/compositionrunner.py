@@ -77,6 +77,11 @@ class CompositionRunner():
 
                 if not self._is_llvm_mode:
                     self._composition._update_learning_parameters(context)
+
+            # Compiled mode does not need more identical inputs.
+            # number_of_runs will be set appropriately to cycle over the set
+            if self._is_llvm_mode and not randomize:
+                return
             if (not self._is_llvm_mode and early_stopper is not None
                     and early_stopper.step(self._calculate_loss(num_trials, context))):
                 # end early if patience exceeded
