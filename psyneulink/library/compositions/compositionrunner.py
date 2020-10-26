@@ -201,7 +201,16 @@ class CompositionRunner():
                                                        early_stopper=early_stopper,
                                                        context=context)
 
+            # The above generators generate:
+            # num_trials / batch_size * batch_size * stim_epoch entries
+            # unless 'early_stopper' stops the iteration sooner.
+            # 'early_stopper' is not allowed in compiled mode.
+            # FIXME: Passing the number to Python execution fails several tests.
+            # Those test rely on the extra iteration that exits the iterator.
+            # (Passing num_trials * stim_epoch + 1 works)
+            run_trials = num_trials * stim_epoch if self._is_llvm_mode else None
             self._composition.run(inputs=minibatched_input,
+                                  num_trials=run_trials,
                                   skip_initialization=skip_initialization,
                                   skip_analyze_graph=True,
                                   bin_execute=bin_execute,
