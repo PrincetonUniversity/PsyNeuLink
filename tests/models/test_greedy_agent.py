@@ -133,7 +133,7 @@ def test_simplified_greedy_agent_random(benchmark, mode):
     pytest.param([a / 10.0 for a in range(0, 101)]),
 ], ids=lambda x: len(x))
 def test_predator_prey(benchmark, mode, samples):
-    if len(samples) > 10 and mode not in {"LLVMRun", "Python-PTX"}:
+    if len(samples) > 10 and mode not in {"LLVM", "LLVMRun", "Python-PTX"}:
         pytest.skip("This test takes too long")
     # OCM default mode is Python
     mode, ocm_mode = (mode + "-Python").split('-')[0:2]

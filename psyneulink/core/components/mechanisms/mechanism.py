@@ -2902,6 +2902,9 @@ class Mechanism_Base(Mechanism):
             # Parameter port inputs are {original parameter, [modulations]},
             # fill in the first one.
             data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            assert data_ptr.type == param_in_ptr.type, \
+                "Mishandled modulation type for: {} in '{}' in '{}'".format(
+                    param_ports[i].name, obj.name, self.name)
             b.store(b.load(param_in_ptr), data_ptr)
             return b
 

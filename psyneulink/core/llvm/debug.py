@@ -17,7 +17,7 @@ Features:
 
 Increased debug output:
  * "compile" -- prints information messages when modules are compiled
- * "stat" -- prints code generation and compilation statistics at the end
+ * "stat" -- prints code generation and compilation statistics
  * "cuda_data" -- print data upload/download statistic (to GPU VRAM)
  * "comp_node_debug" -- print intermediate results after execution composition node wrapper.
  * "print_values" -- Enabled printfs in llvm code (from ctx printf helper)

@@ -1413,7 +1413,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         def _get_values(p):
             param = p.get(context)
             # Modulated parameters change shape to array
-            if np.isscalar(param) and self._is_param_modulated(p):
+            if np.ndim(param) == 0 and self._is_param_modulated(p):
                 return (param,)
             elif p.name == 'num_estimates':
                 return 0 if param is None else param

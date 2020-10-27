@@ -184,6 +184,40 @@ class TestRecurrentTransferMechanismInputs:
         if benchmark.enabled:
             benchmark(EX, [[1.0, 2.0]])
 
+    @pytest.mark.mechanism
+    @pytest.mark.recurrent_transfer_mechanism
+    @pytest.mark.benchmark(group="RecurrentTransferMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_recurrent_mech_lci(self, benchmark, mode):
+        LCI = pnl.LeakyCompetingIntegrator(rate=0.4)
+        R = RecurrentTransferMechanism(size=2,
+                                       hetero=-2.0,
+                                       integrator_mode=True,
+                                       integrator_function=LCI,
+                                       output_ports = [RESULT])
+        if mode == 'Python':
+            EX = R.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.cuda_execute
+
+        val1 = EX([[1.0, 2.0]])
+        val2 = EX([[1.0, 2.0]])
+        # execute 10 times
+        for i in range(10):
+            val10 = EX([[1.0, 2.0]])
+
+        assert np.allclose(val1, [[0.1, 0.2]])
+        assert np.allclose(val2, [[0.196, 0.392]])
+        assert np.allclose(val10, [[0.96822561, 1.93645121]])
+        if benchmark.enabled:
+            benchmark(EX, [[1.0, 2.0]])
+
     # def test_recurrent_mech_inputs_list_of_fns(self):
     #     R = RecurrentTransferMechanism(
     #         name='R',
