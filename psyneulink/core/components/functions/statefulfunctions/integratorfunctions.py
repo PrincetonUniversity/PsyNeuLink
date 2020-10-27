@@ -1744,7 +1744,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
         return value + offset
 
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(fallback_most_recent=True)
     def reset(self, short=None, long=None, context=NotImplemented):
         """
         Effectively begins accumulation over again at the specified utilities.
@@ -1761,9 +1761,6 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         <DualAdaptiveIntegrator.initial_short_term_avg>` and `initial_long_term_avg
         <DualAdaptiveIntegrator.initial_long_term_avg>` are used.
         """
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.most_recent_context.execution_id
-
         if short is None:
             short = self._get_current_parameter_value("initial_short_term_avg", context)
         if long is None:

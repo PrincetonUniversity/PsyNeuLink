@@ -595,7 +595,7 @@ class Scheduler(JSONDumpable):
     ################################################################################
     # Run methods
     ################################################################################
-
+    @handle_external_context(fallback_default=True)
     def run(self, termination_conds=None, context=None, base_context=Context(execution_id=None), skip_trial_time_increment=False):
         """
         run is a python generator, that when iterated over provides the next `TIME_STEP` of
@@ -609,9 +609,6 @@ class Scheduler(JSONDumpable):
             termination_conds = self.termination_conds
         else:
             termination_conds = self.update_termination_conditions(Scheduler._parse_termination_conditions(termination_conds))
-
-        if context is None:
-            context = Context(execution_id=self.default_execution_id)
 
         self._init_counts(context.execution_id, base_context.execution_id)
         self._reset_counts_useable(context.execution_id)

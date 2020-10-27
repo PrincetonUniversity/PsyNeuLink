@@ -83,7 +83,7 @@ class TestReset:
 
         assert np.allclose([[0.3]], I.function.previous_short_term_avg)
         assert np.allclose([[0.7]], I.function.previous_long_term_avg)
-        context = Context()
+        context = Context(execution_id=None)
         print(I.value)
         print(I.function._combine_terms(0.3, 0.7, context))
         assert np.allclose(I.function._combine_terms(0.3, 0.7, context), I.value)

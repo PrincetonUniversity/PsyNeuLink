@@ -1309,7 +1309,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if features:
             features = self._parse_feature_specs(features=features,
-                                                 context=Context(source=ContextFlags.COMMAND_LINE))
+                                                 context=Context(source=ContextFlags.COMMAND_LINE, execution_id=None))
         self.add_ports(InputPort, features)
 
     @tc.typecheck

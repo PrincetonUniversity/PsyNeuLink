@@ -2334,7 +2334,7 @@ class Port_Base(Port):
         Used primarily during validation, when the function may not have been fully instantiated yet
         (e.g., InputPort must sometimes embed its variable in a list-- see InputPort._get_port_function_value).
         """
-        return function.execute(variable, context=Context(source=ContextFlags.UNSET))
+        return function.execute(variable, context=Context(source=ContextFlags.UNSET, execution_id=None))
 
     @property
     def _dependent_components(self):
