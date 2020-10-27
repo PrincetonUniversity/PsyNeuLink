@@ -1089,6 +1089,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         context = Context(
             source=ContextFlags.COMPONENT,
             execution_phase=ContextFlags.IDLE,
+            execution_id=None,
         )
 
         try:
@@ -2781,7 +2782,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 self.defaults.variable,
                 # we can't just pass context here, because this specifically tries to bypass a
                 # branch in TransferMechanism._parse_function_variable
-                context=Context(source=ContextFlags.INSTANTIATE)
+                context=Context(source=ContextFlags.INSTANTIATE, execution_id=context.execution_id)
             )
         )
 
@@ -2990,7 +2991,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """
         pass
 
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(fallback_most_recent=True)
     def reset(self, *args, context=None):
         """
             If the component's execute method involves execution of an `IntegratorFunction` Function, this method
@@ -3000,8 +3001,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
         if isinstance(self.function, IntegratorFunction):
-            if context is NotImplemented:
-                context = self.most_recent_context
             new_value = self.function.reset(*args, context=context)
             self.parameters.value.set(np.atleast_2d(new_value), context, override=True)
         else:
@@ -3641,7 +3640,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         try:
             return self._most_recent_context
         except AttributeError:
-            self._most_recent_context = Context(source=ContextFlags.COMMAND_LINE)
+            self._most_recent_context = Context(source=ContextFlags.COMMAND_LINE, execution_id=None)
             return self._most_recent_context
 
     @most_recent_context.setter

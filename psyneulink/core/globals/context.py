@@ -90,6 +90,7 @@ import warnings
 from collections import defaultdict, namedtuple
 from queue import Queue
 
+import time as py_time  # "time" is declared below
 import typecheck as tc
 
 from psyneulink.core.globals.keywords import CONTEXT, CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
@@ -346,7 +347,7 @@ class Context():
                  # source=ContextFlags.COMPONENT,
                  source=ContextFlags.NONE,
                  runmode=ContextFlags.DEFAULT_MODE,
-                 execution_id=None,
+                 execution_id=NotImplemented,
                  string:str='',
                  time=None,
                  rpc_pipeline:Queue=None):
@@ -368,6 +369,18 @@ class Context():
                                    format(ContextFlags._get_context_string(flags & ContextFlags.SOURCE_MASK),
                                           ContextFlags._get_context_string(flags, SOURCE),
                                           self.owner.name))
+        if execution_id is NotImplemented:
+            subsecond_res = 10 ** 6
+            cur_time = py_time.time()
+            subsec = int((cur_time * subsecond_res) % subsecond_res)
+            time_format = f'%Y-%m-%d %H:%M:%S.{subsec} %Z%z'
+            execution_id = py_time.strftime(time_format, py_time.localtime(cur_time))
+        else:
+            try:
+                execution_id = execution_id.default_execution_id
+            except AttributeError:
+                pass
+
         self.execution_id = execution_id
         self.execution_time = None
         self.string = string
@@ -631,6 +644,8 @@ def handle_external_context(
     source=ContextFlags.COMMAND_LINE,
     execution_phase=ContextFlags.IDLE,
     execution_id=None,
+    fallback_most_recent=False,
+    fallback_default=False,
     **context_kwargs
 ):
     """
@@ -655,6 +670,8 @@ def handle_external_context(
 
     """
     def decorator(func):
+        assert not fallback_most_recent or not fallback_default
+
         # try to detect the position of the 'context' argument in function's
         # signature, to handle non-keyword specification in calls
         try:
@@ -702,6 +719,15 @@ def handle_external_context(
                     pass
 
             if context is None:
+                if eid is None:
+                    # assume first positional arg when fallback_most_recent or fallback_default
+                    # true is the object that has the relevant context
+
+                    if fallback_most_recent:
+                        eid = args[0].most_recent_context.execution_id
+                    if fallback_default:
+                        eid = args[0].default_execution_id
+
                 context = Context(
                     execution_id=eid,
                     source=source,

@@ -2213,7 +2213,7 @@ class Mechanism_Base(Mechanism):
         """Stub that can be overidden by subclasses that need to know when a projection is added to the Mechanism"""
         pass
 
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(fallback_most_recent=True)
     def reset(self, *args, force=False, context=None):
         """Reset `value <Mechanism_Base.value>` if Mechanisms is stateful.
 
@@ -2264,9 +2264,6 @@ class Mechanism_Base(Mechanism):
         """
         from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
-
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.most_recent_context.execution_id
 
         # If the primary function of the mechanism is stateful:
         # (1) reset it, (2) update value, (3) update output ports
@@ -3592,7 +3589,10 @@ class Mechanism_Base(Mechanism):
         from psyneulink.core.components.ports.inputport import InputPort, _instantiate_input_ports
         from psyneulink.core.components.ports.outputport import OutputPort, _instantiate_output_ports
 
-        context = Context(source=ContextFlags.METHOD)
+        # not transferring execution_id here because later function calls
+        # need execution_id=None to succeed.
+        # TODO: remove context passing for init methods if they don't need it
+        context = Context(source=ContextFlags.METHOD, execution_id=None)
 
         # Put in list to standardize treatment below
         if not isinstance(ports, list):

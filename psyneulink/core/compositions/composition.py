@@ -3315,7 +3315,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._initialize_parameters(
             **param_defaults,
             retain_old_simulation_data=retain_old_simulation_data,
-            context=Context(source=ContextFlags.COMPOSITION)
+            context=Context(source=ContextFlags.COMPOSITION, execution_id=None)
         )
 
         # Compiled resources
@@ -3361,10 +3361,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projections = convert_to_list(projections)
             self.add_projections(projections)
 
-        self.add_pathways(pathways, context=Context(source=ContextFlags.CONSTRUCTOR))
+        self.add_pathways(pathways, context=Context(source=ContextFlags.CONSTRUCTOR, execution_id=None))
 
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
-        self._analyze_graph(context=Context(source=ContextFlags.COMPOSITION))
+        self._analyze_graph(context=Context(source=ContextFlags.COMPOSITION, execution_id=None))
 
         show_graph_attributes = show_graph_attributes or {}
         self._show_graph = ShowGraph(self, **show_graph_attributes)
@@ -3591,7 +3591,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for spec in hanging_control_specs:
                 control_signal = self.controller._instantiate_control_signal(control_signal=spec,
                                                                              context=Context(
-                                                                                 source=ContextFlags.COMPOSITION))
+                                                                                 source=ContextFlags.COMPOSITION, execution_id=None))
                 self.controller.control.append(control_signal)
                 self.controller._activate_projections_for_compositions(self)
         return []
@@ -5555,10 +5555,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Otherwise, refer to call from this method
         else:
             pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
-            # FIX 4/4/20 [JDC]: Reset to None for now to replicate prior behavior,
-            #                   but need to implement proper behavior wrt call to analyze_graph()
-            #                   _check_initalization_state()
-            context = None
 
         # First, deal with Pathway() or tuple specifications
         if isinstance(pathway, Pathway):
@@ -5589,6 +5585,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Use add_nodes so that node spec can also be a tuple with required_roles
             self.add_nodes(nodes=[pathway[0]],
                            context=Context(source=ContextFlags.METHOD,
+                                           execution_id=context.execution_id,
                                            string=pathway_arg_str))
             nodes.append(pathway[0])
         else:
@@ -5602,6 +5599,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if _is_node_spec(pathway[c]):
                 self.add_nodes(nodes=[pathway[c]],
                                context=Context(source=ContextFlags.METHOD,
+                                               execution_id=context.execution_id,
                                                string=pathway_arg_str))
                 nodes.append(pathway[c])
 
@@ -5776,10 +5774,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,
                           name=pathway_name,
-                          context=Context(source=ContextFlags.METHOD))
+                          context=Context(source=ContextFlags.METHOD, execution_id=context.execution_id))
         self.pathways.append(pathway)
 
-        self._analyze_graph(context=context)
+        # FIX 4/4/20 [JDC]: Reset to None for now to replicate prior behavior,
+        #                   but need to implement proper behavior wrt call to analyze_graph()
+        #                   _check_initalization_state()
+        # 10/22/20 [KDM]: Pass no context instead of setting to None
+        self._analyze_graph()
 
         return pathway
 
@@ -6034,7 +6036,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Otherwise, refer to call from this method
         else:
             pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
-        context = Context(source=ContextFlags.METHOD, string=pathway_arg_str)
+        context = Context(source=ContextFlags.METHOD, string=pathway_arg_str, execution_id=context.execution_id)
 
         # Deal with Pathway() specifications
         if isinstance(pathway, Pathway):
@@ -6511,6 +6513,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    _check_for_projection_assignments() in order to ignore checks for require_projection_in_composition
         pathway_arg_str = f"'pathway' arg for add_backpropagation_learning_pathway method of {self.name}"
         learning_pathway = self.add_linear_processing_pathway(pathway, name, Context(source=ContextFlags.INITIALIZING,
+                                                                                     execution_id=context.execution_id,
                                                                                      string=pathway_arg_str))
         processing_pathway = learning_pathway.pathway
 
@@ -6618,7 +6621,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 OBJECTIVE_MECHANISM: comparator}
-            self._add_required_node_role(processing_pathway[-1], NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
+            self._add_required_node_role(processing_pathway[-1], NodeRole.OUTPUT, Context(source=ContextFlags.METHOD, execution_id=context.execution_id))
 
             sequence_end = path_length - 3
 
@@ -6893,8 +6896,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         error_signal_input_port = learning_mech.add_ports(
                             InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                       name=ERROR_SIGNAL,
-                                      context=Context(source=ContextFlags.METHOD)),
-                            context=Context(source=ContextFlags.METHOD))[0]
+                                      context=Context(source=ContextFlags.METHOD, execution_id=None)),
+                            context=Context(source=ContextFlags.METHOD, execution_id=None))[0]
                     # Create Projection here so that don't have to worry about determining correct
                     #    error_signal_input_port of learning_mech in _create_non_terminal_backprop_learning_components
                     try:
@@ -6938,8 +6941,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     error_signal_input_port = learning_mech.add_ports(
                                                         InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                                                   name=ERROR_SIGNAL,
-                                                                  context=Context(source=ContextFlags.METHOD)),
-                                                        context=Context(source=ContextFlags.METHOD))
+                                                                  context=Context(source=ContextFlags.METHOD, execution_id=None)),
+                                                        context=Context(source=ContextFlags.METHOD, execution_id=None))
                 # DOES THE ABOVE GENERATE A PROJECTION?  IF SO, JUST GET AND RETURN THAT;  ELSE DO THE FOLLOWING:
                 error_projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
                                                            receiver=error_signal_input_port))
@@ -6969,8 +6972,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 error_signal_input_port = dependent_learning_mech.add_ports(
                                                     InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                                               name=ERROR_SIGNAL,
-                                                              context=Context(source=ContextFlags.METHOD)),
-                                                    context=Context(source=ContextFlags.METHOD))
+                                                              context=Context(source=ContextFlags.METHOD, execution_id=None)),
+                                                    context=Context(source=ContextFlags.METHOD, execution_id=None))
                 projections.append(error_signal_input_port[0].path_afferents[0])
                 # projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
                 #                                      receiver=error_signal_input_port[0]))
@@ -7025,7 +7028,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #        (e.g., was constructed in the controller argument of the Composition), in which case assign it here.
         if controller.initialization_status == ContextFlags.DEFERRED_INIT:
             controller._init_args[AGENT_REP] = self
-            controller._deferred_init(context=Context(source=ContextFlags.COMPOSITION))
+            controller._deferred_init(context=Context(source=ContextFlags.COMPOSITION, execution_id=None))
 
         # Note:  initialization_status here pertains to controller's status w/in the Composition
         #        (i.e., whether any Nodes and/or Projections on which it depends are not yet in the Composition)
@@ -7075,7 +7078,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         controller._activate_projections_for_compositions(self)
         # Call with context to avoid recursion by analyze_graph -> _check_inialization_status -> add_controller
-        self._analyze_graph(context=Context(source=ContextFlags.METHOD))
+        self._analyze_graph(context=Context(source=ContextFlags.METHOD, execution_id=None))
         self._update_shadows_dict(controller)
 
         # INSTANTIATE SHADOW_INPUT PROJECTIONS
@@ -7139,7 +7142,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
             ctl_signal = controller._instantiate_control_signal(control_signal=ctl_sig_spec,
-                                                   context=Context(source=ContextFlags.COMPOSITION))
+                                                   context=Context(source=ContextFlags.COMPOSITION, execution_id=None))
             controller.control.append(ctl_signal)
             # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITON:
             #                ?DON'T ASSIGN ControlProjection?
@@ -7149,7 +7152,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             controller._activate_projections_for_compositions(self)
         if not invalid_aux_components:
             self._controller_initialization_status = ContextFlags.INITIALIZED
-        self._analyze_graph(context=Context(source=ContextFlags.METHOD))
+        self._analyze_graph(context=Context(source=ContextFlags.METHOD, execution_id=None))
 
     def _get_control_signals_for_composition(self):
         """Return list of ControlSignals specified by Nodes in the Composition
@@ -9341,11 +9344,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _update_learning_parameters(self, context):
         pass
 
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(fallback_most_recent=True)
     def reset(self, values=None, include_unspecified_nodes=True, context=NotImplemented):
-        if context is NotImplemented:
-            context = self.most_recent_context
-
         if not values:
             values = {}
 
@@ -9355,7 +9355,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             reset_val = values.get(node)
             node.reset(reset_val, context=context)
 
-    def initialize(self, values=None, include_unspecified_nodes=True, context=NotImplemented):
+    @handle_external_context(fallback_most_recent=True)
+    def initialize(self, values=None, include_unspecified_nodes=True, context=None):
         """
             Initializes the values of nodes within cycles. If `include_unspecified_nodes` is True and a value is
             provided for a given node, the node will be initialized to that value. If `include_unspecified_nodes` is
@@ -9380,9 +9381,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.most_recent_execution_context if one is not specified.
 
         """
-        if context is NotImplemented:
-            context = self.most_recent_context
-
         # comp must be initialized from context before cycle values are initialized
         self._initialize_from_context(context, Context(execution_id=None), override=False)
 
