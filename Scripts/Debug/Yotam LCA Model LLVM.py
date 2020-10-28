@@ -272,7 +272,7 @@ def get_trained_network_multLCA(bipartite_graph, num_features=3, num_hidden=200,
             'targets': {
                     ol: output_examples.tolist()
             },
-            'epochs': epochs
+            'epochs': 10 #epochs # LCA doesn't settle for 1000 epochs
     }
 
     # Build network
