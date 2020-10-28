@@ -1144,6 +1144,13 @@ class ContentAddressableList(UserList):
     #                                                                     repr(self[i].value))
     #                                              for i in range(len(self))]))
 
+    def __copy__(self):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        result.__dict__.update(self.__dict__)
+        result.data = self.data.copy()
+        return result
+
     def __getitem__(self, key):
         if key is None:
             raise KeyError("None is not a legal key for {}".format(self.name))
