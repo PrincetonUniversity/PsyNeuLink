@@ -22,6 +22,7 @@ EXEC_LIMIT=os.getenv("LCA_EXEC_LIMIT", 10000)
 MNET_BIN_EXECUTE=os.getenv("MNET", "LLVMRun")
 MNET2_BIN_EXECUTE="LLVMRun"
 LCA_BIN_EXECUTE=os.getenv("LCA", "LLVMRun")
+RUN_TOTAL=True
 
 # read in bipartite graph, return graph object, number of possible tasks, number of
 # input dimensions and number of output dimensions.
@@ -481,8 +482,20 @@ def evaluate_net_perf_lca(mnet_lca, test_tasks, all_tasks, num_features, num_inp
                                                                               num_test_points=num_test_points)
 
 #    mnet_lca.show_graph()
+    if RUN_TOTAL:
+        inputs_total = {
+            mnet_lca.nodes['mnet'].nodes['input'] : input_test_pts[0:num_test_points, :].tolist(),
+            mnet_lca.nodes['mnet'].nodes['control'] : control_test_pts[0:num_test_points, :].tolist()
+        }
+        print('running LCA total')
+        t1 = time.time()
+        mnet_lca.run( { mnet_lca.nodes['mnet'] : inputs_total }, bin_execute=LCA_BIN_EXECUTE)
+        t2 = time.time()
+        print("LCA total:", LCA_BIN_EXECUTE, t2 - t1)
     # Run the outer composition, one point at a time (for debugging purposes)
     for i in range(num_test_points):
+        if RUN_TOTAL:
+           break
         # Construct input dict
         input_set = {
                 'inputs' : {
