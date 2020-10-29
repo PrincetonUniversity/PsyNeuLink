@@ -3028,14 +3028,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self.parameters.variable._set(variable, context=context)
 
-        if isinstance(self, Function):
-            pass # Functions don't have a Logs or maintain execution_counts or time
-        else:
-            if self.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
-                self._increment_execution_count()
-                self._increment_num_executions(context,
-                                               [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN])
-            self._update_current_execution_time(context=context)
+        if self.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
+            self._increment_execution_count()
+
+            # Functions don't have Logs or maintain time
+            if not isinstance(self, Function):
+                self._update_current_execution_time(context=context)
+                self._increment_num_executions(
+                    context,
+                    [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN]
+                )
 
         value = None
 
