@@ -1560,12 +1560,6 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
 
-        if not hasattr(self, "initializers"):
-            self.initializers = ["initial_long_term_avg", "initial_short_term_avg"]
-
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["previous_short_term_avg", "previous_long_term_avg"]
-
         super().__init__(
             default_variable=default_variable,
             initializer=initializer,
@@ -2401,12 +2395,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         if seed is None:
             seed = get_global_seed()
 
-        if not hasattr(self, "initializers"):
-            self.initializers = ["initializer", "starting_point"]
-
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["previous_value", "previous_time"]
-
         random_state = np.random.RandomState([seed])
 
         # Assign here as default, for use in initialization of function
@@ -2551,6 +2539,13 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
         time_vo_ptr = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(1), index])
         builder.store(curr_time, time_vo_ptr)
+
+    def reset(self, previous_value=None, previous_time=None, context=None):
+        return super().reset(
+            previous_value=previous_value,
+            previous_time=previous_time,
+            context=context
+        )
 
 
 class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # --------------------------------------------------------------
@@ -2813,12 +2808,6 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
 
-        if not hasattr(self, "initializers"):
-            self.initializers = ["initializer", "starting_point"]
-
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["previous_value", "previous_time"]
-
         if seed is None:
             seed = get_global_seed()
 
@@ -2905,6 +2894,13 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
         self.parameters.previous_value._set(previous_value, context)
         return previous_value, previous_time
+
+    def reset(self, previous_value=None, previous_time=None, context=None):
+        return super().reset(
+            previous_value=previous_value,
+            previous_time=previous_time,
+            context=context
+        )
 
 
 class LeakyCompetingIntegrator(IntegratorFunction):  # -----------------------------------------------------------------
@@ -3809,12 +3805,6 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
                 if k in kwargs:
                     del kwargs[k]
 
-        if not hasattr(self, "initializers"):
-            self.initializers = ["initial_v", "initial_w", "t_0"]
-
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["previous_v", "previous_w", "previous_time"]
-
         super().__init__(
             default_variable=default_variable,
             initial_v=initial_v,
@@ -4186,6 +4176,14 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         return previous_v, previous_w, previous_time
 
+    def reset(self, previous_v=None, previous_w=None, previous_time=None, context=None):
+        return super().reset(
+            previous_v=previous_v,
+            previous_w=previous_w,
+            previous_time=previous_time,
+            context=context
+        )
+
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         zero_i32 = ctx.int32_ty(0)
 
@@ -4407,4 +4405,12 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         sum = builder.fadd(sum, tmp4)
 
         res = builder.fdiv(sum, param_vals["time_constant_w"])
+        return res
+
+    # TODO: remove with changes to previous_value/value as stated in
+    # FitzHughNagumoIntegrator.Parameters
+    @property
+    def stateful_attributes(self):
+        res = super().stateful_attributes
+        res.remove('previous_value')
         return res

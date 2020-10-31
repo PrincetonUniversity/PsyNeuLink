@@ -2992,7 +2992,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         pass
 
     @handle_external_context(fallback_most_recent=True)
-    def reset(self, *args, context=None):
+    def reset(self, *args, context=None, **kwargs):
         """
             If the component's execute method involves execution of an `IntegratorFunction` Function, this method
             effectively begins the function's accumulation over again at the specified value, and may update related
@@ -3001,7 +3001,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
         if isinstance(self.function, IntegratorFunction):
-            new_value = self.function.reset(*args, context=context)
+            new_value = self.function.reset(*args, **kwargs, context=context)
             self.parameters.value.set(np.atleast_2d(new_value), context, override=True)
         else:
             raise ComponentError(f"Resetting {self.name} is not allowed because this Component is not stateful. "
@@ -3573,6 +3573,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             may change during runtime
         """
         return [param for param in self.parameters if param.stateful]
+
+    @property
+    def stateful_attributes(self):
+        return [p.name for p in self.parameters if p.initializer is not None]
+
+    @property
+    def initializers(self):
+        return [getattr(self.parameters, p).initializer for p in self.stateful_attributes]
 
     @property
     def function_parameters(self):

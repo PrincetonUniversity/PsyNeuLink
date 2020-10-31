@@ -1567,8 +1567,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         return value
 
     @handle_external_context(fallback_most_recent=True)
-    def reset(self, *args, force=False, context=None):
-        super().reset(*args, force=force, context=context)
+    def reset(self, *args, force=False, context=None, **kwargs):
+        super().reset(*args, force=force, context=context, **kwargs)
         self.parameters.value.clear_history(context)
 
     def _parse_function_variable(self, variable, context=None):
