@@ -633,7 +633,7 @@ class Function_Base(Function):
         # temporary method until previous values are integrated for all parameters
         value = self.parameters.previous_value._get(context)
         if value is None:
-            value = self.parameters.previous_value._get(Context())
+            value = self.parameters.previous_value._get(Context(execution_id=context.execution_id))
 
         return value
 

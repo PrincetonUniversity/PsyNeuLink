@@ -674,10 +674,6 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
         num_exec_locs = {}
         for idx, node in enumerate(composition._all_nodes):
-            #FIXME: This skips nested compositions
-            from psyneulink import Composition
-            if isinstance(node, Composition):
-                continue
             node_state = builder.gep(nodes_states, [ctx.int32_ty(0),
                                                     ctx.int32_ty(idx)])
             num_exec_locs[node] = helpers.get_state_ptr(builder, node,
@@ -909,10 +905,6 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
 
         # Reset internal clocks of each node
         for idx, node in enumerate(composition._all_nodes):
-            #FIXME: This skips nested nodes
-            from psyneulink import Composition
-            if isinstance(node, Composition):
-                continue
             node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
             num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
             num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.RUN.value)])

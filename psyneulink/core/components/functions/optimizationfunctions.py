@@ -430,7 +430,7 @@ class OptimizationFunction(Function_Base):
                 if 'required positional arguments' not in str(e):
                     raise
 
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(fallback_most_recent=True)
     def reset(self, *args, context=None):
         """Reset parameters of the OptimizationFunction
 
@@ -443,8 +443,6 @@ class OptimizationFunction(Function_Base):
             * `search_function <OptimizationFunction.search_function>`
             * `search_termination_function <OptimizationFunction.search_termination_function>`
         """
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.most_recent_context.execution_id
         self._validate_params(request_set=args[0])
 
         if DEFAULT_VARIABLE in args[0]:
@@ -924,7 +922,7 @@ class GradientOptimization(OptimizationFunction):
                     raise OptimizationFunctionError(f"All items in {repr(SEARCH_SPACE)} arg for {self.name}{owner_str} "
                                                     f"must be or resolve to a 2-item list or tuple; this doesn't: {s}.")
 
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(fallback_most_recent=True)
     def reset(self, *args, context=None):
         super().reset(*args)
 
@@ -1328,11 +1326,9 @@ class GridSearch(OptimizationFunction):
             #                                            self.__class__.__name__,
             #                                            ))
 
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(fallback_most_recent=True)
     def reset(self, *args, context=None):
         """Assign size of `search_space <GridSearch.search_space>"""
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.most_recent_context.execution_id
         super(GridSearch, self).reset(*args, context=context)
         sample_iterators = args[0]['search_space']
         owner_str = ''

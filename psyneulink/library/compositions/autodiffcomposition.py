@@ -531,22 +531,16 @@ class AutodiffComposition(Composition):
                                                         )
 
     def _get_state_struct_type(self, ctx):
-        node_state_type_list = (ctx.get_state_struct_type(m) for m in self._all_nodes)
-        proj_state_type_list = (ctx.get_state_struct_type(p) for p in self._inner_projections)
         comp_state_type_list = ctx.get_state_struct_type(super())
         pytorch_representation = self._build_pytorch_representation()
         optimizer_state_type = pytorch_representation._get_compiled_optimizer()._get_optimizer_struct_type(ctx)
 
         return pnlvm.ir.LiteralStructType((
-            pnlvm.ir.LiteralStructType(node_state_type_list),
-            pnlvm.ir.LiteralStructType(proj_state_type_list),
             *comp_state_type_list,
             optimizer_state_type))
 
     def _get_state_initializer(self, context):
-        node_states = (m._get_state_initializer(context=context) for m in self._all_nodes)
-        proj_states = (p._get_state_initializer(context=context) for p in self._inner_projections)
         comp_states = super()._get_state_initializer(context)
         optimizer_states = tuple()
 
-        return (tuple(node_states), tuple(proj_states), *comp_states, optimizer_states)
+        return (*comp_states, optimizer_states)

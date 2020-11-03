@@ -1238,7 +1238,7 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return super()._get_variable_from_input(input, context)
 
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(fallback_most_recent=True)
     def reset(self, *args, force=False, context=None):
         super().reset(*args, force=force, context=context)
         self.parameters.value.clear_history(context)

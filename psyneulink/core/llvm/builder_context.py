@@ -265,7 +265,7 @@ class LLVMBuilderContext:
                 val = np.asfarray(val).flatten()
             elif p.name == 'num_estimates':  # Should always be int
                 val = np.int32(0) if val is None else np.int32(val)
-            elif np.isscalar(val) and component._is_param_modulated(p):
+            elif np.ndim(val) == 0 and component._is_param_modulated(p):
                 val = [val]   # modulation adds array wrap
             return self.convert_python_struct_to_llvm_ir(val)
 
