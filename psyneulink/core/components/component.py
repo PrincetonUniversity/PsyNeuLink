@@ -1092,6 +1092,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             execution_id=None,
         )
 
+        if reset_stateful_function_when is not None:
+            self.reset_stateful_function_when = reset_stateful_function_when
+        else:
+            self.reset_stateful_function_when = Never()
+
         try:
             function_params = copy.copy(param_defaults[FUNCTION_PARAMS])
         except (KeyError, TypeError):
@@ -1166,11 +1171,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # we must know the final variable shape before setting up parameter
         # Functions or they will mismatch
         self._instantiate_parameter_classes(context)
-
-        if reset_stateful_function_when is not None:
-            self.reset_stateful_function_when = reset_stateful_function_when
-        else:
-            self.reset_stateful_function_when = Never()
 
         # self.componentName = self.componentType
         try:
@@ -3028,14 +3028,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self.parameters.variable._set(variable, context=context)
 
-        if isinstance(self, Function):
-            pass # Functions don't have a Logs or maintain execution_counts or time
-        else:
-            if self.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
-                self._increment_execution_count()
-                self._increment_num_executions(context,
-                                               [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN])
-            self._update_current_execution_time(context=context)
+        if self.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
+            self._increment_execution_count()
+
+            # Functions don't have Logs or maintain time
+            if not isinstance(self, Function):
+                self._update_current_execution_time(context=context)
+                self._increment_num_executions(
+                    context,
+                    [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN]
+                )
 
         value = None
 
