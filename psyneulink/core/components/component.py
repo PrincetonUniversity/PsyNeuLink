@@ -2780,9 +2780,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         function_variable = copy.deepcopy(
             self._parse_function_variable(
                 self.defaults.variable,
-                # we can't just pass context here, because this specifically tries to bypass a
-                # branch in TransferMechanism._parse_function_variable
-                context=Context(source=ContextFlags.INSTANTIATE, execution_id=context.execution_id)
+                context
             )
         )
 

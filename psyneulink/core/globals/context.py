@@ -162,8 +162,6 @@ class ContextFlags(enum.IntFlag):
     """Direct call by user (either interactively from the command line, or in a script)."""
     CONSTRUCTOR = enum.auto()
     """Call from Component's constructor method."""
-    INSTANTIATE = enum.auto()
-    """Call by an instantiation method."""
     COMPONENT = enum.auto()
     """Call by Component __init__."""
     METHOD = enum.auto()
@@ -176,7 +174,7 @@ class ContextFlags(enum.IntFlag):
     NONE = enum.auto()
 
     """Call by a/the Composition to which the Component belongs."""
-    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | INSTANTIATE | COMPONENT | METHOD | PROPERTY | COMPOSITION | NONE
+    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | COMPONENT | METHOD | PROPERTY | COMPOSITION | NONE
 
     # runmode flags:
     DEFAULT_MODE = enum.auto()
@@ -257,7 +255,6 @@ EXECUTION_PHASE_FLAGS = {ContextFlags.PREPARING,
 
 SOURCE_FLAGS = {ContextFlags.COMMAND_LINE,
                 ContextFlags.CONSTRUCTOR,
-                ContextFlags.INSTANTIATE,
                 ContextFlags.COMPONENT,
                 ContextFlags.METHOD,
                 ContextFlags.PROPERTY,

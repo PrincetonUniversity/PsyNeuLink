@@ -1572,8 +1572,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         self.parameters.value.clear_history(context)
 
     def _parse_function_variable(self, variable, context=None):
-        if context.source is ContextFlags.INSTANTIATE:
-
+        if self.is_initializing:
             return super(TransferMechanism, self)._parse_function_variable(variable=variable, context=context)
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
