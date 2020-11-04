@@ -1168,7 +1168,7 @@ class DDM(ProcessingMechanism):
     def is_finished(self, context=None):
         # find the single numeric entry in previous_value
         try:
-            single_value = self.function.get_previous_value(context)
+            single_value = self.function.parameters.previous_value._get(context)
         except AttributeError:
             # Analytical function so it is always finished after it is called
             return True

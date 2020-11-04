@@ -270,7 +270,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
             previous_value = self._get_current_parameter_value("initializer", context)
 
         if previous_value is None or previous_value == []:
-            self.get_previous_value(context).clear()
+            self.parameters.previous_value._get(context).clear()
             value = deque([], maxlen=self.parameters.history.get(context))
 
         else:
@@ -313,7 +313,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if self.is_initializing:
             return variable
 
-        previous_value = self.get_previous_value(context)
+        previous_value = self.parameters.previous_value._get(context)
 
         # Apply rate and/or noise, if they are specified, to all stored items
         if len(previous_value):
@@ -751,7 +751,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
                                            ring_buffer_struct))
 
     def _get_state_initializer(self, context):
-        memory = self.get_previous_value(context)
+        memory = self.parameters.previous_value._get(context)
         mem_init = pnlvm._tupleize([memory[0], memory[1], 0, 0])
         return (*super()._get_state_initializer(context), mem_init)
 
@@ -1027,7 +1027,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             previous_value = self._get_current_parameter_value("initializer", context)
 
         if previous_value == []:
-            self.get_previous_value(context).clear()
+            self.parameters.previous_value._get(context).clear()
             value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
 
         else:
@@ -1084,7 +1084,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             return variable
 
         # Set key_size and val_size if this is the first entry
-        if len(self.get_previous_value(context)[KEYS]) == 0:
+        if len(self.parameters.previous_value._get(context)[KEYS]) == 0:
             self.parameters.key_size._set(len(key), context)
             self.parameters.val_size._set(len(val), context)
 
@@ -1150,7 +1150,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         #           ALSO, SHOULD PROBABILISTIC SUPPRESSION OF RETRIEVAL BE HANDLED HERE OR function (AS IT IS NOW).
 
         self._validate_key(query_key, context)
-        _memory = self.get_previous_value(context)
+        _memory = self.parameters.previous_value._get(context)
 
         # if no memory, return the zero vector
         if len(_memory[KEYS]) == 0:
@@ -1211,7 +1211,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         key = list(memory[KEYS])
         val = list(memory[VALS])
 
-        d = self.get_previous_value(context)
+        d = self.parameters.previous_value._get(context)
 
         matches = [k for k in d[KEYS] if key==list(k)]
 
