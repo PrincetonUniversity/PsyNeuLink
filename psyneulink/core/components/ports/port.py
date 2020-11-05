@@ -1083,7 +1083,7 @@ class Port_Base(Port):
                           name=name,
                           registry=owner._portRegistry,
                           # sub_group_attr='owner',
-                          context=context)
+                          )
 
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(Port_Base, self).__init__(

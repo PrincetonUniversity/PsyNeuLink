@@ -546,7 +546,7 @@ class Function_Base(Function):
                           base_class=Function_Base,
                           registry=FunctionRegistry,
                           name=name,
-                          context=context)
+                          )
         self.owner = owner
 
         super().__init__(

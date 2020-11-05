@@ -1698,7 +1698,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                           base_class=Component,
                           name=name,
                           registry=DeferredInitRegistry,
-                          context=context)
+                          )
 
     def _assign_default_name(self, **kwargs):
         return

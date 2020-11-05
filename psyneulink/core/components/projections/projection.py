@@ -704,7 +704,7 @@ class Projection_Base(Projection):
                           base_class=Projection_Base,
                           name=name,
                           registry=ProjectionRegistry,
-                          context=context)
+                          )
 
         # Create projection's _portRegistry and ParameterPort entry
         self._portRegistry = {}
@@ -712,7 +712,7 @@ class Projection_Base(Projection):
         register_category(entry=ParameterPort,
                           base_class=Port_Base,
                           registry=self._portRegistry,
-                          context=context)
+                          )
 
         self._instantiate_sender(sender, context=context)
 

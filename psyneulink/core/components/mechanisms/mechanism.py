@@ -1680,7 +1680,7 @@ class Mechanism_Base(Mechanism):
                           base_class=Mechanism_Base,
                           name=name,
                           registry=MechanismRegistry,
-                          context=context)
+                          )
 
         # Create Mechanism's _portRegistry and port type entries
         from psyneulink.core.components.ports.port import Port_Base
@@ -1691,21 +1691,21 @@ class Mechanism_Base(Mechanism):
         register_category(entry=InputPort,
                           base_class=Port_Base,
                           registry=self._portRegistry,
-                          context=context)
+                          )
 
         # ParameterPort
         from psyneulink.core.components.ports.parameterport import ParameterPort
         register_category(entry=ParameterPort,
                           base_class=Port_Base,
                           registry=self._portRegistry,
-                          context=context)
+                          )
 
         # OutputPort
         from psyneulink.core.components.ports.outputport import OutputPort
         register_category(entry=OutputPort,
                           base_class=Port_Base,
                           registry=self._portRegistry,
-                          context=context)
+                          )
 
         super(Mechanism_Base, self).__init__(
             default_variable=default_variable,
