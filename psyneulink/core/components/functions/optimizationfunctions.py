@@ -2275,7 +2275,6 @@ class ParamEstimationFunction(OptimizationFunction):
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR
         )
 
     @staticmethod
