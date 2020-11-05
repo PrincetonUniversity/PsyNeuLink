@@ -1087,7 +1087,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         self._handle_illegal_kwargs(**kwargs)
 
         context = Context(
-            source=ContextFlags.COMPONENT,
+            source=ContextFlags.CONSTRUCTOR,
             execution_phase=ContextFlags.IDLE,
             execution_id=None,
         )
