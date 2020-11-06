@@ -306,7 +306,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         rate = np.array(self._get_current_parameter_value(RATE, context)).astype(float)
 
         # execute noise if it is a function
-        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable)
+        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
 
         # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
         # Just return current input (for validation).
@@ -1073,7 +1073,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         storage_prob = np.array(self._get_current_parameter_value(STORAGE_PROB, context)).astype(float)
 
         # execute noise if it is a function
-        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable)
+        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
 
         # get random state
         random_state = self._get_current_parameter_value('random_state', context)
