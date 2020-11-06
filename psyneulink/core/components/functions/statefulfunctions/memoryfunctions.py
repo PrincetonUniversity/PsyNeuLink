@@ -253,7 +253,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         )
 
     @handle_external_context(fallback_most_recent=True)
-    def reset(self, *args, context=None):
+    def reset(self, previous_value=None, context=None):
         """
 
         Clears the `previous_value <Buffer.previous_value>` deque.
@@ -266,26 +266,15 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         """
         # no arguments were passed in -- use current values of initializer attributes
-        if len(args) == 0 or args is None:
-            reinitialization_value = self._get_current_parameter_value("initializer", context)
+        if previous_value is None:
+            previous_value = self._get_current_parameter_value("initializer", context)
 
-        elif len(args) == 1:
-            reinitialization_value = args[0]
-
-        # arguments were passed in, but there was a mistake in their specification -- raise error!
-        else:
-            raise FunctionError("Invalid arguments ({}) specified for {}. Either one value must be passed to "
-                                "reset its stateful attribute (previous_value), or reset must be called "
-                                "without any arguments, in which case the current initializer value, will be used to "
-                                "reset previous_value".format(args,
-                                                                     self.name))
-
-        if reinitialization_value is None or reinitialization_value == []:
+        if previous_value is None or previous_value == []:
             self.get_previous_value(context).clear()
             value = deque([], maxlen=self.parameters.history.get(context))
 
         else:
-            value = self._initialize_previous_value(reinitialization_value, context=context)
+            value = self._initialize_previous_value(previous_value, context=context)
 
         self.parameters.value.set(value, context, override=True)
         return value
@@ -1019,7 +1008,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             self.selection_function = self.selection_function(context=context)
 
     @handle_external_context(fallback_most_recent=True)
-    def reset(self, *args, context=None):
+    def reset(self, previous_value=None, context=None):
         """
         reset(<new_dictionary> default={})
 
@@ -1034,25 +1023,15 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         `previous_value <ContentAddressableMemory.previous_value>`.
         """
         # no arguments were passed in -- use current values of initializer attributes
-        if len(args) == 0 or args is None:
-            reinitialization_value = self._get_current_parameter_value("initializer", context)
+        if previous_value is None:
+            previous_value = self._get_current_parameter_value("initializer", context)
 
-        elif len(args) == 1:
-            reinitialization_value = args[0]
-
-        # arguments were passed in, but there was a mistake in their specification -- raise error!
-        else:
-            raise FunctionError("Invalid arguments ({}) specified for {}. Either one value must be passed to "
-                                "reset its stateful attribute (previous_value), or reset must be called "
-                                "without any arguments, in which case the current initializer value will be used to "
-                                "reset previous_value".format(args, self.name))
-
-        if reinitialization_value == []:
+        if previous_value == []:
             self.get_previous_value(context).clear()
             value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
 
         else:
-            value = self._initialize_previous_value(reinitialization_value, context=context)
+            value = self._initialize_previous_value(previous_value, context=context)
 
         self.parameters.value.set(value, context, override=True)
         return value

@@ -737,6 +737,12 @@ class Parameter(ParameterBase):
 
             :default: None
 
+        initializer
+            the name of another Parameter that serves as this
+            Parameter's `initializer <StatefulFunction.initializers>`
+
+            :default: None
+
     """
     # The values of these attributes will never be inherited from parent Parameters
     # KDM 7/12/18: consider inheriting ONLY default_value?
@@ -746,7 +752,7 @@ class Parameter(ParameterBase):
     # display if the function is True based on the value of the attribute
     _hidden_if_unset_attrs = {
         'aliases', 'getter', 'setter', 'constructor_argument', 'spec',
-        'modulation_combination_function', 'valid_types'
+        'modulation_combination_function', 'valid_types', 'initializer'
     }
     _hidden_if_false_attrs = {'read_only', 'modulable', 'fallback_default', 'retain_old_simulation_data'}
     _hidden_when = {
@@ -799,6 +805,7 @@ class Parameter(ParameterBase):
         valid_types=None,
         reference=False,
         dependencies=None,
+        initializer=None,
         _owner=None,
         _inherited=False,
         # this stores a reference to the Parameter object that is the
@@ -859,6 +866,7 @@ class Parameter(ParameterBase):
             valid_types=valid_types,
             reference=reference,
             dependencies=dependencies,
+            initializer=initializer,
             _inherited=_inherited,
             _inherited_source=_inherited_source,
             _user_specified=_user_specified,

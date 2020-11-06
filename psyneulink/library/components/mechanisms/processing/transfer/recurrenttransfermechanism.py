@@ -1238,11 +1238,6 @@ class RecurrentTransferMechanism(TransferMechanism):
 
         return super()._get_variable_from_input(input, context)
 
-    @handle_external_context(fallback_most_recent=True)
-    def reset(self, *args, force=False, context=None):
-        super().reset(*args, force=force, context=context)
-        self.parameters.value.clear_history(context)
-
     @property
     def _learning_signal_source(self):
         """Return default source of learning signal (`Primary OutputPort <OutputPort_Primary>)`

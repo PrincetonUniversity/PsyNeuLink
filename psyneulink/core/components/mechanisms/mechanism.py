@@ -2214,7 +2214,7 @@ class Mechanism_Base(Mechanism):
         pass
 
     @handle_external_context(fallback_most_recent=True)
-    def reset(self, *args, force=False, context=None):
+    def reset(self, *args, force=False, context=None, **kwargs):
         """Reset `value <Mechanism_Base.value>` if Mechanisms is stateful.
 
         If the mechanism's `function <Mechanism.function>` is an `IntegratorFunction`, or if the mechanism has and
@@ -2268,7 +2268,7 @@ class Mechanism_Base(Mechanism):
         # If the primary function of the mechanism is stateful:
         # (1) reset it, (2) update value, (3) update output ports
         if isinstance(self.function, StatefulFunction):
-            new_value = self.function.reset(*args, context=context)
+            new_value = self.function.reset(*args, **kwargs, context=context)
             self.parameters.value._set(convert_to_np_array(new_value, dimension=2), context=context)
             self._update_output_ports(context=context)
 
@@ -2284,7 +2284,7 @@ class Mechanism_Base(Mechanism):
                 )
 
             if self.parameters.integrator_mode._get(context) or force:
-                new_input = self.integrator_function.reset(*args, context=context)[0]
+                new_input = self.integrator_function.reset(*args, **kwargs, context=context)[0]
                 self.parameters.value._set(
                     self.function.execute(variable=new_input, context=context),
                     context=context,
