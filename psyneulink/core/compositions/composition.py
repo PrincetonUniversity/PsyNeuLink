@@ -6392,7 +6392,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"({learning_function}) must be a class of {LearningFunction.__name__} or a "
                                    f"learning-compatible function")
 
-        learning_mechanism.output_ports[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False,
+        learning_mechanism.output_ports[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
                                                                                                          override=True)
         return target_mechanism, objective_mechanism, learning_mechanism
 
