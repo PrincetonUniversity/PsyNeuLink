@@ -164,15 +164,13 @@ class ContextFlags(enum.IntFlag):
     """Call from Component's constructor method."""
     METHOD = enum.auto()
     """Call by method of the Component other than its constructor."""
-    PROPERTY = enum.auto()
-    """Call by property of the Component."""
     COMPOSITION = enum.auto()
     """Call by a/the Composition to which the Component belongs."""
 
     NONE = enum.auto()
 
     """Call by a/the Composition to which the Component belongs."""
-    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | METHOD | PROPERTY | COMPOSITION | NONE
+    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | METHOD | COMPOSITION | NONE
 
     # runmode flags:
     DEFAULT_MODE = enum.auto()
@@ -254,7 +252,6 @@ EXECUTION_PHASE_FLAGS = {ContextFlags.PREPARING,
 SOURCE_FLAGS = {ContextFlags.COMMAND_LINE,
                 ContextFlags.CONSTRUCTOR,
                 ContextFlags.METHOD,
-                ContextFlags.PROPERTY,
                 ContextFlags.COMPOSITION,
                 ContextFlags.NONE}
 

@@ -1897,7 +1897,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         # VALIDATE VARIABLE
 
-        if not (context.source & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY)):
+        if context.source is not ContextFlags.COMMAND_LINE:
             # if variable has been passed then validate and, if OK, assign as self.defaults.variable
             variable = self._validate_variable(variable, context=context)
 

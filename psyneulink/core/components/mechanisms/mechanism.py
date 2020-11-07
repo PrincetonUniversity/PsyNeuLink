@@ -1957,7 +1957,7 @@ class Mechanism_Base(Mechanism):
         try:
             function_param_specs = params[FUNCTION_PARAMS]
         except KeyError:
-            if context.source & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY):
+            if context.source is ContextFlags.COMMAND_LINE:
                 pass
             elif self.prefs.verbosePref:
                 print("No params specified for {0}".format(self.__class__.__name__))
