@@ -1283,6 +1283,23 @@ class Parameter(ParameterBase):
         # set value
         self.values[execution_id] = value
 
+        try:
+            value = value.__self__
+        except AttributeError:
+            pass
+
+        try:
+            if (
+                value in self._owner._owner._parameter_components
+                or context.execution_phase is ContextFlags.IDLE
+            ):
+                pass
+            else:
+                value._initialize_from_context(context)
+                self._owner._owner._parameter_components.add(value)
+        except (AttributeError, TypeError):
+            pass
+
     @handle_external_context()
     def delete(self, context=None):
         try:
