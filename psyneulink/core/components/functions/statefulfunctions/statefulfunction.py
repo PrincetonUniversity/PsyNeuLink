@@ -192,7 +192,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         """
         noise = Parameter(0.0, modulable=True)
         rate = Parameter(1.0, modulable=True)
-        previous_value = Parameter(np.array([0]), pnl_internal=True)
+        previous_value = Parameter(np.array([0]), initializer='initializer', pnl_internal=True)
         initializer = Parameter(np.array([0]), pnl_internal=True)
         has_initializers = Parameter(True, setter=_has_initializers_setter, pnl_internal=True)
 
@@ -422,15 +422,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         if not self.parameters.initializer._user_specified:
-            # TODO: remove this extra check when TransferMechanism.initial_value
-            # is made a FunctionParameter
-            try:
-                skip = self.owner.parameters.initial_value._user_specified
-            except (AttributeError, TypeError):
-                skip = False
-
-            if not skip:
-                self._initialize_previous_value(np.zeros_like(self.defaults.variable), context)
+            self._initialize_previous_value(np.zeros_like(self.defaults.variable), context)
 
         # use np.broadcast_to to guarantee that all initializer type attributes take on the same shape as variable
         if not np.isscalar(self.defaults.variable):
@@ -446,8 +438,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
         # create all stateful attributes and initialize their values to the current values of their
         # corresponding initializer attributes
-        for i, attr_name in enumerate(self.stateful_attributes):
-            initializer_value = getattr(self.parameters, self.initializers[i])._get(context).copy()
+        for attr_name in self.stateful_attributes:
+            initializer_value = getattr(self.parameters, getattr(self.parameters, attr_name).initializer)._get(context).copy()
             getattr(self.parameters, attr_name)._set(initializer_value, context)
 
         super()._instantiate_attributes_before_function(function=function, context=context)
@@ -466,20 +458,21 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     @handle_external_context()
     def _update_default_variable(self, new_default_variable, context=None):
         if not self.parameters.initializer._user_specified:
-            # TODO: remove this extra check when TransferMechanism.initial_value
-            # is made a FunctionParameter
-            try:
-                skip = self.owner.parameters.initial_value._user_specified
-            except (AttributeError, TypeError):
-                skip = False
-
-            if not skip:
-                self._initialize_previous_value(np.zeros_like(new_default_variable), context)
+            self._initialize_previous_value(np.zeros_like(new_default_variable), context)
 
         super()._update_default_variable(new_default_variable, context=context)
 
+    def _parse_value_order(self, **kwargs):
+        """
+            Returns:
+                tuple: the values of the keyword arguments in the order
+                in which they appear in this Component's `value
+                <Component.value>`
+        """
+        return tuple(v for k, v in kwargs.items())
+
     @handle_external_context(fallback_most_recent=True)
-    def reset(self, *args, context=None):
+    def reset(self, *args, context=None, **kwargs):
         """
             Resets `value <StatefulFunction.previous_value>`  and `previous_value <StatefulFunction.previous_value>`
             to the specified value(s).
@@ -504,74 +497,80 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             reinitialization steps.
 
         """
-        reinitialization_values = []
+        num_stateful_attrs = len(self.stateful_attributes)
+        if num_stateful_attrs >= 2:
+            # old args specification can be supported only in subclasses
+            # that explicitly define an order by overriding reset
+            if len(args) > 0:
+                raise FunctionError(
+                    f'{self}.reset has more than one stateful attribute'
+                    f' ({self.stateful_attributes}). You must specify reset'
+                    ' values by keyword.'
+                )
+            if len(kwargs) != num_stateful_attrs:
+                type_name = type(self).__name__
+                raise FunctionError(
+                    'StatefulFunction.reset must receive a keyword argument for'
+                    f' each item in {type_name}.stateful_attributes in the order in'
+                    f' which they appear in {type_name}.value'
+                )
 
-        # no arguments were passed in -- use current values of initializer attributes
-        if len(args) == 0 or args is None or all(arg is None for arg in args):
-            for i in range(len(self.initializers)):
-                initializer_name = self.initializers[i]
-                reinitialization_values.append(self._get_current_parameter_value(initializer_name, context))
+        if num_stateful_attrs == 1:
+            try:
+                kwargs[self.stateful_attributes[0]]
+            except KeyError:
+                try:
+                    kwargs[self.stateful_attributes[0]] = args[0]
+                except IndexError:
+                    kwargs[self.stateful_attributes[0]] = None
 
-        elif len(args) == len(self.initializers):
-            for i in range(len(self.initializers)):
-                initializer_name = self.initializers[i]
-                if args[i] is None:
-                    reinitialization_values.append(self._get_current_parameter_value(initializer_name, context))
-                else:
-                    # Not sure if np.atleast_1d is necessary here:
-                    reinitialization_values.append(np.atleast_1d(args[i]))
+        invalid_args = []
 
-        # arguments were passed in, but there was a mistake in their specification -- raise error!
-        else:
-            stateful_attributes_string = self.stateful_attributes[0]
-            if len(self.stateful_attributes) > 1:
-                for i in range(1, len(self.stateful_attributes) - 1):
-                    stateful_attributes_string += ", "
-                    stateful_attributes_string += self.stateful_attributes[i]
-                stateful_attributes_string += " and "
-                stateful_attributes_string += self.stateful_attributes[len(self.stateful_attributes) - 1]
+        # iterates in order arguments are sent in function call, so it
+        # will match their order in value as long as they are listed
+        # properly in subclass reset method signatures
+        for attr in kwargs:
+            try:
+                kwargs[attr]
+            except KeyError:
+                kwargs[attr] = None
 
-            initializers_string = self.initializers[0]
-            if len(self.initializers) > 1:
-                for i in range(1, len(self.initializers) - 1):
-                    initializers_string += ", "
-                    initializers_string += self.initializers[i]
-                initializers_string += " and "
-                initializers_string += self.initializers[len(self.initializers) - 1]
+            if kwargs[attr] is not None:
+                # from before: unsure if conversion to 1d necessary
+                kwargs[attr] = np.atleast_1d(kwargs[attr])
+            else:
+                try:
+                    kwargs[attr] = self._get_current_parameter_value(getattr(self.parameters, attr).initializer, context=context)
+                except AttributeError:
+                    invalid_args.append(attr)
 
-            raise FunctionError("Invalid arguments ({}) specified for {}. If arguments are specified for the "
-                                "reset method of {}, then a value must be passed to reset each of its "
-                                "stateful_attributes: {}, in that order. Alternatively, reset may be called "
-                                "without any arguments, in which case the current values of {}'s initializers: {}, will"
-                                " be used to reset their corresponding stateful_attributes."
-                                .format(args,
-                                        self.name,
-                                        self.name,
-                                        stateful_attributes_string,
-                                        self.name,
-                                        initializers_string))
+        if len(invalid_args) > 0:
+            raise FunctionError(
+                f'Arguments {invalid_args} to reset are invalid because they do'
+                f" not correspond to any of {self}'s stateful_attributes"
+            )
 
         # rebuilding value rather than simply returning reinitialization_values in case any of the stateful
         # attrs are modified during assignment
         value = []
-        for i, attr in enumerate(self.stateful_attributes):
+        for attr, v in kwargs.items():
             # FIXME: HACK: Do not reinitialize random_state
             if attr != "random_state":
-                setattr(self, attr, reinitialization_values[i])
-                getattr(self.parameters, attr).set(reinitialization_values[i],
+                getattr(self.parameters, attr).set(kwargs[attr],
                                                    context, override=True)
-                value.append(getattr(self.parameters, self.stateful_attributes[i])._get(context))
+                value.append(getattr(self.parameters, attr)._get(context))
 
         self.parameters.value.set(value, context, override=True)
         return value
 
     def _gen_llvm_function_reset(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reset" in tags
-        for i, a in enumerate(self.stateful_attributes):
-            source_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, self.initializers[i])
+        for a in self.stateful_attributes:
+            initializer = getattr(self.parameters, a).initializer
+            source_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, initializer)
             dest_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, a)
             if source_ptr.type != dest_ptr.type:
-                warnings.warn("Shape mismatch: stateful param does not match the initializer: {}({}) vs. {}({})".format(self.initializers[i], source_ptr.type, a, dest_ptr.type))
+                warnings.warn("Shape mismatch: stateful param does not match the initializer: {}({}) vs. {}({})".format(initializer, source_ptr.type, a, dest_ptr.type))
                 # Take a guess that dest just has an extra dimension
                 assert len(dest_ptr.type.pointee) == 1
                 dest_ptr = builder.gep(dest_ptr, [ctx.int32_ty(0),

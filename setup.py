@@ -80,6 +80,7 @@ setup(
 
     extras_require={
         'dev': get_requirements('dev'),
+        'leabra': get_requirements('leabra'),
         'tutorial': get_requirements('tutorial'),
     }
 )

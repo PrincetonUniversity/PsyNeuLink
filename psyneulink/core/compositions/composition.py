@@ -8333,7 +8333,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if (isinstance(reset_stateful_functions_when, Never) or
                     node not in reset_stateful_functions_when) and \
                     isinstance(node.reset_stateful_function_when, Never):
-                node.reset(*vals, context=context)
+                try:
+                    node.reset(**vals, context=context)
+                except TypeError:
+                    node.reset(*vals, context=context)
 
         # cache and set reset_stateful_function_when conditions for nodes, matching old System behavior
         # Validate
@@ -8862,7 +8865,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         )
                     ):
                         vals = reset_stateful_functions_to.get(node, [None])
-                        node.reset(*vals, context=context)
+                        try:
+                            node.reset(**vals, context=context)
+                        except TypeError:
+                            node.reset(*vals, context=context)
                 except AttributeError:
                     pass
 

@@ -878,7 +878,7 @@ class OptimizationControlMechanism(ControlMechanism):
             self.parameters.search_space._set(corrected_search_space, context)
 
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
-        self.function.reset({
+        self.function.reset(**{
             DEFAULT_VARIABLE: self.parameters.control_allocation._get(context),
             OBJECTIVE_FUNCTION: self.evaluation_function,
             # SEARCH_FUNCTION: self.search_function,
