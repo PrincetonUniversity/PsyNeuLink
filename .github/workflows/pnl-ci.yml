@@ -23,7 +23,7 @@ jobs:
         fetch-depth: 10
 
     - name: Linux wheels cache
-      uses: actions/cache@v2.1.2
+      uses: actions/cache@v2.1.3
       if: startsWith(runner.os, 'Linux')
       with:
         path: ~/.cache/pip/wheels
@@ -31,7 +31,7 @@ jobs:
         restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels
 
     - name: MacOS wheels cache
-      uses: actions/cache@v2.1.2
+      uses: actions/cache@v2.1.3
       if: startsWith(runner.os, 'macOS')
       with:
         path: ~/Library/Caches/pip/wheels
@@ -39,7 +39,7 @@ jobs:
         restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels
 
     - name: Windows wheels cache
-      uses: actions/cache@v2.1.2
+      uses: actions/cache@v2.1.3
       if: startsWith(runner.os, 'Windows')
       with:
         path: ~\AppData\Local\pip\Cache\wheels
