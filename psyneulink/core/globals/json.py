@@ -549,6 +549,21 @@ def _generate_component_string(
 
     return output
 
+def _condition_has_blacklisted_nodes(
+    condition,
+    blacklist
+):
+    has_blacklisted_nodes = False
+    for arg in condition['args']:
+        if type(arg)==dict and arg.get('args'):
+            has_blacklisted_nodes = _condition_has_blacklisted_nodes(
+                arg, blacklist
+            )
+        else:
+            if arg in blacklist:
+                return True
+    return has_blacklisted_nodes
+
 
 def _generate_scheduler_string(
     scheduler_id,
@@ -558,7 +573,11 @@ def _generate_scheduler_string(
 ):
     output = []
     for node, condition in scheduler_dict['conditions']['node'].items():
-        if node not in blacklist:
+        if (
+            node not in blacklist
+        ):
+            if _condition_has_blacklisted_nodes(condition, blacklist):
+                continue
             output.append(
                 '{0}.add_condition({1}, {2})'.format(
                     scheduler_id,
@@ -574,20 +593,16 @@ def _generate_scheduler_string(
 
     termination_str = []
     for scale, cond in scheduler_dict['conditions']['termination'].items():
-        termination_str.insert(
-            1,
-            'psyneulink.{0}: {1}'.format(
+        if _condition_has_blacklisted_nodes(cond, blacklist):
+            continue
+
+        output.append(
+                '{0}.termination_conds[psyneulink.{1}] = {2}'.format(
+                scheduler_id,
                 scale,
                 _generate_condition_string(cond, component_identifiers)
             )
         )
-
-    output.append(
-        '{0}.termination_conds = {{{1}}}'.format(
-            scheduler_id,
-            ', '.join(termination_str)
-        )
-    )
 
     return '\n'.join(output)
 

@@ -278,12 +278,17 @@ Class Reference
 import copy
 import datetime
 import logging
+import sys
 
 from toposort import toposort
 
 from psyneulink.core.globals.context import Context, handle_external_context
 from psyneulink.core.globals.json import JSONDumpable
-from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Condition, ConditionSet, EveryNCalls, Never
+from psyneulink.core.globals.keywords import BEFORE, AFTER
+from psyneulink.core.scheduling.condition import AtTrial, AtLastTrialOfRun, AfterEveryPass, AfterEveryRun, \
+    AfterEveryTimeStep, AfterEveryTrial, AfterNCalls, All, AllHaveRun, Always, Any, BeforeEveryPass, \
+    BeforeEveryRun, BeforeEveryTimeStep, BeforeEveryTrial, Condition, ConditionSet, ConditionType, EveryNCalls, \
+    Never, Not, WhenControllerEnabled, WhenSimulationMode
 from psyneulink.core.scheduling.time import Clock, TimeScale
 
 __all__ = [
@@ -351,6 +356,12 @@ class Scheduler(JSONDumpable):
         composition=None,
         graph=None,
         conditions=None,
+        additive_conditions=None,
+        subtractive_conditions=None,
+        controller=None,
+        controller_mode=None,
+        controller_time_scale=None,
+        controller_condition=None,
         termination_conds={
             TimeScale.RUN: Never(),
             TimeScale.TRIAL: AllHaveRun(),
@@ -363,34 +374,60 @@ class Scheduler(JSONDumpable):
         :param composition: (Composition) - the Composition this scheduler is scheduling for
         :param conditions: (ConditionSet) - a :keyword:`ConditionSet` to be scheduled
         """
-        self.conditions = ConditionSet(conditions)
+
+        if not conditions:
+            conditions = {}
+
+        if additive_conditions or subtractive_conditions:
+            self.additive_conditions = ConditionSet(
+                {k: v for k, v in additive_conditions.items() if v.condition_type == ConditionType.ADDITIVE}
+            )
+            self.subtractive_conditions = ConditionSet(
+                {k:v for k,v in subtractive_conditions.items() if v.condition_type == ConditionType.SUBTRACTIVE}
+            )
+        else:
+            self.additive_conditions = ConditionSet(
+                {k:v for k,v in conditions.items() if v.condition_type == ConditionType.ADDITIVE}
+            )
+            self.subtractive_conditions = ConditionSet(
+                {k:v for k,v in conditions.items() if v.condition_type == ConditionType.SUBTRACTIVE}
+            )
 
         # stores the in order list of self.run's yielded outputs
         self.consideration_queue = []
         self.default_termination_conds = Scheduler._parse_termination_conditions(termination_conds)
+        self.needs_update = False
         self._termination_conds = termination_conds.copy()
+        self._num_trials = float('inf')
 
         self.cycle_nodes = set()
 
         if composition is not None:
-            self.nodes = [vert.component for vert in composition.graph_processing.vertices]
-            self._init_consideration_queue_from_graph(composition.graph_processing)
+            self._init_consideration_queue(
+                composition.graph_processing,
+                composition.controller,
+                composition.controller_mode,
+                composition.controller_time_scale,
+                composition.controller_condition
+            )
             if default_execution_id is None:
                 default_execution_id = composition.default_execution_id
         elif graph is not None:
             try:
-                self.nodes = [vert.component for vert in graph.vertices]
-                self._init_consideration_queue_from_graph(graph)
+                self._init_consideration_queue(
+                    graph,
+                    controller,
+                    controller_mode,
+                    controller_time_scale,
+                    controller_condition
+                )
             except AttributeError:
                 self.consideration_queue = list(toposort(graph))
-                self.nodes = []
-                for consideration_set in self.consideration_queue:
-                    for node in consideration_set:
-                        self.nodes.append(node)
         else:
             raise SchedulerError('Must instantiate a Scheduler with either a Composition (kwarg composition) '
                                  'or a graph dependency dict (kwarg graph)')
 
+        self.needs_update = False
         self.default_execution_id = default_execution_id
         self.execution_list = {self.default_execution_id: []}
         self.clocks = {self.default_execution_id: Clock()}
@@ -402,9 +439,156 @@ class Scheduler(JSONDumpable):
 
     # the consideration queue is the ordered list of sets of nodes in the graph, by the
     # order in which they should be checked to ensure that all parents have a chance to run before their children
-    def _init_consideration_queue_from_graph(self, graph):
+    def _init_consideration_queue(self, graph, controller=None, controller_mode=None,
+                                  controller_time_scale=None, controller_condition=None):
         self.dependency_dict, self.removed_dependencies, self.structural_dependencies = graph.prune_feedback_edges()
-        self.consideration_queue = list(toposort(self.dependency_dict))
+        self.pure_topo_consideration_queue = list(toposort(self.dependency_dict))
+        if controller:
+            self._add_condition_for_controller(controller, controller_mode, controller_condition, controller_time_scale)
+        self.consideration_queue = self._get_queue_with_additive_conditions(
+            self.pure_topo_consideration_queue, controller, controller_condition
+        )
+        self._termination_conds = self._get_term_conds_given_additive_conditions(
+            self.termination_conds, controller
+        )
+
+    def _add_condition_for_controller(self, controller, controller_mode, controller_condition, controller_time_scale):
+        condition_map = {
+            (BEFORE, TimeScale.TIME_STEP): BeforeEveryTimeStep(),
+            (AFTER, TimeScale.TIME_STEP): AfterEveryTimeStep(),
+            (BEFORE, TimeScale.PASS): BeforeEveryPass(),
+            (AFTER, TimeScale.PASS): AfterEveryPass(),
+            (BEFORE, TimeScale.TRIAL): BeforeEveryTrial(),
+            (AFTER, TimeScale.TRIAL): AfterEveryTrial(),
+            (BEFORE, TimeScale.RUN): BeforeEveryRun(),
+            (AFTER, TimeScale.RUN): AfterEveryRun()
+        }
+        base_condition = condition_map[(controller_mode,controller_time_scale)]
+        self.add_condition(controller, base_condition)
+        condition_set = {
+            Not(WhenSimulationMode()),
+            WhenControllerEnabled()
+        }
+        if controller_condition:
+            condition_set.add(controller_condition)
+        self.add_condition(controller, All(*condition_set))
+
+    def _get_queue_with_additive_conditions(self, topo_sorted_consideration_queue, controller=None, controller_condition=None):
+        self.insertion_sets = {}
+
+        insertion_sets = {}
+        for mech, condition in self.additive_conditions.conditions.items():
+            if condition.condition_type == ConditionType.ADDITIVE:
+                insertion_indices, composite_condition = condition.get_additive_modifications(
+                    consideration_queue=topo_sorted_consideration_queue,
+                    scheduler=self
+                )
+                for i in insertion_indices:
+                    if not i in insertion_sets:
+                        insertion_sets[i] = set()
+                    insertion_sets[i].add(mech)
+        modified_consideration_queue = [i.copy() for i in topo_sorted_consideration_queue]
+        append_top = False
+        for idx, mech_set in insertion_sets.items():
+            if idx == -1:
+                append_top = True
+                continue
+            elif idx == len(topo_sorted_consideration_queue):
+                modified_consideration_queue.append(mech_set)
+                continue
+            modified_consideration_queue[idx].update(mech_set)
+        if append_top:
+            modified_consideration_queue.insert(0, insertion_sets[-1])
+        return modified_consideration_queue
+
+    def _get_runtime_conditions(self):
+        topo_sorted_consideration_queue = self.pure_topo_consideration_queue
+        generated_subtractive_conditions = {}
+        additive_conditions = {k:v for k,v in self.additive_conditions.conditions.items()}
+        for node, condition in additive_conditions.items():
+            _, generated_condition = condition.get_additive_modifications(
+                consideration_queue=topo_sorted_consideration_queue,
+                scheduler=self,
+                node=node
+            )
+            generated_subtractive_conditions[node] = generated_condition
+        subtractive_conditions = {k:v for k,v in self.subtractive_conditions.conditions.items()}
+        for node, condition in subtractive_conditions.items():
+            if node in generated_subtractive_conditions:
+                generated_condition = generated_subtractive_conditions[node]
+                generated_subtractive_conditions[node] = All(condition, generated_condition)
+            else:
+                generated_subtractive_conditions[node] = condition
+        runtime_condition_set = ConditionSet()
+        for node, condition in generated_subtractive_conditions.items():
+            runtime_condition_set.add_condition(node, condition)
+        return runtime_condition_set
+
+    def _get_term_conds_given_additive_conditions(self, term_conds, controller=None):
+        term_conds_updated = term_conds.copy()
+        trial_term_cond = term_conds_updated[TimeScale.TRIAL]
+        before_run_nodes = set()
+        after_run_nodes = set()
+        structural_nodes = set(self.structural_nodes)
+        new_trial_term_conds = []
+        additive_condition_dict = self.additive_conditions.conditions
+        if not additive_condition_dict:
+            return term_conds
+        general_term_conds = [
+            AllHaveRun(*structural_nodes)
+        ]
+        if all([
+            type(trial_term_cond) == AllHaveRun,
+            not trial_term_cond.args
+        ]):
+            for node, cond in additive_condition_dict.items():
+                if type(cond) == BeforeEveryRun:
+                    before_run_nodes.add(node)
+                elif type(cond) == AfterEveryRun:
+                    after_run_nodes.add(node)
+                else:
+                    consideration_indices = [idx for idx, consideration_set in enumerate(self.consideration_queue)
+                                             if node in consideration_set]
+                    num_ex = len(consideration_indices)
+                    if controller and node == controller:
+                        general_term_conds.append(Any(WhenSimulationMode(), AfterNCalls(node, num_ex, TimeScale.TIME_STEP)))
+                    else:
+                        general_term_conds.append(AfterNCalls(node, num_ex, TimeScale.TIME_STEP))
+        if before_run_nodes:
+            if before_run_nodes - structural_nodes:
+                new_trial_term_conds.append(
+                    All(
+                        AtTrial(0),
+                        AllHaveRun(
+                            *self.structural_nodes,
+                            *before_run_nodes
+                        )
+                    )
+                )
+                general_term_conds.append(
+                    Not(AtTrial(0))
+                )
+        if after_run_nodes:
+            if after_run_nodes - structural_nodes:
+                new_trial_term_conds.append(
+                    All(
+                        AtLastTrialOfRun(),
+                        AllHaveRun(
+                            *self.structural_nodes,
+                            *after_run_nodes
+                        )
+                    )
+                )
+                general_term_conds.append(
+                    Not(AtLastTrialOfRun())
+                )
+        new_trial_term_conds.append(
+            All(*general_term_conds)
+        )
+        term_conds_updated[TimeScale.TRIAL] = Any(
+            *new_trial_term_conds
+        )
+        return term_conds_updated
 
     def _init_counts(self, execution_id=None, base_execution_id=None):
         """
@@ -424,6 +608,9 @@ class Scheduler(JSONDumpable):
 
         # stores total the number of occurrences of a node through the time scale
         # i.e. the number of times node has ran/been queued to run in a trial
+
+        nodes = copy.copy(self.nodes)
+
         if execution_id not in self.counts_total:
             self.counts_total[execution_id] = {}
 
@@ -532,7 +719,11 @@ class Scheduler(JSONDumpable):
         condition : Condition
             specifies the Condition, associated with the **owner** to be added to the ConditionSet.
         """
-        self.conditions.add_condition(owner, condition)
+        if condition.condition_type == ConditionType.ADDITIVE:
+            self.additive_conditions.add_condition(owner, condition)
+            self.needs_update = True
+        else:
+            self.subtractive_conditions.add_condition(owner, condition)
 
     def add_condition_set(self, conditions):
         """
@@ -552,7 +743,17 @@ class Scheduler(JSONDumpable):
                 governed) to a `Condition <Condition>`
 
         """
-        self.conditions.add_condition_set(conditions)
+        if type(conditions) == ConditionSet:
+            conditions = conditions.conditions
+        if all(i.condition_type == ConditionType.ADDITIVE for i in conditions.values()):
+            self.additive_conditions.add_condition_set(conditions)
+        elif all(i.condition_type == ConditionType.SUBTRACTIVE for i in conditions.values()):
+            self.subtractive_conditions.add_condition_set(conditions)
+        else:
+            raise SchedulerError("Mixture of additive and subtractive conditions found in conditions arg "
+                                 "of Scheduler.add_condition_set. ConditionSets must be wholly additive or "
+                                 "subtractive.")
+
 
     ################################################################################
     # Validation methods
@@ -563,17 +764,19 @@ class Scheduler(JSONDumpable):
 
     def _validate_conditions(self):
         unspecified_nodes = []
-        for node in self.nodes:
+        structural_nodes = self.structural_nodes
+        topo_consideration_queue = self.pure_topo_consideration_queue
+        for node in structural_nodes:
             if node not in self.conditions:
                 # determine parent nodes
                 node_index = 0
-                for i in range(len(self.consideration_queue)):
-                    if node in self.consideration_queue[i]:
+                for i in range(len(topo_consideration_queue)):
+                    if node in topo_consideration_queue[i]:
                         node_index = i
                         break
 
                 if node_index > 0:
-                    dependencies = list(self.consideration_queue[i - 1])
+                    dependencies = list(topo_consideration_queue[i - 1])
                     if len(dependencies) == 1:
                         cond = EveryNCalls(dependencies[0], 1)
                     elif len(dependencies) > 1:
@@ -582,8 +785,7 @@ class Scheduler(JSONDumpable):
                         raise SchedulerError(f'{self}: Empty consideration set in consideration_queue[{i - 1}]')
                 else:
                     cond = Always()
-
-                self.conditions.add_condition(node, cond)
+                self.add_condition(node, cond)
                 unspecified_nodes.append(node)
         if len(unspecified_nodes) > 0:
             logger.info(
@@ -646,7 +848,7 @@ class Scheduler(JSONDumpable):
                         # only add each node once during a single time step, this also serves
                         # to prevent infinitely cascading adds
                         if current_node not in cur_time_step_exec:
-                            if self.conditions.conditions[current_node].is_satisfied(scheduler=self, context=context):
+                            if self.conditions[current_node].is_satisfied(scheduler=self, context=context):
                                 cur_time_step_exec.add(current_node)
                                 execution_list_has_changed = True
                                 cur_consideration_set_has_changed = True
@@ -699,7 +901,7 @@ class Scheduler(JSONDumpable):
                     str(k): v._dict_summary for k, v in self.termination_conds.items()
                 },
                 'node': {
-                    n.name: self.conditions[n]._dict_summary for n in self.nodes if n in self.conditions
+                    n.name: self.subtractive_conditions[n]._dict_summary for n in self.nodes if n in self.subtractive_conditions
                 }
             }
         }
@@ -729,3 +931,26 @@ class Scheduler(JSONDumpable):
             self._termination_conds = self.default_termination_conds.copy()
         else:
             self._termination_conds.update(termination_conds)
+
+    @property
+    def conditions(self):
+        return self._get_runtime_conditions()
+
+    @property
+    def nodes(self):
+        nodes = []
+        for consideration_set in self.consideration_queue:
+            for node in consideration_set:
+                nodes.append(node)
+        return nodes
+
+    @property
+    def structural_nodes(self):
+        structural_nodes = []
+        for consideration_set in self.pure_topo_consideration_queue:
+            structural_nodes.extend([i for i in consideration_set])
+        return structural_nodes
+
+    @property
+    def rule_based_nodes(self):
+        return [i for i in self.nodes if i not in self.structural_nodes]

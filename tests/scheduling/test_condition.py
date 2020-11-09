@@ -6,7 +6,13 @@ from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.scheduling.condition import AfterCall, AfterNCalls, AfterNCallsCombined, AfterNPasses, AfterNTrials, AfterPass, AfterTrial, All, AllHaveRun, Always, Any, AtPass, AtTimeStep, AtTrial, AtTrialStart, BeforeNCalls, BeforePass, BeforeTimeStep, BeforeTrial, Condition, ConditionError, ConditionSet, EveryNCalls, EveryNPasses, NWhen, Not, WhenFinished, WhenFinishedAll, WhenFinishedAny, WhileNot
+from psyneulink.core.globals.context import Context, ContextFlags
+from psyneulink.core.scheduling.condition import AfterCall, AfterEveryPass, AfterEveryRun, AfterEveryTimeStep, \
+    AfterEveryTrial, AfterNCalls, AfterNCallsCombined, AfterNPasses, AfterNTrials, AfterPass, AfterTrial, All, \
+    AllHaveRun, Always, Any, AtPass, AtTimeStep, AtTrial, AtTrialStart, BeforeEveryPass, BeforeEveryRun, \
+    BeforeEveryTimeStep, BeforeEveryTrial, BeforeNCalls, BeforePass, BeforeTimeStep, BeforeTrial, Condition, \
+    ConditionError, ConditionSet, EveryNCalls, EveryNPasses, NWhen, Not, WhenControllerEnabled, WhenFinished, \
+    WhenFinishedAll, WhenFinishedAny, WhileNot, WhenSimulationMode
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 
@@ -202,7 +208,7 @@ class TestCondition:
 
             assert output == pytest.helpers.setify_expected_output(expected_output)
 
-    class TestTime:
+    class TestTimeSubtractive:
 
         def test_BeforeTimeStep(self):
             comp = Composition()
@@ -471,6 +477,104 @@ class TestCondition:
             expected_output = [set(), A, A, A, A]
             assert output == pytest.helpers.setify_expected_output(expected_output)
 
+    class TestTimeAdditive:
+
+        def test_BeforeEveryTimeStep(self):
+            A = TransferMechanism()
+            B = TransferMechanism()
+            comp = Composition(
+                pathways=[A,B]
+            )
+            sched = comp.scheduler
+            sched.add_condition(
+                B, BeforeEveryTimeStep()
+            )
+            comp.run(scheduler=sched)
+            assert list(sched.run()) == [{B}, {A, B}, {B}]
+            assert A.execution_count == 1
+            assert B.execution_count == 3
+
+        def test_AfterEveryTimeStep(self):
+            A = TransferMechanism()
+            B = TransferMechanism()
+            comp = Composition(
+                pathways=[A, B]
+            )
+            sched = comp.scheduler
+            sched.add_condition(
+                A, AfterEveryTimeStep()
+            )
+            comp.run(scheduler=sched)
+            assert list(sched.run()) == [{A}, {A, B}, {A}]
+            assert A.execution_count == 3
+            assert B.execution_count == 1
+
+        def test_BeforeEveryPass(self):
+            A = TransferMechanism()
+            B = TransferMechanism()
+            comp = Composition(
+                pathways=[A,B]
+            )
+            sched = comp.scheduler
+            sched.add_condition(
+                A, BeforeEveryPass()
+            )
+            sched.add_condition(
+                B, AtPass(1)
+            )
+            comp.run(scheduler=sched)
+            assert list(sched.run()) == [{A}, {A}, {A}, {A}, {B}]
+            assert A.execution_count == 4
+            assert B.execution_count == 1
+
+        def test_AfterEveryPass(self):
+            A = TransferMechanism()
+            B = TransferMechanism()
+            comp = Composition(
+                pathways=[A,B]
+            )
+            sched = comp.scheduler
+            sched.add_condition(
+                A, AfterEveryPass()
+            )
+            sched.add_condition(
+                B, AtPass(1)
+            )
+            comp.run(scheduler=sched)
+            assert list(sched.run()) == [{A}, {A}, {A}, {B}, {A}]
+            assert A.execution_count == 4
+            assert B.execution_count == 1
+
+        def test_BeforeEveryTrial(self):
+            A = TransferMechanism()
+            B = TransferMechanism()
+            comp = Composition(
+                pathways=[A,B]
+            )
+            sched = comp.scheduler
+            sched.add_condition(
+                A, BeforeEveryTrial()
+            )
+            comp.run(scheduler=sched, num_trials=2)
+            assert list(sched.run()) == [{A}, {A}, {B}]
+            assert A.execution_count == 4
+            assert B.execution_count == 2
+
+        def test_AfterEveryTrial(self):
+            A = TransferMechanism()
+            B = TransferMechanism()
+            comp = Composition(
+                pathways=[A, B]
+            )
+            sched = comp.scheduler
+            sched.add_condition(
+                A, AfterEveryTrial()
+            )
+            comp.run(scheduler=sched, num_trials=2)
+            assert list(sched.run()) == [{A}, {B}, {A}]
+            assert A.execution_count == 4
+            assert B.execution_count == 2
+
     class TestComponentBased:
 
         def test_BeforeNCalls(self):
@@ -550,6 +654,48 @@ class TestCondition:
 
             expected_output = [A, A, set([A, B]), set([A, B]), set([A, B])]
             assert output == pytest.helpers.setify_expected_output(expected_output)
+
+    class TestContextBased:
+
+        def test_WhenControllerEnabled(self):
+            A = TransferMechanism(name='A')
+            B = TransferMechanism(name='B')
+            comp = Composition(
+                pathways=[[A], [B]]
+            )
+            sched = Scheduler(composition=comp)
+            sched.add_condition(
+                A, WhenControllerEnabled()
+            )
+            sched.termination_conds[TimeScale.TRIAL] = AtPass(5)
+            comp.run(scheduler=sched)
+            assert A.execution_count == 0
+            assert B.execution_count == 5
+
+        def test_WhenSimulationMode(self):
+            A = TransferMechanism(name='A')
+            B = TransferMechanism(name='B')
+            comp = Composition(
+                pathways=[[A], [B]]
+            )
+            context = Context(execution_id='sim_context')
+            sched = Scheduler(composition=comp)
+            sched.add_condition(
+                A, WhenSimulationMode()
+            )
+            sched.termination_conds[TimeScale.TRIAL] = AtPass(5)
+            # the first execution will not be in simulation mode,
+            # so A should not execute at all
+            comp.execute(inputs={A: 0, B: 0}, scheduler=sched, context=context)
+            assert A.execution_count == 0
+            assert B.execution_count == 5
+            context.add_flag(ContextFlags.SIMULATION_MODE)
+            # Now we've placed the context into simulation mode,
+            # so both mechanisms should execute
+            comp.execute(inputs={A: 0, B: 0}, scheduler=sched, context=context)
+            assert A.execution_count == 5
+            assert B.execution_count == 10
+
 
     class TestConvenience:
 

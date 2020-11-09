@@ -293,11 +293,14 @@ Class Reference
 """
 
 import collections
+import copy
 import dill
+import enum
 import inspect
 import logging
 import warnings
 
+from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.json import JSONDumpable
 from psyneulink.core.globals.keywords import MODEL_SPEC_ID_TYPE
 from psyneulink.core.globals.parameters import parse_context
@@ -305,16 +308,22 @@ from psyneulink.core.globals.utilities import call_with_pruned_args
 from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
-    'AfterCall', 'AfterNCalls', 'AfterNCallsCombined', 'AfterNPasses', 'AfterNTimeSteps', 'AfterNTrials', 'AfterPass',
+    'AfterCall', 'AfterEveryPass', 'AfterEveryTimeStep', 'AfterEveryTrial', 'AfterEveryRun', 'AfterNCalls',
+    'AfterNCallsCombined', 'AfterNPasses', 'AfterNTimeSteps', 'AfterNTrials', 'AfterPass',
     'AtRun', 'AfterRun', 'AfterNRuns', 'AfterTimeStep', 'AfterTrial', 'All', 'AllHaveRun', 'Always', 'Any',
     'AtNCalls','AtPass', 'AtRunStart', 'AtRunNStart', 'AtTimeStep', 'AtTrial',
-    'AtTrialStart', 'AtTrialNStart', 'BeforeNCalls', 'BeforePass', 'BeforeTimeStep', 'BeforeTrial',
-    'Condition','ConditionError', 'ConditionSet', 'EveryNCalls', 'EveryNPasses',
-    'JustRan', 'Never', 'Not', 'NWhen', 'WhenFinished', 'WhenFinishedAll', 'WhenFinishedAny', 'While', 'WhileNot'
+    'AtTrialStart', 'AtTrialNStart', 'BeforeEveryPass', 'BeforeEveryTimeStep', 'BeforeEveryTrial',
+    'BeforeEveryRun', 'BeforeNCalls', 'BeforePass', 'BeforeTimeStep', 'BeforeTrial',
+    'Condition','ConditionError', 'ConditionSet', 'ConditionType', 'EveryNCalls', 'EveryNPasses',
+    'JustRan', 'Never', 'Not', 'NWhen', 'WhenControllerEnabled', 'WhenFinished', 'WhenFinishedAll', 'WhenFinishedAny', 'WhenSimulationMode',
+    'While', 'WhileNot'
 ]
 
 logger = logging.getLogger(__name__)
 
+class ConditionType(enum.Enum):
+    ADDITIVE = 0
+    SUBTRACTIVE = 1
 
 class ConditionError(Exception):
     def __init__(self, error_value):
@@ -436,6 +445,7 @@ class Condition(JSONDumpable):
         self.func = func
         self.args = args
         self.kwargs = kwargs
+        self.condition_type = self.kwargs.pop('condition_type', ConditionType.SUBTRACTIVE)
 
         self._owner = None
 
@@ -445,6 +455,27 @@ class Condition(JSONDumpable):
             ', '.join([str(arg) for arg in self.args]) if len(self.args) > 0 else '',
             ', {0}'.format(self.kwargs) if len(self.kwargs) > 0 else ''
         )
+
+    def _get_copy_with_node_deleted(self, node):
+        args = []
+        kwargs = self.kwargs
+        for arg in self.args:
+            try:
+                if node not in arg.args:
+                    args.append(arg._get_copy_with_node_deleted(node))
+                else:
+                    args.append(Always())
+            except AttributeError:
+                args.append(arg)
+        return type(self)(*args, **kwargs)
+
+    def _remove_node_from_args(self, node):
+        self.args = [i for i in self.args if not i == node]
+        for arg in self.args:
+            try:
+                arg._remove_node_from_args(node)
+            except AttributeError:
+                continue
 
     @property
     def owner(self):
@@ -492,6 +523,40 @@ class Condition(JSONDumpable):
             execution_id=execution_id,
             **kwargs_to_pass
         )
+
+    def get_additive_modifications(self, *args, consideration_queue=None, scheduler=None, **kwargs):
+        """
+        the function called to determine satisfaction of this Condition.
+
+        Arguments
+        ---------
+        args : *args
+            specifies additional formal arguments to pass to `func` when the Condition is evaluated.
+            these are appended to the **args** specified at instantiation of this Condition
+
+        kwargs : **kwargs
+            specifies additional keyword arguments to pass to `func` when the Condition is evaluated.
+            these are added to the **kwargs** specified at instantiation of this Condition
+
+        Returns
+        -------
+            True - if the Condition is satisfied
+            False - if the Condition is not satisfied
+        """
+
+        # update so that kwargs can override self.kwargs
+        kwargs_to_pass = self.kwargs.copy()
+        kwargs_to_pass.update(kwargs)
+
+        return call_with_pruned_args(
+            self.func,
+            *self.args,
+            *args,
+            consideration_queue=consideration_queue,
+            scheduler=scheduler,
+            **kwargs_to_pass
+        )
+
 
     @property
     def _dict_summary(self):
@@ -768,7 +833,7 @@ class NWhen(Condition):
 
 
 ######################################################################
-# Time-based Conditions
+# Time-based Subtractive Conditions
 #   - satisfied based only on TimeScales
 ######################################################################
 
@@ -1147,6 +1212,53 @@ class AfterNTrials(Condition):
         super().__init__(func, n, time_scale)
 
 
+class AtLastTrialOfRun(Condition):
+    """AfterNTrials
+
+    Satisfied when:
+
+        -
+
+    """
+    def __init__(self):
+        def func(scheduler=None, execution_id=None):
+            try:
+                # add one to account for 0-indexing
+                return scheduler.get_clock(execution_id).get_total_times_relative(TimeScale.TRIAL, TimeScale.RUN) + 1 \
+                       == scheduler._num_trials
+            except AttributeError as e:
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
+
+        super().__init__(func)
+
+
+class EveryNTrials(Condition):
+    """EveryNTrials
+
+    Parameters:
+
+        n(int): the frequency of trials with which this condition is satisfied
+
+        time_scale(TimeScale): the TimeScale used as basis for counting `TRIAL`\\ s (default: TimeScale.RUN)
+
+    Satisfied when:
+
+        - `TRIAL` 0
+
+        - the specified number of `PASS`\\ es that has occurred within a unit of time (at the `TimeScale` specified by
+          **time_scale**) is evenly divisible by n.
+
+    """
+    def __init__(self, n, time_scale=TimeScale.RUN):
+        def func(n, time_scale, scheduler=None, execution_id=None):
+            try:
+                return scheduler.get_clock(execution_id).get_total_times_relative(TimeScale.TRIAL, time_scale) % n == 0
+            except AttributeError as e:
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
+
+        super().__init__(func, n, time_scale)
+
+
 class AtRun(Condition):
     """AtRun
 
@@ -1213,6 +1325,129 @@ class AfterNRuns(Condition):
 
         super().__init__(func, n)
 
+
+class EveryNRuns(Condition):
+    """EveryNRuns
+
+    Parameters:
+
+        n(int): the frequency of runs with which this condition is satisfied
+
+    Satisfied when:
+
+        - `TRIAL` 0
+
+        - the specified number of `RUN`\\ s that have occurred is evenly divisible by n.
+
+    """
+    def __init__(self, n, time_scale=TimeScale.RUN):
+        def func(n, time_scale, scheduler=None, execution_id=None):
+            try:
+                return scheduler.get_clock(execution_id).get_total_times_relative(TimeScale.TRIAL, time_scale) % n == 0
+            except AttributeError as e:
+                raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
+
+        super().__init__(func, n, time_scale)
+
+######################################################################
+# Time-based Additive Conditions
+#   - satisfied based only on TimeScales
+######################################################################
+
+class BeforeEveryTimeStep(Condition):
+    def __init__(self):
+        def func(consideration_queue=None):
+            insertion_indices = [i-1 for i in range(0, len(consideration_queue), 1)]
+            dep_groups = []
+            for set in consideration_queue:
+                dep_groups.append(All(
+                    *[EveryNCalls(dep, 1) for dep in list(set)]
+                ))
+            condition = Any(
+                AtTimeStep(0),
+                *dep_groups
+            )
+            return (insertion_indices, condition)
+        super().__init__(func, condition_type=ConditionType.ADDITIVE)
+
+
+class AfterEveryTimeStep(Condition):
+    def __init__(self):
+        def func(consideration_queue=None):
+            insertion_indices = [i+1 for i in range(0, len(consideration_queue),1)]
+            dep_groups = []
+            for set in consideration_queue:
+                dep_groups.append(All(
+                    *[EveryNCalls(dep,1) for dep in list(set)]
+                ))
+            condition = Any(
+                AtTimeStep(0),
+                *dep_groups
+            )
+            return (insertion_indices, condition)
+        super().__init__(func, condition_type=ConditionType.ADDITIVE)
+
+
+class BeforeEveryPass(Condition):
+    def __init__(self):
+        def func():
+            insertion_indices = [-1]
+            condition = EveryNPasses(1)
+            return (insertion_indices, condition)
+        super().__init__(func, condition_type=ConditionType.ADDITIVE)
+
+
+class AfterEveryPass(Condition):
+    def __init__(self):
+        def func(consideration_queue=None):
+            insertion_indices = [len(consideration_queue)]
+            condition = EveryNPasses(1)
+            return (insertion_indices, condition)
+        super().__init__(func, condition_type=ConditionType.ADDITIVE)
+
+
+class BeforeEveryTrial(Condition):
+    def __init__(self):
+        def func():
+            insertion_indices = [-1]
+            condition = All(
+                AtPass(0),
+                EveryNTrials(1)
+            )
+            return (insertion_indices, condition)
+        super().__init__(func, condition_type=ConditionType.ADDITIVE)
+
+
+class AfterEveryTrial(Condition):
+    def __init__(self):
+        def func(consideration_queue=None, scheduler=None, node=None):
+            insertion_indices = [len(consideration_queue)]
+            condition = EveryNTrials(1)
+            return (insertion_indices, condition)
+        super().__init__(func, condition_type=ConditionType.ADDITIVE)
+
+class BeforeEveryRun(Condition):
+    def __init__(self):
+        def func():
+            insertion_indices = [-1]
+            condition = All(
+                AtTrial(0),
+                EveryNRuns(1)
+            )
+            return (insertion_indices, condition)
+        super().__init__(func, condition_type=ConditionType.ADDITIVE)
+
+
+class AfterEveryRun(Condition):
+    def __init__(self):
+        def func(consideration_queue=None):
+            insertion_indices = [len(consideration_queue)]
+            condition = All(
+                AtLastTrialOfRun(),
+                EveryNRuns(1)
+            )
+            return (insertion_indices, condition)
+        super().__init__(func, condition_type=ConditionType.ADDITIVE)
 
 
 ######################################################################
@@ -1461,8 +1696,10 @@ class JustRan(_DependencyValidation, Condition):
                 return dependency == scheduler.execution_list[execution_id][-1]
         super().__init__(func, dependency)
 
-
-class AllHaveRun(_DependencyValidation, Condition):
+# Implementation Note: AllHaveRun does not inherit from DependencyValidation because
+# it is allowed to instantiate and execute without explicitly listed dependencies
+# -DS
+class AllHaveRun(Condition):
     """AllHaveRun
 
     Parameters:
@@ -1596,6 +1833,23 @@ class WhenFinishedAll(_DependencyValidation, Condition):
             return True
 
         super().__init__(func, *dependencies)
+
+######################################################################
+# Context-based Conditions
+#   - satisfied based on state of Context
+######################################################################
+
+class WhenControllerEnabled(Condition):
+    def __init__(self):
+        def func(context=None):
+            return context.composition.enable_controller
+        super().__init__(func, condition_type=ConditionType.SUBTRACTIVE)
+
+class WhenSimulationMode(Condition):
+    def __init__(self):
+        def func(context=None):
+            return ContextFlags.SIMULATION_MODE in context.runmode
+        super().__init__(func, condition_type=ConditionType.SUBTRACTIVE)
 
 
 ######################################################################

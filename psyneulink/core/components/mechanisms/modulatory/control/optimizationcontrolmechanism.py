@@ -418,6 +418,7 @@ from psyneulink.core.globals.parameters import Parameter, ParameterAlias
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
+from psyneulink.core.scheduling.time import TimeScale
 
 from psyneulink.core import llvm as pnlvm
 
@@ -1015,6 +1016,20 @@ class OptimizationControlMechanism(ControlMechanism):
                 new_context = self._set_up_simulation(context, control_allocation)
             else:
                 new_context = context
+                scheduler = context.composition.scheduler
+                eid = context.execution_id
+                counts_total = {
+                    timescale: {
+                        mech: count for mech, count in scheduler.counts_total[eid][timescale].items()
+                    } for timescale in TimeScale
+                }
+                counts_useable = {
+                    mech: {
+                        ref_mech: count for ref_mech, count in scheduler.counts_useable[eid][mech].items()
+                    } for mech in scheduler.counts_useable[eid]
+                }
+                clock = copy.deepcopy(scheduler.clock)
+
 
             old_composition = context.composition
             context.composition = self.agent_rep
@@ -1033,6 +1048,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
             if self.defaults.search_statefulness:
                 self._tear_down_simulation(new_context)
+            else:
+                scheduler.counts_total[eid] = counts_total
+                scheduler.counts_useable[eid] = counts_useable
+                scheduler.clock.history.current_time = clock.time
 
             # If results of the simulation shoudld be returned then, do so. Agent Rep Evaluate will
             # return a tuple in this case where the first element is the outcome as usual and the
