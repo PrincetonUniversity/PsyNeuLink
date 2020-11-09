@@ -1378,7 +1378,7 @@ class AfterEveryTimeStep(Condition):
             dep_groups = []
             for set in consideration_queue:
                 dep_groups.append(All(
-                    *[EveryNCalls(dep,1) for dep in list(set)]
+                    *[JustRan(dep) for dep in list(set)]
                 ))
             condition = Any(
                 AtTimeStep(0),

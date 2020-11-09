@@ -2352,19 +2352,23 @@ class TestControlTimeScales:
             controller_mode=pnl.AFTER,
             controller_time_scale=pnl.TimeScale.TIME_STEP
         )
-        comp.run([1], num_trials=2)
+        comp.run([1], num_trials=3)
         # Controller executions
         # (C-<#>) == controller execution followed by val as of the end of that execution, increments by 1
         # on each execution
         #
         #  Trial 1:
-        #    a (C-1) b (C-2)
+        #      c (c-1)
+        #    a b c (c-2)
         #  Trial 2:
-        #    a (C-3) b (C-4)
-        #
-        assert c.value == [4]
-        assert c.execution_count == 4
-        assert comp.results == [[1], [3]]
+        #      c (c-3)
+        #    a b c (c-4)
+        #  Trial 3:
+        #      c (c-5)
+        #    a b c (c-6)
+        assert c.value == [6]
+        assert c.execution_count == 6
+        assert comp.results == [[1], [2], [4]]
 
     def test_pass_before(self):
         a = pnl.ProcessingMechanism()
