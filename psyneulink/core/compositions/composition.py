@@ -3423,7 +3423,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # ******************************************************************************************************************
 
     @handle_external_context(source=ContextFlags.COMPOSITION)
-    def _analyze_graph(self, scheduler=None, context=None):
+    def _analyze_graph(self, context=None):
         """
         Assigns `NodeRoles <NodeRole>` to nodes based on the structure of the `Graph`.
 
@@ -8223,35 +8223,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if ContextFlags.SIMULATION_MODE not in context.runmode:
             self._check_projection_initialization_status()
 
-        # MODIFIED 8/27/19 OLD:
-        # try:
-        #     if ContextFlags.SIMULATION_MODE not in context.runmode:
-        #         self._analyze_graph()
-        # except AttributeError:
-        #     # if context is None, it has not been created for this context yet, so it is not
-        #     # in a simulation
-        #     self._analyze_graph()
-        # MODIFIED 8/27/19 NEW:
-        # FIX: MODIFIED FEEDBACK -
-        #      THIS IS NEEDED HERE (AND NO LATER) TO WORK WITH test_3_mechanisms_2_origins_1_additive_control_1_terminal
-        #      HOWEVER, WOULD BE GOOD IF CONTEXT WERE SET TO EXECUTE TO FILTER DEFERRED_INIT WARNINGS
-        #      (E.G., IN _check_projection_initialization_status)
-        #      MAYBE AT LEAST CALL _analzze_graph WITH APPOPRIATE FLAG SET?
-        # If a scheduler was passed in, first call _analyze_graph with default scheduler
-        if scheduler is not self.scheduler:
             if not skip_analyze_graph:
                 self._analyze_graph(context=context)
-        # Then call _analyze graph with scheduler actually being used (passed in or default)
-        try:
-            if ContextFlags.SIMULATION_MODE not in context.runmode:
-                if not skip_analyze_graph:
-                    self._analyze_graph(scheduler=scheduler, context=context)
-        except AttributeError:
-            # if context is None, it has not been created for this context yet,
-            # so it is not in a simulation
-            if not skip_analyze_graph:
-                self._analyze_graph(scheduler=scheduler, context=context)
-        # MODIFIED 8/27/19 END
 
         self._check_for_unnecessary_feedback_projections()
 
