@@ -1357,7 +1357,7 @@ class EveryNRuns(Condition):
 class BeforeEveryTimeStep(Condition):
     def __init__(self):
         def func(consideration_queue=None):
-            insertion_indices = [i-1 for i in range(0, len(consideration_queue), 1)]
+            insertion_indices = [i - 1 for i in range(0, len(consideration_queue), 1)]
             dep_groups = []
             for set in consideration_queue:
                 dep_groups.append(All(
@@ -1374,7 +1374,7 @@ class BeforeEveryTimeStep(Condition):
 class AfterEveryTimeStep(Condition):
     def __init__(self):
         def func(consideration_queue=None):
-            insertion_indices = [i+1 for i in range(0, len(consideration_queue),1)]
+            insertion_indices = [i + 1 for i in range(0, len(consideration_queue),1)]
             dep_groups = []
             for set in consideration_queue:
                 dep_groups.append(All(
@@ -1431,7 +1431,7 @@ class AfterEveryTrial(Condition):
                         if idx == 0:
                             conditions.append(Always())
                         else:
-                            conditions.append(All(JustRan(i) for i in consideration_set[idx-1]))
+                            conditions.append(All(JustRan(i) for i in consideration_set[idx - 1]))
             if len(conditions) > 1:
                 condition = Any(*conditions)
             return (insertion_indices, condition)

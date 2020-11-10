@@ -489,7 +489,7 @@ class Scheduler(JSONDumpable):
                     node=node
                 )
                 for i in insertion_indices:
-                    if not i in insertion_sets:
+                    if i not in insertion_sets:
                         insertion_sets[i] = set()
                     insertion_sets[i].add(node)
         modified_consideration_queue = [i.copy() for i in topo_sorted_consideration_queue]
