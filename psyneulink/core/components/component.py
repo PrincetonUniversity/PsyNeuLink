@@ -1656,8 +1656,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         except KeyError:
             pass
 
-    @handle_external_context()
-    def _deferred_init(self, context=None):
+    def _deferred_init(self, **kwargs):
         """Use in subclasses that require deferred initialization
         """
         if self.initialization_status == ContextFlags.DEFERRED_INIT:
@@ -1666,7 +1665,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             #       (usually in _instantiate_function)
             self.initialization_status = ContextFlags.INITIALIZING
 
-            self._init_args['context'] = context
+            self._init_args.update(kwargs)
 
             # Complete initialization
             # MODIFIED 10/27/18 OLD:
