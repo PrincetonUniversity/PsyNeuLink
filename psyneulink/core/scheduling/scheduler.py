@@ -282,13 +282,13 @@ import sys
 
 from toposort import toposort
 
-from psyneulink.core.globals.context import Context, handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.json import JSONDumpable
 from psyneulink.core.globals.keywords import BEFORE, AFTER
-from psyneulink.core.scheduling.condition import AtTrial, AtLastTrialOfRun, AfterEveryPass, AfterEveryRun, \
+from psyneulink.core.scheduling.condition import AtTrial, AtTimeStep, AtLastTrialOfRun, AfterEveryPass, AfterEveryRun, \
     AfterEveryTimeStep, AfterEveryTrial, AfterNCalls, All, AllHaveRun, Always, Any, BeforeEveryPass, \
     BeforeEveryRun, BeforeEveryTimeStep, BeforeEveryTrial, Condition, ConditionSet, ConditionType, EveryNCalls, \
-    Never, Not, WhenControllerEnabled, WhenSimulationMode
+    Never, Not, WhenControllerEnabled, WhenSimulationMode, WhenTrialTerminationCondsSatisfied
 from psyneulink.core.scheduling.time import Clock, TimeScale
 
 __all__ = [
@@ -398,6 +398,7 @@ class Scheduler(JSONDumpable):
         self.default_termination_conds = Scheduler._parse_termination_conditions(termination_conds)
         self.needs_update = False
         self._termination_conds = termination_conds.copy()
+        self._trial_bound_termination_conditions = termination_conds.copy()
         self._num_trials = float('inf')
 
         self.cycle_nodes = set()
@@ -445,6 +446,9 @@ class Scheduler(JSONDumpable):
         self.pure_topo_consideration_queue = list(toposort(self.dependency_dict))
         if controller:
             self._add_condition_for_controller(controller, controller_mode, controller_condition, controller_time_scale)
+        self._update_trial_bound_termination_conditions(
+            self.termination_conds
+        )
         self.consideration_queue = self._get_queue_with_additive_conditions(
             self.pure_topo_consideration_queue, controller, controller_condition
         )
@@ -467,7 +471,7 @@ class Scheduler(JSONDumpable):
         self.add_condition(controller, base_condition)
         condition_set = {
             Not(WhenSimulationMode()),
-            WhenControllerEnabled()
+            WhenControllerEnabled(),
         }
         if controller_condition:
             condition_set.add(controller_condition)
@@ -477,16 +481,17 @@ class Scheduler(JSONDumpable):
         self.insertion_sets = {}
 
         insertion_sets = {}
-        for mech, condition in self.additive_conditions.conditions.items():
+        for node, condition in self.additive_conditions.conditions.items():
             if condition.condition_type == ConditionType.ADDITIVE:
                 insertion_indices, composite_condition = condition.get_additive_modifications(
                     consideration_queue=topo_sorted_consideration_queue,
-                    scheduler=self
+                    scheduler=self,
+                    node=node
                 )
                 for i in insertion_indices:
                     if not i in insertion_sets:
                         insertion_sets[i] = set()
-                    insertion_sets[i].add(mech)
+                    insertion_sets[i].add(node)
         modified_consideration_queue = [i.copy() for i in topo_sorted_consideration_queue]
         append_top = False
         for idx, mech_set in insertion_sets.items():
@@ -524,71 +529,84 @@ class Scheduler(JSONDumpable):
             runtime_condition_set.add_condition(node, condition)
         return runtime_condition_set
 
+
     def _get_term_conds_given_additive_conditions(self, term_conds, controller=None):
-        term_conds_updated = term_conds.copy()
-        trial_term_cond = term_conds_updated[TimeScale.TRIAL]
-        before_run_nodes = set()
-        after_run_nodes = set()
-        structural_nodes = set(self.structural_nodes)
-        new_trial_term_conds = []
-        additive_condition_dict = self.additive_conditions.conditions
-        if not additive_condition_dict:
+        additive_conditions = self.additive_conditions.conditions
+
+        # if there are no additive conditions, don't modify
+        if not additive_conditions:
             return term_conds
-        general_term_conds = [
-            AllHaveRun(*structural_nodes)
-        ]
-        if all([
-            type(trial_term_cond) == AllHaveRun,
-            not trial_term_cond.args
-        ]):
-            for node, cond in additive_condition_dict.items():
-                if type(cond) == BeforeEveryRun:
-                    before_run_nodes.add(node)
-                elif type(cond) == AfterEveryRun:
-                    after_run_nodes.add(node)
+
+        # if user has set custom termination conditions, don't modify
+        term_conds_trial = term_conds[TimeScale.TRIAL]
+        if not(type(term_conds_trial) == AllHaveRun and not term_conds_trial.args):
+            return term_conds
+
+        term_conds = term_conds.copy()
+        general_term_conds = [term_conds[TimeScale.TRIAL]]
+        special_run_conds = []
+        controller_modifier = False
+        for node, condition in additive_conditions.items():
+            if type(condition) in {BeforeEveryTimeStep, AfterEveryTimeStep}:
+                num_ex = len([i for i in self.consideration_queue if node in i])
+                general_term_conds.append(
+                    AfterNCalls(
+                        node, num_ex, TimeScale.PASS
+                    )
+                )
+                controller_modifier = True
+
+            elif type(condition) in {AfterEveryPass, AfterEveryTrial}:
+                from psyneulink import JustRan
+                general_term_conds.append(
+                    JustRan(
+                        node
+                    )
+                )
+                controller_modifier = True
+
+            elif type(condition) == AfterEveryRun:
+                special_run_conds.extend(
+                    [AtLastTrialOfRun(), AfterNCalls(node, 1, TimeScale.TIME_STEP)]
+                )
+                controller_modifier = True
+
+            if node == controller and controller_modifier:
+                if type(condition) == AfterEveryRun:
+                    list_with_controller_rule = special_run_conds
                 else:
-                    consideration_indices = [idx for idx, consideration_set in enumerate(self.consideration_queue)
-                                             if node in consideration_set]
-                    num_ex = len(consideration_indices)
-                    if controller and node == controller:
-                        general_term_conds.append(Any(WhenSimulationMode(), AfterNCalls(node, num_ex, TimeScale.TIME_STEP)))
-                    else:
-                        general_term_conds.append(AfterNCalls(node, num_ex, TimeScale.TIME_STEP))
-        if before_run_nodes:
-            if before_run_nodes - structural_nodes:
-                new_trial_term_conds.append(
-                    All(
-                        AtTrial(0),
-                        AllHaveRun(
-                            *self.structural_nodes,
-                            *before_run_nodes
-                        )
+                    list_with_controller_rule = general_term_conds
+                list_with_controller_rule[-1] = Any(
+                    Not(WhenControllerEnabled()), WhenSimulationMode(), list_with_controller_rule[-1]
+                )
+        if special_run_conds:
+            general_term_conds.append(Not(AtLastTrialOfRun()))
+        updated_trial_term_conds = All(*general_term_conds)
+        if special_run_conds:
+            updated_trial_term_conds = Any(updated_trial_term_conds, All(AtLastTrialOfRun(), *special_run_conds))
+        term_conds[TimeScale.TRIAL] = updated_trial_term_conds
+        return term_conds
+
+    def _update_trial_bound_termination_conditions(self, term_conds):
+        additive_conditions = self.additive_conditions.conditions
+
+        # if there are no additive conditions, don't modify
+        if not additive_conditions:
+            return term_conds
+
+        term_conds = term_conds.copy()
+        general_term_conds = [term_conds[TimeScale.TRIAL]]
+        for node, condition in additive_conditions.items():
+            if type(condition) in {BeforeEveryTimeStep, AfterEveryTimeStep}:
+                num_ex = len([i for i in self.consideration_queue if node in i])
+                general_term_conds.append(
+                    AfterNCalls(
+                        node, num_ex, TimeScale.PASS
                     )
                 )
-                general_term_conds.append(
-                    Not(AtTrial(0))
-                )
-        if after_run_nodes:
-            if after_run_nodes - structural_nodes:
-                new_trial_term_conds.append(
-                    All(
-                        AtLastTrialOfRun(),
-                        AllHaveRun(
-                            *self.structural_nodes,
-                            *after_run_nodes
-                        )
-                    )
-                )
-                general_term_conds.append(
-                    Not(AtLastTrialOfRun())
-                )
-        new_trial_term_conds.append(
-            All(*general_term_conds)
-        )
-        term_conds_updated[TimeScale.TRIAL] = Any(
-            *new_trial_term_conds
-        )
-        return term_conds_updated
+
+        self._trial_bound_termination_conditions[TimeScale.TRIAL] = All(*general_term_conds)
+
 
     def _init_counts(self, execution_id=None, base_execution_id=None):
         """
@@ -811,6 +829,8 @@ class Scheduler(JSONDumpable):
             termination_conds = self.termination_conds
         else:
             termination_conds = self.update_termination_conditions(Scheduler._parse_termination_conditions(termination_conds))
+            if ContextFlags.COMMAND_LINE in context.source:
+                self._update_trial_bound_termination_conditions(termination_conds)
 
         self._init_counts(context.execution_id, base_context.execution_id)
         self._reset_counts_useable(context.execution_id)

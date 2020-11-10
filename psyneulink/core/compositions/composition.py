@@ -8225,6 +8225,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             new_conds = self.termination_processing.copy()
             new_conds.update(termination_processing)
             termination_processing = new_conds
+            scheduler._update_trial_bound_termination_conditions(termination_processing)
 
         for node in self.nodes:
             num_execs = node.parameters.num_executions._get(context)
@@ -8758,6 +8759,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if termination_processing is None:
             termination_processing = execution_scheduler.termination_conds
+        elif ContextFlags.COMMAND_LINE in context.source:
+            execution_scheduler._update_trial_bound_termination_conditions(termination_processing)
 
         # if execute was called from command line and no inputs were specified, assign default inputs to highest level
         # composition (i.e. not on any nested Compositions)

@@ -1422,7 +1422,18 @@ class AfterEveryTrial(Condition):
     def __init__(self):
         def func(consideration_queue=None, scheduler=None, node=None):
             insertion_indices = [len(consideration_queue)]
-            condition = EveryNTrials(1)
+            pure_topo_queue = scheduler.pure_topo_consideration_queue
+            condition = WhenTrialTerminationCondsSatisfied()
+            conditions = [condition]
+            for idx, consideration_set in enumerate(pure_topo_queue):
+                for consideration_node in consideration_set:
+                    if consideration_node == node:
+                        if idx == 0:
+                            conditions.append(Always())
+                        else:
+                            conditions.append(All(JustRan(i) for i in consideration_set[idx-1]))
+            if len(conditions) > 1:
+                condition = Any(*conditions)
             return (insertion_indices, condition)
         super().__init__(func, condition_type=ConditionType.ADDITIVE)
 
@@ -1431,8 +1442,8 @@ class BeforeEveryRun(Condition):
         def func():
             insertion_indices = [-1]
             condition = All(
+                AtPass(0),
                 AtTrial(0),
-                EveryNRuns(1)
             )
             return (insertion_indices, condition)
         super().__init__(func, condition_type=ConditionType.ADDITIVE)
@@ -1718,7 +1729,7 @@ class AllHaveRun(Condition):
     def __init__(self, *dependencies, time_scale=TimeScale.TRIAL):
         def func(*dependencies, scheduler=None, execution_id=None):
             if len(dependencies) == 0:
-                dependencies = scheduler.nodes
+                dependencies = scheduler.structural_nodes
             for d in dependencies:
                 try:
                     if scheduler.counts_total[execution_id][time_scale][d] < 1:
@@ -1842,15 +1853,29 @@ class WhenFinishedAll(_DependencyValidation, Condition):
 class WhenControllerEnabled(Condition):
     def __init__(self):
         def func(context=None):
+            if not context.composition:
+                return False
             return context.composition.enable_controller
         super().__init__(func, condition_type=ConditionType.SUBTRACTIVE)
+
 
 class WhenSimulationMode(Condition):
     def __init__(self):
         def func(context=None):
+            if not context:
+                return False
             return ContextFlags.SIMULATION_MODE in context.runmode
         super().__init__(func, condition_type=ConditionType.SUBTRACTIVE)
 
+class WhenTrialTerminationCondsSatisfied(Condition):
+    def __init__(self):
+        def func(scheduler=None, context=None):
+            if not scheduler:
+                return True
+            return scheduler._trial_bound_termination_conditions[TimeScale.TRIAL].is_satisfied(
+                scheduler=scheduler, context=context
+            )
+        super().__init__(func, condition_type=ConditionType.SUBTRACTIVE)
 
 ######################################################################
 # Convenience Conditions
