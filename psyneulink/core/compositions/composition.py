@@ -3312,10 +3312,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.cycle_vertices = set()
 
+        context = Context(source=ContextFlags.CONSTRUCTOR, execution_id=None)
+
         self._initialize_parameters(
             **param_defaults,
             retain_old_simulation_data=retain_old_simulation_data,
-            context=Context(source=ContextFlags.COMPOSITION, execution_id=None)
+            context=context
         )
 
         # Compiled resources
@@ -3361,10 +3363,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projections = convert_to_list(projections)
             self.add_projections(projections)
 
-        self.add_pathways(pathways, context=Context(source=ContextFlags.CONSTRUCTOR, execution_id=None))
+        self.add_pathways(pathways, context=context)
 
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
-        self._analyze_graph(context=Context(source=ContextFlags.COMPOSITION, execution_id=None))
+        self._analyze_graph(context=context)
 
         show_graph_attributes = show_graph_attributes or {}
         self._show_graph = ShowGraph(self, **show_graph_attributes)
