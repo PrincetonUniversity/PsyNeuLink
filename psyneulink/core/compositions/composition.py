@@ -9841,6 +9841,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             if p.feedback is EdgeType.FEEDBACK])
 
     @property
+    def controller_mode(self):
+        return self._controller_mode
+
+    @controller_mode.setter
+    def controller_mode(self, controller_mode):
+        self.needs_update_scheduler = True
+        self._controller_mode = controller_mode
+
+    @property
+    def controller_condition(self):
+        return self._controller_condition
+
+    @controller_condition.setter
+    def controller_condition(self, controller_condition):
+        self.needs_update_scheduler = True
+        self._controller_condition = controller_condition
+
+    @property
+    def controller_time_scale(self):
+        return self._controller_time_scale
+
+    @controller_time_scale.setter
+    def controller_time_scale(self, controller_time_scale):
+        self.needs_update_scheduler = True
+        self._controller_time_scale = controller_time_scale
+
+    @property
     def _all_nodes(self):
         for n in self.nodes:
             yield n
