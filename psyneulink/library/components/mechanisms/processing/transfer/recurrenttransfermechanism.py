@@ -1110,7 +1110,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                         learning_rate,
                                         learning_condition,
                                         matrix,
-                                        context=None):
+                                        ):
 
         learning_mechanism = AutoAssociativeLearningMechanism(default_variable=copy.deepcopy([activity_vector.defaults.value]),
                                                               # learning_signals=[self.recurrent_projection],
@@ -1202,7 +1202,7 @@ class RecurrentTransferMechanism(TransferMechanism):
                                                                        learning_rate=learning_rate,
                                                                        learning_condition=learning_condition,
                                                                        matrix=self.recurrent_projection,
-                                                                       context=context)
+                                                                       )
 
         self.learning_projection = self.learning_mechanism.output_ports[LEARNING_SIGNAL].efferents[0]
         if self.learning_mechanism is None:
