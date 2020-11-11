@@ -740,7 +740,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if agent_rep is None:
             if context.source==ContextFlags.COMMAND_LINE:
                 # Temporarily name InputPort
-                self._assign_deferred_init_name(self.__class__.__name__, context)
+                self._assign_deferred_init_name(self.__class__.__name__)
                 # Store args for deferred initialization
                 self._store_deferred_init_args(**locals())
 

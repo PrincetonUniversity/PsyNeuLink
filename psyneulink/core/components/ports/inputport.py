@@ -782,7 +782,7 @@ class InputPort(Port_Base):
         # if owner is None or (variable is None and reference_value is None and projections is None):
         if owner is None:
             # Temporarily name InputPort
-            self._assign_deferred_init_name(name, context)
+            self._assign_deferred_init_name(name)
             # Store args for deferred initialization
             self._store_deferred_init_args(**locals())
 

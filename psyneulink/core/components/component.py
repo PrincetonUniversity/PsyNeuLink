@@ -1687,7 +1687,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
             del self._init_args
 
-    def _assign_deferred_init_name(self, name, context):
+    def _assign_deferred_init_name(self, name):
 
         name = "{} [{}]".format(name,DEFERRED_INITIALIZATION) if name \
           else "{} {}".format(DEFERRED_INITIALIZATION,self.__class__.__name__)
