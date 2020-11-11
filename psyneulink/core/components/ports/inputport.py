@@ -811,7 +811,7 @@ class InputPort(Port_Base):
         )
 
         if self.name is self.componentName or self.componentName + '-' in self.name:
-            self._assign_default_port_Name(context=context)
+            self._assign_default_port_Name()
 
     def _assign_variable_from_projection(self, variable, size, projections):
         """Assign variable to value of Projection in projections

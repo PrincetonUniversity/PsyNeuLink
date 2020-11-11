@@ -3632,7 +3632,7 @@ class Mechanism_Base(Mechanism):
                                                                   context=context)
             for port in instantiated_input_ports:
                 if port.name is port.componentName or port.componentName + '-' in port.name:
-                        port._assign_default_port_Name(context=context)
+                        port._assign_default_port_Name()
             # self._instantiate_function(function=self.function)
         if output_ports:
             instantiated_output_ports = _instantiate_output_ports(self, output_ports, context=context)

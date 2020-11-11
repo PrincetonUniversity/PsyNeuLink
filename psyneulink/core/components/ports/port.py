@@ -1074,7 +1074,7 @@ class Port_Base(Port):
 
         # If name is not specified, assign default name
         if name is not None and DEFERRED_INITIALIZATION in name:
-            name = self._assign_default_port_Name(context=context)
+            name = self._assign_default_port_Name()
 
 
         # Register Port with PortRegistry of owner (Mechanism to which the Port is being assigned)
@@ -2241,7 +2241,7 @@ class Port_Base(Port):
         else:
             return self.name
 
-    def _assign_default_port_Name(self, context=None):
+    def _assign_default_port_Name(self):
         return False
 
     def _get_input_struct_type(self, ctx):
