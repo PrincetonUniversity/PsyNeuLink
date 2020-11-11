@@ -1707,9 +1707,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         param._set(val, context)
         if hasattr(self, "parameter_ports"):
             if param in self.parameter_ports:
-                new_port_value = self.parameter_ports[param].execute(
-                    context=Context(execution_phase=ContextFlags.EXECUTING, execution_id=context.execution_id)
-                )
+                new_port_value = self.parameter_ports[param].execute(context=context)
                 self.parameter_ports[param].parameters.value._set(new_port_value, context)
         elif hasattr(self, "owner"):
             if hasattr(self.owner, "parameter_ports"):
@@ -1723,9 +1721,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                         if isinstance(val, Component):
                             return
 
-                    new_port_value = self.owner.parameter_ports[param].execute(
-                        context=Context(execution_phase=ContextFlags.EXECUTING, execution_id=context.execution_id)
-                    )
+                    new_port_value = self.owner.parameter_ports[param].execute(context=context)
                     self.owner.parameter_ports[param].parameters.value._set(new_port_value, context)
 
     def _check_args(self, variable=None, params=None, context=None, target_set=None):
