@@ -5547,11 +5547,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         nodes = []
 
-        # If called from add_pathways(), use its pathway_arg_str in error messages (in context.string)
-        if context.source == ContextFlags.METHOD:
-            pathway_arg_str = context.string
-        # If call from _create_backpropagation_learning_pathway, use its pathway_arg_str
-        elif context.source == ContextFlags.INITIALIZING:
+        # If called internally, use its pathway_arg_str in error messages (in context.string)
+        if context.source is not ContextFlags.COMMAND_LINE:
             pathway_arg_str = context.string
         # Otherwise, refer to call from this method
         else:
@@ -6512,10 +6509,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
         # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
         #    _check_for_projection_assignments() in order to ignore checks for require_projection_in_composition
-        pathway_arg_str = f"'pathway' arg for add_backpropagation_learning_pathway method of {self.name}"
-        learning_pathway = self.add_linear_processing_pathway(pathway, name, Context(source=ContextFlags.INITIALIZING,
-                                                                                     execution_id=context.execution_id,
-                                                                                     string=pathway_arg_str))
+        context.string = f"'pathway' arg for add_backpropagation_learning_pathway method of {self.name}"
+        learning_pathway = self.add_linear_processing_pathway(pathway, name, context)
         processing_pathway = learning_pathway.pathway
 
         path_length = len(processing_pathway)
@@ -6622,7 +6617,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 OBJECTIVE_MECHANISM: comparator}
-            self._add_required_node_role(processing_pathway[-1], NodeRole.OUTPUT, Context(source=ContextFlags.METHOD, execution_id=context.execution_id))
+            self._add_required_node_role(processing_pathway[-1], NodeRole.OUTPUT, context)
 
             sequence_end = path_length - 3
 
