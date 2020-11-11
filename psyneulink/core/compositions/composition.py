@@ -5557,6 +5557,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
 
+        context.source = ContextFlags.METHOD
+        context.string = pathway_arg_str
+
         # First, deal with Pathway() or tuple specifications
         if isinstance(pathway, Pathway):
             # Give precedence to name specified in call to add_linear_processing_pathway
@@ -5585,9 +5588,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if _is_node_spec(pathway[0]):
             # Use add_nodes so that node spec can also be a tuple with required_roles
             self.add_nodes(nodes=[pathway[0]],
-                           context=Context(source=ContextFlags.METHOD,
-                                           execution_id=context.execution_id,
-                                           string=pathway_arg_str))
+                           context=context)
             nodes.append(pathway[0])
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
@@ -5599,9 +5600,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
             if _is_node_spec(pathway[c]):
                 self.add_nodes(nodes=[pathway[c]],
-                               context=Context(source=ContextFlags.METHOD,
-                                               execution_id=context.execution_id,
-                                               string=pathway_arg_str))
+                               context=context)
                 nodes.append(pathway[c])
 
         # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
@@ -5775,7 +5774,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,
                           name=pathway_name,
-                          context=Context(source=ContextFlags.METHOD, execution_id=context.execution_id))
+                          context=context)
         self.pathways.append(pathway)
 
         # FIX 4/4/20 [JDC]: Reset to None for now to replicate prior behavior,
@@ -6037,7 +6036,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Otherwise, refer to call from this method
         else:
             pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
-        context = Context(source=ContextFlags.METHOD, string=pathway_arg_str, execution_id=context.execution_id)
+        context.source = ContextFlags.METHOD
+        context.string = pathway_arg_str
 
         # Deal with Pathway() specifications
         if isinstance(pathway, Pathway):
