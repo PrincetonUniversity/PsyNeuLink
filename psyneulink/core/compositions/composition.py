@@ -6642,7 +6642,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add error_signal projections to any learning_mechanisms that are now dependent on the new one
         for lm in learning_mechanisms:
             if lm.dependent_learning_mechanisms:
-                projections = self._add_error_projection_to_dependent_learning_mechs(lm)
+                projections = self._add_error_projection_to_dependent_learning_mechs(lm, context)
                 self.add_projections(projections)
 
         # Suppress "no efferent connections" warning for:
@@ -6953,7 +6953,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #       and error_matrix to its self.error_matrices attribute
         #     - add new error_signal projection
 
-    def _add_error_projection_to_dependent_learning_mechs(self, error_source):
+    def _add_error_projection_to_dependent_learning_mechs(self, error_source, context=None):
         projections = []
         # Get all afferents to receiver_activity_mech in Composition that have LearningProjections
         for afferent in [p for p in error_source.input_source.path_afferents
@@ -6968,8 +6968,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 error_signal_input_port = dependent_learning_mech.add_ports(
                                                     InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                                               name=ERROR_SIGNAL,
-                                                              context=Context(source=ContextFlags.METHOD, execution_id=None)),
-                                                    context=Context(source=ContextFlags.METHOD, execution_id=None))
+                                                              context=context),
+                                                    context=context)
                 projections.append(error_signal_input_port[0].path_afferents[0])
                 # projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
                 #                                      receiver=error_signal_input_port[0]))
