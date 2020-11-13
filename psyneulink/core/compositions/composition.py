@@ -9361,7 +9361,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
         # comp must be initialized from context before cycle values are initialized
-        self._initialize_from_context(context, Context(execution_id=None), override=False)
+        self._initialize_from_context(context, override=False)
 
         if not values:
             values = {}
