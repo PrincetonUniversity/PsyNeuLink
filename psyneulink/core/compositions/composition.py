@@ -6635,7 +6635,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                         output_source,
                                                                                         learned_projection,
                                                                                         learning_rate,
-                                                                                        learning_update)
+                                                                                        learning_update,
+                                                                                        context)
             learning_mechanisms.append(learning_mechanism)
             learned_projections.append(learned_projection)
 
@@ -6780,7 +6781,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           output_source,
                                                           learned_projection,
                                                           learning_rate,
-                                                          learning_update):
+                                                          learning_update,
+                                                          context):
 
         # Get existing LearningMechanism if one exists (i.e., if this is a crossing point with another pathway)
         learning_mechanism = \
@@ -6792,13 +6794,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    error_sources will be empty (as they have been dealt with in self._get_back_prop_error_sources
         #    error_projections will contain list of any created to be added to the Composition below
         if learning_mechanism:
-            error_sources, error_projections = self._get_back_prop_error_sources(output_source, learning_mechanism)
+            error_sources, error_projections = self._get_back_prop_error_sources(output_source, learning_mechanism, context)
         # If learning_mechanism does not yet exist:
         #    error_sources will contain ones needed to create learning_mechanism
         #    error_projections will be empty since they can't be created until the learning_mechanism is created below;
         #    they will be created (using error_sources) when, and determined after learning_mechanism is created below
         else:
-            error_sources, error_projections = self._get_back_prop_error_sources(output_source)
+            error_sources, error_projections = self._get_back_prop_error_sources(output_source, context=context)
             error_signal_template = [error_source.output_ports[ERROR_SIGNAL].value for error_source in error_sources]
             default_variable = [input_source.output_ports[0].value,
                                 output_source.output_ports[0].value] + error_signal_template
@@ -6844,7 +6846,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return learning_mechanism
 
-    def _get_back_prop_error_sources(self, receiver_activity_mech, learning_mech=None):
+    def _get_back_prop_error_sources(self, receiver_activity_mech, learning_mech=None, context=None):
         # FIX CROSSED_PATHWAYS [JDC]:  GENERALIZE THIS TO HANDLE COMPARATOR/TARGET ASSIGNMENTS IN BACKPROP
         #                              AND THEN TO HANDLE ALL FORMS OF LEARNING (AS BELOW)
         #  REFACTOR TO DEAL WITH CROSSING PATHWAYS (?CREATE METHOD ON LearningMechanism TO DO THIS?):
@@ -6892,8 +6894,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         error_signal_input_port = learning_mech.add_ports(
                             InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                       name=ERROR_SIGNAL,
-                                      context=Context(source=ContextFlags.METHOD, execution_id=None)),
-                            context=Context(source=ContextFlags.METHOD, execution_id=None))[0]
+                                      context=context),
+                            context=context)[0]
                     # Create Projection here so that don't have to worry about determining correct
                     #    error_signal_input_port of learning_mech in _create_non_terminal_backprop_learning_components
                     try:
