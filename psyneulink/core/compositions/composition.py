@@ -7000,7 +7000,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                              CONTROL
     # ******************************************************************************************************************
 
-    def add_controller(self, controller:ControlMechanism):
+    @handle_external_context()
+    def add_controller(self, controller:ControlMechanism, context=None):
         """
         Add an `ControlMechanism` as the `controller <Composition.controller>` of the Composition.
 
@@ -7029,7 +7030,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #        (e.g., was constructed in the controller argument of the Composition), in which case assign it here.
         if controller.initialization_status == ContextFlags.DEFERRED_INIT:
             controller._init_args[AGENT_REP] = self
-            controller._deferred_init(context=Context(source=ContextFlags.COMPOSITION, execution_id=None))
+            controller._deferred_init(context=context)
 
         # Note:  initialization_status here pertains to controller's status w/in the Composition
         #        (i.e., whether any Nodes and/or Projections on which it depends are not yet in the Composition)
@@ -7079,7 +7080,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         controller._activate_projections_for_compositions(self)
         # Call with context to avoid recursion by analyze_graph -> _check_inialization_status -> add_controller
-        self._analyze_graph(context=Context(source=ContextFlags.METHOD, execution_id=None))
+        context.source = ContextFlags.METHOD
+        self._analyze_graph(context=context)
         self._update_shadows_dict(controller)
 
         # INSTANTIATE SHADOW_INPUT PROJECTIONS
@@ -7143,7 +7145,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
             ctl_signal = controller._instantiate_control_signal(control_signal=ctl_sig_spec,
-                                                   context=Context(source=ContextFlags.COMPOSITION, execution_id=None))
+                                                   context=context)
             controller.control.append(ctl_signal)
             # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITON:
             #                ?DON'T ASSIGN ControlProjection?
@@ -7153,7 +7155,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             controller._activate_projections_for_compositions(self)
         if not invalid_aux_components:
             self._controller_initialization_status = ContextFlags.INITIALIZED
-        self._analyze_graph(context=Context(source=ContextFlags.METHOD, execution_id=None))
+        self._analyze_graph(context=context)
 
     def _get_control_signals_for_composition(self):
         """Return list of ControlSignals specified by Nodes in the Composition
@@ -7307,7 +7309,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Check if controller is in deferred init
         if self.controller and self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
-            self.add_controller(self.controller)
+            self.add_controller(self.controller, context=context)
 
             # Don't bother checking any further if from COMMAND_LINE or COMPOSITION (i.e., anything other than Run)
             #    since no need to detect deferred_init and generate errors until runtime
