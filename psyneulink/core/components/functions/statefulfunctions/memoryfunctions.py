@@ -39,7 +39,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, ContentAddressableMemory_FUNCTION, \
     MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM
 from psyneulink.core.globals.utilities import all_within_range, convert_to_np_array, parameter_spec, get_global_seed
-from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
+from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
@@ -715,8 +715,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         )
 
         if self.previous_value.size != 0:
-            self.parameters.key_size._set(len(self.previous_value[KEYS][0]), Context(execution_id=None))
-            self.parameters.val_size._set(len(self.previous_value[VALS][0]), Context(execution_id=None))
+            self.parameters.key_size.set(len(self.previous_value[KEYS][0]))
+            self.parameters.val_size.set(len(self.previous_value[VALS][0]))
 
     def _parse_distance_function_variable(self, variable):
         # actual used variable in execution (get_memory) checks distance
