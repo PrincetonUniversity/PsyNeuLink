@@ -3559,7 +3559,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add ControlSignals to controller and ControlProjections
         #     to any parameter_ports specified for control in node's constructor
         if self.controller:
-            self._instantiate_deferred_init_control(node)
+            self._instantiate_deferred_init_control(node, context=context)
 
         try:
             if len(invalid_aux_components) > 0:
@@ -3567,7 +3567,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         except NameError:
             pass
 
-    def _instantiate_deferred_init_control(self, node):
+    def _instantiate_deferred_init_control(self, node, context=None):
         """
         If node is a Composition with a controller, activate its nodes' deferred init control specs for its controller.
         If it does not have a controller, but self does, activate them for self's controller.
@@ -3584,7 +3584,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         hanging_control_specs = []
         if node.componentCategory == 'Composition':
             for nested_node in node.nodes:
-                hanging_control_specs.extend(node._instantiate_deferred_init_control(nested_node))
+                hanging_control_specs.extend(node._instantiate_deferred_init_control(nested_node, context=context))
         else:
             hanging_control_specs = node._get_parameter_port_deferred_init_control_specs()
         if not self.controller:
@@ -3592,8 +3592,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             for spec in hanging_control_specs:
                 control_signal = self.controller._instantiate_control_signal(control_signal=spec,
-                                                                             context=Context(
-                                                                                 source=ContextFlags.COMPOSITION, execution_id=None))
+                                                                             context=context)
                 self.controller.control.append(control_signal)
                 self.controller._activate_projections_for_compositions(self)
         return []
