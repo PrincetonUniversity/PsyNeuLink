@@ -6911,7 +6911,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    so they can be added to the Composition by _create_non_terminal_backprop_learning_components
         return error_sources, error_projections
 
-    def _get_backprop_error_projections(self, learning_mech, receiver_activity_mech):
+    def _get_backprop_error_projections(self, learning_mech, receiver_activity_mech, context):
         error_sources = []
         error_projections = []
         # for error_source in learning_mech.error_sources:
@@ -6939,8 +6939,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     error_signal_input_port = learning_mech.add_ports(
                                                         InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                                                   name=ERROR_SIGNAL,
-                                                                  context=Context(source=ContextFlags.METHOD, execution_id=None)),
-                                                        context=Context(source=ContextFlags.METHOD, execution_id=None))
+                                                                  context=context),
+                                                        context=context)
                 # DOES THE ABOVE GENERATE A PROJECTION?  IF SO, JUST GET AND RETURN THAT;  ELSE DO THE FOLLOWING:
                 error_projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
                                                            receiver=error_signal_input_port))
