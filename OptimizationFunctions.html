@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationFunctions &mdash; PsyNeuLink 0.8.4.6 documentation</title>
+  <title>OptimizationFunctions &mdash; PsyNeuLink 0.8.4.6+24.g029bcf7 documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.4.6
+                  0.8.4.6+24
                 </div>
               
             
@@ -393,7 +393,7 @@ for all the samples in the order they were evaluated; otherwise it is empty.</td
 
 <dl class="method">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.reset">
-<code class="descname">reset</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.reset" title="Permalink to this definition">¶</a></dt>
+<code class="descname">reset</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>objective_function=None</em>, <em>search_function=None</em>, <em>search_termination_function=None</em>, <em>search_space=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reset parameters of the OptimizationFunction</p>
 <p>Parameters to be reset should be specified in a parameter specification dictionary, in which they key
 for each entry is the name of one of the following parameters, and its value is the value to be assigned to the
@@ -772,7 +772,7 @@ This is assigned as the <a class="reference internal" href="#psyneulink.core.com
 
 <dl class="method">
 <dt id="psyneulink.core.components.functions.optimizationfunctions.GridSearch.reset">
-<code class="descname">reset</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.reset" title="Permalink to this definition">¶</a></dt>
+<code class="descname">reset</code><span class="sig-paren">(</span><em>search_space</em>, <em>context=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign size of <a href="#id5"><span class="problematic" id="id6">`</span></a>search_space &lt;GridSearch.search_space&gt;</p>
 </dd></dl>
 
@@ -1047,7 +1047,7 @@ deterministic function.</p>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.4.6',
+               VERSION:'0.8.4.6+24.g029bcf7',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
