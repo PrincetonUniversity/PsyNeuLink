@@ -1,0 +1,1 @@
+leabra@git+https://github.com/benureau/leabra.git@master

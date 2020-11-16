@@ -1855,7 +1855,6 @@ class TestIntegratorMode:
         T.parameters.integrator_mode.set(True, context=C)
 
         assert T.parameters.integrator_mode.get(C) is True
-        assert T.has_integrated is True
         assert T.integrator_function is integrator_function
 
         C.run({T: [[1.0], [1.0], [1.0]]})

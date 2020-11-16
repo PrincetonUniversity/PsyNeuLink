@@ -6572,15 +6572,15 @@ class TestResetValues:
             # "save" the current state of each stateful mechanism by storing the values of each of its stateful
             # attributes in the reinitialization_values dictionary; this gets passed into run and used to call
             # the reset method on each stateful mechanism.
-            reinitialization_value = []
+            reinitialization_value = {}
 
             if isinstance(mechanism.function, IntegratorFunction):
                 for attr in mechanism.function.stateful_attributes:
-                    reinitialization_value.append(getattr(mechanism.function.parameters, attr).get(comp))
+                    reinitialization_value[attr] = getattr(mechanism.function.parameters, attr).get(comp)
             elif hasattr(mechanism, "integrator_function"):
                 if isinstance(mechanism.integrator_function, IntegratorFunction):
                     for attr in mechanism.integrator_function.stateful_attributes:
-                        reinitialization_value.append(getattr(mechanism.integrator_function.parameters, attr).get(comp))
+                        reinitialization_value[attr] = getattr(mechanism.integrator_function.parameters, attr).get(comp)
 
             reinitialization_values[mechanism] = reinitialization_value
 

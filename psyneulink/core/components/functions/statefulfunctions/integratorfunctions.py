@@ -218,7 +218,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         """
         rate = Parameter(1.0, modulable=True, function_arg=True)
         noise = Parameter(0.0, modulable=True, function_arg=True)
-        previous_value = Parameter(np.array([0]), pnl_internal=True)
+        previous_value = Parameter(np.array([0]), initializer='initializer', pnl_internal=True)
         initializer = Parameter(np.array([0]), pnl_internal=True)
 
     @tc.typecheck
@@ -653,7 +653,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         increment = self._get_current_parameter_value(INCREMENT, context)
         noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable)
 
-        previous_value = np.atleast_2d(self.get_previous_value(context))
+        previous_value = np.atleast_2d(self.parameters.previous_value._get(context))
 
         value = previous_value * rate + noise + increment
 
@@ -849,8 +849,8 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         offset = self._get_current_parameter_value(OFFSET, context)
 
         # execute noise if it is a function
-        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable)
-        previous_value = self.get_previous_value(context)
+        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
+        previous_value = self.parameters.previous_value._get(context)
         new_value = variable
 
         value = previous_value + (new_value * rate) + noise
@@ -1188,9 +1188,9 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable)
 
         # # MODIFIED 6/14/19 OLD:
-        # previous_value = np.atleast_2d(self.get_previous_value(context))
+        # previous_value = np.atleast_2d(self.parameters.previous_value._get(context))
         # # MODIFIED 6/14/19 NEW: [JDC]
-        previous_value = self.get_previous_value(context)
+        previous_value = self.parameters.previous_value._get(context)
         # MODIFIED 6/14/19 END
 
         try:
@@ -1534,8 +1534,8 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         long_term_rate = Parameter(0.1, modulable=True, function_arg=True)
         operation = PRODUCT
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
-        previous_short_term_avg = Parameter(None, pnl_internal=True)
-        previous_long_term_avg = Parameter(None, pnl_internal=True)
+        previous_short_term_avg = Parameter(None, initializer='initial_short_term_avg', pnl_internal=True)
+        previous_long_term_avg = Parameter(None, initializer='initial_long_term_avg', pnl_internal=True)
         short_term_logistic = None
         long_term_logistic = None
 
@@ -1559,12 +1559,6 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                  params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
-
-        if not hasattr(self, "initializers"):
-            self.initializers = ["initial_long_term_avg", "initial_short_term_avg"]
-
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["previous_short_term_avg", "previous_long_term_avg"]
 
         super().__init__(
             default_variable=default_variable,
@@ -2098,7 +2092,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
                 raise FunctionError("The {} argument of {} ({}) must be an int or float, "
                                     "or a list or array of the same length as its variable ({})".
                                     format(repr(REST), self.__class__.__name__, rest, len(variable)))
-        previous_value = self.get_previous_value(context)
+        previous_value = self.parameters.previous_value._get(context)
 
         current_input = np.atleast_2d(variable)
         prev_val = np.atleast_2d(previous_value)
@@ -2372,7 +2366,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         starting_point = 0.0
         threshold = Parameter(100.0, modulable=True)
         time_step_size = Parameter(1.0, modulable=True)
-        previous_time = Parameter(None, pnl_internal=True)
+        previous_time = Parameter(None, initializer='starting_point', pnl_internal=True)
         seed = Parameter(None, read_only=True)
         random_state = Parameter(None, stateful=True, loggable=False)
         enable_output_type_conversion = Parameter(
@@ -2400,12 +2394,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
         if seed is None:
             seed = get_global_seed()
-
-        if not hasattr(self, "initializers"):
-            self.initializers = ["initializer", "starting_point"]
-
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["previous_value", "previous_time"]
 
         random_state = np.random.RandomState([seed])
 
@@ -2463,7 +2451,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         time_step_size = self._get_current_parameter_value(TIME_STEP_SIZE, context)
         random_state = self._get_current_parameter_value("random_state", context)
 
-        previous_value = np.atleast_2d(self.get_previous_value(context))
+        previous_value = np.atleast_2d(self.parameters.previous_value._get(context))
 
         random_draw = np.array([random_state.normal() for _ in list(variable)])
         value = previous_value + rate * variable * time_step_size \
@@ -2551,6 +2539,13 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
         time_vo_ptr = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(1), index])
         builder.store(curr_time, time_vo_ptr)
+
+    def reset(self, previous_value=None, previous_time=None, context=None):
+        return super().reset(
+            previous_value=previous_value,
+            previous_time=previous_time,
+            context=context
+        )
 
 
 class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # --------------------------------------------------------------
@@ -2788,7 +2783,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         time_step_size = Parameter(1.0, modulable=True)
         starting_point = 0.0
-        previous_time = Parameter(0.0, pnl_internal=True)
+        previous_time = Parameter(0.0, initializer='starting_point', pnl_internal=True)
         random_state = Parameter(None, stateful=True, loggable=False)
         enable_output_type_conversion = Parameter(
             False,
@@ -2812,12 +2807,6 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                  seed=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
-
-        if not hasattr(self, "initializers"):
-            self.initializers = ["initializer", "starting_point"]
-
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["previous_value", "previous_time"]
 
         if seed is None:
             seed = get_global_seed()
@@ -2879,7 +2868,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         time_step_size = self._get_current_parameter_value(TIME_STEP_SIZE, context)
         random_state = self._get_current_parameter_value('random_state', context)
 
-        previous_value = np.atleast_2d(self.get_previous_value(context))
+        previous_value = np.atleast_2d(self.parameters.previous_value._get(context))
 
         random_normal = random_state.normal()
 
@@ -2905,6 +2894,13 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
         self.parameters.previous_value._set(previous_value, context)
         return previous_value, previous_time
+
+    def reset(self, previous_value=None, previous_time=None, context=None):
+        return super().reset(
+            previous_value=previous_value,
+            previous_time=previous_time,
+            context=context
+        )
 
 
 class LeakyCompetingIntegrator(IntegratorFunction):  # -----------------------------------------------------------------
@@ -3151,8 +3147,8 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         offset = self._get_current_parameter_value(OFFSET, context)
 
         # execute noise if it is a function
-        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable)
-        previous_value = self.get_previous_value(context)
+        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
+        previous_value = self.parameters.previous_value._get(context)
         new_value = variable
 
         # Gilzenrat: previous_value + (-previous_value + variable)*self.time_step_size + noise --> rate = -1
@@ -3754,9 +3750,13 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         initial_w = 0.0
         initial_v = 0.0
         t_0 = 0.0
-        previous_w = Parameter(np.array([1.0]), pnl_internal=True)
-        previous_v = Parameter(np.array([1.0]), pnl_internal=True)
-        previous_time = Parameter(0.0, pnl_internal=True)
+        previous_w = Parameter(np.array([1.0]), initializer='initial_w', pnl_internal=True)
+        previous_v = Parameter(np.array([1.0]), initializer='initial_v', pnl_internal=True)
+        previous_time = Parameter(0.0, initializer='t_0', pnl_internal=True)
+
+        # this should be removed because it's unused, but this will
+        # require a larger refactoring on previous_value/value
+        previous_value = Parameter(None, initializer='initializer', pnl_internal=True)
 
         enable_output_type_conversion = Parameter(
             False,
@@ -3804,12 +3804,6 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             for k in unsupported_args:
                 if k in kwargs:
                     del kwargs[k]
-
-        if not hasattr(self, "initializers"):
-            self.initializers = ["initial_v", "initial_w", "t_0"]
-
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["previous_v", "previous_w", "previous_time"]
 
         super().__init__(
             default_variable=default_variable,
@@ -4182,6 +4176,14 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         return previous_v, previous_w, previous_time
 
+    def reset(self, previous_v=None, previous_w=None, previous_time=None, context=None):
+        return super().reset(
+            previous_v=previous_v,
+            previous_w=previous_w,
+            previous_time=previous_time,
+            context=context
+        )
+
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         zero_i32 = ctx.int32_ty(0)
 
@@ -4403,4 +4405,12 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         sum = builder.fadd(sum, tmp4)
 
         res = builder.fdiv(sum, param_vals["time_constant_w"])
+        return res
+
+    # TODO: remove with changes to previous_value/value as stated in
+    # FitzHughNagumoIntegrator.Parameters
+    @property
+    def stateful_attributes(self):
+        res = super().stateful_attributes
+        res.remove('previous_value')
         return res

@@ -147,16 +147,17 @@ class TestResetValues:
         original_output = [A.execute(1.0)[0], A.execute(1.0)[0]]
 
         # SAVING STATE  - - - - - - - - - - - - - - - - - - - - - - - - -
-        reset_stateful_functions_to = []
+        reset_stateful_functions_to = {}
         for attr in A.function.stateful_attributes:
-            reset_stateful_functions_to.append(getattr(A.function, attr))
+            reset_stateful_functions_to[attr] = getattr(A.function, attr)
 
+        print(reset_stateful_functions_to)
         # Execute A twice AFTER saving the state so that it continues accumulating.
         # We expect the next two outputs to repeat once we reset the state b/c we will return it to the current state
         output_after_saving_state = [A.execute(1.0)[0], A.execute(1.0)[0]]
 
         # RESETTING STATE - - - - - - - - - - - - - - - - - - - - - - - -
-        A.reset(*reset_stateful_functions_to)
+        A.reset(**reset_stateful_functions_to)
 
         # We expect these results to match the results from immediately after saving the state
         output_after_reinitialization = [A.execute(1.0)[0], A.execute(1.0)[0]]
@@ -172,17 +173,17 @@ class TestResetValues:
         original_output = [A.execute(1.0), A.execute(1.0)]
 
         # SAVING STATE  - - - - - - - - - - - - - - - - - - - - - - - - -
-        reset_stateful_functions_to = []
+        reset_stateful_functions_to = {}
 
         for attr in A.integrator_function.stateful_attributes:
-            reset_stateful_functions_to.append(getattr(A.integrator_function, attr))
+            reset_stateful_functions_to[attr] = getattr(A.integrator_function, attr)
 
         # Execute A twice AFTER saving the state so that it continues accumulating.
         # We expect the next two outputs to repeat once we reset the state b/c we will return it to the current state
         output_after_saving_state = [A.execute(1.0), A.execute(1.0)]
 
         # RESETTING STATE - - - - - - - - - - - - - - - - - - - - - - - -
-        A.reset(*reset_stateful_functions_to)
+        A.reset(**reset_stateful_functions_to)
 
         # We expect these results to match the results from immediately after saving the state
         output_after_reinitialization = [A.execute(1.0), A.execute(1.0)]

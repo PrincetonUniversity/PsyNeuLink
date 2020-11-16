@@ -1155,12 +1155,12 @@ class DDM(ProcessingMechanism):
         return mech_out, builder
 
     @handle_external_context(fallback_most_recent=True)
-    def reset(self, *args, force=False, context=None):
+    def reset(self, *args, force=False, context=None, **kwargs):
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
         # (1) reset function, (2) update mechanism value, (3) update output ports
         if isinstance(self.function, IntegratorFunction):
-            new_values = self.function.reset(*args, context=context)
+            new_values = self.function.reset(*args, **kwargs, context=context)
             self.parameters.value._set(convert_to_np_array(new_values), context)
             self._update_output_ports(context=context)
 
@@ -1168,7 +1168,7 @@ class DDM(ProcessingMechanism):
     def is_finished(self, context=None):
         # find the single numeric entry in previous_value
         try:
-            single_value = self.function.get_previous_value(context)
+            single_value = self.function.parameters.previous_value._get(context)
         except AttributeError:
             # Analytical function so it is always finished after it is called
             return True

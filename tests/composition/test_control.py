@@ -1042,7 +1042,7 @@ class TestControlMechanisms:
             bin_execute=mode
         )
         assert np.allclose(val[0], [5])
-        assert np.allclose(val[1], [0.7573055560600637, 0.4500512583901123])
+        assert np.allclose(val[1], [0.7978996, 0.40776362])
 
     @pytest.mark.control
     @pytest.mark.composition
