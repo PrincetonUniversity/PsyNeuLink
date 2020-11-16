@@ -560,7 +560,8 @@ class Condition(JSONDumpable):
 
     def get_additive_modifications(self, *args, consideration_queue=None, scheduler=None, **kwargs):
         """
-        the function called to determine satisfaction of this Condition.
+        the function called to retrieve 1) the indices at which to insert the condition's owner component and
+        2) the additional subtractive condition to apply to the owner component.
 
         Arguments
         ---------
@@ -574,8 +575,7 @@ class Condition(JSONDumpable):
 
         Returns
         -------
-            True - if the Condition is satisfied
-            False - if the Condition is not satisfied
+            tuple ({insertion indices}, subtractive_condition)
         """
 
         # update so that kwargs can override self.kwargs
