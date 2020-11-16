@@ -1422,7 +1422,7 @@ class AfterEveryTrial(Condition):
     def __init__(self):
         def func(consideration_queue=None, scheduler=None, node=None):
             insertion_indices = [len(consideration_queue)]
-            pure_topo_queue = scheduler.pure_topo_consideration_queue
+            pure_topo_queue = scheduler.base_consideration_queue
             condition = WhenTrialTerminationCondsSatisfied()
             conditions = [condition]
             for idx, consideration_set in enumerate(pure_topo_queue):

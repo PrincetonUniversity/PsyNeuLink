@@ -3917,7 +3917,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            controller may not be NodeRole.TERMINAL, so if the ObjectiveMechanism is the only node in the last entry
            of the consideration queue, then the second-to-last entry is NodeRole.TERMINAL instead.
         """
-        queue = self.scheduler.pure_topo_consideration_queue
+        queue = self.scheduler.base_consideration_queue
 
         for node in list(queue)[0]:
             self._add_node_role(node, NodeRole.ORIGIN)
@@ -4149,7 +4149,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._add_node_role(node_role_pair[0], node_role_pair[1])
 
         # Get ORIGIN and TERMINAL Nodes using self.scheduler.consideration_queue
-        if self.scheduler.pure_topo_consideration_queue:
+        if self.scheduler.base_consideration_queue:
             self._determine_origin_and_terminal_nodes_from_consideration_queue()
 
         # INPUT

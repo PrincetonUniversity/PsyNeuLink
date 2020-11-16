@@ -443,14 +443,14 @@ class Scheduler(JSONDumpable):
     def _init_consideration_queue(self, graph, controller=None, controller_mode=None,
                                   controller_time_scale=None, controller_condition=None):
         self.dependency_dict, self.removed_dependencies, self.structural_dependencies = graph.prune_feedback_edges()
-        self.pure_topo_consideration_queue = list(toposort(self.dependency_dict))
+        self.base_consideration_queue = list(toposort(self.dependency_dict))
         if controller:
             self._add_condition_for_controller(controller, controller_mode, controller_condition, controller_time_scale)
         self._update_trial_bound_termination_conditions(
             self.termination_conds
         )
         self.consideration_queue = self._get_queue_with_additive_conditions(
-            self.pure_topo_consideration_queue, controller, controller_condition
+            self.base_consideration_queue, controller, controller_condition
         )
         self._termination_conds = self._get_term_conds_given_additive_conditions(
             self.termination_conds, controller
@@ -507,7 +507,7 @@ class Scheduler(JSONDumpable):
         return modified_consideration_queue
 
     def _get_runtime_conditions(self):
-        topo_sorted_consideration_queue = self.pure_topo_consideration_queue
+        topo_sorted_consideration_queue = self.base_consideration_queue
         generated_subtractive_conditions = {}
         additive_conditions = {k:v for k,v in self.additive_conditions.conditions.items()}
         for node, condition in additive_conditions.items():
@@ -535,11 +535,6 @@ class Scheduler(JSONDumpable):
 
         # if there are no additive conditions, don't modify
         if not additive_conditions:
-            return term_conds
-
-        # if user has set custom termination conditions, don't modify
-        term_conds_trial = term_conds[TimeScale.TRIAL]
-        if not(type(term_conds_trial) == AllHaveRun and not term_conds_trial.args):
             return term_conds
 
         term_conds = term_conds.copy()
@@ -783,7 +778,7 @@ class Scheduler(JSONDumpable):
     def _validate_conditions(self):
         unspecified_nodes = []
         structural_nodes = self.structural_nodes
-        topo_consideration_queue = self.pure_topo_consideration_queue
+        topo_consideration_queue = self.base_consideration_queue
         for node in structural_nodes:
             if node not in self.conditions:
                 # determine parent nodes
@@ -967,7 +962,7 @@ class Scheduler(JSONDumpable):
     @property
     def structural_nodes(self):
         structural_nodes = []
-        for consideration_set in self.pure_topo_consideration_queue:
+        for consideration_set in self.base_consideration_queue:
             structural_nodes.extend([i for i in consideration_set])
         return structural_nodes
 
