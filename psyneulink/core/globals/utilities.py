@@ -741,7 +741,7 @@ def copy_iterable_with_shared(obj, shared_types=None, memo=None):
             new_k = k if isinstance(k, shared_types) else copy.deepcopy(k, memo)
 
             if isinstance(v, all_types_using_recursion):
-                new_v = copy_iterable_with_shared(v, shared_types)
+                new_v = copy_iterable_with_shared(v, shared_types, memo)
             elif isinstance(v, shared_types):
                 new_v = v
             else:
@@ -769,7 +769,7 @@ def copy_iterable_with_shared(obj, shared_types=None, memo=None):
 
         for item in obj:
             if isinstance(item, all_types_using_recursion):
-                new_item = copy_iterable_with_shared(item, shared_types)
+                new_item = copy_iterable_with_shared(item, shared_types, memo)
             elif isinstance(item, shared_types):
                 new_item = item
             else:
