@@ -14,22 +14,28 @@
 
 Overview
 --------
+`Conditions <Condition>` are used to specify *either* when `Components <Component>` are allowed to execute *or* to
+force additional executions of Components, depending on whether their `condition_type` is `Subtractive <ConditionFlag>`
+or `Additive <ConditionFlag>`, respectively.
 
-`Conditions <Condition>` are used to specify when `Components <Component>` are allowed to execute.  Conditions
-can be used to specify a variety of required conditions for execution, including the state of the Component
-itself (e.g., how many times it has already executed, or the value of one of its attributes), the state of the
+Subtractive Conditions can be used to specify a variety of required conditions for execution, including the state of the
+Component itself (e.g., how many times it has already executed, or the value of one of its attributes), the state of the
 Composition (e.g., how many `TIME_STEP` s have occurred in the current `TRIAL <TimeScale.TRIAL>`), or the state of other
 Components in a Composition (e.g., whether or how many times they have executed). PsyNeuLink provides a number of
 `pre-specified Conditions <Condition_Pre_Specified>` that can be parametrized (e.g., how many times a Component should
 be executed). `Custom conditions <Condition_Custom>` can also be created, by assigning a function to a Condition that
 can reference any Component or its attributes in PsyNeuLink, thus providing considerable flexibility for scheduling.
 
+Additive Conditions can be used to force additional executions of a Component by 1) inserting it into sets of
+the `Scheduler's <Scheduler>` `consideration_queue` and 2) specifying an additional Subtractive Condition for the
+Component.
+
 .. note::
     Any Component that is part of a collection `specified to a Scheduler for execution <Scheduler_Creation>` can be
-    associated with a Condition.  Most commonly, these are `Mechanisms <Mechanism>`.  However, in some circumstances
-    `Projections <Projection>` can be included in the specification to a Scheduler (e.g., for
-    `learning <Process_Learning>`) in which case these can also be assigned Conditions.
-
+    associated with one additive Condition and one subtractive Condition.  Most commonly, these are
+    `Mechanisms <Mechanism>`.  However, in some circumstances `Projections <Projection>` can be included in the
+    specification to a Scheduler (e.g., for `learning <Process_Learning>`) in which case these can also be assigned
+    Conditions.
 
 
 .. _Condition_Creation:
@@ -165,8 +171,7 @@ six types:
 
 .. _Conditions_Time_Based:
 
-**Time-Based Conditions** (based on the count of units of time at a specified `TimeScale`):
-
+**Subtractive Time-Based Conditions** (based on the count of units of time at a specified `TimeScale`):
 
     * `BeforeTimeStep` (int[, TimeScale])
       satisfied any time before the specified `TIME_STEP` occurs.
@@ -215,6 +220,46 @@ six types:
 
     * `AfterNRuns` (int)
       satisfied any time after the specified number of `RUN`\\ s has occurred.
+
+**Additive Time-Based Conditions** (based on the progression of Time during the Scheduler's execution):
+
+    * `BeforeEveryTimeStep`
+      for each consideration set in Scheduler's base Consideration Queue, inserts Component into the time step preceding
+      it, prepending a new consideration set to the queue if one has not already been prepended by another Additive
+      Condition
+
+    * `AfterEveryTimeStep`
+      for each consideration set in Scheduler's base Consideration Queue, inserts Component into the time step
+      succeeding it, appending a new consideration set to the queue if one has not already been prepended by another
+      Additive Condition
+
+    * `BeforeEveryPass`
+      Prepends a new consideration set to the base queue if one has not already been prepended by another Additive
+      Condition and adds Component to the set at index 0.
+
+    * `AfterEveryPass`
+      Appends a new consideration set to the base queue if one has not already been appended by another Additive
+      Condition and adds Component to the final set.
+
+    * `BeforeEveryTrial`
+      Prepends a new consideration set to the base queue if one has not already been prepended by another Additive
+      Condition and adds Component to the set at index 0. The Component will execute in this consideration set only in
+      the first pass of the trial.
+
+    * `AfterEveryTrial`
+      Appends a new consideration set to the base queue if one has not already been appended by another Additive
+      Condition and adds Component to the final set. The Component will execute in this consideration set only once per
+      trial, after all the trial's termination conditions are satisfied.
+
+    * `BeforeEveryRun`
+      Prepends a new consideration set to the base queue if one has not already been prepended by another Additive
+      Condition and adds Component to the set at index 0. The Component will execute in this consideration set only in
+      the trial pass of the run.
+
+    * `AfterEveryRun`
+      Appends a new consideration set to the base queue if one has not already been appended by another Additive
+      Condition and adds Component to the final set. The Component will execute in this consideration set only once per
+      run, after all the trial's termination conditions are satisfied on the run's final trial.
 
 .. _Conditions_Component_Based:
 
@@ -278,6 +323,16 @@ six types:
 
 Execution
 ---------
+
+Additive Conditions
+===================
+
+After the `Scheduler` constructs its base `consideration_queue`, it calls the `get_additive_modifications` method of
+each of its additive conditions, which specifies 1) additional indices of the consideration queue that the condition's
+owner node should be inserted into and 2) an additional subtractive condition to be evaluated at runtime.
+
+Subtractive Conditions
+======================
 
 When the `Scheduler` `runs <Schedule_Execution>`, it makes a sequential `PASS` through its `consideration_queue`,
 evaluating each `consideration_set <consideration_set>` in the queue to determine which Components should be assigned
@@ -455,27 +510,6 @@ class Condition(JSONDumpable):
             ', '.join([str(arg) for arg in self.args]) if len(self.args) > 0 else '',
             ', {0}'.format(self.kwargs) if len(self.kwargs) > 0 else ''
         )
-
-    def _get_copy_with_node_deleted(self, node):
-        args = []
-        kwargs = self.kwargs
-        for arg in self.args:
-            try:
-                if node not in arg.args:
-                    args.append(arg._get_copy_with_node_deleted(node))
-                else:
-                    args.append(Always())
-            except AttributeError:
-                args.append(arg)
-        return type(self)(*args, **kwargs)
-
-    def _remove_node_from_args(self, node):
-        self.args = [i for i in self.args if not i == node]
-        for arg in self.args:
-            try:
-                arg._remove_node_from_args(node)
-            except AttributeError:
-                continue
 
     @property
     def owner(self):
@@ -1351,10 +1385,20 @@ class EveryNRuns(Condition):
 
 ######################################################################
 # Time-based Additive Conditions
-#   - satisfied based only on TimeScales
+#   - Adds nodes to consideration sets based on the positions of nodes
+#   in the topological consideration queue
 ######################################################################
 
 class BeforeEveryTimeStep(Condition):
+    """BeforeEveryTimeStep
+
+    Consideration queue modifications:
+
+        - For each consideration set in the consideration queue, inserts owner node into the
+        consideration set that precedes it. Execution of owner node within the appended consideration set
+        depends on nodes having executed in the consideration set before it.
+
+    """
     def __init__(self):
         def func(consideration_queue=None):
             insertion_indices = [i - 1 for i in range(0, len(consideration_queue), 1)]
@@ -1372,6 +1416,15 @@ class BeforeEveryTimeStep(Condition):
 
 
 class AfterEveryTimeStep(Condition):
+    """AfterEveryTimeStep
+
+    Consideration queue modifications:
+
+        - For each consideration set in the consideration queue, inserts owner node into the
+        consideration set that succeeds it. Execution of owner node within the appended consideration set
+        depends on nodes having executed in the consideration set before it.
+
+    """
     def __init__(self):
         def func(consideration_queue=None):
             insertion_indices = [i + 1 for i in range(0, len(consideration_queue),1)]
@@ -1389,6 +1442,14 @@ class AfterEveryTimeStep(Condition):
 
 
 class BeforeEveryPass(Condition):
+    """BeforeEveryPass
+
+    Consideration queue modifications:
+
+        - Inserts owner node into a consideration set that precedes the first consideration set of the topological
+        consideration queue.
+
+    """
     def __init__(self):
         def func():
             insertion_indices = [-1]
@@ -1398,6 +1459,14 @@ class BeforeEveryPass(Condition):
 
 
 class AfterEveryPass(Condition):
+    """AfterEveryPass
+
+    Consideration queue modifications:
+
+        - Inserts owner node into a consideration set that succeeds the final consideration set of the topological
+        consideration queue.
+
+    """
     def __init__(self):
         def func(consideration_queue=None):
             insertion_indices = [len(consideration_queue)]
@@ -1407,6 +1476,15 @@ class AfterEveryPass(Condition):
 
 
 class BeforeEveryTrial(Condition):
+    """BeforeEveryTrial
+
+    Consideration queue modifications:
+
+        - Inserts owner node into a consideration set that precedes the first consideration set of the topological
+        consideration queue. Owner node will only execute once within the appended consideration set the first time
+        it is considered on each trial.
+
+    """
     def __init__(self):
         def func():
             insertion_indices = [-1]
@@ -1419,6 +1497,15 @@ class BeforeEveryTrial(Condition):
 
 
 class AfterEveryTrial(Condition):
+    """AfterEveryTrial
+
+    Consideration queue modifications:
+
+        - Inserts owner node into a consideration set that succeeds the final consideration set of the topological
+        consideration queue. Owner node will only execute once within the appended consideration set after all
+        termination conditions are satisfied for the trial.
+
+    """
     def __init__(self):
         def func(consideration_queue=None, scheduler=None, node=None):
             insertion_indices = [len(consideration_queue)]
@@ -1438,6 +1525,15 @@ class AfterEveryTrial(Condition):
         super().__init__(func, condition_type=ConditionType.ADDITIVE)
 
 class BeforeEveryRun(Condition):
+    """BeforeEveryRun
+
+    Consideration queue modifications:
+
+        - Inserts owner node into a consideration set that precedes the first consideration set of the topological
+        consideration queue. Owner node will only execute once within the appended consideration set the first time
+        it is considered on each run.
+
+    """
     def __init__(self):
         def func():
             insertion_indices = [-1]
@@ -1450,6 +1546,15 @@ class BeforeEveryRun(Condition):
 
 
 class AfterEveryRun(Condition):
+    """AfterEveryRun
+
+    Consideration queue modifications:
+
+        - Inserts owner node into a consideration set that succeeds the final consideration set of the topological
+        consideration queue. Owner node will only execute once within the appended consideration set after all
+        termination conditions are satisfied for the run.
+
+    """
     def __init__(self):
         def func(consideration_queue=None):
             insertion_indices = [len(consideration_queue)]
@@ -1851,6 +1956,13 @@ class WhenFinishedAll(_DependencyValidation, Condition):
 ######################################################################
 
 class WhenControllerEnabled(Condition):
+    """WhenControllerEnabled
+
+    Satisfied when:
+
+        - the enable_controller attribute is equal to True in the context's composition.
+
+    """
     def __init__(self):
         def func(context=None):
             if not context.composition:
@@ -1860,6 +1972,13 @@ class WhenControllerEnabled(Condition):
 
 
 class WhenSimulationMode(Condition):
+    """WhenSimulationMode
+
+    Satisfied when:
+
+        - the SIMULATION_MODE ContextFlag is present within the context's runmode.
+
+    """
     def __init__(self):
         def func(context=None):
             if not context:
@@ -1868,6 +1987,13 @@ class WhenSimulationMode(Condition):
         super().__init__(func, condition_type=ConditionType.SUBTRACTIVE)
 
 class WhenTrialTerminationCondsSatisfied(Condition):
+    """WhenTrialTerminationCondsSatisfied
+
+    Satisfied when:
+
+        - the scheduler's trial termination conditions have been met.
+
+    """
     def __init__(self):
         def func(scheduler=None, context=None):
             if not scheduler:
