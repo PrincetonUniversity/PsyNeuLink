@@ -14,9 +14,10 @@
 
 Overview
 --------
-`Conditions <Condition>` are used to specify *either* when `Components <Component>` are allowed to execute *or* to
-force additional executions of Components, depending on whether their `condition_type` is `Subtractive <ConditionFlag>`
-or `Additive <ConditionFlag>`, respectively.
+
+`Conditions <Condition>` are used *either* to specify when `Components <Component>` are allowed to execute *or* to
+force additional executions of Components, depending on whether their `condition_type` is `Subtractive <ConditionType>`
+or `Additive <ConditionType>`, respectively.
 
 Subtractive Conditions can be used to specify a variety of required conditions for execution, including the state of the
 Component itself (e.g., how many times it has already executed, or the value of one of its attributes), the state of the
@@ -26,9 +27,9 @@ Components in a Composition (e.g., whether or how many times they have executed)
 be executed). `Custom conditions <Condition_Custom>` can also be created, by assigning a function to a Condition that
 can reference any Component or its attributes in PsyNeuLink, thus providing considerable flexibility for scheduling.
 
-Additive Conditions can be used to force additional executions of a Component by 1) inserting it into sets of
-the `Scheduler's <Scheduler>` `consideration_queue` and 2) specifying an additional Subtractive Condition for the
-Component.
+Additive Conditions can be used to force additional executions of a Component relative to the Time of a Scheduler's
+clock as a Composition executes by 1) inserting it into sets of the `Scheduler's <Scheduler>` `consideration_queue` and
+2) specifying an additional Subtractive Condition for the Component.
 
 .. note::
     Any Component that is part of a collection `specified to a Scheduler for execution <Scheduler_Creation>` can be
@@ -69,13 +70,16 @@ Here, `EveryNCalls(A, 2)` for example, is assigned the `owner` `B`.
 *Custom Conditions*
 ~~~~~~~~~~~~~~~~~~~
 
-Custom Conditions can be created by calling the constructor for the base class (`Condition()`) or one of the
-`generic classes <Conditions_Generic>`,  and assigning a function to the **func** argument and any arguments it
-requires to the **args** and/or **kwargs** arguments (for formal or keyword arguments, respectively). The function
-is called with **args** and **kwargs** by the `Scheduler` on each `PASS` through its `consideration_queue`, and the result is
-used to determine whether the associated Component is allowed to execute on that `PASS`. Custom Conditions allow
-arbitrary schedules to be created, in which the execution of each Component can depend on one or more attributes of
-any other Components in the Composition.
+*Subtractive Conditions*
+=====================
+
+Custom subtractive Conditions can be created by calling the constructor for the base class (`Condition()`) or one of the
+`generic classes <Conditions_Generic>`, assigning ContextFlags.SUBTRACTIVE to the condition_type argument, a function to
+the **func** argument, and any arguments it requires to the **args** and/or **kwargs** arguments (for
+formal or keyword arguments, respectively). The function is called with **args** and **kwargs** by the `Scheduler` on
+each `PASS` through its `consideration_queue`, and the result is used to determine whether the associated Component is
+allowed to execute on that `PASS`. Custom Conditions allow arbitrary schedules to be created, in which the execution of
+each Component can depend on one or more attributes of any other Components in the Composition.
 
 .. _Condition_Recurrent_Example:
 
@@ -97,6 +101,44 @@ the standard `Condition()` with `mech_A` and `epsilon` as its arguments, and `co
 `NWhen` (which is satisfied the first N times after its condition becomes true),  The Condition is assigned to `mech_B`,
 thus scheduling it to execute one time when all of the elements of `mech_A` have changed by less than `epsilon`.
 
+*Additive Conditions*
+=====================
+
+Custom additive Conditions can be created by calling the constructor for the base class (`Condition()`),
+assigning ContextFlags.ADDITIVE to the condition_type argument, a function to
+the **func** argument, and any arguments it requires to the **args** and/or **kwargs** arguments (for
+formal or keyword arguments, respectively). The function is called with **args**, **kwargs**, and the scheduler's base
+consideration queue (i.e. a consideration queue that is based solely on the structure of the `Graph <Graph>`), and
+should return a tuple with an iterable at index 0 containing the indices of the base consideration queue for which to
+insert the owner component and a subtractive condition to apply to the Owner component at index 1.
+
+.. note::
+
+    If any of a Scheduler's additive conditions return an insertion_indices iterable containing a value of -1, one new
+    consideration set will be prepended to the consideration queue relative to the base consideration queue containing
+    all owner nodes with conditions that meet this criterion. Analogously, if any of a Scheduler's additive
+    conditions return an insertion_indices iterable containing a value that is equal to the length of the base
+    consideration queue, a new consideration set will be appended to the consideration queue relative to the base
+    consideration queue containing all owner nodes that meet this criterion.
+
+.. _Condition_Before_Every_Trial_Example:
+
+For example, the following script fragment re-implements the BeforeEveryTrial Condition that inserts ::
+    def before_every_trial():
+        insertion_indices = [-1]
+        condition = All(
+            AtPass(0),
+            EveryNTrials(1)
+        )
+        return (insertion_indices, condition)
+    my_scheduler.add_condition(mech_A, Condition(before_every_trial, condition_type=ConditionType.ADDITIVE))
+
+In the example, a function `before_every_trial` was defined that returns a tuple containing the following:
+    - at index 0, an iterable that contains the value -1, which specifies that a consideration queue containing mech_a
+      should be added that precedes the 1st consideration set in the base consideration queue
+    - at index 1, a subtractive condition that restrains the node to executing only once per trial.
+
+
 .. _Condition_Structure:
 
 Structure
@@ -115,7 +157,8 @@ six types:
   * `Composite <Conditions_Composite>` - satisfied based on one or more other Conditions;
   * `Time-based <Conditions_Time_Based>` - satisfied based on the current count of units of time at a specified
     `TimeScale`;
-  * `Component-based <Conditions_Component_Based>` - based on the execution or state of other Components.
+  * `Component-based <Conditions_Component_Based>` - based on the execution or state of other Components;
+  * `Context-based <Conditions_Context_Based>` - based on the state of the Context;
   * `Convenience <Conditions_Convenience>` - based on other Conditions, condensed for convenience
 
 .. _Condition_Pre-Specified_List:
@@ -301,6 +344,21 @@ six types:
     * `WhenFinishedAll` (*Components)
       satisfied when all of the specified Components have set their `is_finished` attributes to `True`.
 
+.. _Conditions_Context_Based:
+
+**Context-Based Conditions** (based on the state of the Context):
+
+    * `WhenControllerEnabled`
+      satisfied when the controller attached to the context passed to Condition's function has set its
+      `enable_controller` attribute to `True`.
+
+    * `WhenSimulationMode`
+      satisfied when the context passed to Condition's function has set ContextFlags.SIMULATION_MODE in its `runmode`
+      attribute.
+
+    * `WhenTrialTerminationCondsSatisfied`
+      satisfied when the scheduler's trial termination conditions are satisfied within a given context.
+
 .. _Conditions_Convenience:
 
 **Convenience Conditions** (based on other Conditions, condensed for convenience)
@@ -369,9 +427,9 @@ __all__ = [
     'AtNCalls','AtPass', 'AtRunStart', 'AtRunNStart', 'AtTimeStep', 'AtTrial',
     'AtTrialStart', 'AtTrialNStart', 'BeforeEveryPass', 'BeforeEveryTimeStep', 'BeforeEveryTrial',
     'BeforeEveryRun', 'BeforeNCalls', 'BeforePass', 'BeforeTimeStep', 'BeforeTrial',
-    'Condition','ConditionError', 'ConditionSet', 'ConditionType', 'EveryNCalls', 'EveryNPasses',
-    'JustRan', 'Never', 'Not', 'NWhen', 'WhenControllerEnabled', 'WhenFinished', 'WhenFinishedAll', 'WhenFinishedAny', 'WhenSimulationMode',
-    'While', 'WhileNot'
+    'Condition','ConditionError', 'ConditionSet', 'ConditionType', 'EveryNCalls', 'EveryNPasses', 'EveryNRuns',
+    'EveryNTrials', 'JustRan', 'Never', 'Not', 'NWhen', 'WhenControllerEnabled', 'WhenFinished', 'WhenFinishedAll',
+    'WhenFinishedAny', 'WhenSimulationMode', 'While', 'WhileNot'
 ]
 
 logger = logging.getLogger(__name__)
