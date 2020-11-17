@@ -2396,7 +2396,7 @@ from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array
-from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls, Never
+from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Condition, EveryNCalls, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, PreferenceSet, _assign_prefs
@@ -3373,6 +3373,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         old_scheduler = scheduler
         old_additive_conds = old_scheduler.additive_conditions.conditions if old_scheduler else None
         old_subtractive_conds = old_scheduler.subtractive_conditions.conditions if old_scheduler else None
+        old_termination_conds = old_scheduler._base_termination_conds if old_scheduler else {
+            TimeScale.RUN: Never(),
+            TimeScale.TRIAL: AllHaveRun()
+        }
         scheduler = Scheduler(
             graph=self.graph_processing,
             additive_conditions=old_additive_conds,

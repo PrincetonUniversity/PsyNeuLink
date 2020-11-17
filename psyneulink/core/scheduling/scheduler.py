@@ -398,6 +398,7 @@ class Scheduler(JSONDumpable):
         self.default_termination_conds = Scheduler._parse_termination_conditions(termination_conds)
         self.needs_update = False
         self._termination_conds = termination_conds.copy()
+        self._base_termination_conds = termination_conds.copy()
         self._trial_bound_termination_conditions = termination_conds.copy()
         self._num_trials = float('inf')
         self._controller = controller
@@ -425,7 +426,7 @@ class Scheduler(JSONDumpable):
             )
         #TODO: switch all of this over to properties to fix problem assigning new base term conds
         self._update_trial_bound_termination_conditions(
-            self.termination_conds
+            self._base_termination_conds
         )
         self.consideration_queue = self._get_queue_with_additive_conditions(
             self.base_consideration_queue, controller, controller_condition
