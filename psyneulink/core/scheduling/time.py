@@ -305,9 +305,7 @@ class TimeHistoryTree:
 
         max_depth : :class:`TimeScale` : `TimeScale.TRIAL`
             the finest grain TimeScale that should be created as a subtree
-            Setting this value lower allows for more precise measurements
-            (by default, you cannot query the number of
-            `TimeScale.TIME_STEP`\\ s in a certain `TimeScale.PASS`), but
+            Setting this value lower allows for more precise measurements, but
             this may use a large amount of memory in large simulations
 
         index : int
@@ -337,7 +335,7 @@ class TimeHistoryTree:
     def __init__(
         self,
         time_scale=TimeScale.LIFE,
-        max_depth=TimeScale.TRIAL,
+        max_depth=TimeScale.PASS,
         index=0,
         parent=None,
         enable_current_time=True

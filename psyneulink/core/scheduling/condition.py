@@ -431,8 +431,8 @@ __all__ = [
     'AtTrialStart', 'AtTrialNStart', 'BeforeEveryPass', 'BeforeEveryTimeStep', 'BeforeEveryTrial',
     'BeforeEveryRun', 'BeforeNCalls', 'BeforePass', 'BeforeTimeStep', 'BeforeTrial',
     'Condition','ConditionError', 'ConditionSet', 'ConditionType', 'EveryNCalls', 'EveryNPasses', 'EveryNRuns',
-    'EveryNTrials', 'JustRan', 'Never', 'Not', 'NWhen', 'WhenControllerEnabled', 'WhenFinished', 'WhenFinishedAll',
-    'WhenFinishedAny', 'WhenSimulationMode', 'While', 'WhileNot'
+    'EveryNTrials', 'JustRan', 'Never', 'Not', 'NWhen', 'NWhenWithReset', 'WhenControllerEnabled', 'WhenFinished',
+    'WhenFinishedAll', 'WhenFinishedAny', 'WhenSimulationMode', 'While', 'WhileNot'
 ]
 
 logger = logging.getLogger(__name__)
@@ -926,6 +926,56 @@ class NWhen(Condition):
                 return True
         return False
 
+class NWhenWithReset(Condition):
+    """NWhen
+
+    Parameters:
+
+        condition(Condition): a `Condition`
+
+        n(int): the maximum number of times this condition will be satisfied
+
+    Satisfied when:
+
+        - the first **n** times **condition** is satisfied upon evaluation
+
+    """
+    def __init__(self, condition, n=1, time_scale=TimeScale.PASS):
+        self.satisfactions = {}
+        self.current_relative_time = {}
+        self.time_scale = time_scale
+        self.condition = condition
+
+        super().__init__(self.satis, condition, n)
+
+    @Condition.owner.setter
+    def owner(self, value):
+        self.condition.owner = value
+
+    def satis(self, condition, n, *args, scheduler=None, execution_id=None, **kwargs):
+        if execution_id is None:
+            if scheduler is not None:
+                execution_id = scheduler.default_execution_id
+        # if no execution_id or scheduler is provided technically this will still work
+        # indexed on None, but that's a bit weird honestly
+        current_time_passed = scheduler.get_clock(execution_id).get_total_times_relative(
+            self.time_scale, self.time_scale.LIFE
+        )
+
+        if execution_id not in self.satisfactions:
+            self.satisfactions[execution_id] = 0
+
+        if execution_id not in self.current_relative_time:
+            self.current_relative_time[execution_id] = current_time_passed
+
+        if not self.current_relative_time[execution_id] == current_time_passed:
+            self.satisfactions[execution_id] = 0
+
+        if self.satisfactions[execution_id] < n:
+            if call_with_pruned_args(condition.is_satisfied, *args, scheduler=scheduler, execution_id=execution_id, **kwargs):
+                self.satisfactions[execution_id] += 1
+                return True
+        return False
 
 ######################################################################
 # Time-based Subtractive Conditions
@@ -1547,11 +1597,26 @@ class BeforeEveryTrial(Condition):
 
     """
     def __init__(self):
-        def func():
+        def func(node=None, consideration_queue=None):
             insertion_indices = [-1]
-            condition = All(
-                AtPass(0),
-                EveryNTrials(1)
+            original_index = None
+            for idx, consideration_set in enumerate(consideration_queue):
+                if node in consideration_set:
+                    original_index = idx
+                    break
+            conditions = [
+                All(AtPass(0), EveryNTrials(1))
+            ]
+            if original_index == 0:
+                conditions.append(
+                    All(Not(AtPass(0)), Not(AfterNCalls(1, TimeScale.PASS)))
+                )
+            elif original_index:
+                conditions.append(
+                    All(*[EveryNCalls(dep, 1) for dep in consideration_queue[original_index-1]])
+                )
+            condition = Any(
+                *conditions
             )
             return (insertion_indices, condition)
         super().__init__(func, condition_type=ConditionType.ADDITIVE)
@@ -1568,20 +1633,31 @@ class AfterEveryTrial(Condition):
 
     """
     def __init__(self):
-        def func(consideration_queue=None, scheduler=None, node=None):
+        def func(consideration_queue=None, node=None):
             insertion_indices = [len(consideration_queue)]
-            pure_topo_queue = scheduler.base_consideration_queue
-            condition = WhenTrialTerminationCondsSatisfied()
-            conditions = [condition]
-            for idx, consideration_set in enumerate(pure_topo_queue):
-                for consideration_node in consideration_set:
-                    if consideration_node == node:
-                        if idx == 0:
-                            conditions.append(Always())
-                        else:
-                            conditions.append(All(JustRan(i) for i in consideration_set[idx - 1]))
-            if len(conditions) > 1:
-                condition = Any(*conditions)
+            conditions = [All(
+                WhenTrialTerminationCondsSatisfied()
+            )]
+            original_index = None
+            for idx, consideration_set in enumerate(consideration_queue):
+                if node in consideration_set:
+                    original_index = idx
+                    break
+            if original_index == 0:
+                conditions.append(
+                    All(
+                        AtTimeStep(0, TimeScale.PASS)
+                    )
+                )
+            elif original_index:
+                conditions.append(
+                    All(
+                        *[EveryNCalls(dep, 1) for dep in consideration_queue[original_index-1]]
+                    )
+                )
+            condition = Any(
+                *conditions
+            )
             return (insertion_indices, condition)
         super().__init__(func, condition_type=ConditionType.ADDITIVE)
 
@@ -1596,11 +1672,27 @@ class BeforeEveryRun(Condition):
 
     """
     def __init__(self):
-        def func():
+        def func(node=None, consideration_queue=None):
             insertion_indices = [-1]
-            condition = All(
+            conditions = [All(
                 AtPass(0),
                 AtTrial(0),
+            )]
+            original_index = None
+            for idx, consideration_set in enumerate(consideration_queue):
+                if node in consideration_set:
+                    original_index = idx
+                    break
+            if original_index == 0:
+                conditions.append(
+                    All(Not(AtPass(0)), Not(AfterNCalls(node, 1, TimeScale.PASS)))
+                )
+            elif original_index:
+                conditions.append(
+                    All(*[EveryNCalls(dep, 1) for dep in consideration_queue[original_index-1]])
+                )
+            condition = Any(
+                *conditions
             )
             return (insertion_indices, condition)
         super().__init__(func, condition_type=ConditionType.ADDITIVE)
@@ -1617,11 +1709,31 @@ class AfterEveryRun(Condition):
 
     """
     def __init__(self):
-        def func(consideration_queue=None):
+        def func(node=None, consideration_queue=None):
             insertion_indices = [len(consideration_queue)]
-            condition = All(
+            conditions = [All(
                 AtLastTrialOfRun(),
-                EveryNRuns(1)
+                WhenTrialTerminationCondsSatisfied()
+            )]
+            original_index = None
+            for idx, consideration_set in enumerate(consideration_queue):
+                if node in consideration_set:
+                    original_index = idx
+                    break
+            if original_index == 0:
+                conditions.append(
+                    All(
+                        AtTimeStep(0, TimeScale.PASS)
+                    )
+                )
+            elif original_index:
+                conditions.append(
+                    All(
+                        *[EveryNCalls(dep, 1) for dep in consideration_queue[original_index-1]]
+                    )
+                )
+            condition = Any(
+                *conditions
             )
             return (insertion_indices, condition)
         super().__init__(func, condition_type=ConditionType.ADDITIVE)

@@ -285,10 +285,10 @@ from toposort import toposort
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.json import JSONDumpable
 from psyneulink.core.globals.keywords import BEFORE, AFTER
-from psyneulink.core.scheduling.condition import AtTrial, AtTimeStep, AtLastTrialOfRun, AfterEveryPass, AfterEveryRun, \
-    AfterEveryTimeStep, AfterEveryTrial, AfterNCalls, All, AllHaveRun, Always, Any, BeforeEveryPass, \
-    BeforeEveryRun, BeforeEveryTimeStep, BeforeEveryTrial, Condition, ConditionSet, ConditionType, EveryNCalls, \
-    Never, Not, WhenControllerEnabled, WhenSimulationMode, WhenTrialTerminationCondsSatisfied
+from psyneulink.core.scheduling.condition import AtTrial, AtTimeStep, AtPass, AtLastTrialOfRun, AfterEveryPass, AfterEveryRun, \
+    AfterEveryTimeStep, AfterEveryTrial, AfterNCalls, AfterNPasses, AfterNTimeSteps, AfterPass, AfterTimeStep, All, AllHaveRun, Always, Any, AfterTimeStep, BeforeEveryPass, \
+    BeforeEveryRun, BeforeEveryTimeStep, BeforeEveryTrial, BeforePass, BeforeTimeStep, Condition, ConditionSet, ConditionType, EveryNCalls, \
+    EveryNPasses, Never, Not, WhenControllerEnabled, WhenSimulationMode, WhenTrialTerminationCondsSatisfied
 from psyneulink.core.scheduling.time import Clock, TimeScale
 
 __all__ = [
@@ -400,34 +400,39 @@ class Scheduler(JSONDumpable):
         self._termination_conds = termination_conds.copy()
         self._trial_bound_termination_conditions = termination_conds.copy()
         self._num_trials = float('inf')
-
+        self._controller = controller
         self.cycle_nodes = set()
 
         if composition is not None:
-            self._init_consideration_queue(
-                composition.graph_processing,
-                composition.controller,
-                composition.controller_mode,
-                composition.controller_time_scale,
-                composition.controller_condition
+            self._init_base_consideration_queue(
+                composition.graph_processing
             )
             if default_execution_id is None:
                 default_execution_id = composition.default_execution_id
         elif graph is not None:
             try:
-                self._init_consideration_queue(
-                    graph,
-                    controller,
-                    controller_mode,
-                    controller_time_scale,
-                    controller_condition
+                self._init_base_consideration_queue(
+                    graph
                 )
             except AttributeError:
                 self.consideration_queue = list(toposort(graph))
         else:
             raise SchedulerError('Must instantiate a Scheduler with either a Composition (kwarg composition) '
                                  'or a graph dependency dict (kwarg graph)')
-
+        if controller:
+            self._add_condition_for_controller(
+                controller, controller_mode, controller_condition, controller_time_scale
+            )
+        #TODO: switch all of this over to properties to fix problem assigning new base term conds
+        self._update_trial_bound_termination_conditions(
+            self.termination_conds
+        )
+        self.consideration_queue = self._get_queue_with_additive_conditions(
+            self.base_consideration_queue, controller, controller_condition
+        )
+        self._termination_conds = self._get_term_conds_given_additive_conditions(
+            self.termination_conds, controller
+        )
         self.needs_update = False
         self.default_execution_id = default_execution_id
         self.execution_list = {self.default_execution_id: []}
@@ -440,21 +445,9 @@ class Scheduler(JSONDumpable):
 
     # the consideration queue is the ordered list of sets of nodes in the graph, by the
     # order in which they should be checked to ensure that all parents have a chance to run before their children
-    def _init_consideration_queue(self, graph, controller=None, controller_mode=None,
-                                  controller_time_scale=None, controller_condition=None):
+    def _init_base_consideration_queue(self, graph):
         self.dependency_dict, self.removed_dependencies, self.structural_dependencies = graph.prune_feedback_edges()
         self.base_consideration_queue = list(toposort(self.dependency_dict))
-        if controller:
-            self._add_condition_for_controller(controller, controller_mode, controller_condition, controller_time_scale)
-        self._update_trial_bound_termination_conditions(
-            self.termination_conds
-        )
-        self.consideration_queue = self._get_queue_with_additive_conditions(
-            self.base_consideration_queue, controller, controller_condition
-        )
-        self._termination_conds = self._get_term_conds_given_additive_conditions(
-            self.termination_conds, controller
-        )
 
     def _add_condition_for_controller(self, controller, controller_mode, controller_condition, controller_time_scale):
         condition_map = {
@@ -582,6 +575,26 @@ class Scheduler(JSONDumpable):
         term_conds[TimeScale.TRIAL] = updated_trial_term_conds
         return term_conds
 
+    def _adjust_down_time_based_conditions(self, cond):
+        adjustment_set = {
+            BeforeTimeStep, AtTimeStep, AfterTimeStep, AfterNTimeSteps, BeforePass, AtPass,
+            AfterPass, AfterNPasses, EveryNPasses
+        }
+        if type(cond) in adjustment_set:
+            cond.args = list(cond.args)
+            cond = copy.copy(cond)
+            cond.args[0] -= 1
+            cond.args = tuple(cond.args)
+            return cond
+        try:
+            cond.args = list(cond.args)
+            for idx, arg in enumerate(cond.args):
+                cond.args[idx] = self._adjust_down_time_based_conditions(arg)
+            cond.args = tuple(cond.args)
+        except AttributeError:
+            pass
+        return cond
+
     def _update_trial_bound_termination_conditions(self, term_conds):
         additive_conditions = self.additive_conditions.conditions
 
@@ -590,6 +603,7 @@ class Scheduler(JSONDumpable):
             return term_conds
 
         term_conds = term_conds.copy()
+        term_conds[TimeScale.TRIAL] = self._adjust_down_time_based_conditions(copy.copy(term_conds[TimeScale.TRIAL]))
         general_term_conds = [term_conds[TimeScale.TRIAL]]
         for node, condition in additive_conditions.items():
             if type(condition) in {BeforeEveryTimeStep, AfterEveryTimeStep}:
@@ -867,7 +881,6 @@ class Scheduler(JSONDumpable):
                                 cur_time_step_exec.add(current_node)
                                 execution_list_has_changed = True
                                 cur_consideration_set_has_changed = True
-
                                 for ts in TimeScale:
                                     self.counts_total[context.execution_id][ts][current_node] += 1
                                 # current_node's node is added to the execution queue, so we now need to
@@ -946,7 +959,9 @@ class Scheduler(JSONDumpable):
             self._termination_conds = self.default_termination_conds.copy()
         else:
             self._termination_conds.update(termination_conds)
-
+        self._update_trial_bound_termination_conditions(
+            self._termination_conds
+        )
     @property
     def conditions(self):
         return self._get_runtime_conditions()
