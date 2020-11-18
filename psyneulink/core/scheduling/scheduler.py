@@ -288,7 +288,7 @@ from psyneulink.core.globals.keywords import BEFORE, AFTER
 from psyneulink.core.scheduling.condition import AtTrial, AtTimeStep, AtPass, AtLastTrialOfRun, AfterEveryPass, AfterEveryRun, \
     AfterEveryTimeStep, AfterEveryTrial, AfterNCalls, AfterNPasses, AfterNTimeSteps, AfterPass, AfterTimeStep, All, AllHaveRun, Always, Any, AfterTimeStep, BeforeEveryPass, \
     BeforeEveryRun, BeforeEveryTimeStep, BeforeEveryTrial, BeforePass, BeforeTimeStep, Condition, ConditionSet, ConditionType, EveryNCalls, \
-    EveryNPasses, Never, Not, WhenControllerEnabled, WhenSimulationMode, WhenTrialTerminationCondsSatisfied
+    EveryNPasses, JustRan, Never, Not, WhenControllerEnabled, WhenSimulationMode, WhenTrialTerminationCondsSatisfied
 from psyneulink.core.scheduling.time import Clock, TimeScale
 
 __all__ = [
@@ -424,7 +424,6 @@ class Scheduler(JSONDumpable):
             self._add_condition_for_controller(
                 controller, controller_mode, controller_condition, controller_time_scale
             )
-        #TODO: switch all of this over to properties to fix problem assigning new base term conds
         self._update_trial_bound_termination_conditions(
             self._base_termination_conds
         )
@@ -534,9 +533,14 @@ class Scheduler(JSONDumpable):
         term_conds = term_conds.copy()
         general_term_conds = [term_conds[TimeScale.TRIAL]]
         special_run_conds = []
+        special_run_conds_before = False
+        special_run_conds_after = False
         controller_modifier = False
         for node, condition in additive_conditions.items():
-            if type(condition) in {BeforeEveryTimeStep, AfterEveryTimeStep}:
+            if type(condition) in {
+                BeforeEveryTimeStep, AfterEveryTimeStep,
+                BeforeEveryPass, AfterEveryPass
+            }:
                 num_ex = len([i for i in self.consideration_queue if node in i])
                 general_term_conds.append(
                     AfterNCalls(
@@ -545,34 +549,58 @@ class Scheduler(JSONDumpable):
                 )
                 controller_modifier = True
 
-            elif type(condition) in {AfterEveryPass, AfterEveryTrial}:
-                from psyneulink import JustRan
+            elif type(condition) in {BeforeEveryTrial, AfterEveryTrial}:
+                num_ex = len([i for i in self.consideration_queue if node in i])
                 general_term_conds.append(
-                    JustRan(
-                        node
+                    AfterNCalls(
+                        node, num_ex, TimeScale.TRIAL
                     )
                 )
                 controller_modifier = True
 
-            elif type(condition) == AfterEveryRun:
+            elif type(condition) in {BeforeEveryRun}:
+                num_ex = len([i for i in self.consideration_queue if node in i])
                 special_run_conds.extend(
-                    [AtLastTrialOfRun(), AfterNCalls(node, 1, TimeScale.TIME_STEP)]
+                    [
+                        AtTrial(0),
+                        copy.copy(term_conds[TimeScale.TRIAL]),
+                        AfterNCalls(
+                            node, num_ex, TimeScale.TRIAL
+                        )
+                    ]
                 )
+                special_run_conds_before = True
+                controller_modifier = True
+
+            elif type(condition) in {AfterEveryRun}:
+                num_ex = len([i for i in self.consideration_queue if node in i])
+                special_run_conds.extend(
+                    [
+                        AtLastTrialOfRun(),
+                        AfterNCalls(
+                            node, num_ex, TimeScale.TRIAL
+                        )
+                    ]
+                )
+                special_run_conds_after = True
                 controller_modifier = True
 
             if node == controller and controller_modifier:
-                if type(condition) == AfterEveryRun:
+                if type(condition) in {BeforeEveryRun, AfterEveryRun}:
                     list_with_controller_rule = special_run_conds
                 else:
                     list_with_controller_rule = general_term_conds
                 list_with_controller_rule[-1] = Any(
                     Not(WhenControllerEnabled()), WhenSimulationMode(), list_with_controller_rule[-1]
                 )
-        if special_run_conds:
+
+        if special_run_conds_after:
             general_term_conds.append(Not(AtLastTrialOfRun()))
+        if special_run_conds_before:
+            general_term_conds.append(Not(AtTrial(0)))
         updated_trial_term_conds = All(*general_term_conds)
         if special_run_conds:
-            updated_trial_term_conds = Any(updated_trial_term_conds, All(AtLastTrialOfRun(), *special_run_conds))
+            updated_trial_term_conds = Any(updated_trial_term_conds, All(*special_run_conds))
         term_conds[TimeScale.TRIAL] = updated_trial_term_conds
         return term_conds
 
@@ -841,6 +869,9 @@ class Scheduler(JSONDumpable):
             termination_conds = self.update_termination_conditions(Scheduler._parse_termination_conditions(termination_conds))
             if ContextFlags.COMMAND_LINE in context.source:
                 self._update_trial_bound_termination_conditions(termination_conds)
+
+        if ContextFlags.COMMAND_LINE in context.source:
+            self._num_trials = 1
 
         self._init_counts(context.execution_id, base_context.execution_id)
         self._reset_counts_useable(context.execution_id)

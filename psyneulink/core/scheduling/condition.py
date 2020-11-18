@@ -1679,7 +1679,7 @@ class BeforeEveryRun(Condition):
                 if node in consideration_set:
                     original_index = idx
                     break
-            if not original_index:
+            if original_index == 0:
                 condition = \
                     Any(
                         All(
@@ -1709,6 +1709,10 @@ class BeforeEveryRun(Condition):
                             *[EveryNCalls(dep, 1) for dep in consideration_queue[original_index-1]]
                         )
                     )
+            else:
+                condition = All(
+                    AtTrial(0), AtPass(0)
+                )
             return (insertion_indices, condition)
         super().__init__(func, condition_type=ConditionType.ADDITIVE)
 
