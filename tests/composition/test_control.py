@@ -2059,39 +2059,39 @@ class TestModelBasedOptimizationControlMechanisms:
         assert np.allclose(comp.results,
                            [[np.array([1.])], [np.array([1.75])]])
 
-    # def test_model_based_ocm_no_simulations(self):
-    #     A = pnl.ProcessingMechanism(name='A')
-    #     B = pnl.ProcessingMechanism(name='B', function=pnl.SimpleIntegrator(rate=1))
-    #
-    #     comp = pnl.Composition(name='comp')
-    #     comp.add_linear_processing_pathway([A, B])
-    #
-    #     control_signal = pnl.ControlSignal(
-    #         projections=[(pnl.SLOPE, A)],
-    #         variable=1.0,
-    #         allocation_samples=[1, 2, 3],
-    #         intensity_cost_function=pnl.Linear(slope=0.)
-    #     )
-    #
-    #     objective_mech = pnl.ObjectiveMechanism(monitor=[B])
-    #     ocm = pnl.OptimizationControlMechanism(
-    #         agent_rep=comp,
-    #         features=[A.input_port],
-    #         objective_mechanism=objective_mech,
-    #         function=pnl.GridSearch(),
-    #         num_estimates=1,
-    #         control_signals=[control_signal],
-    #         search_statefulness=False,
-    #     )
-    #
-    #     comp.add_controller(ocm)
-    #
-    #     inputs = {A: [[[1.0]]]}
-    #
-    #     comp.run(inputs=inputs, num_trials=1)
-    #
-    #     # initial 1 + each allocation sample (1, 2, 3) integrated
-    #     assert B.parameters.value.get(comp) == 7
+    def test_model_based_ocm_no_simulations(self):
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B', function=pnl.SimpleIntegrator(rate=1))
+
+        comp = pnl.Composition(name='comp')
+        comp.add_linear_processing_pathway([A, B])
+
+        control_signal = pnl.ControlSignal(
+            projections=[(pnl.SLOPE, A)],
+            variable=1.0,
+            allocation_samples=[1, 2, 3],
+            intensity_cost_function=pnl.Linear(slope=0.)
+        )
+
+        objective_mech = pnl.ObjectiveMechanism(monitor=[B])
+        ocm = pnl.OptimizationControlMechanism(
+            agent_rep=comp,
+            features=[A.input_port],
+            objective_mechanism=objective_mech,
+            function=pnl.GridSearch(),
+            num_estimates=1,
+            control_signals=[control_signal],
+            search_statefulness=False,
+        )
+
+        comp.add_controller(ocm)
+
+        inputs = {A: [[[1.0]]]}
+
+        comp.run(inputs=inputs, num_trials=1)
+
+        # initial 1 + each allocation sample (1, 2, 3) integrated
+        assert B.parameters.value.get(comp) == 7
 
     @pytest.mark.control
     @pytest.mark.composition

@@ -2396,7 +2396,7 @@ from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array
-from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Condition, EveryNCalls, Never
+from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Condition, ConditionError, EveryNCalls, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, PreferenceSet, _assign_prefs
@@ -7450,6 +7450,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context.add_flag(ContextFlags.SIMULATION_MODE)
         context.remove_flag(ContextFlags.CONTROL)
         results = self.run(inputs=inputs,
+                 base_context=base_context,
                  context=context,
                  runtime_params=runtime_params,
                  num_trials=num_simulation_trials,
@@ -8311,7 +8312,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         scheduler._init_counts(execution_id=context.execution_id)
 
-        scheduler._reset_counts_total(TimeScale.RUN, context.execution_id)
+        # if we're in simulation mode but still in the same context and base context,
+        # it means we're running an OCM with search_statefulness disabled. If this is the case,
+        # we need to preserve the state of the scheduler so we can fast forward through execution sets
+        # in Composition.execute
+        # -DS
+        if not (ContextFlags.SIMULATION_MODE in context.runmode and context == base_context):
+            scheduler._reset_counts_total(TimeScale.RUN, context.execution_id)
 
         # KDM 3/29/19: run the following not only during LLVM Run compilation, due to bug where TimeScale.RUN
         # termination condition is checked and no data yet exists. Adds slight overhead as long as run is not
@@ -8965,9 +8972,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                       context=context,
                                                       skip_trial_time_increment=True,
                                                       )
-        # if context.runmode == ContextFlags.SIMULATION_MODE:
-        #     for i in range(scheduler.clock.time.time_step):
-        #         execution_sets.__next__()
+
+        # if context and base context are equivalent, it means search_statefulness is turned off.
+        # if this is the case,
+        if context.runmode == ContextFlags.SIMULATION_MODE:
+            # if the term conds for the base context are satisfied, then we know we're at an execution
+            # taking place after a trial, therefore, we shouldn't skip forward in executions
+            try:
+                base_term_conds_satisfied = scheduler._trial_bound_termination_conditions[TimeScale.TRIAL].is_satisfied(
+                    scheduler=scheduler, context=base_context
+                )
+                if not base_term_conds_satisfied:
+                    for i in range(scheduler.clock.time.time_step):
+                        execution_sets.__next__()
+            # a ConditionError will be thrown if the scheduler was executed directly
+            except ConditionError:
+                pass
 
         for next_execution_set in execution_sets:
 

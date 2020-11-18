@@ -1016,20 +1016,18 @@ class OptimizationControlMechanism(ControlMechanism):
                 new_context = self._set_up_simulation(context, control_allocation)
             else:
                 new_context = context
-                scheduler = context.composition.scheduler
-                eid = context.execution_id
-                counts_total = {
-                    timescale: {
-                        mech: count for mech, count in scheduler.counts_total[eid][timescale].items()
-                    } for timescale in TimeScale
-                }
-                counts_useable = {
-                    mech: {
-                        ref_mech: count for ref_mech, count in scheduler.counts_useable[eid][mech].items()
-                    } for mech in scheduler.counts_useable[eid]
-                }
-                clock = copy.deepcopy(scheduler.clock)
-
+                scheduler = self.agent_rep.scheduler
+                eid = new_context.execution_id
+                # this keeps the OCM at the end of the execution list, which is needed to insure
+                # conditions (e.g. JustRan) work as expected during Composition execution
+                # -DS
+                execution_list_reorder = False
+                try:
+                    if self in scheduler.execution_list[eid][-1]:
+                        controller = scheduler.execution_list[eid].pop()
+                        execution_list_reorder = True
+                except IndexError:
+                    pass
 
             old_composition = context.composition
             context.composition = self.agent_rep
@@ -1049,9 +1047,8 @@ class OptimizationControlMechanism(ControlMechanism):
             if self.defaults.search_statefulness:
                 self._tear_down_simulation(new_context)
             else:
-                scheduler.counts_total[eid] = counts_total
-                scheduler.counts_useable[eid] = counts_useable
-                scheduler.clock.history.current_time = clock.time
+                if execution_list_reorder:
+                    self.agent_rep.scheduler.execution_list[eid].append(controller)
 
             # If results of the simulation shoudld be returned then, do so. Agent Rep Evaluate will
             # return a tuple in this case where the first element is the outcome as usual and the
