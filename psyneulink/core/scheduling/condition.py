@@ -29,7 +29,7 @@ can reference any Component or its attributes in PsyNeuLink, thus providing cons
 
 Additive Conditions can be used to force additional executions of a Component relative to the state of the Component,
 Scheduler, or context by 1) inserting the Component into sets of the `Scheduler's <Scheduler>` `consideration_queue` and
-2) specifying an additional Subtractive Condition to impose additional constraints on the execution of the Condition's
+2) generating a Subtractive Condition to impose additional constraints on the execution of the Condition's
 owner component based on some desired state.
 
 Components that are part of a collection `specified to a Scheduler for execution <Scheduler_Creation>` can be
