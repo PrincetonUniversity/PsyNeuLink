@@ -1609,7 +1609,7 @@ class BeforeEveryTrial(Condition):
             ]
             if original_index == 0:
                 conditions.append(
-                    All(Not(AtPass(0)), Not(AfterNCalls(1, TimeScale.PASS)))
+                    All(Not(AtPass(0)), Not(AfterNCalls(node, 1, TimeScale.PASS)))
                 )
             elif original_index:
                 conditions.append(
@@ -1674,32 +1674,41 @@ class BeforeEveryRun(Condition):
     def __init__(self):
         def func(node=None, consideration_queue=None):
             insertion_indices = [-1]
-            conditions = [All(
-                AtTrial(0),
-                Any(
-                    AtPass(0),
-                    Not(AfterNCalls(node, 1, TimeScale.PASS))
-                )
-            )]
             original_index = None
             for idx, consideration_set in enumerate(consideration_queue):
                 if node in consideration_set:
                     original_index = idx
                     break
-            if original_index == 0:
-                conditions.append(
-                    All(
-                        Not(AtTrial(0)),
-                        Not(AfterNCalls(node, 1, TimeScale.PASS))
+            if not original_index:
+                condition = \
+                    Any(
+                        All(
+                            AtTrial(0),
+                            Any(
+                                AtPass(0),
+                                Not(AfterNCalls(node, 1, TimeScale.PASS))
+                            )
+                        ),
+                        All(
+                            Not(AtTrial(0)),
+                            Not(AfterNCalls(node, 1, TimeScale.PASS))
+                        )
                     )
-                )
             elif original_index:
-                conditions.append(
-                    All(*[EveryNCalls(dep, 1) for dep in consideration_queue[original_index-1]])
-                )
-            condition = Any(
-                *conditions
-            )
+                condition = \
+                    Any(
+                        All(
+                            AtTrial(0),
+                            Any(
+                                AtPass(0),
+                                *[EveryNCalls(dep, 1) for dep in consideration_queue[original_index - 1]]
+                            )
+                        ),
+                        All(
+                            Not(AtTrial(0)),
+                            *[EveryNCalls(dep, 1) for dep in consideration_queue[original_index-1]]
+                        )
+                    )
             return (insertion_indices, condition)
         super().__init__(func, condition_type=ConditionType.ADDITIVE)
 
