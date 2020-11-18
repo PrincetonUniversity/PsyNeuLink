@@ -1675,8 +1675,11 @@ class BeforeEveryRun(Condition):
         def func(node=None, consideration_queue=None):
             insertion_indices = [-1]
             conditions = [All(
-                AtPass(0),
                 AtTrial(0),
+                Any(
+                    AtPass(0),
+                    Not(AfterNCalls(node, 1, TimeScale.PASS))
+                )
             )]
             original_index = None
             for idx, consideration_set in enumerate(consideration_queue):
@@ -1685,7 +1688,10 @@ class BeforeEveryRun(Condition):
                     break
             if original_index == 0:
                 conditions.append(
-                    All(Not(AtPass(0)), Not(AfterNCalls(node, 1, TimeScale.PASS)))
+                    All(
+                        Not(AtTrial(0)),
+                        Not(AfterNCalls(node, 1, TimeScale.PASS))
+                    )
                 )
             elif original_index:
                 conditions.append(
