@@ -284,7 +284,7 @@ from psyneulink.core.rpc.graph_pb2 import Entry, ndArray
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
-from psyneulink.core.globals.utilities import call_with_pruned_args, copy_iterable_with_shared, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy
+from psyneulink.core.globals.utilities import call_with_pruned_args, copy_iterable_with_shared, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy, create_union_set
 
 __all__ = [
     'Defaults', 'get_validator_by_function', 'Parameter', 'ParameterAlias', 'ParameterError',
@@ -730,6 +730,19 @@ class Parameter(ParameterBase):
             _instantiate_parameter_classes or validated for variable
             shape
 
+        dependencies
+            for Functions; if not None, this contains a set of Parameter
+            names corresponding to Parameters whose values must be
+            instantiated before that of this Parameter
+
+            :default: None
+
+        initializer
+            the name of another Parameter that serves as this
+            Parameter's `initializer <StatefulFunction.initializers>`
+
+            :default: None
+
     """
     # The values of these attributes will never be inherited from parent Parameters
     # KDM 7/12/18: consider inheriting ONLY default_value?
@@ -739,7 +752,7 @@ class Parameter(ParameterBase):
     # display if the function is True based on the value of the attribute
     _hidden_if_unset_attrs = {
         'aliases', 'getter', 'setter', 'constructor_argument', 'spec',
-        'modulation_combination_function', 'valid_types'
+        'modulation_combination_function', 'valid_types', 'initializer'
     }
     _hidden_if_false_attrs = {'read_only', 'modulable', 'fallback_default', 'retain_old_simulation_data'}
     _hidden_when = {
@@ -791,6 +804,8 @@ class Parameter(ParameterBase):
         parse_spec=False,
         valid_types=None,
         reference=False,
+        dependencies=None,
+        initializer=None,
         _owner=None,
         _inherited=False,
         # this stores a reference to the Parameter object that is the
@@ -817,6 +832,9 @@ class Parameter(ParameterBase):
                 valid_types = tuple(valid_types)
             else:
                 valid_types = (valid_types, )
+
+        if dependencies is not None:
+            dependencies = create_union_set(dependencies)
 
         super().__init__(
             default_value=default_value,
@@ -847,6 +865,8 @@ class Parameter(ParameterBase):
             parse_spec=parse_spec,
             valid_types=valid_types,
             reference=reference,
+            dependencies=dependencies,
+            initializer=initializer,
             _inherited=_inherited,
             _inherited_source=_inherited_source,
             _user_specified=_user_specified,

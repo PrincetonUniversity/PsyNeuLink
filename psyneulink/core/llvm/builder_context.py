@@ -265,7 +265,7 @@ class LLVMBuilderContext:
                 val = np.asfarray(val).flatten()
             elif p.name == 'num_estimates':  # Should always be int
                 val = np.int32(0) if val is None else np.int32(val)
-            elif np.isscalar(val) and component._is_param_modulated(p):
+            elif np.ndim(val) == 0 and component._is_param_modulated(p):
                 val = [val]   # modulation adds array wrap
             return self.convert_python_struct_to_llvm_ir(val)
 
@@ -431,12 +431,16 @@ def _convert_llvm_ir_to_ctype(t: ir.Type):
     if type_t is ir.VoidType:
         return None
     elif type_t is ir.IntType:
-        if t.width == 32:
-            return ctypes.c_int
+        if t.width == 8:
+            return ctypes.c_int8
+        elif t.width == 16:
+            return ctypes.c_int16
+        elif t.width == 32:
+            return ctypes.c_int32
         elif t.width == 64:
-            return ctypes.c_longlong
+            return ctypes.c_int64
         else:
-            assert False, "Integer type too big!"
+            assert False, "Unknown integer type: {}".format(type_t)
     elif type_t is ir.DoubleType:
         return ctypes.c_double
     elif type_t is ir.FloatType:

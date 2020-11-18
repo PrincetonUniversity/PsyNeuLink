@@ -482,9 +482,10 @@ The `controller <Composition.controller>` is executed only if the Composition's 
 <Composition.enable_controller>` attribute is True.  This generally done automatically when the `controller
 <Composition.controller>` is `assigned <Composition_Controller_Assignment>`.  If enabled, the `controller
 <Composition.controller>` is generally executed either before or after all of the other Components in the Composition
-have been executed, as determined by the Composition's `controller_mode <Composition.controller_mode>` attribute.
-However, the Composition's `controller_condition <Composition.controller_condition>` attribute can be used to
-customize when it is executed.  All three of these attributes can be specified in corresponding arguments of the
+have been executed within a given `TimeScale <TimeScale>`, as determined by the Composition's
+`controller_time_scale` and `controller_mode <Composition.controller_mode>` attributes. The Composition's
+`controller_condition <Composition.controller_condition>` attribute can be used to further customize when it is
+executed. All three of these attributes can be specified in corresponding arguments of the
 Composition's constructor, or programmatically after it is constructed by assigning the desired value to the
 corresponding attribute.
 
@@ -2952,9 +2953,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Composition is executed.  Set to True by default if **controller** specified;  if set to False,
         the `controller <Composition.controller>` is ignored when the Composition is executed.
 
-    controller_mode: enum.Enum[BEOFRE|AFTER] : default AFTER
+    controller_mode: enum.Enum[BEFORE|AFTER] : default AFTER
         specifies whether the controller is executed before or after the rest of the Composition
-        in each trial.  Must be either the keyword *BEFORE* or *AFTER*.
+        in each run, trial, pass, or time step.  Must be either the keyword *BEFORE* or *AFTER*.
+
+    controller_time_scale: TimeScale[TIME_STEP, PASS, TRIAL, RUN] : default TRIAL
+        specifies with what frequency the the controller should be executed.
 
     controller_condition: Condition : default Always
         specifies when the Composition's `controller <Composition.controller>` is executed in a trial.
@@ -3240,6 +3244,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             controller:ControlMechanism=None,
             enable_controller=None,
             controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
+            controller_time_scale=TimeScale.TRIAL,
             controller_condition:Condition=Always(),
             retain_old_simulation_data=None,
             show_graph_attributes=None,
@@ -3310,7 +3315,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._initialize_parameters(
             **param_defaults,
             retain_old_simulation_data=retain_old_simulation_data,
-            context=Context(source=ContextFlags.COMPOSITION)
+            context=Context(source=ContextFlags.COMPOSITION, execution_id=None)
         )
 
         # Compiled resources
@@ -3330,6 +3335,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             self.enable_controller = enable_controller
         self.controller_mode = controller_mode
+        self.controller_time_scale = controller_time_scale
         self.controller_condition = controller_condition
         self.controller_condition.owner = self.controller
 
@@ -3355,10 +3361,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projections = convert_to_list(projections)
             self.add_projections(projections)
 
-        self.add_pathways(pathways, context=Context(source=ContextFlags.CONSTRUCTOR))
+        self.add_pathways(pathways, context=Context(source=ContextFlags.CONSTRUCTOR, execution_id=None))
 
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
-        self._analyze_graph(context=Context(source=ContextFlags.COMPOSITION))
+        self._analyze_graph(context=Context(source=ContextFlags.COMPOSITION, execution_id=None))
 
         show_graph_attributes = show_graph_attributes or {}
         self._show_graph = ShowGraph(self, **show_graph_attributes)
@@ -3585,7 +3591,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for spec in hanging_control_specs:
                 control_signal = self.controller._instantiate_control_signal(control_signal=spec,
                                                                              context=Context(
-                                                                                 source=ContextFlags.COMPOSITION))
+                                                                                 source=ContextFlags.COMPOSITION, execution_id=None))
                 self.controller.control.append(control_signal)
                 self.controller._activate_projections_for_compositions(self)
         return []
@@ -5549,10 +5555,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Otherwise, refer to call from this method
         else:
             pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
-            # FIX 4/4/20 [JDC]: Reset to None for now to replicate prior behavior,
-            #                   but need to implement proper behavior wrt call to analyze_graph()
-            #                   _check_initalization_state()
-            context = None
 
         # First, deal with Pathway() or tuple specifications
         if isinstance(pathway, Pathway):
@@ -5583,6 +5585,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Use add_nodes so that node spec can also be a tuple with required_roles
             self.add_nodes(nodes=[pathway[0]],
                            context=Context(source=ContextFlags.METHOD,
+                                           execution_id=context.execution_id,
                                            string=pathway_arg_str))
             nodes.append(pathway[0])
         else:
@@ -5596,6 +5599,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if _is_node_spec(pathway[c]):
                 self.add_nodes(nodes=[pathway[c]],
                                context=Context(source=ContextFlags.METHOD,
+                                               execution_id=context.execution_id,
                                                string=pathway_arg_str))
                 nodes.append(pathway[c])
 
@@ -5770,10 +5774,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,
                           name=pathway_name,
-                          context=Context(source=ContextFlags.METHOD))
+                          context=Context(source=ContextFlags.METHOD, execution_id=context.execution_id))
         self.pathways.append(pathway)
 
-        self._analyze_graph(context=context)
+        # FIX 4/4/20 [JDC]: Reset to None for now to replicate prior behavior,
+        #                   but need to implement proper behavior wrt call to analyze_graph()
+        #                   _check_initalization_state()
+        # 10/22/20 [KDM]: Pass no context instead of setting to None
+        self._analyze_graph()
 
         return pathway
 
@@ -6028,7 +6036,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Otherwise, refer to call from this method
         else:
             pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
-        context = Context(source=ContextFlags.METHOD, string=pathway_arg_str)
+        context = Context(source=ContextFlags.METHOD, string=pathway_arg_str, execution_id=context.execution_id)
 
         # Deal with Pathway() specifications
         if isinstance(pathway, Pathway):
@@ -6505,6 +6513,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    _check_for_projection_assignments() in order to ignore checks for require_projection_in_composition
         pathway_arg_str = f"'pathway' arg for add_backpropagation_learning_pathway method of {self.name}"
         learning_pathway = self.add_linear_processing_pathway(pathway, name, Context(source=ContextFlags.INITIALIZING,
+                                                                                     execution_id=context.execution_id,
                                                                                      string=pathway_arg_str))
         processing_pathway = learning_pathway.pathway
 
@@ -6612,7 +6621,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 OBJECTIVE_MECHANISM: comparator}
-            self._add_required_node_role(processing_pathway[-1], NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
+            self._add_required_node_role(processing_pathway[-1], NodeRole.OUTPUT, Context(source=ContextFlags.METHOD, execution_id=context.execution_id))
 
             sequence_end = path_length - 3
 
@@ -6887,8 +6896,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         error_signal_input_port = learning_mech.add_ports(
                             InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                       name=ERROR_SIGNAL,
-                                      context=Context(source=ContextFlags.METHOD)),
-                            context=Context(source=ContextFlags.METHOD))[0]
+                                      context=Context(source=ContextFlags.METHOD, execution_id=None)),
+                            context=Context(source=ContextFlags.METHOD, execution_id=None))[0]
                     # Create Projection here so that don't have to worry about determining correct
                     #    error_signal_input_port of learning_mech in _create_non_terminal_backprop_learning_components
                     try:
@@ -6932,8 +6941,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     error_signal_input_port = learning_mech.add_ports(
                                                         InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                                                   name=ERROR_SIGNAL,
-                                                                  context=Context(source=ContextFlags.METHOD)),
-                                                        context=Context(source=ContextFlags.METHOD))
+                                                                  context=Context(source=ContextFlags.METHOD, execution_id=None)),
+                                                        context=Context(source=ContextFlags.METHOD, execution_id=None))
                 # DOES THE ABOVE GENERATE A PROJECTION?  IF SO, JUST GET AND RETURN THAT;  ELSE DO THE FOLLOWING:
                 error_projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
                                                            receiver=error_signal_input_port))
@@ -6963,8 +6972,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 error_signal_input_port = dependent_learning_mech.add_ports(
                                                     InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                                               name=ERROR_SIGNAL,
-                                                              context=Context(source=ContextFlags.METHOD)),
-                                                    context=Context(source=ContextFlags.METHOD))
+                                                              context=Context(source=ContextFlags.METHOD, execution_id=None)),
+                                                    context=Context(source=ContextFlags.METHOD, execution_id=None))
                 projections.append(error_signal_input_port[0].path_afferents[0])
                 # projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
                 #                                      receiver=error_signal_input_port[0]))
@@ -7019,7 +7028,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #        (e.g., was constructed in the controller argument of the Composition), in which case assign it here.
         if controller.initialization_status == ContextFlags.DEFERRED_INIT:
             controller._init_args[AGENT_REP] = self
-            controller._deferred_init(context=Context(source=ContextFlags.COMPOSITION))
+            controller._deferred_init(context=Context(source=ContextFlags.COMPOSITION, execution_id=None))
 
         # Note:  initialization_status here pertains to controller's status w/in the Composition
         #        (i.e., whether any Nodes and/or Projections on which it depends are not yet in the Composition)
@@ -7069,7 +7078,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         controller._activate_projections_for_compositions(self)
         # Call with context to avoid recursion by analyze_graph -> _check_inialization_status -> add_controller
-        self._analyze_graph(context=Context(source=ContextFlags.METHOD))
+        self._analyze_graph(context=Context(source=ContextFlags.METHOD, execution_id=None))
         self._update_shadows_dict(controller)
 
         # INSTANTIATE SHADOW_INPUT PROJECTIONS
@@ -7133,7 +7142,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
             ctl_signal = controller._instantiate_control_signal(control_signal=ctl_sig_spec,
-                                                   context=Context(source=ContextFlags.COMPOSITION))
+                                                   context=Context(source=ContextFlags.COMPOSITION, execution_id=None))
             controller.control.append(ctl_signal)
             # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITON:
             #                ?DON'T ASSIGN ControlProjection?
@@ -7143,7 +7152,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             controller._activate_projections_for_compositions(self)
         if not invalid_aux_components:
             self._controller_initialization_status = ContextFlags.INITIALIZED
-        self._analyze_graph(context=Context(source=ContextFlags.METHOD))
+        self._analyze_graph(context=Context(source=ContextFlags.METHOD, execution_id=None))
 
     def _get_control_signals_for_composition(self):
         """Return list of ControlSignals specified by Nodes in the Composition
@@ -8302,7 +8311,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if (isinstance(reset_stateful_functions_when, Never) or
                     node not in reset_stateful_functions_when) and \
                     isinstance(node.reset_stateful_function_when, Never):
-                node.reset(*vals, context=context)
+                try:
+                    node.reset(**vals, context=context)
+                except TypeError:
+                    node.reset(*vals, context=context)
 
         # cache and set reset_stateful_function_when conditions for nodes, matching old System behavior
         # Validate
@@ -8439,6 +8451,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             if call_after_trial:
                 call_with_pruned_args(call_after_trial, context=context)
+
+        # IMPLEMENTATION NOTE:
+        # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
+        # method whether or not we are at the last trial of the run.
+        # The BEFORE Run controller execution takes place in the execute method,, because we can't execute the controller until after
+        # setup has occurred for the Input CIM.
+        if (self.controller_mode == AFTER and
+            self.controller_time_scale == TimeScale.RUN):
+            try:
+                _comp_ex
+            except NameError:
+                _comp_ex = None
+            self._execute_controller(
+                bin_execute=bin_execute,
+                _comp_ex=_comp_ex,
+                context=context
+            )
 
         # Reset input spec for next trial
         self.parameters.input_specification._set(None, context)
@@ -8602,6 +8631,37 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         context.remove_flag(ContextFlags.LEARNING_MODE)
         return learning_results
+
+    def _execute_controller(self, relative_order=AFTER, bin_execute=False, _comp_ex=False, context=None):
+        execution_scheduler = context.composition.scheduler
+        if (self.enable_controller and
+            self.controller_mode == relative_order and
+            self.controller_condition.is_satisfied(scheduler=execution_scheduler,
+                                                   context=context)
+        ):
+
+            # control phase
+            # FIX: SHOULD SET CONTEXT AS CONTROL HERE AND RESET AT END (AS DONE FOR animation BELOW)
+            if (
+                    self.initialization_status != ContextFlags.INITIALIZING
+                    and ContextFlags.SIMULATION_MODE not in context.runmode
+            ):
+                if self.controller and not bin_execute:
+                    # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
+                    # FIX: END REMOVE
+                    context.execution_phase = ContextFlags.PROCESSING
+                    self.controller.execute(context=context)
+
+                if bin_execute:
+                    _comp_ex.execute_node(self.controller)
+
+                context.remove_flag(ContextFlags.PROCESSING)
+
+                # Animate controller (before execution)
+                context.execution_phase = ContextFlags.CONTROL
+                if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
+                    self._animate_execution(self.controller, context)
+                context.remove_flag(ContextFlags.CONTROL)
 
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
     def execute(
@@ -8825,7 +8885,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         )
                     ):
                         vals = reset_stateful_functions_to.get(node, [None])
-                        node.reset(*vals, context=context)
+                        try:
+                            node.reset(**vals, context=context)
+                        except TypeError:
+                            node.reset(*vals, context=context)
                 except AttributeError:
                     pass
 
@@ -8904,33 +8967,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Execute controller --------------------------------------------------------
 
-        if (self.enable_controller and
-            self.controller_mode == BEFORE and
-            self.controller_condition.is_satisfied(scheduler=execution_scheduler,
-                                                   context=context)):
-
-            # control phase
-            # FIX: SHOULD SET CONTEXT AS CONTROL HERE AND RESET AT END (AS DONE FOR animation BELOW)
-            if (
-                    self.initialization_status != ContextFlags.INITIALIZING
-                    and ContextFlags.SIMULATION_MODE not in context.runmode
-            ):
-                if self.controller and not bin_execute:
-                    # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
-                    # FIX: END REMOVE
-                    context.execution_phase = ContextFlags.PROCESSING
-                    self.controller.execute(context=context)
-
-                if bin_execute:
-                    _comp_ex.execute_node(self.controller)
-
-                context.remove_flag(ContextFlags.PROCESSING)
-
-                # Animate controller (before execution)
-                context.execution_phase = ContextFlags.CONTROL
-                if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
-                    self._animate_execution(self.controller, context)
-                context.remove_flag(ContextFlags.CONTROL)
+        try:
+            _comp_ex
+        except NameError:
+            _comp_ex = None
+        # IMPLEMENTATION NOTE:
+        # The BEFORE Run controller execution takes place here, because we can't execute the controller until after
+        # setup has occurred for the Input CIM, whereas the AFTER Run controller execution takes place in the run
+        # method, because there's no way to tell from within the execute method whether or not we are at the last trial
+        # of the run.
+        if (self.controller_time_scale == TimeScale.RUN and
+            scheduler.clock.time.trial == 0):
+                self._execute_controller(
+                    relative_order=BEFORE,
+                    bin_execute=bin_execute,
+                    _comp_ex=_comp_ex,
+                    context=context
+                )
+        elif self.controller_time_scale == TimeScale.TRIAL:
+            self._execute_controller(
+                relative_order=BEFORE,
+                bin_execute=bin_execute,
+                _comp_ex=_comp_ex,
+                context=context
+            )
 
         # EXECUTE EACH EXECUTION SET *********************************************************************************
 
@@ -8938,15 +8998,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         context.execution_phase = ContextFlags.PROCESSING
 
+        try:
+            _comp_ex
+        except NameError:
+            _comp_ex = None
+
         if call_before_pass:
             call_with_pruned_args(call_before_pass, context=context)
 
+        if self.controller_time_scale == TimeScale.PASS:
+            self._execute_controller(
+                relative_order=BEFORE,
+                bin_execute=bin_execute,
+                _comp_ex=_comp_ex,
+                context=context
+            )
+
         # GET execution_set -------------------------------------------------------------------------
         # run scheduler to receive sets of nodes that may be executed at this time step in any order
-        for next_execution_set in execution_scheduler.run(termination_conds=termination_processing,
-                                                          context=context,
-                                                          skip_trial_time_increment=True,
-                                                          ):
+        execution_sets = execution_scheduler.run(termination_conds=termination_processing,
+                                                      context=context,
+                                                      skip_trial_time_increment=True,
+                                                      )
+        if context.runmode == ContextFlags.SIMULATION_MODE:
+            for i in range(scheduler.clock.time.time_step):
+                execution_sets.__next__()
+
+        for next_execution_set in execution_sets:
 
             # SETUP EXECUTION ----------------------------------------------------------------------------
 
@@ -8960,19 +9038,41 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if curr_pass != last_pass:
                 new_pass = True
                 last_pass = curr_pass
-            if call_after_pass:
-                if next_pass_after == curr_pass:
+            if next_pass_after == curr_pass:
+                if call_after_pass:
                     logger.debug(f'next_pass_after {next_pass_after}\tscheduler pass {curr_pass}')
                     call_with_pruned_args(call_after_pass, context=context)
-                    next_pass_after += 1
-            if call_before_pass:
-                if next_pass_before == curr_pass:
+                if self.controller_time_scale == TimeScale.PASS:
+                    self._execute_controller(
+                        relative_order=AFTER,
+                        bin_execute=bin_execute,
+                        _comp_ex=_comp_ex,
+                        context=context
+                    )
+                next_pass_after += 1
+            if next_pass_before == curr_pass:
+                if call_before_pass:
                     call_with_pruned_args(call_before_pass, context=context)
                     logger.debug(f'next_pass_before {next_pass_before}\tscheduler pass {curr_pass}')
-                    next_pass_before += 1
+                if self.controller_time_scale == TimeScale.PASS:
+                    self._execute_controller(
+                        relative_order=BEFORE,
+                        bin_execute=bin_execute,
+                        _comp_ex=_comp_ex,
+                        context=context
+                    )
+                next_pass_before += 1
 
             if call_before_time_step:
                 call_with_pruned_args(call_before_time_step, context=context)
+
+            if self.controller_time_scale == TimeScale.TIME_STEP:
+                self._execute_controller(
+                    relative_order=BEFORE,
+                    bin_execute=bin_execute,
+                    _comp_ex=_comp_ex,
+                    context=context
+                )
 
             # MANAGE EXECUTION OF FEEDBACK / CYCLIC GRAPHS ------------------------------------------------
             # Set up storage of all node values *before* the start of each timestep
@@ -8999,7 +9099,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
 
             # execute each node with EXECUTING in context
-            for node in next_execution_set:
+            for (node_idx, node) in enumerate(next_execution_set):
 
                 node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TIME_STEP, 0)
                 if new_pass:
@@ -9160,6 +9260,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     node.output_ports[i].parameters.value._set(new_values[node][i], context,
                                                                skip_history=True, skip_log=True)
 
+            if self.controller_time_scale == TimeScale.TIME_STEP:
+                self._execute_controller(
+                    relative_order=AFTER,
+                    bin_execute=bin_execute,
+                    _comp_ex=_comp_ex,
+                    context=context
+                )
+
             if call_after_time_step:
                 call_with_pruned_args(call_after_time_step, context=context)
 
@@ -9179,6 +9287,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if call_after_pass:
             call_with_pruned_args(call_after_pass, context=context)
 
+        if self.controller_time_scale == TimeScale.PASS:
+            self._execute_controller(
+                relative_order=AFTER,
+                bin_execute=bin_execute,
+                _comp_ex=_comp_ex,
+                context=context
+            )
 
         # Animate output_CIM
         # FIX: NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THIS -
@@ -9188,31 +9303,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX: END
 
         # EXECUTE CONTROLLER (if controller_mode == AFTER) ************************************************************
-
-        if (self.enable_controller and
-                self.controller_mode == AFTER and
-                self.controller_condition.is_satisfied(scheduler=execution_scheduler,
-                                                       context=context)):
-            # control phase
-            if (
-                    self.initialization_status != ContextFlags.INITIALIZING
-                    and ContextFlags.SIMULATION_MODE not in context.runmode
-            ):
-                context.execution_phase = ContextFlags.CONTROL
-                if self.controller and not bin_execute:
-                    self.controller.execute(context=context)
-
-                if bin_execute:
-                    _comp_ex.freeze_values()
-                    _comp_ex.execute_node(self.controller)
-
-
-
-                # Animate controller (after execution)
-                if self._animate is not False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
-                    self._animate_execution(self.controller, context)
-
-                context.remove_flag(ContextFlags.CONTROL)
+        if self.controller_time_scale == TimeScale.TRIAL:
+            self._execute_controller(
+                relative_order=AFTER,
+                bin_execute=bin_execute,
+                _comp_ex=_comp_ex,
+                context=context
+            )
 
         execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
@@ -9253,11 +9350,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _update_learning_parameters(self, context):
         pass
 
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(fallback_most_recent=True)
     def reset(self, values=None, include_unspecified_nodes=True, context=NotImplemented):
-        if context is NotImplemented:
-            context = self.most_recent_context
-
         if not values:
             values = {}
 
@@ -9267,7 +9361,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             reset_val = values.get(node)
             node.reset(reset_val, context=context)
 
-    def initialize(self, values=None, include_unspecified_nodes=True, context=NotImplemented):
+    @handle_external_context(fallback_most_recent=True)
+    def initialize(self, values=None, include_unspecified_nodes=True, context=None):
         """
             Initializes the values of nodes within cycles. If `include_unspecified_nodes` is True and a value is
             provided for a given node, the node will be initialized to that value. If `include_unspecified_nodes` is
@@ -9292,9 +9387,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.most_recent_execution_context if one is not specified.
 
         """
-        if context is NotImplemented:
-            context = self.most_recent_context
-
         # comp must be initialized from context before cycle values are initialized
         self._initialize_from_context(context, Context(execution_id=None), override=False)
 

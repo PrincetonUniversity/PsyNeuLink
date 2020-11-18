@@ -42,7 +42,7 @@ from psyneulink.core.components.functions.function import Function_Base, is_func
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
+    BOUNDS, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
     OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import call_with_pruned_args, get_global_seed
@@ -405,11 +405,11 @@ class OptimizationFunction(Function_Base):
 
         if SEARCH_SPACE in request_set and request_set[SEARCH_SPACE] is not None:
             search_space = request_set[SEARCH_SPACE]
-            if not all(isinstance(s, (SampleIterator, type(None))) for s in search_space):
+            if not all(isinstance(s, (SampleIterator, type(None), list, tuple, np.ndarray)) for s in search_space):
                 raise OptimizationFunctionError("All entries in list specified for {} arg of {} must be a {}".
                                                 format(repr(SEARCH_SPACE),
                                                        self.__class__.__name__,
-                                                       SampleIterator.__name__))
+                                                       "SampleIterator, list, tuple, or ndarray"))
 
         if SEARCH_TERMINATION_FUNCTION in request_set and request_set[SEARCH_TERMINATION_FUNCTION] is not None:
             if not is_function_type(request_set[SEARCH_TERMINATION_FUNCTION]):
@@ -430,8 +430,16 @@ class OptimizationFunction(Function_Base):
                 if 'required positional arguments' not in str(e):
                     raise
 
-    @handle_external_context(execution_id=NotImplemented)
-    def reset(self, *args, context=None):
+    @handle_external_context(fallback_most_recent=True)
+    def reset(
+        self,
+        default_variable=None,
+        objective_function=None,
+        search_function=None,
+        search_termination_function=None,
+        search_space=None,
+        context=None
+    ):
         """Reset parameters of the OptimizationFunction
 
         Parameters to be reset should be specified in a parameter specification dictionary, in which they key
@@ -443,26 +451,32 @@ class OptimizationFunction(Function_Base):
             * `search_function <OptimizationFunction.search_function>`
             * `search_termination_function <OptimizationFunction.search_termination_function>`
         """
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.most_recent_context.execution_id
-        self._validate_params(request_set=args[0])
+        self._validate_params(
+            request_set={
+                'default_variable': default_variable,
+                'objective_function': objective_function,
+                'search_function': search_function,
+                'search_termination_function': search_termination_function,
+                'search_space': search_space,
+            }
+        )
 
-        if DEFAULT_VARIABLE in args[0]:
-            self.defaults.variable = args[0][DEFAULT_VARIABLE]
-        if OBJECTIVE_FUNCTION in args[0] and args[0][OBJECTIVE_FUNCTION] is not None:
-            self.objective_function = args[0][OBJECTIVE_FUNCTION]
+        if default_variable is not None:
+            self._update_default_variable(default_variable, context)
+        if objective_function is not None:
+            self.parameters.objective_function._set(objective_function, context)
             if OBJECTIVE_FUNCTION in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(OBJECTIVE_FUNCTION)]
-        if SEARCH_FUNCTION in args[0] and args[0][SEARCH_FUNCTION] is not None:
-            self.search_function = args[0][SEARCH_FUNCTION]
+        if search_function is not None:
+            self.parameters.search_function._set(search_function, context)
             if SEARCH_FUNCTION in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(SEARCH_FUNCTION)]
-        if SEARCH_TERMINATION_FUNCTION in args[0] and args[0][SEARCH_TERMINATION_FUNCTION] is not None:
-            self.search_termination_function = args[0][SEARCH_TERMINATION_FUNCTION]
+        if search_termination_function is not None:
+            self.parameters.search_termination_function._set(search_termination_function, context)
             if SEARCH_TERMINATION_FUNCTION in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(SEARCH_TERMINATION_FUNCTION)]
-        if SEARCH_SPACE in args[0] and args[0][SEARCH_SPACE] is not None:
-            self.parameters.search_space._set(args[0][SEARCH_SPACE], context)
+        if search_space is not None:
+            self.parameters.search_space._set(search_space, context)
             if SEARCH_SPACE in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(SEARCH_SPACE)]
 
@@ -492,10 +506,15 @@ class OptimizationFunction(Function_Base):
         if self._unspecified_args and self.initialization_status == ContextFlags.INITIALIZED:
             warnings.warn("The following arg(s) were not specified for {}: {} -- using default(s)".
                           format(self.name, ', '.join(self._unspecified_args)))
+            assert all([not getattr(self.parameters, x)._user_specified for x in self._unspecified_args])
             self._unspecified_args = []
 
         current_sample = self._check_args(variable=variable, context=context, params=params)
-        current_value = self.owner.objective_mechanism.parameters.value._get(context) if self.owner else 0.
+
+        try:
+            current_value = self.owner.objective_mechanism.parameters.value._get(context)
+        except AttributeError:
+            current_value = 0
 
         samples = []
         values = []
@@ -766,6 +785,7 @@ class GradientOptimization(OptimizationFunction):
     """
 
     componentName = GRADIENT_OPTIMIZATION_FUNCTION
+    bounds = None
 
     class Parameters(OptimizationFunction.Parameters):
         """
@@ -839,7 +859,7 @@ class GradientOptimization(OptimizationFunction):
 
         # these should be removed and use switched to .get_previous()
         previous_variable = Parameter([[0], [0]], read_only=True, pnl_internal=True, constructor_argument='default_variable')
-        previous_value = Parameter([[0], [0]], read_only=True, pnl_internal=True)
+        previous_value = Parameter([[0], [0]], read_only=True, initializer='initializer', pnl_internal=True)
 
         gradient_function = Parameter(None, stateful=False, loggable=False)
         step_size = Parameter(1.0, modulable=True)
@@ -919,19 +939,23 @@ class GradientOptimization(OptimizationFunction):
                     raise OptimizationFunctionError(f"All items in {repr(SEARCH_SPACE)} arg for {self.name}{owner_str} "
                                                     f"must be or resolve to a 2-item list or tuple; this doesn't: {s}.")
 
-    @handle_external_context(execution_id=NotImplemented)
-    def reset(self, *args, context=None):
-        super().reset(*args)
+    @handle_external_context(fallback_most_recent=True)
+    def reset(self, default_variable=None, objective_function=None, context=None, **kwargs):
+        super().reset(
+            objective_function=objective_function,
+            context=context,
+            **kwargs
+        )
 
         # Differentiate objective_function using autograd.grad()
-        if OBJECTIVE_FUNCTION in args[0]:
+        if objective_function is not None and not self.gradient_function:
             try:
                 from autograd import grad
-                self.gradient_function = grad(self.objective_function)
+                self.parameters.gradient_function._set(grad(self.objective_function), context)
             except:
                 raise OptimizationFunctionError("Unable to use autograd with {} specified for {} Function: {}.".
                                                 format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__,
-                                                       args[0][OBJECTIVE_FUNCTION].__name__))
+                                                       objective_function.__name__))
         search_space = self.search_space
         bounds = None
 
@@ -966,7 +990,7 @@ class GradientOptimization(OptimizationFunction):
             if bounds[0] is None and bounds[1] is None:
                 bounds = None
             else:
-                sample_len = len(args[0][DEFAULT_VARIABLE])
+                sample_len = len(default_variable)
                 lower = np.atleast_1d(bounds[0])
                 if len(lower)==1:
                     # Single value specified for lower bound, so distribute over array with length = sample_len
@@ -1323,13 +1347,11 @@ class GridSearch(OptimizationFunction):
             #                                            self.__class__.__name__,
             #                                            ))
 
-    @handle_external_context(execution_id=NotImplemented)
-    def reset(self, *args, context=None):
+    @handle_external_context(fallback_most_recent=True)
+    def reset(self, search_space, context=None, **kwargs):
         """Assign size of `search_space <GridSearch.search_space>"""
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.most_recent_context.execution_id
-        super(GridSearch, self).reset(*args, context=context)
-        sample_iterators = args[0]['search_space']
+        super(GridSearch, self).reset(search_space=search_space, context=context, **kwargs)
+        sample_iterators = search_space
         owner_str = ''
         if self.owner:
             owner_str = f' of {self.owner.name}'
@@ -1511,7 +1533,7 @@ class GridSearch(OptimizationFunction):
         # Use NaN here. fcmp_unordered below returns true if one of the
         # operands is a NaN. This makes sure we always set min_*
         # in the first iteration
-        builder.store(min_value_ptr.type.pointee("NaN"), min_value_ptr)
+        builder.store(min_value_ptr.type.pointee(float("NaN")), min_value_ptr)
 
         b = builder
         with contextlib.ExitStack() as stack:
@@ -1560,14 +1582,13 @@ class GridSearch(OptimizationFunction):
     def _run_cuda_grid(self, ocm, variable, context):
         assert ocm is ocm.agent_rep.controller
         # Compiled evaluate expects the same variable as mech function
-        new_variable = [np.asfarray(ip.parameters.value.get(context))
-                        for ip in ocm.input_ports]
-        new_variable = np.array(new_variable, dtype=np.object)
+        new_variable = [ip.parameters.value.get(context) for ip in ocm.input_ports]
         # Map allocations to values
         comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
         ct_alloc, ct_values = comp_exec.cuda_evaluate(new_variable,
                                                       self.search_space)
 
+        assert len(ct_values) == len(ct_alloc)
         # Reduce array of values to min/max
         # select_min params are:
         # params, state, min_sample_ptr, sample_ptr, min_value_ptr, value_ptr, opt_count_ptr, count
@@ -1577,7 +1598,6 @@ class GridSearch(OptimizationFunction):
         ct_opt_sample = bin_func.byref_arg_types[2](float("NaN"))
         ct_opt_value = bin_func.byref_arg_types[4]()
         ct_opt_count = bin_func.byref_arg_types[6](0)
-        assert len(ct_values) == len(ct_alloc)
         ct_count = bin_func.c_func.argtypes[7](len(ct_alloc))
 
         bin_func(ct_param, ct_state, ct_opt_sample, ct_alloc, ct_opt_value,

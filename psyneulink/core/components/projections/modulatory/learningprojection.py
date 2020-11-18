@@ -474,8 +474,8 @@ class LearningProjection(ModulatoryProjection_Base):
 
         # replaces similar code in _instantiate_sender
         try:
-            if sender.owner.learning_rate is not None:
-                learning_rate = sender.owner.learning_rate
+            if sender.owner.defaults.learning_rate is not None:
+                learning_rate = sender.owner.defaults.learning_rate
         except AttributeError:
             pass
 

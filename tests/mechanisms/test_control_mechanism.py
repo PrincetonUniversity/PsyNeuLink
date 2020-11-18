@@ -51,8 +51,8 @@ class TestLCControlMechanism:
             gain_created_by_LC_output_port_1.append(LC.output_ports[0].parameters.value.get(context))
             mod_gain_assigned_to_A.append([A.get_mod_gain(composition)])
             mod_gain_assigned_to_B.append([B.get_mod_gain(composition)])
-            base_gain_assigned_to_A.append(A.function.gain)
-            base_gain_assigned_to_B.append(B.function.gain)
+            base_gain_assigned_to_A.append(A.function.gain.base)
+            base_gain_assigned_to_B.append(B.function.gain.base)
 
         C._analyze_graph()
         benchmark(C.run, inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},

@@ -2334,7 +2334,7 @@ class Port_Base(Port):
         Used primarily during validation, when the function may not have been fully instantiated yet
         (e.g., InputPort must sometimes embed its variable in a list-- see InputPort._get_port_function_value).
         """
-        return function.execute(variable, context=Context(source=ContextFlags.UNSET))
+        return function.execute(variable, context=Context(source=ContextFlags.UNSET, execution_id=None))
 
     @property
     def _dependent_components(self):
@@ -2602,9 +2602,9 @@ def _instantiate_port(port_type:_is_port_class,           # Port's type
         # FIX: THIS SHOULD ONLY APPLY TO InputPort AND ParameterPort; WHAT ABOUT OutputPort?
         # Port's assigned value is incompatible with its reference_value (presumably its owner Mechanism's variable)
         reference_value = reference_value if reference_value is not None else port.reference_value
-        if not iscompatible(port.value, reference_value):
+        if not iscompatible(port.defaults.value, reference_value):
             raise PortError("{}'s value attribute ({}) is incompatible with the {} ({}) of its owner ({})".
-                             format(port.name, port.value, REFERENCE_VALUE, reference_value, owner.name))
+                             format(port.name, port.defaults.value, REFERENCE_VALUE, reference_value, owner.name))
 
         # Port has already been assigned to an owner
         if port.owner is not None and port.owner is not owner:

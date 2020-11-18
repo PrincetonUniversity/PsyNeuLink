@@ -194,7 +194,7 @@ class TestTransferMechanismNoise:
         )
         T.reset_stateful_function_when = Never()
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.90104733, 0.95869664, -0.81762271, -1.39225086]])
+        assert np.allclose(val, [[0.01034782, 0.90104733, 0.95869664, -0.81762271]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -293,7 +293,7 @@ class TestDistributionFunctions:
         )
 
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.90104733, 0.95869664, -0.81762271, -1.39225086]])
+        assert np.allclose(val, [[0.01034782, 0.90104733, 0.95869664, -0.81762271]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -325,7 +325,7 @@ class TestDistributionFunctions:
             integrator_mode=True,
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.7025651, 0.33105989, 1.40978493, 0.9633011]])
+        assert np.allclose(val, [[2.38719447, 0.7025651, 0.33105989, 1.40978493]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -339,7 +339,7 @@ class TestDistributionFunctions:
                 noise=UniformToNormalDist(),
                 integration_rate=1.0
             )
-            T.noise.parameters.random_state.get(None).seed(22)
+            T.noise.base.parameters.random_state.get(None).seed(22)
             val = T.execute([0, 0, 0, 0])
             assert np.allclose(val, [[-0.81177443, -0.04593492, -0.20051725, 1.07665147]])
 
@@ -368,7 +368,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.50468686, 0.28183784, 0.7558042, 0.618369]])
+        assert np.allclose(val, [[0.90811289, 0.50468686, 0.28183784, 0.7558042]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -383,7 +383,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.7025651, 0.33105989, 1.40978493, 0.9633011]])
+        assert np.allclose(val, [[2.38719447, 0.7025651, 0.33105989, 1.40978493]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -398,7 +398,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[1.0678432, 0.34512569, 1.07265769, 1.3550318]])
+        assert np.allclose(val, [[0.40277101, 1.0678432, 0.34512569, 1.07265769]])
 
 
 class TestTransferMechanismFunctions:
@@ -1147,7 +1147,7 @@ class TestTransferMechanismTimeConstant:
             val = e.execute([1, 1, 1, 1])
         assert np.allclose(val, [[0.9, 0.9, 0.9, 0.9]])
 
-        T.noise = 10
+        T.noise.base = 10
 
         if mode == 'Python':
             val = T.execute([1, 2, -3, 0])
@@ -1190,7 +1190,7 @@ class TestTransferMechanismTimeConstant:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_integration_rate_2(self):
-        with pytest.raises(TransferError) as error_text:
+        with pytest.raises(ParameterError) as error_text:
             T = TransferMechanism(
                 name='T',
                 default_variable=[0, 0, 0, 0],
@@ -1200,7 +1200,7 @@ class TestTransferMechanismTimeConstant:
             )
             T.execute([1, 1, 1, 1])
         assert (
-            "Value(s) in \'integration_rate\' arg for" in str(error_text.value)
+            "'integration_rate'" in str(error_text.value)
             and "must be an int or float in the interval [0,1]" in str(error_text.value)
         )
 
@@ -1563,7 +1563,7 @@ class TestTransferMechanismMultipleInputPorts:
             default_variable=[[0.0, 0.0], [0.0, 0.0]]
         )
         val = T.execute([[1.0, 2.0], [3.0, 4.0]])
-        assert np.allclose(val, [[4.80209467, 6.91739329], [5.36475458, 6.21549828]])
+        assert np.allclose(val, [[3.02069564, 6.80209467], [8.91739329, 7.36475458]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -1855,7 +1855,6 @@ class TestIntegratorMode:
         T.parameters.integrator_mode.set(True, context=C)
 
         assert T.parameters.integrator_mode.get(C) is True
-        assert T.has_integrated is True
         assert T.integrator_function is integrator_function
 
         C.run({T: [[1.0], [1.0], [1.0]]})

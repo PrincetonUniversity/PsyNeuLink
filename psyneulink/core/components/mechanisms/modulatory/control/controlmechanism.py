@@ -742,7 +742,7 @@ class DefaultAllocationFunction(Function_Base):
         result = np.array([variable[0]] * num_ctl_sigs)
         return self.convert_output_type(result)
 
-    def reset(self, *args, force=False, context=None):
+    def reset(self, *args, force=False, context=None, **kwargs):
         # Override Component.reset which requires that the Component is stateful
         pass
 
@@ -1532,10 +1532,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         control_signal = _instantiate_port(port_type=ControlSignal,
                                                owner=self,
-                                               variable=self.default_allocation           # User specified value
+                                               variable=self.defaults.default_allocation           # User specified value
                                                         or allocation_parameter_default,  # Parameter default
                                                reference_value=allocation_parameter_default,
-                                               modulation=self.modulation,
+                                               modulation=self.defaults.modulation,
                                                port_spec=control_signal_spec,
                                                context=context)
         if not type(control_signal) in convert_to_list(self.outputPortTypes):

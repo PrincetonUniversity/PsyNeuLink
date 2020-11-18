@@ -14,8 +14,8 @@ class TestRPC:
 
         T_1 = pnl.TransferMechanism(name='log_test_T_1', size=2)
         T_2 = pnl.TransferMechanism(name='log_test_T_2', size=2)
-        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue())
         PS = pnl.Composition(name='log_test_PS', pathways=[T_1, T_2])
+        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue(), execution_id=PS)
 
         T_1.set_log_conditions('mod_noise')
         T_1.set_log_conditions(pnl.RESULT)
@@ -61,12 +61,12 @@ class TestRPC:
         ])
 
     def test_delivery_initialization(self):
-        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue())
-        pipeline = con_with_rpc_pipeline.rpc_pipeline
         T = pnl.TransferMechanism(
                 prefs={pnl.DELIVERY_PREF: pnl.PreferenceEntry(pnl.LogCondition.EXECUTION, pnl.PreferenceLevel.INSTANCE)}
         )
         comp = pnl.Composition(name='comp', nodes=[T])
+        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue(), execution_id=comp)
+        pipeline = con_with_rpc_pipeline.rpc_pipeline
         comp.run([1], context=con_with_rpc_pipeline)
         actual = []
         while not pipeline.empty():
@@ -79,13 +79,13 @@ class TestRPC:
         ])
 
     def test_run_resets(self):
-        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue())
-        pipeline = con_with_rpc_pipeline.rpc_pipeline
         T1 = pnl.TransferMechanism(name='log_test_T1',
                                    size=2)
         T2 = pnl.TransferMechanism(name='log_test_T2',
                                    size=2)
         COMP = pnl.Composition(name='COMP', pathways=[T1, T2])
+        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue(), execution_id=COMP)
+        pipeline = con_with_rpc_pipeline.rpc_pipeline
         T1.set_delivery_conditions('mod_slope')
         T2.set_delivery_conditions('value')
         COMP.run(inputs={T1: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]},
@@ -113,14 +113,14 @@ class TestRPC:
         ], [[[1.0, 2.0]], [[3.0, 4.0]], [[5.0, 6.0]]])
 
     def test_log_dictionary_with_time(self):
-        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue())
-        pipeline = con_with_rpc_pipeline.rpc_pipeline
         T1 = pnl.TransferMechanism(name='log_test_T1',
                                    size=2)
         T2 = pnl.TransferMechanism(name='log_test_T2',
                                    function=pnl.Linear(slope=2.0),
                                    size=2)
         COMP = pnl.Composition(name='log_test_COMP', pathways=[T1, T2])
+        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue(), execution_id=COMP)
+        pipeline = con_with_rpc_pipeline.rpc_pipeline
 
         T1.set_delivery_conditions('mod_slope')
         T1.set_delivery_conditions(pnl.RESULT)
@@ -253,14 +253,14 @@ class TestRPC:
         assert np.allclose(expected_slopes_T2, t2_slope_values)
 
     def test_log_dictionary_with_scheduler(self):
-        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue())
-        pipeline = con_with_rpc_pipeline.rpc_pipeline
         T1 = pnl.TransferMechanism(name='log_test_T1',
                                    integrator_mode=True,
                                    integration_rate=0.5)
         T2 = pnl.TransferMechanism(name='log_test_T2',
                                    function=pnl.Linear(slope=6.0))
         COMP = pnl.Composition(name='log_test_COMP', pathways=[T1, T2])
+        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue(), execution_id=COMP)
+        pipeline = con_with_rpc_pipeline.rpc_pipeline
 
         def pass_threshold(mech, thresh):
             results = mech.output_ports[0].parameters.value.get(COMP)
@@ -328,12 +328,12 @@ class TestRPC:
         assert np.allclose(expected_slopes_T2, t2_slope_values)
 
     def test_log_dictionary_with_scheduler_many_time_step_increments(self):
-        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue())
-        pipeline = con_with_rpc_pipeline.rpc_pipeline
         T1 = pnl.TransferMechanism(name='log_test_T1',
                                    integrator_mode=True,
                                    integration_rate=0.05)
         COMP = pnl.Composition(name='log_test_COMP', pathways=[T1])
+        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue(), execution_id=COMP)
+        pipeline = con_with_rpc_pipeline.rpc_pipeline
 
         def pass_threshold(mech, thresh):
             results = mech.output_ports[0].parameters.value.get(COMP)
@@ -406,8 +406,6 @@ class TestRPC:
         ]
     )
     def test_log_multi_calls_single_timestep(self, scheduler_conditions, multi_run):
-        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue())
-        pipeline = con_with_rpc_pipeline.rpc_pipeline
         lca = pnl.LCAMechanism(
             size=2,
             leak=0.5,
@@ -422,6 +420,8 @@ class TestRPC:
         comp.add_linear_processing_pathway([m0, lca])
         if scheduler_conditions:
             comp.scheduler.add_condition(lca, pnl.AfterNCalls(m0, 2))
+        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue(), execution_id=comp)
+        pipeline = con_with_rpc_pipeline.rpc_pipeline
         comp.run(inputs={m0: [[1, 0], [1, 0], [1, 0]]}, context=con_with_rpc_pipeline)
 
         actual = []
@@ -453,8 +453,6 @@ class TestRPC:
 
 class TestFullModels:
     def test_multilayer(self):
-        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue())
-        pipeline = con_with_rpc_pipeline.rpc_pipeline
         input_layer = pnl.TransferMechanism(name='input_layer',
                                             function=pnl.Logistic,
                                             size=2)
@@ -512,6 +510,8 @@ class TestFullModels:
                             input_layer: [[-1., 30.]]}
 
         middle_weights.set_delivery_conditions(('mod_matrix', pnl.PROCESSING))
+        con_with_rpc_pipeline = pnl.Context(rpc_pipeline=Queue(), execution_id=comp)
+        pipeline = con_with_rpc_pipeline.rpc_pipeline
 
         comp.learn(inputs=input_dictionary,
                    num_trials=10,
