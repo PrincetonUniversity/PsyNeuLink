@@ -1016,6 +1016,19 @@ class OptimizationControlMechanism(ControlMechanism):
                 new_context = self._set_up_simulation(context, control_allocation)
             else:
                 new_context = context
+                scheduler = context.composition.scheduler
+                eid = context.execution_id
+                counts_total = {
+                    timescale: {
+                        mech: count for mech, count in scheduler.counts_total[eid][timescale].items()
+                    } for timescale in TimeScale
+                }
+                counts_useable = {
+                    mech: {
+                        ref_mech: count for ref_mech, count in scheduler.counts_useable[eid][mech].items()
+                    } for mech in scheduler.counts_useable[eid]
+                }
+                clock = copy.deepcopy(scheduler.clock)
                 scheduler = self.agent_rep.scheduler
                 eid = new_context.execution_id
                 # this keeps the OCM at the end of the execution list, which is needed to insure
@@ -1028,6 +1041,7 @@ class OptimizationControlMechanism(ControlMechanism):
                         execution_list_reorder = True
                 except IndexError:
                     pass
+
 
             old_composition = context.composition
             context.composition = self.agent_rep
@@ -1049,6 +1063,10 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 if execution_list_reorder:
                     self.agent_rep.scheduler.execution_list[eid].append(controller)
+                scheduler.counts_total[eid] = counts_total
+                scheduler.counts_useable[eid] = counts_useable
+                scheduler.clock.history.current_time.pass_ = clock.time.pass_
+                scheduler.clock.history.current_time.time_step_ = clock.time.time_step
 
             # If results of the simulation shoudld be returned then, do so. Agent Rep Evaluate will
             # return a tuple in this case where the first element is the outcome as usual and the
