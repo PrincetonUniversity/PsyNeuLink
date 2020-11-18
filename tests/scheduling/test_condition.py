@@ -494,6 +494,20 @@ class TestCondition:
             assert A.execution_count == 1
             assert B.execution_count == 3
 
+            C = TransferMechanism()
+            D = TransferMechanism()
+            comp2 = Composition(
+                pathways=[C, D]
+            )
+            sched = comp2.scheduler
+            sched.add_condition(
+                C, BeforeEveryTimeStep()
+            )
+            comp2.run(scheduler=sched)
+            assert list(sched.run()) == [{C}, {C}, {D}]
+            assert C.execution_count == 2
+            assert D.execution_count == 1
+            
         def test_AfterEveryTimeStep(self):
             A = TransferMechanism()
             B = TransferMechanism()
@@ -508,6 +522,20 @@ class TestCondition:
             assert list(sched.run()) == [{A}, {A, B}, {A}]
             assert A.execution_count == 3
             assert B.execution_count == 1
+
+            C = TransferMechanism()
+            D = TransferMechanism()
+            comp2 = Composition(
+                pathways=[C, D]
+            )
+            sched = comp2.scheduler
+            sched.add_condition(
+                D, AfterEveryTimeStep()
+            )
+            comp2.run(scheduler=sched)
+            assert list(sched.run()) == [{C}, {D}, {D}]
+            assert C.execution_count == 1
+            assert D.execution_count == 2
 
         def test_BeforeEveryPass(self):
             A = TransferMechanism()
@@ -560,6 +588,60 @@ class TestCondition:
             assert A.execution_count == 4
             assert B.execution_count == 2
 
+            C = TransferMechanism()
+            D = TransferMechanism()
+            comp2 = Composition(
+                pathways=[C,D]
+            )
+            sched = comp2.scheduler
+            sched.add_condition(
+                D, BeforeEveryTrial()
+            )
+            comp2.run(scheduler=sched, num_trials=2)
+            assert list(sched.run()) == [{D}, {C}, {D}]
+            assert C.execution_count == 2
+            assert D.execution_count == 4
+
+        def test_BeforeEveryTrial_with_multiple_passes(self):
+            a = TransferMechanism()
+            b = TransferMechanism()
+            comp = Composition(
+                name='comp',
+                pathways=[a, b],
+            )
+            comp.scheduler.add_condition(
+                b, BeforeEveryTrial()
+            )
+            comp.scheduler.termination_conds = {
+                TimeScale.TRIAL: AtPass(2)
+            }
+            comp.run([1], num_trials=2)
+            assert a.execution_count == 4
+            assert b.execution_count == 6
+            assert comp.scheduler.execution_list['comp'] == [
+                {b}, {a}, {b}, {a}, {b}, {b}, {a}, {b}, {a}, {b}
+            ]
+
+        def test_BeforeEveryTrial_with_multiple_passes_idx_0(self):
+            a = TransferMechanism()
+            b = TransferMechanism()
+            comp = Composition(
+                name='comp',
+                pathways=[a, b],
+            )
+            comp.scheduler.add_condition(
+                a, BeforeEveryTrial()
+            )
+            comp.scheduler.termination_conds = {
+                TimeScale.TRIAL: AtPass(2)
+            }
+            comp.run([1], num_trials=2)
+            assert a.execution_count == 6
+            assert b.execution_count == 4
+            assert comp.scheduler.execution_list['comp'] == [
+                {a}, {a}, {b}, {a}, {b}, {a}, {a}, {b}, {a}, {b}
+            ]
+
         def test_AfterEveryTrial(self):
             A = TransferMechanism()
             B = TransferMechanism()
@@ -574,6 +656,198 @@ class TestCondition:
             assert list(sched.run()) == [{A}, {B}, {A}]
             assert A.execution_count == 4
             assert B.execution_count == 2
+
+            C = TransferMechanism()
+            D = TransferMechanism()
+            comp2 = Composition(
+                pathways=[C, D]
+            )
+            sched = comp2.scheduler
+            sched.add_condition(
+                D, AfterEveryTrial()
+            )
+            comp2.run(scheduler=sched, num_trials=2)
+            assert list(sched.run()) == [{C}, {D}, {D}]
+            assert C.execution_count == 2
+            assert D.execution_count == 4
+
+        def test_AfterEveryTrial_with_multiple_passes(self):
+            a = TransferMechanism()
+            b = TransferMechanism()
+            comp = Composition(
+                name='comp',
+                pathways=[a, b],
+            )
+            comp.scheduler.add_condition(
+                b, AfterEveryTrial()
+            )
+            comp.scheduler.termination_conds = {
+                TimeScale.TRIAL: AtPass(2)
+            }
+            comp.run([1], num_trials=2)
+            assert a.execution_count == 4
+            assert b.execution_count == 6
+            assert comp.scheduler.execution_list['comp'] == [
+                {a}, {b}, {a}, {b}, {b}, {a}, {b}, {a}, {b}, {b}
+            ]
+
+        def test_AfterEveryTrial_with_multiple_passes_idx_0(self):
+            a = TransferMechanism()
+            b = TransferMechanism()
+            comp = Composition(
+                name='comp',
+                pathways=[a, b],
+            )
+            comp.scheduler.add_condition(
+                a, AfterEveryTrial()
+            )
+            comp.scheduler.termination_conds = {
+                TimeScale.TRIAL: AtPass(2)
+            }
+            comp.run([1], num_trials=2)
+            assert a.execution_count == 6
+            assert b.execution_count == 4
+            assert comp.scheduler.execution_list['comp'] == [
+                {a}, {b}, {a}, {b}, {a}, {a}, {b}, {a}, {b}, {a}
+            ]
+
+        def test_BeforeEveryRun(self):
+            A = TransferMechanism()
+            B = TransferMechanism()
+            comp = Composition(
+                pathways=[A, B]
+            )
+            sched = comp.scheduler
+            sched.add_condition(
+                A, BeforeEveryRun()
+            )
+            comp.run(scheduler=sched, num_trials=2)
+            assert list(sched.run()) == [{A}, {A}, {B}]
+            assert A.execution_count == 3
+            assert B.execution_count == 2
+
+            C = TransferMechanism()
+            D = TransferMechanism()
+            comp2 = Composition(
+                pathways=[C, D]
+            )
+            sched = comp2.scheduler
+            sched.add_condition(
+                D, BeforeEveryRun()
+            )
+            comp2.run(scheduler=sched, num_trials=2)
+            assert list(sched.run()) == [{D}, {C}, {D}]
+            assert C.execution_count == 2
+            assert D.execution_count == 3
+
+        def test_BeforeEveryRun_with_multiple_passes(self):
+            a = TransferMechanism()
+            b = TransferMechanism()
+            comp = Composition(
+                name='comp',
+                pathways=[a, b],
+            )
+            comp.scheduler.add_condition(
+                b, BeforeEveryRun()
+            )
+            comp.scheduler.termination_conds = {
+                TimeScale.TRIAL: AtPass(2)
+            }
+            comp.run([1], num_trials=2)
+            assert a.execution_count == 4
+            assert b.execution_count == 5
+            assert comp.scheduler.execution_list['comp'] == [
+                {b}, {a}, {b}, {a}, {b}, {a}, {b}, {a}, {b}
+            ]
+
+        def test_BeforeEveryRun_with_multiple_passes_idx_0(self):
+            a = TransferMechanism()
+            b = TransferMechanism()
+            comp = Composition(
+                name='comp',
+                pathways=[a, b],
+            )
+            comp.scheduler.add_condition(
+                a, BeforeEveryRun()
+            )
+            comp.scheduler.termination_conds = {
+                TimeScale.TRIAL: AtPass(2)
+            }
+            comp.run([1], num_trials=2)
+            assert a.execution_count == 5
+            assert b.execution_count == 4
+            assert comp.scheduler.execution_list['comp'] == [
+                {a}, {a}, {b}, {a}, {b}, {a}, {b}, {a}, {b}
+            ]
+
+        def test_AfterEveryRun(self):
+            A = TransferMechanism()
+            B = TransferMechanism()
+            comp = Composition(
+                pathways=[A, B]
+            )
+            sched = comp.scheduler
+            sched.add_condition(
+                A, AfterEveryRun()
+            )
+            comp.run(scheduler=sched, num_trials=2)
+            assert list(sched.run()) == [{A}, {B}, {A}]
+            assert A.execution_count == 3
+            assert B.execution_count == 2
+
+            C = TransferMechanism()
+            D = TransferMechanism()
+            comp2 = Composition(
+                pathways=[C, D]
+            )
+            sched = comp2.scheduler
+            sched.add_condition(
+                D, AfterEveryRun()
+            )
+            comp2.run(scheduler=sched, num_trials=2)
+            assert list(sched.run()) == [{C}, {D}, {D}]
+            assert C.execution_count == 2
+            assert D.execution_count == 3
+
+        def test_AfterEveryRun_with_multiple_passes(self):
+            a = TransferMechanism()
+            b = TransferMechanism()
+            comp = Composition(
+                name='comp',
+                pathways=[a, b],
+            )
+            comp.scheduler.add_condition(
+                b, AfterEveryRun()
+            )
+            comp.scheduler.termination_conds = {
+                TimeScale.TRIAL: AtPass(2)
+            }
+            comp.run([1], num_trials=2)
+            assert a.execution_count == 4
+            assert b.execution_count == 5
+            assert comp.scheduler.execution_list['comp'] == [
+                {a}, {b}, {a}, {b}, {a}, {b}, {a}, {b}, {b}
+            ]
+
+        def test_AfterEveryRun_with_multiple_passes_idx_0(self):
+            a = TransferMechanism()
+            b = TransferMechanism()
+            comp = Composition(
+                name='comp',
+                pathways=[a, b],
+            )
+            comp.scheduler.add_condition(
+                a, AfterEveryRun()
+            )
+            comp.scheduler.termination_conds = {
+                TimeScale.TRIAL: AtPass(2)
+            }
+            comp.run([1], num_trials=2)
+            assert a.execution_count == 5
+            assert b.execution_count == 4
+            assert comp.scheduler.execution_list['comp'] == [
+                {a}, {b}, {a}, {b}, {a}, {b}, {a}, {b}, {a}
+            ]
 
     class TestComponentBased:
 
