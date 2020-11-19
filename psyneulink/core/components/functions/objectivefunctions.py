@@ -36,7 +36,7 @@ from psyneulink.core.globals.keywords import \
     NORMED_L0_SIMILARITY, OBJECTIVE_FUNCTION_TYPE, SIZE, STABILITY_FUNCTION
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
-from psyneulink.core.globals.utilities import is_distance_metric, safe_len
+from psyneulink.core.globals.utilities import is_distance_metric, safe_len, convert_to_np_array
 from psyneulink.core.globals.utilities import is_iterable
 
 
@@ -321,6 +321,9 @@ class Stability(ObjectiveFunction):
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
                                  context=context)
+
+    def _parse_metric_fct_variable(self, variable):
+        return convert_to_np_array([variable, variable])
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         """Instantiate matrix
@@ -1000,7 +1003,7 @@ class Distance(ObjectiveFunction):
         elif self.metric == MAX_ABS_DIFF:
             del kwargs['acc']
             max_diff_ptr = builder.alloca(ctx.float_ty)
-            builder.store(ctx.float_ty("NaN"), max_diff_ptr)
+            builder.store(ctx.float_ty(float("NaN")), max_diff_ptr)
             kwargs['max_diff_ptr'] = max_diff_ptr
             inner = functools.partial(self.__gen_llvm_max_diff, **kwargs)
         elif self.metric == CORRELATION:

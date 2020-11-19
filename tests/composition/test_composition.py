@@ -3764,6 +3764,21 @@ class TestRun:
             context='custom'
         )
 
+    def test_manual_context(self):
+        t = pnl.TransferMechanism()
+        comp = pnl.Composition()
+
+        comp.add_node(t)
+
+        comp.run({t: [1]})
+        assert comp.results == [[[1]]]
+
+        context = pnl.Context()
+        t.function.parameters.slope._set(2, context)
+
+        comp.run({t: [1]}, context=context)
+        assert comp.results == [[[2]]]
+
 
 class TestCallBeforeAfterTimescale:
 
@@ -6294,7 +6309,7 @@ class TestInitialize:
         C = RecurrentTransferMechanism(name='C',
                                        auto=1.0)
 
-        context = Context(execution_id='a') if context_specified else NotImplemented
+        context = Context(execution_id='a') if context_specified else None
 
         abc_Composition = Composition(pathways=[[A, B, C]])
 
@@ -6303,7 +6318,7 @@ class TestInitialize:
         abc_Composition.run(inputs={A: [1.0, 2.0, 3.0]}, context=context)
 
         if not context_specified:
-            abc_Composition.run()
+            abc_Composition.run(context=Context(execution_id='b'))
 
         abc_Composition.run(inputs={A: [1.0, 2.0, 3.0]}, context=context)
 
@@ -6557,15 +6572,15 @@ class TestResetValues:
             # "save" the current state of each stateful mechanism by storing the values of each of its stateful
             # attributes in the reinitialization_values dictionary; this gets passed into run and used to call
             # the reset method on each stateful mechanism.
-            reinitialization_value = []
+            reinitialization_value = {}
 
             if isinstance(mechanism.function, IntegratorFunction):
                 for attr in mechanism.function.stateful_attributes:
-                    reinitialization_value.append(getattr(mechanism.function.parameters, attr).get(comp))
+                    reinitialization_value[attr] = getattr(mechanism.function.parameters, attr).get(comp)
             elif hasattr(mechanism, "integrator_function"):
                 if isinstance(mechanism.integrator_function, IntegratorFunction):
                     for attr in mechanism.integrator_function.stateful_attributes:
-                        reinitialization_value.append(getattr(mechanism.integrator_function.parameters, attr).get(comp))
+                        reinitialization_value[attr] = getattr(mechanism.integrator_function.parameters, attr).get(comp)
 
             reinitialization_values[mechanism] = reinitialization_value
 

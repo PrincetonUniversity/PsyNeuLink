@@ -713,7 +713,10 @@ def get_deepcopy_with_shared(shared_keys=frozenset(), shared_types=()):
             if k in shared_keys or isinstance(v, shared_types):
                 res_val = v
             else:
-                res_val = copy.deepcopy(v, memo)
+                try:
+                    res_val = copy_iterable_with_shared(v, shared_types, memo)
+                except TypeError:
+                    res_val = copy.deepcopy(v, memo)
             setattr(result, k, res_val)
         return result
 
@@ -738,7 +741,7 @@ def copy_iterable_with_shared(obj, shared_types=None, memo=None):
             new_k = k if isinstance(k, shared_types) else copy.deepcopy(k, memo)
 
             if isinstance(v, all_types_using_recursion):
-                new_v = copy_iterable_with_shared(v, shared_types)
+                new_v = copy_iterable_with_shared(v, shared_types, memo)
             elif isinstance(v, shared_types):
                 new_v = v
             else:
@@ -766,7 +769,7 @@ def copy_iterable_with_shared(obj, shared_types=None, memo=None):
 
         for item in obj:
             if isinstance(item, all_types_using_recursion):
-                new_item = copy_iterable_with_shared(item, shared_types)
+                new_item = copy_iterable_with_shared(item, shared_types, memo)
             elif isinstance(item, shared_types):
                 new_item = item
             else:
@@ -1140,6 +1143,13 @@ class ContentAddressableList(UserList):
     #     return '[\n\t{0}\n]'.format('\n\t'.join(['{0}\t{1}\t{2}'.format(i, self[i].name,
     #                                                                     repr(self[i].value))
     #                                              for i in range(len(self))]))
+
+    def __copy__(self):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        result.__dict__.update(self.__dict__)
+        result.data = self.data.copy()
+        return result
 
     def __getitem__(self, key):
         if key is None:

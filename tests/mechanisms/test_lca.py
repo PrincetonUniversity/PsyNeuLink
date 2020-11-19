@@ -285,6 +285,23 @@ class TestLCA:
     #     result = comp.run(inputs={lca:[1,0]})
     #     assert np.allclose(result, [[0.71463572, 0.28536428]])
 
+    @pytest.mark.mechanism
+    @pytest.mark.lca_mechanism
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_LCAMechanism_DDM_equivalent(self, mode):
+        lca = LCAMechanism(size=2, leak=0., threshold=1, auto=0, hetero=0,
+                           initial_value=[0, 0], execute_until_finished=False)
+        comp1 = Composition()
+        comp1.add_node(lca)
+        result1 = comp1.run(inputs={lca:[1, -1]}, bin_execute=mode)
+        assert np.allclose(result1, [[0.52497918747894, 0.47502081252106]],)
+
+
 class TestLCAReset:
 
     def test_reset_run(self):

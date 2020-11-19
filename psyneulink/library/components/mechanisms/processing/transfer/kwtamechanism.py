@@ -326,7 +326,7 @@ class KWTAMechanism(RecurrentTransferMechanism):
                     :default value: 0.0
                     :type: ``float``
         """
-        function = Parameter(Logistic, stateful=False, loggable=False)
+        function = Parameter(Logistic, stateful=False, loggable=False, dependencies='integrator_function')
         k_value = Parameter(0.5, modulable=True)
         threshold = Parameter(0.0, modulable=True)
         ratio = Parameter(0.5, modulable=True)

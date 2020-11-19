@@ -52,6 +52,11 @@ class CompositionRunner():
         Chunks input dict into pieces where each chunk is a dict with values of length batch_size
         (or for the last chunk, the remainder)
         """
+
+        assert early_stopper is None or not self._is_llvm_mode, "Early stopper doesn't work in compiled mode"
+        assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
+        assert call_after_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
+
         #This is a generator for performance reasons,
         #    since we don't want to copy any data (especially for very large inputs or epoch counts!)
         for epoch in range(epochs):
@@ -72,12 +77,22 @@ class CompositionRunner():
 
                 if not self._is_llvm_mode:
                     self._composition._update_learning_parameters(context)
+
+            # Compiled mode does not need more identical inputs.
+            # number_of_runs will be set appropriately to cycle over the set
+            if self._is_llvm_mode and not randomize:
+                return
             if (not self._is_llvm_mode and early_stopper is not None
                     and early_stopper.step(self._calculate_loss(num_trials, context))):
                 # end early if patience exceeded
                 pass
 
     def _batch_function_inputs(self, inputs: dict, epochs: int, num_trials: int, batch_size: int = 1, call_before_minibatch=None, call_after_minibatch=None, early_stopper=None, context=None):
+
+        assert early_stopper is None or not self._is_llvm_mode, "Early stopper doesn't work in compiled mode"
+        assert call_before_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
+        assert call_after_minibatch is None or not self._is_llvm_mode, "minibatch calls don't work in compiled mode"
+
         for epoch in range(epochs):
             for i in range(0, num_trials, batch_size):
                 batch_ran = False
@@ -191,7 +206,16 @@ class CompositionRunner():
                                                        early_stopper=early_stopper,
                                                        context=context)
 
+            # The above generators generate:
+            # num_trials / batch_size * batch_size * stim_epoch entries
+            # unless 'early_stopper' stops the iteration sooner.
+            # 'early_stopper' is not allowed in compiled mode.
+            # FIXME: Passing the number to Python execution fails several tests.
+            # Those test rely on the extra iteration that exits the iterator.
+            # (Passing num_trials * stim_epoch + 1 works)
+            run_trials = num_trials * stim_epoch if self._is_llvm_mode else None
             self._composition.run(inputs=minibatched_input,
+                                  num_trials=run_trials,
                                   skip_initialization=skip_initialization,
                                   skip_analyze_graph=True,
                                   bin_execute=bin_execute,

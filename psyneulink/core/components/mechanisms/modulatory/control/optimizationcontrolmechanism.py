@@ -431,7 +431,7 @@ FEATURES = 'features'
 
 
 def _parse_feature_values_from_variable(variable):
-    return np.array(np.array(variable[1:]).tolist())
+    return convert_to_np_array(np.array(variable[1:]).tolist())
 
 
 class OptimizationControlMechanismError(Exception):
@@ -877,7 +877,7 @@ class OptimizationControlMechanism(ControlMechanism):
             self.parameters.search_space._set(corrected_search_space, context)
 
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
-        self.function.reset({
+        self.function.reset(**{
             DEFAULT_VARIABLE: self.parameters.control_allocation._get(context),
             OBJECTIVE_FUNCTION: self.evaluation_function,
             # SEARCH_FUNCTION: self.search_function,
@@ -1309,7 +1309,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if features:
             features = self._parse_feature_specs(features=features,
-                                                 context=Context(source=ContextFlags.COMMAND_LINE))
+                                                 context=Context(source=ContextFlags.COMMAND_LINE, execution_id=None))
         self.add_ports(InputPort, features)
 
     @tc.typecheck

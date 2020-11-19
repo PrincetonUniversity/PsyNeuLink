@@ -483,8 +483,10 @@ import copy
 import dill
 import functools
 import inspect
+import itertools
 import logging
 import numbers
+import toposort
 import types
 import warnings
 
@@ -518,7 +520,7 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared,\
     is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, \
-    get_all_explicit_arguments, call_with_pruned_args
+    get_all_explicit_arguments, call_with_pruned_args, safe_equals
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
@@ -1087,7 +1089,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         context = Context(
             source=ContextFlags.COMPONENT,
             execution_phase=ContextFlags.IDLE,
+            execution_id=None,
         )
+
+        if reset_stateful_function_when is not None:
+            self.reset_stateful_function_when = reset_stateful_function_when
+        else:
+            self.reset_stateful_function_when = Never()
 
         try:
             function_params = copy.copy(param_defaults[FUNCTION_PARAMS])
@@ -1157,18 +1165,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 except KeyError:
                     isp_val = copy.deepcopy(param.default_value)
 
-                self.initial_shared_parameters[param.attribute_name][param.shared_parameter_name] = isp_val
+                if isp_val is not None:
+                    self.initial_shared_parameters[param.attribute_name][param.shared_parameter_name] = isp_val
 
         # we must know the final variable shape before setting up parameter
         # Functions or they will mismatch
         self._instantiate_parameter_classes(context)
-        self._override_unspecified_shared_parameters(context)
-        self._validate_subfunctions()
-
-        if reset_stateful_function_when is not None:
-            self.reset_stateful_function_when = reset_stateful_function_when
-        else:
-            self.reset_stateful_function_when = Never()
 
         # self.componentName = self.componentType
         try:
@@ -1411,7 +1413,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         def _get_values(p):
             param = p.get(context)
             # Modulated parameters change shape to array
-            if np.isscalar(param) and self._is_param_modulated(p):
+            if np.ndim(param) == 0 and self._is_param_modulated(p):
                 return (param,)
             elif p.name == 'num_estimates':
                 return 0 if param is None else param
@@ -1968,6 +1970,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     # p in param_defaults does not correspond to a Parameter
                     continue
 
+                if d[p] is not None:
+                    parameter_obj._user_specified = True
+
                 if parameter_obj.structural:
                     parameter_obj.spec = d[p]
 
@@ -2019,8 +2024,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     param_defaults[p.source.name] = param_defaults[p.name]
 
         for p in filter(lambda x: not isinstance(x, (ParameterAlias, SharedParameter)), self.parameters):
-            p._user_specified = _is_user_specified(p)
-
             # copy spec so it is not overwritten later
             # TODO: check if this is necessary
             p.spec = copy_parameter_value(p.spec)
@@ -2051,6 +2054,27 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             if p.stateful:
                 setattr(self, _get_parametervalue_attr(p), ParameterValue(self, p))
 
+    def _get_parsed_variable(self, parameter, variable=NotImplemented, context=None):
+        if variable is NotImplemented:
+            variable = copy.deepcopy(self.defaults.variable)
+
+        try:
+            parameter = getattr(self.parameters, parameter)
+        except TypeError:
+            pass
+
+        try:
+            parse_variable_method = getattr(
+                self,
+                f'_parse_{parameter.name}_variable'
+            )
+            return copy.deepcopy(
+                call_with_pruned_args(parse_variable_method, variable, context=context)
+            )
+        except AttributeError:
+            # no parsing method, assume same shape as owner
+            return variable
+
     def _instantiate_parameter_classes(self, context=None):
         """
             An optional method that will take any Parameter values in
@@ -2058,15 +2082,29 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """
         from psyneulink.core.components.shellclasses import Function
 
+        parameter_function_ordering = list(toposort.toposort({
+            p.name: p.dependencies for p in self.parameters if p.dependencies is not None
+        }))
+        parameter_function_ordering = list(itertools.chain.from_iterable(parameter_function_ordering))
+
+        def ordering(p):
+            try:
+                return parameter_function_ordering.index(p.name)
+            except ValueError:
+                return -1
+
         # (this originally occurred in _validate_params)
-        for p in self.parameters:
+        for p in sorted(self.parameters, key=ordering):
             if p.getter is None:
                 val = p._get(context)
                 if (
                     p.name != FUNCTION
+                    and is_instance_or_subclass(val, Function)
                     and not p.reference
                     and not isinstance(p, SharedParameter)
                 ):
+                    function_default_variable = self._get_parsed_variable(p, context=context)
+
                     if (
                         inspect.isclass(val)
                         and issubclass(val, Function)
@@ -2074,55 +2112,65 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                         # instantiate class val with all relevant shared parameters
                         # some shared parameters may not be arguments (e.g.
                         # transfer_fct additive_param when function is Identity)
+                        # NOTE: this may cause an issue if there is an
+                        # incompatibility between a shared parameter and
+                        # the default variable, by forcing variable to
+                        # be _user_specified, where instead the variable
+                        # would be coerced to match
                         val = call_with_pruned_args(
                             val,
+                            default_variable=function_default_variable,
                             **self.initial_shared_parameters[p.name]
                         )
 
                         val.owner = self
                         p._set(val, context)
 
-        self._update_parameter_class_variables(context)
+                        for sub_param_name in itertools.chain(self.initial_shared_parameters[p.name], ['variable']):
+                            try:
+                                sub_param = getattr(val.parameters, sub_param_name)
+                            except AttributeError:
+                                # TransferWithCosts has SharedParameters
+                                # referencing transfer_fct's
+                                # additive_param or
+                                # multiplicative_param, but Identity
+                                # does not have them
+                                continue
 
-    def _update_parameter_class_variables(self, context=None):
-        from psyneulink.core.components.shellclasses import Function
-        for p in self.parameters:
-            if p.getter is None:
-                val = p._get(context)
-                if (
-                    p.name != FUNCTION
-                    and not p.reference
-                    and isinstance(val, Function)
-                    and not isinstance(p, SharedParameter)
-                ):
-                    try:
-                        parse_variable_method = getattr(
-                            self,
-                            f'_parse_{p.name}_variable'
-                        )
-                        function_default_variable = copy.deepcopy(
-                            parse_variable_method(self.defaults.variable)
-                        )
-                    except AttributeError:
-                        # no parsing method, assume same shape as owner
-                        function_default_variable = copy.deepcopy(
-                            self.defaults.variable
-                        )
+                            try:
+                                orig_param_name = [x.name for x in self.parameters if isinstance(x, SharedParameter) and x.source is sub_param][0]
+                            except IndexError:
+                                orig_param_name = sub_param_name
+                            sub_param._user_specified = getattr(self.parameters, orig_param_name)._user_specified
 
-                    incompatible = False
+                    elif isinstance(val, Function):
+                        incompatible = False
+                        if function_default_variable.shape != val.defaults.variable.shape:
+                            incompatible = True
+                            if val._variable_shape_flexibility is DefaultsFlexibility.INCREASE_DIMENSION:
+                                increased_dim = np.asarray([val.defaults.variable])
 
-                    if function_default_variable.shape != val.defaults.variable.shape:
-                        incompatible = True
-                        if val._variable_shape_flexibility is DefaultsFlexibility.INCREASE_DIMENSION:
-                            increased_dim = np.asarray([val.defaults.variable])
-
-                            if increased_dim.shape == function_default_variable.shape:
-                                function_default_variable = increased_dim
+                                if increased_dim.shape == function_default_variable.shape:
+                                    function_default_variable = increased_dim
+                                    incompatible = False
+                            elif val._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                                 incompatible = False
-                        elif val._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
-                            incompatible = False
 
-                    if not incompatible:
+                        if incompatible:
+                            def _create_justified_line(k, v, error_line_len=110):
+                                return f'{k}: {v.rjust(error_line_len - len(k))}'
+
+                            raise ParameterError(
+                                f'Variable shape incompatibility between {self} and its {p.name} Parameter'
+                                + _create_justified_line(
+                                    f'\n{self}.variable',
+                                    f'{function_default_variable}    (numpy.array shape: {np.asarray(function_default_variable).shape})'
+                                )
+                                + _create_justified_line(
+                                    f'\n{self}.{p.name}.variable',
+                                    f'{val.defaults.variable}    (numpy.array shape: {np.asarray(val.defaults.variable).shape})'
+                                )
+                            )
                         val._update_default_variable(
                             function_default_variable,
                             context
@@ -2133,6 +2181,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                 function_default_variable,
                                 context
                             )
+
+        self._override_unspecified_shared_parameters(context)
 
     def _override_unspecified_shared_parameters(self, context):
         for param_name, param in self.parameters.values(show_all=True).items():
@@ -2154,14 +2204,23 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                         except AttributeError:
                             continue
 
-                        if (
-                            not shared_obj_param._user_specified
-                            and param.primary
-                            and param.default_value is not None
+                        if not shared_obj_param._user_specified:
+                            if (
+                                param.primary
+                                and param.default_value is not None
+                            ):
+                                shared_obj_param.default_value = copy.deepcopy(param.default_value)
+                                shared_obj_param._set(copy.deepcopy(param.default_value), context)
+                                shared_obj_param._user_specified = param._user_specified
+                        elif (
+                            param._user_specified
+                            and not safe_equals(param.default_value, shared_obj_param.default_value)
+                            # only show warning one time, for the non-default value if possible
+                            and c is shared_objs[-1]
                         ):
-                            shared_obj_param.default_value = copy.deepcopy(param.default_value)
-                            shared_obj_param._set(copy.deepcopy(param.default_value), context)
-                            shared_obj_param._user_specified = param._user_specified
+                            warnings.warn(
+                                f'Specification of the "{param.name}" parameter'
+                                f' ({param.default_value}) for {self} conflicts with specification of its shared parameter "{shared_obj_param.name}" ({shared_obj_param.default_value}) for its {param.attribute_name} ({param.source._owner._owner}). The value specified on {param.source._owner._owner} will be used.')
 
     @handle_external_context()
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS, context=None):
@@ -2581,48 +2640,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 raise ComponentError("Value of {} param for {} ({}) is not compatible with {}".
                                     format(param_name, self.name, param_value, type_name))
 
-    def _validate_subfunctions(self):
-        from psyneulink.core.components.shellclasses import Function
-
-        for p in self.parameters:
-            if (
-                p.name != FUNCTION  # has specialized validation
-                and isinstance(p.default_value, Function)
-                and not p.reference
-                and not isinstance(p, SharedParameter)
-            ):
-                # TODO: assert it's not stateful?
-                function_variable = p.default_value.defaults.variable
-                expected_function_variable = self.defaults.variable
-
-                try:
-                    parse_variable_method = getattr(
-                        self,
-                        f'_parse_{p.name}_variable'
-                    )
-                    expected_function_variable = parse_variable_method(
-                        expected_function_variable
-                    )
-
-                except AttributeError:
-                    pass
-
-                if not function_variable.shape == expected_function_variable.shape:
-                    def _create_justified_line(k, v, error_line_len=110):
-                        return f'{k}: {v.rjust(error_line_len - len(k))}'
-
-                    raise ParameterError(
-                        f'Variable shape incompatibility between {self} and its {p.name} Parameter'
-                        + _create_justified_line(
-                            f'\n{self}.variable',
-                            f'{expected_function_variable}    (numpy.array shape: {np.asarray(expected_function_variable).shape})'
-                        )
-                        + _create_justified_line(
-                            f'\n{self}.{p.name}.variable',
-                            f'{function_variable}    (numpy.array shape: {np.asarray(function_variable).shape})'
-                        )
-                    )
-
     def _get_param_value_for_modulatory_spec(self, param_name, param_value):
         from psyneulink.core.globals.keywords import MODULATORY_SPEC_KEYWORDS
         if isinstance(param_value, str):
@@ -2765,7 +2782,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 self.defaults.variable,
                 # we can't just pass context here, because this specifically tries to bypass a
                 # branch in TransferMechanism._parse_function_variable
-                context=Context(source=ContextFlags.INSTANTIATE)
+                context=Context(source=ContextFlags.INSTANTIATE, execution_id=context.execution_id)
             )
         )
 
@@ -2844,7 +2861,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # Specification is Function class
         # Note:  parameter_ports for function's parameters will be created in_instantiate_attributes_after_function
         elif inspect.isclass(function) and issubclass(function, Function):
-            kwargs_to_instantiate = function.class_defaults.values().copy()
+            kwargs_to_instantiate = {}
             if function_params is not None:
                 kwargs_to_instantiate.update(**function_params)
                 # default_variable should not be in any function_params but sometimes it is
@@ -2929,6 +2946,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             self.defaults.value = value
 
     def _update_default_variable(self, new_default_variable, context=None):
+        from psyneulink.core.components.shellclasses import Function
+
         self.defaults.variable = copy.deepcopy(new_default_variable)
 
         # exclude value from validation because it isn't updated until
@@ -2946,16 +2965,22 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         )
         self._instantiate_value(context)
 
-        function_variable = self._parse_function_variable(
-            new_default_variable,
-            context
-        )
-        try:
-            self.function._update_default_variable(function_variable, context)
-        except AttributeError:
-            pass
+        for p in self.parameters:
+            val = p._get(context)
+            if (
+                not p.reference
+                and isinstance(val, Function)
+                and not isinstance(p, SharedParameter)
+            ):
+                function_default_variable = self._get_parsed_variable(p, context=context)
 
-        # TODO: is it necessary to call _validate_value here?
+                try:
+                    val._update_default_variable(function_default_variable, context)
+                    p.default_value._update_default_variable(copy.deepcopy(function_default_variable), context)
+                except (AttributeError, TypeError):
+                    pass
+
+                # TODO: is it necessary to call _validate_value here?
 
     def initialize(self, context=None):
         raise ComponentError("{} class does not support initialize() method".format(self.__class__.__name__))
@@ -2966,8 +2991,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """
         pass
 
-    @handle_external_context(execution_id=NotImplemented)
-    def reset(self, *args, context=None):
+    @handle_external_context(fallback_most_recent=True)
+    def reset(self, *args, context=None, **kwargs):
         """
             If the component's execute method involves execution of an `IntegratorFunction` Function, this method
             effectively begins the function's accumulation over again at the specified value, and may update related
@@ -2976,9 +3001,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
         if isinstance(self.function, IntegratorFunction):
-            if context is NotImplemented:
-                context = self.most_recent_context
-            new_value = self.function.reset(*args, context=context)
+            new_value = self.function.reset(*args, **kwargs, context=context)
             self.parameters.value.set(np.atleast_2d(new_value), context, override=True)
         else:
             raise ComponentError(f"Resetting {self.name} is not allowed because this Component is not stateful. "
@@ -3005,14 +3028,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self.parameters.variable._set(variable, context=context)
 
-        if isinstance(self, Function):
-            pass # Functions don't have a Logs or maintain execution_counts or time
-        else:
-            if self.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
-                self._increment_execution_count()
-                self._increment_num_executions(context,
-                                               [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN])
-            self._update_current_execution_time(context=context)
+        if self.initialization_status & ~(ContextFlags.VALIDATING | ContextFlags.INITIALIZING):
+            self._increment_execution_count()
+
+            # Functions don't have Logs or maintain time
+            if not isinstance(self, Function):
+                self._update_current_execution_time(context=context)
+                self._increment_num_executions(
+                    context,
+                    [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN]
+                )
 
         value = None
 
@@ -3430,7 +3455,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         for p in self.parameters:
             if (
                 p.name not in self._model_spec_parameter_blacklist
-                and not isinstance(p, (ParameterAlias, SharedParameter))
+                and not isinstance(p, ParameterAlias)
             ):
                 if self.initialization_status is ContextFlags.DEFERRED_INIT:
                     try:
@@ -3550,6 +3575,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         return [param for param in self.parameters if param.stateful]
 
     @property
+    def stateful_attributes(self):
+        return [p.name for p in self.parameters if p.initializer is not None]
+
+    @property
+    def initializers(self):
+        return [getattr(self.parameters, p).initializer for p in self.stateful_attributes]
+
+    @property
     def function_parameters(self):
         """
             The `parameters <Parameters>` object of this object's `function`
@@ -3617,7 +3650,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         try:
             return self._most_recent_context
         except AttributeError:
-            self._most_recent_context = Context(source=ContextFlags.COMMAND_LINE)
+            self._most_recent_context = Context(source=ContextFlags.COMMAND_LINE, execution_id=None)
             return self._most_recent_context
 
     @most_recent_context.setter

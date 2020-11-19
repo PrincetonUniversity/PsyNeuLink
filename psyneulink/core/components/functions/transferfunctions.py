@@ -68,7 +68,7 @@ from psyneulink.core.globals.keywords import \
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import \
     FunctionParameter, Parameter, get_validator_by_function
-from psyneulink.core.globals.utilities import parameter_spec, get_global_seed, safe_len
+from psyneulink.core.globals.utilities import parameter_spec, get_global_seed, safe_len, convert_to_np_array
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
@@ -2298,7 +2298,7 @@ class SoftMax(TransferFunction):
         )
 
     def _parse_one_hot_function_variable(self, variable):
-        if self.defaults.per_item:
+        if self.defaults.per_item and len(np.shape(variable)) > 1:
             variable = variable[0]
 
         if self.defaults.output in {PROB, PROB_INDICATOR}:
@@ -2357,7 +2357,7 @@ class SoftMax(TransferFunction):
         builder.store(exp_sum_ptr.type.pointee(0), exp_sum_ptr)
 
         max_ptr = builder.alloca(ctx.float_ty)
-        builder.store(max_ptr.type.pointee('-inf'), max_ptr)
+        builder.store(max_ptr.type.pointee(float('-inf')), max_ptr)
 
         max_ind_ptr = builder.alloca(ctx.int32_ty)
         builder.store(max_ind_ptr.type.pointee(-1), max_ind_ptr)

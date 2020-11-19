@@ -2213,8 +2213,8 @@ class Mechanism_Base(Mechanism):
         """Stub that can be overidden by subclasses that need to know when a projection is added to the Mechanism"""
         pass
 
-    @handle_external_context(execution_id=NotImplemented)
-    def reset(self, *args, force=False, context=None):
+    @handle_external_context(fallback_most_recent=True)
+    def reset(self, *args, force=False, context=None, **kwargs):
         """Reset `value <Mechanism_Base.value>` if Mechanisms is stateful.
 
         If the mechanism's `function <Mechanism.function>` is an `IntegratorFunction`, or if the mechanism has and
@@ -2265,14 +2265,11 @@ class Mechanism_Base(Mechanism):
         from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.most_recent_context.execution_id
-
         # If the primary function of the mechanism is stateful:
         # (1) reset it, (2) update value, (3) update output ports
         if isinstance(self.function, StatefulFunction):
-            new_value = self.function.reset(*args, context=context)
-            self.parameters.value._set(np.atleast_2d(new_value), context=context)
+            new_value = self.function.reset(*args, **kwargs, context=context)
+            self.parameters.value._set(convert_to_np_array(new_value, dimension=2), context=context)
             self._update_output_ports(context=context)
 
         # If the mechanism has an auxiliary integrator function:
@@ -2287,7 +2284,7 @@ class Mechanism_Base(Mechanism):
                 )
 
             if self.parameters.integrator_mode._get(context) or force:
-                new_input = self.integrator_function.reset(*args, context=context)[0]
+                new_input = self.integrator_function.reset(*args, **kwargs, context=context)[0]
                 self.parameters.value._set(
                     self.function.execute(variable=new_input, context=context),
                     context=context,
@@ -2783,10 +2780,17 @@ class Mechanism_Base(Mechanism):
     def _get_input_struct_type(self, ctx):
         # Extract the non-modulation portion of InputPort input struct
         input_type_list = [ctx.get_input_struct_type(port).elements[0] for port in self.input_ports]
+
+
         # Get modulatory inputs
-        mod_input_type_list = [ctx.get_output_struct_type(proj) for proj in self.mod_afferents]
-        if len(mod_input_type_list) > 0:
+        if len(self.mod_afferents) > 0:
+            mod_input_type_list = (ctx.get_output_struct_type(proj) for proj in self.mod_afferents)
             input_type_list.append(pnlvm.ir.LiteralStructType(mod_input_type_list))
+        # Prefer an array type if there is no modulation.
+        # This is used to keep ctypes inputs as arrays instead of structs.
+        elif all(t == input_type_list[0] for t in input_type_list):
+            return pnlvm.ir.ArrayType(input_type_list[0], len(input_type_list))
+
         return pnlvm.ir.LiteralStructType(input_type_list)
 
     def _get_param_initializer(self, context):
@@ -2898,6 +2902,9 @@ class Mechanism_Base(Mechanism):
             # Parameter port inputs are {original parameter, [modulations]},
             # fill in the first one.
             data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            assert data_ptr.type == param_in_ptr.type, \
+                "Mishandled modulation type for: {} in '{}' in '{}'".format(
+                    param_ports[i].name, obj.name, self.name)
             b.store(b.load(param_in_ptr), data_ptr)
             return b
 
@@ -2996,7 +3003,7 @@ class Mechanism_Base(Mechanism):
         for scale in [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN]:
             num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(scale.value)])
             new_val = builder.load(num_exec_time_ptr)
-            new_val = builder.add(new_val, ctx.int32_ty(1))
+            new_val = builder.add(new_val, new_val.type(1))
             builder.store(new_val, num_exec_time_ptr)
 
         builder = self._gen_llvm_output_ports(ctx, builder, value, params, state, arg_in, arg_out)
@@ -3585,7 +3592,10 @@ class Mechanism_Base(Mechanism):
         from psyneulink.core.components.ports.inputport import InputPort, _instantiate_input_ports
         from psyneulink.core.components.ports.outputport import OutputPort, _instantiate_output_ports
 
-        context = Context(source=ContextFlags.METHOD)
+        # not transferring execution_id here because later function calls
+        # need execution_id=None to succeed.
+        # TODO: remove context passing for init methods if they don't need it
+        context = Context(source=ContextFlags.METHOD, execution_id=None)
 
         # Put in list to standardize treatment below
         if not isinstance(ports, list):

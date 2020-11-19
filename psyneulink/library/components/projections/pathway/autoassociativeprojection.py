@@ -271,14 +271,14 @@ class AutoAssociativeProjection(MappingProjection):
     # get passed properly. should be replaced with a better organization
     # of auto/hetero, in which the base parameters are stored either on
     # AutoAssociativeProjection or on LinearMatrix itself
-    def _override_unspecified_shared_parameters(self, context):
-        super()._override_unspecified_shared_parameters(context)
-
+    def _instantiate_parameter_classes(self, context):
         if FUNCTION not in self.initial_shared_parameters:
             try:
                 self.initial_shared_parameters[FUNCTION] = self.initial_shared_parameters[OWNER_MECH]
             except KeyError:
                 pass
+
+        super()._instantiate_parameter_classes(context)
 
     # COMMENTED OUT BY KAM 1/9/2018 -- this method is not currently used; should be moved to Recurrent Transfer Mech
     #     if it is used in the future

@@ -742,7 +742,7 @@ class DefaultAllocationFunction(Function_Base):
         result = np.array([variable[0]] * num_ctl_sigs)
         return self.convert_output_type(result)
 
-    def reset(self, *args, force=False, context=None):
+    def reset(self, *args, force=False, context=None, **kwargs):
         # Override Component.reset which requires that the Component is stateful
         pass
 

@@ -62,14 +62,15 @@ addons:
       - graphviz
 
 before_install:
+  - lscpu
   - |
     # Install venv on Linux using Ubuntu distributed python
     if [ "$TRAVIS_CPU_ARCH" != "amd64" ]; then
       # There are a lot fewer wheels distributed for non-x86 architectures.
       # We end up building a lot of them locally, install dev packages
-      export EXTRA_PKGS="build-essential gfortran llvm-9-dev libfreetype6-dev libjpeg-dev liblapack-dev zlib1g-dev"
+      export EXTRA_PKGS="build-essential gfortran llvm-10-dev libfreetype6-dev libjpeg-dev liblapack-dev zlib1g-dev"
       # Export LLVM_CONFIG for llvmlite
-      export LLVM_CONFIG=llvm-config-9
+      export LLVM_CONFIG=llvm-config-10
       # Disable coverage
       export RUN_COV=""
     fi
@@ -109,15 +110,25 @@ before_cache:
 
 install:
   - pip install coveralls
-  - pip install git+https://github.com/benureau/leabra.git@master
   - pip install -e .[dev]
+  # This should be installed after PNL to avoid pulling incompatible deps
+  - pip install git+https://github.com/benureau/leabra.git@master
 
 
 script:
   - if [ "x$RUN_COV" != "x" ] ; then echo "Running with coverage"; export COV_ARGS="--cov=psyneulink"; else echo "Running without coverage"; export COV_ARGS=""; fi
+  # CPU count detection is a mess. pytest-xdist checks for physical cores
+  # (not threads). However, Travis exposes mixed configurations:
+  #   * amd64: 1s * 1c * 2t   = 1c/2t
+  #   * arm64: 1s * 32c * 1t  = 32c/32t
+  #   * ppc64le: 2s * 1c * 8t = 2c/16t
+  #   * s390x:  4drawers * 1book * 1s * 1c * 1t = 4c/4t
+  # 'nproc' should give the correct count, including threads.
+  # There's also a limit on available memory so the below maxproc numbers
+  # make sure we don't run out of memory.
   - if [ "$TRAVIS_CPU_ARCH" == "ppc64le" ] ; then export MAX_PROCESSES="--maxprocesses=6"; fi
   - if [ "$TRAVIS_CPU_ARCH" == "arm64" ] ; then export MAX_PROCESSES="--maxprocesses=16"; fi
-  - pytest -n auto -p no:logging --verbosity=0 $COV_ARGS $MAX_PROCESSES
+  - pytest -n `nproc` -p no:logging --verbosity=0 $COV_ARGS $MAX_PROCESSES
 
 after_script:
   - if [ "x$RUN_COV" != "x" ] ; then coveralls; fi

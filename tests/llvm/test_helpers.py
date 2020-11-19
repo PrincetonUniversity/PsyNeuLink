@@ -21,8 +21,7 @@ VECTOR = np.random.rand(DIM_X)
 def test_helper_fclamp(mode):
 
     with pnlvm.LLVMBuilderContext() as ctx:
-        local_vec = copy.deepcopy(VECTOR)
-        double_ptr_ty = ctx.float_ty.as_pointer()
+        double_ptr_ty = ir.DoubleType().as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, ctx.int32_ty,
                                                   double_ptr_ty))
 
@@ -48,8 +47,9 @@ def test_helper_fclamp(mode):
     ref = np.clip(VECTOR, TST_MIN, TST_MAX)
     bounds = np.asfarray([TST_MIN, TST_MAX])
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+    local_vec = copy.deepcopy(VECTOR)
     if mode == 'CPU':
-        ct_ty = pnlvm._convert_llvm_ir_to_ctype(double_ptr_ty)
+        ct_ty = ctypes.POINTER(bin_f.byref_arg_types[0])
         ct_vec = local_vec.ctypes.data_as(ct_ty)
         ct_bounds = bounds.ctypes.data_as(ct_ty)
 
@@ -66,8 +66,7 @@ def test_helper_fclamp(mode):
 def test_helper_fclamp_const(mode):
 
     with pnlvm.LLVMBuilderContext() as ctx:
-        local_vec = copy.deepcopy(VECTOR)
-        double_ptr_ty = ctx.float_ty.as_pointer()
+        double_ptr_ty = ir.DoubleType().as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, ctx.int32_ty))
 
         # Create clamp function
@@ -86,10 +85,11 @@ def test_helper_fclamp_const(mode):
 
         builder.ret_void()
 
+    local_vec = copy.deepcopy(VECTOR)
     ref = np.clip(VECTOR, TST_MIN, TST_MAX)
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
     if mode == 'CPU':
-        ct_ty = pnlvm._convert_llvm_ir_to_ctype(double_ptr_ty)
+        ct_ty = ctypes.POINTER(bin_f.byref_arg_types[0])
         ct_vec = local_vec.ctypes.data_as(ct_ty)
 
         bin_f(ct_vec, DIM_X)
@@ -105,7 +105,7 @@ def test_helper_fclamp_const(mode):
 def test_helper_is_close(mode):
 
     with pnlvm.LLVMBuilderContext() as ctx:
-        double_ptr_ty = ctx.float_ty.as_pointer()
+        double_ptr_ty = ir.DoubleType().as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), [double_ptr_ty, double_ptr_ty,
                                                   double_ptr_ty, ctx.int32_ty])
 
@@ -124,7 +124,9 @@ def test_helper_is_close(mode):
             val2 = b1.load(val2_ptr)
             close = pnlvm.helpers.is_close(b1, val1, val2)
             out_ptr = b1.gep(out, [index])
-            out_val = b1.select(close, ctx.float_ty(1), ctx.float_ty(0))
+            out_val = b1.select(close, val1.type(1), val1.type(0))
+            res = b1.select(close, out_ptr.type.pointee(1),
+                                   out_ptr.type.pointee(0))
             b1.store(out_val, out_ptr)
 
         builder.ret_void()
@@ -139,7 +141,7 @@ def test_helper_is_close(mode):
     ref = np.isclose(vec1, vec2)
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
     if mode == 'CPU':
-        ct_ty = pnlvm._convert_llvm_ir_to_ctype(double_ptr_ty)
+        ct_ty = ctypes.POINTER(bin_f.byref_arg_types[0])
         ct_vec1 = vec1.ctypes.data_as(ct_ty)
         ct_vec2 = vec2.ctypes.data_as(ct_ty)
         ct_res = res.ctypes.data_as(ct_ty)
@@ -157,7 +159,7 @@ def test_helper_is_close(mode):
 def test_helper_all_close(mode):
 
     with pnlvm.LLVMBuilderContext() as ctx:
-        arr_ptr_ty = ir.ArrayType(ctx.float_ty, DIM_X).as_pointer()
+        arr_ptr_ty = ir.ArrayType(ir.DoubleType(), DIM_X).as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), [arr_ptr_ty, arr_ptr_ty,
                                                   ir.IntType(32).as_pointer()])
 
@@ -178,7 +180,7 @@ def test_helper_all_close(mode):
     ref = np.allclose(vec1, vec2)
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
     if mode == 'CPU':
-        ct_ty = pnlvm._convert_llvm_ir_to_ctype(arr_ptr_ty)
+        ct_ty = ctypes.POINTER(bin_f.byref_arg_types[0])
         ct_vec1 = vec1.ctypes.data_as(ct_ty)
         ct_vec2 = vec2.ctypes.data_as(ct_ty)
         res = ctypes.c_int32()
@@ -580,7 +582,7 @@ def test_helper_elementwise_op(mode, var, expected):
 
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
     if mode == 'CPU':
-        ct_vec = var.ctypes.data_as(ctypes.POINTER(bin_f.byref_arg_types[0]))
+        ct_vec = np.ctypeslib.as_ctypes(var)
         res = bin_f.byref_arg_types[1]()
         bin_f(ct_vec, ctypes.byref(res))
     else:

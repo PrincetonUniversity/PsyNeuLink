@@ -1006,20 +1006,6 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
         if isinstance(p, ParameterAlias):
             port_aliases.add(p.name)
 
-    duplicates = [p for p in port_parameters if len(port_parameters[p]) > 1]
-    if len(duplicates) > 0:
-        dup_str = '\n\t'.join([f'{name}: {", ".join(port_parameters[name])}' for name in duplicates])
-        ex_func_name = next(iter(port_parameters[duplicates[0]]))
-        ex_port_name = duplicates[0]
-        warnings.warn(
-            'Multiple ParameterPorts will be created for Parameters with the'
-            f' same name:\n{owner}\n\t{dup_str}'
-            '\nTo explicitly access the correct Port, you will need to'
-            " include the function's name as suffix or use the Parameter object."
-            f" For example,\nself.parameter_ports['{ex_port_name}{owner.parameter_ports.separator}{ex_func_name}']\nor\n"
-            f'self.parameter_ports[self.{ex_func_name}.parameters.{ex_port_name}]'
-        )
-
     for parameter_port_name in port_parameters:
         if (
             len(port_parameters[parameter_port_name]) > 1

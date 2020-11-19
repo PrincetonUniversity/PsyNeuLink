@@ -150,7 +150,7 @@ import typecheck as tc
 
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility
 from psyneulink.core.components.shellclasses import Function, Mechanism
-from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import (
     ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, EXAMPLE_FUNCTION_TYPE, FULL_CONNECTIVITY_MATRIX,
     FUNCTION_COMPONENT_CATEGORY, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, HOLLOW_MATRIX,
@@ -632,8 +632,6 @@ class Function_Base(Function):
     def get_previous_value(self, context=None):
         # temporary method until previous values are integrated for all parameters
         value = self.parameters.previous_value._get(context)
-        if value is None:
-            value = self.parameters.previous_value._get(Context())
 
         return value
 

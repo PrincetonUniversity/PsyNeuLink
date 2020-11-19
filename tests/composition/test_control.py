@@ -1042,7 +1042,7 @@ class TestControlMechanisms:
             bin_execute=mode
         )
         assert np.allclose(val[0], [5])
-        assert np.allclose(val[1], [0.7573055560600637, 0.4500512583901123])
+        assert np.allclose(val[1], [0.7978996, 0.40776362])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2306,3 +2306,276 @@ class TestSampleIterator:
         assert sample_iterator.start == 1
         assert sample_iterator.stop is None
         assert sample_iterator.num == len(sample_list)
+
+
+class TestControlTimeScales:
+
+    def test_time_step_before(self):
+        a = pnl.ProcessingMechanism()
+        b = pnl.ProcessingMechanism()
+        c = pnl.ControlMechanism(
+            default_variable=1,
+            function=pnl.SimpleIntegrator,
+            control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
+        )
+        comp = pnl.Composition(
+            pathways=[a, b],
+            controller=c,
+            controller_mode=pnl.BEFORE,
+            controller_time_scale=pnl.TimeScale.TIME_STEP
+        )
+        comp.run([1], num_trials=2)
+        # Controller executions
+        # (C-<#>) == controller execution followed by val as of the end of that execution, increments by 1
+        # on each execution
+        #
+        #  Trial 1:
+        #    (C-1) a (C-2) b
+        #  Trial 2:
+        #    (C-3) a (C-4) b
+        #
+        assert c.value == [4]
+        assert c.execution_count == 4
+        assert comp.results == [[2], [4]]
+
+    def test_time_step_after(self):
+        a = pnl.ProcessingMechanism()
+        b = pnl.ProcessingMechanism()
+        c = pnl.ControlMechanism(
+            default_variable=1,
+            function=pnl.SimpleIntegrator,
+            control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
+        )
+        comp = pnl.Composition(
+            pathways=[a, b],
+            controller=c,
+            controller_mode=pnl.AFTER,
+            controller_time_scale=pnl.TimeScale.TIME_STEP
+        )
+        comp.run([1], num_trials=2)
+        # Controller executions
+        # (C-<#>) == controller execution followed by val as of the end of that execution, increments by 1
+        # on each execution
+        #
+        #  Trial 1:
+        #    a (C-1) b (C-2)
+        #  Trial 2:
+        #    a (C-3) b (C-4)
+        #
+        assert c.value == [4]
+        assert c.execution_count == 4
+        assert comp.results == [[1], [3]]
+
+    def test_pass_before(self):
+        a = pnl.ProcessingMechanism()
+        b = pnl.ProcessingMechanism()
+        c = pnl.ControlMechanism(
+            default_variable=1,
+            function=pnl.SimpleIntegrator,
+            control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
+        )
+        comp = pnl.Composition(
+            pathways=[a, b],
+            controller=c,
+            controller_mode=pnl.BEFORE,
+            controller_time_scale=pnl.TimeScale.PASS,
+        )
+        comp.scheduler.add_condition(
+            b, pnl.AfterPass(1)
+        )
+        comp.run([1], num_trials=2,)
+        # Controller executions
+        # (C-<#>) == controller execution followed by val as of the end of that execution, increments by 1
+        # on each execution
+        #
+        #  Trial 1:
+        #    (C-1) Pass 1:
+        #       a
+        #    (C-2) Pass 2:
+        #       a
+        #    (C-3) Pass 2:
+        #       a   b
+        #  Trial 2:
+        #    (C-4) Pass 1:
+        #       a
+        #    (C-5) Pass 2:
+        #       a
+        #    (C-6) Pass 3:
+        #       a   b
+        assert c.value == [6]
+        assert c.execution_count == 6
+        assert comp.results == [[3], [6]]
+
+    def test_pass_after(self):
+        a = pnl.ProcessingMechanism()
+        b = pnl.ProcessingMechanism()
+        c = pnl.ControlMechanism(
+            default_variable=1,
+            function=pnl.SimpleIntegrator,
+            control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
+        )
+        comp = pnl.Composition(
+            pathways=[a, b],
+            controller=c,
+            controller_mode=pnl.AFTER,
+            controller_time_scale=pnl.TimeScale.PASS,
+        )
+        comp.scheduler.add_condition(
+            b, pnl.AfterPass(1)
+        )
+        comp.run([1], num_trials=2)
+        # Controller executions
+        # (C-<#>) == controller execution followed by val as of the end of that execution, increments by 1
+        # on each execution
+        #
+        #  Trial 1:
+        #    Pass 1:
+        #       a
+        #       (C-1)
+        #    Pass 2:
+        #       a
+        #       (C-2)
+        #    Pass 2:
+        #       a   b
+        #       (C-3)
+        #  Trial 2:
+        #    Pass 1:
+        #       a
+        #       (C-4)
+        #    Pass 2:
+        #       a
+        #       (C-5)
+        #    Pass 3:
+        #       a   b
+        #       (C-6)
+        assert c.value == [6]
+        assert c.execution_count == 6
+        assert comp.results == [[2], [5]]
+
+    def test_trial_before(self):
+        a = pnl.ProcessingMechanism()
+        b = pnl.ProcessingMechanism()
+        c = pnl.ControlMechanism(
+            default_variable=1,
+            function=pnl.SimpleIntegrator,
+            control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
+        )
+        comp = pnl.Composition(
+            pathways=[a, b],
+            controller=c,
+            controller_mode=pnl.BEFORE,
+            controller_time_scale=pnl.TimeScale.TRIAL
+        )
+        comp.run([1], num_trials=2)
+        # Controller executions
+        # (C-<#>) == controller execution followed by val as of the end of that execution, increments by 1
+        # on each execution
+        #
+        #  (C-1) Trial 1:
+        #    a  b
+        #  (C-2) Trial 2:
+        #    a  b
+        #
+        assert c.value == [2]
+        assert c.execution_count == 2
+        assert comp.results == [[1], [2]]
+
+    def test_trial_after(self):
+        a = pnl.ProcessingMechanism()
+        b = pnl.ProcessingMechanism()
+        c = pnl.ControlMechanism(
+            default_variable=1,
+            function=pnl.SimpleIntegrator,
+            control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
+        )
+        comp = pnl.Composition(
+            pathways=[a, b],
+            controller=c,
+            controller_mode=pnl.AFTER,
+            controller_time_scale=pnl.TimeScale.TRIAL
+        )
+        comp.run([1], num_trials=2)
+        # Controller executions
+        # (C-<#>) == controller execution followed by val as of the end of that execution, increments by 1
+        # on each execution
+        #
+        #  Trial 1:
+        #    a  b
+        #    (C-1)
+        #  Trial 2:
+        #    a  b
+        #    (C-2)
+        #
+        assert c.value == [2]
+        assert c.execution_count == 2
+        assert comp.results == [[1], [1]]
+
+    def test_run_before(self):
+        a = pnl.ProcessingMechanism()
+        b = pnl.ProcessingMechanism()
+        c = pnl.ControlMechanism(
+            default_variable=1,
+            function=pnl.SimpleIntegrator,
+            control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
+        )
+        comp = pnl.Composition(
+            pathways=[a, b],
+            controller=c,
+            controller_mode=pnl.BEFORE,
+            controller_time_scale=pnl.TimeScale.RUN
+        )
+        comp.run([1], num_trials=2)
+        comp.run([1], num_trials=2)
+        # Controller executions
+        # (C-<#>) == controller execution followed by val as of the end of that execution, increments by 1
+        # on each execution
+        #  (C-1)
+        #   Run 1:
+        #    Trial 1:
+        #      a  b
+        #    Trial 2:
+        #      a  b
+        #  (C-2)
+        #   Run 2:
+        #    Trial 1:
+        #      a  b
+        #    Trial 2:
+        #      a  b
+        assert c.value == [2]
+        assert c.execution_count == 2
+        assert comp.results == [[1], [1], [2], [2]]
+
+    def test_run_after(self):
+        a = pnl.ProcessingMechanism()
+        b = pnl.ProcessingMechanism()
+        c = pnl.ControlMechanism(
+            default_variable=1,
+            function=pnl.SimpleIntegrator,
+            control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
+        )
+        comp = pnl.Composition(
+            pathways=[a, b],
+            controller=c,
+            controller_mode=pnl.AFTER,
+            controller_time_scale=pnl.TimeScale.RUN
+        )
+        comp.run([1], num_trials=2)
+        comp.run([1], num_trials=2)
+        # Controller executions
+        # (C-<#>) == controller execution followed by val as of the end of that execution, increments by 1
+        # on each execution
+        #  (C-1)
+        #   Run 1:
+        #    Trial 1:
+        #      a  b
+        #    Trial 2:
+        #      a  b
+        #  (C-2)
+        #   Run 2:
+        #    Trial 1:
+        #      a  b
+        #    Trial 2:
+        #      a  b
+        assert c.value == [2]
+        assert c.execution_count == 2
+        assert comp.results == [[1], [1], [1], [1]]

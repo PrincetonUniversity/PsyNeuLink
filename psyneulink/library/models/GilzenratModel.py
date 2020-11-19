@@ -254,13 +254,13 @@ if args.enable_plot:
     )
     plt.plot(
         t,
-        LC_results_h_of_v,
+        pnl.convert_to_np_array(LC_results_h_of_v),
         label="h(v)",
         color='b'
     )
     plt.plot(
         t,
-        LC_results_u,
+        pnl.convert_to_np_array(LC_results_u),
         label="u",
         color='black'
     )

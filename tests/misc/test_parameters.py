@@ -235,11 +235,26 @@ def test_copy():
         (pnl.AdaptiveIntegrator, {'rate': None}, 'multiplicative_param', False),
         (pnl.AdaptiveIntegrator, {'rate': 0.5}, 'rate', True),
         (pnl.AdaptiveIntegrator, {'rate': 0.5}, 'multiplicative_param', True),
+        (pnl.TransferMechanism, {'integration_rate': None}, 'integration_rate', False),
+        (pnl.TransferMechanism, {'integration_rate': 0.5}, 'integration_rate', True),
     ]
 )
 def test_user_specified(cls_, kwargs, parameter, is_user_specified):
     c = cls_(**kwargs)
     assert getattr(c.parameters, parameter)._user_specified == is_user_specified
+
+
+@pytest.mark.parametrize(
+    'kwargs, parameter, is_user_specified',
+    [
+        ({'function': pnl.Linear}, 'slope', False),
+        ({'function': pnl.Linear()}, 'slope', False),
+        ({'function': pnl.Linear(slope=1)}, 'slope', True),
+    ]
+)
+def test_function_user_specified(kwargs, parameter, is_user_specified):
+    t = pnl.TransferMechanism(**kwargs)
+    assert getattr(t.function.parameters, parameter)._user_specified == is_user_specified
 
 
 class TestSharedParameters:
@@ -307,3 +322,29 @@ class TestSharedParameters:
         source_param = shared_param.source
 
         assert getattr(shared_param, attr_name) == getattr(source_param, attr_name)
+
+    @pytest.mark.parametrize(
+        'integrator_function, expected_rate',
+        [
+            (pnl.AdaptiveIntegrator, pnl.TransferMechanism.defaults.integration_rate),
+            (pnl.AdaptiveIntegrator(), pnl.TransferMechanism.defaults.integration_rate),
+            (pnl.AdaptiveIntegrator(rate=.75), .75)
+        ]
+    )
+    def test_override_tmech(self, integrator_function, expected_rate):
+        t = pnl.TransferMechanism(integrator_function=integrator_function)
+        assert t.integrator_function.defaults.rate == expected_rate
+        assert t.integration_rate.modulated == t.integration_rate.base == expected_rate
+
+    def test_conflict_warning(self):
+        with pytest.warns(
+            UserWarning,
+            match=(
+                'Specification of the "integration_rate" parameter.*conflicts'
+                ' with specification of its shared parameter "rate"'
+            )
+        ):
+            pnl.TransferMechanism(
+                integration_rate=.1,
+                integrator_function=pnl.AdaptiveIntegrator(rate=.2)
+            )

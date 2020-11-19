@@ -32,7 +32,7 @@ from psyneulink.core.components.functions.function import Function_Base, Functio
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.globals.keywords import \
-    CONTRASTIVE_HEBBIAN_FUNCTION, DEFAULT_VARIABLE, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
+    CONTRASTIVE_HEBBIAN_FUNCTION, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
     KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, MATRIX, \
     MSE, SSE
 from psyneulink.core.globals.parameters import Parameter
@@ -521,13 +521,15 @@ class BayesGLM(LearningFunction):
         self.gamma_shape_n = self.gamma_shape_0
         self.gamma_size_n = self.gamma_size_0
 
-    @handle_external_context(execution_id=NotImplemented)
-    def reset(self, *args, context=None):
+    @handle_external_context(fallback_most_recent=True)
+    def reset(self, default_variable=None, context=None):
         # If variable passed during execution does not match default assigned during initialization,
         #    reassign default and re-initialize priors
-        if DEFAULT_VARIABLE in args[0]:
-            self.defaults.variable = np.array([np.zeros_like(args[0][DEFAULT_VARIABLE][0]),
-                                                        np.zeros_like(args[0][DEFAULT_VARIABLE][1])])
+        if default_variable is not None:
+            self._update_default_variable(
+                np.array([np.zeros_like(default_variable), np.zeros_like(default_variable)]),
+                context=context
+            )
             self.initialize_priors()
 
     def _function(
