@@ -274,7 +274,7 @@ if args.enable_plot:
     plt.xticks(x_values)
     plt.title('GILZENRAT 2002 PsyNeuLink', fontweight='bold')
 
-    plt.show()
+    plt.show(block=not pnl._called_from_pytest)
 
     task.show_graph()
     print('\nPlots generated')

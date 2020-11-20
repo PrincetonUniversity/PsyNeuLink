@@ -246,4 +246,4 @@ if args.enable_plot:
     plt.title('Nieuwenhuis 2005 PsyNeuLink Lag 2 without noise', fontweight='bold')  # Set title
     ax.set_ylim((-0.2, 1.0))                     # Set left y axis limits
     ax2.set_ylim((0.0, 0.4))                    # Set right y axis limits
-    plt.show()
+    plt.show(block=not pnl._called_from_pytest)
