@@ -61,7 +61,7 @@ jobs:
       if: startsWith(runner.os, 'Linux')
 
     - name: Windows dependencies
-      run: choco install --no-progress -y graphviz
+      run: choco install --no-progress -y graphviz --version=2.38.0.20190211
       if: startsWith(runner.os, 'Windows')
 
     - name: Windows pytorch
