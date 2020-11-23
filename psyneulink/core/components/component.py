@@ -3626,6 +3626,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         for p in self.parameters:
             try:
                 param_value = p._get(context)
+                try:
+                    param_value = param_value.__self__
+                except AttributeError:
+                    pass
+
                 if isinstance(param_value, Component):
                     self._parameter_components.add(param_value)
             # ControlMechanism and GatingMechanism have Parameters that only
