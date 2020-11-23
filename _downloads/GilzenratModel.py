@@ -254,13 +254,13 @@ if args.enable_plot:
     )
     plt.plot(
         t,
-        LC_results_h_of_v,
+        pnl.convert_to_np_array(LC_results_h_of_v),
         label="h(v)",
         color='b'
     )
     plt.plot(
         t,
-        LC_results_u,
+        pnl.convert_to_np_array(LC_results_u),
         label="u",
         color='black'
     )
@@ -274,7 +274,7 @@ if args.enable_plot:
     plt.xticks(x_values)
     plt.title('GILZENRAT 2002 PsyNeuLink', fontweight='bold')
 
-    plt.show()
+    plt.show(block=not pnl._called_from_pytest)
 
     task.show_graph()
     print('\nPlots generated')

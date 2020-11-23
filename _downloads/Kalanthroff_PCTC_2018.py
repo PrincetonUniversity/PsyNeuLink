@@ -561,4 +561,4 @@ if args.enable_plot:
     axes[2, 3].plot(www_incong[settle:, 0], 'b')
     axes[2, 3].plot(www_incong[settle:, 1], 'g')
 
-    plt.show()
+    plt.show(block=not pnl._called_from_pytest)

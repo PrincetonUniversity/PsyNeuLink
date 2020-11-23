@@ -123,7 +123,7 @@ def figure_5a():
             plt.legend()
             plt.xlim(xmin=35)
             plt.xticks()
-            plt.show()
+            plt.show(block=not pnl._called_from_pytest)
 
     return comp
 
@@ -189,7 +189,7 @@ def figure_5b():
             ax.set_xlim(0, 120)
             ax.set_zlim(-1, 1)
             ax.set_title("Montague et. al. (1996) -- Figure 5B")
-            plt.show()
+            plt.show(block=not pnl._called_from_pytest)
 
     return comp
 
@@ -253,7 +253,7 @@ def figure_5c():
             ax.set_ylabel("Timestep")
             ax.set_zlabel("∂")
             ax.set_title("Montague et. al. (1996) -- Figure 5C")
-            plt.show()
+            plt.show(block=not pnl._called_from_pytest)
 
     return comp
 
