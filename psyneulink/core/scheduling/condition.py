@@ -344,7 +344,10 @@ class ConditionSet(object):
 
     """
     def __init__(self, conditions=None):
-        self.conditions = conditions if conditions is not None else {}
+        self.conditions = {}
+
+        if conditions is not None:
+            self.add_condition_set(conditions)
 
     def __contains__(self, item):
         return item in self.conditions
