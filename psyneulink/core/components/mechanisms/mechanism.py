@@ -1680,7 +1680,7 @@ class Mechanism_Base(Mechanism):
                           base_class=Mechanism_Base,
                           name=name,
                           registry=MechanismRegistry,
-                          context=context)
+                          )
 
         # Create Mechanism's _portRegistry and port type entries
         from psyneulink.core.components.ports.port import Port_Base
@@ -1691,21 +1691,21 @@ class Mechanism_Base(Mechanism):
         register_category(entry=InputPort,
                           base_class=Port_Base,
                           registry=self._portRegistry,
-                          context=context)
+                          )
 
         # ParameterPort
         from psyneulink.core.components.ports.parameterport import ParameterPort
         register_category(entry=ParameterPort,
                           base_class=Port_Base,
                           registry=self._portRegistry,
-                          context=context)
+                          )
 
         # OutputPort
         from psyneulink.core.components.ports.outputport import OutputPort
         register_category(entry=OutputPort,
                           base_class=Port_Base,
                           registry=self._portRegistry,
-                          context=context)
+                          )
 
         super(Mechanism_Base, self).__init__(
             default_variable=default_variable,
@@ -1957,7 +1957,7 @@ class Mechanism_Base(Mechanism):
         try:
             function_param_specs = params[FUNCTION_PARAMS]
         except KeyError:
-            if context.source & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY):
+            if context.source is ContextFlags.COMMAND_LINE:
                 pass
             elif self.prefs.verbosePref:
                 print("No params specified for {0}".format(self.__class__.__name__))
@@ -3632,7 +3632,7 @@ class Mechanism_Base(Mechanism):
                                                                   context=context)
             for port in instantiated_input_ports:
                 if port.name is port.componentName or port.componentName + '-' in port.name:
-                        port._assign_default_port_Name(context=context)
+                        port._assign_default_port_Name()
             # self._instantiate_function(function=self.function)
         if output_ports:
             instantiated_output_ports = _instantiate_output_ports(self, output_ports, context=context)

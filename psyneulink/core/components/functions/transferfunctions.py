@@ -3694,7 +3694,6 @@ class TransferWithCosts(TransferFunction):
             params=params,
             owner=owner,
             prefs=prefs,
-            context=ContextFlags.CONSTRUCTOR
         )
 
         # # MODIFIED 6/12/19 NEW: [JDC]

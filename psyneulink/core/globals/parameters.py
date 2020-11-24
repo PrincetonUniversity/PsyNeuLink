@@ -1240,7 +1240,7 @@ class Parameter(ParameterBase):
 
         return self._set(self._parse(value), context, skip_history, skip_log, **kwargs)
 
-    def _set(self, value, context=None, skip_history=False, skip_log=False, **kwargs):
+    def _set(self, value, context, skip_history=False, skip_log=False, **kwargs):
         if not self.stateful:
             execution_id = None
         else:

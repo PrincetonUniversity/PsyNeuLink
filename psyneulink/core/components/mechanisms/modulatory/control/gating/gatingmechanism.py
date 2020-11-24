@@ -487,7 +487,7 @@ class GatingMechanism(ControlMechanism):
         register_category(entry=GatingSignal,
                           base_class=Port_Base,
                           registry=self._portRegistry,
-                          context=context)
+                          )
 
     def _instantiate_control_signal_type(self, gating_signal_spec, context):
         """Instantiate actual ControlSignal, or subclass if overridden"""

@@ -39,7 +39,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, ContentAddressableMemory_FUNCTION, \
     MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM
 from psyneulink.core.globals.utilities import all_within_range, convert_to_np_array, parameter_spec, get_global_seed
-from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
+from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
@@ -306,7 +306,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         rate = np.array(self._get_current_parameter_value(RATE, context)).astype(float)
 
         # execute noise if it is a function
-        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable)
+        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
 
         # If this is an initialization run, leave deque empty (don't want to count it as an execution step);
         # Just return current input (for validation).
@@ -715,8 +715,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         )
 
         if self.previous_value.size != 0:
-            self.parameters.key_size._set(len(self.previous_value[KEYS][0]), Context(execution_id=None))
-            self.parameters.val_size._set(len(self.previous_value[VALS][0]), Context(execution_id=None))
+            self.parameters.key_size.set(len(self.previous_value[KEYS][0]))
+            self.parameters.val_size.set(len(self.previous_value[VALS][0]))
 
     def _parse_distance_function_variable(self, variable):
         # actual used variable in execution (get_memory) checks distance
@@ -1073,7 +1073,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         storage_prob = np.array(self._get_current_parameter_value(STORAGE_PROB, context)).astype(float)
 
         # execute noise if it is a function
-        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable)
+        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
 
         # get random state
         random_state = self._get_current_parameter_value('random_state', context)
