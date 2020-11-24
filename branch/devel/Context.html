@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Context &mdash; PsyNeuLink 0.8.4.8+1.gdc4ac4c documentation</title>
+  <title>Context &mdash; PsyNeuLink 0.8.4.8+27.g4d7794a documentation</title>
   
 
   
@@ -95,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.4.8+1
+                  0.8.4.8+27
                 </div>
               
             
@@ -251,7 +251,7 @@ information as the string returned by the <a class="reference internal" href="#p
 <span id="context-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="psyneulink.core.globals.context.Context">
-<em class="property">class </em><code class="descclassname">psyneulink.core.globals.context.</code><code class="descname">Context</code><span class="sig-paren">(</span><em>owner=None</em>, <em>composition=None</em>, <em>flags=None</em>, <em>execution_phase=&lt;ContextFlags.IDLE: 1024&gt;</em>, <em>source=&lt;ContextFlags.NONE: 262144&gt;</em>, <em>runmode=&lt;ContextFlags.DEFAULT_MODE: 524288&gt;</em>, <em>execution_id=NotImplemented</em>, <em>string=''</em>, <em>time=None</em>, <em>rpc_pipeline=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.context.Context" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.context.</code><code class="descname">Context</code><span class="sig-paren">(</span><em>owner=None</em>, <em>composition=None</em>, <em>flags=None</em>, <em>execution_phase=&lt;ContextFlags.IDLE: 1024&gt;</em>, <em>source=&lt;ContextFlags.NONE: 32768&gt;</em>, <em>runmode=&lt;ContextFlags.DEFAULT_MODE: 65536&gt;</em>, <em>execution_id=NotImplemented</em>, <em>string=''</em>, <em>time=None</em>, <em>rpc_pipeline=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.context.Context" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used to indicate the state of initialization and phase of execution of a Component, as well as the source of
 call of a method;  also used to specify and identify <a class="reference internal" href="Log.html#log-conditions"><span class="std std-ref">conditions</span></a> for <a class="reference internal" href="Log.html"><span class="doc">logging</span></a>.</p>
 <dl class="attribute">
@@ -303,7 +303,6 @@ one of the following flags is always set:</p>
 <div><ul class="simple">
 <li><code class="xref any docutils literal"><span class="pre">CONSTRUCTOR</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">COMMAND_LINE</span></code></li>
-<li><code class="xref any docutils literal"><span class="pre">COMPONENT</span></code></li>
 <li><code class="xref any docutils literal"><span class="pre">COMPOSITION</span></code></li>
 </ul>
 </div></blockquote>
@@ -363,7 +362,7 @@ last_value: the last value assigned or None</p>
 
 <dl class="classmethod">
 <dt id="psyneulink.core.globals.context.ContextFlags._get_context_string">
-<em class="property">classmethod </em><code class="descname">_get_context_string</code><span class="sig-paren">(</span><em>condition_flags</em>, <em>fields={'execution_phase'</em>, <em>'source'}</em>, <em>string=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags._get_context_string" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="descname">_get_context_string</code><span class="sig-paren">(</span><em>condition_flags</em>, <em>fields={'source'</em>, <em>'execution_phase'}</em>, <em>string=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.context.ContextFlags._get_context_string" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return string with the names of flags that are set in <strong>condition_flags</strong></p>
 <p>If <strong>fields</strong> is specified, then only the names of the flag(s) in the specified field(s) are returned.
 The fields argument must be the name of a field (<em>EXECUTION_PHASE</em> or <em>SOURCE</em>)
@@ -474,7 +473,7 @@ Context is not specified</li>
        <script type="text/javascript">
            var DOCUMENTATION_OPTIONS = {
                URL_ROOT:'./',
-               VERSION:'0.8.4.8+1.gdc4ac4c',
+               VERSION:'0.8.4.8+27.g4d7794a',
                LANGUAGE:'None',
                COLLAPSE_INDEX:false,
                FILE_SUFFIX:'.html',
