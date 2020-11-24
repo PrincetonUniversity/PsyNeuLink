@@ -13,10 +13,11 @@ import networkx as nx
 import sys
 import warnings
 warnings.filterwarnings("error", category=UserWarning)
-
+warnings.filterwarnings("ignore", "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method", category=UserWarning)
+warnings.filterwarnings("ignore", "Unable to copy weight matrix for", category=UserWarning)
 ###################### Convenience functions for testing script #################################
 
-# read in bipartite graph, return graph object, number of possible tasks, number of 
+# read in bipartite graph, return graph object, number of possible tasks, number of
 # input dimensions and number of output dimensions.
 # file format Ni No (input dimension number, output dimension number)
 def read_bipartite_adjlist(filename):
@@ -146,13 +147,9 @@ def get_trained_network(bipartite_graph, num_features=3, num_hidden=200, epochs=
 	    'epochs': epochs
 	}
 
-	# Build network
 	mnet = pnl.AutodiffComposition(
-                           patience=patience,
-                           min_delta=min_delt,
-                           learning_rate=learning_rate,
-                           learning_enabled=True,
-                           name='mnet')
+						   learning_rate=learning_rate,
+						   name='mnet')
 
 	mnet.output_CIM.parameters.value._set_history_max_length(100000)
 	mnet.add_node(il)
@@ -165,17 +162,18 @@ def get_trained_network(bipartite_graph, num_features=3, num_hidden=200, epochs=
 	mnet.add_projection(projection=pho, sender=hl, receiver=ol)
 
 	# Train network
-	mnet.run(
-	    inputs=input_set,
-	    minibatch_size=1,
-	    bin_execute=True
+	mnet.learn(
+		inputs=input_set,
+		minibatch_size=1,
+		bin_execute=True,
+		patience=patience,
+		min_delta=min_delt,
 	)
 
 	for projection in mnet.projections:
 		weights = projection.parameters.matrix.get(mnet)
 		projection.parameters.matrix.set(weights, None)
 
-	mnet.learning_enabled = False
 
 	# Apply LCA transform (values from Sebastian's code -- supposedly taken from the original LCA paper from Marius & Jay)
 	if attach_LCA:
@@ -273,12 +271,8 @@ def get_trained_network_multLCA(bipartite_graph, num_features=3, num_hidden=200,
 	}
 
 	# Build network
-	mnet = pnl.AutodiffComposition(
-                           patience=patience,
-                           min_delta=min_delt,
-                           learning_rate=learning_rate,
-                           learning_enabled=True,
-                           name='mnet')
+	mnet = pnl.AutodiffComposition(learning_rate=learning_rate,
+								   name='mnet')
 
 	mnet.output_CIM.parameters.value._set_history_max_length(1000)
 	mnet.add_node(il)
@@ -291,17 +285,20 @@ def get_trained_network_multLCA(bipartite_graph, num_features=3, num_hidden=200,
 	mnet.add_projection(projection=pho, sender=hl, receiver=ol)
 
 	# Train network
-	mnet.run(
-	    inputs=input_set,
-	    minibatch_size=1,
-	    bin_execute=True
+	mnet.learn(
+		inputs=input_set,
+		minibatch_size=1,
+		bin_execute=True,
+		patience=patience,
+		min_delta=min_delt,
 	)
 
 	for projection in mnet.projections:
-		weights = projection.parameters.matrix.get(mnet)
-		projection.parameters.matrix.set(weights, None)
-
-	mnet.learning_enabled = False
+		try:
+			weights = projection.parameters.matrix.get(mnet)
+			projection.parameters.matrix.set(weights, None)
+		except AttributeError as e:
+			warnings.warn(f"Unable to copy weight matrix for {projection}")
 
 	# Apply LCA transform (values from Sebastian's code -- supposedly taken from the original LCA paper from Marius & Jay)
 	if attach_LCA:
