@@ -86,6 +86,7 @@ class LLVMBuilderContext:
     _llvm_generation = 0
     int32_ty = ir.IntType(32)
     float_ty = ir.DoubleType()
+    bool_ty = ir.IntType(1)
 
     def __init__(self):
         self._modules = []
