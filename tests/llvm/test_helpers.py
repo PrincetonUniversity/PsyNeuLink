@@ -590,3 +590,49 @@ def test_helper_elementwise_op(mode, var, expected):
         bin_f.cuda_wrap_call(var, res)
 
     assert np.array_equal(res, expected)
+
+@pytest.mark.llvm
+@pytest.mark.parametrize('mode', ['CPU',
+                                  pytest.param('PTX', marks=pytest.mark.cuda)])
+@pytest.mark.parametrize('var1,var2,expected', [
+    (np.array([1.,2.,3.]), np.array([1.,2.,3.]), np.array([2.,4.,6.])),
+    (np.array([1.,2.,3.]), np.array([0.,1.,2.]), np.array([1.,3.,5.])),
+    (np.array([[1.,2.,3.],
+               [4.,5.,6.],
+               [7.,8.,9.]]),
+     np.array([[10.,11.,12.],
+               [13.,14.,15.],
+               [16.,17.,18.]]),
+     np.array([[11.,13.,15.],
+               [17.,19.,21.],
+               [23.,25.,27.]])),
+])
+def test_helper_recursive_iterate_arrays(mode, var1, var2, expected):
+    with pnlvm.LLVMBuilderContext() as ctx:
+        arr_ptr_ty = ctx.convert_python_struct_to_llvm_ir(var1).as_pointer()
+
+        func_ty = ir.FunctionType(ir.VoidType(), [arr_ptr_ty, arr_ptr_ty, arr_ptr_ty])
+
+        custom_name = ctx.get_unique_name("elementwise_op")
+        function = ir.Function(ctx.module, func_ty, name=custom_name)
+        u, v, out = function.args
+        block = function.append_basic_block(name="entry")
+        builder = ir.IRBuilder(block)
+
+        for (a_ptr, b_ptr, o_ptr) in pnlvm.helpers.recursive_iterate_arrays(ctx, builder, u, v, out):
+            a = builder.load(a_ptr)
+            b = builder.load(b_ptr)
+            builder.store(builder.fadd(a,b), o_ptr)
+        builder.ret_void()
+
+    bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
+    if mode == 'CPU':
+        ct_vec = np.ctypeslib.as_ctypes(var1)
+        ct_vec_2 = np.ctypeslib.as_ctypes(var2)
+        res = bin_f.byref_arg_types[2]()
+        bin_f(ct_vec, ct_vec_2, ctypes.byref(res))
+    else:
+        res = copy.deepcopy(var1)
+        bin_f.cuda_wrap_call(var1, var2, res)
+
+    assert np.array_equal(res, expected)

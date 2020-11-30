@@ -158,17 +158,6 @@ def csch(ctx, builder, x):
     den = builder.fsub(e2x, e2x.type(1))
     return builder.fdiv(num, den)
 
-def call_elementwise_operation(ctx, builder, x, operation, output_ptr):
-    """Recurse through an array structure and call operation on each scalar element of the structure. Store result in output_ptr"""
-    if isinstance(x.type.pointee, ir.ArrayType):
-        with array_ptr_loop(builder, x, str(x) + "_elementwise_op") as (b1, idx):
-            element_ptr = b1.gep(x, [ctx.int32_ty(0), idx])
-            output_element_ptr = b1.gep(output_ptr, [ctx.int32_ty(0), idx])
-            call_elementwise_operation(ctx, b1, element_ptr, operation, output_ptr=output_element_ptr)
-    else:
-        val = operation(ctx, builder, builder.load(x))
-        builder.store(val, output_ptr)
-
 def is_close(builder, val1, val2, rtol=1e-05, atol=1e-08):
     diff = builder.fsub(val1, val2, "is_close_diff")
     diff_neg = fneg(builder, diff, "is_close_fneg_diff")
@@ -238,6 +227,23 @@ def is_boolean(x):
     if is_pointer(x):
         type_t = x.type.pointee
     return isinstance(type_t, ir.IntType) and type_t.width == 1
+
+def recursive_iterate_arrays(ctx, builder, u, *args):
+    """Recursively iterates over all elements in scalar arrays of the same shape"""
+    assert isinstance(u.type.pointee, ir.ArrayType), "Can only iterate over arrays!"
+    assert all(len(u.type.pointee) == len(v.type.pointee) for v in args), "Tried to iterate over differing lengths!"
+    with array_ptr_loop(builder, u, str(u) + "," + str(args) + "_recursive_zip") as (b, idx):
+        u_ptr = b.gep(u, [ctx.int32_ty(0), idx])
+        arg_ptrs = (b.gep(v, [ctx.int32_ty(0), idx]) for v in args)
+        if is_scalar(u_ptr):
+            yield (u_ptr, *arg_ptrs)
+        else:
+            yield from recursive_iterate_arrays(ctx, b, u_ptr, *arg_ptrs)
+
+def call_elementwise_operation(ctx, builder, x, operation, output_ptr):
+    """Recurse through an array structure and call operation on each scalar element of the structure. Store result in output_ptr"""
+    for (inp_ptr, out_ptr) in recursive_iterate_arrays(ctx, builder, x, output_ptr):
+        builder.store(operation(ctx, builder, builder.load(inp_ptr)), out_ptr)
 
 def printf(builder, fmt, *args, override_debug=False):
     if "print_values" not in debug_env and not override_debug:
