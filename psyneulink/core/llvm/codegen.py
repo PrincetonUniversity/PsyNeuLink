@@ -46,6 +46,12 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
                 b.store(tmp, total_sum)
             return total_sum
 
+        def _len(x):
+            x_ty = x.type
+            if helpers.is_pointer(x):
+                x_ty = x_ty.pointee
+            return ctx.float_ty(len(x_ty))
+
         def _tanh(x):
             output_ptr = builder.alloca(x.type.pointee)
             helpers.call_elementwise_operation(self.ctx, self.builder, x, helpers.tanh, output_ptr)
@@ -57,6 +63,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             return output_ptr
 
         self.register['sum'] = _list_sum
+        self.register['len'] = _len
 
         # setup numpy
         numpy_handlers = {
