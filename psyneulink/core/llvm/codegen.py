@@ -31,13 +31,20 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         self.register = {}
 
         #setup default functions
-        def _vec_sum(x):
-            dim = len(x.type.pointee)
-            output_scalar = builder.alloca(ctx.float_ty)
-            # Get the pointer to the first element of the array to convert from [? x double]* -> double*
-            vec_u = builder.gep(x, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            builder.call(ctx.import_llvm_function("__pnl_builtin_vec_sum"), [vec_u, ctx.int32_ty(dim), output_scalar])
-            return output_scalar
+        def _list_sum(x):
+            # HACK: Obtain polymorphic addition function by visiting the add node
+            # this should ideally be moved to an explicit helper
+            add_func = self.visit_Add(None)
+
+            total_sum = builder.alloca(x.type.pointee.element)
+            builder.store(total_sum.type.pointee(None), total_sum)
+            with helpers.array_ptr_loop(builder, x, "list_sum") as (b, idx):
+                curr_val = b.gep(x, [ctx.int32_ty(0), idx])
+                tmp = add_func(total_sum, curr_val)
+                if helpers.is_pointer(tmp):
+                    tmp = builder.load(tmp)
+                b.store(tmp, total_sum)
+            return total_sum
 
         def _tanh(x):
             output_ptr = builder.alloca(x.type.pointee)
@@ -49,7 +56,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             helpers.call_elementwise_operation(self.ctx, self.builder, x, helpers.exp, output_ptr)
             return output_ptr
 
-        self.register['sum'] = _vec_sum
+        self.register['sum'] = _list_sum
 
         # setup numpy
         numpy_handlers = {

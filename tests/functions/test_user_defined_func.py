@@ -367,6 +367,29 @@ class TestUserDefFunc:
         val = benchmark(e, [-1, 2, 3, 4])
         assert np.allclose(val, [[10]])
 
+    @pytest.mark.parametrize("op,variable,expected", [ # parameter is string since compiled udf doesn't support closures as of present
+                    ("SUM", [1.0, 3.0], 4),
+                    ("SUM", [[1.0], [3.0]], [4.0]),
+                    ])
+    @pytest.mark.parametrize("bin_execute", ['Python',
+                                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                            ])
+    @pytest.mark.benchmark(group="Function UDF")
+    def test_user_def_func_builtin(self, op, variable, expected, bin_execute, benchmark):
+        if op == "SUM":
+            def myFunction(variable):
+                return sum(variable)
+
+        U = UserDefinedFunction(custom_function=myFunction, default_variable=variable)
+        if bin_execute == 'LLVM':
+            e = pnlvm.execution.FuncExecution(U).execute
+        elif bin_execute == 'PTX':
+            e = pnlvm.execution.FuncExecution(U).cuda_execute
+        else:
+            e = U
+        val = benchmark(e, variable)
+        assert np.allclose(val, expected)
 
     @pytest.mark.parametrize("bin_execute", ['Python',
                                              pytest.param('LLVM', marks=pytest.mark.llvm),
