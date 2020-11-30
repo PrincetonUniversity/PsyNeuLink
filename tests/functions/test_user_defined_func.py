@@ -109,72 +109,59 @@ class TestBinaryOperations:
         val = benchmark(e, [0])
         assert val == 1.0
 
-    @pytest.mark.parametrize("op", [ # parameter is string since compiled udf doesn't support closures as of present
-                        "Eq",
-                        "NotEq",
-                        "Lt",
-                        "LtE",
-                        "Gt",
-                        "GtE",
+    @pytest.mark.parametrize("op,var1,var2,expected", [ # parameter is string since compiled udf doesn't support closures as of present
+                        ("Eq", 1.0, 2.0, 0.0),
+                        ("NotEq", 1.0, 2.0, 1.0),
+                        ("Lt", 1.0, 2.0, 1.0),
+                        ("LtE", 1.0, 2.0, 1.0),
+                        ("Gt", 1.0, 2.0, 0.0),
+                        ("GtE", 1.0, 2.0, 0.0),
                         ])
     @pytest.mark.parametrize("bin_execute", ['Python',
                                              pytest.param('LLVM', marks=pytest.mark.llvm),
                                              pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                             ])
     @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_cmpop(self, op, bin_execute, benchmark):
+    def test_user_def_func_cmpop(self, op, var1, var2, expected, bin_execute, benchmark):
+        # we explicitly use np here to ensure that the result is castable to float in the scalar-scalar case
         if op == "Eq":
-            def myFunction(variable):
-                var1 = 1.0
-                var2 = 1.0
+            def myFunction(variable, var1, var2):
                 if var1 == var2:
                     return 1.0
                 else:
                     return 0.0
         elif op == "NotEq":
-            def myFunction(variable):
-                var1 = 1.0
-                var2 = 2.0
+            def myFunction(variable, var1, var2):
                 if var1 != var2:
                     return 1.0
                 else:
                     return 0.0
         elif op == "Lt":
-            def myFunction(variable):
-                var1 = 1.0
-                var2 = 2.0
+            def myFunction(variable, var1, var2):
                 if var1 < var2:
                     return 1.0
                 else:
                     return 0.0
         elif op == "LtE":
-            def myFunction(variable):
-                var1 = 1.0
-                var2 = 2.0
-                var3 = 1.0
-                if var1 <= var2 and var1 <= var3:
+            def myFunction(variable, var1, var2):
+                if var1 <= var2:
                     return 1.0
                 else:
                     return 0.0
         elif op == "Gt":
-            def myFunction(variable):
-                var1 = 2.0
-                var2 = 1.0
+            def myFunction(variable, var1, var2):
                 if var1 > var2:
                     return 1.0
                 else:
                     return 0.0
         elif op == "GtE":
-            def myFunction(variable):
-                var1 = 3.0
-                var2 = 2.0
-                var3 = 3.0
-                if var1 >= var2 and var1 >= var3:
+            def myFunction(variable, var1, var2):
+                if var1 >= var2:
                     return 1.0
                 else:
                     return 0.0
 
-        U = UserDefinedFunction(custom_function=myFunction, default_variable=[0])
+        U = UserDefinedFunction(custom_function=myFunction, default_variable=[0], var1=var1, var2=var2)
         if bin_execute == 'LLVM':
             e = pnlvm.execution.FuncExecution(U).execute
         elif bin_execute == 'PTX':
@@ -182,7 +169,87 @@ class TestBinaryOperations:
         else:
             e = U
         val = benchmark(e, [0])
-        assert val == 1.0
+        assert np.allclose(expected, val)
+
+    @pytest.mark.parametrize("op,var1,var2,expected", [ # parameter is string since compiled udf doesn't support closures as of present
+                        ("Eq", 1.0, 2.0, 0.0),
+                        ("Eq", [1.0, 2.0], [1.0, 2.0], [1.0, 1.0]),
+                        ("Eq", 1.0, [1.0, 2.0], [1.0, 0.0]),
+                        ("Eq", [2.0, 1.0], 1.0, [0.0, 1.0]),
+                        ("Eq", [[1.0, 2.0], [3.0, 4.0]], 1.0, [[1.0, 0.0], [0.0, 0.0]]),
+                        ("Eq", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[1.0, 0.0], [0.0, 0.0]]),
+                        ("Eq", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[1.0, 1.0], [1.0, 1.0]]),
+                        ("NotEq", 1.0, 2.0, 1.0),
+                        ("NotEq", [1.0, 2.0], [1.0, 2.0], [0.0, 0.0]),
+                        ("NotEq", 1.0, [1.0, 2.0], [0.0, 1.0]),
+                        ("NotEq", [2.0, 1.0], 1.0, [1.0, 0.0]),
+                        ("NotEq", [[1.0, 2.0], [3.0, 4.0]], 1.0, [[0.0, 1.0], [1.0, 1.0]]),
+                        ("NotEq", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[0.0, 1.0], [1.0, 1.0]]),
+                        ("NotEq", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[0.0, 0.0], [0.0, 0.0]]),
+                        ("Lt", 1.0, 2.0, 1.0),
+                        ("Lt", [1.0, 2.0], [1.0, 2.0], [0.0, 0.0]),
+                        ("Lt", 1.0, [1.0, 2.0], [0.0, 1.0]),
+                        ("Lt", [2.0, 1.0], 1.0, [0.0, 0.0]),
+                        ("Lt", [[1.0, 2.0], [3.0, 4.0]], 1.0, [[0.0, 0.0], [0.0, 0.0]]),
+                        ("Lt", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[0.0, 1.0], [1.0, 1.0]]),
+                        ("Lt", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[0.0, 0.0], [0.0, 0.0]]),
+                        ("LtE", 1.0, 2.0, 1.0),
+                        ("LtE", [1.0, 2.0], [1.0, 2.0], [1.0, 1.0]),
+                        ("LtE", 1.0, [1.0, 2.0], [1.0, 1.0]),
+                        ("LtE", [2.0, 1.0], 1.0, [0.0, 1.0]),
+                        ("LtE", [[1.0, 2.0], [3.0, 4.0]], 1.0, [[1.0, 0.0], [0.0, 0.0]]),
+                        ("LtE", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[1.0, 1.0], [1.0, 1.0]]),
+                        ("LtE", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[1.0, 1.0], [1.0, 1.0]]),
+                        ("Gt", 1.0, 2.0, 0.0),
+                        ("Gt", [1.0, 2.0], [1.0, 2.0], [0.0, 0.0]),
+                        ("Gt", 1.0, [1.0, 2.0], [0.0, 0.0]),
+                        ("Gt", [2.0, 1.0], 1.0, [1.0, 0.0]),
+                        ("Gt", [[1.0, 2.0], [3.0, 4.0]], 1.0, [[0.0, 1.0], [1.0, 1.0]]),
+                        ("Gt", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[0.0, 0.0], [0.0, 0.0]]),
+                        ("Gt", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[0.0, 0.0], [0.0, 0.0]]),
+                        ("GtE", 1.0, 2.0, 0.0),
+                        ("GtE", [1.0, 2.0], [1.0, 2.0], [1.0, 1.0]),
+                        ("GtE", 1.0, [1.0, 2.0], [1.0, 0.0]),
+                        ("GtE", [2.0, 1.0], 1.0, [1.0, 1.0]),
+                        ("GtE", [[1.0, 2.0], [3.0, 4.0]], 1.0, [[1.0, 1.0], [1.0, 1.0]]),
+                        ("GtE", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[1.0, 0.0], [0.0, 0.0]]),
+                        ("GtE", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[1.0, 1.0], [1.0, 1.0]]),
+                        ])
+    @pytest.mark.parametrize("bin_execute", ['Python',
+                                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                            ])
+    @pytest.mark.benchmark(group="Function UDF")
+    def test_user_def_func_cmpop_numpy(self, op, var1, var2, expected, bin_execute, benchmark):
+        # we explicitly use np here to ensure that the result is castable to float in the scalar-scalar case
+        if op == "Eq":
+            def myFunction(variable, var1, var2):
+                return np.equal(var1, var2).astype(float)
+        elif op == "NotEq":
+            def myFunction(variable, var1, var2):
+                return np.not_equal(var1, var2).astype(float)
+        elif op == "Lt":
+            def myFunction(variable, var1, var2):
+                return np.less(var1, var2).astype(float)
+        elif op == "LtE":
+            def myFunction(variable, var1, var2):
+                return np.less_equal(var1, var2).astype(float)
+        elif op == "Gt":
+            def myFunction(variable, var1, var2):
+                return np.greater(var1, var2).astype(float)
+        elif op == "GtE":
+            def myFunction(variable, var1, var2):
+                return np.greater_equal(var1, var2).astype(float)
+
+        U = UserDefinedFunction(custom_function=myFunction, default_variable=[0], var1=var1, var2=var2)
+        if bin_execute == 'LLVM':
+            e = pnlvm.execution.FuncExecution(U).execute
+        elif bin_execute == 'PTX':
+            e = pnlvm.execution.FuncExecution(U).cuda_execute
+        else:
+            e = U
+        val = benchmark(e, [0])
+        assert np.allclose(expected, val)
 
 class TestUserDefFunc:
 

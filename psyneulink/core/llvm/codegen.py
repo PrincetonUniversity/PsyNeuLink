@@ -71,7 +71,13 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         # setup numpy
         numpy_handlers = {
             'tanh': _tanh,
-            'exp': _exp
+            'exp': _exp,
+            'equal': self._generate_fcmp_handler(self.ctx, self.builder, "=="),
+            'not_equal': self._generate_fcmp_handler(self.ctx, self.builder, "!="),
+            'less': self._generate_fcmp_handler(self.ctx, self.builder, "<"),
+            'less_equal': self._generate_fcmp_handler(self.ctx, self.builder, "<="),
+            'greater': self._generate_fcmp_handler(self.ctx, self.builder, ">"),
+            'greater_equal': self._generate_fcmp_handler(self.ctx, self.builder, ">="),
         }
 
         for k, v in func_globals.items():
@@ -392,53 +398,68 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
         return _or
 
-    def visit_Eq(self, node):
-        def _eq(x, y):
-            assert helpers.is_floating_point(x), f"{x} is not a floating point type!"
-            assert helpers.is_floating_point(y), f"{y} is not a floating point type!"
-            return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fcmp_ordered('==', x, y))
+    def _generate_fcmp_handler(self, ctx, builder, cmp):
+        def _cmp_array(ctx, builder, u, v):
+            assert u.type == v.type
+            shape = helpers.get_array_shape(u)
+            output_ptr = builder.alloca(helpers.array_from_shape(shape, ctx.bool_ty))
 
-        return _eq
+            for (u_ptr, v_ptr, out_ptr) in helpers.recursive_iterate_arrays(ctx, builder, u, v, output_ptr):
+                u_val = builder.load(u_ptr)
+                v_val = builder.load(v_ptr)
+                builder.store(builder.fcmp_ordered(cmp, u_val, v_val), out_ptr)
+
+            return output_ptr
+
+        def _cmp_array_scalar(ctx, builder, array, s):
+            shape = helpers.get_array_shape(array)
+            output_ptr = builder.alloca(helpers.array_from_shape(shape, ctx.bool_ty))
+            helpers.call_elementwise_operation(ctx, builder, array, lambda ctx, builder, x:  builder.fcmp_ordered(cmp, x, s), output_ptr)
+
+            return output_ptr
+
+        def _cmp_scalar_array(ctx, builder, s, array):
+            shape = helpers.get_array_shape(array)
+            output_ptr = builder.alloca(helpers.array_from_shape(shape, ctx.bool_ty))
+            helpers.call_elementwise_operation(ctx, builder, array, lambda ctx, builder, x:  builder.fcmp_ordered(cmp, s, x), output_ptr)
+
+            return output_ptr
+
+        def _cmp(x, y):
+            if helpers.is_floating_point(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fcmp_ordered(cmp, x, y))
+            elif helpers.is_vector(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, _cmp_array_scalar)
+            elif helpers.is_floating_point(x) and helpers.is_vector(y):
+                return self._generate_binop(x, y, _cmp_scalar_array)
+            elif helpers.is_2d_matrix(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, _cmp_array_scalar)
+            elif helpers.is_floating_point(x) and helpers.is_2d_matrix(y):
+                return self._generate_binop(x, y, _cmp_scalar_array)
+            elif helpers.is_vector(x) and helpers.is_vector(y):
+                return self._generate_binop(x, y, _cmp_array)
+            elif helpers.is_2d_matrix(x) and helpers.is_2d_matrix(y):
+                return self._generate_binop(x, y, _cmp_array)
+
+        return _cmp
+
+    def visit_Eq(self, node):
+        return self._generate_fcmp_handler(self.ctx, self.builder, "==")
 
     def visit_NotEq(self, node):
-        def _neq(x, y):
-            assert helpers.is_floating_point(x), f"{x} is not a floating point type!"
-            assert helpers.is_floating_point(y), f"{y} is not a floating point type!"
-            return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fcmp_ordered('!=', x, y))
-
-        return _neq
+        return self._generate_fcmp_handler(self.ctx, self.builder, "!=")
 
     def visit_Lt(self, node):
-        def _lt(x, y):
-            assert helpers.is_floating_point(x), f"{x} is not a floating point type!"
-            assert helpers.is_floating_point(y), f"{y} is not a floating point type!"
-            return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fcmp_ordered('<', x, y))
-
-        return _lt
+        return self._generate_fcmp_handler(self.ctx, self.builder, "<")
 
     def visit_LtE(self, node):
-        def _lte(x, y):
-            assert helpers.is_floating_point(x), f"{x} is not a floating point type!"
-            assert helpers.is_floating_point(y), f"{y} is not a floating point type!"
-            return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fcmp_ordered('<=', x, y))
-
-        return _lte
+        return self._generate_fcmp_handler(self.ctx, self.builder, "<=")
 
     def visit_Gt(self, node):
-        def _gt(x, y):
-            assert helpers.is_floating_point(x), f"{x} is not a floating point type!"
-            assert helpers.is_floating_point(y), f"{y} is not a floating point type!"
-            return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fcmp_ordered('>', x, y))
-
-        return _gt
+        return self._generate_fcmp_handler(self.ctx, self.builder, ">")
 
     def visit_GtE(self, node):
-        def _gte(x, y):
-            assert helpers.is_floating_point(x), f"{x} is not a floating point type!"
-            assert helpers.is_floating_point(y), f"{y} is not a floating point type!"
-            return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fcmp_ordered('>=', x, y))
-
-        return _gte
+        return self._generate_fcmp_handler(self.ctx, self.builder, ">=")
 
     def visit_Compare(self, node):
         comp_val = self.visit(node.left)
