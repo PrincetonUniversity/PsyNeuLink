@@ -519,6 +519,25 @@ class TestHelperTypegetters:
 
         assert res == expected
 
+    @pytest.mark.llvm
+    @pytest.mark.parametrize('ir_type,expected', [
+        (DOUBLE_VECTOR_TYPE, [1]),
+        (DOUBLE_VECTOR_PTR_TYPE, [1]),
+        (DOUBLE_MATRIX_TYPE, [1, 1]),
+        (DOUBLE_MATRIX_PTR_TYPE, [1, 1]),
+    ], ids=str)
+    def test_helper_get_array_shape(self, ir_type, expected):
+        assert pnlvm.helpers.get_array_shape(ir_type(None)) == expected
+
+    @pytest.mark.llvm
+    @pytest.mark.parametrize('ir_type,shape', [
+        (DOUBLE_VECTOR_TYPE, (1,)),
+        (DOUBLE_MATRIX_TYPE, (1,1)),
+    ], ids=str)
+    def test_helper_array_from_shape(self, ir_type, shape):
+        with pnlvm.LLVMBuilderContext() as ctx:
+            assert ir_type == pnlvm.helpers.array_from_shape(shape, ctx.float_ty)
+
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
                                   pytest.param('PTX', marks=pytest.mark.cuda)])

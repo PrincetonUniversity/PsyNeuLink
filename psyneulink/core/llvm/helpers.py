@@ -228,6 +228,25 @@ def is_boolean(x):
         type_t = x.type.pointee
     return isinstance(type_t, ir.IntType) and type_t.width == 1
 
+def get_array_shape(x):
+    x_ty = x.type
+    if is_pointer(x):
+        x_ty = x_ty.pointee
+
+    assert isinstance(x_ty, ir.ArrayType), f"Tried to get shape of non-array type: {x_ty}"
+    dimensions = []
+    while hasattr(x_ty, "count"):
+        dimensions.append(x_ty.count)
+        x_ty = x_ty.element
+
+    return dimensions
+
+def array_from_shape(shape, element_ty):
+    array_ty = element_ty
+    for dim in reversed(shape):
+        array_ty = ir.ArrayType(array_ty, dim)
+    return array_ty
+
 def recursive_iterate_arrays(ctx, builder, u, *args):
     """Recursively iterates over all elements in scalar arrays of the same shape"""
     assert isinstance(u.type.pointee, ir.ArrayType), "Can only iterate over arrays!"
