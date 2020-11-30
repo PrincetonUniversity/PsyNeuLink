@@ -28,7 +28,6 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         self.func_params = func_params
         self.arg_in = arg_in
         self.arg_out = arg_out
-        self.register = {}
 
         #setup default functions
         def _list_sum(x):
@@ -62,8 +61,11 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             helpers.call_elementwise_operation(self.ctx, self.builder, x, helpers.exp, output_ptr)
             return output_ptr
 
-        self.register['sum'] = _list_sum
-        self.register['len'] = _len
+        self.register = {
+            "sum": _list_sum,
+            "len": _len,
+            "float": ctx.float_ty,
+        }
 
         # setup numpy
         numpy_handlers = {
