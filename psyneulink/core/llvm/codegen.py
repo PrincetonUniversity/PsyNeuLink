@@ -274,6 +274,12 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
     def visit_Attribute(self, node):
         val = self.visit(node.value)
+
+        # special case numpy attributes
+        if node.attr == "shape":
+            shape = helpers.get_array_shape(val)
+            return ir.LiteralStructType([self.ctx.float_ty] * len(shape))(shape)
+
         return val[node.attr]
 
     def visit_Num(self, node):

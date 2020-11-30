@@ -318,25 +318,29 @@ class TestUserDefFunc:
         val = benchmark(e, 0)
         assert np.allclose(val, expected)
 
-    @pytest.mark.parametrize("op,expected", [ # parameter is string since compiled udf doesn't support closures as of present
-                    ("TANH", [0.76159416, 0.99505475]),
-                    ("EXP", [2.71828183, 20.08553692]),
+    @pytest.mark.parametrize("op,variable,expected", [ # parameter is string since compiled udf doesn't support closures as of present
+                    ("TANH", [[1, 3]], [0.76159416, 0.99505475]),
+                    ("EXP", [[1, 3]], [2.71828183, 20.08553692]),
+                    ("SHAPE", [1, 2], [2]),
+                    ("SHAPE", [[1, 3]], [1, 2]),
                     ])
     @pytest.mark.parametrize("bin_execute", ['Python',
                                              pytest.param('LLVM', marks=pytest.mark.llvm),
                                              pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                             ])
     @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_numpy(self, op, expected, bin_execute, benchmark):
-        variable = [[1, 3]]
+    def test_user_def_func_numpy(self, op, variable, expected, bin_execute, benchmark):
         if op == "TANH":
             def myFunction(variable):
                 return np.tanh(variable)
         elif op == "EXP":
             def myFunction(variable):
                 return np.exp(variable)
+        elif op == "SHAPE":
+            def myFunction(variable):
+                return variable.shape
 
-        U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]])
+        U = UserDefinedFunction(custom_function=myFunction, default_variable=variable)
         if bin_execute == 'LLVM':
             e = pnlvm.execution.FuncExecution(U).execute
         elif bin_execute == 'PTX':
