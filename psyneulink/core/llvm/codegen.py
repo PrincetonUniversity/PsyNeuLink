@@ -65,6 +65,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             "sum": _list_sum,
             "len": _len,
             "float": ctx.float_ty,
+            "int": ctx.int32_ty,
         }
 
         # setup numpy
@@ -281,6 +282,27 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         if node.attr == "shape":
             shape = helpers.get_array_shape(val)
             return ir.LiteralStructType([self.ctx.float_ty] * len(shape))(shape)
+        elif node.attr == "astype":
+            def astype(ty):
+                def _convert(ctx, builder, x):
+                    if helpers.is_pointer(x):
+                        x = builder.load(x)
+                    if helpers.is_integer(x) and ty is ctx.float_ty:
+                        if helpers.is_boolean(x):
+                            return builder.uitofp(x, ty)
+                        return builder.sitofp(x, ty)
+                    elif helpers.is_floating_point(x) and ty is self.register["int"]:
+                        return builder.fptosi(x, ty)
+                    elif (helpers.is_floating_point(x) and ty is ctx.float_ty):
+                        return x
+                if helpers.is_scalar(val):
+                    return _convert(self.ctx, self.builder, val)
+                else:
+                    output_ptr = self.builder.alloca(helpers.array_from_shape(helpers.get_array_shape(val), ty))
+                    helpers.call_elementwise_operation(self.ctx, self.builder, val, _convert, output_ptr)
+                    return output_ptr
+            # we only support float types
+            return astype
 
         return val[node.attr]
 

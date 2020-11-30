@@ -323,6 +323,8 @@ class TestUserDefFunc:
                     ("EXP", [[1, 3]], [2.71828183, 20.08553692]),
                     ("SHAPE", [1, 2], [2]),
                     ("SHAPE", [[1, 3]], [1, 2]),
+                    ("ASTYPE_FLOAT", [1], [1.0]),
+                    ("ASTYPE_INT", [-1.5], [-1.0]),
                     ])
     @pytest.mark.parametrize("bin_execute", ['Python',
                                              pytest.param('LLVM', marks=pytest.mark.llvm),
@@ -339,6 +341,13 @@ class TestUserDefFunc:
         elif op == "SHAPE":
             def myFunction(variable):
                 return variable.shape
+        elif op == "ASTYPE_FLOAT":
+            def myFunction(variable):
+                return variable.astype(float)
+        elif op == "ASTYPE_INT":
+            # return types cannot be integers, so we cast back to float and check for truncation
+            def myFunction(variable):
+                return variable.astype(int).astype(float)
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=variable)
         if bin_execute == 'LLVM':
