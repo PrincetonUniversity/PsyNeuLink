@@ -484,6 +484,9 @@ class TestUserDefFunc:
                     ("LEN", [1.0, 3.0], 2),
                     ("LEN", [[1.0], [3.0]], 2),
                     ("LEN_TUPLE", [0, 0], 2),
+                    ("MAX", [0.0, 0.0], 0),
+                    ("MAX", [1.0, 2.0], 2),
+                    ("MAX", [[2.0, 1.0], [6.0, 2.0]], 6),
                     ])
     @pytest.mark.parametrize("bin_execute", ['Python',
                                              pytest.param('LLVM', marks=pytest.mark.llvm),
@@ -500,6 +503,9 @@ class TestUserDefFunc:
         elif op == "LEN_TUPLE":
             def myFunction(variable):
                 return len((1,2))
+        elif op == "MAX":
+            def myFunction(variable):
+                return np.max(variable)
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=variable)
         if bin_execute == 'LLVM':

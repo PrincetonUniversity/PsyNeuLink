@@ -61,11 +61,23 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             helpers.call_elementwise_operation(self.ctx, self.builder, x, helpers.exp, output_ptr)
             return output_ptr
 
+        def _max(x):
+            assert helpers.is_vector(x) or helpers.is_2d_matrix(x), "Attempted to call max on invalid variable! Only 1-d and 2-d lists are supported!"
+            curr = builder.alloca(ctx.float_ty)
+            builder.store(ctx.float_ty('NaN'), curr)
+            for (element_ptr,) in helpers.recursive_iterate_arrays(ctx, builder, x):
+                element = builder.load(element_ptr)
+                greater = builder.fcmp_unordered('>', element, builder.load(curr))
+                with builder.if_then(greater):
+                    builder.store(element, curr)
+            return curr
+
         self.register = {
             "sum": _list_sum,
             "len": _len,
             "float": ctx.float_ty,
             "int": ctx.int32_ty,
+            "max": _max,
         }
 
         # setup numpy
@@ -78,6 +90,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             'less_equal': self._generate_fcmp_handler(self.ctx, self.builder, "<="),
             'greater': self._generate_fcmp_handler(self.ctx, self.builder, ">"),
             'greater_equal': self._generate_fcmp_handler(self.ctx, self.builder, ">="),
+            "max": _max,
         }
 
         for k, v in func_globals.items():
