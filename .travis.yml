@@ -14,31 +14,9 @@ arch:
   - amd64
   - arm64
   - ppc64le
-# Disabled until the scheduling issues are fixed:
-# https://travis-ci.community/t/s390x-build-fails-to-get-queued/9533
+# Disabled until grpcio works with s390x
+# https://github.com/grpc/grpc/issues/23797
 #  - s390x
-
-stages:
-  - precache
-  - test
-
-jobs:
-  include:
-    - script: true
-      after_script: true
-      stage: precache
-      env: PYTHON=3.8
-      arch: arm64
-    - script: true
-      after_script: true
-      stage: precache
-      env: PYTHON=3.7
-      arch: arm64
-    - script: true
-      after_script: true
-      stage: precache
-      env: PYTHON=3.6
-      arch: arm64
 
 env:
   jobs:
