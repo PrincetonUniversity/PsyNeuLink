@@ -372,6 +372,25 @@ class TestUserDefFunc:
         val = benchmark(e, variable)
         assert np.allclose(val, -variable)
 
+    @pytest.mark.parametrize("bin_execute", ['Python',
+                                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                            ])
+    @pytest.mark.benchmark(group="Function UDF")
+    def test_user_def_reward_func(self, bin_execute, benchmark):
+        variable = [[1,2,3,4]]
+        def myFunction(x,t0=0.48):
+            return (x[0][0]>0).astype(float) * (x[0][2]>0).astype(float) / (np.max([x[0][1],x[0][3]]) + t0)
+        U = UserDefinedFunction(custom_function=myFunction, default_variable=variable, param=variable)
+        if bin_execute == 'LLVM':
+            e = pnlvm.execution.FuncExecution(U).execute
+        elif bin_execute == 'PTX':
+            e = pnlvm.execution.FuncExecution(U).cuda_execute
+        else:
+            e = U
+        val = benchmark(e, variable)
+        assert np.allclose(val, 0.2232142857142857)
+
     @pytest.mark.parametrize("dtype, expected", [ # parameter is string since compiled udf doesn't support closures as of present
                         ("SCALAR", 1.0),
                         ("VECTOR", [1,2]),
