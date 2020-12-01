@@ -257,6 +257,51 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
         return _mul
 
+    def visit_Div(self, node):
+        def _div_array(ctx, builder, u, v):
+            assert u.type == v.type
+            output_ptr = builder.alloca(u.type.pointee)
+
+            for (u_ptr, v_ptr, out_ptr) in helpers.recursive_iterate_arrays(ctx, builder, u, v, output_ptr):
+                u_val = builder.load(u_ptr)
+                v_val = builder.load(v_ptr)
+                builder.store(builder.fdiv(u_val, v_val), out_ptr)
+
+            return output_ptr
+
+        def _div_array_scalar(ctx, builder, array, s):
+            output_ptr = builder.alloca(array.type.pointee)
+            helpers.call_elementwise_operation(ctx, builder, array, lambda ctx, builder, x:  builder.fdiv(x, s), output_ptr)
+
+            return output_ptr
+
+        def _div_scalar_array(ctx, builder, s, array):
+            output_ptr = builder.alloca(array.type.pointee)
+            helpers.call_elementwise_operation(ctx, builder, array, lambda ctx, builder, x:  builder.fdiv(s, x), output_ptr)
+
+            return output_ptr
+
+        def _div(x, y):
+            if helpers.is_floating_point(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fdiv(x, y))
+            elif helpers.is_floating_point(x) and (helpers.is_2d_matrix(y) or helpers.is_vector(y)):
+                return self._generate_binop(x, y, _div_scalar_array)
+            elif helpers.is_vector(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, _div_array_scalar)
+            elif helpers.is_2d_matrix(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, _div_array_scalar)
+            elif helpers.is_vector(x) and helpers.is_vector(y):
+                if x.type != y.type:
+                    # Special case: Cast y into scalar if it can be done
+                    if helpers.get_array_shape(y) == [1]:
+                        y = self.builder.gep(y, [self.ctx.int32_ty(0), self.ctx.int32_ty(0)])
+                        return self._generate_binop(x, y, _div_array_scalar)
+                return self._generate_binop(x, y, _div_array)
+            elif helpers.is_2d_matrix(x) and helpers.is_2d_matrix(y):
+                return self._generate_binop(x, y, _div_array)
+            assert False, f"Unable to divide arguments {x}, {y}"
+        return _div
+
     def _generate_unop(self, x, callback):
         if helpers.is_floating_point(x) and helpers.is_pointer(x):
             x = self.builder.load(x)

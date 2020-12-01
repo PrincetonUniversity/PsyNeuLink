@@ -70,6 +70,37 @@ class TestBinaryOperations:
         val = benchmark(e, 0)
         assert np.allclose(val, param1 * param2)
 
+    @pytest.mark.parametrize("param1, param2", [
+                    (1, 2),
+                    (np.ones(2), 2),
+                    (2, np.ones(2)),
+                    (np.ones((2, 2)), 2),
+                    (2, np.ones((2, 2))),
+                    (np.ones(2), np.array([1, 2])),
+                    (np.ones(2), np.array([2.])),
+                    (np.ones((2, 2)), np.array([[1, 2], [3, 4]])),
+                    ], ids=["scalar-scalar", "vec-scalar", "scalar-vec", "mat-scalar", "scalar-mat", "vec-vec", "vec-vec-differing", "mat-mat"])
+    @pytest.mark.parametrize("bin_execute", ['Python',
+                                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                            ])
+    @pytest.mark.benchmark(group="Function UDF")
+    def test_user_def_func_div(self, param1, param2, bin_execute, benchmark):
+        # default val is same shape as expected output
+        def myFunction(_, param1, param2):
+            # we only use param1 and param2 to avoid automatic shape changes of the variable
+            return param1 / param2
+
+        U = UserDefinedFunction(custom_function=myFunction, param1=param1, param2=param2)
+        if bin_execute == 'LLVM':
+            e = pnlvm.execution.FuncExecution(U).execute
+        elif bin_execute == 'PTX':
+            e = pnlvm.execution.FuncExecution(U).cuda_execute
+        else:
+            e = U
+        val = benchmark(e, 0)
+        assert np.allclose(val, np.divide(param1, param2))
+
     @pytest.mark.parametrize("op", [ # parameter is string since compiled udf doesn't support closures as of present
                         "AND",
                         "OR",
