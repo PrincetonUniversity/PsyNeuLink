@@ -368,8 +368,6 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
                 self.register[id] = value
             else:
                 to_store = value
-                if helpers.is_pointer(value):
-                    to_store = builder.load(value)
 
                 target = self.visit(target)
                 self.builder.store(to_store, target)
