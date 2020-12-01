@@ -946,7 +946,7 @@ class OutputPort(Port_Base):
         # if owner is None or reference_value is None:
         if owner is None:
             # Temporarily name OutputPort
-            self._assign_deferred_init_name(name, context)
+            self._assign_deferred_init_name(name)
             # Store args for deferred initialization
             self._store_deferred_init_args(**locals())
 

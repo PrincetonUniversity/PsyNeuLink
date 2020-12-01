@@ -53,7 +53,6 @@ __all__.extend(projections.__all__)
 __all__.extend(shellclasses.__all__)
 __all__.extend(ports.__all__)
 
-kwInitPy = '__init__.py'
 
 class InitError(Exception):
     def __init__(self, error_value):
@@ -68,18 +67,18 @@ class InitError(Exception):
 register_category(entry=ControlMechanism,
                   base_class=Mechanism_Base,
                   registry=MechanismRegistry,
-                  context=kwInitPy)
+                  )
 
 register_category(entry=DefaultControlMechanism,
                   base_class=Mechanism_Base,
                   registry=MechanismRegistry,
-                  context=kwInitPy)
+                  )
 
 # DDM (used as DefaultMechanism)
 register_category(entry=DDM,
                   base_class=Mechanism_Base,
                   registry=MechanismRegistry,
-                  context=kwInitPy)
+                  )
 
 #endregion
 
@@ -111,37 +110,37 @@ SystemDefaultControlMechanism = DefaultControlMechanism
 register_category(entry=InputPort,
                   base_class=Port_Base,
                   registry=PortRegistry,
-                  context=kwInitPy)
+                  )
 
 # ParameterPort
 register_category(entry=ParameterPort,
                   base_class=Port_Base,
                   registry=PortRegistry,
-                  context=kwInitPy)
+                  )
 
 # OutputPort
 register_category(entry=OutputPort,
                   base_class=Port_Base,
                   registry=PortRegistry,
-                  context=kwInitPy)
+                  )
 
 # LearningSignal
 register_category(entry=LearningSignal,
                   base_class=Port_Base,
                   registry=PortRegistry,
-                  context=kwInitPy)
+                  )
 
 # ControlSignal
 register_category(entry=ControlSignal,
                   base_class=Port_Base,
                   registry=PortRegistry,
-                  context=kwInitPy)
+                  )
 
 # GatingSignal
 register_category(entry=GatingSignal,
                   base_class=Port_Base,
                   registry=PortRegistry,
-                  context=kwInitPy)
+                  )
 
 
 # Projection -----------------------------------------------------------------------------------------------------------
@@ -152,25 +151,25 @@ register_category(entry=GatingSignal,
 register_category(entry=MappingProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
-                  context=kwInitPy)
+                  )
 
 # LearningProjection
 register_category(entry=LearningProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
-                  context=kwInitPy)
+                  )
 
 # ControlProjection
 register_category(entry=ControlProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
-                  context=kwInitPy)
+                  )
 
 # GatingProjection
 register_category(entry=GatingProjection,
                   base_class=Projection_Base,
                   registry=ProjectionRegistry,
-                  context=kwInitPy)
+                  )
 
 #endregion
 

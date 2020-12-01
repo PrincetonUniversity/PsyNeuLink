@@ -390,8 +390,13 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             param = np.atleast_2d(param)
             for i in range(len(param)):
                 for j in range(len(param[i])):
-                    if callable(param[i][j]):
-                        param[i][j] = param[i][j]()
+                    try:
+                        param[i][j] = param[i][j](context=context)
+                    except TypeError:
+                        try:
+                            param[i][j] = param[i][j]()
+                        except TypeError:
+                            pass
             try:
                 param = param.reshape(param_shape)
             except ValueError:
@@ -408,7 +413,11 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             # for row in var:
                 new_row = []
                 for item in row:
-                    new_row.append(param())
+                    try:
+                        val = param(context=context)
+                    except TypeError:
+                        val = param()
+                    new_row.append(val)
                 new_param.append(new_row)
             param = np.asarray(new_param)
             # FIX: [JDC 12/18/18 - HACK TO DEAL WITH ENFORCEMENT OF 2D ABOVE]

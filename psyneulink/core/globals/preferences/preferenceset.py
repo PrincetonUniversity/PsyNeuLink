@@ -241,7 +241,7 @@ class PreferenceSet(object):
                           base_class=PreferenceSet,
                           name=name,
                           registry=PreferenceSetRegistry,
-                          context=context)
+                          )
 
         # ASSIGN PREFS
         condition = 0
