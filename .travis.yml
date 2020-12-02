@@ -114,8 +114,6 @@ before_cache:
 install:
   - pip install coveralls
   - pip install -e .[dev]
-  # This should be installed after PNL to avoid pulling incompatible deps
-  - pip install git+https://github.com/benureau/leabra.git@master
 
 
 script:
