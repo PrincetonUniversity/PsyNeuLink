@@ -28,10 +28,9 @@ network algorithm (`O'Reilly, 1996 <ftp://grey.colorado.edu/pub/oreilly/thesis/o
 info about leabra, please see `O'Reilly and Munakata, 2016 <https://grey.colorado.edu/emergent/index.php/Leabra>`_.
 
 .. note::
-    The LeabraMechanism uses the leabra Python package, which can be found
-    `here <https://github.com/benureau/leabra>`_ at Github. You may need to install the Python leabra package in order
-    to use the LeabraMechanism. While the LeabraMechanism should always match the output of an equivalent network in
-    the leabra package, the leabra package itself is still in development, so it is not guaranteed to be correct yet.
+    The LeabraMechanism uses the leabra Python package, which can be found `here <https://github.com/benureau/leabra>`_
+    at Github. While the LeabraMechanism should always match the output of an equivalent network in the leabra package,
+    the leabra package itself is still in development, so it is not guaranteed to be correct yet.
 
 .. _LeabraMechanism_Creation:
 
@@ -99,15 +98,10 @@ Class Reference
 
 """
 
+import leabra
 import numbers
 
 import numpy as np
-
-try:
-    import leabra
-    leabra_available = True
-except ImportError:
-    leabra_available = False
 
 from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
@@ -225,10 +219,6 @@ class LeabraFunction(Function_Base):
                  params=None,
                  owner=None,
                  prefs=None):
-
-        if not leabra_available:
-            raise LeabraError('leabra python module is not installed. Please install it from '
-                              'https://github.com/benureau/leabra')
 
         if network is None:
             raise LeabraError('network was None. Cannot create function for Leabra Mechanism if network is not specified.')
@@ -504,9 +494,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
                  name=None,
                  prefs=None
     ):
-        if not leabra_available:
-            raise LeabraError('leabra python module is not installed. Please install it from '
-                              'https://github.com/benureau/leabra')
 
         if network is not None:
             input_size = len(network.layers[0].units)
