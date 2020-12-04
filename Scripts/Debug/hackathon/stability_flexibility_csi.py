@@ -6,6 +6,7 @@ import random
 import pytest
 import pandas as pd
 
+
 # Define function to generate a counterbalanced trial sequence with a specified switch trial frequency
 def generateTrialSequence(N, Frequency):
 
