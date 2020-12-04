@@ -655,7 +655,7 @@ class ModulatorySignal(OutputPort):
             if projection:
                 projection._assign_default_projection_name(port=self)
 
-    def _assign_default_port_Name(self, context=None):
+    def _assign_default_port_Name(self):
 
         # If the name is not a default name for the class,
         #    or the ModulatorySignal has no projections (which are used to name it)

@@ -162,21 +162,15 @@ class ContextFlags(enum.IntFlag):
     """Direct call by user (either interactively from the command line, or in a script)."""
     CONSTRUCTOR = enum.auto()
     """Call from Component's constructor method."""
-    INSTANTIATE = enum.auto()
-    """Call by an instantiation method."""
-    COMPONENT = enum.auto()
-    """Call by Component __init__."""
     METHOD = enum.auto()
     """Call by method of the Component other than its constructor."""
-    PROPERTY = enum.auto()
-    """Call by property of the Component."""
     COMPOSITION = enum.auto()
     """Call by a/the Composition to which the Component belongs."""
 
     NONE = enum.auto()
 
     """Call by a/the Composition to which the Component belongs."""
-    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | INSTANTIATE | COMPONENT | METHOD | PROPERTY | COMPOSITION | NONE
+    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | METHOD | COMPOSITION | NONE
 
     # runmode flags:
     DEFAULT_MODE = enum.auto()
@@ -257,10 +251,7 @@ EXECUTION_PHASE_FLAGS = {ContextFlags.PREPARING,
 
 SOURCE_FLAGS = {ContextFlags.COMMAND_LINE,
                 ContextFlags.CONSTRUCTOR,
-                ContextFlags.INSTANTIATE,
-                ContextFlags.COMPONENT,
                 ContextFlags.METHOD,
-                ContextFlags.PROPERTY,
                 ContextFlags.COMPOSITION,
                 ContextFlags.NONE}
 
@@ -312,7 +303,6 @@ class Context():
 
             * `CONSTRUCTOR <ContextFlags.CONSTRUCTOR>`
             * `COMMAND_LINE <ContextFlags.COMMAND_LINE>`
-            * `COMPONENT <ContextFlags.COMPONENT>`
             * `COMPOSITION <ContextFlags.COMPOSITION>`
 
     composition : Composition
@@ -344,7 +334,6 @@ class Context():
                  composition=None,
                  flags=None,
                  execution_phase=ContextFlags.IDLE,
-                 # source=ContextFlags.COMPONENT,
                  source=ContextFlags.NONE,
                  runmode=ContextFlags.DEFAULT_MODE,
                  execution_id=NotImplemented,
@@ -364,7 +353,7 @@ class Context():
                                    "of Context for {}".
                                    format(ContextFlags._get_context_string(flags & ContextFlags.EXECUTION_PHASE_MASK),
                                           ContextFlags._get_context_string(flags, EXECUTION_PHASE), self.owner.name))
-            if (source != ContextFlags.COMPONENT) and not (flags & ContextFlags.SOURCE_MASK & source):
+            if not (flags & ContextFlags.SOURCE_MASK & source):
                 raise ContextError("Conflict in assignment to flags ({}) and source ({}) arguments of Context for {}".
                                    format(ContextFlags._get_context_string(flags & ContextFlags.SOURCE_MASK),
                                           ContextFlags._get_context_string(flags, SOURCE),

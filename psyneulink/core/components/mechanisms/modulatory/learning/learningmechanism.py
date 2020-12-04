@@ -1212,7 +1212,7 @@ class LearningMechanism(ModulatoryMechanism_Base):
         register_category(entry=LearningSignal,
                           base_class=Port_Base,
                           registry=self._portRegistry,
-                          context=context)
+                          )
 
         # Instantiate LearningSignals if they are specified, and assign to self.output_ports
         # Notes:

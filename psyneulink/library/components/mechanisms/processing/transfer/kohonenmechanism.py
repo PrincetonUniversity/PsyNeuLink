@@ -402,7 +402,7 @@ class KohonenMechanism(TransferMechanism):
         self.learning_mechanism = self._instantiate_learning_mechanism(learning_function=self.learning_function,
                                                                        learning_rate=self.learning_rate,
                                                                        learned_projection=self.learned_projection,
-                                                                       context=context)
+                                                                       )
 
         self.learning_projection = self.learning_mechanism.output_ports[LEARNING_SIGNAL].efferents[0]
 
@@ -414,7 +414,7 @@ class KohonenMechanism(TransferMechanism):
                                         learning_function,
                                         learning_rate,
                                         learned_projection,
-                                        context=None):
+                                        ):
 
         learning_mechanism = KohonenLearningMechanism(default_variable=[self.learned_projection.sender.value,
                                                                         self.learned_projection.receiver.value],

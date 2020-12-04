@@ -151,7 +151,6 @@ from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import _parse_port_spec
-from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import \
     COMPARATOR_MECHANISM, FUNCTION, INPUT_PORTS, NAME, OUTCOME, SAMPLE, TARGET, VARIABLE, PREFERENCE_SET_NAME, MSE, SSE
 from psyneulink.core.globals.parameters import Parameter
@@ -363,7 +362,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                          )
 
         # Require Projection to TARGET InputPort (already required for SAMPLE as primary InputPort)
-        self.input_ports[1].parameters.require_projection_in_composition._set(True, Context(execution_id=None))
+        self.input_ports[1].parameters.require_projection_in_composition.set(True, override=True)
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """If sample and target values are specified, validate that they are compatible

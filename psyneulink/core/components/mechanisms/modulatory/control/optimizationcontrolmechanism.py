@@ -740,7 +740,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if agent_rep is None:
             if context.source==ContextFlags.COMMAND_LINE:
                 # Temporarily name InputPort
-                self._assign_deferred_init_name(self.__class__.__name__, context)
+                self._assign_deferred_init_name(self.__class__.__name__)
                 # Store args for deferred initialization
                 self._store_deferred_init_args(**locals())
 
@@ -1300,7 +1300,8 @@ class OptimizationControlMechanism(ControlMechanism):
     # FIX: SHOULD BE GENERALIZED AS SOMETHING LIKE update_feature_values
 
     @tc.typecheck
-    def add_features(self, features):
+    @handle_external_context()
+    def add_features(self, features, context=None):
         """Add InputPorts and Projections to OptimizationControlMechanism for features used to
         predict `net_outcome <ControlMechanism.net_outcome>`
 
@@ -1309,7 +1310,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if features:
             features = self._parse_feature_specs(features=features,
-                                                 context=Context(source=ContextFlags.COMMAND_LINE, execution_id=None))
+                                                 context=context)
         self.add_ports(InputPort, features)
 
     @tc.typecheck

@@ -10,12 +10,19 @@
 import numpy as np
 import psyneulink as pnl
 import networkx as nx
+import os
 import sys
 import warnings
-warnings.filterwarnings("error", category=UserWarning)
-warnings.filterwarnings("ignore", "Pathway specified in 'pathway' arg for add_backpropagation_learning_pathway method", category=UserWarning)
-warnings.filterwarnings("ignore", "Unable to copy weight matrix for", category=UserWarning)
+import time
+#warnings.filterwarnings("error", category=UserWarning)
+
 ###################### Convenience functions for testing script #################################
+
+EXEC_LIMIT=os.getenv("LCA_EXEC_LIMIT", 10000)
+MNET_BIN_EXECUTE=os.getenv("MNET", "LLVMRun")
+MNET2_BIN_EXECUTE="LLVMRun"
+LCA_BIN_EXECUTE=os.getenv("LCA", "LLVMRun")
+RUN_TOTAL=True
 
 # read in bipartite graph, return graph object, number of possible tasks, number of
 # input dimensions and number of output dimensions.
@@ -161,16 +168,17 @@ def get_trained_network(bipartite_graph, num_features=3, num_hidden=200, epochs=
     mnet.add_projection(projection=pho, sender=hl, receiver=ol)
 
     # Train network
-    mnet.learn(inputs=input_set,
-               minibatch_size=1,
-               bin_execute=True,
-               patience=patience,
-               min_delta=min_delt)
-
-    for projection in mnet.projections:
-        weights = projection.parameters.matrix.get(mnet)
-        projection.parameters.matrix.set(weights, None)
-
+    print("training 1")
+    t1 = time.time()
+    mnet.learn(
+        inputs=input_set,
+        minibatch_size=1,
+        bin_execute=MNET_BIN_EXECUTE,
+        patience=patience,
+        min_delta=min_delt,
+    )
+    t2 = time.time()
+    print("training 1:", MNET_BIN_EXECUTE, t2-t1)
 
     # Apply LCA transform (values from Sebastian's code -- supposedly taken from the original LCA paper from Marius & Jay)
     if attach_LCA:
@@ -204,9 +212,7 @@ def get_trained_network(bipartite_graph, num_features=3, num_hidden=200, epochs=
 #     learning_rate: learning rate for SGD or (however pnl train their networks)
 #     attach_LCA: if True, will attach an LCAMechanism to evaluate network performance
 #     rest: LCA parameters
-def get_trained_network_multLCA(bipartite_graph, num_features=3, num_hidden=200, epochs=10, learning_rate=20,
-                                                                attach_LCA=True, competition=0.2, self_excitation=0.2, leak=0.4, threshold=1e-4,
-                                                                exec_limit=10000):
+def get_trained_network_multLCA(bipartite_graph, num_features=3, num_hidden=200, epochs=10, learning_rate=20, attach_LCA=True, competition=0.2, self_excitation=0.2, leak=0.4, threshold=1e-4, exec_limit=EXEC_LIMIT):
     # Get all tasks from bipartite graph (edges) and strip 'i/o' suffix
     all_tasks = get_all_tasks(bipartite_graph)
 
@@ -266,7 +272,7 @@ def get_trained_network_multLCA(bipartite_graph, num_features=3, num_hidden=200,
             'targets': {
                     ol: output_examples.tolist()
             },
-            'epochs': epochs
+            'epochs': 10 #epochs # LCA doesn't settle for 1000 epochs
     }
 
     # Build network
@@ -284,18 +290,23 @@ def get_trained_network_multLCA(bipartite_graph, num_features=3, num_hidden=200,
     mnet.add_projection(projection=pho, sender=hl, receiver=ol)
 
     # Train network
-    mnet.learn(inputs=input_set,
-               minibatch_size=1,
-               bin_execute=True,
-               patience=patience,
-               min_delta=min_delt)
+    print("training 2:", MNET_BIN_EXECUTE)
+    t1 = time.time()
+    mnet.learn(
+        inputs=input_set,
+        minibatch_size=input_set['epochs'],
+        bin_execute=MNET_BIN_EXECUTE,
+        patience=patience,
+        min_delta=min_delt,
+    )
+    t2 = time.time()
+    print("training 2:", MNET_BIN_EXECUTE, t2-t1)
 
     for projection in mnet.projections:
-        try:
+        if hasattr(projection.parameters, 'matrix'):
             weights = projection.parameters.matrix.get(mnet)
             projection.parameters.matrix.set(weights, None)
-        except AttributeError as e:
-            warnings.warn(f"Unable to copy weight matrix for {projection}")
+
 
     # Apply LCA transform (values from Sebastian's code -- supposedly taken from the original LCA paper from Marius & Jay)
     if attach_LCA:
@@ -317,6 +328,12 @@ def get_trained_network_multLCA(bipartite_graph, num_features=3, num_hidden=200,
 
         # Add mnet and lca to outer_composition
         wrapper_composition.add_linear_processing_pathway([mnet, lca])
+
+        # Dummy to save mnet results
+        if str(LCA_BIN_EXECUTE).startswith("LLVM"):
+            dummy = pnl.TransferMechanism(size=D_o,
+                                          name="MNET_OUT")
+            wrapper_composition.add_linear_processing_pathway([mnet, dummy])
 
         # Set execution limit
         lca.parameters.max_executions_before_finished.set(exec_limit, wrapper_composition)
@@ -432,6 +449,15 @@ def generate_testing_data(test_tasks, all_tasks, num_features, num_input_dims, n
 def task_id_to_control_idx(task, all_tasks):
     return all_tasks.index(task)
 
+def ugly_get_compile_param_value(comp, node_name, param_name):
+    compiled_state = comp._compilation_data.state_struct.get(comp)
+    nodes_state = getattr(compiled_state, compiled_state._fields_[0][0])
+    node = comp.nodes[node_name]
+    node_state = getattr(nodes_state, nodes_state._fields_[comp._get_node_index(node)][0])
+#    node_private_state = getattr(node_state, node_state._fields_[2][0])
+    state = getattr(node_state, node_state._fields_[node.llvm_state_ids.index(param_name)][0])
+    return pnl.core.llvm.execution._convert_ctype_to_python(state)[0]
+
 # Use the LCA to evaluate network performance on a given set of tasks (performance set)
 # Params:
 #     mnet_lca: Multitasking network AutodiffComposition with attached LCAMechanism (PNL)
@@ -455,8 +481,21 @@ def evaluate_net_perf_lca(mnet_lca, test_tasks, all_tasks, num_features, num_inp
                                                                               num_output_dims,
                                                                               num_test_points=num_test_points)
 
+#    mnet_lca.show_graph()
+    if RUN_TOTAL:
+        inputs_total = {
+            mnet_lca.nodes['mnet'].nodes['input'] : input_test_pts[0:num_test_points, :].tolist(),
+            mnet_lca.nodes['mnet'].nodes['control'] : control_test_pts[0:num_test_points, :].tolist()
+        }
+        print('running LCA total')
+        t1 = time.time()
+        mnet_lca.run( { mnet_lca.nodes['mnet'] : inputs_total }, bin_execute=LCA_BIN_EXECUTE)
+        t2 = time.time()
+        print("LCA total:", LCA_BIN_EXECUTE, t2 - t1)
     # Run the outer composition, one point at a time (for debugging purposes)
     for i in range(num_test_points):
+        if RUN_TOTAL:
+           break
         # Construct input dict
         input_set = {
                 'inputs' : {
@@ -465,35 +504,49 @@ def evaluate_net_perf_lca(mnet_lca, test_tasks, all_tasks, num_features, num_inp
                 }
         }
 
-        try:
-            mnet_lca.run( { mnet_lca.nodes['mnet'] : input_set } )
-        except Warning:
-            print('input: ', input_test_pts[i, :])
-            print('control: ', control_test_pts[i, :])
-            print('true: ', output_true_pts[i, :])
-            mnet = mnet_lca.nodes['mnet']
-            lca = mnet_lca.nodes['lca']
-            print('net out: ', np.array([mnet.output_CIM.parameters.value.get(mnet_lca)]).reshape(1, output_layer_size))
-            print('num executions: ', mnet_lca.nodes['lca'].num_executions_before_finished)
+        print('running LCA', i)
+        t1 = time.time()
+        mnet_lca.run( { mnet_lca.nodes['mnet'] : input_set['inputs'] }, bin_execute=LCA_BIN_EXECUTE )
+        t2 = time.time()
+        print("LCA:", LCA_BIN_EXECUTE, t2 - t1)
+        iterations = mnet_lca.nodes['lca'].num_executions_before_finished if LCA_BIN_EXECUTE == "Python" else ugly_get_compile_param_value(mnet_lca, 'lca', 'num_executions_before_finished')
+        print("ITERATIONS:", iterations)
+        print('input: ', input_test_pts[i, :])
+        print('control: ', control_test_pts[i, :])
+        print('true: ', output_true_pts[i, :])
+        mnet = mnet_lca.nodes['mnet']
+        lca = mnet_lca.nodes['lca']
+        if str(LCA_BIN_EXECUTE).startswith("LLVM"):
+            mnet_res = [r[1] for r in mnet_lca.results]
+            mnet_out = np.array(mnet_res[-num_test_points:])
+        else:
+            mnet_out = np.array([mnet.output_CIM.parameters.value.get(mnet_lca)])
+        print('net out: ', mnet_out.reshape(-1, output_layer_size)[-1])
 
 
+        if iterations == EXEC_LIMIT:
             # mnet_lca.nodes['lca'].log.print_entries()
             sys.exit(0)
 
-    # Retrieve LCA results
-    lca_out = np.array(mnet_lca.parameters.results.get(mnet_lca)[-num_test_points:]).reshape(num_test_points, output_layer_size)
 
-    # Retrieve mnet results
-    mnet = mnet_lca.nodes['mnet']
-
-    # Brutal line of code provided by Dillon
-    # Intuition: Part in list() expression is stored history. Part afterwards is the current value.
-    # This distinction is important because PsyNeuLink objects update history only on next trial call.
-    if num_test_points > 1:
-        mnet_out = np.array(list(mnet.output_CIM.parameters.value.history[mnet_lca.default_execution_id])[
-                           -num_test_points +1:] +[mnet.output_CIM.parameters.value.get(mnet_lca)]).reshape(num_test_points, output_layer_size)
+    if str(LCA_BIN_EXECUTE).startswith("LLVM"):
+        mnet_res = [r[1] for r in mnet_lca.results]
+        mnet_out = np.array(mnet_res[-num_test_points:]).reshape(num_test_points, output_layer_size)
+        lca_res = [r[0] for r in mnet_lca.parameters.results.get(mnet_lca)]
+        lca_out = np.array(lca_res[-num_test_points:]).reshape(num_test_points, output_layer_size)
     else:
-        mnet_out = np.array([mnet.output_CIM.parameters.value.get(mnet_lca)]).reshape(num_test_points, output_layer_size)
+        # Retrieve LCA results
+        lca_out = np.array(mnet_lca.parameters.results.get(mnet_lca)[-num_test_points:]).reshape(num_test_points, output_layer_size)
+        # Retrieve mnet results
+        mnet = mnet_lca.nodes['mnet']
+        # Brutal line of code provided by Dillon
+        # Intuition: Part in list() expression is stored history. Part afterwards is the current value.
+        # This distinction is important because PsyNeuLink objects update history only on next trial call.
+        if num_test_points > 1:
+            mnet_out = np.array(list(mnet.output_CIM.parameters.value.history[mnet_lca.default_execution_id])[
+                   -num_test_points+1:] +[mnet.output_CIM.parameters.value.get(mnet_lca)]).reshape(num_test_points, output_layer_size)
+        else:
+            mnet_out = np.array([mnet.output_CIM.parameters.value.get(mnet_lca)]).reshape(num_test_points, output_layer_size)
 
     # Compare correctness, get a bunch of useful stats
     stats_dict = {
@@ -564,7 +617,11 @@ def evaluate_net_perf_mse(mnet, test_tasks, all_tasks, num_features, num_input_d
             }
     }
 
-    mnet.run(input_set)
+    print("running mnet2:", MNET2_BIN_EXECUTE)
+    t1 = time.time()
+    mnet.run(input_set, bin_execute=MNET2_BIN_EXECUTE)
+    t2 = time.time()
+    print("mnet2:", MNET2_BIN_EXECUTE, t2-t1)
 
     # Retrieve results
     output_test_pts = np.array(mnet.parameters.results.get(mnet)[-num_test_points:]).reshape(num_test_points, output_layer_size)
@@ -600,6 +657,7 @@ if __name__ == '__main__':
     np.set_printoptions(precision=7, threshold=sys.maxsize, suppress=True, linewidth=np.nan)
     verbose = False
     np.random.seed(12345)
+    pnl.core.globals.utilities.set_global_seed(12345)
 
     # Train and evaluate an mnet-LCA combo on single-tasking and multitasking
 
@@ -610,7 +668,7 @@ if __name__ == '__main__':
     all_tasks = get_all_tasks(g)
 
     # Get trained network (@ Jon: This won't work)
-    mnet_lca = get_trained_network_multLCA(g, learning_rate=0.3, epochs=200, attach_LCA = True, exec_limit=10000)
+    mnet_lca = get_trained_network_multLCA(g, learning_rate=0.3, epochs=1000, attach_LCA = True, exec_limit=EXEC_LIMIT)
 
     # (@ Jon: This is the global LCA (i.e. no within dimension effects) and it does work, using LCAMechanism)
     # mnet_lca = get_trained_network(g, learning_rate=0.3, epochs=1000, attach_LCA = True)

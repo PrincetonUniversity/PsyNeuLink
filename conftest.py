@@ -1,4 +1,5 @@
 import doctest
+import psyneulink
 import pytest
 import numpy as np
 
@@ -88,3 +89,9 @@ def expand_np_ndarray(arr):
                 nested_elem = [nested_elem]
             results_list.extend(nested_elem)
     return results_list
+
+
+# flag when run from pytest
+# https://docs.pytest.org/en/stable/example/simple.html#detect-if-running-from-within-a-pytest-run
+def pytest_configure(config):
+    psyneulink._called_from_pytest = True

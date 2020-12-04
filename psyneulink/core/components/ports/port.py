@@ -782,7 +782,7 @@ from psyneulink.core.components.functions.combinationfunctions import Combinatio
 from psyneulink.core.components.functions.function import Function, get_param_value_for_keyword, is_function_type
 from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
-from psyneulink.core.globals.context import Context, ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, \
     CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, DISABLE, EXPONENT, \
@@ -1074,7 +1074,7 @@ class Port_Base(Port):
 
         # If name is not specified, assign default name
         if name is not None and DEFERRED_INITIALIZATION in name:
-            name = self._assign_default_port_Name(context=context)
+            name = self._assign_default_port_Name()
 
 
         # Register Port with PortRegistry of owner (Mechanism to which the Port is being assigned)
@@ -1083,7 +1083,7 @@ class Port_Base(Port):
                           name=name,
                           registry=owner._portRegistry,
                           # sub_group_attr='owner',
-                          context=context)
+                          )
 
         # VALIDATE VARIABLE, PARAM_SPECS, AND INSTANTIATE self.function
         super(Port_Base, self).__init__(
@@ -2241,7 +2241,7 @@ class Port_Base(Port):
         else:
             return self.name
 
-    def _assign_default_port_Name(self, context=None):
+    def _assign_default_port_Name(self):
         return False
 
     def _get_input_struct_type(self, ctx):
@@ -2326,7 +2326,10 @@ class Port_Base(Port):
         return builder
 
     @staticmethod
-    def _get_port_function_value(owner, function, variable):
+    # TODO: find out why UNSET is required to avoid many more deepcopies
+    # occurring causing slowdowns
+    @handle_external_context(source=ContextFlags.UNSET)
+    def _get_port_function_value(owner, function, variable, context=None):
         """Execute the function of a Port and return its value
         # FIX: CONSIDER INTEGRATING THIS INTO _EXECUTE FOR PORT?
 
@@ -2334,7 +2337,7 @@ class Port_Base(Port):
         Used primarily during validation, when the function may not have been fully instantiated yet
         (e.g., InputPort must sometimes embed its variable in a list-- see InputPort._get_port_function_value).
         """
-        return function.execute(variable, context=Context(source=ContextFlags.UNSET, execution_id=None))
+        return function.execute(variable, context=context)
 
     @property
     def _dependent_components(self):
