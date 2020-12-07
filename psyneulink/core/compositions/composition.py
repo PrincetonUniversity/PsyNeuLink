@@ -6163,7 +6163,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            name:str=None):
         """Convenience method that calls `add_linear_learning_pathway` with **learning_function**=`Reinforcement`
 
-        Arguments
+        Arguments‚‚
         ---------
 
         pathway: List

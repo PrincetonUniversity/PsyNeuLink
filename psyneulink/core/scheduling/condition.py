@@ -10,24 +10,44 @@
 
 """
 
+Contents
+--------
+
+  * `Condition_Overview`
+     - `Subtractive Conditions <Condition_Subtractive>`
+     - `Additive Conditions <Condition_Additive>`
+  * `Creating_Conditions`
+
+
 .. _Condition_Overview
 
 Overview
 --------
 
-`Conditions <Condition>` are used *either* to specify when `Components <Component>` are allowed to execute *or* to
-force additional executions of Components, depending on whether their `condition_type` is `Subtractive <ConditionType>`
-or `Additive <ConditionType>`, respectively.
+`Conditions <Condition>` are used to customize when a `Component` executes.  By default, Components execute once after
+any `nodes <Composition_Nodes>` that project it execute.  However, Conditions can be used to modify this behavior.
+There are two types of Conditions:  the `Subtractive <ConditionType>` `condition_type`, that restricts execution of a
+Component to a specificied circumstance or set of circumstances;  and `Additive <ConditionType>`, that enforces a
+particular number of executions of a Component.  For a Condition to take effect, it must be added to the `Scheduler`
+for the `Composition` in which the Component is to be executed.
 
-Subtractive Conditions can be used to specify a variety of required conditions for execution, including the state of the
-Component itself (e.g., how many times it has already executed, or the value of one of its attributes), the state of the
-Composition (e.g., how many `TIME_STEP` s have occurred in the current `TRIAL <TimeScale.TRIAL>`), or the state of other
-Components in a Composition (e.g., whether or how many times they have executed). PsyNeuLink provides a number of
+.. _Condition_Subtractive:
+
+Subtractive Conditions
+~~~~~~~~~~~~~~~~~~~~~~
+
+These can be used to specify a variety of criteria that must be met for a Component to execute, including the state of
+the Component itself (e.g., how many times it has already executed, or the value of one of its attributes), the state of
+the Composition (e.g., how many `TIME_STEP` s have occurred in the current `TRIAL <TimeScale.TRIAL>`), or the state of
+other Components in a Composition (e.g., whether or how many times they have executed). PsyNeuLink provides a number of
 `pre-specified Conditions <Condition_Pre_Specified>` that can be parametrized (e.g., how many times a Component should
 be executed). `Custom conditions <Condition_Custom>` can also be created, by assigning a function to a Condition that
 can reference any Component or its attributes in PsyNeuLink, thus providing considerable flexibility for scheduling.
 
-Additive Conditions can be used to force additional executions of a Component relative to the state of the Component,
+Additive Conditions
+~~~~~~~~~~~~~~~~~~~
+
+These can be used to force additional executions of a Component relative to the state of the Component,
 Scheduler, or context by 1) inserting the Component into sets of the `Scheduler's <Scheduler>` `consideration_queue` and
 2) generating a Subtractive Condition to impose additional constraints on the execution of the Condition's
 owner component based on some desired state.
