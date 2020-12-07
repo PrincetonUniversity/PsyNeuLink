@@ -650,7 +650,7 @@ def make_parameter_property(param):
                 f' for example, <object>.{param.name}.base = {value}',
                 FutureWarning,
             )
-        getattr(self.parameters, p.name)._set(value, self.most_recent_context)
+        getattr(self.parameters, p.name).set(value, self.most_recent_context)
 
     return property(getter).setter(setter)
 
