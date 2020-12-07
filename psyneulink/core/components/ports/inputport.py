@@ -1360,7 +1360,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
     if context.source & (ContextFlags.METHOD | ContextFlags.COMMAND_LINE):
         owner.input_ports.extend(port_list)
     else:
-        owner.input_ports = port_list
+        owner.parameters.input_ports._set(port_list, context)
 
     # Assign value of require_projection_in_composition
     for port in owner.input_ports:

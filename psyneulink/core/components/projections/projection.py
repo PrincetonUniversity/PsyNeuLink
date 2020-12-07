@@ -2052,13 +2052,18 @@ def _add_projection_to(receiver, port, projection_spec, context=None):
 
     #  Update InputPort and input_ports
     if receiver.input_ports:
-        receiver.input_ports[input_port.name] = input_port
+        receiver.parameters.input_ports._get(context)[input_port.name] = input_port
 
     # No InputPort(s) yet, so create them
     else:
-        receiver.input_ports = ContentAddressableList(component_type=Port_Base,
-                                                      list=[input_port],
-                                                      name=receiver.name + '.input_ports')
+        receiver.parameters.input_ports._set(
+            ContentAddressableList(
+                component_type=Port_Base,
+                list=[input_port],
+                name=receiver.name + '.input_ports'
+            ),
+            context
+        )
 
     return input_port._instantiate_projections_to_port(projections=projection_spec, context=context)
 
@@ -2160,8 +2165,12 @@ def _add_projection_from(sender, port, projection_spec, receiver, context=None):
     # No OutputPort(s) yet, so create them
     except AttributeError:
         from psyneulink.core.components.ports.port import Port_Base
-        sender.output_ports = ContentAddressableList(component_type=Port_Base,
-                                                      list=[output_port],
-                                                      name=sender.name + '.output_ports')
+        sender.parameters.output_ports._set(
+            ContentAddressableList(
+                component_type=Port_Base,
+                list=[output_port],
+                name=sender.name + '.output_ports'
+            )
+        )
 
     output_port._instantiate_projections_to_port(projections=projection_spec, context=context)

@@ -1180,7 +1180,10 @@ class LearningMechanism(ModulatoryMechanism_Base):
         """
 
         if self._error_sources:
-            self.input_ports = self.input_ports[:2] + [ERROR_SIGNAL] * len(self._error_sources)
+            self.parameters.input_ports._set(
+                self.input_ports[:2] + [ERROR_SIGNAL] * len(self._error_sources),
+                context
+            )
 
         super()._instantiate_attributes_before_function(function=function, context=context)
 

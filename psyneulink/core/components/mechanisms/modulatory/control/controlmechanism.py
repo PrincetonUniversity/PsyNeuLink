@@ -1483,7 +1483,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """
 
         if self.output_ports is None:
-            self.output_ports = []
+            self.parameters.output_ports._set([], context)
 
         control_signal = self._instantiate_control_signal_type(control_signal, context)
         control_signal.owner = self
