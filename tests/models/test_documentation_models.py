@@ -90,7 +90,7 @@ def test_documentation_models(
     )
     model_file = os.path.join(models_dir, f'{model_name}.py')
     old_argv = sys.argv
-    sys.argv = [model_file, '--no-plot'] + additional_args
+    sys.argv = [model_file] + additional_args
     script_globals = runpy.run_path(model_file)
     sys.argv = old_argv
 

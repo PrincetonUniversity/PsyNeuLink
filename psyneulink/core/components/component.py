@@ -1087,7 +1087,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         self._handle_illegal_kwargs(**kwargs)
 
         context = Context(
-            source=ContextFlags.COMPONENT,
+            source=ContextFlags.CONSTRUCTOR,
             execution_phase=ContextFlags.IDLE,
             execution_id=None,
         )
@@ -1656,8 +1656,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         except KeyError:
             pass
 
-    @handle_external_context()
-    def _deferred_init(self, context=None):
+    def _deferred_init(self, **kwargs):
         """Use in subclasses that require deferred initialization
         """
         if self.initialization_status == ContextFlags.DEFERRED_INIT:
@@ -1666,7 +1665,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             #       (usually in _instantiate_function)
             self.initialization_status = ContextFlags.INITIALIZING
 
-            self._init_args['context'] = context
+            self._init_args.update(kwargs)
 
             # Complete initialization
             # MODIFIED 10/27/18 OLD:
@@ -1688,7 +1687,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
             del self._init_args
 
-    def _assign_deferred_init_name(self, name, context):
+    def _assign_deferred_init_name(self, name):
 
         name = "{} [{}]".format(name,DEFERRED_INITIALIZATION) if name \
           else "{} {}".format(DEFERRED_INITIALIZATION,self.__class__.__name__)
@@ -1698,7 +1697,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                           base_class=Component,
                           name=name,
                           registry=DeferredInitRegistry,
-                          context=context)
+                          )
 
     def _assign_default_name(self, **kwargs):
         return
@@ -1708,9 +1707,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         param._set(val, context)
         if hasattr(self, "parameter_ports"):
             if param in self.parameter_ports:
-                new_port_value = self.parameter_ports[param].execute(
-                    context=Context(execution_phase=ContextFlags.EXECUTING, execution_id=context.execution_id)
-                )
+                new_port_value = self.parameter_ports[param].execute(context=context)
                 self.parameter_ports[param].parameters.value._set(new_port_value, context)
         elif hasattr(self, "owner"):
             if hasattr(self.owner, "parameter_ports"):
@@ -1724,9 +1721,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                         if isinstance(val, Component):
                             return
 
-                    new_port_value = self.owner.parameter_ports[param].execute(
-                        context=Context(execution_phase=ContextFlags.EXECUTING, execution_id=context.execution_id)
-                    )
+                    new_port_value = self.owner.parameter_ports[param].execute(context=context)
                     self.owner.parameter_ports[param].parameters.value._set(new_port_value, context)
 
     def _check_args(self, variable=None, params=None, context=None, target_set=None):
@@ -1897,7 +1892,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         # VALIDATE VARIABLE
 
-        if not (context.source & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY)):
+        if context.source is not ContextFlags.COMMAND_LINE:
             # if variable has been passed then validate and, if OK, assign as self.defaults.variable
             variable = self._validate_variable(variable, context=context)
 
@@ -2780,9 +2775,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         function_variable = copy.deepcopy(
             self._parse_function_variable(
                 self.defaults.variable,
-                # we can't just pass context here, because this specifically tries to bypass a
-                # branch in TransferMechanism._parse_function_variable
-                context=Context(source=ContextFlags.INSTANTIATE, execution_id=context.execution_id)
+                context
             )
         )
 
@@ -3626,6 +3619,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         for p in self.parameters:
             try:
                 param_value = p._get(context)
+                try:
+                    param_value = param_value.__self__
+                except AttributeError:
+                    pass
+
                 if isinstance(param_value, Component):
                     self._parameter_components.add(param_value)
             # ControlMechanism and GatingMechanism have Parameters that only

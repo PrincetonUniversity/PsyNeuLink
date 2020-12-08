@@ -693,7 +693,7 @@ class Projection_Base(Projection):
         from psyneulink.core.components.ports.port import Port_Base
 
         if self.initialization_status == ContextFlags.DEFERRED_INIT:
-            self._assign_deferred_init_name(name, context)
+            self._assign_deferred_init_name(name)
             self._store_deferred_init_args(**locals())
             return
 
@@ -704,7 +704,7 @@ class Projection_Base(Projection):
                           base_class=Projection_Base,
                           name=name,
                           registry=ProjectionRegistry,
-                          context=context)
+                          )
 
         # Create projection's _portRegistry and ParameterPort entry
         self._portRegistry = {}
@@ -712,7 +712,7 @@ class Projection_Base(Projection):
         register_category(entry=ParameterPort,
                           base_class=Port_Base,
                           registry=self._portRegistry,
-                          context=context)
+                          )
 
         self._instantiate_sender(sender, context=context)
 

@@ -63,7 +63,7 @@ def register_category(entry,
                       base_class,
                       name=None,
                       registry=None,
-                      context='Registry'):
+                      ):
     """Create a category within the specified registry.
 
     Arguments

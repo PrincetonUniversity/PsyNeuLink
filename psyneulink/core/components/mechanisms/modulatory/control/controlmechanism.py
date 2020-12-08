@@ -1432,7 +1432,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         register_category(entry=ControlSignal,
                           base_class=Port_Base,
                           registry=self._portRegistry,
-                          context=context)
+                          )
 
     def _instantiate_control_signals(self, context):
         """Subclassess can override for class-specific implementation (see OptimiziationControlMechanism for example)"""

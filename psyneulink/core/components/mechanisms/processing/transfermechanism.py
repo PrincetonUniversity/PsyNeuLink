@@ -1304,7 +1304,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                  "function, or array/list of these.".format(noise,
                                                                             self.name))
 
-    def _try_execute_param(self, param, var):
+    def _try_execute_param(self, param, var, context=None):
 
         # param is a list; if any element is callable, execute it
         if isinstance(param, (np.ndarray, list)):
@@ -1313,7 +1313,10 @@ class TransferMechanism(ProcessingMechanism_Base):
             for i in range(len(param)):
                 for j in range(len(param[i])):
                     if callable(param[i][j]):
-                        param[i][j] = param[i][j]()
+                        try:
+                            param[i][j] = param[i][j](context=context)
+                        except TypeError:
+                            param[i][j] = param[i][j]()
 
         # param is one function
         elif callable(param):
@@ -1322,7 +1325,11 @@ class TransferMechanism(ProcessingMechanism_Base):
             for row in np.atleast_2d(var):
                 new_row = []
                 for item in row:
-                    new_row.append(param())
+                    try:
+                        val = param(context=context)
+                    except TypeError:
+                        val = param()
+                    new_row.append(val)
                 new_param.append(new_row)
             param = new_param
 
@@ -1373,8 +1380,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         #                               component=self.output_ports['RESULT'])
         # register_instance(self.output_ports['RESULT'], 'RESULT-0', OutputPort, self._portRegistry, OUTPUT_PORT)
 
-    def _get_instantaneous_function_input(self, function_variable, noise):
-        noise = self._try_execute_param(noise, function_variable)
+    def _get_instantaneous_function_input(self, function_variable, noise, context=None):
+        noise = self._try_execute_param(noise, function_variable, context=context)
         if (np.array(noise) != 0).any():
             current_input = function_variable + noise
         else:
@@ -1572,8 +1579,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         self.parameters.value.clear_history(context)
 
     def _parse_function_variable(self, variable, context=None):
-        if context.source is ContextFlags.INSTANTIATE:
-
+        if self.is_initializing:
             return super(TransferMechanism, self)._parse_function_variable(variable=variable, context=context)
 
         # FIX: NEED TO GET THIS TO WORK WITH CALL TO METHOD:
@@ -1587,7 +1593,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             return value
 
         else:
-            return self._get_instantaneous_function_input(variable, noise)
+            return self._get_instantaneous_function_input(variable, noise, context)
 
     def _instantiate_attributes_after_function(self, context=None):
         """Determine numberr of items expected by termination_measure"""

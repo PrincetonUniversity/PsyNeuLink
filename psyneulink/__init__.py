@@ -34,6 +34,8 @@ from .library import *
 _pnl_global_names = [
     'primary_registries', 'System', 'Process'
 ]
+# flag when run from pytest (see conftest.py)
+_called_from_pytest = False
 
 __all__ = list(_pnl_global_names)
 __all__.extend(core.__all__)
