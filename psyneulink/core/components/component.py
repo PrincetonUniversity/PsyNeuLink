@@ -2040,6 +2040,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 if isinstance(val, Function):
                     val.owner = self
 
+                p._validate(val)
                 p.set(val, context=context, skip_history=True, override=True)
 
             if isinstance(p.default_value, Function):
