@@ -2378,19 +2378,22 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         )
 
     @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 rate: tc.optional(parameter_spec) = None,
-                 noise=None,
-                 offset: tc.optional(parameter_spec) = None,
-                 starting_point=None,
-                 threshold=None,
-                 time_step_size=None,
-                 initializer=None,
-                 seed=None,
-                 params: tc.optional(tc.optional(dict)) = None,
-                 owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+    def __init__(
+        self,
+        default_variable=None,
+        rate: tc.optional(parameter_spec) = None,
+        noise=None,
+        offset: tc.optional(parameter_spec) = None,
+        starting_point=None,
+        threshold=None,
+        time_step_size=None,
+        initializer=None,
+        seed=None,
+        params: tc.optional(tc.optional(dict)) = None,
+        owner=None,
+        prefs: tc.optional(is_pref_set) = None,
+        **kwargs
+    ):
 
         if seed is None:
             seed = get_global_seed()
@@ -2411,6 +2414,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             params=params,
             owner=owner,
             prefs=prefs,
+            **kwargs
         )
 
     def _validate_noise(self, noise):
@@ -2794,19 +2798,22 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         )
 
     @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 rate: tc.optional(parameter_spec) = None,
-                 decay=None,
-                 noise=None,
-                 offset: tc.optional(parameter_spec) = None,
-                 starting_point=None,
-                 time_step_size=None,
-                 initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
-                 seed=None,
-                 owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+    def __init__(
+        self,
+        default_variable=None,
+        rate: tc.optional(parameter_spec) = None,
+        decay=None,
+        noise=None,
+        offset: tc.optional(parameter_spec) = None,
+        starting_point=None,
+        time_step_size=None,
+        initializer=None,
+        params: tc.optional(tc.optional(dict)) = None,
+        seed=None,
+        owner=None,
+        prefs: tc.optional(is_pref_set) = None,
+        **kwargs
+    ):
 
         if seed is None:
             seed = get_global_seed()
@@ -2828,6 +2835,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             random_state=random_state,
             owner=owner,
             prefs=prefs,
+            **kwargs
         )
 
     def _validate_noise(self, noise):
