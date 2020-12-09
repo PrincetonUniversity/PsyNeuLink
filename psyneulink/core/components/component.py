@@ -1009,7 +1009,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             return None
 
         def _parse_modulable(self, param_name, param_value):
-            from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
+            from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
+            from psyneulink.core.components.ports.modulatorysignals import ModulatorySignal
+            from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+
             # assume 2-tuple with class/instance as second item is a proper
             # modulatory spec, can possibly add in a flag on acceptable
             # classes in the future
@@ -1025,14 +1028,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 )
             ):
                 value = param_value[0]
-            # assume a DistributionFunction is allowed to persist, for noise
             elif (
-                (
-                    is_instance_or_subclass(param_value, Component)
-                    and not is_instance_or_subclass(
-                        param_value,
-                        DistributionFunction
-                    )
+                is_instance_or_subclass(
+                    param_value,
+                    (ModulatoryMechanism_Base, ModulatorySignal, ModulatoryProjection_Base)
                 )
                 or (
                     isinstance(param_value, str)
