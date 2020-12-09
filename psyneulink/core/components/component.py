@@ -2010,7 +2010,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     if param_defaults[p.name] is not param_defaults[p.source.name]:
                         raise ComponentError(
                             f"Multiple values ({p.name}: {param_defaults[p.name]}"
-                            f"\t{p.source.name}: {param_defaults[p.source.name]} "
+                            f"\t{p.source.name}: {param_defaults[p.source.name]}) "
                             f"assigned to identical Parameters. {p.name} is an alias "
                             f"of {p.source.name}",
                             component=self,
