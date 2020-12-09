@@ -2455,7 +2455,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
         random_draw = np.array([random_state.normal() for _ in list(variable)])
         value = previous_value + rate * variable * time_step_size \
-                + np.sqrt(time_step_size * noise) * random_draw
+                + noise * np.sqrt(time_step_size) * random_draw
 
         adjusted_value = np.clip(value + offset, -threshold, threshold)
 
@@ -2513,10 +2513,12 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         val = builder.fmul(val, time_step_size)
         val = builder.fadd(val, prev_val)
 
-        factor = builder.fmul(noise, time_step_size)
+        #factor = builder.fmul(noise, time_step_size)
+        factor = time_step_size
         sqrt_f = ctx.get_builtin("sqrt", [ctx.float_ty])
         factor = builder.call(sqrt_f, [factor])
 
+        factor = builder.fmul(noise, factor)
         factor = builder.fmul(rand_val, factor)
 
         val = builder.fadd(val, factor)

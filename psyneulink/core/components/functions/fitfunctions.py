@@ -66,7 +66,7 @@ def simulation_likelihood(sim_data,
 
     """
 
-    if combine_trials:
+    if combine_trials and sim_data.shape[0] > 1:
         sim_data = np.vstack(sim_data)[None, :, :]
 
     con_sim_data = sim_data[:, :, ~categorical_dims]
