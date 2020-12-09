@@ -27,7 +27,7 @@ Decision = pnl.DDM(
             ),
         ),
         noise=0.5,
-        starting_point=0,
+        starting_value=0,
         t0=0.45,
     ),
     output_ports=[

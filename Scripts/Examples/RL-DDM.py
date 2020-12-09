@@ -29,7 +29,7 @@ action_selection = pnl.DDM(
         function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
                 drift_rate=pnl.CONTROL,
                 threshold=pnl.CONTROL,
-                starting_point=pnl.CONTROL,
+                starting_value=pnl.CONTROL,
                 noise=pnl.CONTROL,
         ),
         output_ports=[pnl.SELECTED_INPUT_ARRAY],

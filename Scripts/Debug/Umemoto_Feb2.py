@@ -61,7 +61,7 @@ Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
        # drift_rate=(0.1170),
         threshold=(thresh),
         noise=(c),
-        starting_point=(x_0),
+        starting_value=(x_0),
         t0=t0
     ),name='Decision',
     output_ports=[

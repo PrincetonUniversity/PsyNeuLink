@@ -70,7 +70,7 @@ inhibitoryWeight = np.asarray([[-1]])
 gain = np.asarray([[g]])
 
 DRIFT = 1 # Drift Rate
-STARTING_POINT = 0.0 # Starting Point
+STARTING_VALUE = 0.0 # Starting Point
 THRESHOLD = 0.0475 # Threshold
 NOISE = 0.04 # Noise
 T0 = 0.2 # T0
@@ -124,7 +124,7 @@ ddmCombination = pnl.TransferMechanism(size = 1,
 ddmCombination.set_log_conditions([pnl.RESULT])
 
 decisionMaker = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate = DRIFT,
-                                                                 starting_point = STARTING_POINT,
+                                                                 starting_value = STARTING_VALUE,
                                                                  threshold = THRESHOLD,
                                                                  noise = NOISE,
                                                                  t0 = T0),

@@ -1136,7 +1136,7 @@ class TestFiltering:
                     control_signal_params={pnl.ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)})
                 ),
                 noise=0.5,
-                starting_point=0,
+                starting_value=0,
                 t0=0.45
             ),
             output_ports=[

@@ -9,7 +9,7 @@ motion_input = ProcessingMechanism(name='Motion',
                                   function=Linear(slope=optimal_motion_control))
 decision = DDM(name='Decision',
                function=DriftDiffusionAnalytical(
-                       starting_point=0,
+                       starting_value=0,
                        noise=0.5,
                        t0=0.2,
                        threshold=0.45),

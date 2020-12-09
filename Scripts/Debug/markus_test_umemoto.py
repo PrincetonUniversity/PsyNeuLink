@@ -76,7 +76,7 @@ Decision = pnl.DDM(function=psyneulink.core.components.functions.distributionfun
        # drift_rate=(0.3),
         threshold=(thresh),
         noise=(c),
-        starting_point=(x_0),
+        starting_value=(x_0),
         t0=t0
     ),name='Decision',
     output_ports=[

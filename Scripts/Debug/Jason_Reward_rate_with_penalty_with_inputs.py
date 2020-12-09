@@ -120,7 +120,7 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
                        function=pnl.DriftDiffusionAnalytical(drift_rate=1,
                                                              threshold =1,
                                                              noise=1,
-                                                             starting_point=0,
+                                                             starting_value=0,
                                                              t0=0.35),
                        output_ports=[pnl.RESPONSE_TIME,
                                      pnl.PROBABILITY_UPPER_THRESHOLD,

@@ -41,7 +41,7 @@ from psyneulink.core.globals.parameters import Parameter
 
 __all__ = [
     'DistributionFunction', 'DRIFT_RATE', 'DRIFT_RATE_VARIABILITY', 'DriftDiffusionAnalytical', 'ExponentialDist',
-    'GammaDist', 'NON_DECISION_TIME', 'NormalDist', 'STARTING_POINT', 'STARTING_POINT_VARIABILITY',
+    'GammaDist', 'NON_DECISION_TIME', 'NormalDist', 'STARTING_VALUE', 'STARTING_VALUE_VARIABILITY',
     'THRESHOLD_VARIABILITY', 'UniformDist', 'UniformToNormalDist', 'WaldDist',
 ]
 
@@ -912,16 +912,16 @@ class WaldDist(DistributionFunction):
 DRIFT_RATE = 'drift_rate'
 DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
 THRESHOLD_VARIABILITY = 'DDM_ThresholdRateVariability'
-STARTING_POINT = 'starting_point'
-STARTING_POINT_VARIABILITY = "DDM_StartingPointVariability"
+STARTING_VALUE = 'starting_value'
+STARTING_VALUE_VARIABILITY = "DDM_StartingPointVariability"
 NON_DECISION_TIME = 't0'
 
 
 def _DriftDiffusionAnalytical_bias_getter(owning_component=None, context=None):
-    starting_point = owning_component.parameters.starting_point._get(context)
+    starting_value = owning_component.parameters.starting_value._get(context)
     threshold = owning_component.parameters.threshold._get(context)
     try:
-        return (starting_point + threshold) / (2 * threshold)
+        return (starting_value + threshold) / (2 * threshold)
     except TypeError:
         return None
 
@@ -933,7 +933,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         default_variable=None,  \
         drift_rate=1.0,         \
         threshold=1.0,          \
-        starting_point=0.0,     \
+        starting_value=0.0,     \
         t0=0.2                  \
         noise=0.5,              \
         params=None,            \
@@ -949,7 +949,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
     *Modulatory Parameters:*
 
     | *MULTIPLICATIVE_PARAM:* `drift_rate <DriftDiffusionAnalytical.drift_rate>`
-    | *ADDITIVE_PARAM:* `starting_point <DriftDiffusionAnalytical.starting_point>`
+    | *ADDITIVE_PARAM:* `starting_value <DriftDiffusionAnalytical.starting_value>`
     |
 
     Arguments
@@ -967,7 +967,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array,
         it must be the same length as `default_variable <DriftDiffusionAnalytical.default_variable>`.
 
-    starting_point : float, list or 1d array : default 1.0
+    starting_value : float, list or 1d array : default 1.0
         specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or
         array, it must be the same length as `default_variable <DriftDiffusionAnalytical.default_variable>`.
 
@@ -1013,7 +1013,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         determines the threshold (boundary) of the drift diffusion process (i.e., at which the integration
         process is assumed to terminate).
 
-    starting_point : float or 1d array
+    starting_value : float or 1d array
         determines the initial value of the decision variable for the drift diffusion process.
 
     noise : float or 1d array
@@ -1025,7 +1025,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
     bias : float or 1d array
         normalized starting point:
-        (`starting_point <DriftDiffusionAnalytical.starting_point>` + `threshold <DriftDiffusionAnalytical.threshold>`) /
+        (`starting_value <DriftDiffusionAnalytical.starting_value>` + `threshold <DriftDiffusionAnalytical.threshold>`) /
         (2 * `threshold <DriftDiffusionAnalytical.threshold>`)
 
     owner : Component
@@ -1075,8 +1075,8 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                     :default value: 0.5
                     :type: ``float``
 
-                starting_point
-                    see `starting_point <DriftDiffusionAnalytical.starting_point>`
+                starting_value
+                    see `starting_value <DriftDiffusionAnalytical.starting_value>`
 
                     :default value: 0.0
                     :type: ``float``
@@ -1094,7 +1094,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                     :type: ``float``
         """
         drift_rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        starting_point = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        starting_value = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         threshold = Parameter(1.0, modulable=True)
         noise = Parameter(0.5, modulable=True)
         t0 = Parameter(.200, modulable=True)
@@ -1113,7 +1113,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
     def __init__(self,
                  default_variable=None,
                  drift_rate: tc.optional(parameter_spec) = None,
-                 starting_point: tc.optional(parameter_spec) = None,
+                 starting_value: tc.optional(parameter_spec) = None,
                  threshold: tc.optional(parameter_spec) = None,
                  noise: tc.optional(parameter_spec) = None,
                  t0: tc.optional(parameter_spec) = None,
@@ -1127,7 +1127,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         super().__init__(
             default_variable=default_variable,
             drift_rate=drift_rate,
-            starting_point=starting_point,
+            starting_value=starting_value,
             threshold=threshold,
             noise=noise,
             t0=t0,
@@ -1208,17 +1208,17 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         stimulus_drift_rate = float(variable)
         drift_rate = attentional_drift_rate * stimulus_drift_rate
         threshold = self._get_current_parameter_value(THRESHOLD, context)
-        starting_point = float(self._get_current_parameter_value(STARTING_POINT, context))
+        starting_value = float(self._get_current_parameter_value(STARTING_VALUE, context))
         noise = float(self._get_current_parameter_value(NOISE, context))
         t0 = float(self._get_current_parameter_value(NON_DECISION_TIME, context))
 
         # drift_rate = float(self.drift_rate) * float(variable)
         # threshold = float(self.threshold)
-        # starting_point = float(self.starting_point)
+        # starting_value = float(self.starting_value)
         # noise = float(self.noise)
         # t0 = float(self.t0)
 
-        bias = (starting_point + threshold) / (2 * threshold)
+        bias = (starting_value + threshold) / (2 * threshold)
 
         # Prevents div by 0 issue below:
         if bias <= 0:
@@ -1310,7 +1310,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                moments['mean_rt_minus'], moments['var_rt_minus'], moments['skew_rt_minus']
 
     @staticmethod
-    def _compute_conditional_rt_moments(drift_rate, noise, threshold, starting_point, t0):
+    def _compute_conditional_rt_moments(drift_rate, noise, threshold, starting_value, t0):
         """
         This is a helper function for computing the conditional decison time moments for the DDM.
         It is based completely off of Matlab\\DDMFunctions\\ddm_metrics_cond_Mat.m.
@@ -1318,7 +1318,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         :param drift_rate: The drift rate of the DDM
         :param noise: The diffusion rate.
         :param threshold: The symmetric threshold of the DDM
-        :param starting_point: The initial condition.
+        :param starting_value: The initial condition.
         :param t0: The non decision time.
         :return: A dictionary containing the following key value pairs:
          mean_rt_plus: The mean RT of positive responses.
@@ -1330,12 +1330,12 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         """
 
         #  transform starting point to be centered at 0
-        starting_point = (starting_point - 0.5) * 2.0 * threshold
+        starting_value = (starting_value - 0.5) * 2.0 * threshold
 
         if abs(drift_rate) < 0.01:
             drift_rate = 0.01
 
-        X = drift_rate * starting_point / noise**2
+        X = drift_rate * starting_value / noise**2
         Z = drift_rate * threshold / noise**2
 
         X = max(-100, min(100, X))
@@ -1394,7 +1394,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
         attentional_drift_rate = load_scalar_param(DRIFT_RATE)
         threshold = load_scalar_param(THRESHOLD)
-        starting_point = load_scalar_param(STARTING_POINT)
+        starting_value = load_scalar_param(STARTING_VALUE)
         noise = load_scalar_param(NOISE)
         t0 = load_scalar_param(NON_DECISION_TIME)
 
@@ -1407,7 +1407,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         drift_rate = builder.fmul(attentional_drift_rate, stimulus_drift_rate)
 
         threshold_2 = builder.fmul(threshold, threshold.type(2))
-        bias = builder.fadd(starting_point, threshold)
+        bias = builder.fadd(starting_value, threshold)
         bias = builder.fdiv(bias, threshold_2)
 
         bias = pnlvm.helpers.fclamp(builder, bias, 1e-8, 1 - 1e-8)
@@ -1529,16 +1529,16 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         skew_rt_minus_ptr = _get_arg_out_ptr(7)
 
         # Transform starting point to be centered at 0
-        starting_point = bias
-        starting_point = builder.fsub(starting_point, starting_point.type(0.5))
-        starting_point = builder.fmul(starting_point, starting_point.type(2))
-        starting_point = builder.fmul(starting_point, threshold)
+        starting_value = bias
+        starting_value = builder.fsub(starting_value, starting_value.type(0.5))
+        starting_value = builder.fmul(starting_value, starting_value.type(2))
+        starting_value = builder.fmul(starting_value, threshold)
 
         drift_rate_limit = abs_drift_rate.type(0.01)
         small_drift = builder.fcmp_ordered("<", abs_drift_rate, drift_rate_limit)
         drift_rate = builder.select(small_drift, drift_rate_limit, drift_rate)
 
-        X = builder.fmul(drift_rate, starting_point)
+        X = builder.fmul(drift_rate, starting_value)
         X = builder.fdiv(X, noise_sqr)
         X = pnlvm.helpers.fclamp(builder, X, X.type(-100), X.type(100))
 
