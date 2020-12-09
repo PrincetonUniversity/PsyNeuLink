@@ -4331,7 +4331,7 @@ class TestSchedulerConditions:
                             ])
     def test_scheduler_conditions(self, mode, condition, expected_result):
         decisionMaker = pnl.DDM(
-                        function=pnl.DriftDiffusionIntegrator(starting_point=0,
+                        function=pnl.DriftDiffusionIntegrator(non_decision_time=0,
                                                               threshold=1,
                                                               noise=0.0),
                         reset_stateful_function_when=pnl.AtTrialStart(),

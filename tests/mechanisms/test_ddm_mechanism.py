@@ -75,7 +75,7 @@ class TestReset:
 
         # reset only decision variable
         D.function.initializer = 1.0
-        D.function.starting_point = 0.0
+        D.function.non_decision_time = 0.0
         D.reset()
         assert np.allclose(D.function.value[0], 1.0)
         assert np.allclose(D.function.previous_value, 1.0)
@@ -620,7 +620,7 @@ def test_DDM_time():
             noise=0.0,
             rate=-5.0,
             time_step_size=0.2,
-            starting_point=0.5
+            non_decision_time=0.5
         )
     )
 
@@ -660,7 +660,7 @@ def test_DDM_in_composition(benchmark, mode):
             rate=1,
             noise=0.0,
             offset=0.0,
-            starting_point=0.0,
+            non_decision_time=0.0,
             time_step_size=0.1,
         ),
     )

@@ -88,7 +88,7 @@ Decision = pnl.DDM(function=psyneulink.core.components.functions.distributionfun
             pnl.VARIABLE: (pnl.OWNER_VALUE, 2),
             pnl.FUNCTION: psyneulink.core.components.functions.transferfunctions.Linear(0, slope=1.0, intercept=1)
         }
-    ],) #drift_rate=(1.0),threshold=(0.2645),noise=(0.5),starting_point=(0), t0=0.15
+    ],) #drift_rate=(1.0),threshold=(0.2645),noise=(0.5),non_decision_time=(0), t0=0.15
 
 print(Decision.execute([1]))
 

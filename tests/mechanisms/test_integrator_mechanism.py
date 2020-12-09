@@ -610,7 +610,7 @@ class TestIntegratorFunctions:
                 initializer=10.0,
                 rate=10,
                 time_step_size=0.2,
-                starting_point=0.5,
+                non_decision_time=0.5,
                 decay=0.1,
                 offset=10,
             )
