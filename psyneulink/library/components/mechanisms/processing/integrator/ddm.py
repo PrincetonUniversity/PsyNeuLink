@@ -208,7 +208,7 @@ An example that illustrate all of the parameters is shown below:
     ...         starting_value=0.5,
     ...         threshold=0.2645,
     ...         noise=0.5,
-    ...         t0=0.15
+    ...         non_decision_time=0.15
     ...     ),
     ...     name='my_DDM_DriftDiffusionAnalytical'
     ... )
@@ -292,7 +292,7 @@ COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
       - specifies the variance of the stochastic ("diffusion") component of the decision process.
     ..
     * `NON_DECISION_TIME` (default 0.2)
-      specifies the `t0` parameter of the decision process (in units of seconds).
+      specifies the `non_decision_time` parameter of the decision process (in units of seconds).
 
 [TBI - MULTIPROCESS DDM - REPLACE BELOW]
 When a DDM Mechanism is executed it computes the decision process, either analytically (in TRIAL mode)
@@ -315,7 +315,7 @@ single set of parameters that are not subject to the analytic solution (e.g., fo
    created) for the next execution.
 
   ADD NOTE ABOUT INTERROGATION PROTOCOL, USING ``terminate_function``
-  ADD NOTE ABOUT RELATIONSHIP OF RT TO time_steps TO t0 TO ms
+  ADD NOTE ABOUT RELATIONSHIP OF RT TO time_steps TO non_decision_time TO ms
 COMMENT
 
 .. _DDM_Execution:
@@ -710,7 +710,7 @@ class DDM(ProcessingMechanism):
                 starting_value=0.0,
                 threshold=1.0,
                 noise=0.5,
-                t0=.200,
+                non_decision_time=.200,
             ),
             stateful=False,
             loggable=False

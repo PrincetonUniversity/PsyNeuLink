@@ -7066,7 +7066,7 @@ class TestMisc:
                 threshold=(0.1654),
                 noise=(0.5),
                 starting_value=(0),
-                t0=0.25,
+                non_decision_time=0.25,
             ),
             name='Decision',
         )
@@ -7096,7 +7096,7 @@ class TestMisc:
                 ),
                 noise=(0.5),
                 starting_value=(0),
-                t0=0.45
+                non_decision_time=0.45
             ),
             name='second_DDM',
         )

@@ -135,7 +135,7 @@ class TestControlSpecification:
                                                                                                                   0.3)})),
                                                                  noise=0.5,
                                                                  starting_value=0,
-                                                                 t0=0.45),
+                                                                 non_decision_time=0.45),
                            output_ports=[pnl.DECISION_VARIABLE,
                                          pnl.RESPONSE_TIME,
                                          pnl.PROBABILITY_UPPER_THRESHOLD],
@@ -829,7 +829,7 @@ class TestControlMechanisms:
                                                                       starting_value=STARTING_VALUE,
                                                                       threshold=THRESHOLD,
                                                                       noise=NOISE,
-                                                                      t0=T0),
+                                                                      non_decision_time=T0),
                                 output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME,
                                                pnl.PROBABILITY_UPPER_THRESHOLD,
                                                pnl.PROBABILITY_LOWER_THRESHOLD],
@@ -1164,7 +1164,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                                                                   control_signal_params={pnl.ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)})),
                                                                  noise=0.5,
                                                                  starting_value=0,
-                                                                 t0=0.45),
+                                                                 non_decision_time=0.45),
                            output_ports=[pnl.DECISION_VARIABLE,
                                         pnl.RESPONSE_TIME,
                                         pnl.PROBABILITY_UPPER_THRESHOLD],
@@ -1272,7 +1272,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                                  threshold=(0.2645),
                                                                  noise=(0.5),
                                                                  starting_value=(0),
-                                                                 t0=0.15),
+                                                                 non_decision_time=0.15),
                            output_ports=[pnl.DECISION_VARIABLE,
                                           pnl.RESPONSE_TIME,
                                           pnl.PROBABILITY_UPPER_THRESHOLD]
@@ -1443,7 +1443,7 @@ class TestModelBasedOptimizationControlMechanisms:
                 threshold=1.0,
                 noise=0.5,
                 starting_value=0,
-                t0=0.45
+                non_decision_time=0.45
             ),
             output_ports=[
                 pnl.DECISION_VARIABLE,
@@ -1581,7 +1581,7 @@ class TestModelBasedOptimizationControlMechanisms:
                 ),
                 noise=(0.5),
                 starting_value=(0),
-                t0=0.45
+                non_decision_time=0.45
             ),
             output_ports=[
                 pnl.DECISION_VARIABLE,
@@ -1948,7 +1948,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                                       starting_value=STARTING_VALUE,
                                                                       threshold=THRESHOLD,
                                                                       noise=NOISE,
-                                                                      t0=T0),
+                                                                      non_decision_time=T0),
                                 output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME,
                                                pnl.PROBABILITY_UPPER_THRESHOLD,
                                                pnl.PROBABILITY_LOWER_THRESHOLD],

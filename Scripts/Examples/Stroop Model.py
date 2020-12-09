@@ -33,7 +33,7 @@ decision = DDM(name='DECISION',
                                                  threshold=(0.2645),
                                                  noise=(0.5),
                                                  starting_value=(0),
-                                                 t0=0.15),
+                                                 non_decision_time=0.15),
                output_ports=[DECISION_VARIABLE,
                               RESPONSE_TIME,
                               PROBABILITY_UPPER_THRESHOLD]

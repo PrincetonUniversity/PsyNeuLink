@@ -126,7 +126,7 @@ decisionMaker = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate = DRIFT
                                                                  starting_value = STARTING_VALUE,
                                                                  threshold = THRESHOLD,
                                                                  noise = NOISE,
-                                                                 t0 = T0),
+                                                                 non_decision_time = T0),
                                                                  output_ports = [pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME,
                                                                                   pnl.PROBABILITY_UPPER_THRESHOLD, pnl.PROBABILITY_LOWER_THRESHOLD],
                                                                  name='DDM')

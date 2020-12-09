@@ -914,7 +914,7 @@ DRIFT_RATE_VARIABILITY = 'DDM_DriftRateVariability'
 THRESHOLD_VARIABILITY = 'DDM_ThresholdRateVariability'
 STARTING_VALUE = 'starting_value'
 STARTING_VALUE_VARIABILITY = "DDM_StartingPointVariability"
-NON_DECISION_TIME = 't0'
+NON_DECISION_TIME = 'non_decision_time'
 
 
 def _DriftDiffusionAnalytical_bias_getter(owning_component=None, context=None):
@@ -934,7 +934,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         drift_rate=1.0,         \
         threshold=1.0,          \
         starting_value=0.0,     \
-        t0=0.2                  \
+        non_decision_time=0.2   \
         noise=0.5,              \
         params=None,            \
         owner=None,             \
@@ -976,7 +976,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         If it is a float, it must be a number from 0 to 1.  If it is a list or array, it must be the same length as
         `default_variable <DriftDiffusionAnalytical.default_variable>` and all elements must be floats from 0 to 1.
 
-    t0 : float, list or 1d array : default 0.2
+    non_decision_time : float, list or 1d array : default 0.2
         specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a
         list or array, it must be the same length as  `default_variable <DriftDiffusionAnalytical.default_variable>` and all
         elements must be floats from 0 to 1.
@@ -1020,7 +1020,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         determines the diffusion component of the drift diffusion process (used to specify the variance of a
         Gaussian random process).
 
-    t0 : float or 1d array
+    non_decision_time : float or 1d array
         determines the assumed non-decision time to determine the response time returned by the solution.
 
     bias : float or 1d array
@@ -1081,8 +1081,8 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                     :default value: 0.0
                     :type: ``float``
 
-                t0
-                    see `t0 <DriftDiffusionAnalytical.t0>`
+                non_decision_time
+                    see `non_decision_time <DriftDiffusionAnalytical.non_decision_time>`
 
                     :default value: 0.2
                     :type: ``float``
@@ -1097,7 +1097,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         starting_value = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         threshold = Parameter(1.0, modulable=True)
         noise = Parameter(0.5, modulable=True)
-        t0 = Parameter(.200, modulable=True)
+        non_decision_time = Parameter(.200, modulable=True)
         bias = Parameter(0.5, read_only=True, getter=_DriftDiffusionAnalytical_bias_getter)
         # this is read only because conversion is disabled for this function
         # this occurs in other places as well
@@ -1116,7 +1116,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                  starting_value: tc.optional(parameter_spec) = None,
                  threshold: tc.optional(parameter_spec) = None,
                  noise: tc.optional(parameter_spec) = None,
-                 t0: tc.optional(parameter_spec) = None,
+                 non_decision_time: tc.optional(parameter_spec) = None,
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None,
@@ -1130,7 +1130,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
             starting_value=starting_value,
             threshold=threshold,
             noise=noise,
-            t0=t0,
+            non_decision_time=non_decision_time,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -1210,13 +1210,13 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         threshold = self._get_current_parameter_value(THRESHOLD, context)
         starting_value = float(self._get_current_parameter_value(STARTING_VALUE, context))
         noise = float(self._get_current_parameter_value(NOISE, context))
-        t0 = float(self._get_current_parameter_value(NON_DECISION_TIME, context))
+        non_decision_time = float(self._get_current_parameter_value(NON_DECISION_TIME, context))
 
         # drift_rate = float(self.drift_rate) * float(variable)
         # threshold = float(self.threshold)
         # starting_value = float(self.starting_value)
         # noise = float(self.noise)
-        # t0 = float(self.t0)
+        # non_decision_time = float(self.non_decision_time)
 
         bias = (starting_value + threshold) / (2 * threshold)
 
@@ -1231,7 +1231,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
             # back to absolute bias in order to apply limit
             bias_abs = bias * 2 * threshold - threshold
             # use expression for limit a->0 from Srivastava et al. 2016
-            rt = t0 + (threshold ** 2 - bias_abs ** 2) / (noise ** 2)
+            rt = non_decision_time + (threshold ** 2 - bias_abs ** 2) / (noise ** 2)
             er = (threshold - bias_abs) / (2 * threshold)
         else:
             drift_rate_normed = np.abs(drift_rate)
@@ -1285,7 +1285,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                         if rt < 0:
                             rt = 0
 
-                    rt = rt + t0
+                    rt = rt + non_decision_time
 
                 except FloatingPointError:
                     # Per Mike Shvartsman:
@@ -1294,7 +1294,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                     # depending on the sign of the drift, and so decision time goes to a point mass on z/a – x0, and
                     # generates a "RuntimeWarning: overflow encountered in exp"
                     er = 0
-                    rt = ztilde / atilde - x0tilde + t0
+                    rt = ztilde / atilde - x0tilde + non_decision_time
 
             # This last line makes it report back in terms of a fixed reference point
             #    (i.e., closer to 1 always means higher p(upper boundary))
@@ -1303,14 +1303,14 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
             er = (is_neg_drift == 1) * (1 - er) + (is_neg_drift == 0) * (er)
 
         # Compute moments (mean, variance, skew) of condiational response time distributions
-        moments = DriftDiffusionAnalytical._compute_conditional_rt_moments(drift_rate, noise, threshold, bias, t0)
+        moments = DriftDiffusionAnalytical._compute_conditional_rt_moments(drift_rate, noise, threshold, bias, non_decision_time)
 
         return rt, er, \
                moments['mean_rt_plus'], moments['var_rt_plus'], moments['skew_rt_plus'], \
                moments['mean_rt_minus'], moments['var_rt_minus'], moments['skew_rt_minus']
 
     @staticmethod
-    def _compute_conditional_rt_moments(drift_rate, noise, threshold, starting_value, t0):
+    def _compute_conditional_rt_moments(drift_rate, noise, threshold, starting_value, non_decision_time):
         """
         This is a helper function for computing the conditional decison time moments for the DDM.
         It is based completely off of Matlab\\DDMFunctions\\ddm_metrics_cond_Mat.m.
@@ -1319,7 +1319,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         :param noise: The diffusion rate.
         :param threshold: The symmetric threshold of the DDM
         :param starting_value: The initial condition.
-        :param t0: The non decision time.
+        :param non_decision_time: The non decision time.
         :return: A dictionary containing the following key value pairs:
          mean_rt_plus: The mean RT of positive responses.
          mean_rt_minus: The mean RT of negative responses.
@@ -1380,8 +1380,8 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
             moments['skew_rt_minus'] /= moments['var_rt_minus']**1.5
 
             # Add the non-decision time to the mean RTs
-            moments['mean_rt_plus'] += t0
-            moments['mean_rt_minus'] += t0
+            moments['mean_rt_plus'] += non_decision_time
+            moments['mean_rt_minus'] += non_decision_time
 
 
         return moments
@@ -1396,7 +1396,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         threshold = load_scalar_param(THRESHOLD)
         starting_value = load_scalar_param(STARTING_VALUE)
         noise = load_scalar_param(NOISE)
-        t0 = load_scalar_param(NON_DECISION_TIME)
+        non_decision_time = load_scalar_param(NON_DECISION_TIME)
 
         noise_sqr = builder.fmul(noise, noise)
 
@@ -1437,7 +1437,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                 threshold_sqr = builder.fmul(threshold, threshold)
                 rt = builder.fsub(threshold_sqr, bias_abs_sqr)
                 rt = builder.fdiv(rt, noise_sqr)
-                rt = builder.fadd(t0, rt)
+                rt = builder.fadd(non_decision_time, rt)
                 builder.store(rt, rt_ptr)
 
                 er = builder.fsub(threshold, bias_abs)
@@ -1517,7 +1517,7 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
                 rt = builder.fdiv(rt_tmp1, rt_tmp2)
                 rt = builder.fsub(rt, x0tilde)
                 rt = builder.fadd(rt_tmp0, rt)
-                rt = builder.fadd(rt, t0)
+                rt = builder.fadd(rt, non_decision_time)
                 builder.store(rt, rt_ptr)
 
         # Calculate moments
@@ -1566,14 +1566,14 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         mrtp_tmp = builder.fsub(Z2_coth_Z2, ZpX_coth_ZpX)
         m_rt_p = builder.fdiv(noise_sqr, drift_rate_sqr)
         m_rt_p = builder.fmul(m_rt_p, mrtp_tmp)
-        m_rt_p = builder.fadd(m_rt_p, t0)
+        m_rt_p = builder.fadd(m_rt_p, non_decision_time)
         builder.store(m_rt_p, mean_rt_plus_ptr)
 
         # Mean minus
         mrtm_tmp = builder.fsub(Z2_coth_Z2, ZmX_coth_ZmX)
         m_rt_m = builder.fdiv(noise_sqr, drift_rate_sqr)
         m_rt_m = builder.fmul(m_rt_m, mrtm_tmp)
-        m_rt_m = builder.fadd(m_rt_m, t0)
+        m_rt_m = builder.fadd(m_rt_m, non_decision_time)
         builder.store(m_rt_m, mean_rt_minus_ptr)
 
         # Variance helpers
