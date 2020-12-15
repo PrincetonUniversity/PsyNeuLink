@@ -60,12 +60,11 @@ Conditions can be added to a Scheduler when it is created by specifying a `Condi
 ConditionSets can also be added after the  Scheduler has been created, using its `add_condition` and
 `add_condition_set` methods, respectively.
 
-.. _Scheduler_Algorithm:
-
-Algorithm
----------
-
 .. _consideration_set:
+.. _consideration_queue:
+
+Consideration Queue
+-------------------
 
 When a Scheduler is created, it constructs a `consideration_queue`:  a list of `consideration_sets <consideration_set>`
 that defines the order in which `Components <Component>` are eligible to be executed.  This is based on the pattern of
@@ -80,6 +79,19 @@ The third consists of  Components that receive Projections from Components in th
 Components are eligible to execute in each `TIME_STEP` of a `PASS`, and then evaluates the `Condition <Condition>`
 associated with each Component in the current `consideration_set <consideration_set>` to determine which should
 actually be assigned for execution.
+
+**Figure: Translation from Composition or Graph Dependency Structure to Consideration Queue**
+
+.. figure:: _static/Scheduler_Composition_to_ConsiderationQueue.svg
+   :alt: Translation From Composition or Graph Dependency Structure to Consideration Queue
+   :scale: 50 %
+
+   The Composition or Graph Dependency Structure on the left is translated to the consideration queue on the right.
+
+.. _Scheduler_Algorithm:
+
+Algorithm Pseudocode
+--------------------
 
 Pseudocode::
 
