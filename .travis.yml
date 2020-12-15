@@ -53,7 +53,8 @@ before_install:
       export RUN_COV=""
 
       # matplotlib depends on cython
-      export EXTRA_PIP="cython"
+      # explicitly install numpy (https://github.com/pypa/pip/issues/9239)
+      export EXTRA_PIP="cython $(grep numpy requirements.txt)"
     fi
     # distutils is only needed for python3.8
     # https://bugs.launchpad.net/ubuntu/+source/python3.8/+bug/1851684
