@@ -720,9 +720,9 @@ class Not(Condition):
     def __init__(self, condition):
         self.condition = condition
 
-        def inner_func(*args, **kwargs):
+        def inner_func(condition, *args, **kwargs):
             return not condition.is_satisfied(*args, **kwargs)
-        super().__init__(inner_func)
+        super().__init__(inner_func, condition)
 
     @Condition.owner.setter
     def owner(self, value):
