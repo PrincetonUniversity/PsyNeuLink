@@ -557,7 +557,7 @@ def _generate_scheduler_string(
     blacklist=[]
 ):
     output = []
-    for node, condition in scheduler_dict['conditions']['node'].items():
+    for node, condition in scheduler_dict['node'].items():
         if node not in blacklist:
             output.append(
                 '{0}.add_condition({1}, {2})'.format(
@@ -573,7 +573,7 @@ def _generate_scheduler_string(
     output.append('')
 
     termination_str = []
-    for scale, cond in scheduler_dict['conditions']['termination'].items():
+    for scale, cond in scheduler_dict['termination'].items():
         termination_str.insert(
             1,
             'psyneulink.{0}: {1}'.format(
@@ -904,15 +904,13 @@ def _generate_composition_string(composition_list, component_identifiers):
             )
 
         # add schedulers
-        sched_dict = composition_dict[comp_type._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]['scheduler']
-
         # blacklist automatically generated nodes because they will
         # not exist in the script namespace
         output.append('')
         output.append(
             _generate_scheduler_string(
                 f'{comp_identifer}.scheduler',
-                sched_dict,
+                composition_dict['conditions'],
                 component_identifiers,
                 blacklist=implicit_names
             )
