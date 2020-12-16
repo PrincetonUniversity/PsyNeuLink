@@ -577,7 +577,7 @@ def _generate_scheduler_string(
         termination_str.insert(
             1,
             'psyneulink.{0}: {1}'.format(
-                scale,
+                f'TimeScale.{str.upper(scale)}',
                 _generate_condition_string(cond, component_identifiers)
             )
         )
