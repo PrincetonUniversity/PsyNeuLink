@@ -557,7 +557,7 @@ def _generate_scheduler_string(
     blacklist=[]
 ):
     output = []
-    for node, condition in scheduler_dict['node'].items():
+    for node, condition in scheduler_dict['node_specific'].items():
         if node not in blacklist:
             output.append(
                 '{0}.add_condition({1}, {2})'.format(
