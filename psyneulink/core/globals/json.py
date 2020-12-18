@@ -557,7 +557,7 @@ def _generate_scheduler_string(
     blacklist=[]
 ):
     output = []
-    for node, condition in scheduler_dict['conditions']['node'].items():
+    for node, condition in scheduler_dict['node_specific'].items():
         if node not in blacklist:
             output.append(
                 '{0}.add_condition({1}, {2})'.format(
@@ -573,11 +573,11 @@ def _generate_scheduler_string(
     output.append('')
 
     termination_str = []
-    for scale, cond in scheduler_dict['conditions']['termination'].items():
+    for scale, cond in scheduler_dict['termination'].items():
         termination_str.insert(
             1,
             'psyneulink.{0}: {1}'.format(
-                scale,
+                f'TimeScale.{str.upper(scale)}',
                 _generate_condition_string(cond, component_identifiers)
             )
         )
@@ -904,37 +904,17 @@ def _generate_composition_string(composition_list, component_identifiers):
             )
 
         # add schedulers
-        try:
-            schedulers = composition_dict[comp_type._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]['schedulers']
-
-            ContextFlags = psyneulink.core.globals.context.ContextFlags
-            scheduler_attr_mappings = {
-                str(ContextFlags.PROCESSING): 'scheduler',
-                str(ContextFlags.LEARNING): 'scheduler_learning',
-            }
-
-            for phase, sched_dict in schedulers.items():
-                try:
-                    sched_attr = scheduler_attr_mappings[phase]
-                except KeyError as e:
-                    raise PNLJSONError(
-                        f'Invalid scheduler phase in JSON: {phase}'
-                    ) from e
-
-                # blacklist automatically generated nodes because they will
-                # not exist in the script namespace
-                output.append('')
-                output.append(
-                    _generate_scheduler_string(
-                        f'{comp_identifer}.{sched_attr}',
-                        sched_dict,
-                        component_identifiers,
-                        blacklist=implicit_names
-                    )
-                )
-
-        except KeyError:
-            pass
+        # blacklist automatically generated nodes because they will
+        # not exist in the script namespace
+        output.append('')
+        output.append(
+            _generate_scheduler_string(
+                f'{comp_identifer}.scheduler',
+                composition_dict['conditions'],
+                component_identifiers,
+                blacklist=implicit_names
+            )
+        )
 
     return '\n'.join(output)
 

@@ -696,9 +696,9 @@ class Scheduler(JSONDumpable):
         return {
             'conditions': {
                 'termination': {
-                    str(k): v._dict_summary for k, v in self.termination_conds.items()
+                    str.lower(k.name): v._dict_summary for k, v in self.termination_conds.items()
                 },
-                'node': {
+                'node_specific': {
                     n.name: self.conditions[n]._dict_summary for n in self.nodes if n in self.conditions
                 }
             }
