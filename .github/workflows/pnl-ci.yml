@@ -47,7 +47,7 @@ jobs:
         restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2.1.4
+      uses: actions/setup-python@v2.2.0
       with:
         python-version: ${{ matrix.python-version }}
         architecture: ${{ matrix.python-architecture }}
