@@ -9,7 +9,7 @@ matplotlib<3.3.4
 networkx<2.6
 numpy<1.19.5
 pillow<8.1.0
-toposort<=1.5
+toposort<1.7
 torch<1.8.0; sys_platform != 'win32' and platform_machine == 'x86_64' and platform_python_implementation == 'CPython'
 typecheck-decorator<=1.2
 leabra-psyneulink<=0.3.2
