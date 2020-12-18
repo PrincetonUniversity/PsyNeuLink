@@ -904,37 +904,19 @@ def _generate_composition_string(composition_list, component_identifiers):
             )
 
         # add schedulers
-        try:
-            schedulers = composition_dict[comp_type._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]['schedulers']
+        sched_dict = composition_dict[comp_type._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]['scheduler']
 
-            ContextFlags = psyneulink.core.globals.context.ContextFlags
-            scheduler_attr_mappings = {
-                str(ContextFlags.PROCESSING): 'scheduler',
-                str(ContextFlags.LEARNING): 'scheduler_learning',
-            }
-
-            for phase, sched_dict in schedulers.items():
-                try:
-                    sched_attr = scheduler_attr_mappings[phase]
-                except KeyError as e:
-                    raise PNLJSONError(
-                        f'Invalid scheduler phase in JSON: {phase}'
-                    ) from e
-
-                # blacklist automatically generated nodes because they will
-                # not exist in the script namespace
-                output.append('')
-                output.append(
-                    _generate_scheduler_string(
-                        f'{comp_identifer}.{sched_attr}',
-                        sched_dict,
-                        component_identifiers,
-                        blacklist=implicit_names
-                    )
-                )
-
-        except KeyError:
-            pass
+        # blacklist automatically generated nodes because they will
+        # not exist in the script namespace
+        output.append('')
+        output.append(
+            _generate_scheduler_string(
+                f'{comp_identifer}.scheduler',
+                sched_dict,
+                component_identifiers,
+                blacklist=implicit_names
+            )
+        )
 
     return '\n'.join(output)
 
