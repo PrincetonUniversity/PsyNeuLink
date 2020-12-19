@@ -11,14 +11,14 @@ import psyneulink.core.llvm as pnlvm
 
 class TestBinaryOperations:
     @pytest.mark.parametrize("param1, param2", [
-                        (1, 2), # scalar - scalar
-                        (np.ones(2), 2), # vec - scalar
-                        (2, np.ones(2)), # scalar - vec
-                        (np.ones((2, 2)), 2), # mat - scalar
-                        (2, np.ones((2, 2))), # scalar - mat
-                        (np.ones(2), np.array([1, 2])), # vec - vec
-                        (np.ones((2, 2)), np.array([[1, 2], [3, 4]])), # mat - mat
-                        ])
+                        (1, 2),
+                        (np.ones(2), 2),
+                        (2, np.ones(2)),
+                        (np.ones((2, 2)), 2),
+                        (2, np.ones((2, 2))),
+                        (np.ones(2), np.array([1, 2])),
+                        (np.ones((2, 2)), np.array([[1, 2], [3, 4]])),
+                        ], ids=["scalar-scalar", "vec-scalar", "scalar-vec", "mat-scalar", "scalar-mat", "vec-vec", "mat-mat"])
     @pytest.mark.parametrize("bin_execute", ['Python',
                                              pytest.param('LLVM', marks=pytest.mark.llvm),
                                              pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
@@ -41,14 +41,14 @@ class TestBinaryOperations:
         assert np.allclose(val, param1 + param2)
 
     @pytest.mark.parametrize("param1, param2", [
-                        (1, 2), # scalar - scalar
-                        (np.ones(2), 2), # vec - scalar
-                        (2, np.ones(2)), # scalar - vec
-                        (np.ones((2, 2)), 2), # mat - scalar
-                        (2, np.ones((2, 2))), # scalar - mat
-                        (np.ones(2), np.array([1, 2])), # vec - vec
-                        (np.ones((2, 2)), np.array([[1, 2], [3, 4]])), # mat - mat
-                        ])
+                        (1, 2),
+                        (np.ones(2), 2),
+                        (2, np.ones(2)),
+                        (np.ones((2, 2)), 2),
+                        (2, np.ones((2, 2))),
+                        (np.ones(2), np.array([1, 2])),
+                        (np.ones((2, 2)), np.array([[1, 2], [3, 4]])),
+                        ], ids=["scalar-scalar", "vec-scalar", "scalar-vec", "mat-scalar", "scalar-mat", "vec-vec", "mat-mat"])
     @pytest.mark.parametrize("bin_execute", ['Python',
                                              pytest.param('LLVM', marks=pytest.mark.llvm),
                                              pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
@@ -349,10 +349,10 @@ class TestUserDefFunc:
         assert np.allclose(val, [[6, 10]])
 
     @pytest.mark.parametrize("variable", [
-                        (1), # scalar
-                        (np.ones((2))), # vec-2d
-                        (np.ones((2, 2))) # mat
-                        ])
+                        (1),
+                        (np.ones((2))),
+                        (np.ones((2, 2)))
+                        ], ids=["scalar", "vec-2d", "mat"])
     @pytest.mark.parametrize("bin_execute", ['Python',
                                              pytest.param('LLVM', marks=pytest.mark.llvm),
                                              pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
