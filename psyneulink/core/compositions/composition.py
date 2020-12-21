@@ -9667,17 +9667,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def _dict_summary(self):
-        scheduler_dict = {
-            str(ContextFlags.PROCESSING): self.scheduler._dict_summary
-        }
-
         super_summary = super()._dict_summary
-
-        try:
-            super_summary[self._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]['schedulers'] = scheduler_dict
-        except KeyError:
-            super_summary[self._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK] = {}
-            super_summary[self._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]['schedulers'] = scheduler_dict
 
         nodes_dict = {MODEL_SPEC_ID_PSYNEULINK: {}}
         projections_dict = {MODEL_SPEC_ID_PSYNEULINK: {}}
@@ -9737,6 +9727,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return {
             MODEL_SPEC_ID_COMPOSITION: [{
                 **super_summary,
+                **self.scheduler._dict_summary,
                 **{
                     MODEL_SPEC_ID_NODES: nodes_dict,
                     MODEL_SPEC_ID_PROJECTIONS: projections_dict,
