@@ -259,6 +259,7 @@ def recursive_iterate_arrays(ctx, builder, u, *args):
         else:
             yield from recursive_iterate_arrays(ctx, b, u_ptr, *arg_ptrs)
 
+# TODO: Remove this function. Can be replaced by `recursive_iterate_arrays`
 def call_elementwise_operation(ctx, builder, x, operation, output_ptr):
     """Recurse through an array structure and call operation on each scalar element of the structure. Store result in output_ptr"""
     for (inp_ptr, out_ptr) in recursive_iterate_arrays(ctx, builder, x, output_ptr):
