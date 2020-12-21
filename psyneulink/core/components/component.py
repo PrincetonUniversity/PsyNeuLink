@@ -520,7 +520,7 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared,\
     is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, \
-    get_all_explicit_arguments, call_with_pruned_args, safe_equals
+    get_all_explicit_arguments, call_with_pruned_args, safe_equals, object_has_single_value
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
@@ -3154,6 +3154,58 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     raise
 
         return parameter._get(context)
+
+    def _try_execute_param(self, param, var, context=None):
+
+        # FIX: [JDC 12/18/18 - HACK TO DEAL WITH ENFORCEMENT OF 2D BELOW]
+        param_shape = np.array(param).shape
+        if not len(param_shape):
+            param_shape = np.array(var).shape
+        # param is a list; if any element is callable, execute it
+        if isinstance(param, (np.ndarray, list)):
+            # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
+            # FIX: WHY FORCE 2d??
+            param = np.atleast_2d(param)
+            for i in range(len(param)):
+                for j in range(len(param[i])):
+                    try:
+                        param[i][j] = param[i][j](context=context)
+                    except TypeError:
+                        try:
+                            param[i][j] = param[i][j]()
+                        except TypeError:
+                            pass
+            try:
+                param = param.reshape(param_shape)
+            except ValueError:
+                if object_has_single_value(param):
+                    param = np.full(param_shape, float(param))
+
+        # param is one function
+        elif callable(param):
+            # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
+            new_param = []
+            # FIX: WHY FORCE 2d??
+            for row in np.atleast_2d(var):
+            # for row in np.atleast_1d(var):
+            # for row in var:
+                new_row = []
+                for item in row:
+                    try:
+                        val = param(context=context)
+                    except TypeError:
+                        val = param()
+                    new_row.append(val)
+                new_param.append(new_row)
+            param = np.asarray(new_param)
+            # FIX: [JDC 12/18/18 - HACK TO DEAL WITH ENFORCEMENT OF 2D ABOVE]
+            try:
+                if len(np.squeeze(param)):
+                    param = param.reshape(param_shape)
+            except TypeError:
+                pass
+
+        return param
 
     def _increment_execution_count(self, count=1):
         self.parameters.execution_count.set(self.execution_count + count, override=True)
