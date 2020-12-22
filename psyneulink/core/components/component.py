@@ -520,7 +520,7 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared,\
     is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, \
-    get_all_explicit_arguments, call_with_pruned_args, safe_equals, object_has_single_value
+    get_all_explicit_arguments, call_with_pruned_args, safe_equals, safe_len
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
@@ -3156,56 +3156,75 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         return parameter._get(context)
 
     def _try_execute_param(self, param, var, context=None):
-
-        # FIX: [JDC 12/18/18 - HACK TO DEAL WITH ENFORCEMENT OF 2D BELOW]
-        param_shape = np.array(param).shape
-        if not len(param_shape):
-            param_shape = np.array(var).shape
-        # param is a list; if any element is callable, execute it
-        if isinstance(param, (np.ndarray, list)):
-            # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
-            # FIX: WHY FORCE 2d??
-            param = np.atleast_2d(param)
-            for i in range(len(param)):
-                for j in range(len(param[i])):
+        def fill_recursively(arr, value, indices=()):
+            if arr.ndim == 0:
+                try:
+                    value = value(context=context)
+                except TypeError:
                     try:
-                        param[i][j] = param[i][j](context=context)
+                        value = value()
                     except TypeError:
-                        try:
-                            param[i][j] = param[i][j]()
-                        except TypeError:
-                            pass
-            try:
-                param = param.reshape(param_shape)
-            except ValueError:
-                if object_has_single_value(param):
-                    param = np.full(param_shape, float(param))
+                        pass
+                return value
 
-        # param is one function
-        elif callable(param):
-            # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
-            new_param = []
-            # FIX: WHY FORCE 2d??
-            for row in np.atleast_2d(var):
-            # for row in np.atleast_1d(var):
-            # for row in var:
-                new_row = []
-                for item in row:
-                    try:
-                        val = param(context=context)
-                    except TypeError:
-                        val = param()
-                    new_row.append(val)
-                new_param.append(new_row)
-            param = np.asarray(new_param)
-            # FIX: [JDC 12/18/18 - HACK TO DEAL WITH ENFORCEMENT OF 2D ABOVE]
             try:
-                if len(np.squeeze(param)):
-                    param = param.reshape(param_shape)
+                len_value = len(value)
+                len_arr = safe_len(arr)
+
+                if len_value > len_arr:
+                    if len_arr == len_value - 1:
+                        ignored_items_str = f'Item {len_value - 1}'
+                    else:
+                        ignored_items_str = f'The items {len_arr} to {len_value - 1}'
+
+                    warnings.warn(
+                        f'The length of {value} is greater than that of {arr}.'
+                        f'{ignored_items_str} will be ignored for index {indices}'
+                    )
             except TypeError:
+                # if noise value is not an iterable, ignore shape warnings
                 pass
 
-        return param
+            for i, _ in enumerate(arr):
+                new_indices = indices + (i,)  # for error reporting
+                try:
+                    arr[i] = fill_recursively(arr[i], value[i], new_indices)
+                except (IndexError, TypeError):
+                    arr[i] = fill_recursively(arr[i], value, new_indices)
+
+            return arr
+
+        var = convert_all_elements_to_np_array(var, cast_from=np.integer, cast_to=float)
+
+        # handle simple wrapping of a Component (e.g. from ParameterPort in
+        # case of set after Component instantiation)
+        if (
+            (isinstance(param, list) and len(param) == 1)
+            or (isinstance(param, np.ndarray) and param.shape == (1,))
+        ):
+            if isinstance(param[0], Component):
+                param = param[0]
+
+        # Currently most noise functions do not return noise in the same
+        # shape as their variable:
+        if isinstance(param, Component):
+            try:
+                if param.defaults.value.shape == var.shape:
+                    return param(context=context)
+            except AttributeError:
+                pass
+
+        # special case where var is shaped same as param, but with extra dims
+        # assign param elements to deepest dim of var (ex: param [1, 2, 3], var [[0, 0, 0]])
+        try:
+            if param.shape != var.shape:
+                if param.shape == np.squeeze(var).shape:
+                    param = param.reshape(var.shape)
+        except AttributeError:
+            pass
+
+        fill_recursively(var, param)
+        return var
 
     def _increment_execution_count(self, count=1):
         self.parameters.execution_count.set(self.execution_count + count, override=True)

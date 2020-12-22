@@ -1055,6 +1055,48 @@ class TestIntegratorNoise:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
+    def test_integrator_simple_noise_fn_noise_list(self):
+        I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function=SimpleIntegrator(
+                noise=[NormalDist()]
+            ),
+        )
+        val = float(I.execute(10))
+
+        np.testing.assert_allclose(val, 10.302846)
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    def test_integrator_simple_noise_fn_noise_list_squeezed(self):
+        I = IntegratorMechanism(
+            name='IntegratorMechanism',
+            function=SimpleIntegrator(
+                default_variable=[[0, 0, 0]],
+                noise=[NormalDist(seed=0), NormalDist(seed=0), NormalDist(seed=0)], # seed to check elementwise
+            ),
+        )
+        val = I.execute([10, 10, 10])
+
+        np.testing.assert_allclose(val, [[10.302846, 10.302846, 10.302846]])
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
+    def test_integrator_simple_noise_fn_noise_shaped(self):
+        I = IntegratorMechanism(
+            variable=[[0], [0], [0]],
+            name='IntegratorMechanism',
+            function=SimpleIntegrator(
+                default_variable=[[0], [0], [0]],
+                noise=NormalDist([[0], [0], [0]]),
+            ),
+        )
+        val = I.execute([[10], [10], [10]])
+
+        np.testing.assert_allclose(val, [[10.660535], [11.108879], [ 9.084011]])
+
+    @pytest.mark.mechanism
+    @pytest.mark.integrator_mechanism
     def test_integrator_simple_noise_fn_var_list(self):
         I = IntegratorMechanism(
             name='IntegratorMechanism',

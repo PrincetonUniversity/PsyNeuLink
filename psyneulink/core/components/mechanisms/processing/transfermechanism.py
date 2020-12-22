@@ -640,7 +640,7 @@ from psyneulink.core.globals.parameters import Parameter, FunctionParameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    all_within_range, append_type_to_name, iscompatible, is_comparison_operator, convert_to_np_array
+    all_within_range, append_type_to_name, iscompatible, is_comparison_operator, convert_to_np_array, safe_equals
 from psyneulink.core.scheduling.condition import TimeScale
 from psyneulink.core.globals.registry import remove_instance_from_registry, register_instance
 
@@ -1351,7 +1351,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _get_instantaneous_function_input(self, function_variable, noise, context=None):
         noise = self._try_execute_param(noise, function_variable, context=context)
-        if (np.array(noise) != 0).any():
+        if noise is not None and not safe_equals(noise, 0):
             current_input = function_variable + noise
         else:
             current_input = function_variable

@@ -30,7 +30,7 @@ from psyneulink.core.components.functions.function import Function_Base, Functio
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.globals.keywords import STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.utilities import parameter_spec, iscompatible, object_has_single_value, convert_to_np_array, contains_type
+from psyneulink.core.globals.utilities import parameter_spec, iscompatible, convert_to_np_array, contains_type
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 

@@ -210,7 +210,7 @@ class TestTransferMechanismNoise:
         )
         T.reset_stateful_function_when = Never()
         val = T.execute([0, 0, 0, 0])
-        expected = [0.6202001216069017, 0.840166034615641, 0.7279826246296707, -1.5678942459349325]
+        expected = [[-1.56404341, -3.01320403, -1.22503678, 1.3093712]]
         assert np.allclose(np.asfarray(val[0]), expected)
 
     @pytest.mark.mechanism
