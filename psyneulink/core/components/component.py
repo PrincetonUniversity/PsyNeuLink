@@ -487,7 +487,6 @@ import inspect
 import itertools
 import logging
 import numbers
-import toposort
 import types
 import warnings
 
@@ -2086,19 +2085,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """
         from psyneulink.core.components.shellclasses import Function
 
-        parameter_function_ordering = list(toposort.toposort({
-            p.name: p.dependencies for p in self.parameters if p.dependencies is not None
-        }))
-        parameter_function_ordering = list(itertools.chain.from_iterable(parameter_function_ordering))
-
-        def ordering(p):
-            try:
-                return parameter_function_ordering.index(p.name)
-            except ValueError:
-                return -1
-
         # (this originally occurred in _validate_params)
-        for p in sorted(self.parameters, key=ordering):
+        for p in self.parameters._in_dependency_order:
             if p.getter is None:
                 val = p._get(context)
                 if (
