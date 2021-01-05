@@ -319,7 +319,9 @@ class LLVMBuilderContext:
                 return ir.ArrayType(elems_t[0], len(elems_t))
             return ir.LiteralStructType(elems_t)
         elif type(t) is tuple:
-            elems_t = (self.convert_python_struct_to_llvm_ir(x) for x in t)
+            elems_t = [self.convert_python_struct_to_llvm_ir(x) for x in t]
+            if len(elems_t) > 0 and all(x == elems_t[0] for x in elems_t):
+                return ir.ArrayType(elems_t[0], len(elems_t))
             return ir.LiteralStructType(elems_t)
         elif isinstance(t, enum.Enum):
             # FIXME: Consider enums of non-int type

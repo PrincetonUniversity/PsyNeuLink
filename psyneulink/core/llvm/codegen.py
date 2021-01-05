@@ -350,7 +350,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         # special case numpy attributes
         if node.attr == "shape":
             shape = helpers.get_array_shape(val)
-            return ir.LiteralStructType([self.ctx.float_ty] * len(shape))(shape)
+            return ir.ArrayType(self.ctx.float_ty, len(shape))(shape)
         elif node.attr == "astype":
             def astype(ty):
                 def _convert(ctx, builder, x):
@@ -404,7 +404,10 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         elements = [self.builder.load(element) if helpers.is_pointer(element) else element for element in elements]
 
         element_types = [element.type for element in elements]
-        ret_list = self.builder.alloca(ir.LiteralStructType(element_types))
+        if len(element_types) > 0 and all(x == element_types[0] for x in element_types):
+            ret_list = self.builder.alloca(ir.ArrayType(element_types[0], len(element_types)))
+        else:
+            ret_list = self.builder.alloca(ir.LiteralStructType(element_types))
 
         for idx, element in enumerate(elements):
             self.builder.store(element, self.builder.gep(ret_list, [self.ctx.int32_ty(0), self.ctx.int32_ty(idx)]))
