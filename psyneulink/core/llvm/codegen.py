@@ -264,6 +264,11 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             elif helpers.is_floating_point(x) and helpers.is_2d_matrix(y):
                 return self._generate_binop(y, x, _mul_mat_scalar)
             elif helpers.is_vector(x) and helpers.is_vector(y):
+                if x.type != y.type:
+                    # Special case: Cast y into scalar if it can be done
+                    if helpers.get_array_shape(y) == [1]:
+                        y = self.builder.gep(y, [self.ctx.int32_ty(0), self.ctx.int32_ty(0)])
+                        return self._generate_binop(x, y, _mul_vec_scalar)
                 return self._generate_binop(x, y, _mul_vec)
             elif helpers.is_2d_matrix(x) and helpers.is_2d_matrix(y):
                 return self._generate_binop(x, y, _mul_mat)

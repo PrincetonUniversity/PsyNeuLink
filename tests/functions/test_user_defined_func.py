@@ -47,8 +47,9 @@ class TestBinaryOperations:
                         (np.ones((2, 2)), 2),
                         (2, np.ones((2, 2))),
                         (np.ones(2), np.array([1, 2])),
+                        (np.ones(2), np.array([2.])),
                         (np.ones((2, 2)), np.array([[1, 2], [3, 4]])),
-                        ], ids=["scalar-scalar", "vec-scalar", "scalar-vec", "mat-scalar", "scalar-mat", "vec-vec", "mat-mat"])
+                        ], ids=["scalar-scalar", "vec-scalar", "scalar-vec", "mat-scalar", "scalar-mat", "vec-vec", "vec-vec-differing", "mat-mat"])
     @pytest.mark.parametrize("bin_execute", ['Python',
                                              pytest.param('LLVM', marks=pytest.mark.llvm),
                                              pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
