@@ -8,5 +8,5 @@ pytest-profiling<=1.7.0
 pytest-pycodestyle<=2.2.0
 pytest-pydocstyle<=2.2.0
 pytest-xdist<2.3.0
-sphinx<3.3.2
+sphinx<3.4.3
 sphinx_autodoc_typehints<1.12.0
