@@ -249,15 +249,19 @@ def array_from_shape(shape, element_ty):
 
 def recursive_iterate_arrays(ctx, builder, u, *args):
     """Recursively iterates over all elements in scalar arrays of the same shape"""
-    assert isinstance(u.type.pointee, ir.ArrayType), "Can only iterate over arrays!"
-    assert all(len(u.type.pointee) == len(v.type.pointee) for v in args), "Tried to iterate over differing lengths!"
-    with array_ptr_loop(builder, u, str(u) + "," + str(args) + "_recursive_zip") as (b, idx):
-        u_ptr = b.gep(u, [ctx.int32_ty(0), idx])
-        arg_ptrs = (b.gep(v, [ctx.int32_ty(0), idx]) for v in args)
-        if is_scalar(u_ptr):
-            yield (u_ptr, *arg_ptrs)
-        else:
-            yield from recursive_iterate_arrays(ctx, b, u_ptr, *arg_ptrs)
+    #FIXME: This implementation should use the array_ptr_loop helper and `yield from`, but this breaks on arm/ppc/pypy
+    return_vals = []
+    def _populate(a, *vars):
+        assert isinstance(a.type.pointee, ir.ArrayType), "Can only iterate over arrays!"
+        assert all(len(a.type.pointee) == len(v.type.pointee) for v in vars), "Tried to iterate over differing lengths!"
+        for idx in range(len(a.type.pointee)):
+            elements = [builder.gep(v, [ctx.int32_ty(0), ctx.int32_ty(idx)]) for v in (a, *vars)]
+            if is_scalar(elements[0]):
+                return_vals.append(elements)
+            else:
+                _populate(*elements)
+    _populate(u, *args)
+    return return_vals
 
 # TODO: Remove this function. Can be replaced by `recursive_iterate_arrays`
 def call_elementwise_operation(ctx, builder, x, operation, output_ptr):
