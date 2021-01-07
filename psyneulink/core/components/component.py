@@ -3840,4 +3840,4 @@ class ParameterValue:
 
     @base.setter
     def base(self, value):
-        self._parameter._set(value, self._owner.most_recent_context)
+        self._parameter.set(value, self._owner.most_recent_context)
