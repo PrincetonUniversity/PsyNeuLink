@@ -251,7 +251,7 @@ def recursive_iterate_arrays(ctx, builder, u, *args):
     """Recursively iterates over all elements in scalar arrays of the same shape"""
     assert isinstance(u.type.pointee, ir.ArrayType), "Can only iterate over arrays!"
     assert all(len(u.type.pointee) == len(v.type.pointee) for v in args), "Tried to iterate over differing lengths!"
-    with array_ptr_loop(builder, u, str(u) + "," + str(args) + "_recursive_zip") as (b, idx):
+    with array_ptr_loop(builder, u, "recursive_iteration") as (b, idx):
         u_ptr = b.gep(u, [ctx.int32_ty(0), idx])
         arg_ptrs = (b.gep(v, [ctx.int32_ty(0), idx]) for v in args)
         if is_scalar(u_ptr):
