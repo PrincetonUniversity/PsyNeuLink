@@ -650,7 +650,14 @@ def make_parameter_property(param):
                 f' for example, <object>.{param.name}.base = {value}',
                 FutureWarning,
             )
-        getattr(self.parameters, p.name).set(value, self.most_recent_context)
+        try:
+            getattr(self.parameters, p.name).set(value, self.most_recent_context)
+        except ParameterError as e:
+            if 'Pass override=True to force set.' in str(e):
+                raise ParameterError(
+                    f"Parameter '{p.name}' is read-only. Set at your own risk."
+                    f' Use .parameters.{p.name}.set with override=True to force set.'
+                ) from None
 
     return property(getter).setter(setter)
 
