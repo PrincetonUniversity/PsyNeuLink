@@ -17,6 +17,7 @@
 """
 
 import abc
+import collections
 import typecheck as tc
 import warnings
 import numbers
@@ -24,12 +25,12 @@ import numbers
 import numpy as np
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import DefaultsFlexibility, _has_initializers_setter
+from psyneulink.core.components.component import DefaultsFlexibility, _has_initializers_setter, ComponentsMeta
 from psyneulink.core.components.functions.function import Function_Base, FunctionError
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.globals.keywords import STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.utilities import parameter_spec, iscompatible, object_has_single_value, convert_to_np_array
+from psyneulink.core.globals.utilities import parameter_spec, iscompatible, object_has_single_value, convert_to_np_array, contains_type
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 
@@ -195,6 +196,15 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         previous_value = Parameter(np.array([0]), initializer='initializer', pnl_internal=True)
         initializer = Parameter(np.array([0]), pnl_internal=True)
         has_initializers = Parameter(True, setter=_has_initializers_setter, pnl_internal=True)
+
+        def _validate_noise(self, noise):
+            if (
+                isinstance(noise, collections.Iterable)
+                # assume ComponentsMeta are functions
+                and contains_type(noise, ComponentsMeta)
+            ):
+                # TODO: make this validation unnecessary by handling automatically?
+                return 'functions in a list must be instantiated and have the desired noise variable shape'
 
     @handle_external_context()
     @tc.typecheck
