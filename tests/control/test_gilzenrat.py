@@ -49,7 +49,7 @@ class TestGilzenratMechanisms:
                          initial_value=np.array([[1.0]]))
 
         C = Composition(pathways=[G])
-        G.output_port.value = [0.0]
+        G.output_port.parameters.value.set([0.0], override=True)
 
         # - - - - - LCAMechanism integrator functions - - - - -
         # X = previous_value + (rate * previous_value + variable) * self.time_step_size + noise

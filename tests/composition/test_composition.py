@@ -1797,7 +1797,7 @@ class TestExecutionOrder:
         D.set_log_conditions("OutputPort-0")
         cycle_nodes = [B, C, D]
         for cycle_node in cycle_nodes:
-            cycle_node.output_ports[0].value = [1.0]
+            cycle_node.output_ports[0].parameters.value.set([1.0], override=True)
 
         comp.run(inputs={A: [1.0]})
         expected_values = {A: 1.0,
