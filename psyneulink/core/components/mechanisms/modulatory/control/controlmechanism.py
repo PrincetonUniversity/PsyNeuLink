@@ -1325,17 +1325,17 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         monitored_output_ports = []
 
-        self.monitor_for_control = self.monitor_for_control or []
-        if not isinstance(self.monitor_for_control, list):
-            self.monitor_for_control = [self.monitor_for_control]
+        monitor_for_control = self.monitor_for_control or []
+        if not isinstance(monitor_for_control, list):
+            monitor_for_control = [monitor_for_control]
 
         # If objective_mechanism is used to specify OutputPorts to be monitored (legacy feature)
         #    move them to monitor_for_control
         if isinstance(self.objective_mechanism, list):
-            self.monitor_for_control.extend(self.objective_mechanism)
+            monitor_for_control.extend(self.objective_mechanism)
 
         # Add items in monitor_for_control to monitored_output_ports
-        for i, item in enumerate(self.monitor_for_control):
+        for i, item in enumerate(monitor_for_control):
             # If it is already in the list received from System, ignore
             if item in monitored_output_ports:
                 # NOTE: this can happen if ControlMechanisms is being constructed by System
@@ -1389,7 +1389,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         # ASSIGN ATTRIBUTES
 
         self._objective_projection = projection_from_objective
-        self.monitor_for_control = self.monitored_output_ports
+        self.parameters.monitor_for_control._set(self.monitored_output_ports, context)
 
     def _instantiate_input_ports(self, context=None):
 
