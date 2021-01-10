@@ -1,6 +1,14 @@
 name: PsyNeuLink CI
 
-on: [push, pull_request]
+on:
+  push:
+    paths-ignore:
+      - 'docs/**'
+      - 'doc_requirements.txt'
+  pull_request:
+    paths-ignore:
+      - 'docs/**'
+      - 'doc_requirements.txt'
 
 jobs:
   build:
