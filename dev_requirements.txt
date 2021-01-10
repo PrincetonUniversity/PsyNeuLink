@@ -1,5 +1,4 @@
 jupyter<=1.0.0
-psyneulink-sphinx-theme<=1.2.1.7
 pytest<6.2.2
 pytest-benchmark<=3.2.3
 pytest-cov<=2.10.1
@@ -8,5 +7,3 @@ pytest-profiling<=1.7.0
 pytest-pycodestyle<=2.2.0
 pytest-pydocstyle<=2.2.0
 pytest-xdist<2.3.0
-sphinx<3.3.2
-sphinx_autodoc_typehints<1.12.0
