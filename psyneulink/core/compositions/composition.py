@@ -8029,16 +8029,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             a cycle is not specified, it is assigned its `default values <Parameter_Defaults>` when initialized
             (see `Composition_Cycles_and_Feedback` additional details).
 
-            reset_stateful_functions_to : Dict { Node : Object | iterable [Object] } : default None
-                object or iterable of objects to be passed as arguments to nodes' reset methods when their
-                respective reset_stateful_function_when conditions are met. These are used to seed the stateful attributes
-                of Mechanisms that have stateful functions. If a node's reset_stateful_function_when condition is set to
-                Never, but they are listed in the reset_stateful_functions_to dict, then they will be reset once at the
-                beginning of the run, using the provided values.
+        reset_stateful_functions_to : Dict { Node : Object | iterable [Object] } : default None
+            object or iterable of objects to be passed as arguments to nodes' reset methods when their
+            respective reset_stateful_function_when conditions are met. These are used to seed the stateful attributes
+            of Mechanisms that have stateful functions. If a node's reset_stateful_function_when condition is set to
+            Never, but they are listed in the reset_stateful_functions_to dict, then they will be reset once at the
+            beginning of the run, using the provided values. For a more in depth explanation of this argument, see
+            `Resetting Parameters of StatefulFunctions <Composition_Reset>`.
 
-        reset_stateful_functions_when :  Condition : default Never()
-            sets the reset_stateful_function_when condition for all nodes in the Composition that currently have their
-            reset_stateful_function_when condition set to `Never <Never>` for the duration of the run.
+        reset_stateful_functions_when :  Dict { Node: Condition } | Condition : default Never()
+            if type is dict, sets the reset_stateful_function_when attribute for each key Node to its corresponding value
+            Condition. if type is Condition, sets the reset_stateful_function_when attribute for all nodes in the
+            Composition that currently have their reset_stateful_function_when conditions set to `Never <Never>`.
+            in either case, the specified Conditions persist only for the duration of the run, after which the nodes'
+            reset_stateful_functions_when attributes are returned to their previous Conditions. For a more in depth
+            explanation of this argument, see `Resetting Parameters of StatefulFunctions <Composition_Reset>`.
 
         skip_initialization : bool : default False
 

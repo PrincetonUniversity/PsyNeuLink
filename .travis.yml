@@ -13,7 +13,8 @@ dist: bionic
 arch:
   - amd64
   - arm64
-  - ppc64le
+# Disabled due to intermittent failures and long running times
+#  - ppc64le
 # Disabled until grpcio works with s390x
 # https://github.com/grpc/grpc/issues/23797
 #  - s390x
