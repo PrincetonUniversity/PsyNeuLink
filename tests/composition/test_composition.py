@@ -4331,7 +4331,7 @@ class TestSchedulerConditions:
                             ])
     def test_scheduler_conditions(self, mode, condition, expected_result):
         decisionMaker = pnl.DDM(
-                        function=pnl.DriftDiffusionIntegrator(starting_point=0,
+                        function=pnl.DriftDiffusionIntegrator(non_decision_time=0,
                                                               threshold=1,
                                                               noise=0.0),
                         reset_stateful_function_when=pnl.AtTrialStart(),
@@ -7065,8 +7065,8 @@ class TestMisc:
                 drift_rate=(1.0),
                 threshold=(0.1654),
                 noise=(0.5),
-                starting_point=(0),
-                t0=0.25,
+                starting_value=(0),
+                non_decision_time=0.25,
             ),
             name='Decision',
         )
@@ -7095,8 +7095,8 @@ class TestMisc:
                     ),
                 ),
                 noise=(0.5),
-                starting_point=(0),
-                t0=0.45
+                starting_value=(0),
+                non_decision_time=0.45
             ),
             name='second_DDM',
         )

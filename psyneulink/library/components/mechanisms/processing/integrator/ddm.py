@@ -205,10 +205,10 @@ An example that illustrate all of the parameters is shown below:
     >>> my_DDM_DriftDiffusionAnalytical = pnl.DDM(
     ...     function=pnl.DriftDiffusionAnalytical(
     ...         drift_rate=0.08928,
-    ...         starting_point=0.5,
+    ...         starting_value=0.5,
     ...         threshold=0.2645,
     ...         noise=0.5,
-    ...         t0=0.15
+    ...         non_decision_time=0.15
     ...     ),
     ...     name='my_DDM_DriftDiffusionAnalytical'
     ... )
@@ -229,7 +229,7 @@ mode, only the `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <D
     ...     function=pnl.DriftDiffusionIntegrator(
     ...         noise=0.5,
     ...         initializer=1.0,
-    ...         starting_point=2.0,
+    ...         non_decision_time=2.0,
     ...         rate=3.0
     ...     ),
     ...     name='my_DDM_path_integrator'
@@ -266,7 +266,7 @@ COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
             function=DriftDiffusionAnalytical(drift_rate=0.1),
             params={
                 DRIFT_RATE:(0.2, ControlProjection),
-                STARTING_POINT:-0.5
+                STARTING_VALUE:-0.5
             },
         )
     The parameters for the DDM when `function <DDM.function>` is set to `DriftDiffusionAnalytical` are:
@@ -281,7 +281,7 @@ COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
       component, and the input its "stimulus" component.  The product of all three determines the drift rate in
       effect for each time_step of the decision process.
     ..
-    * `STARTING_POINT <starting_point>` (default 0.0)
+    * `STARTING_VALUE <starting_value>` (default 0.0)
       - specifies the starting value of the decision variable.
     ..
     * `THRESHOLD` (default 1.0)
@@ -292,7 +292,7 @@ COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
       - specifies the variance of the stochastic ("diffusion") component of the decision process.
     ..
     * `NON_DECISION_TIME` (default 0.2)
-      specifies the `t0` parameter of the decision process (in units of seconds).
+      specifies the `non_decision_time` parameter of the decision process (in units of seconds).
 
 [TBI - MULTIPROCESS DDM - REPLACE BELOW]
 When a DDM Mechanism is executed it computes the decision process, either analytically (in TRIAL mode)
@@ -315,7 +315,7 @@ single set of parameters that are not subject to the analytic solution (e.g., fo
    created) for the next execution.
 
   ADD NOTE ABOUT INTERROGATION PROTOCOL, USING ``terminate_function``
-  ADD NOTE ABOUT RELATIONSHIP OF RT TO time_steps TO t0 TO ms
+  ADD NOTE ABOUT RELATIONSHIP OF RT TO time_steps TO non_decision_time TO ms
 COMMENT
 
 .. _DDM_Execution:
@@ -367,7 +367,7 @@ import typecheck as tc
 
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
     DriftDiffusionIntegrator, IntegratorFunction
-from psyneulink.core.components.functions.distributionfunctions import STARTING_POINT, \
+from psyneulink.core.components.functions.distributionfunctions import STARTING_VALUE, \
     DriftDiffusionAnalytical
 from psyneulink.core.components.functions.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
@@ -453,7 +453,7 @@ class DDM(ProcessingMechanism):
     Arguments
     ---------
 
-    default_variable : value, list or np.ndarray : default FUNCTION_PARAMS[STARTING_POINT]
+    default_variable : value, list or np.ndarray : default FUNCTION_PARAMS[STARTING_VALUE]
         the input to the Mechanism used if none is provided in a call to its `execute <Mechanism_Base.execute>` or
         `run <Mechanism_Base.run>` methods; also serves as a template to specify the length of the `variable
         <DDM.variable>` for its `function <DDM.function>`, and the `primary OutputPort <OuputState_Primary>` of the
@@ -471,7 +471,7 @@ class DDM(ProcessingMechanism):
 
     Attributes
     ----------
-    variable : value : default  FUNCTION_PARAMS[STARTING_POINT]
+    variable : value : default  FUNCTION_PARAMS[STARTING_VALUE]
         the input to Mechanism's execute method.  Serves as the "stimulus" component of the `function <DDM.function>`'s
         **drift_rate** parameter.
 
@@ -707,10 +707,10 @@ class DDM(ProcessingMechanism):
         function = Parameter(
             DriftDiffusionAnalytical(
                 drift_rate=1.0,
-                starting_point=0.0,
+                starting_value=0.0,
                 threshold=1.0,
                 noise=0.5,
-                t0=.200,
+                non_decision_time=.200,
             ),
             stateful=False,
             loggable=False
@@ -826,7 +826,7 @@ class DDM(ProcessingMechanism):
         # compared to other mechanisms: see TransferMechanism.py __init__ function for a more normal example.
         if default_variable is None and size is None:
             try:
-                default_variable = params[FUNCTION_PARAMS][STARTING_POINT]
+                default_variable = params[FUNCTION_PARAMS][STARTING_VALUE]
                 if not is_numeric(default_variable):
                     # set normally by default
                     default_variable = None
