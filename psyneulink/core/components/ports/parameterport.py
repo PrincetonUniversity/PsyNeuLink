@@ -474,6 +474,19 @@ class ParameterPortList(ContentAddressableList):
 
         return res
 
+    def __delitem__(self, key):
+        main_port = self[key]
+        rem_mapping_keys = set()
+
+        for m, port in self.parameter_mapping.items():
+            if port is main_port:
+                rem_mapping_keys.add(m)
+
+        for m in rem_mapping_keys:
+            del self.parameter_mapping[m]
+
+        del self.data[self.data.index(main_port)]
+
     def _get_possible_port_names(self, param_name):
         """
             Returns:
