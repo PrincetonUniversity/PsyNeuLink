@@ -1254,6 +1254,15 @@ class Parameter(ParameterBase):
                     value._initialize_from_context(context)
                     owner._parameter_components.add(value)
 
+                    try:
+                        value._update_default_variable(owner._get_parsed_variable(self, context=context), context)
+                    except TypeError as e:
+                        if (
+                            f'unsupported for {value.__class__.__name__}' not in str(e)
+                            and f'unsupported for {owner.__class__.__name__}' not in str(e)
+                        ):
+                            raise
+
         return value
 
     def _set(self, value, context, skip_history=False, skip_log=False, **kwargs):
