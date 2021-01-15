@@ -80,6 +80,7 @@ setup(
 
     extras_require={
         'dev': get_requirements('dev'),
+        'doc': get_requirements('doc'),
         'tutorial': get_requirements('tutorial'),
     }
 )

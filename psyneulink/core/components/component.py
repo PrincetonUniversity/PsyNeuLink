@@ -2040,6 +2040,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 if isinstance(val, Function):
                     val.owner = self
 
+                p._validate(val)
                 p.set(val, context=context, skip_history=True, override=True)
 
             if isinstance(p.default_value, Function):
@@ -2213,9 +2214,27 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                             # only show warning one time, for the non-default value if possible
                             and c is shared_objs[-1]
                         ):
-                            warnings.warn(
-                                f'Specification of the "{param.name}" parameter'
-                                f' ({param.default_value}) for {self} conflicts with specification of its shared parameter "{shared_obj_param.name}" ({shared_obj_param.default_value}) for its {param.attribute_name} ({param.source._owner._owner}). The value specified on {param.source._owner._owner} will be used.')
+                            try:
+                                isp_arg = self.initial_shared_parameters[param.attribute_name][param.shared_parameter_name]
+                                # TODO: handle passed component but copied?
+                                throw_warning = (
+                                    # arg passed directly into shared_obj, no parsing
+                                    not safe_equals(shared_obj_param._get(context), isp_arg)
+                                    # arg passed but was parsed
+                                    and not safe_equals(shared_obj_param.spec, isp_arg)
+                                )
+                            except KeyError:
+                                throw_warning = True
+
+                            if throw_warning:
+                                warnings.warn(
+                                    f'Specification of the "{param.name}" parameter ({param.default_value})'
+                                    f' for {self} conflicts with specification of its shared parameter'
+                                    f' "{shared_obj_param.name}" ({shared_obj_param.default_value}) for its'
+                                    f' {param.attribute_name} ({param.source._owner._owner}). The value'
+                                    f' specified on {param.source._owner._owner} will be used.'
+                                )
+
 
     @handle_external_context()
     def reset_params(self, mode=ResetMode.INSTANCE_TO_CLASS, context=None):
