@@ -9,3 +9,4 @@ Services
    Registry
    Preferences
    json
+   Compilation
