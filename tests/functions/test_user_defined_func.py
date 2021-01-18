@@ -443,6 +443,7 @@ class TestUserDefFunc:
                     ("SHAPE", [[1, 3]], [1, 2]),
                     ("ASTYPE_FLOAT", [1], [1.0]),
                     ("ASTYPE_INT", [-1.5], [-1.0]),
+                    ("FLATTEN", [[1.0, 2.0], [3.0, 4.0]], [1.0, 2.0, 3.0, 4.0])
                     ])
     @pytest.mark.parametrize("bin_execute", ['Python',
                                              pytest.param('LLVM', marks=pytest.mark.llvm),
@@ -466,7 +467,9 @@ class TestUserDefFunc:
             # return types cannot be integers, so we cast back to float and check for truncation
             def myFunction(variable):
                 return variable.astype(int).astype(float)
-
+        elif op == "FLATTEN":
+            def myFunction(variable):
+                return variable.flatten()
         U = UserDefinedFunction(custom_function=myFunction, default_variable=variable)
         if bin_execute == 'LLVM':
             e = pnlvm.execution.FuncExecution(U).execute

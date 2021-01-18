@@ -351,6 +351,23 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         if node.attr == "shape":
             shape = helpers.get_array_shape(val)
             return ir.ArrayType(self.ctx.float_ty, len(shape))(shape)
+        elif node.attr == "flatten":
+            def flatten():
+                shape = helpers.get_array_shape(val)
+                flattened_size = reduce(lambda x, y: x * y, shape)
+                flattened_ty = ir.ArrayType(self.ctx.float_ty, flattened_size)
+                flattened_array = self.builder.alloca(flattened_ty)
+                index_var = self.builder.alloca(self.ctx.int32_ty, name="flattened_index_var_loc")
+                self.builder.store(self.ctx.int32_ty(0), index_var)
+                for (array_ptr,) in helpers.recursive_iterate_arrays(self.ctx, self.builder, val):
+                    index = self.builder.load(index_var, name="flattened_index_var")
+                    flattened_array_ptr = self.builder.gep(flattened_array, [self.ctx.int32_ty(0), index])
+                    array_val = self.builder.load(array_ptr)
+                    self.builder.store(array_val, flattened_array_ptr)
+                    index = self.builder.add(index, self.ctx.int32_ty(1), name="flattened_index_var_inc")
+                    self.builder.store(index, index_var)
+                return flattened_array
+            return flatten
         elif node.attr == "astype":
             def astype(ty):
                 def _convert(ctx, builder, x):
