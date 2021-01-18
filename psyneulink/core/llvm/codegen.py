@@ -10,6 +10,7 @@
 import ast
 import warnings
 import numpy as np
+from functools import reduce
 
 from llvmlite import ir
 from contextlib import contextmanager
@@ -61,7 +62,9 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             helpers.call_elementwise_operation(self.ctx, self.builder, x, helpers.exp, output_ptr)
             return output_ptr
 
-        def _max(x):
+        # numpy's max function differs greatly from that of python's buiiltin max
+        # see: https://numpy.org/doc/stable/reference/generated/numpy.amax.html#numpy.amax
+        def _max_numpy(x):
             assert helpers.is_vector(x) or helpers.is_2d_matrix(x), "Attempted to call max on invalid variable! Only 1-d and 2-d lists are supported!"
             curr = builder.alloca(ctx.float_ty)
             builder.store(ctx.float_ty('NaN'), curr)
@@ -72,6 +75,28 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
                     builder.store(element, curr)
             return curr
 
+        # see: https://docs.python.org/3/library/functions.html#max
+        def _max(*args):
+            if len(args) == 1 and helpers.is_vector(args[0]):
+                curr = builder.alloca(ctx.float_ty)
+                builder.store(ctx.float_ty('NaN'), curr)
+                for (element_ptr,) in helpers.recursive_iterate_arrays(ctx, builder, args[0]):
+                    element = builder.load(element_ptr)
+                    greater = builder.fcmp_unordered('>', element, builder.load(curr))
+                    with builder.if_then(greater):
+                        builder.store(element, curr)
+                return curr
+            elif len(args) > 1 and all(a.type == args[0].type for a in args):
+                curr = builder.alloca(ctx.float_ty)
+                builder.store(ctx.float_ty('NaN'), curr)
+                for element in args:
+                    if helpers.is_pointer(element):
+                        element = builder.load(element)
+                    greater = builder.fcmp_unordered('>', element, builder.load(curr))
+                    with builder.if_then(greater):
+                        builder.store(element, curr)
+                return curr
+            assert False, "Attempted to call max with invalid arguments!"
         self.register = {
             "sum": _list_sum,
             "len": _len,
@@ -90,7 +115,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             'less_equal': self._generate_fcmp_handler(self.ctx, self.builder, "<="),
             'greater': self._generate_fcmp_handler(self.ctx, self.builder, ">"),
             'greater_equal': self._generate_fcmp_handler(self.ctx, self.builder, ">="),
-            "max": _max,
+            "max": _max_numpy,
         }
 
         for k, v in func_globals.items():
