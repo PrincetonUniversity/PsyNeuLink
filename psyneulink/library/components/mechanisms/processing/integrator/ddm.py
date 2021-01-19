@@ -383,8 +383,10 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, is_same_function_spec, object_has_single_value, get_global_seed
-
+from psyneulink.core.scheduling.condition import AtTrialStart
 from psyneulink.core import llvm as pnlvm
+
+
 
 __all__ = [
     'ARRAY', 'DDM', 'DDMError', 'DECISION_VARIABLE', 'DECISION_VARIABLE_ARRAY',
@@ -447,7 +449,10 @@ class DDM(ProcessingMechanism):
     Implements a drift diffusion process (also known as the `Diffusion Decision Model
     <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2474742/>`_, either by calculating an `analytic solution
     <DDM_Analytic_Mode>` or carrying out `step-wise numerical integration <DDM_Integration_Mode>`.
-    See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
+    See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes. The default behaviour
+    for the DDM is to reset its integration state on each new trial, this can be overridden by setting
+    the attribute to a different condition. For example, reset_stateful_function_when = pnl.Never() will cause
+    the DDM to never reset its state.
 
 
     Arguments
@@ -852,6 +857,10 @@ class DDM(ProcessingMechanism):
 
         self._instantiate_plotting_functions()
 
+        # New (1/19/2021) default behavior of DDM mechanism is to reset stateful functions
+        # on each new trial.
+        self.reset_stateful_function_when = AtTrialStart()
+
 
     def plot(self, stimulus=1.0, threshold=10.0):
         """
@@ -1086,6 +1095,7 @@ class DDM(ProcessingMechanism):
             return return_value
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, *, tags:frozenset):
+
         mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable, tags=tags)
 
         mech_out_ty = ctx.convert_python_struct_to_llvm_ir(self.defaults.value)
