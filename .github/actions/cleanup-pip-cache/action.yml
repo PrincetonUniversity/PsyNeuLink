@@ -13,6 +13,6 @@ runs:
         for P in $CACHED; do
           # Remove cached and not installed
           if [ `echo $INSTALLED | grep -o $P | wc -l` == "0" ] ; then
-            pip cache remove -v $P
+            pip cache remove -v $P || true
           fi
         done
