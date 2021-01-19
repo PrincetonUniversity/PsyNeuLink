@@ -992,7 +992,7 @@ class InputPort(Port_Base):
             (port_spec, weights, exponents, connections)
 
         See Port._parse_port_specific_spec for additional info.
-.
+
         Returns:
              - port_spec:  1st item of tuple if it is a numeric value;  otherwise None
              - params dict with WEIGHT, EXPONENT and/or PROJECTIONS entries if any of these was specified.
