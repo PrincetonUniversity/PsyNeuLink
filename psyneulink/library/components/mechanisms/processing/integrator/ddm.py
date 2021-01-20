@@ -449,10 +449,15 @@ class DDM(ProcessingMechanism):
     Implements a drift diffusion process (also known as the `Diffusion Decision Model
     <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2474742/>`_, either by calculating an `analytic solution
     <DDM_Analytic_Mode>` or carrying out `step-wise numerical integration <DDM_Integration_Mode>`.
-    See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes. The default behaviour
-    for the DDM is to reset its integration state on each new trial, this can be overridden by setting
-    the attribute to a different condition. For example, reset_stateful_function_when = pnl.Never() will cause
-    the DDM to never reset its state.
+    See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
+
+    The default behaviour for the DDM is to reset its integration state on each new trial, this can be overridden by
+    setting the `reset_stateful_function_when <Component.reset_stateful_function_when>` attribute to a different condition.
+    In addition, unlike `TransferMechamism <TransferMechamism>`, the DDM's
+    `execute_until_finished <Component.execute_until_finished>`
+    attribute is set to :code:`True` by default. This will cause the DDM to execute multiple time steps per
+    call to its `execute <Component.execute>`  method until the decision threshold is reached. This default behavior can
+    be changed by setting `execute_until_finished <Component.execute_until_finished>` to :code:`False`.
 
 
     Arguments
@@ -861,6 +866,9 @@ class DDM(ProcessingMechanism):
         # on each new trial.
         self.reset_stateful_function_when = AtTrialStart()
 
+        # New (1/19/2021) default behaviour of DDM mechanism is to execute until finished. That
+        # is, it should execute until it reaches its threshold.
+        self.execute_until_finished = True
 
     def plot(self, stimulus=1.0, threshold=10.0):
         """

@@ -47,8 +47,6 @@ def ddm_pdf_simulate(drift_rate=0.75, threshold=1.0, noise=0.1, starting_point=0
         comp = pnl.Composition()
         comp.add_node(decision)
 
-        comp.termination_processing = {pnl.TimeScale.TRIAL: pnl.WhenFinished(decision)}
-
         context = pnl.Context()
         decision.function.parameters.rate.set(drift_rate, context)
         decision.function.parameters.noise.set(noise, context)
