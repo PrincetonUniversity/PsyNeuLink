@@ -29,8 +29,8 @@ class TestReset:
         #  0.0 + 1.0 * 1.0 * 1.0 + 0.0
         D.execute(1.0)
         assert np.allclose(np.asfarray(D.value),  [[1.0], [1.0]])
-        assert np.allclose(D.output_ports[0].value[0][0], 1.0)
-        assert np.allclose(D.output_ports[1].value[0][0], 1.0)
+        assert np.allclose(D.output_ports[0].value[0], 1.0)
+        assert np.allclose(D.output_ports[1].value[0], 1.0)
 
         # reset function
         D.function.reset(2.0, 0.1)
@@ -38,8 +38,8 @@ class TestReset:
         assert np.allclose(D.function.previous_value, 2.0)
         assert np.allclose(D.function.previous_time, 0.1)
         assert np.allclose(np.asfarray(D.value),  [[1.0], [1.0]])
-        assert np.allclose(D.output_ports[0].value[0][0], 1.0)
-        assert np.allclose(D.output_ports[1].value[0][0], 1.0)
+        assert np.allclose(D.output_ports[0].value[0], 1.0)
+        assert np.allclose(D.output_ports[1].value[0], 1.0)
 
         # reset function without value spec
         D.function.reset()
@@ -47,8 +47,8 @@ class TestReset:
         assert np.allclose(D.function.previous_value, 0.0)
         assert np.allclose(D.function.previous_time, 0.0)
         assert np.allclose(np.asfarray(D.value), [[1.0], [1.0]])
-        assert np.allclose(D.output_ports[0].value[0][0], 1.0)
-        assert np.allclose(D.output_ports[1].value[0][0], 1.0)
+        assert np.allclose(D.output_ports[0].value[0], 1.0)
+        assert np.allclose(D.output_ports[1].value[0], 1.0)
 
         # reset mechanism
         D.reset(2.0, 0.1)
@@ -61,9 +61,9 @@ class TestReset:
 
         D.execute(1.0)
         #  2.0 + 1.0 = 3.0 ; 0.1 + 1.0 = 1.1
-        assert np.allclose(np.asfarray(D.value), [[[3.0]], [[1.1]]])
-        assert np.allclose(D.output_ports[0].value[0][0], 3.0)
-        assert np.allclose(D.output_ports[1].value[0][0], 1.1)
+        assert np.allclose(np.asfarray(D.value), [[3.0], [1.1]])
+        assert np.allclose(D.output_ports[0].value[0], 3.0)
+        assert np.allclose(D.output_ports[1].value[0], 1.1)
 
         # reset mechanism without value spec
         D.reset()
@@ -127,8 +127,8 @@ class TestThreshold:
         time_points = []
         for i in range(5):
             output = ex([variable])
-            decision_variables.append(output[0][0][0])
-            time_points.append(output[1][0][0])
+            decision_variables.append(output[0][0])
+            time_points.append(output[1][0])
 
         # decision variable accumulation stops
         assert np.allclose(decision_variables, expected)
@@ -305,7 +305,7 @@ def test_DDM_noise(mech_mode, benchmark, noise, expected):
         ex = pnlvm.execution.MechExecution(T).cuda_execute
 
     val = ex([10])
-    assert np.allclose(val[0][0][0], expected)
+    assert np.allclose(val[0][0], expected)
     if benchmark.enabled:
         benchmark(ex, [10])
 
@@ -436,7 +436,7 @@ def test_DDM_rate(benchmark, rate, expected, mech_mode):
         ex = pnlvm.execution.MechExecution(T).execute
     elif mech_mode == 'PTX':
         ex = pnlvm.execution.MechExecution(T).cuda_execute
-    val = float(ex(stim)[0][0][0])
+    val = float(ex(stim)[0][0])
     assert val == expected
     if benchmark.enabled:
         benchmark(ex, stim)
@@ -608,12 +608,12 @@ def test_DDM_time():
     np.testing.assert_allclose(time_0, 0.5, atol=1e-08)
 
     time_1 = D.execute(10)[1][0]   # t_1  = 0.5 + 0.2 = 0.7
-    np.testing.assert_allclose(time_1[0], 0.7, atol=1e-08)
+    np.testing.assert_allclose(time_1, 0.7, atol=1e-08)
 
     for i in range(10):                                     # t_11 = 0.7 + 10*0.2 = 2.7
         D.execute(10)
     time_12 = D.execute(10)[1][0]                              # t_12 = 2.7 + 0.2 = 2.9
-    np.testing.assert_allclose(time_12[0], 2.9, atol=1e-08)
+    np.testing.assert_allclose(time_12, 2.9, atol=1e-08)
 
 
 def test_WhenFinished_DDM_Analytical():

@@ -187,10 +187,10 @@ class TestScheduler:
         # Trial 1:
         # input = 2.0, termination condition = AllHaveRun
         # 1 pass (value = 2.0)
-        expected_results = [[np.array([[10.]]), np.array([[10.]])],
-                            [np.array([[2.]]), np.array([[1.]])],
-                            [np.array([[10.]]), np.array([[10.]])],
-                            [np.array([[2.]]), np.array([[1.]])]]
+        expected_results = [[np.array([10.]), np.array([10.])],
+                            [np.array([2.]), np.array([1.])],
+                            [np.array([10.]), np.array([10.])],
+                            [np.array([2.]), np.array([1.])]]
         assert np.allclose(expected_results, np.asfarray(C.results))
 
     def test_default_condition_1(self):
