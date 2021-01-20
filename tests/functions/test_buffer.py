@@ -154,6 +154,7 @@ class TestBuffer():
                                                 history=3))
         val = P.execute(1.0)
 
+        # NOTE: actual output is [0, [[1]]]
         assert np.allclose(np.asfarray(val), [[0., 1.]])
         if benchmark.enabled:
             benchmark(P.execute, 5.0)

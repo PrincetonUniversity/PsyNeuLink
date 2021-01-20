@@ -640,7 +640,7 @@ from psyneulink.core.globals.parameters import Parameter, FunctionParameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    all_within_range, append_type_to_name, iscompatible, is_comparison_operator, convert_to_np_array
+    all_within_range, append_type_to_name, iscompatible, is_comparison_operator, convert_to_np_array, safe_equals
 from psyneulink.core.scheduling.condition import TimeScale
 from psyneulink.core.globals.registry import remove_instance_from_registry, register_instance
 
@@ -1304,37 +1304,6 @@ class TransferMechanism(ProcessingMechanism_Base):
                                  "function, or array/list of these.".format(noise,
                                                                             self.name))
 
-    def _try_execute_param(self, param, var, context=None):
-
-        # param is a list; if any element is callable, execute it
-        if isinstance(param, (np.ndarray, list)):
-            # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
-            param = np.atleast_2d(param)
-            for i in range(len(param)):
-                for j in range(len(param[i])):
-                    if callable(param[i][j]):
-                        try:
-                            param[i][j] = param[i][j](context=context)
-                        except TypeError:
-                            param[i][j] = param[i][j]()
-
-        # param is one function
-        elif callable(param):
-            # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
-            new_param = []
-            for row in np.atleast_2d(var):
-                new_row = []
-                for item in row:
-                    try:
-                        val = param(context=context)
-                    except TypeError:
-                        val = param()
-                    new_row.append(val)
-                new_param.append(new_row)
-            param = new_param
-
-        return param
-
     def _instantiate_parameter_ports(self, function=None, context=None):
 
         # If function is a logistic, and clip has not been specified, bound it between 0 and 1
@@ -1382,7 +1351,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     def _get_instantaneous_function_input(self, function_variable, noise, context=None):
         noise = self._try_execute_param(noise, function_variable, context=context)
-        if (np.array(noise) != 0).any():
+        if noise is not None and not safe_equals(noise, 0):
             current_input = function_variable + noise
         else:
             current_input = function_variable

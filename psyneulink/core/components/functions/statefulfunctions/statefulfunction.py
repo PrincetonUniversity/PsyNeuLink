@@ -30,7 +30,7 @@ from psyneulink.core.components.functions.function import Function_Base, Functio
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
 from psyneulink.core.globals.keywords import STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.utilities import parameter_spec, iscompatible, object_has_single_value, convert_to_np_array, contains_type
+from psyneulink.core.globals.utilities import parameter_spec, iscompatible, convert_to_np_array, contains_type
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 
@@ -386,58 +386,6 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     if not np.isscalar(noise[i]) and not callable(noise[i]):
                         raise FunctionError("The elements of a noise list or array must be scalars or functions. "
                                             "{} is not a valid noise element for {}".format(noise[i], self.name))
-
-    def _try_execute_param(self, param, var, context=None):
-
-        # FIX: [JDC 12/18/18 - HACK TO DEAL WITH ENFORCEMENT OF 2D BELOW]
-        param_shape = np.array(param).shape
-        if not len(param_shape):
-            param_shape = np.array(var).shape
-        # param is a list; if any element is callable, execute it
-        if isinstance(param, (np.ndarray, list)):
-            # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
-            # FIX: WHY FORCE 2d??
-            param = np.atleast_2d(param)
-            for i in range(len(param)):
-                for j in range(len(param[i])):
-                    try:
-                        param[i][j] = param[i][j](context=context)
-                    except TypeError:
-                        try:
-                            param[i][j] = param[i][j]()
-                        except TypeError:
-                            pass
-            try:
-                param = param.reshape(param_shape)
-            except ValueError:
-                if object_has_single_value(param):
-                    param = np.full(param_shape, float(param))
-
-        # param is one function
-        elif callable(param):
-            # NOTE: np.atleast_2d will cause problems if the param has "rows" of different lengths
-            new_param = []
-            # FIX: WHY FORCE 2d??
-            for row in np.atleast_2d(var):
-            # for row in np.atleast_1d(var):
-            # for row in var:
-                new_row = []
-                for item in row:
-                    try:
-                        val = param(context=context)
-                    except TypeError:
-                        val = param()
-                    new_row.append(val)
-                new_param.append(new_row)
-            param = np.asarray(new_param)
-            # FIX: [JDC 12/18/18 - HACK TO DEAL WITH ENFORCEMENT OF 2D ABOVE]
-            try:
-                if len(np.squeeze(param)):
-                    param = param.reshape(param_shape)
-            except TypeError:
-                pass
-
-        return param
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         if not self.parameters.initializer._user_specified:
