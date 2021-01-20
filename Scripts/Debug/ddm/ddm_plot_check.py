@@ -36,11 +36,7 @@ def ddm_pdf_simulate(drift_rate=0.75, threshold=1.0, noise=0.1, starting_point=0
                      time_step_size=0.01, num_samples=1000000, use_pnl=True, rt_space=None):
 
     if use_pnl:
-        decision = pnl.DDM(function=pnl.DriftDiffusionIntegrator(starting_value=0.8,
-                                                                 rate=-0.75,
-                                                                 threshold=0.8,
-                                                                 noise=0.1,
-                                                                 time_step_size=0.01),
+        decision = pnl.DDM(function=pnl.DriftDiffusionIntegrator(starting_value=0.3),
                            output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME],
                            name='DDM')
 
@@ -53,7 +49,6 @@ def ddm_pdf_simulate(drift_rate=0.75, threshold=1.0, noise=0.1, starting_point=0
         decision.function.parameters.threshold.set(threshold, context)
         decision.function.parameters.time_step_size.set(time_step_size, context)
         decision.function.parameters.starting_value.set(np.array([starting_point]), context)
-        decision.function.parameters.time_step_size.set(time_step_size, context)
         decision.function.parameters.non_decision_time.set(non_decision_time, context)
 
         input = np.ones((1, 1))
@@ -112,7 +107,7 @@ def main():
 
     ddm_params = dict(starting_point=0.0, drift_rate=0.1, noise=1.0, threshold=0.5, non_decision_time=0.0)
 
-    NUM_SAMPLES = 10000
+    NUM_SAMPLES = 1000000
 
     rt_space = np.linspace(0.0, 3.0, 30000)
 
@@ -138,8 +133,8 @@ def main():
     df = pd.concat([
         anal_df,
         ddm_pdf_simulate(**ddm_params, time_step_size=0.01, use_pnl=True, num_samples=NUM_SAMPLES, rt_space=rt_space),
-        #ddm_pdf_simulate(**ddm_params, time_step_size=0.001, use_pnl=True, num_samples=NUM_SAMPLES, rt_space=rt_space),
-        #ddm_pdf_simulate(**ddm_params, time_step_size=0.0001, use_pnl=True, num_samples=NUM_SAMPLES, rt_space=rt_space),
+        ddm_pdf_simulate(**ddm_params, time_step_size=0.001, use_pnl=True, num_samples=NUM_SAMPLES, rt_space=rt_space),
+        ddm_pdf_simulate(**ddm_params, time_step_size=0.0001, use_pnl=True, num_samples=NUM_SAMPLES, rt_space=rt_space),
     ])
 
     fig, axes = plt.subplots(1, 2, sharex=True, sharey=True)
