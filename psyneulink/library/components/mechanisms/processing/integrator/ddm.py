@@ -358,6 +358,7 @@ References
 Class Reference
 ---------------
 """
+import sys
 import logging
 import types
 from collections.abc import Iterable
@@ -869,6 +870,9 @@ class DDM(ProcessingMechanism):
         # New (1/19/2021) default behaviour of DDM mechanism is to execute until finished. That
         # is, it should execute until it reaches its threshold.
         self.execute_until_finished = True
+
+        # FIXME: Set maximum executions absurdly large to avoid early termination
+        self.max_executions_before_finished = sys.maxsize
 
     def plot(self, stimulus=1.0, threshold=10.0):
         """
