@@ -443,6 +443,10 @@ class TestUserDefFunc:
                     ("SHAPE", [[1, 3]], [1, 2]),
                     ("ASTYPE_FLOAT", [1], [1.0]),
                     ("ASTYPE_INT", [-1.5], [-1.0]),
+                    ("NP_MAX", [0.0, 0.0], 0),
+                    ("NP_MAX", [1.0, 2.0], 2),
+                    ("NP_MAX", [[2.0, 1.0], [6.0, 2.0]], 6),
+                    ("FLATTEN", [[1.0, 2.0], [3.0, 4.0]], [1.0, 2.0, 3.0, 4.0])
                     ])
     @pytest.mark.parametrize("bin_execute", ['Python',
                                              pytest.param('LLVM', marks=pytest.mark.llvm),
@@ -466,7 +470,12 @@ class TestUserDefFunc:
             # return types cannot be integers, so we cast back to float and check for truncation
             def myFunction(variable):
                 return variable.astype(int).astype(float)
-
+        elif op == "NP_MAX":
+            def myFunction(variable):
+                return np.max(variable)
+        elif op == "FLATTEN":
+            def myFunction(variable):
+                return variable.flatten()
         U = UserDefinedFunction(custom_function=myFunction, default_variable=variable)
         if bin_execute == 'LLVM':
             e = pnlvm.execution.FuncExecution(U).execute
@@ -504,9 +513,8 @@ class TestUserDefFunc:
                     ("LEN", [1.0, 3.0], 2),
                     ("LEN", [[1.0], [3.0]], 2),
                     ("LEN_TUPLE", [0, 0], 2),
-                    ("MAX", [0.0, 0.0], 0),
-                    ("MAX", [1.0, 2.0], 2),
-                    ("MAX", [[2.0, 1.0], [6.0, 2.0]], 6),
+                    ("MAX_MULTI", [1,], 6),
+                    ("MAX", [1.0, 3.0, 2.0], 3.0),
                     ])
     @pytest.mark.parametrize("bin_execute", ['Python',
                                              pytest.param('LLVM', marks=pytest.mark.llvm),
@@ -525,7 +533,11 @@ class TestUserDefFunc:
                 return len((1,2))
         elif op == "MAX":
             def myFunction(variable):
-                return np.max(variable)
+                return max(variable)
+        elif op == "MAX_MULTI":
+            # special cased, since passing in multiple variables without a closure is hard
+            def myFunction(_):
+                return max(1, 2, 3, 4, 5, 6, -1, -2)
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=variable)
         if bin_execute == 'LLVM':
