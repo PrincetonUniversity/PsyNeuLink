@@ -160,7 +160,7 @@ class TestAccumulator():
         A()
         A()
         val = A()
-        expected_val = [[40.0, 0.2480800486427607, 80.0]]
+        expected_val = [[40.0, -0.43300219, 80.0]]
         for i in range(len(val)):
             for j in range(len(val[i])):
                 assert np.allclose(expected_val[i][j], val[i][j])

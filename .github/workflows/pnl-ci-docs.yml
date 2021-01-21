@@ -3,7 +3,7 @@ name: PsyNeuLink Docs CI
 on: push
 
 jobs:
-  build:
+  docs-build:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -12,11 +12,24 @@ jobs:
         python-architecture: ['x64']
         os: [ubuntu-latest, macos-latest, windows-latest]
 
+    outputs:
+      on_master: ${{ steps.on_master.outputs.on_master }}
+
     steps:
     - name: Checkout sources
       uses: actions/checkout@v2
       with:
-        fetch-depth: 10
+        fetch-depth: 0
+
+    - name: Check if on master
+      id: on_master
+      shell: bash
+      run: |
+        git branch -a --contains $GITHUB_REF
+        git describe --always --tags
+        export ON_MASTER=$(git branch -a --contains $GITHUB_REF | grep -q '^  remotes/origin/master$' && echo "master" || echo "")
+        echo "Found out: ${ON_MASTER}"
+        echo ::set-output name=on_master::$ON_MASTER
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2.2.1
@@ -76,3 +89,61 @@ jobs:
         name: Documentation-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         retention-days: 1
         path: pnl-html
+
+  docs-deploy:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.7]
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+    needs: [docs-build]
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/devel' || github.ref == 'refs/heads/docs' || (contains(github.ref, 'tags') && contains(needs.*.outputs.on_master, 'master'))
+
+    steps:
+    - name: Checkout docs
+      uses: actions/checkout@v2
+      with:
+        ref: gh-pages
+
+    - name: Download branch docs
+      uses: actions/download-artifact@v2
+      with:
+        name: Documentation-${{ matrix.os }}-${{ matrix.python-version }}-x64
+        path: _built_docs/${{ github.ref }}
+      if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/devel' || github.ref == 'refs/heads/docs'
+
+    - name: Update branch docs
+      shell: bash
+      run: |
+        mkdir -p branch
+        rm -rf "branch/${GITHUB_REF##*/}"
+        # Remove '.doctrees' and move to correct location
+        rm -rf "_built_docs/${GITHUB_REF}/.doctrees"
+        mv -f "_built_docs/${GITHUB_REF}" branch/
+      if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/devel' || github.ref == 'refs/heads/docs'
+
+    - name: Download main docs
+      uses: actions/download-artifact@v2
+      with:
+        name: Documentation-${{ matrix.os }}-${{ matrix.python-version }}-x64
+        # This overwrites files in current directory
+      if: contains(github.ref, 'tags') && contains(needs.*.outputs.on_master, 'master')
+
+    - name: Update main docs
+      shell: bash
+      run: |
+        # Remove '.doctrees'
+        rm -rf ".doctrees"
+      if: contains(github.ref, 'tags') && contains(needs.*.outputs.on_master, 'master')
+
+    - name: Commit docs changes
+      shell: bash
+      run: |
+        # Commit changes to git
+        git add .
+        git config user.name "Documentation Bot"
+        git config user.email "doc-bot@psyneulink.princeton.edu"
+        git commit -m "Docs changes for $GITHUB_REF $GITHUB_SHA"
+        git push
