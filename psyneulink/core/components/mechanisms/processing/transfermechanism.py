@@ -1333,11 +1333,12 @@ class TransferMechanism(ProcessingMechanism_Base):
         # then assign one OutputPort (with the default name, indexed by the number of the item) per item of variable
         if len(self.output_ports) == 1 and self.output_ports[0] == RESULTS:
             if len(self.defaults.variable) == 1:
-                self.output_ports = [RESULT]
+                output_ports = [RESULT]
             else:
-                self.output_ports = []
+                output_ports = []
                 for i, item in enumerate(self.defaults.variable):
-                    self.output_ports.append({NAME: f'{RESULT}-{i}', VARIABLE: (OWNER_VALUE, i)})
+                    output_ports.append({NAME: f'{RESULT}-{i}', VARIABLE: (OWNER_VALUE, i)})
+            self.parameters.output_ports._set(output_ports, context)
         super()._instantiate_output_ports(context=context)
 
         # # Relabel first output_port:

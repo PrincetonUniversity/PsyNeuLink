@@ -2141,7 +2141,7 @@ class Mechanism_Base(Mechanism):
         with warnings.catch_warnings():
             warnings.simplefilter(action='ignore', category=UserWarning)
             self.function.output_type = FunctionOutputType.NP_2D_ARRAY
-            self.function.enable_output_type_conversion = True
+            self.function.parameters.enable_output_type_conversion._set(True, context)
 
         self.function._instantiate_value(context)
 

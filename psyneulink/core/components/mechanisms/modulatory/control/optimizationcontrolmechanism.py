@@ -794,13 +794,15 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # If any features were specified (assigned to self.input_ports in __init__):
         if self.input_ports:
-            self.input_ports = _parse_shadow_inputs(self, self.input_ports)
-            self.input_ports = self._parse_feature_specs(self.input_ports, self.feature_function)
+            input_ports = _parse_shadow_inputs(self, self.input_ports)
+            input_ports = self._parse_feature_specs(input_ports, self.feature_function)
             # Insert primary InputPort for outcome from ObjectiveMechanism;
             #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
-            self.input_ports.insert(0, outcome_input_port),
+            input_ports.insert(0, outcome_input_port),
         else:
-            self.input_ports = [outcome_input_port]
+            input_ports = [outcome_input_port]
+
+        self.parameters.input_ports._set(input_ports, context)
 
         # Configure default_variable to comport with full set of input_ports
         self.defaults.variable, _ = self._handle_arg_input_ports(self.input_ports)

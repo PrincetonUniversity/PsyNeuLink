@@ -650,7 +650,14 @@ def make_parameter_property(param):
                 f' for example, <object>.{param.name}.base = {value}',
                 FutureWarning,
             )
-        getattr(self.parameters, p.name)._set(value, self.most_recent_context)
+        try:
+            getattr(self.parameters, p.name).set(value, self.most_recent_context)
+        except ParameterError as e:
+            if 'Pass override=True to force set.' in str(e):
+                raise ParameterError(
+                    f"Parameter '{p.name}' is read-only. Set at your own risk."
+                    f' Use .parameters.{p.name}.set with override=True to force set.'
+                ) from None
 
     return property(getter).setter(setter)
 
@@ -2040,8 +2047,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 if isinstance(val, Function):
                     val.owner = self
 
+                val = p._parse(val)
                 p._validate(val)
-                p.set(val, context=context, skip_history=True, override=True)
+                p._set(val, context=context, skip_history=True, override=True)
 
             if isinstance(p.default_value, Function):
                 p.default_value.owner = p
@@ -2704,7 +2712,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         return value
 
-    def _validate_function(self, function):
+    def _validate_function(self, function, context=None):
         """Check that either params[FUNCTION] and/or self.execute are implemented
 
         # FROM _validate_params:
@@ -2752,7 +2760,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             or isinstance(function, types.MethodType)
             or is_instance_or_subclass(function, Function)
         ):
-            self.function = function
+            self.parameters.function._set(function, context)
             return
         # self.function is NOT OK, so raise exception
         else:
@@ -2813,7 +2821,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # Specification is a standard python function, so wrap as a UserDefnedFunction
         # Note:  parameter_ports for function's parameters will be created in_instantiate_attributes_after_function
         if isinstance(function, types.FunctionType):
-            self.function = UserDefinedFunction(default_variable=function_variable,
+            function = UserDefinedFunction(default_variable=function_variable,
                                                 custom_function=function,
                                                 owner=self,
                                                 context=context)
@@ -2840,9 +2848,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             # class default functions should always be copied, otherwise anything this component
             # does with its function will propagate to anything else that wants to use
             # the default
-            if function.owner is None:
-                self.function = function
-            elif function.owner is self:
+            if function.owner is self:
                 try:
                     if function._is_pnl_inherent:
                         # This will most often occur if a Function instance is
@@ -2860,15 +2866,15 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                             ' psyneulinkhelp@princeton.edu or'
                             ' https://github.com/PrincetonUniversity/PsyNeuLink/issues'
                         )
-                        self.function = copy.deepcopy(function)
+                        function = copy.deepcopy(function)
                 except AttributeError:
-                    self.function = function
-            else:
-                self.function = copy.deepcopy(function)
+                    pass
+            elif function.owner is not None:
+                function = copy.deepcopy(function)
 
             # set owner first because needed for is_initializing calls
-            self.function.owner = self
-            self.function._update_default_variable(function_variable, context)
+            function.owner = self
+            function._update_default_variable(function_variable, context)
 
         # Specification is Function class
         # Note:  parameter_ports for function's parameters will be created in_instantiate_attributes_after_function
@@ -2899,10 +2905,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                         pass
 
             _, kwargs = prune_unused_args(function.__init__, args=[], kwargs=kwargs_to_instantiate)
-            self.function = function(default_variable=function_variable, owner=self, **kwargs)
+            function = function(default_variable=function_variable, owner=self, **kwargs)
 
         else:
             raise ComponentError(f'Unsupported function type: {type(function)}, function={function}.')
+
+        self.parameters.function._set(function, context)
 
         # KAM added 6/14/18 for functions that do not pass their has_initializers status up to their owner via property
         # FIX: need comprehensive solution for has_initializers; need to determine whether ports affect mechanism's
@@ -3839,4 +3847,4 @@ class ParameterValue:
 
     @base.setter
     def base(self, value):
-        self._parameter._set(value, self._owner.most_recent_context)
+        self._parameter.set(value, self._owner.most_recent_context)
