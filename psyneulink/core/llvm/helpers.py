@@ -196,15 +196,15 @@ def is_pointer(x):
 def is_floating_point(x):
     type_t = getattr(x, "type", x)
     # dereference pointer
-    if is_pointer(x):
-        type_t = x.type.pointee
+    if is_pointer(type_t):
+        type_t = type_t.pointee
     return isinstance(type_t, (ir.DoubleType, ir.FloatType, ir.HalfType))
 
 def is_integer(x):
     type_t = getattr(x, "type", x)
     # dereference pointer
-    if is_pointer(x):
-        type_t = x.type.pointee
+    if is_pointer(type_t):
+        type_t = type_t.pointee
     return isinstance(type_t, ir.IntType)
 
 def is_scalar(x):
@@ -212,20 +212,20 @@ def is_scalar(x):
 
 def is_vector(x):
     type_t = getattr(x, "type", x)
-    if is_pointer(x):
-        type_t = x.type.pointee
+    if is_pointer(type_t):
+        type_t = type_t.pointee
     return isinstance(type_t, ir.ArrayType) and is_scalar(type_t.element)
 
 def is_2d_matrix(x):
     type_t = getattr(x, "type", x)
-    if is_pointer(x):
-        type_t = x.type.pointee
+    if is_pointer(type_t):
+        type_t = type_t.pointee
     return isinstance(type_t, ir.ArrayType) and is_vector(type_t.element)
 
 def is_boolean(x):
     type_t = getattr(x, "type", x)
-    if is_pointer(x):
-        type_t = x.type.pointee
+    if is_pointer(type_t):
+        type_t = type_t.pointee
     return isinstance(type_t, ir.IntType) and type_t.width == 1
 
 def get_array_shape(x):

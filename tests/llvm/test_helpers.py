@@ -228,18 +228,16 @@ class TestHelperTypegetters:
     FLOAT_PTR_TYPE = pnlvm.ir.PointerType(FLOAT_TYPE)
     DOUBLE_TYPE = pnlvm.ir.DoubleType()
     DOUBLE_PTR_TYPE = pnlvm.ir.PointerType(DOUBLE_TYPE)
-    DOUBLE_VECTOR_TYPE = pnlvm.ir.ArrayType(pnlvm.ir.DoubleType(), 1)
+    DOUBLE_VECTOR_TYPE = pnlvm.ir.ArrayType(DOUBLE_TYPE, 1)
     DOUBLE_VECTOR_PTR_TYPE = pnlvm.ir.PointerType(DOUBLE_VECTOR_TYPE)
-    DOUBLE_MATRIX_TYPE = pnlvm.ir.ArrayType(pnlvm.ir.ArrayType(pnlvm.ir.DoubleType(), 1), 1)
+    DOUBLE_MATRIX_TYPE = pnlvm.ir.ArrayType(pnlvm.ir.ArrayType(DOUBLE_TYPE, 1), 1)
     DOUBLE_MATRIX_PTR_TYPE = pnlvm.ir.PointerType(DOUBLE_MATRIX_TYPE)
     INT_TYPE = pnlvm.ir.IntType(32)
-    INT_PTR_TYPE = pnlvm.ir.PointerType(pnlvm.ir.IntType(32))
+    INT_PTR_TYPE = pnlvm.ir.PointerType(INT_TYPE)
     BOOL_TYPE = pnlvm.ir.IntType(1)
     BOOL_PTR_TYPE = pnlvm.ir.PointerType(BOOL_TYPE)
 
     @pytest.mark.llvm
-    @pytest.mark.parametrize('mode', ['CPU',
-                                      pytest.param('PTX', marks=pytest.mark.cuda)])
     @pytest.mark.parametrize('ir_type,expected', [
         (FLOAT_TYPE, 0),
         (FLOAT_PTR_TYPE, 1),
@@ -254,39 +252,11 @@ class TestHelperTypegetters:
         (BOOL_TYPE, 0),
         (BOOL_PTR_TYPE, 1),
     ], ids=str)
-    def test_helper_is_pointer(self, mode, ir_type, expected):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            func_ty = ir.FunctionType(ir.VoidType(), [ir.IntType(32).as_pointer()])
-
-            custom_name = ctx.get_unique_name("is_pointer")
-            function = ir.Function(ctx.module, func_ty, name=custom_name)
-            out = function.args[0]
-            block = function.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
-
-            variable = builder.load(builder.alloca(ir_type))
-            if pnlvm.helpers.is_pointer(variable):
-                builder.store(out.type.pointee(1), out)
-            else:
-                builder.store(out.type.pointee(0), out)
-
-            builder.ret_void()
-
-        bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
-        if mode == 'CPU':
-            res = bin_f.byref_arg_types[0](-1)
-            bin_f(ctypes.byref(res))
-            res = res.value
-        else:
-            res = np.array([-1], dtype=np.int32)
-            bin_f.cuda_wrap_call(res)
-            res = res[0]
-
-        assert res == expected
+    def test_helper_is_pointer(self, ir_type, expected):
+        assert pnlvm.helpers.is_pointer(ir_type) == expected
+        assert pnlvm.helpers.is_pointer(ir_type(None)) == expected
 
     @pytest.mark.llvm
-    @pytest.mark.parametrize('mode', ['CPU',
-                                      pytest.param('PTX', marks=pytest.mark.cuda)])
     @pytest.mark.parametrize('ir_type,expected', [
         (FLOAT_TYPE, 1),
         (FLOAT_PTR_TYPE, 1),
@@ -301,39 +271,11 @@ class TestHelperTypegetters:
         (BOOL_TYPE, 1),
         (BOOL_PTR_TYPE, 1),
     ], ids=str)
-    def test_helper_is_scalar(self, mode, ir_type, expected):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            func_ty = ir.FunctionType(ir.VoidType(), [ir.IntType(32).as_pointer()])
-
-            custom_name = ctx.get_unique_name("is_scalar")
-            function = ir.Function(ctx.module, func_ty, name=custom_name)
-            out = function.args[0]
-            block = function.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
-
-            variable = builder.load(builder.alloca(ir_type))
-            if pnlvm.helpers.is_scalar(variable):
-                builder.store(out.type.pointee(1), out)
-            else:
-                builder.store(out.type.pointee(0), out)
-
-            builder.ret_void()
-
-        bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
-        if mode == 'CPU':
-            res = bin_f.byref_arg_types[0](-1)
-            bin_f(ctypes.byref(res))
-            res = res.value
-        else:
-            res = np.array([-1], dtype=np.int32)
-            bin_f.cuda_wrap_call(res)
-            res = res[0]
-
-        assert res == expected
+    def test_helper_is_scalar(self, ir_type, expected):
+        assert pnlvm.helpers.is_scalar(ir_type) == expected
+        assert pnlvm.helpers.is_scalar(ir_type(None)) == expected
 
     @pytest.mark.llvm
-    @pytest.mark.parametrize('mode', ['CPU',
-                                      pytest.param('PTX', marks=pytest.mark.cuda)])
     @pytest.mark.parametrize('ir_type,expected', [
         (FLOAT_TYPE, 1),
         (FLOAT_PTR_TYPE, 1),
@@ -348,39 +290,30 @@ class TestHelperTypegetters:
         (BOOL_TYPE, 0),
         (BOOL_PTR_TYPE, 0),
     ], ids=str)
-    def test_helper_is_floating_point(self, mode, ir_type, expected):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            func_ty = ir.FunctionType(ir.VoidType(), [ir.IntType(32).as_pointer()])
-
-            custom_name = ctx.get_unique_name("is_floating_point")
-            function = ir.Function(ctx.module, func_ty, name=custom_name)
-            out = function.args[0]
-            block = function.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
-
-            variable = builder.load(builder.alloca(ir_type))
-            if pnlvm.helpers.is_floating_point(variable):
-                builder.store(out.type.pointee(1), out)
-            else:
-                builder.store(out.type.pointee(0), out)
-
-            builder.ret_void()
-
-        bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
-        if mode == 'CPU':
-            res = bin_f.byref_arg_types[0](-1)
-            bin_f(ctypes.byref(res))
-            res = res.value
-        else:
-            res = np.array([-1], dtype=np.int32)
-            bin_f.cuda_wrap_call(res)
-            res = res[0]
-
-        assert res == expected
+    def test_helper_is_floating_point(self, ir_type, expected):
+        assert pnlvm.helpers.is_floating_point(ir_type) == expected
+        assert pnlvm.helpers.is_floating_point(ir_type(None)) == expected
 
     @pytest.mark.llvm
-    @pytest.mark.parametrize('mode', ['CPU',
-                                      pytest.param('PTX', marks=pytest.mark.cuda)])
+    @pytest.mark.parametrize('ir_type,expected', [
+        (FLOAT_TYPE, 0),
+        (FLOAT_PTR_TYPE, 0),
+        (DOUBLE_TYPE, 0),
+        (DOUBLE_PTR_TYPE, 0),
+        (DOUBLE_VECTOR_TYPE, 0),
+        (DOUBLE_VECTOR_PTR_TYPE, 0),
+        (DOUBLE_MATRIX_TYPE, 0),
+        (DOUBLE_MATRIX_PTR_TYPE, 0),
+        (INT_TYPE, 1),
+        (INT_PTR_TYPE, 1),
+        (BOOL_TYPE, 1),
+        (BOOL_PTR_TYPE, 1),
+    ], ids=str)
+    def test_helper_is_integer(self, ir_type, expected):
+        assert pnlvm.helpers.is_integer(ir_type) == expected
+        assert pnlvm.helpers.is_integer(ir_type(None)) == expected
+
+    @pytest.mark.llvm
     @pytest.mark.parametrize('ir_type,expected', [
         (FLOAT_TYPE, 0),
         (FLOAT_PTR_TYPE, 0),
@@ -395,39 +328,11 @@ class TestHelperTypegetters:
         (BOOL_TYPE, 0),
         (BOOL_PTR_TYPE, 0),
     ], ids=str)
-    def test_helper_is_vector(self, mode, ir_type, expected):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            func_ty = ir.FunctionType(ir.VoidType(), [ir.IntType(32).as_pointer()])
-
-            custom_name = ctx.get_unique_name("is_vector")
-            function = ir.Function(ctx.module, func_ty, name=custom_name)
-            out = function.args[0]
-            block = function.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
-
-            variable = builder.load(builder.alloca(ir_type))
-            if pnlvm.helpers.is_vector(variable):
-                builder.store(out.type.pointee(1), out)
-            else:
-                builder.store(out.type.pointee(0), out)
-
-            builder.ret_void()
-
-        bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
-        if mode == 'CPU':
-            res = bin_f.byref_arg_types[0](-1)
-            bin_f(ctypes.byref(res))
-            res = res.value
-        else:
-            res = np.array([-1], dtype=np.int32)
-            bin_f.cuda_wrap_call(res)
-            res = res[0]
-
-        assert res == expected
+    def test_helper_is_vector(self, ir_type, expected):
+        assert pnlvm.helpers.is_vector(ir_type) == expected
+        assert pnlvm.helpers.is_vector(ir_type(None)) == expected
 
     @pytest.mark.llvm
-    @pytest.mark.parametrize('mode', ['CPU',
-                                      pytest.param('PTX', marks=pytest.mark.cuda)])
     @pytest.mark.parametrize('ir_type,expected', [
         (FLOAT_TYPE, 0),
         (FLOAT_PTR_TYPE, 0),
@@ -442,39 +347,11 @@ class TestHelperTypegetters:
         (BOOL_TYPE, 0),
         (BOOL_PTR_TYPE, 0),
     ], ids=str)
-    def test_helper_is_2d_matrix(self, mode, ir_type, expected):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            func_ty = ir.FunctionType(ir.VoidType(), [ir.IntType(32).as_pointer()])
-
-            custom_name = ctx.get_unique_name("is_2d_matrix")
-            function = ir.Function(ctx.module, func_ty, name=custom_name)
-            out = function.args[0]
-            block = function.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
-
-            variable = builder.load(builder.alloca(ir_type))
-            if pnlvm.helpers.is_2d_matrix(variable):
-                builder.store(out.type.pointee(1), out)
-            else:
-                builder.store(out.type.pointee(0), out)
-
-            builder.ret_void()
-
-        bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
-        if mode == 'CPU':
-            res = bin_f.byref_arg_types[0](-1)
-            bin_f(ctypes.byref(res))
-            res = res.value
-        else:
-            res = np.array([-1], dtype=np.int32)
-            bin_f.cuda_wrap_call(res)
-            res = res[0]
-
-        assert res == expected
+    def test_helper_is_2d_matrix(self, ir_type, expected):
+        assert pnlvm.helpers.is_2d_matrix(ir_type) == expected
+        assert pnlvm.helpers.is_2d_matrix(ir_type(None)) == expected
 
     @pytest.mark.llvm
-    @pytest.mark.parametrize('mode', ['CPU',
-                                      pytest.param('PTX', marks=pytest.mark.cuda)])
     @pytest.mark.parametrize('ir_type,expected', [
         (FLOAT_TYPE, 0),
         (FLOAT_PTR_TYPE, 0),
@@ -489,35 +366,9 @@ class TestHelperTypegetters:
         (BOOL_TYPE, 1),
         (BOOL_PTR_TYPE, 1),
     ], ids=str)
-    def test_helper_is_boolean(self, mode, ir_type, expected):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            func_ty = ir.FunctionType(ir.VoidType(), [ir.IntType(32).as_pointer()])
-
-            custom_name = ctx.get_unique_name("is_boolean")
-            function = ir.Function(ctx.module, func_ty, name=custom_name)
-            out = function.args[0]
-            block = function.append_basic_block(name="entry")
-            builder = ir.IRBuilder(block)
-
-            variable = builder.load(builder.alloca(ir_type))
-            if pnlvm.helpers.is_boolean(variable):
-                builder.store(out.type.pointee(1), out)
-            else:
-                builder.store(out.type.pointee(0), out)
-
-            builder.ret_void()
-
-        bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
-        if mode == 'CPU':
-            res = bin_f.byref_arg_types[0](-1)
-            bin_f(ctypes.byref(res))
-            res = res.value
-        else:
-            res = np.array([-1], dtype=np.int32)
-            bin_f.cuda_wrap_call(res)
-            res = res[0]
-
-        assert res == expected
+    def test_helper_is_boolean(self, ir_type, expected):
+        assert pnlvm.helpers.is_boolean(ir_type) == expected
+        assert pnlvm.helpers.is_boolean(ir_type(None)) == expected
 
     @pytest.mark.llvm
     @pytest.mark.parametrize('ir_type,expected', [
@@ -535,8 +386,7 @@ class TestHelperTypegetters:
         (DOUBLE_MATRIX_TYPE, (1,1)),
     ], ids=str)
     def test_helper_array_from_shape(self, ir_type, shape):
-        with pnlvm.LLVMBuilderContext() as ctx:
-            assert ir_type == pnlvm.helpers.array_from_shape(shape, ctx.float_ty)
+        assert ir_type == pnlvm.helpers.array_from_shape(shape, self.DOUBLE_TYPE)
 
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
