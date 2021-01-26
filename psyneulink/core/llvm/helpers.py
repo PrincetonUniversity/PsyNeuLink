@@ -321,9 +321,9 @@ class ConditionGenerator:
         self._zero = ctx.int32_ty(0) if ctx is not None else None
 
     def get_private_condition_struct_type(self, composition):
-        time_stamp_struct = ir.LiteralStructType([self.ctx.int32_ty,
-                                                  self.ctx.int32_ty,
-                                                  self.ctx.int32_ty])
+        time_stamp_struct = ir.LiteralStructType([self.ctx.int32_ty,   # Run
+                                                  self.ctx.int32_ty,   # Pass
+                                                  self.ctx.int32_ty])  # Step
 
         structure = ir.LiteralStructType([
             time_stamp_struct,  # current time stamp
@@ -361,7 +361,7 @@ class ConditionGenerator:
         Indices greater than that of the one are zeroed.
         """
 
-        # Validate count tuple
+        # Only one element should be non-zero
         assert count.count(0) == len(count) - 1
 
         # Get timestruct pointer
