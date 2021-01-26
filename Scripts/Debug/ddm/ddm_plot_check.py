@@ -11,7 +11,7 @@ import pandas as pd
 
 import wfpt
 
-from psyneulink.core.components.functions.fitfunctions import simulation_likelihood
+from psyneulink.core.components.functions.fitfunctions import simulation_likelihood, make_likelihood_function, MaxLikelihoodEstimator
 
 
 def ddm_pdf_analytical(drift_rate, threshold, noise, starting_point, non_decision_time, time_step_size=0.01):
@@ -36,7 +36,7 @@ def ddm_pdf_simulate(drift_rate=0.75, threshold=1.0, noise=0.1, starting_point=0
                      time_step_size=0.01, num_samples=1000000, use_pnl=True, rt_space=None):
 
     if use_pnl:
-        decision = pnl.DDM(function=pnl.DriftDiffusionIntegrator(starting_value=0.8),
+        decision = pnl.DDM(function=pnl.DriftDiffusionIntegrator(starting_value=0.1234),
                            output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME],
                            name='DDM')
 
@@ -57,7 +57,6 @@ def ddm_pdf_simulate(drift_rate=0.75, threshold=1.0, noise=0.1, starting_point=0
         comp.run(inputs={decision: input},
                  num_trials=num_samples * len(input),
                  bin_execute=True,
-                 reset_stateful_functions_when=pnl.AtTrialStart(),
                  context=context)
 
         results = np.squeeze(np.array(comp.results))
@@ -96,8 +95,8 @@ def ddm_pdf_simulate(drift_rate=0.75, threshold=1.0, noise=0.1, starting_point=0
 
     return df
 
-
-def main():
+def ddm_plot_check():
+    ddm_params = dict(starting_point=0.1, drift_rate=0.3, noise=1.0, threshold=0.6, non_decision_time=0.8)
 
     # from numpy.random import rand
     # pd.DataFrame({
@@ -106,8 +105,6 @@ def main():
     #     'threshold': 0.5 + rand() * 1.5,
     #     'noise': 1.0
     # })
-
-    ddm_params = dict(starting_point=0.0, drift_rate=0.1, noise=1.0, threshold=0.5, non_decision_time=0.0)
 
     NUM_SAMPLES = 100000
 
@@ -148,27 +145,58 @@ def main():
 
     plt.savefig(f"{'_'.join([f'{p}={v}' for p,v in ddm_params.items()])}.png")
 
-    # # Create a likelihood function from the composition itself, this is done
-    # # using probability density approximation via kernel density estimation.
-    # likelihood_func, param_map = make_likelihood_function(composition=comp,
-    #                                                       fit_params=[decision.function.parameters.rate,
-    #                                                                   decision.function.parameters.starting_point],
-    #                                                       inputs=input,
-    #                                                       categorical_dims=np.array([True, False]),
-    #                                                       data_to_fit=data_to_fit,
-    #                                                       num_simulations=1000,
-    #                                                       fixed_params=dict(
-    #                                                           threshold=1.0,
-    #                                                           noise=0.1,
-    #                                                           time_step_size=0.01
-    #                                                       ),
-    #                                                       combine_trials=True)
-    #
-    # params_to_fit = {
-    #     'rate':              (0.0, 1.0),
-    #     'starting_point':    (0.001, 1.0),
-    # }
 
 
-if __name__ == "__main__":
-    main()
+from psyneulink.core.components.functions.fitfunctions import simulation_likelihood, make_likelihood_function, \
+    MaxLikelihoodEstimator
+
+ddm_params = dict(starting_value=0.1, rate=0.3, noise=1.0, threshold=0.6, non_decision_time=0.15)
+
+# Create a simple one mechanism composition containing a DDM in integrator mode.
+decision = pnl.DDM(function=pnl.DriftDiffusionIntegrator(**ddm_params),
+                   output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME],
+                   name='DDM')
+
+comp = pnl.Composition()
+comp.add_node(decision)
+
+# Lets generate an "experimental" dataset to fit. This is a parameter recovery test
+# The input will be 500 trials of the same constant stimulus drift rate of 1
+input = np.ones((500, 1))
+inputs_dict = {decision: input}
+
+# Run the composition to generate some data to fit
+comp.run(inputs=inputs_dict,
+         num_trials=len(input),
+         bin_execute=True)
+
+# Store the results of this "experiment" as a numpy array. This should be a
+# 2D array of shape (len(input), 2). The first column being a discrete variable
+# specifying the upper or lower decision boundary and the second column is the
+# reaction time.
+data_to_fit = np.squeeze(np.array(comp.results))
+
+# Create a likelihood function from the composition itself, this is done
+# using probability density approximation via kernel density estimation.
+likelihood_func, param_map = make_likelihood_function(composition=comp,
+                                                      fit_params=[decision.function.parameters.rate,
+                                                                  decision.function.parameters.starting_value,
+                                                                  decision.function.parameters.non_decision_time],
+                                                      inputs=inputs_dict,
+                                                      categorical_dims=np.array([True, False]),
+                                                      data_to_fit=data_to_fit,
+                                                      num_simulations=1000,
+                                                      fixed_params={
+                                                          decision.function.parameters.threshold: ddm_params['threshold'],
+                                                          decision.function.parameters.noise: ddm_params['noise'],
+                                                          decision.function.parameters.time_step_size: ddm_params['time_step_size']
+                                                      },
+                                                      combine_trials=True)
+
+print(likelihood_func(rate=0.3, starting_value=np.array([0.1]), non_decision_time=0.15))
+
+params_to_fit = {
+    'rate':              (0.0, 1.0),
+    'starting_point':    (0.001, 1.0),
+}
+

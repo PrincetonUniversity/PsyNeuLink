@@ -118,9 +118,9 @@ def simulation_likelihood(sim_data,
             # Get the right KDE for this trial, if all simulation trials have been combined
             # use that KDE for all trials of experimental data.
             if len(kdes) == 1:
-                kde, axes = kdes[0][exp_trial_cat]
+                kde, axes = kdes[0].get(exp_trial_cat, (None, None))
             else:
-                kde, axes = kdes[trial][exp_trial_cat]
+                kde, axes = kdes[trial].get(exp_trial_cat, (None, None))
 
             # Linear interpolation using the grid we computed the KDE
             # on.
@@ -152,29 +152,29 @@ def make_likelihood_function(composition: 'psyneulink.core.composition.Compositi
     Parameters
     ----------
     composition: A PsyNeuLink composition. This function returns a function that runs
-    many simulations of this composition to generate a kernel density estimate of the likelihood
-    of a dataset under different parameter settings. The output (composition.results) should match
-    the format in data_to_fit.
+        many simulations of this composition to generate a kernel density estimate of the likelihood
+        of a dataset under different parameter settings. The output (composition.results) should match
+        the format in data_to_fit.
     fit_params: A list of PsyNeuLink parameters to fit. Each on of these parameters will map to
-    an argument of the likelihood function that is returned. Values passed via these arguments
-    will be assigned to the composition before simulation.
+        an argument of the likelihood function that is returned. Values passed via these arguments
+        will be assigned to the composition before simulation.
     fixed_params: A dict of PsyNeuLink parameters and their corresponding fixed values. These
-    parameters will be applied to the composition before simulation but will not be exposed as
-    arguments to the likelihood function.
+        parameters will be applied to the composition before simulation but will not be exposed as
+        arguments to the likelihood function.
     inputs: A set of inputs to pass to the composition on each simulation of the likelihood. These
-    inputs are passed directly to the composition run method as is.
+        inputs are passed directly to the composition run method as is.
     categorical_dims: A 1D logical array, where each dimension corresponds to an output dimension
-    of the PsyNeuLink composition. If True, the dimension should be considered categorical, if False,
-    it should be treated as continuous. Categorical is suitable for outputs that will only take on
-    a handful of unique values, such as the decision value of a DDM.
+        of the PsyNeuLink composition. If True, the dimension should be considered categorical, if False,
+        it should be treated as continuous. Categorical is suitable for outputs that will only take on
+        a handful of unique values, such as the decision value of a DDM.
     data_to_fit: A 2D numpy array where the first dimension is the trial number and the columns are
-    in the same format as outputs of the PsyNeuLink composition. This data essentially describes at
-    what values the KDE of the likelihood should be evaluated.
+        in the same format as outputs of the PsyNeuLink composition. This data essentially describes at
+        what values the KDE of the likelihood should be evaluated.
     num_simulations: The number of simulations (per trial) to run to construct the KDE likelihood.
     combine_trials: Whether we can combine simulations across trials for one estimate of the likelihood.
-    This can dramatically increase the speed of the likelihood function by allowing a smaller number
-    of total simulations to run per trial. However, this cannot be done if the trial by trial state
-    of the composition is maintained.
+        This can dramatically increase the speed of the likelihood function by allowing a smaller number
+        of total simulations to run per trial. However, this cannot be done if the trial by trial state
+        of the composition is maintained.
 
     Returns
     -------
@@ -183,8 +183,9 @@ def make_likelihood_function(composition: 'psyneulink.core.composition.Compositi
         - A dict which maps elements of fit_params to their string function argument names.
     """
 
-    # Get the number of trials in the input data
-    num_trials = len(next(iter(inputs)))
+    # We need to parse the inputs like composition does to get the number of trials
+    _, num_inputs_sets = composition._parse_run_inputs(inputs)
+    num_trials = num_inputs_sets
 
     # Check to see if any parameters (fittable or fixed) have the same name,
     # this will cause problems, if so, we need to create a unique numbering.
@@ -215,14 +216,13 @@ def make_likelihood_function(composition: 'psyneulink.core.composition.Compositi
             param.set(value, context)
 
         # Also apply the fixed parameters
-        if fixed_params:
-            for param, value in fixed_params:
+        if fixed_params is not None:
+            for param, value in fixed_params.items():
                 param.set(value, context)
 
         # Run the composition for all simulations, this corresponds to looping over the input
         # num_simulations times.
         composition.run(inputs=inputs,
-                        reset_stateful_functions_when=AtTrialStart(),
                         num_trials=num_simulations * num_trials,
                         bin_execute=True,
                         context=context)
@@ -230,7 +230,7 @@ def make_likelihood_function(composition: 'psyneulink.core.composition.Compositi
         results = np.squeeze(np.array(composition.results))
 
         # Split results into (trials, simulations, data)
-        sim_data = np.array(np.vsplit(results, len(input)))
+        sim_data = np.array(np.vsplit(results, num_trials))
 
         # Compute the likelihood given the data
         like = simulation_likelihood(sim_data=sim_data, exp_data=data_to_fit,

@@ -2127,7 +2127,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         offset= 0.0,                    \
         non_decision_time=0.0,          \
         threshold=1.0                   \
-        time_step_size=1.0,             \
+        time_step_size=0.01,            \
         initializer=None,               \
         params=None,                    \
         owner=None,                     \
@@ -2370,7 +2370,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         initializer = Parameter(np.array([0]), aliases=['starting_value'])
         non_decision_time = Parameter(0.0, modulable=True)
         threshold = Parameter(100.0, modulable=True)
-        time_step_size = Parameter(1.0, modulable=True)
+        time_step_size = Parameter(0.01, modulable=True)
         previous_time = Parameter(None, initializer='non_decision_time', pnl_internal=True)
         seed = Parameter(None, read_only=True)
         random_state = Parameter(None, stateful=True, loggable=False)
