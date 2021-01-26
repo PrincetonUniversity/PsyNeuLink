@@ -1235,10 +1235,35 @@ class Parameter(ParameterBase):
                 kwargs
                     any additional arguments to be passed to this `Parameter`'s `setter` if it exists
         """
+        from psyneulink.core.components.component import Component
+
         if not override and self.read_only:
             raise ParameterError('Parameter \'{0}\' is read-only. Set at your own risk. Pass override=True to force set.'.format(self.name))
 
-        return self._set(self._parse(value), context, skip_history, skip_log, **kwargs)
+        value = self._set(self._parse(value), context, skip_history, skip_log, **kwargs)
+
+        try:
+            value = value.__self__
+        except AttributeError:
+            pass
+
+        if isinstance(value, Component):
+            owner = self._owner._owner
+            if value not in owner._parameter_components:
+                if not owner.is_initializing:
+                    value._initialize_from_context(context)
+                    owner._parameter_components.add(value)
+
+                    try:
+                        value._update_default_variable(owner._get_parsed_variable(self, context=context), context)
+                    except TypeError as e:
+                        if (
+                            f'unsupported for {value.__class__.__name__}' not in str(e)
+                            and f'unsupported for {owner.__class__.__name__}' not in str(e)
+                        ):
+                            raise
+
+        return value
 
     def _set(self, value, context, skip_history=False, skip_log=False, **kwargs):
         if not self.stateful:
@@ -1282,23 +1307,6 @@ class Parameter(ParameterBase):
 
         # set value
         self.values[execution_id] = value
-
-        try:
-            value = value.__self__
-        except AttributeError:
-            pass
-
-        try:
-            if (
-                value in self._owner._owner._parameter_components
-                or context.execution_phase is ContextFlags.IDLE
-            ):
-                pass
-            else:
-                value._initialize_from_context(context)
-                self._owner._owner._parameter_components.add(value)
-        except (AttributeError, TypeError):
-            pass
 
     @handle_external_context()
     def delete(self, context=None):

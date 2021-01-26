@@ -9568,6 +9568,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _after_agent_rep_execution(self, context=None):
         pass
 
+    def _update_default_variable(self, *args, **kwargs):
+        # NOTE: Composition should not really have a default_variable,
+        # but does as a result of subclassing from Component.
+        # Subclassing may not be necessary anymore
+        raise TypeError(f'_update_default_variable unsupported for {self.__class__.__name__}')
+
+    def _get_parsed_variable(self, *args, **kwargs):
+        raise TypeError(f'_get_parsed_variable unsupported for {self.__class__.__name__}')
+
 
     # ******************************************************************************************************************
     #                                           LLVM
