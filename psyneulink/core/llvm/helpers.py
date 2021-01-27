@@ -368,8 +368,9 @@ class ConditionGenerator:
         ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
         ts = builder.load(ts_ptr)
 
+        assert len(ts.type) == len(count)
         # Update run, pass, step of ts
-        for idx in range(3):
+        for idx in range(len(ts.type)):
             if all(v == 0 for v in count[:idx]):
                 el = builder.extract_value(ts, idx)
                 el = builder.add(el, self.ctx.int32_ty(count[idx]))
@@ -385,7 +386,8 @@ class ConditionGenerator:
         part_eq = []
         part_cmp = []
 
-        for element in range(3):
+        assert ts1.type == ts2.type
+        for element in range(len(ts1.type)):
             a = builder.extract_value(ts1, element)
             b = builder.extract_value(ts2, element)
             part_eq.append(builder.icmp_signed('==', a, b))
