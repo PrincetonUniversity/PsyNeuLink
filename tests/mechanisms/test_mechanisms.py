@@ -41,6 +41,21 @@ class TestMechanism:
         assert M.defaults.value.shape == mechanism_value.shape
         assert M.function.defaults.value.shape == function_value.shape
 
+    @pytest.mark.parametrize(
+        'noise',
+        [pnl.GaussianDistort, pnl.NormalDist]
+    )
+    def test_noise_variations(self, noise):
+        t1 = pnl.TransferMechanism(name='t1', size=2, noise=noise())
+        t2 = pnl.TransferMechanism(name='t2', size=2)
+        t2.integrator_function.parameters.noise.set(noise())
+
+        t1.integrator_function.noise.base.random_state = np.random.RandomState([0])
+        t2.integrator_function.noise.base.random_state = np.random.RandomState([0])
+
+        for _ in range(5):
+            np.testing.assert_equal(t1.execute([1, 1]), t2.execute([1, 1]))
+
 
 class TestMechanismFunctionParameters:
     f = pnl.Linear()
