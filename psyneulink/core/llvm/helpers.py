@@ -12,6 +12,7 @@ from llvmlite import ir
 from contextlib import contextmanager
 from ctypes import util
 
+from ..scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
 from .debug import debug_env
 
 
@@ -451,7 +452,6 @@ class ConditionGenerator:
 
     def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_callbacks):
 
-        from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
 
         if isinstance(condition, Always):
             return ir.IntType(1)(1)
@@ -460,8 +460,8 @@ class ConditionGenerator:
             return ir.IntType(1)(0)
 
         elif isinstance(condition, Not):
-            condition = condition.condition
-            return builder.not_(self.generate_sched_condition(builder, condition, cond_ptr, node, is_finished_callbacks))
+            orig_condition = self.generate_sched_condition(builder, condition.condition, cond_ptr, node, is_finished_callbacks)
+            return builder.not_(orig_condition)
 
         elif isinstance(condition, All):
             agg_cond = ir.IntType(1)(1)
@@ -477,7 +477,6 @@ class ConditionGenerator:
                 dependencies = condition.args
 
             run_cond = ir.IntType(1)(1)
-            array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
             for node in dependencies:
                 node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
                 run_cond = builder.and_(run_cond, node_ran)
