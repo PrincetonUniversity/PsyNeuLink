@@ -322,7 +322,7 @@ class ConditionGenerator:
         self._zero = ctx.int32_ty(0) if ctx is not None else None
 
     def get_private_condition_struct_type(self, composition):
-        time_stamp_struct = ir.LiteralStructType([self.ctx.int32_ty,   # Run
+        time_stamp_struct = ir.LiteralStructType([self.ctx.int32_ty,   # Trial
                                                   self.ctx.int32_ty,   # Pass
                                                   self.ctx.int32_ty])  # Step
 
