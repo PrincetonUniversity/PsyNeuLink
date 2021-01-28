@@ -13,6 +13,7 @@ from contextlib import contextmanager
 from ctypes import util
 
 from ..scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
+from ..scheduling.time import TimeScale
 from .debug import debug_env
 
 
@@ -482,7 +483,10 @@ class ConditionGenerator:
 
             run_cond = ir.IntType(1)(1)
             for node in dependencies:
-                node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
+                if condition.time_scale == TimeScale.TRIAL:
+                    node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
+                else:
+                    assert False, "Unsupported 'AllHaveRun' time scale: {}".format(condition.time_scale)
                 run_cond = builder.and_(run_cond, node_ran)
             return run_cond
 
