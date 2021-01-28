@@ -384,23 +384,27 @@ class ConditionGenerator:
 
     def ts_compare(self, builder, ts1, ts2, comp):
         assert comp == '<'
-        part_eq = []
-        part_cmp = []
+
+        # True if all elements to the left of the current one are equal
+        prefix_eq = self.ctx.bool_ty(1)
+        result = self.ctx.bool_ty(0)
 
         assert ts1.type == ts2.type
         for element in range(len(ts1.type)):
             a = builder.extract_value(ts1, element)
             b = builder.extract_value(ts2, element)
-            part_eq.append(builder.icmp_signed('==', a, b))
-            part_cmp.append(builder.icmp_signed(comp, a, b))
 
-        trial = builder.and_(builder.not_(part_eq[0]), part_cmp[0])
-        run = builder.and_(part_eq[0],
-                           builder.and_(builder.not_(part_eq[1]), part_cmp[1]))
-        step = builder.and_(builder.and_(part_eq[0], part_eq[1]),
-                            part_cmp[2])
+            # Use existing prefix_eq to construct expression
+            # for the current element
+            element_comp = builder.icmp_signed(comp, a, b)
+            current_comp = builder.and_(prefix_eq, element_comp)
+            result = builder.or_(result, current_comp)
 
-        return builder.or_(trial, builder.or_(run, step))
+            # Update prefix_eq
+            element_eq = builder.icmp_signed('==', a, b)
+            prefix_eq = builder.and_(prefix_eq, element_eq)
+
+        return result
 
     def __get_node_status_ptr(self, builder, cond_ptr, node):
         node_idx = self.ctx.int32_ty(self.composition.nodes.index(node))
