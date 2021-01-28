@@ -524,15 +524,7 @@ class ConditionGenerator:
 
             # Check number of runs
             target_runs = builder.extract_value(target_status, 0, target.name + " runs")
-            less_than_call_count = builder.icmp_unsigned('<', target_runs, self.ctx.int32_ty(count))
-
-            # Check that we have not run yet
-            my_time_stamp = self.__get_node_ts(builder, cond_ptr, node)
-            target_time_stamp = self.__get_node_ts(builder, cond_ptr, target)
-            ran_after_me = self.ts_compare(builder, my_time_stamp, target_time_stamp, '<')
-
-            # Return: target.calls % N == 0 AND me.last_time < target.last_time
-            return builder.and_(less_than_call_count, ran_after_me)
+            return builder.icmp_unsigned('<', target_runs, self.ctx.int32_ty(count))
 
         elif isinstance(condition, AtNCalls):
             target, count = condition.args
@@ -541,15 +533,7 @@ class ConditionGenerator:
 
             # Check number of runs
             target_runs = builder.extract_value(target_status, 0, target.name + " runs")
-            less_than_call_count = builder.icmp_unsigned('==', target_runs, self.ctx.int32_ty(count))
-
-            # Check that we have not run yet
-            my_time_stamp = self.__get_node_ts(builder, cond_ptr, node)
-            target_time_stamp = self.__get_node_ts(builder, cond_ptr, target)
-            ran_after_me = self.ts_compare(builder, my_time_stamp, target_time_stamp, '<')
-
-            # Return: target.calls % N == 0 AND me.last_time < target.last_time
-            return builder.and_(less_than_call_count, ran_after_me)
+            return builder.icmp_unsigned('==', target_runs, self.ctx.int32_ty(count))
 
         elif isinstance(condition, AfterNCalls):
             target, count = condition.args
@@ -561,15 +545,7 @@ class ConditionGenerator:
 
             # Check number of runs
             target_runs = builder.extract_value(target_status, 0, target.name + " runs")
-            less_than_call_count = builder.icmp_unsigned('>=', target_runs, self.ctx.int32_ty(count))
-
-            # Check that we have not run yet
-            my_time_stamp = self.__get_node_ts(builder, cond_ptr, node)
-            target_time_stamp = self.__get_node_ts(builder, cond_ptr, target)
-            ran_after_me = self.ts_compare(builder, my_time_stamp, target_time_stamp, '<')
-
-            # Return: target.calls % N == 0 AND me.last_time < target.last_time
-            return builder.and_(less_than_call_count, ran_after_me)
+            return builder.icmp_unsigned('>=', target_runs, self.ctx.int32_ty(count))
 
         elif isinstance(condition, WhenFinished):
             # The first argument is the target node
