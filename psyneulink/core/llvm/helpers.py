@@ -500,10 +500,7 @@ class ConditionGenerator:
         elif isinstance(condition, EveryNCalls):
             target, count = condition.args
 
-            target_idx = self.ctx.int32_ty(self.composition.nodes.index(target))
-
-            array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
-            target_status = builder.load(builder.gep(array_ptr, [self._zero, target_idx]))
+            target_status = builder.load(self.__get_node_status_ptr(builder, cond_ptr, target))
 
             # Check number of runs
             target_runs = builder.extract_value(target_status, 0, target.name + " runs")
@@ -523,10 +520,7 @@ class ConditionGenerator:
         elif isinstance(condition, BeforeNCalls):
             target, count = condition.args
 
-            target_idx = self.ctx.int32_ty(self.composition.nodes.index(target))
-
-            array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
-            target_status = builder.load(builder.gep(array_ptr, [self._zero, target_idx]))
+            target_status = builder.load(self.__get_node_status_ptr(builder, cond_ptr, target))
 
             # Check number of runs
             target_runs = builder.extract_value(target_status, 0, target.name + " runs")
@@ -543,10 +537,7 @@ class ConditionGenerator:
         elif isinstance(condition, AtNCalls):
             target, count = condition.args
 
-            target_idx = self.ctx.int32_ty(self.composition.nodes.index(target))
-
-            array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
-            target_status = builder.load(builder.gep(array_ptr, [self._zero, target_idx]))
+            target_status = builder.load(self.__get_node_status_ptr(builder, cond_ptr, target))
 
             # Check number of runs
             target_runs = builder.extract_value(target_status, 0, target.name + " runs")
