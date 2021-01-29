@@ -459,17 +459,17 @@ class ConditionGenerator:
 
 
         if isinstance(condition, Always):
-            return ir.IntType(1)(1)
+            return self.ctx.bool_ty(1)
 
         if isinstance(condition, Never):
-            return ir.IntType(1)(0)
+            return self.ctx.bool_ty(0)
 
         elif isinstance(condition, Not):
             orig_condition = self.generate_sched_condition(builder, condition.condition, cond_ptr, node, is_finished_callbacks)
             return builder.not_(orig_condition)
 
         elif isinstance(condition, All):
-            agg_cond = ir.IntType(1)(1)
+            agg_cond = self.ctx.bool_ty(1)
             for cond in condition.args:
                 cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks)
                 agg_cond = builder.and_(agg_cond, cond_res)
@@ -481,7 +481,7 @@ class ConditionGenerator:
             if len(condition.args) > 0:
                 dependencies = condition.args
 
-            run_cond = ir.IntType(1)(1)
+            run_cond = self.ctx.bool_ty(1)
             for node in dependencies:
                 if condition.time_scale == TimeScale.TRIAL:
                     node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
@@ -565,7 +565,7 @@ class ConditionGenerator:
         elif isinstance(condition, WhenFinishedAny):
             assert len(condition.args) > 0
 
-            run_cond = ir.IntType(1)(0)
+            run_cond = self.ctx.bool_ty(0)
             for node in condition.args:
                 target = is_finished_callbacks[node]
                 is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
@@ -578,7 +578,7 @@ class ConditionGenerator:
         elif isinstance(condition, WhenFinishedAll):
             assert len(condition.args) > 0
 
-            run_cond = ir.IntType(1)(1)
+            run_cond = self.ctx.bool_ty(1)
             for node in condition.args:
                 target = is_finished_callbacks[node]
                 is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
