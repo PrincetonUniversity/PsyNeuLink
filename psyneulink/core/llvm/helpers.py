@@ -12,7 +12,7 @@ from llvmlite import ir
 from contextlib import contextmanager
 from ctypes import util
 
-from ..scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
+from ..scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
 from ..scheduling.time import TimeScale
 from .debug import debug_env
 
@@ -489,6 +489,13 @@ class ConditionGenerator:
                     assert False, "Unsupported 'AllHaveRun' time scale: {}".format(condition.time_scale)
                 run_cond = builder.and_(run_cond, node_ran)
             return run_cond
+
+        elif isinstance(condition, Any):
+            agg_cond = self.ctx.bool_ty(0)
+            for cond in condition.args:
+                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks)
+                agg_cond = builder.or_(agg_cond, cond_res)
+            return agg_cond
 
         elif isinstance(condition, AtTrial):
             trial_num = condition.args[0]
