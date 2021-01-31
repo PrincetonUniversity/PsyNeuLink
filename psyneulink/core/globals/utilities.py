@@ -1793,7 +1793,7 @@ def gen_friendly_comma_str(items):
 
 
 def contains_type(
-    arr: collections.Iterable,
+    arr: collections.abc.Iterable,
     typ: typing.Union[type, typing.Tuple[type, ...]]
 ) -> bool:
     """

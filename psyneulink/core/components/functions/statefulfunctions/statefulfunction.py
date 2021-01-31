@@ -199,7 +199,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
         def _validate_noise(self, noise):
             if (
-                isinstance(noise, collections.Iterable)
+                isinstance(noise, collections.abc.Iterable)
                 # assume ComponentsMeta are functions
                 and contains_type(noise, ComponentsMeta)
             ):
