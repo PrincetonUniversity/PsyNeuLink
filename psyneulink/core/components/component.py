@@ -1292,9 +1292,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         if not hasattr(self, 'ports'):
             blacklist.add("value")
         def _is_compilation_state(p):
-            val = p.get()   # memoize for this function
-            return val is not None and p.name not in blacklist and \
-                   (p.name in whitelist or isinstance(val, Component))
+            #FIXME: This should use defaults instead of 'p.get'
+            return p.name not in blacklist and \
+                   (p.name in whitelist or isinstance(p.get(), Component))
 
         return filter(_is_compilation_state, self.parameters)
 
