@@ -487,6 +487,8 @@ class ConditionGenerator:
             for node in dependencies:
                 if condition.time_scale == TimeScale.TRIAL:
                     node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
+                elif condition.time_scale == TimeScale.PASS:
+                    node_ran = self.generate_ran_this_pass(builder, cond_ptr, node)
                 else:
                     assert False, "Unsupported 'AllHaveRun' time scale: {}".format(condition.time_scale)
                 run_cond = builder.and_(run_cond, node_ran)
