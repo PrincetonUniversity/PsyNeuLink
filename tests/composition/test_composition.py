@@ -4326,7 +4326,7 @@ class TestSchedulerConditions:
                               (pnl.Not, [[.05, .05]]),
                               (pnl.AllHaveRun, [[.05, .05]]),
                               (pnl.Always, [[0.05, 0.05]]),
-                              #(pnl.AtPass, [[.3, .3]]), #FIXME: Differing result between llvm and python
+                              (pnl.AtPass, [[.3, .3]]), #FIXME: Differing result between llvm and python
                               (pnl.AtTrial,[[0.05, 0.05]]),
                               #(pnl.Never), #TODO: Find a good test case for this!
                             ])
