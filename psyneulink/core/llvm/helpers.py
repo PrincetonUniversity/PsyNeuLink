@@ -327,14 +327,13 @@ class ConditionGenerator:
                                                   self.ctx.int32_ty,   # Pass
                                                   self.ctx.int32_ty])  # Step
 
+        status_struct = ir.LiteralStructType([
+                    self.ctx.int32_ty,  # number of executions in this run
+                    time_stamp_struct   # time stamp of last execution
+                ])
         structure = ir.LiteralStructType([
             time_stamp_struct,  # current time stamp
-            ir.ArrayType(       # for each node
-                ir.LiteralStructType([
-                    self.ctx.int32_ty,  # number of executions
-                    time_stamp_struct   # time stamp of last execution
-                ]), len(composition.nodes)
-            )
+            ir.ArrayType(status_struct, len(composition.nodes))  # for each node
         ])
         return structure
 
