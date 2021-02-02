@@ -150,7 +150,7 @@ import typecheck as tc
 
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility
 from psyneulink.core.components.shellclasses import Function, Mechanism
-from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import (
     ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, EXAMPLE_FUNCTION_TYPE, FULL_CONNECTIVITY_MATRIX,
     FUNCTION_COMPONENT_CATEGORY, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, HOLLOW_MATRIX,
@@ -538,7 +538,7 @@ class Function_Base(Function):
         """
 
         if self.initialization_status == ContextFlags.DEFERRED_INIT:
-            self._assign_deferred_init_name(name, context)
+            self._assign_deferred_init_name(name)
             self._init_args[NAME] = name
             return
 
@@ -546,7 +546,7 @@ class Function_Base(Function):
                           base_class=Function_Base,
                           registry=FunctionRegistry,
                           name=name,
-                          context=context)
+                          )
         self.owner = owner
 
         super().__init__(
@@ -617,24 +617,21 @@ class Function_Base(Function):
             raise FunctionError(f"{param} is not a valid specification for "
                                 f"the {param_name} argument of {self.__class__.__name__}{owner_name}.")
 
-    def _get_current_function_param(self, param_name, context=None):
-        if param_name == "variable":
-            raise FunctionError(f"The method '_get_current_function_param' is intended for retrieving "
-                                f"the current value of a function parameter. 'variable' is not a function parameter. "
-                                f"If looking for {self.name}'s default variable, try {self.name}.defaults.variable.")
+    def _get_current_parameter_value(self, param_name, context=None):
         try:
-            return self.owner._parameter_ports[param_name].parameters.value._get(context)
-        except (AttributeError, TypeError):
-            try:
-                return getattr(self.parameters, param_name)._get(context)
-            except AttributeError:
-                raise FunctionError(f"{self} has no parameter '{param_name}'.")
+            param = getattr(self.parameters, param_name)
+        except TypeError:
+            param = param_name
+        except AttributeError:
+            # don't accept strings that don't correspond to Parameters
+            # on this function
+            raise
+
+        return super()._get_current_parameter_value(param, context)
 
     def get_previous_value(self, context=None):
         # temporary method until previous values are integrated for all parameters
         value = self.parameters.previous_value._get(context)
-        if value is None:
-            value = self.parameters.previous_value._get(Context())
 
         return value
 
@@ -914,8 +911,8 @@ class ArgumentTherapy(Function_Base):
         """
         # Compute the function
         statement = variable
-        propensity = self._get_current_function_param(PROPENSITY, context)
-        pertinacity = self._get_current_function_param(PERTINACITY, context)
+        propensity = self._get_current_parameter_value(PROPENSITY, context)
+        pertinacity = self._get_current_parameter_value(PERTINACITY, context)
         whim = np.random.randint(-10, 10)
 
         if propensity == self.Manner.OBSEQUIOUS:

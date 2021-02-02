@@ -662,7 +662,7 @@ class LCControlMechanism(ControlMechanism):
         base_level_gain = Parameter(0.5, modulable=True)
         scaling_factor_gain = Parameter(3.0, modulable=True)
 
-        modulated_mechanisms = None
+        modulated_mechanisms = Parameter(None, stateful=False, loggable=False)
 
     @tc.typecheck
     def __init__(self,
@@ -798,7 +798,7 @@ class LCControlMechanism(ControlMechanism):
             ctl_sig_projs = []
             for mech, mult_param_name in zip(self.modulated_mechanisms, multiplicative_param_names):
                 ctl_sig_projs.append((mult_param_name, mech))
-            self.control = [{PROJECTIONS: ctl_sig_projs}]
+            self.parameters.control._set([{PROJECTIONS: ctl_sig_projs}], context)
             self.parameters.control_allocation.default_value = self.value[0]
 
         super()._instantiate_output_ports(context=context)

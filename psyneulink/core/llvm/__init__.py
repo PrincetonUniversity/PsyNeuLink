@@ -88,12 +88,12 @@ class LLVMBinaryFunction:
             self.__cuda_kernel = _ptx_engine.get_kernel(self.name)
         return self.__cuda_kernel
 
-    def cuda_call(self, *args, threads=1, block_size=32):
+    def cuda_call(self, *args, threads=1, block_size=128):
         grid = ((threads + block_size - 1) // block_size, 1)
         self._cuda_kernel(*args, np.int32(threads),
                           block=(block_size, 1, 1), grid=grid)
 
-    def cuda_wrap_call(self, *args, threads=1, block_size=32):
+    def cuda_wrap_call(self, *args, threads=1, block_size=128):
         wrap_args = (jit_engine.pycuda.driver.InOut(a) if isinstance(a, np.ndarray) else a for a in args)
         self.cuda_call(*wrap_args, threads=threads, block_size=block_size)
 
@@ -133,6 +133,7 @@ def init_builtins():
         builtins.setup_vxm_transposed(ctx)
         builtins.setup_mersenne_twister(ctx)
         builtins.setup_vec_add(ctx)
+        builtins.setup_vec_sum(ctx)
         builtins.setup_mat_add(ctx)
         builtins.setup_vec_sub(ctx)
         builtins.setup_mat_sub(ctx)

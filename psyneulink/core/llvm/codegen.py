@@ -9,7 +9,8 @@
 # ********************************************* LLVM IR Generation **************************************************************
 import ast
 import warnings
-
+import numpy as np
+from functools import reduce
 
 from llvmlite import ir
 from contextlib import contextmanager
@@ -21,6 +22,600 @@ from psyneulink.core.scheduling.time import TimeScale
 from . import helpers
 from .debug import debug_env
 
+class UserDefinedFunctionVisitor(ast.NodeVisitor):
+    def __init__(self, ctx, builder, func_globals, func_params, arg_in, arg_out):
+        self.ctx = ctx
+        self.builder = builder
+        self.func_params = func_params
+        self.arg_in = arg_in
+        self.arg_out = arg_out
+
+        #setup default functions
+        def _list_sum(x):
+            # HACK: Obtain polymorphic addition function by visiting the add node
+            # this should ideally be moved to an explicit helper
+            add_func = self.visit_Add(None)
+
+            total_sum = builder.alloca(x.type.pointee.element)
+            builder.store(total_sum.type.pointee(None), total_sum)
+            with helpers.array_ptr_loop(builder, x, "list_sum") as (b, idx):
+                curr_val = b.gep(x, [ctx.int32_ty(0), idx])
+                tmp = add_func(total_sum, curr_val)
+                if helpers.is_pointer(tmp):
+                    tmp = builder.load(tmp)
+                b.store(tmp, total_sum)
+            return total_sum
+
+        def _len(x):
+            x_ty = x.type
+            if helpers.is_pointer(x):
+                x_ty = x_ty.pointee
+            return ctx.float_ty(len(x_ty))
+
+        def _tanh(x):
+            output_ptr = builder.alloca(x.type.pointee)
+            helpers.call_elementwise_operation(self.ctx, self.builder, x, helpers.tanh, output_ptr)
+            return output_ptr
+
+        def _exp(x):
+            output_ptr = builder.alloca(x.type.pointee)
+            helpers.call_elementwise_operation(self.ctx, self.builder, x, helpers.exp, output_ptr)
+            return output_ptr
+
+        # numpy's max function differs greatly from that of python's buiiltin max
+        # see: https://numpy.org/doc/stable/reference/generated/numpy.amax.html#numpy.amax
+        def _max_numpy(x):
+            assert helpers.is_vector(x) or helpers.is_2d_matrix(x), "Attempted to call max on invalid variable! Only 1-d and 2-d lists are supported!"
+            curr = builder.alloca(ctx.float_ty)
+            builder.store(ctx.float_ty('NaN'), curr)
+            for (element_ptr,) in helpers.recursive_iterate_arrays(ctx, builder, x):
+                element = builder.load(element_ptr)
+                greater = builder.fcmp_unordered('>', element, builder.load(curr))
+                with builder.if_then(greater):
+                    builder.store(element, curr)
+            return curr
+
+        # see: https://docs.python.org/3/library/functions.html#max
+        def _max(*args):
+            if len(args) == 1 and helpers.is_vector(args[0]):
+                curr = builder.alloca(ctx.float_ty)
+                builder.store(ctx.float_ty('NaN'), curr)
+                for (element_ptr,) in helpers.recursive_iterate_arrays(ctx, builder, args[0]):
+                    element = builder.load(element_ptr)
+                    greater = builder.fcmp_unordered('>', element, builder.load(curr))
+                    with builder.if_then(greater):
+                        builder.store(element, curr)
+                return curr
+            elif len(args) > 1 and all(a.type == args[0].type for a in args):
+                curr = builder.alloca(ctx.float_ty)
+                builder.store(ctx.float_ty('NaN'), curr)
+                for element in args:
+                    if helpers.is_pointer(element):
+                        element = builder.load(element)
+                    greater = builder.fcmp_unordered('>', element, builder.load(curr))
+                    with builder.if_then(greater):
+                        builder.store(element, curr)
+                return curr
+            assert False, "Attempted to call max with invalid arguments!"
+        self.register = {
+            "sum": _list_sum,
+            "len": _len,
+            "float": ctx.float_ty,
+            "int": ctx.int32_ty,
+            "max": _max,
+        }
+
+        # setup numpy
+        numpy_handlers = {
+            'tanh': _tanh,
+            'exp': _exp,
+            'equal': self._generate_fcmp_handler(self.ctx, self.builder, "=="),
+            'not_equal': self._generate_fcmp_handler(self.ctx, self.builder, "!="),
+            'less': self._generate_fcmp_handler(self.ctx, self.builder, "<"),
+            'less_equal': self._generate_fcmp_handler(self.ctx, self.builder, "<="),
+            'greater': self._generate_fcmp_handler(self.ctx, self.builder, ">"),
+            'greater_equal': self._generate_fcmp_handler(self.ctx, self.builder, ">="),
+            "max": _max_numpy,
+        }
+
+        for k, v in func_globals.items():
+            if v is np:
+                self.register[k] = numpy_handlers
+
+        name_constants = {
+            True: ir.IntType(1)(1),
+            False: ir.IntType(1)(0),
+        }
+        self.name_constants = name_constants
+        super().__init__()
+
+    def visit_arguments(self, node):
+        args = node.args
+        variable = args[0]
+        # update register
+        self.register[variable.arg] = self.arg_in
+        parameters = args[1:]
+        for param in parameters:
+            assert param.arg not in ["self", "owner"], f"Unable to reference {param.arg} in a compiled UserDefinedFunction!"
+            if param.arg == 'params':
+                assert False, "Runtime parameters are not supported in compiled mode"
+            elif param.arg == 'context':
+                # Since contexts are implicit in the structs in compiled mode, we do not compile it.
+                pass
+            else:
+                self.register[param.arg] = self.func_params[param.arg]
+
+    def _generate_binop(self, x, y, callback):
+        # unpack scalars from pointers
+        if helpers.is_floating_point(x) and helpers.is_pointer(x):
+            x = self.builder.load(x)
+        if helpers.is_floating_point(y) and helpers.is_pointer(y):
+            y = self.builder.load(y)
+
+        return callback(self.ctx, self.builder, x, y)
+
+    def visit_Add(self, node):
+        def _add_vec(ctx, builder, u, v):
+            assert u.type == v.type
+
+            dim = len(u.type.pointee)
+            output_vec = builder.alloca(u.type.pointee)
+
+            # Get the pointer to the first element of the array to convert from [? x double]* -> double*
+            vec_u = builder.gep(u, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vec_v = builder.gep(v, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vec_out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            builtin = ctx.import_llvm_function("__pnl_builtin_vec_add")
+            builder.call(builtin, [vec_u, vec_v, ctx.int32_ty(dim), vec_out])
+            return output_vec
+
+        def _add_mat(ctx, builder, m1, m2):
+            assert m1.type == m2.type
+
+            x = len(m1.type.pointee)
+            y = len(m1.type.pointee.element)
+
+            output_mat = builder.alloca(m1.type.pointee)
+
+            m1_ptr = builder.gep(m1, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+            m2_ptr = builder.gep(m2, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+            output_ptr = builder.gep(output_mat, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            builtin = ctx.import_llvm_function("__pnl_builtin_mat_add")
+            builder.call(builtin, [m1_ptr, m2_ptr, ctx.int32_ty(x), ctx.int32_ty(y), output_ptr])
+            return output_mat
+
+        def _add_mat_scalar(ctx, builder, m1, s):
+            x = len(m1.type.pointee)
+            y = len(m1.type.pointee.element)
+            output_mat = builder.alloca(m1.type.pointee)
+
+            m1_ptr = builder.gep(m1, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+            output_ptr = builder.gep(output_mat, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            builtin = ctx.import_llvm_function("__pnl_builtin_mat_scalar_add")
+            builder.call(builtin, [m1_ptr, s, ctx.int32_ty(x), ctx.int32_ty(y), output_ptr])
+            return output_mat
+
+        def _add_vec_scalar(ctx, builder, u, s):
+            output_vec = builder.alloca(u.type.pointee)
+
+            helpers.call_elementwise_operation(ctx, builder, u, lambda ctx, builder, x: builder.fadd(x, s), output_vec)
+            return output_vec
+
+        def _add(x, y):
+            if helpers.is_floating_point(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fadd(x,y))
+            elif helpers.is_vector(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, _add_vec_scalar)
+            elif helpers.is_floating_point(x) and helpers.is_vector(y):
+                return self._generate_binop(y, x, _add_vec_scalar)
+            elif helpers.is_2d_matrix(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, _add_mat_scalar)
+            elif helpers.is_floating_point(x) and helpers.is_2d_matrix(y):
+                return self._generate_binop(y, x, _add_mat_scalar)
+            elif helpers.is_vector(x) and helpers.is_vector(y):
+                return self._generate_binop(x, y, _add_vec)
+            elif helpers.is_2d_matrix(x) and helpers.is_2d_matrix(y):
+                return self._generate_binop(x, y, _add_mat)
+
+        return _add
+
+    def visit_Mult(self, node):
+        def _mul_vec(ctx, builder, u, v):
+            assert u.type == v.type
+
+            dim = len(u.type.pointee)
+            output_vec = builder.alloca(u.type.pointee)
+
+            # Get the pointer to the first element of the array to convert from [? x double]* -> double*
+            vec_u = builder.gep(u, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vec_v = builder.gep(v, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            vec_out = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            builtin = ctx.import_llvm_function("__pnl_builtin_vec_hadamard")
+            builder.call(builtin, [vec_u, vec_v, ctx.int32_ty(dim), vec_out])
+            return output_vec
+
+        def _mul_mat(ctx, builder, m1, m2):
+            assert m1.type == m2.type
+
+            x = len(m1.type.pointee)
+            y = len(m1.type.pointee.element)
+
+            output_mat = builder.alloca(m1.type.pointee)
+
+            m1_ptr = builder.gep(m1, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+            m2_ptr = builder.gep(m2, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+            output_ptr = builder.gep(output_mat, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            builtin = ctx.import_llvm_function("__pnl_builtin_mat_hadamard")
+            builder.call(builtin, [m1_ptr, m2_ptr, ctx.int32_ty(x), ctx.int32_ty(y), output_ptr])
+            return output_mat
+
+        def _mul_mat_scalar(ctx, builder, m1, s):
+            x = len(m1.type.pointee)
+            y = len(m1.type.pointee.element)
+            output_mat = builder.alloca(m1.type.pointee)
+
+            m1_ptr = builder.gep(m1, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+            output_ptr = builder.gep(output_mat, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            builtin = ctx.import_llvm_function("__pnl_builtin_mat_scalar_mult")
+            builder.call(builtin, [m1_ptr, s, ctx.int32_ty(x), ctx.int32_ty(y), output_ptr])
+            return output_mat
+
+        def _mul_vec_scalar(ctx, builder, v, s):
+            x = len(v.type.pointee)
+            output_vec = builder.alloca(v.type.pointee)
+
+            v_ptr = builder.gep(v, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            output_ptr = builder.gep(output_vec, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            builtin = ctx.import_llvm_function("__pnl_builtin_vec_scalar_mult")
+            builder.call(builtin, [v_ptr, s, ctx.int32_ty(x), output_ptr])
+            return output_vec
+
+        def _mul(x, y):
+            if helpers.is_floating_point(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fmul(x,y))
+            elif helpers.is_vector(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, _mul_vec_scalar)
+            elif helpers.is_floating_point(x) and helpers.is_vector(y):
+                return self._generate_binop(y, x, _mul_vec_scalar)
+            elif helpers.is_2d_matrix(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, _mul_mat_scalar)
+            elif helpers.is_floating_point(x) and helpers.is_2d_matrix(y):
+                return self._generate_binop(y, x, _mul_mat_scalar)
+            elif helpers.is_vector(x) and helpers.is_vector(y):
+                if x.type != y.type:
+                    # Special case: Cast y into scalar if it can be done
+                    if helpers.get_array_shape(y) == [1]:
+                        y = self.builder.gep(y, [self.ctx.int32_ty(0), self.ctx.int32_ty(0)])
+                        return self._generate_binop(x, y, _mul_vec_scalar)
+                return self._generate_binop(x, y, _mul_vec)
+            elif helpers.is_2d_matrix(x) and helpers.is_2d_matrix(y):
+                return self._generate_binop(x, y, _mul_mat)
+
+        return _mul
+
+    def visit_Div(self, node):
+        def _div_array(ctx, builder, u, v):
+            assert u.type == v.type
+            output_ptr = builder.alloca(u.type.pointee)
+
+            for (u_ptr, v_ptr, out_ptr) in helpers.recursive_iterate_arrays(ctx, builder, u, v, output_ptr):
+                u_val = builder.load(u_ptr)
+                v_val = builder.load(v_ptr)
+                builder.store(builder.fdiv(u_val, v_val), out_ptr)
+
+            return output_ptr
+
+        def _div_array_scalar(ctx, builder, array, s):
+            output_ptr = builder.alloca(array.type.pointee)
+            helpers.call_elementwise_operation(ctx, builder, array, lambda ctx, builder, x:  builder.fdiv(x, s), output_ptr)
+
+            return output_ptr
+
+        def _div_scalar_array(ctx, builder, s, array):
+            output_ptr = builder.alloca(array.type.pointee)
+            helpers.call_elementwise_operation(ctx, builder, array, lambda ctx, builder, x:  builder.fdiv(s, x), output_ptr)
+
+            return output_ptr
+
+        def _div(x, y):
+            if helpers.is_floating_point(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fdiv(x, y))
+            elif helpers.is_floating_point(x) and (helpers.is_2d_matrix(y) or helpers.is_vector(y)):
+                return self._generate_binop(x, y, _div_scalar_array)
+            elif helpers.is_vector(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, _div_array_scalar)
+            elif helpers.is_2d_matrix(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, _div_array_scalar)
+            elif helpers.is_vector(x) and helpers.is_vector(y):
+                if x.type != y.type:
+                    # Special case: Cast y into scalar if it can be done
+                    if helpers.get_array_shape(y) == [1]:
+                        y = self.builder.gep(y, [self.ctx.int32_ty(0), self.ctx.int32_ty(0)])
+                        return self._generate_binop(x, y, _div_array_scalar)
+                return self._generate_binop(x, y, _div_array)
+            elif helpers.is_2d_matrix(x) and helpers.is_2d_matrix(y):
+                return self._generate_binop(x, y, _div_array)
+            assert False, f"Unable to divide arguments {x}, {y}"
+        return _div
+
+    def _generate_unop(self, x, callback):
+        if helpers.is_floating_point(x) and helpers.is_pointer(x):
+            x = self.builder.load(x)
+
+        return callback(self.ctx, self.builder, x)
+
+    def visit_USub(self, node):
+        def _usub_vec_mat(ctx, builder, x):
+            output = builder.alloca(x.type.pointee)
+
+            helpers.call_elementwise_operation(ctx, builder, x, lambda ctx, builder, x: helpers.fneg(builder, x), output)
+            return output
+
+        def _usub(x):
+            if helpers.is_floating_point(x):
+                return self._generate_unop(x, lambda ctx, builder, x: helpers.fneg(builder, x))
+            elif helpers.is_vector(x) or helpers.is_2d_matrix(x):
+                return self._generate_unop(x, _usub_vec_mat)
+
+        return _usub
+
+    def visit_Name(self, node):
+        return self.register[node.id]
+
+    def visit_Attribute(self, node):
+        val = self.visit(node.value)
+
+        # special case numpy attributes
+        if node.attr == "shape":
+            shape = helpers.get_array_shape(val)
+            return ir.ArrayType(self.ctx.float_ty, len(shape))(shape)
+        elif node.attr == "flatten":
+            def flatten():
+                shape = helpers.get_array_shape(val)
+                flattened_size = reduce(lambda x, y: x * y, shape)
+                flattened_ty = ir.ArrayType(self.ctx.float_ty, flattened_size)
+                flattened_array = self.builder.alloca(flattened_ty)
+                index_var = self.builder.alloca(self.ctx.int32_ty, name="flattened_index_var_loc")
+                self.builder.store(self.ctx.int32_ty(0), index_var)
+                for (array_ptr,) in helpers.recursive_iterate_arrays(self.ctx, self.builder, val):
+                    index = self.builder.load(index_var, name="flattened_index_var")
+                    flattened_array_ptr = self.builder.gep(flattened_array, [self.ctx.int32_ty(0), index])
+                    array_val = self.builder.load(array_ptr)
+                    self.builder.store(array_val, flattened_array_ptr)
+                    index = self.builder.add(index, self.ctx.int32_ty(1), name="flattened_index_var_inc")
+                    self.builder.store(index, index_var)
+                return flattened_array
+            return flatten
+        elif node.attr == "astype":
+            def astype(ty):
+                def _convert(ctx, builder, x):
+                    if helpers.is_pointer(x):
+                        x = builder.load(x)
+                    if helpers.is_integer(x) and ty is ctx.float_ty:
+                        if helpers.is_boolean(x):
+                            return builder.uitofp(x, ty)
+                        return builder.sitofp(x, ty)
+                    elif helpers.is_floating_point(x) and ty is self.register["int"]:
+                        return builder.fptosi(x, ty)
+                    elif (helpers.is_floating_point(x) and ty is ctx.float_ty):
+                        return x
+                if helpers.is_scalar(val):
+                    return _convert(self.ctx, self.builder, val)
+                else:
+                    output_ptr = self.builder.alloca(helpers.array_from_shape(helpers.get_array_shape(val), ty))
+                    helpers.call_elementwise_operation(self.ctx, self.builder, val, _convert, output_ptr)
+                    return output_ptr
+            # we only support float types
+            return astype
+
+        return val[node.attr]
+
+    def visit_Num(self, node):
+        return self.ctx.float_ty(node.n)
+
+    def visit_Assign(self, node):
+        value = self.visit(node.value)
+        def _assign_target(target, value):
+            if isinstance(target, ast.Name):
+                id = target.id
+                self.register[id] = value
+            else:
+                to_store = value
+
+                target = self.visit(target)
+                self.builder.store(to_store, target)
+
+        for target in node.targets:
+            _assign_target(target, value)
+
+    def visit_NameConstant(self, node):
+        val = self.name_constants[node.value]
+        assert val, f"Failed to convert NameConstant {node.value}"
+        return val
+
+    def visit_Tuple(self, node):
+        elements = [self.visit(element) for element in node.elts]
+
+        elements = [self.builder.load(element) if helpers.is_pointer(element) else element for element in elements]
+
+        element_types = [element.type for element in elements]
+        if len(element_types) > 0 and all(x == element_types[0] for x in element_types):
+            ret_list = self.builder.alloca(ir.ArrayType(element_types[0], len(element_types)))
+        else:
+            ret_list = self.builder.alloca(ir.LiteralStructType(element_types))
+
+        for idx, element in enumerate(elements):
+            self.builder.store(element, self.builder.gep(ret_list, [self.ctx.int32_ty(0), self.ctx.int32_ty(idx)]))
+
+        return ret_list
+
+    def visit_BinOp(self, node):
+        operator = self.visit(node.op)
+        return operator(self.visit(node.left), self.visit(node.right))
+
+    def visit_BoolOp(self, node):
+        operator = self.visit(node.op)
+        values = [self.visit(value) for value in node.values]
+        ret_val = values[0]
+        for value in values[1:]:
+            ret_val = operator(ret_val, value)
+        return ret_val
+
+    def visit_UnaryOp(self, node):
+        operator = self.visit(node.op)
+        return operator(self.visit(node.operand))
+
+    def visit_List(self, node):
+        elements = [self.visit(element) for element in node.elts]
+        element_ty = elements[0].type
+        assert all(element.type == element_ty for element in elements), f"Unable to convert {node} into a list! (Elements differ in type!)"
+
+        # dereference pointers
+        if helpers.is_pointer(element_ty):
+            elements = [self.builder.load(element) for element in elements]
+            element_ty = elements[0].type
+
+        ret_list = self.builder.alloca(ir.ArrayType(element_ty, len(elements)))
+
+        for idx, element in enumerate(elements):
+            self.builder.store(element, self.builder.gep(ret_list, [self.ctx.int32_ty(0), self.ctx.int32_ty(idx)]))
+        return ret_list
+
+    def visit_And(self, node):
+        def _and(x, y):
+            assert helpers.is_boolean(x), f"{x} is not a Boolean!"
+            assert helpers.is_boolean(y), f"{y} is not a Boolean!"
+            return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.and_(x, y))
+
+        return _and
+
+    def visit_Or(self, node):
+        def _or(x, y):
+            assert helpers.is_boolean(x), f"{x} is not a Boolean!"
+            assert helpers.is_boolean(y), f"{y} is not a Boolean!"
+            return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.or_(x, y))
+
+        return _or
+
+    def _generate_fcmp_handler(self, ctx, builder, cmp):
+        def _cmp_array(ctx, builder, u, v):
+            assert u.type == v.type
+            shape = helpers.get_array_shape(u)
+            output_ptr = builder.alloca(helpers.array_from_shape(shape, ctx.bool_ty))
+
+            for (u_ptr, v_ptr, out_ptr) in helpers.recursive_iterate_arrays(ctx, builder, u, v, output_ptr):
+                u_val = builder.load(u_ptr)
+                v_val = builder.load(v_ptr)
+                builder.store(builder.fcmp_ordered(cmp, u_val, v_val), out_ptr)
+
+            return output_ptr
+
+        def _cmp_array_scalar(ctx, builder, array, s):
+            shape = helpers.get_array_shape(array)
+            output_ptr = builder.alloca(helpers.array_from_shape(shape, ctx.bool_ty))
+            helpers.call_elementwise_operation(ctx, builder, array, lambda ctx, builder, x:  builder.fcmp_ordered(cmp, x, s), output_ptr)
+
+            return output_ptr
+
+        def _cmp_scalar_array(ctx, builder, s, array):
+            shape = helpers.get_array_shape(array)
+            output_ptr = builder.alloca(helpers.array_from_shape(shape, ctx.bool_ty))
+            helpers.call_elementwise_operation(ctx, builder, array, lambda ctx, builder, x:  builder.fcmp_ordered(cmp, s, x), output_ptr)
+
+            return output_ptr
+
+        def _cmp(x, y):
+            if helpers.is_floating_point(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fcmp_ordered(cmp, x, y))
+            elif helpers.is_vector(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, _cmp_array_scalar)
+            elif helpers.is_floating_point(x) and helpers.is_vector(y):
+                return self._generate_binop(x, y, _cmp_scalar_array)
+            elif helpers.is_2d_matrix(x) and helpers.is_floating_point(y):
+                return self._generate_binop(x, y, _cmp_array_scalar)
+            elif helpers.is_floating_point(x) and helpers.is_2d_matrix(y):
+                return self._generate_binop(x, y, _cmp_scalar_array)
+            elif helpers.is_vector(x) and helpers.is_vector(y):
+                return self._generate_binop(x, y, _cmp_array)
+            elif helpers.is_2d_matrix(x) and helpers.is_2d_matrix(y):
+                return self._generate_binop(x, y, _cmp_array)
+
+        return _cmp
+
+    def visit_Eq(self, node):
+        return self._generate_fcmp_handler(self.ctx, self.builder, "==")
+
+    def visit_NotEq(self, node):
+        return self._generate_fcmp_handler(self.ctx, self.builder, "!=")
+
+    def visit_Lt(self, node):
+        return self._generate_fcmp_handler(self.ctx, self.builder, "<")
+
+    def visit_LtE(self, node):
+        return self._generate_fcmp_handler(self.ctx, self.builder, "<=")
+
+    def visit_Gt(self, node):
+        return self._generate_fcmp_handler(self.ctx, self.builder, ">")
+
+    def visit_GtE(self, node):
+        return self._generate_fcmp_handler(self.ctx, self.builder, ">=")
+
+    def visit_Compare(self, node):
+        comp_val = self.visit(node.left)
+        comparators = [self.visit(comparator) for comparator in node.comparators]
+        ops = [self.visit(op) for op in node.ops]
+        for comparator, op in zip(comparators, ops):
+            comp_val = op(comp_val, comparator)
+        return comp_val
+
+    def visit_If(self, node):
+        predicate = self.visit(node.test)
+        with self.builder.if_else(predicate) as (then, otherwise):
+            with then:
+                for child in node.body:
+                    self.visit(child)
+            with otherwise:
+                for child in node.orelse:
+                    self.visit(child)
+
+    def visit_Return(self, node):
+        ret_val = self.visit(node.value)
+        arg_out = self.arg_out
+
+        # dereference pointer
+        if helpers.is_pointer(ret_val):
+            ret_val = self.builder.load(ret_val)
+
+        # get position in arg_out if types differ
+        if (helpers.is_scalar(ret_val) or helpers.is_vector(ret_val)) and helpers.is_2d_matrix(arg_out):
+            arg_out = self.builder.gep(arg_out, [self.ctx.int32_ty(0), self.ctx.int32_ty(0)])
+
+        if helpers.is_scalar(ret_val) and helpers.is_vector(arg_out):
+            arg_out = self.builder.gep(arg_out, [self.ctx.int32_ty(0), self.ctx.int32_ty(0)])
+
+        self.builder.store(ret_val, arg_out)
+
+    def visit_Call(self, node):
+        call_func = self.visit(node.func)
+        assert callable(call_func), f"Uncallable function {node.func}!"
+        node_args = [self.visit(arg) for arg in node.args]
+
+        return call_func(*node_args)
+
+    def visit_Subscript(self, node):
+        node_val = self.visit(node.value)
+        node_slice_val = self.visit(node.slice)
+        return self.builder.gep(node_val, [self.ctx.int32_ty(0), node_slice_val])
+
+    def visit_Index(self, node):
+        return self.builder.fptoui(self.visit(node.value), self.ctx.int32_ty)
 
 def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
     assert "node_wrapper" in tags
@@ -44,7 +639,7 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         cond_ty = cond_gen.get_condition_struct_type().as_pointer()
         args.append(cond_ty)
 
-    builder = ctx.create_llvm_function(args, node, node_function.name, tags=tags,
+    builder = ctx.create_llvm_function(args, node, tags=tags,
                                        return_type=node_function.type.pointee.return_type)
     llvm_func = builder.function
     for a in llvm_func.args:
@@ -250,10 +845,6 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
         num_exec_locs = {}
         for idx, node in enumerate(composition._all_nodes):
-            #FIXME: This skips nested compositions
-            from psyneulink import Composition
-            if isinstance(node, Composition):
-                continue
             node_state = builder.gep(nodes_states, [ctx.int32_ty(0),
                                                     ctx.int32_ty(idx)])
             num_exec_locs[node] = helpers.get_state_ptr(builder, node,
@@ -485,14 +1076,10 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
 
         # Reset internal clocks of each node
         for idx, node in enumerate(composition._all_nodes):
-            #FIXME: This skips nested nodes
-            from psyneulink import Composition
-            if isinstance(node, Composition):
-                continue
             node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
             num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
             num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.RUN.value)])
-            builder.store(ctx.int32_ty(0), num_exec_time_ptr)
+            builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
 
         # Call execution
         exec_tags = tags.difference({"run"})

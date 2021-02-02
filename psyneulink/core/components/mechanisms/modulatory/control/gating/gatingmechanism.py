@@ -487,7 +487,7 @@ class GatingMechanism(ControlMechanism):
         register_category(entry=GatingSignal,
                           base_class=Port_Base,
                           registry=self._portRegistry,
-                          context=context)
+                          )
 
     def _instantiate_control_signal_type(self, gating_signal_spec, context):
         """Instantiate actual ControlSignal, or subclass if overridden"""
@@ -500,7 +500,7 @@ class GatingMechanism(ControlMechanism):
                                                variable=self.default_allocation           # User specified value
                                                         or allocation_parameter_default,  # Parameter default
                                                reference_value=allocation_parameter_default,
-                                               modulation=self.modulation,
+                                               modulation=self.defaults.modulation,
                                                port_spec=gating_signal_spec,
                                                context=context)
         if not type(gating_signal) in convert_to_list(self.outputPortTypes):

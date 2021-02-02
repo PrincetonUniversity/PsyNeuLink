@@ -41,6 +41,21 @@ class TestMechanism:
         assert M.defaults.value.shape == mechanism_value.shape
         assert M.function.defaults.value.shape == function_value.shape
 
+    @pytest.mark.parametrize(
+        'noise',
+        [pnl.GaussianDistort, pnl.NormalDist]
+    )
+    def test_noise_variations(self, noise):
+        t1 = pnl.TransferMechanism(name='t1', size=2, noise=noise())
+        t2 = pnl.TransferMechanism(name='t2', size=2)
+        t2.integrator_function.parameters.noise.set(noise())
+
+        t1.integrator_function.noise.base.random_state = np.random.RandomState([0])
+        t2.integrator_function.noise.base.random_state = np.random.RandomState([0])
+
+        for _ in range(5):
+            np.testing.assert_equal(t1.execute([1, 1]), t2.execute([1, 1]))
+
 
 class TestMechanismFunctionParameters:
     f = pnl.Linear()
@@ -147,16 +162,17 @@ class TestResetValues:
         original_output = [A.execute(1.0)[0], A.execute(1.0)[0]]
 
         # SAVING STATE  - - - - - - - - - - - - - - - - - - - - - - - - -
-        reset_stateful_functions_to = []
+        reset_stateful_functions_to = {}
         for attr in A.function.stateful_attributes:
-            reset_stateful_functions_to.append(getattr(A.function, attr))
+            reset_stateful_functions_to[attr] = getattr(A.function, attr)
 
+        print(reset_stateful_functions_to)
         # Execute A twice AFTER saving the state so that it continues accumulating.
         # We expect the next two outputs to repeat once we reset the state b/c we will return it to the current state
         output_after_saving_state = [A.execute(1.0)[0], A.execute(1.0)[0]]
 
         # RESETTING STATE - - - - - - - - - - - - - - - - - - - - - - - -
-        A.reset(*reset_stateful_functions_to)
+        A.reset(**reset_stateful_functions_to)
 
         # We expect these results to match the results from immediately after saving the state
         output_after_reinitialization = [A.execute(1.0)[0], A.execute(1.0)[0]]
@@ -172,17 +188,17 @@ class TestResetValues:
         original_output = [A.execute(1.0), A.execute(1.0)]
 
         # SAVING STATE  - - - - - - - - - - - - - - - - - - - - - - - - -
-        reset_stateful_functions_to = []
+        reset_stateful_functions_to = {}
 
         for attr in A.integrator_function.stateful_attributes:
-            reset_stateful_functions_to.append(getattr(A.integrator_function, attr))
+            reset_stateful_functions_to[attr] = getattr(A.integrator_function, attr)
 
         # Execute A twice AFTER saving the state so that it continues accumulating.
         # We expect the next two outputs to repeat once we reset the state b/c we will return it to the current state
         output_after_saving_state = [A.execute(1.0), A.execute(1.0)]
 
         # RESETTING STATE - - - - - - - - - - - - - - - - - - - - - - - -
-        A.reset(*reset_stateful_functions_to)
+        A.reset(**reset_stateful_functions_to)
 
         # We expect these results to match the results from immediately after saving the state
         output_after_reinitialization = [A.execute(1.0), A.execute(1.0)]

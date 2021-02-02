@@ -9,11 +9,10 @@
 #
 # *****************************************  USER-DEFINED FUNCTION  ****************************************************
 
-import ctypes
 import numpy as np
 import typecheck as tc
-
-from inspect import signature, _empty
+from inspect import signature, _empty, getsourcelines
+import ast
 
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import FunctionError, Function_Base
@@ -284,6 +283,39 @@ class UserDefinedFunction(Function_Base):
     `Function_Modulatory_Params` for gating any InputPort or OutputPort to which the function is assigned (see
     `GatingMechanism_Specifying_Gating` and `GatingSignal_Examples`).
 
+.. _UDF_Compilation:
+
+    **Compiling a User Defined Function**
+
+    User defined functions may also be `automatically compiled <Composition_Compilation>`, by adding them as a mechanism or projection function.
+    There are several restrictions to take into account:
+
+.. _UDF_Compilation_Restrictions:
+
+    * *Lambda Functions* -- User defined functions currently do not support Python Lambda functions
+
+    * *Loops* -- User defined functions currently do not support Loops
+
+    * *Python Data Types* -- User defined functions currently do not support *dict* and *class* types
+
+    * *Nested Functions* -- User defined functions currently do not support recursive calls, nested functions, or closures
+
+    * *Slicing and comprehensions* -- User defined functions currently have limited support for slicing, and do not support comprehensions
+
+    * *Libraries* -- User defined functions currently do not support libraries, aside from **NumPy** (with limited support)
+
+.. _UDF_Compilation_Numpy:
+
+    **NumPy Support for Compiled User Defined Functions**
+
+    Compiled User Defined Functions also provide access to limited compiled NumPy functionality; The supported features are listed as follows:
+
+    * *Data Types* -- Numpy Arrays and Matrices are supported, as long as their dimensionality is less than 3. In addition, the elementwise multiplication and addition of NumPy arrays and matrices is fully supported
+
+    * *Numerical functions* -- the `exp` and `tanh` methods are currently supported in compiled mode
+
+    It is highly recommended that users who require additional functionality request it as an issue `here <https://github.com/PrincetonUniversity/PsyNeuLink/issues>`_.
+
     **Class Definition:**
 
 
@@ -521,7 +553,7 @@ class UserDefinedFunction(Function_Base):
                 self.cust_fct_params[param] = kwargs[PARAMS][param]
             else:
                 # Otherwise, get current value from ParameterPort (in case it is being modulated by ControlSignal(s)
-                self.cust_fct_params[param] = self._get_current_function_param(param, context)
+                self.cust_fct_params[param] = self._get_current_parameter_value(param, context)
 
         call_params = self.cust_fct_params.copy()
 
@@ -549,59 +581,15 @@ class UserDefinedFunction(Function_Base):
     def _gen_llvm_function_body(self, ctx, builder, params, state,
                                 arg_in, arg_out, *, tags:frozenset):
 
-        # Instantiate needed ctypes
-        arg_in_ct = pnlvm._convert_llvm_ir_to_ctype(arg_in.type.pointee)
-        params_ct = pnlvm._convert_llvm_ir_to_ctype(params.type.pointee)
-        state_ct = pnlvm._convert_llvm_ir_to_ctype(state.type.pointee)
-        arg_out_ct = pnlvm._convert_llvm_ir_to_ctype(arg_out.type.pointee)
-        wrapper_ct = ctypes.CFUNCTYPE(None,
-                                      ctypes.POINTER(params_ct),
-                                      ctypes.POINTER(state_ct),
-                                      ctypes.POINTER(arg_in_ct),
-                                      ctypes.POINTER(arg_out_ct))
+        srclines = getsourcelines(self.custom_function)[0]
+        # strip preceeding space characters
+        first_line = srclines[0]
+        prefix_len = len(first_line) - len(first_line.lstrip())
+        formatted_src = ''.join(line[prefix_len:] for line in srclines)
+        func_ast = ast.parse(formatted_src)
 
-        # we don't support passing any stateful params
-        for i, p in enumerate(self.llvm_state_ids):
-            assert p not in self.cust_fct_params
-
-        def _carr_to_list(carr):
-            try:
-                return [_carr_to_list(x) for x in carr]
-            except TypeError:
-                return carr
-
-        def _assign_to_carr(carr, vals):
-            assert len(carr) == len(vals)
-            for i, x in enumerate(vals):
-                try:
-                    carr[i] = x
-                except TypeError:
-                    _assign_to_carr(carr[i], x)
-
-        def _wrapper(params, state, arg_in, arg_out):
-            variable = _carr_to_list(arg_in.contents)
-
-            llvm_params = {}
-            for i, p in enumerate(self.llvm_param_ids):
-                if p in self.cust_fct_params:
-                    field_name = params.contents._fields_[i][0]
-                    val = getattr(params.contents, field_name)
-                    llvm_params[p] = val
-
-            if self.context_arg:
-                # FIXME: We can't get the context
-                #        and do not support runtime params
-                llvm_params[CONTEXT] = None
-                llvm_params[PARAMS] = None
-
-            value = self.custom_function(np.asfarray(variable), **llvm_params)
-            _assign_to_carr(arg_out.contents, np.atleast_2d(value))
-
-        self.__wrapper_f = wrapper_ct(_wrapper)
-        # To get the right callback pointer, we need to cast to void*
-        wrapper_address = ctypes.cast(self.__wrapper_f, ctypes.c_void_p)
-        # Direct pointer constants don't work
-        wrapper_ptr = builder.inttoptr(pnlvm.ir.IntType(64)(wrapper_address.value), builder.function.type)
-        builder.call(wrapper_ptr, [params, state, arg_in, arg_out])
+        func_globals = self.custom_function.__globals__
+        func_params = {param_id: pnlvm.helpers.get_param_ptr(builder, self, params, param_id) for param_id in self.llvm_param_ids}
+        pnlvm.codegen.UserDefinedFunctionVisitor(ctx, builder, func_globals, func_params, arg_in, arg_out).visit(func_ast)
 
         return builder

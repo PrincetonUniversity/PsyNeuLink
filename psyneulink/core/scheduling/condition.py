@@ -344,7 +344,10 @@ class ConditionSet(object):
 
     """
     def __init__(self, conditions=None):
-        self.conditions = conditions if conditions is not None else {}
+        self.conditions = {}
+
+        if conditions is not None:
+            self.add_condition_set(conditions)
 
     def __contains__(self, item):
         return item in self.conditions
@@ -717,9 +720,9 @@ class Not(Condition):
     def __init__(self, condition):
         self.condition = condition
 
-        def inner_func(*args, **kwargs):
+        def inner_func(condition, *args, **kwargs):
             return not condition.is_satisfied(*args, **kwargs)
-        super().__init__(inner_func)
+        super().__init__(inner_func, condition)
 
     @Condition.owner.setter
     def owner(self, value):

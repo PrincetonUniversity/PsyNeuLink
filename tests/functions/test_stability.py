@@ -11,16 +11,16 @@ import pytest
 SIZE=10
 # Some metrics (CROSS_ENTROPY) don't like 0s
 test_var = np.random.rand(SIZE) + Function.EPSILON
-hollow_matrix= Function.get_matrix(kw.HOLLOW_MATRIX, SIZE, SIZE)
+hollow_matrix = Function.get_matrix(kw.HOLLOW_MATRIX, SIZE, SIZE)
 v1 = test_var
 v2 = np.dot(hollow_matrix * hollow_matrix, v1)
 norm = len(v1)
 
 test_data = [
-    (test_var, kw.ENTROPY, False, -np.sum(v1 * np.log(v2))),
-    (test_var, kw.ENTROPY, True, -np.sum(v1 * np.log(v2)) / norm),
-    (test_var, kw.ENERGY, False, -np.sum(v1 * v2) / 2),
-    (test_var, kw.ENERGY, True, (-np.sum(v1 * v2) / 2) / norm**2),
+    (kw.ENTROPY, False, -np.sum(v1 * np.log(v2))),
+    (kw.ENTROPY, True, -np.sum(v1 * np.log(v2)) / norm),
+    (kw.ENERGY, False, -np.sum(v1 * v2) / 2),
+    (kw.ENERGY, True, (-np.sum(v1 * v2) / 2) / norm**2),
 ]
 
 # use list, naming function produces ugly names
@@ -33,38 +33,24 @@ names = [
 
 @pytest.mark.function
 @pytest.mark.stability_function
-@pytest.mark.parametrize("variable, metric, normalize, expected", test_data, ids=names)
 @pytest.mark.benchmark
-def test_basic(variable, metric, normalize, expected, benchmark):
+@pytest.mark.parametrize("metric, normalize, expected", test_data, ids=names)
+@pytest.mark.parametrize("variable", [test_var, test_var.astype(np.float32)], ids=["float", "float32"] )
+@pytest.mark.parametrize('mode', ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_basic(variable, metric, normalize, expected, benchmark, mode):
     f = Functions.Stability(default_variable=variable, metric=metric, normalize=normalize)
-    benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
-    res = benchmark(f.function, variable)
-    assert np.allclose(res, expected)
-    assert np.isscalar(res)
+    if mode == 'Python':
+        EX = f.function
+    elif mode == 'LLVM':
+        e = pnlvm.execution.FuncExecution(f)
+        EX = e.execute
+    elif mode == 'PTX':
+        e = pnlvm.execution.FuncExecution(f)
+        EX = e.cuda_execute
 
-@pytest.mark.llvm
-@pytest.mark.function
-@pytest.mark.stability_function
-@pytest.mark.parametrize("variable, metric, normalize, expected", test_data, ids=names)
-@pytest.mark.benchmark
-def test_llvm(variable, metric, normalize, expected, benchmark):
-    f = Functions.Stability(default_variable=variable, metric=metric, normalize=normalize)
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
-    e = pnlvm.execution.FuncExecution(f)
-    res = benchmark(e.execute, variable)
-    assert np.allclose(res, expected)
-    assert np.isscalar(res) or len(res) == 1
-
-@pytest.mark.llvm
-@pytest.mark.cuda
-@pytest.mark.function
-@pytest.mark.stability_function
-@pytest.mark.parametrize("variable, metric, normalize, expected", test_data, ids=names)
-@pytest.mark.benchmark
-def test_ptx_cuda(variable, metric, normalize, expected, benchmark):
-    benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
-    f = Functions.Stability(default_variable=variable, metric=metric, normalize=normalize)
-    e = pnlvm.execution.FuncExecution(f)
-    res = benchmark(e.cuda_execute, variable)
+    res = benchmark(EX, variable)
     assert np.allclose(res, expected)
     assert np.isscalar(res) or len(res) == 1

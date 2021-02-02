@@ -90,6 +90,7 @@ import warnings
 from collections import defaultdict, namedtuple
 from queue import Queue
 
+import time as py_time  # "time" is declared below
 import typecheck as tc
 
 from psyneulink.core.globals.keywords import CONTEXT, CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
@@ -161,21 +162,15 @@ class ContextFlags(enum.IntFlag):
     """Direct call by user (either interactively from the command line, or in a script)."""
     CONSTRUCTOR = enum.auto()
     """Call from Component's constructor method."""
-    INSTANTIATE = enum.auto()
-    """Call by an instantiation method."""
-    COMPONENT = enum.auto()
-    """Call by Component __init__."""
     METHOD = enum.auto()
     """Call by method of the Component other than its constructor."""
-    PROPERTY = enum.auto()
-    """Call by property of the Component."""
     COMPOSITION = enum.auto()
     """Call by a/the Composition to which the Component belongs."""
 
     NONE = enum.auto()
 
     """Call by a/the Composition to which the Component belongs."""
-    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | INSTANTIATE | COMPONENT | METHOD | PROPERTY | COMPOSITION | NONE
+    SOURCE_MASK = COMMAND_LINE | CONSTRUCTOR | METHOD | COMPOSITION | NONE
 
     # runmode flags:
     DEFAULT_MODE = enum.auto()
@@ -256,10 +251,7 @@ EXECUTION_PHASE_FLAGS = {ContextFlags.PREPARING,
 
 SOURCE_FLAGS = {ContextFlags.COMMAND_LINE,
                 ContextFlags.CONSTRUCTOR,
-                ContextFlags.INSTANTIATE,
-                ContextFlags.COMPONENT,
                 ContextFlags.METHOD,
-                ContextFlags.PROPERTY,
                 ContextFlags.COMPOSITION,
                 ContextFlags.NONE}
 
@@ -311,7 +303,6 @@ class Context():
 
             * `CONSTRUCTOR <ContextFlags.CONSTRUCTOR>`
             * `COMMAND_LINE <ContextFlags.COMMAND_LINE>`
-            * `COMPONENT <ContextFlags.COMPONENT>`
             * `COMPOSITION <ContextFlags.COMPOSITION>`
 
     composition : Composition
@@ -343,10 +334,9 @@ class Context():
                  composition=None,
                  flags=None,
                  execution_phase=ContextFlags.IDLE,
-                 # source=ContextFlags.COMPONENT,
                  source=ContextFlags.NONE,
                  runmode=ContextFlags.DEFAULT_MODE,
-                 execution_id=None,
+                 execution_id=NotImplemented,
                  string:str='',
                  time=None,
                  rpc_pipeline:Queue=None):
@@ -363,11 +353,23 @@ class Context():
                                    "of Context for {}".
                                    format(ContextFlags._get_context_string(flags & ContextFlags.EXECUTION_PHASE_MASK),
                                           ContextFlags._get_context_string(flags, EXECUTION_PHASE), self.owner.name))
-            if (source != ContextFlags.COMPONENT) and not (flags & ContextFlags.SOURCE_MASK & source):
+            if not (flags & ContextFlags.SOURCE_MASK & source):
                 raise ContextError("Conflict in assignment to flags ({}) and source ({}) arguments of Context for {}".
                                    format(ContextFlags._get_context_string(flags & ContextFlags.SOURCE_MASK),
                                           ContextFlags._get_context_string(flags, SOURCE),
                                           self.owner.name))
+        if execution_id is NotImplemented:
+            subsecond_res = 10 ** 6
+            cur_time = py_time.time()
+            subsec = int((cur_time * subsecond_res) % subsecond_res)
+            time_format = f'%Y-%m-%d %H:%M:%S.{subsec} %Z%z'
+            execution_id = py_time.strftime(time_format, py_time.localtime(cur_time))
+        else:
+            try:
+                execution_id = execution_id.default_execution_id
+            except AttributeError:
+                pass
+
         self.execution_id = execution_id
         self.execution_time = None
         self.string = string
@@ -631,6 +633,8 @@ def handle_external_context(
     source=ContextFlags.COMMAND_LINE,
     execution_phase=ContextFlags.IDLE,
     execution_id=None,
+    fallback_most_recent=False,
+    fallback_default=False,
     **context_kwargs
 ):
     """
@@ -655,6 +659,8 @@ def handle_external_context(
 
     """
     def decorator(func):
+        assert not fallback_most_recent or not fallback_default
+
         # try to detect the position of the 'context' argument in function's
         # signature, to handle non-keyword specification in calls
         try:
@@ -702,6 +708,15 @@ def handle_external_context(
                     pass
 
             if context is None:
+                if eid is None:
+                    # assume first positional arg when fallback_most_recent or fallback_default
+                    # true is the object that has the relevant context
+
+                    if fallback_most_recent:
+                        eid = args[0].most_recent_context.execution_id
+                    if fallback_default:
+                        eid = args[0].default_execution_id
+
                 context = Context(
                     execution_id=eid,
                     source=source,

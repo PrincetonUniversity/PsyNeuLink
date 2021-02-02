@@ -2,6 +2,18 @@ import copy
 import numpy as np
 import psyneulink as pnl
 import pytest
+import re
+import warnings
+
+
+def shared_parameter_warning_regex(param_name, shared_name=None):
+    if shared_name is None:
+        shared_name = param_name
+
+    return (
+        f'Specification of the "{param_name}" parameter.*conflicts'
+        f' with specification of its shared parameter "{shared_name}"'
+    )
 
 
 # (ancestor, child, should_override)
@@ -235,8 +247,160 @@ def test_copy():
         (pnl.AdaptiveIntegrator, {'rate': None}, 'multiplicative_param', False),
         (pnl.AdaptiveIntegrator, {'rate': 0.5}, 'rate', True),
         (pnl.AdaptiveIntegrator, {'rate': 0.5}, 'multiplicative_param', True),
+        (pnl.TransferMechanism, {'integration_rate': None}, 'integration_rate', False),
+        (pnl.TransferMechanism, {'integration_rate': 0.5}, 'integration_rate', True),
     ]
 )
 def test_user_specified(cls_, kwargs, parameter, is_user_specified):
     c = cls_(**kwargs)
     assert getattr(c.parameters, parameter)._user_specified == is_user_specified
+
+
+@pytest.mark.parametrize(
+    'kwargs, parameter, is_user_specified',
+    [
+        ({'function': pnl.Linear}, 'slope', False),
+        ({'function': pnl.Linear()}, 'slope', False),
+        ({'function': pnl.Linear(slope=1)}, 'slope', True),
+    ]
+)
+def test_function_user_specified(kwargs, parameter, is_user_specified):
+    t = pnl.TransferMechanism(**kwargs)
+    assert getattr(t.function.parameters, parameter)._user_specified == is_user_specified
+
+
+class TestSharedParameters:
+
+    recurrent_mech = pnl.RecurrentTransferMechanism(default_variable=[0, 0], enable_learning=True)
+    recurrent_mech_no_learning = pnl.RecurrentTransferMechanism(default_variable=[0, 0])
+    transfer_with_costs = pnl.TransferWithCosts(default_variable=[0, 0])
+
+    test_values = [
+        (
+            recurrent_mech,
+            'learning_function',
+            recurrent_mech.learning_mechanism.parameters.function
+        ),
+        (
+            recurrent_mech,
+            'learning_rate',
+            recurrent_mech.learning_mechanism.parameters.learning_rate
+        ),
+        (
+            transfer_with_costs,
+            'transfer_fct_mult_param',
+            transfer_with_costs.transfer_fct.parameters.multiplicative_param
+        )
+    ]
+
+    @pytest.mark.parametrize(
+        'obj, parameter_name, source',
+        test_values + [
+            (recurrent_mech_no_learning, 'learning_function', None),
+        ]
+    )
+    def test_sources(self, obj, parameter_name, source):
+        assert getattr(obj.parameters, parameter_name).source is source
+
+    @pytest.mark.parametrize(
+        'obj, parameter_name, source',
+        test_values
+    )
+    def test_values(self, obj, parameter_name, source):
+        obj_param = getattr(obj.parameters, parameter_name)
+        eids = range(5)
+
+        for eid in eids:
+            obj.execute(np.array([eid, eid]), context=eid)
+
+        assert all([
+            obj_param.get(eid) is source.get(eid)
+            for eid in eids
+        ])
+
+    @pytest.mark.parametrize(
+        'obj, parameter_name, attr_name',
+        [
+            (transfer_with_costs, 'intensity_cost_fct_mult_param', 'modulable'),
+            (recurrent_mech, 'learning_function', 'stateful'),
+            (recurrent_mech, 'learning_function', 'loggable'),
+            (recurrent_mech.recurrent_projection, 'auto', 'modulable'),
+            (recurrent_mech, 'integration_rate', 'modulable'),
+            (recurrent_mech, 'noise', 'modulable'),
+        ]
+    )
+    def test_param_attrs_match(self, obj, parameter_name, attr_name):
+        shared_param = getattr(obj.parameters, parameter_name)
+        source_param = shared_param.source
+
+        assert getattr(shared_param, attr_name) == getattr(source_param, attr_name)
+
+    @pytest.mark.parametrize(
+        'integrator_function, expected_rate',
+        [
+            (pnl.AdaptiveIntegrator, pnl.TransferMechanism.defaults.integration_rate),
+            (pnl.AdaptiveIntegrator(), pnl.TransferMechanism.defaults.integration_rate),
+            (pnl.AdaptiveIntegrator(rate=.75), .75)
+        ]
+    )
+    def test_override_tmech(self, integrator_function, expected_rate):
+        t = pnl.TransferMechanism(integrator_function=integrator_function)
+        assert t.integrator_function.defaults.rate == expected_rate
+        assert t.integration_rate.modulated == t.integration_rate.base == expected_rate
+
+    def test_conflict_warning(self):
+        with pytest.warns(
+            UserWarning,
+            match=shared_parameter_warning_regex('integration_rate', 'rate')
+        ):
+            pnl.TransferMechanism(
+                integration_rate=.1,
+                integrator_function=pnl.AdaptiveIntegrator(rate=.2)
+            )
+
+    @pytest.mark.parametrize(
+        'mech_type, param_name, shared_param_name, param_value',
+        [
+            (pnl.LCAMechanism, 'noise', 'noise', pnl.GaussianDistort),
+            (pnl.LCAMechanism, 'noise', 'noise', pnl.GaussianDistort()),
+            (pnl.TransferMechanism, 'noise', 'noise', pnl.NormalDist),
+            (pnl.TransferMechanism, 'noise', 'noise', pnl.NormalDist()),
+            (pnl.TransferMechanism, 'noise', 'noise', [pnl.NormalDist()]),
+        ]
+    )
+    def test_conflict_no_warning(
+        self,
+        mech_type,
+        param_name,
+        shared_param_name,
+        param_value
+    ):
+        # pytest doesn't support inverse warning assertion for specific
+        # warning only
+        with warnings.catch_warnings():
+            warnings.simplefilter(action='error', category=UserWarning)
+            try:
+                mech_type(**{param_name: param_value})
+            except UserWarning as w:
+                if re.match(shared_parameter_warning_regex(param_name, shared_param_name), str(w)):
+                    raise
+
+    def test_conflict_no_warning_parser(self):
+        # replace with different class/parameter if _parse_noise ever implemented
+        assert not hasattr(pnl.AdaptiveIntegrator.Parameters, '_parse_noise')
+        pnl.AdaptiveIntegrator.Parameters._parse_noise = lambda self, noise: 2 * noise
+
+        # pytest doesn't support inverse warning assertion for specific
+        # warning only
+        with warnings.catch_warnings():
+            warnings.simplefilter(action='error', category=UserWarning)
+            try:
+                pnl.TransferMechanism(
+                    noise=2,
+                    integrator_function=pnl.AdaptiveIntegrator(noise=1)
+                )
+            except UserWarning as w:
+                if re.match(shared_parameter_warning_regex('noise'), str(w)):
+                    raise
+
+        delattr(pnl.AdaptiveIntegrator.Parameters, '_parse_noise')

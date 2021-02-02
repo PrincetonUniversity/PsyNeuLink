@@ -291,14 +291,16 @@ class TestMiscTrainingFunctionality:
 
     @pytest.mark.benchmark(group="Optimizer specs")
     @pytest.mark.parametrize(
-        'learning_rate, weight_decay, optimizer_type', [
-            (10, 0, 'sgd'), (1.5, 1, 'sgd'),  (1.5, 1, 'adam'),
+        'learning_rate, weight_decay, optimizer_type, expected', [
+            (10, 0, 'sgd', [[[0.9863038667851067]], [[0.9944287263151904]], [[0.9934801466163382]], [[0.9979153035411085]]]),
+            (1.5, 1, 'sgd', None),
+            (1.5, 1, 'adam', None),
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                      ])
-    def test_optimizer_specs(self, learning_rate, weight_decay, optimizer_type, mode, benchmark):
+    def test_optimizer_specs(self, learning_rate, weight_decay, optimizer_type, expected, mode, benchmark):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -335,12 +337,16 @@ class TestMiscTrainingFunctionality:
         #                               targets={xor_out:xor_targets},
         #                               epochs=10)
         results_before_proc = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
-                                              "targets": {xor_out:xor_targets},
-                                              "epochs": 10}, bin_execute=mode)
+                                                "targets": {xor_out:xor_targets},
+                                                "epochs": 10}, bin_execute=mode)
 
-        benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
-                                   "targets": {xor_out:xor_targets},
-                                   "epochs": 10}, bin_execute=mode)
+        if expected is not None:
+            assert np.allclose(results_before_proc, expected)
+
+        if benchmark.enabled:
+            benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
+                                         "targets": {xor_out:xor_targets},
+                                         "epochs": 10}, bin_execute=mode)
 
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
@@ -469,9 +475,10 @@ class TestTrainingCorrectness:
         for r, t in zip(results, expected):
             assert np.allclose(r[0], t)
 
-        benchmark(xor.learn, inputs={"inputs": {xor_in: xor_inputs},
-                                     "targets": {xor_out: xor_targets},
-                                     "epochs": eps}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(xor.learn, inputs={"inputs": {xor_in: xor_inputs},
+                                         "targets": {xor_out: xor_targets},
+                                         "epochs": eps}, bin_execute=mode)
 
 
     # tests whether semantic network created as autodiff composition learns properly
@@ -775,13 +782,14 @@ class TestTrainingCorrectness:
         for res, exp in zip(results, expected):
             for r, e in zip(res, exp):
                 assert np.allclose(r, e)
-        benchmark(sem_net.learn, inputs={'inputs': inputs_dict,
-                                         'targets': targets_dict,
-                                         'epochs': eps}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(sem_net.learn, inputs={'inputs': inputs_dict,
+                                             'targets': targets_dict,
+                                             'epochs': eps}, bin_execute=mode)
 
     @pytest.mark.parametrize("mode", ['Python',
-                                pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                ])
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                     ])
     def test_pytorch_equivalence_with_autodiff_composition(self, mode):
         iSs = np.array(
             [np.array([0.47360805, 0.8009108, 0.5204775, 0.53737324, 0.7586156,
@@ -1256,7 +1264,7 @@ class TestTrainingTime:
         # SET UP PROJECTIONS FOR SYSTEM
 
         and_map_sys = MappingProjection(name='and_map_sys',
-                                        matrix=and_map.matrix.copy(),
+                                        matrix=and_map.matrix.base.copy(),
                                         sender=and_in_sys,
                                         receiver=and_out_sys)
 
@@ -1354,12 +1362,12 @@ class TestTrainingTime:
         # SET UP PROJECTIONS FOR SYSTEM
 
         hid_map_sys = MappingProjection(name='hid_map_sys',
-                                        matrix=hid_map.matrix.copy(),
+                                        matrix=hid_map.matrix.base.copy(),
                                         sender=xor_in_sys,
                                         receiver=xor_hid_sys)
 
         out_map_sys = MappingProjection(name='out_map_sys',
-                                        matrix=out_map.matrix.copy(),
+                                        matrix=out_map.matrix.base.copy(),
                                         sender=xor_hid_sys,
                                         receiver=xor_out_sys)
 
@@ -1533,37 +1541,37 @@ class TestTrainingTime:
 
         # SET UP PROJECTIONS FOR SYSTEM
 
-        map_nouns_h1_sys = MappingProjection(matrix=map_nouns_h1.matrix.copy(),
+        map_nouns_h1_sys = MappingProjection(matrix=map_nouns_h1.matrix.base.copy(),
                                              name="map_nouns_h1_sys",
                                              sender=nouns_in_sys,
                                              receiver=h1_sys)
 
-        map_rels_h2_sys = MappingProjection(matrix=map_rels_h2.matrix.copy(),
+        map_rels_h2_sys = MappingProjection(matrix=map_rels_h2.matrix.base.copy(),
                                         name="map_relh2_sys",
                                         sender=rels_in_sys,
                                         receiver=h2_sys)
 
-        map_h1_h2_sys = MappingProjection(matrix=map_h1_h2.matrix.copy(),
+        map_h1_h2_sys = MappingProjection(matrix=map_h1_h2.matrix.base.copy(),
                                           name="map_h1_h2_sys",
                                           sender=h1_sys,
                                           receiver=h2_sys)
 
-        map_h2_I_sys = MappingProjection(matrix=map_h2_I.matrix.copy(),
+        map_h2_I_sys = MappingProjection(matrix=map_h2_I.matrix.base.copy(),
                                          name="map_h2_I_sys",
                                          sender=h2_sys,
                                          receiver=out_sig_I_sys)
 
-        map_h2_is_sys = MappingProjection(matrix=map_h2_is.matrix.copy(),
+        map_h2_is_sys = MappingProjection(matrix=map_h2_is.matrix.base.copy(),
                                           name="map_h2_is_sys",
                                           sender=h2_sys,
                                           receiver=out_sig_is_sys)
 
-        map_h2_has_sys = MappingProjection(matrix=map_h2_has.matrix.copy(),
+        map_h2_has_sys = MappingProjection(matrix=map_h2_has.matrix.base.copy(),
                                            name="map_h2_has_sys",
                                            sender=h2_sys,
                                            receiver=out_sig_has_sys)
 
-        map_h2_can_sys = MappingProjection(matrix=map_h2_can.matrix.copy(),
+        map_h2_can_sys = MappingProjection(matrix=map_h2_can.matrix.base.copy(),
                                            name="map_h2_can_sys",
                                            sender=h2_sys,
                                            receiver=out_sig_can_sys)
@@ -1800,37 +1808,37 @@ class TestTrainingIdenticalness():
 
         # SET UP PROJECTIONS FOR SYSTEM
 
-        map_nouns_h1_sys = MappingProjection(matrix=map_nouns_h1.matrix.copy(),
+        map_nouns_h1_sys = MappingProjection(matrix=map_nouns_h1.matrix.base.copy(),
                                              name="map_nouns_h1_sys",
                                              sender=nouns_in_sys,
                                              receiver=h1_sys)
 
-        map_rels_h2_sys = MappingProjection(matrix=map_rels_h2.matrix.copy(),
+        map_rels_h2_sys = MappingProjection(matrix=map_rels_h2.matrix.base.copy(),
                                         name="map_relh2_sys",
                                         sender=rels_in_sys,
                                         receiver=h2_sys)
 
-        map_h1_h2_sys = MappingProjection(matrix=map_h1_h2.matrix.copy(),
+        map_h1_h2_sys = MappingProjection(matrix=map_h1_h2.matrix.base.copy(),
                                           name="map_h1_h2_sys",
                                           sender=h1_sys,
                                           receiver=h2_sys)
 
-        map_h2_I_sys = MappingProjection(matrix=map_h2_I.matrix.copy(),
+        map_h2_I_sys = MappingProjection(matrix=map_h2_I.matrix.base.copy(),
                                          name="map_h2_I_sys",
                                          sender=h2_sys,
                                          receiver=out_sig_I_sys)
 
-        map_h2_is_sys = MappingProjection(matrix=map_h2_is.matrix.copy(),
+        map_h2_is_sys = MappingProjection(matrix=map_h2_is.matrix.base.copy(),
                                           name="map_h2_is_sys",
                                           sender=h2_sys,
                                           receiver=out_sig_is_sys)
 
-        map_h2_has_sys = MappingProjection(matrix=map_h2_has.matrix.copy(),
+        map_h2_has_sys = MappingProjection(matrix=map_h2_has.matrix.base.copy(),
                                            name="map_h2_has_sys",
                                            sender=h2_sys,
                                            receiver=out_sig_has_sys)
 
-        map_h2_can_sys = MappingProjection(matrix=map_h2_can.matrix.copy(),
+        map_h2_can_sys = MappingProjection(matrix=map_h2_can.matrix.base.copy(),
                                            name="map_h2_can_sys",
                                            sender=h2_sys,
                                            receiver=out_sig_can_sys)
@@ -2727,37 +2735,37 @@ class TestNested:
 
         # SET UP PROJECTIONS FOR SYSTEM
 
-        map_nouns_h1_sys = MappingProjection(matrix=map_nouns_h1.matrix.copy(),
+        map_nouns_h1_sys = MappingProjection(matrix=map_nouns_h1.matrix.base.copy(),
                                              name="map_nouns_h1_sys",
                                              sender=nouns_in_sys,
                                              receiver=h1_sys)
 
-        map_rels_h2_sys = MappingProjection(matrix=map_rels_h2.matrix.copy(),
+        map_rels_h2_sys = MappingProjection(matrix=map_rels_h2.matrix.base.copy(),
                                         name="map_relh2_sys",
                                         sender=rels_in_sys,
                                         receiver=h2_sys)
 
-        map_h1_h2_sys = MappingProjection(matrix=map_h1_h2.matrix.copy(),
+        map_h1_h2_sys = MappingProjection(matrix=map_h1_h2.matrix.base.copy(),
                                           name="map_h1_h2_sys",
                                           sender=h1_sys,
                                           receiver=h2_sys)
 
-        map_h2_I_sys = MappingProjection(matrix=map_h2_I.matrix.copy(),
+        map_h2_I_sys = MappingProjection(matrix=map_h2_I.matrix.base.copy(),
                                          name="map_h2_I_sys",
                                          sender=h2_sys,
                                          receiver=out_sig_I_sys)
 
-        map_h2_is_sys = MappingProjection(matrix=map_h2_is.matrix.copy(),
+        map_h2_is_sys = MappingProjection(matrix=map_h2_is.matrix.base.copy(),
                                           name="map_h2_is_sys",
                                           sender=h2_sys,
                                           receiver=out_sig_is_sys)
 
-        map_h2_has_sys = MappingProjection(matrix=map_h2_has.matrix.copy(),
+        map_h2_has_sys = MappingProjection(matrix=map_h2_has.matrix.base.copy(),
                                            name="map_h2_has_sys",
                                            sender=h2_sys,
                                            receiver=out_sig_has_sys)
 
-        map_h2_can_sys = MappingProjection(matrix=map_h2_can.matrix.copy(),
+        map_h2_can_sys = MappingProjection(matrix=map_h2_can.matrix.base.copy(),
                                            name="map_h2_can_sys",
                                            sender=h2_sys,
                                            receiver=out_sig_can_sys)

@@ -41,43 +41,24 @@ GROUP_PREFIX="SelectionFunction "
 
 @pytest.mark.function
 @pytest.mark.integrator_function
-@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 @pytest.mark.benchmark
-def test_basic(func, variable, params, expected, benchmark):
+@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                  ])
+def test_basic(func, variable, params, expected, benchmark, mode):
     f = func(default_variable=variable, **params)
     benchmark.group = GROUP_PREFIX + func.componentName + params['mode']
-    f(variable)
-    res = f(variable)
+    if mode == 'Python':
+        EX = f
+    elif mode == 'LLVM':
+        EX = pnlvm.execution.FuncExecution(f).execute
+    elif mode == 'PTX':
+        EX = pnlvm.execution.FuncExecution(f).cuda_execute
+
+    EX(variable)
+    res = EX(variable)
     assert np.allclose(res, expected)
-    benchmark(f, variable)
-
-
-@pytest.mark.llvm
-@pytest.mark.function
-@pytest.mark.integrator_function
-@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
-@pytest.mark.benchmark
-def test_llvm(func, variable, params, expected, benchmark):
-    benchmark.group = GROUP_PREFIX + func.componentName + params['mode']
-    f = func(default_variable=variable, **params)
-    m = pnlvm.execution.FuncExecution(f)
-    m.execute(variable)
-    res = m.execute(variable)
-    assert np.allclose(res, expected)
-    benchmark(m.execute, variable)
-
-
-@pytest.mark.llvm
-@pytest.mark.cuda
-@pytest.mark.function
-@pytest.mark.integrator_function
-@pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
-@pytest.mark.benchmark
-def test_ptx_cuda(func, variable, params, expected, benchmark):
-    benchmark.group = GROUP_PREFIX + func.componentName + params['mode']
-    f = func(default_variable=variable, **params)
-    m = pnlvm.execution.FuncExecution(f)
-    m.cuda_execute(variable)
-    res = m.cuda_execute(variable)
-    assert np.allclose(res, expected)
-    benchmark(m.cuda_execute, variable)
+    if benchmark.enabled:
+        benchmark(EX, variable)

@@ -482,9 +482,10 @@ The `controller <Composition.controller>` is executed only if the Composition's 
 <Composition.enable_controller>` attribute is True.  This generally done automatically when the `controller
 <Composition.controller>` is `assigned <Composition_Controller_Assignment>`.  If enabled, the `controller
 <Composition.controller>` is generally executed either before or after all of the other Components in the Composition
-have been executed, as determined by the Composition's `controller_mode <Composition.controller_mode>` attribute.
-However, the Composition's `controller_condition <Composition.controller_condition>` attribute can be used to
-customize when it is executed.  All three of these attributes can be specified in corresponding arguments of the
+have been executed within a given `TimeScale <TimeScale>`, as determined by the Composition's
+`controller_time_scale` and `controller_mode <Composition.controller_mode>` attributes. The Composition's
+`controller_condition <Composition.controller_condition>` attribute can be used to further customize when it is
+executed. All three of these attributes can be specified in corresponding arguments of the
 Composition's constructor, or programmatically after it is constructed by assigning the desired value to the
 corresponding attribute.
 
@@ -831,8 +832,7 @@ environment that supports learning can be assigned as the `function <Mechanism_B
 <Mechanism>`, in which case it is automatically  wrapped as `UserDefinedFunction`.  For example, the `forward and
 backward methods <https://pytorch.org/docs/master/notes/extending.html>`_ of a PyTorch object can be assigned in this
 way.  The advanatage of this approach is that it can be applied to any Python function that adheres to the requirements
-of a `UserDefinedFunction`.  The disadvantage is that it can't be `compiled`, so efficiency may be compromised.  It must
-also be carefully coordinated with the execution of other learning-related Components in the Composition, to insure
+of a `UserDefinedFunction`. It must be carefully coordinated with the execution of other learning-related Components in the Composition, to insure
 that each function is called at the appropriate times during execution.  Furthermore, as with an `AutodiffComposition`,
 the internal constituents of the object (e.g., intermediates layers of a neural network model) are not accessible to
 other Components in the Composition (e.g., as a source of information or for modulation).
@@ -1284,6 +1284,9 @@ specified in **initialize_cycle_values** will be re-initialized to the assigned 
 cycle in that run, whereas any Nodes not specified will retain the last `value <Component.value>` they were assigned
 in the uprevious call to `run <Composition.run>` or `learn <Composition.learn>`.
 
+Nodes in a cycle can also be initialized outside of a call to `run <Composition.run>` or `learn <Composition.run>` using
+the `initialize <Composition.initialize>` method.
+
 .. note::
    If a `Mechanism` belonging to a cycle in a Composition is first executed on its own (i.e., using its own `execute
    <Mechanism_Base.execute>` method), the value it is assigned will be used as its initial value when it is executed
@@ -1532,8 +1535,8 @@ mode can be useful for executing Compositions that are complex and/or for large 
 Compilation is supported for most CPUs (including x86, arm64, and powerpc64le).  Several modes can be specified, that
 that tradeoff power (i.e., degree of speed-up) against level of support (i.e., likelihood of success).  Most PsyNeuLink
 `Components <Component>` and methods are supported for compilation;  however, Python native functions and methods
-(e.g., used to specify the `function <Component.function>` of a Component) are not supported at present, including
-their use in a `UserDefinedFunction`.  Users are strongly urged to report any other compilation failures to
+(e.g., used to specify the `function <Component.function>` of a Component) are not supported at present. Users who wish
+to compile custom functions should refer to `compiled User Defined Functions <UserDefinedFunction>` for more information.  Users are strongly urged to report any other compilation failures to
 psyneulinkhelp@princeton.edu, or as an issue `here <https://github.com/PrincetonUniversity/PsyNeuLink/issues>`_.
 Known failure conditions are listed `here <https://github.com/PrincetonUniversity/PsyNeuLink/milestone/2>`_.
 
@@ -2378,7 +2381,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
-    COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, \
+    COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, DEFAULT, \
     FEEDBACK, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, INSET, \
     LABELS, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
@@ -2387,12 +2390,12 @@ from psyneulink.core.globals.keywords import \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, \
     ROLES, SAMPLE, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
-    TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT
+    TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array, merge_dictionaries
+    ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array
 from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -2678,100 +2681,54 @@ class Graph(object):
         structural_dependencies = self.dependency_dict
         # wipe and reconstruct list of vertices in cycles
         self.cycle_vertices = set()
+        flexible_edges = set()
 
-        # prune all feedback projections
         for node in execution_dependencies:
-            # recurrent edges
+            # prune recurrent edges
             try:
                 execution_dependencies[node].remove(node)
                 self.cycle_vertices.add(node)
             except KeyError:
                 pass
 
-            # standard edges labeled as feedback
-            vert = self.comp_to_vertex[node]
-            execution_dependencies[node] = {
-                dep for dep in execution_dependencies[node]
-                if (
-                    self.comp_to_vertex[dep] not in vert.source_types
-                    or vert.source_types[self.comp_to_vertex[dep]] is not EdgeType.FEEDBACK
-                )
-            }
+            for dep in tuple(execution_dependencies[node]):
+                vert = self.comp_to_vertex[node]
+                dep_vert = self.comp_to_vertex[dep]
+
+                if dep_vert in vert.source_types:
+                    # prune standard edges labeled as feedback
+                    if vert.source_types[dep_vert] is EdgeType.FEEDBACK:
+                        execution_dependencies[node].remove(dep)
+                    # store flexible edges for potential pruning later
+                    elif vert.source_types[dep_vert] is EdgeType.FLEXIBLE:
+                        flexible_edges.add((dep, node))
 
         # construct a parallel networkx graph to use its cycle algorithms
         nx_graph = self._generate_networkx_graph(execution_dependencies)
+        connected_components = list(networkx.strongly_connected_components(nx_graph))
 
         # prune only one flexible edge per attempt, to remove as few
         # edges as possible
         # For now, just prune the first flexible edge each time. Maybe
         # look for "best" edges to prune in future by frequency in
         # cycles, if that occurs
-        cycles_changed = True
-        while cycles_changed:
-            cycles_changed = False
+        for parent, child in flexible_edges:
+            cycles = [c for c in connected_components if len(c) > 1]
 
-            # recompute cycles after each prune
-            for cycle in networkx.simple_cycles(nx_graph):
-                len_cycle = len(cycle)
+            if len(cycles) == 0:
+                break
 
-                for i in range(len_cycle):
-                    parent = self.comp_to_vertex[cycle[i]]
-                    child = self.comp_to_vertex[cycle[(i + 1) % len_cycle]]
-
-                    if (
-                        parent in child.source_types
-                        and child.source_types[parent] is EdgeType.FLEXIBLE
-                    ):
-                        execution_dependencies[child.component].remove(parent.component)
-                        child.source_types[parent] = EdgeType.FEEDBACK
-                        nx_graph.remove_edge(parent.component, child.component)
-                        cycles_changed = True
-                        break
-
-        def merge_intersecting_cycles(cycle_list: list) -> dict:
-            # transforms a cycle represented as a list [c_0, ... c_n]
-            # to a dependency dictionary {c_0: c_n, c_1: c_0, ..., c_n: c_{n-1}}
-            cycle_dicts = [
-                {
-                    cycle[i]: cycle[(i - 1) % len(cycle)]
-                    for i in range(len(cycle))
-                }
-                for cycle in cycle_list
-            ]
-
-            new_cycles = cycle_dicts
-            cycles_changed = True
-
-            # repeatedly join cycles that have a Node in common
-            while cycles_changed:
-                cycles_changed = False
-                i = 0
-                j = 1
-
-                while i < len(new_cycles):
-                    while j < len(new_cycles):
-                        merged, has_shared_keys = merge_dictionaries(
-                            new_cycles[i],
-                            new_cycles[j]
-                        )
-                        if has_shared_keys:
-                            cycles_changed = True
-                            new_cycles[i] = merged
-                            new_cycles.remove(new_cycles[j])
-                        else:
-                            j += 1
-                    i += 1
-
-            return new_cycles
-
-        cycles = list(networkx.simple_cycles(nx_graph))
-        # create the longest possible cycles using any smaller, connected cycles
-        cycles = merge_intersecting_cycles(cycles)
+            if any((parent in c and child in c) for c in cycles):
+                # prune
+                execution_dependencies[child].remove(parent)
+                self.comp_to_vertex[child].source_types[self.comp_to_vertex[parent]] = EdgeType.FEEDBACK
+                nx_graph.remove_edge(parent, child)
+                # recompute cycles after each prune
+                connected_components = list(networkx.strongly_connected_components(nx_graph))
 
         # find all the parent nodes for each node in a cycle, excluding
         # parents that are part of the cycle
-        for cycle in cycles:
-            len_cycle = len(cycle)
+        for cycle in [c for c in connected_components if len(c) > 1]:
             acyclic_dependencies = set()
 
             for node in cycle:
@@ -2803,11 +2760,14 @@ class Graph(object):
             structural_dependencies
         )
 
-    def get_cycles(self, nx_graph: typing.Optional[networkx.DiGraph] = None):
+    def get_strongly_connected_components(
+        self,
+        nx_graph: typing.Optional[networkx.DiGraph] = None
+    ):
         if nx_graph is None:
             nx_graph = self._generate_networkx_graph()
 
-        return list(networkx.simple_cycles(nx_graph))
+        return list(networkx.strongly_connected_components(nx_graph))
 
     def _generate_networkx_graph(self, dependency_dict=None):
         if dependency_dict is None:
@@ -2993,9 +2953,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Composition is executed.  Set to True by default if **controller** specified;  if set to False,
         the `controller <Composition.controller>` is ignored when the Composition is executed.
 
-    controller_mode: enum.Enum[BEOFRE|AFTER] : default AFTER
+    controller_mode: enum.Enum[BEFORE|AFTER] : default AFTER
         specifies whether the controller is executed before or after the rest of the Composition
-        in each trial.  Must be either the keyword *BEFORE* or *AFTER*.
+        in each run, trial, pass, or time step.  Must be either the keyword *BEFORE* or *AFTER*.
+
+    controller_time_scale: TimeScale[TIME_STEP, PASS, TRIAL, RUN] : default TRIAL
+        specifies with what frequency the the controller should be executed.
 
     controller_condition: Condition : default Always
         specifies when the Composition's `controller <Composition.controller>` is executed in a trial.
@@ -3281,6 +3244,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             controller:ControlMechanism=None,
             enable_controller=None,
             controller_mode:tc.enum(BEFORE,AFTER)=AFTER,
+            controller_time_scale=TimeScale.TRIAL,
             controller_condition:Condition=Always(),
             retain_old_simulation_data=None,
             show_graph_attributes=None,
@@ -3348,10 +3312,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.cycle_vertices = set()
 
+        context = Context(source=ContextFlags.CONSTRUCTOR, execution_id=None)
+
         self._initialize_parameters(
             **param_defaults,
             retain_old_simulation_data=retain_old_simulation_data,
-            context=Context(source=ContextFlags.COMPOSITION)
+            context=context
         )
 
         # Compiled resources
@@ -3371,6 +3337,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             self.enable_controller = enable_controller
         self.controller_mode = controller_mode
+        self.controller_time_scale = controller_time_scale
         self.controller_condition = controller_condition
         self.controller_condition.owner = self.controller
 
@@ -3396,10 +3363,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             projections = convert_to_list(projections)
             self.add_projections(projections)
 
-        self.add_pathways(pathways, context=Context(source=ContextFlags.CONSTRUCTOR))
+        self.add_pathways(pathways, context=context)
 
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
-        self._analyze_graph(context=Context(source=ContextFlags.COMPOSITION))
+        self._analyze_graph(context=context)
 
         show_graph_attributes = show_graph_attributes or {}
         self._show_graph = ShowGraph(self, **show_graph_attributes)
@@ -3458,7 +3425,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # ******************************************************************************************************************
 
     @handle_external_context(source=ContextFlags.COMPOSITION)
-    def _analyze_graph(self, scheduler=None, context=None):
+    def _analyze_graph(self, context=None):
         """
         Assigns `NodeRoles <NodeRole>` to nodes based on the structure of the `Graph`.
 
@@ -3496,32 +3463,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Constructs the processing graph (the graph that contains only Nodes as vertices)
         from the composition's full graph
         """
-        logger.debug('Updating processing graph')
-
         self._graph_processing = self.graph.copy()
 
         def remove_vertex(vertex):
-            logger.debug('Removing', vertex)
             for parent in vertex.parents:
                 for child in vertex.children:
                     child.source_types[parent] = vertex.feedback
                     self._graph_processing.connect_vertices(parent, child)
-
-            for node in cur_vertex.parents + cur_vertex.children:
-                logger.debug(
-                    'New parents for vertex {0}: \n\t{1}\nchildren: \n\t{2}'.format(
-                        node, node.parents, node.children
-                    )
-                )
-
-            logger.debug('Removing vertex {0}'.format(cur_vertex))
 
             self._graph_processing.remove_vertex(vertex)
 
         # copy to avoid iteration problems when deleting
         vert_list = self._graph_processing.vertices.copy()
         for cur_vertex in vert_list:
-            logger.debug('Examining', cur_vertex)
             if not cur_vertex.component.is_processing:
                 remove_vertex(cur_vertex)
 
@@ -3605,7 +3559,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add ControlSignals to controller and ControlProjections
         #     to any parameter_ports specified for control in node's constructor
         if self.controller:
-            self._instantiate_deferred_init_control(node)
+            self._instantiate_deferred_init_control(node, context=context)
 
         try:
             if len(invalid_aux_components) > 0:
@@ -3613,7 +3567,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         except NameError:
             pass
 
-    def _instantiate_deferred_init_control(self, node):
+    def _instantiate_deferred_init_control(self, node, context=None):
         """
         If node is a Composition with a controller, activate its nodes' deferred init control specs for its controller.
         If it does not have a controller, but self does, activate them for self's controller.
@@ -3630,7 +3584,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         hanging_control_specs = []
         if node.componentCategory == 'Composition':
             for nested_node in node.nodes:
-                hanging_control_specs.extend(node._instantiate_deferred_init_control(nested_node))
+                hanging_control_specs.extend(node._instantiate_deferred_init_control(nested_node, context=context))
         else:
             hanging_control_specs = node._get_parameter_port_deferred_init_control_specs()
         if not self.controller:
@@ -3638,8 +3592,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             for spec in hanging_control_specs:
                 control_signal = self.controller._instantiate_control_signal(control_signal=spec,
-                                                                             context=Context(
-                                                                                 source=ContextFlags.COMPOSITION))
+                                                                             context=context)
                 self.controller.control.append(control_signal)
                 self.controller._activate_projections_for_compositions(self)
         return []
@@ -5490,7 +5443,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             labeled as EdgeType.FEEDBACK (True) but are not in a cycle
         """
         unnecessary_feedback_specs = []
-        cycles = self.graph.get_cycles()
+        cycles = self.graph.get_strongly_connected_components()
 
         for proj in self.projections:
             try:
@@ -5594,19 +5547,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         nodes = []
 
-        # If called from add_pathways(), use its pathway_arg_str in error messages (in context.string)
-        if context.source == ContextFlags.METHOD:
-            pathway_arg_str = context.string
-        # If call from _create_backpropagation_learning_pathway, use its pathway_arg_str
-        elif context.source == ContextFlags.INITIALIZING:
+        # If called internally, use its pathway_arg_str in error messages (in context.string)
+        if context.source is not ContextFlags.COMMAND_LINE:
             pathway_arg_str = context.string
         # Otherwise, refer to call from this method
         else:
             pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
-            # FIX 4/4/20 [JDC]: Reset to None for now to replicate prior behavior,
-            #                   but need to implement proper behavior wrt call to analyze_graph()
-            #                   _check_initalization_state()
-            context = None
+
+        context.source = ContextFlags.METHOD
+        context.string = pathway_arg_str
 
         # First, deal with Pathway() or tuple specifications
         if isinstance(pathway, Pathway):
@@ -5636,8 +5585,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if _is_node_spec(pathway[0]):
             # Use add_nodes so that node spec can also be a tuple with required_roles
             self.add_nodes(nodes=[pathway[0]],
-                           context=Context(source=ContextFlags.METHOD,
-                                           string=pathway_arg_str))
+                           context=context)
             nodes.append(pathway[0])
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
@@ -5649,8 +5597,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
             if _is_node_spec(pathway[c]):
                 self.add_nodes(nodes=[pathway[c]],
-                               context=Context(source=ContextFlags.METHOD,
-                                               string=pathway_arg_str))
+                               context=context)
                 nodes.append(pathway[c])
 
         # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
@@ -5824,10 +5771,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         pathway = Pathway(pathway=explicit_pathway,
                           composition=self,
                           name=pathway_name,
-                          context=Context(source=ContextFlags.METHOD))
+                          context=context)
         self.pathways.append(pathway)
 
-        self._analyze_graph(context=context)
+        # FIX 4/4/20 [JDC]: Reset to None for now to replicate prior behavior,
+        #                   but need to implement proper behavior wrt call to analyze_graph()
+        #                   _check_initalization_state()
+        # 10/22/20 [KDM]: Pass no context instead of setting to None
+        self._analyze_graph()
 
         return pathway
 
@@ -6082,7 +6033,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Otherwise, refer to call from this method
         else:
             pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
-        context = Context(source=ContextFlags.METHOD, string=pathway_arg_str)
+        context.source = ContextFlags.METHOD
+        context.string = pathway_arg_str
 
         # Deal with Pathway() specifications
         if isinstance(pathway, Pathway):
@@ -6438,7 +6390,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                    f"({learning_function}) must be a class of {LearningFunction.__name__} or a "
                                    f"learning-compatible function")
 
-        learning_mechanism.output_ports[ERROR_SIGNAL].parameters.require_projection_in_composition._set(False,
+        learning_mechanism.output_ports[ERROR_SIGNAL].parameters.require_projection_in_composition.set(False,
                                                                                                          override=True)
         return target_mechanism, objective_mechanism, learning_mechanism
 
@@ -6557,9 +6509,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Add pathway to graph and get its full specification (includes all ProcessingMechanisms and MappingProjections)
         # Pass ContextFlags.INITIALIZING so that it can be passed on to _analyze_graph() and then
         #    _check_for_projection_assignments() in order to ignore checks for require_projection_in_composition
-        pathway_arg_str = f"'pathway' arg for add_backpropagation_learning_pathway method of {self.name}"
-        learning_pathway = self.add_linear_processing_pathway(pathway, name, Context(source=ContextFlags.INITIALIZING,
-                                                                                     string=pathway_arg_str))
+        context.string = f"'pathway' arg for add_backpropagation_learning_pathway method of {self.name}"
+        learning_pathway = self.add_linear_processing_pathway(pathway, name, context)
         processing_pathway = learning_pathway.pathway
 
         path_length = len(processing_pathway)
@@ -6666,7 +6617,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._terminal_backprop_sequences[output_source] = {LEARNING_MECHANISM: learning_mechanism,
                                                                 TARGET_MECHANISM: target,
                                                                 OBJECTIVE_MECHANISM: comparator}
-            self._add_required_node_role(processing_pathway[-1], NodeRole.OUTPUT, Context(source=ContextFlags.METHOD))
+            self._add_required_node_role(processing_pathway[-1], NodeRole.OUTPUT, context)
 
             sequence_end = path_length - 3
 
@@ -6684,14 +6635,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                         output_source,
                                                                                         learned_projection,
                                                                                         learning_rate,
-                                                                                        learning_update)
+                                                                                        learning_update,
+                                                                                        context)
             learning_mechanisms.append(learning_mechanism)
             learned_projections.append(learned_projection)
 
         # Add error_signal projections to any learning_mechanisms that are now dependent on the new one
         for lm in learning_mechanisms:
             if lm.dependent_learning_mechanisms:
-                projections = self._add_error_projection_to_dependent_learning_mechs(lm)
+                projections = self._add_error_projection_to_dependent_learning_mechs(lm, context)
                 self.add_projections(projections)
 
         # Suppress "no efferent connections" warning for:
@@ -6829,7 +6781,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           output_source,
                                                           learned_projection,
                                                           learning_rate,
-                                                          learning_update):
+                                                          learning_update,
+                                                          context):
 
         # Get existing LearningMechanism if one exists (i.e., if this is a crossing point with another pathway)
         learning_mechanism = \
@@ -6841,13 +6794,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    error_sources will be empty (as they have been dealt with in self._get_back_prop_error_sources
         #    error_projections will contain list of any created to be added to the Composition below
         if learning_mechanism:
-            error_sources, error_projections = self._get_back_prop_error_sources(output_source, learning_mechanism)
+            error_sources, error_projections = self._get_back_prop_error_sources(output_source, learning_mechanism, context)
         # If learning_mechanism does not yet exist:
         #    error_sources will contain ones needed to create learning_mechanism
         #    error_projections will be empty since they can't be created until the learning_mechanism is created below;
         #    they will be created (using error_sources) when, and determined after learning_mechanism is created below
         else:
-            error_sources, error_projections = self._get_back_prop_error_sources(output_source)
+            error_sources, error_projections = self._get_back_prop_error_sources(output_source, context=context)
             error_signal_template = [error_source.output_ports[ERROR_SIGNAL].value for error_source in error_sources]
             default_variable = [input_source.output_ports[0].value,
                                 output_source.output_ports[0].value] + error_signal_template
@@ -6893,7 +6846,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return learning_mechanism
 
-    def _get_back_prop_error_sources(self, receiver_activity_mech, learning_mech=None):
+    def _get_back_prop_error_sources(self, receiver_activity_mech, learning_mech=None, context=None):
         # FIX CROSSED_PATHWAYS [JDC]:  GENERALIZE THIS TO HANDLE COMPARATOR/TARGET ASSIGNMENTS IN BACKPROP
         #                              AND THEN TO HANDLE ALL FORMS OF LEARNING (AS BELOW)
         #  REFACTOR TO DEAL WITH CROSSING PATHWAYS (?CREATE METHOD ON LearningMechanism TO DO THIS?):
@@ -6941,8 +6894,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         error_signal_input_port = learning_mech.add_ports(
                             InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                       name=ERROR_SIGNAL,
-                                      context=Context(source=ContextFlags.METHOD)),
-                            context=Context(source=ContextFlags.METHOD))[0]
+                                      context=context),
+                            context=context)[0]
                     # Create Projection here so that don't have to worry about determining correct
                     #    error_signal_input_port of learning_mech in _create_non_terminal_backprop_learning_components
                     try:
@@ -6958,7 +6911,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    so they can be added to the Composition by _create_non_terminal_backprop_learning_components
         return error_sources, error_projections
 
-    def _get_backprop_error_projections(self, learning_mech, receiver_activity_mech):
+    def _get_backprop_error_projections(self, learning_mech, receiver_activity_mech, context):
         error_sources = []
         error_projections = []
         # for error_source in learning_mech.error_sources:
@@ -6986,8 +6939,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     error_signal_input_port = learning_mech.add_ports(
                                                         InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                                                   name=ERROR_SIGNAL,
-                                                                  context=Context(source=ContextFlags.METHOD)),
-                                                        context=Context(source=ContextFlags.METHOD))
+                                                                  context=context),
+                                                        context=context)
                 # DOES THE ABOVE GENERATE A PROJECTION?  IF SO, JUST GET AND RETURN THAT;  ELSE DO THE FOLLOWING:
                 error_projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
                                                            receiver=error_signal_input_port))
@@ -7002,7 +6955,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #       and error_matrix to its self.error_matrices attribute
         #     - add new error_signal projection
 
-    def _add_error_projection_to_dependent_learning_mechs(self, error_source):
+    def _add_error_projection_to_dependent_learning_mechs(self, error_source, context=None):
         projections = []
         # Get all afferents to receiver_activity_mech in Composition that have LearningProjections
         for afferent in [p for p in error_source.input_source.path_afferents
@@ -7017,8 +6970,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 error_signal_input_port = dependent_learning_mech.add_ports(
                                                     InputPort(projections=error_source.output_ports[ERROR_SIGNAL],
                                                               name=ERROR_SIGNAL,
-                                                              context=Context(source=ContextFlags.METHOD)),
-                                                    context=Context(source=ContextFlags.METHOD))
+                                                              context=context),
+                                                    context=context)
                 projections.append(error_signal_input_port[0].path_afferents[0])
                 # projections.append(MappingProjection(sender=error_source.output_ports[ERROR_SIGNAL],
                 #                                      receiver=error_signal_input_port[0]))
@@ -7044,7 +6997,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                              CONTROL
     # ******************************************************************************************************************
 
-    def add_controller(self, controller:ControlMechanism):
+    @handle_external_context()
+    def add_controller(self, controller:ControlMechanism, context=None):
         """
         Add an `ControlMechanism` as the `controller <Composition.controller>` of the Composition.
 
@@ -7073,7 +7027,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #        (e.g., was constructed in the controller argument of the Composition), in which case assign it here.
         if controller.initialization_status == ContextFlags.DEFERRED_INIT:
             controller._init_args[AGENT_REP] = self
-            controller._deferred_init(context=Context(source=ContextFlags.COMPOSITION))
+            controller._deferred_init(context=context)
 
         # Note:  initialization_status here pertains to controller's status w/in the Composition
         #        (i.e., whether any Nodes and/or Projections on which it depends are not yet in the Composition)
@@ -7123,7 +7077,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         controller._activate_projections_for_compositions(self)
         # Call with context to avoid recursion by analyze_graph -> _check_inialization_status -> add_controller
-        self._analyze_graph(context=Context(source=ContextFlags.METHOD))
+        context.source = ContextFlags.METHOD
+        self._analyze_graph(context=context)
         self._update_shadows_dict(controller)
 
         # INSTANTIATE SHADOW_INPUT PROJECTIONS
@@ -7187,7 +7142,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
             ctl_signal = controller._instantiate_control_signal(control_signal=ctl_sig_spec,
-                                                   context=Context(source=ContextFlags.COMPOSITION))
+                                                   context=context)
             controller.control.append(ctl_signal)
             # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITON:
             #                ?DON'T ASSIGN ControlProjection?
@@ -7197,7 +7152,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             controller._activate_projections_for_compositions(self)
         if not invalid_aux_components:
             self._controller_initialization_status = ContextFlags.INITIALIZED
-        self._analyze_graph(context=Context(source=ContextFlags.METHOD))
+        self._analyze_graph(context=context)
 
     def _get_control_signals_for_composition(self):
         """Return list of ControlSignals specified by Nodes in the Composition
@@ -7282,14 +7237,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not component:
                 continue
             if isinstance(component, Projection):
-                if hasattr(component.sender,'owner_mech'):
+                if hasattr(component.sender, OWNER_MECH):
                     sender_node = component.sender.owner_mech
                 else:
                     if isinstance(component.sender.owner, CompositionInterfaceMechanism):
                         sender_node = component.sender.owner.composition
                     else:
                         sender_node = component.sender.owner
-                if hasattr(component.receiver, 'owner_mech'):
+                if hasattr(component.receiver, OWNER_MECH):
                     receiver_node = component.receiver.owner_mech
                 else:
                     if isinstance(component.receiver.owner, CompositionInterfaceMechanism):
@@ -7335,7 +7290,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                 )
 
             # Get control signal costs
-            all_costs = convert_to_np_array(self.controller.parameters.costs._get(context) + [reconfiguration_cost])
+            other_costs = self.controller.parameters.costs._get(context) or []
+            all_costs = convert_to_np_array(other_costs + [reconfiguration_cost])
             # Compute a total for the candidate control signal(s)
             total_cost = self.controller.combine_costs(all_costs)
         return total_cost
@@ -7350,7 +7306,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Check if controller is in deferred init
         if self.controller and self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
-            self.add_controller(self.controller)
+            self.add_controller(self.controller, context=context)
 
             # Don't bother checking any further if from COMMAND_LINE or COMPOSITION (i.e., anything other than Run)
             #    since no need to detect deferred_init and generate errors until runtime
@@ -7361,7 +7317,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 invalid_aux_components = self._get_invalid_aux_components(self.controller)
                 for component in invalid_aux_components:
                     if isinstance(component, Projection):
-                        if hasattr(component.receiver, 'owner_mech'):
+                        if hasattr(component.receiver, OWNER_MECH):
                             owner = component.receiver.owner_mech
                         else:
                             owner = component.receiver.owner
@@ -8073,16 +8029,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             a cycle is not specified, it is assigned its `default values <Parameter_Defaults>` when initialized
             (see `Composition_Cycles_and_Feedback` additional details).
 
-            reset_stateful_functions_to : Dict { Node : Object | iterable [Object] } : default None
-                object or iterable of objects to be passed as arguments to nodes' reset methods when their
-                respective reset_stateful_function_when conditions are met. These are used to seed the stateful attributes
-                of Mechanisms that have stateful functions. If a node's reset_stateful_function_when condition is set to
-                Never, but they are listed in the reset_stateful_functions_to dict, then they will be reset once at the
-                beginning of the run, using the provided values.
+        reset_stateful_functions_to : Dict { Node : Object | iterable [Object] } : default None
+            object or iterable of objects to be passed as arguments to nodes' reset methods when their
+            respective reset_stateful_function_when conditions are met. These are used to seed the stateful attributes
+            of Mechanisms that have stateful functions. If a node's reset_stateful_function_when condition is set to
+            Never, but they are listed in the reset_stateful_functions_to dict, then they will be reset once at the
+            beginning of the run, using the provided values. For a more in depth explanation of this argument, see
+            `Resetting Parameters of StatefulFunctions <Composition_Reset>`.
 
-        reset_stateful_functions_when :  Condition : default Never()
-            sets the reset_stateful_function_when condition for all nodes in the Composition that currently have their
-            reset_stateful_function_when condition set to `Never <Never>` for the duration of the run.
+        reset_stateful_functions_when :  Dict { Node: Condition } | Condition : default Never()
+            if type is dict, sets the reset_stateful_function_when attribute for each key Node to its corresponding value
+            Condition. if type is Condition, sets the reset_stateful_function_when attribute for all nodes in the
+            Composition that currently have their reset_stateful_function_when conditions set to `Never <Never>`.
+            in either case, the specified Conditions persist only for the duration of the run, after which the nodes'
+            reset_stateful_functions_when attributes are returned to their previous Conditions. For a more in depth
+            explanation of this argument, see `Resetting Parameters of StatefulFunctions <Composition_Reset>`.
 
         skip_initialization : bool : default False
 
@@ -8255,65 +8216,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 node.parameters.num_executions._get(context)._set_by_time_scale(TimeScale.RUN, 0)
 
-        if initialize_cycle_values is not None:
-            for node in initialize_cycle_values:
-                if node not in self.nodes:
-                    raise CompositionError(f"{node.name} "
-                                           f"(entry in initialize_cycle_values arg) is not a node in '{self.name}'")
-                else:
-                    if (node not in self.get_nodes_by_role(NodeRole.CYCLE) and
-                            node not in self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER)):
-                        warnings.warn(
-                            f"A value is specified for {node.name} of {self.name} in the 'initialize_cycle_values' "
-                            f"argument of call to run, but it is neither part of a cycle nor a FEEDBACK_SENDER. "
-                            f"Its value will be overwritten when the node first executes, and therefore not used.")
-                    node.initialize(initialize_cycle_values[node], context)
-
-        if not reset_stateful_functions_to:
-            reset_stateful_functions_to = {}
-
-        for node, vals in reset_stateful_functions_to.items():
-            try:
-                iter(vals)
-            except TypeError:
-                vals = [vals]
-                reset_stateful_functions_to[node] = vals
-            if (isinstance(reset_stateful_functions_when, Never) or
-                    node not in reset_stateful_functions_when) and \
-                    isinstance(node.reset_stateful_function_when, Never):
-                node.reset(*vals, context=context)
-
-        # cache and set reset_stateful_function_when conditions for nodes, matching old System behavior
-        # Validate
-        valid_reset_type = True
-        if not isinstance(reset_stateful_functions_when, (Condition, dict)):
-            valid_reset_type = False
-        elif type(reset_stateful_functions_when) == dict:
-            if False in {True if isinstance(k, Mechanism) and isinstance(v, Condition) else
-                         False for k,v in reset_stateful_functions_when.items()}:
-                valid_reset_type = False
-
-        if not valid_reset_type:
-            raise CompositionError(
-                f"{reset_stateful_functions_when} is not a valid specification for reset_integrator_nodes_when of {self.name}. "
-                "reset_integrator_nodes_when must be a Condition or a dict comprised of {Node: Condition} pairs.")
-
-        self._reset_stateful_functions_when_cache = {}
-
-        # use type here to avoid another costly call to isinstance
-        if not type(reset_stateful_functions_when) == dict:
-            for node in self.nodes:
-                try:
-                    if isinstance(node.reset_stateful_function_when, Never):
-                        self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
-                        node.reset_stateful_function_when = reset_stateful_functions_when
-                except AttributeError:
-                    pass
-        else:
-            for node in reset_stateful_functions_when:
-                self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
-                node.reset_stateful_function_when = reset_stateful_functions_when[node]
-
         if ContextFlags.SIMULATION_MODE not in context.runmode:
             try:
                 self.parameters.input_specification._set(copy(inputs), context)
@@ -8326,35 +8228,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if ContextFlags.SIMULATION_MODE not in context.runmode:
             self._check_projection_initialization_status()
 
-        # MODIFIED 8/27/19 OLD:
-        # try:
-        #     if ContextFlags.SIMULATION_MODE not in context.runmode:
-        #         self._analyze_graph()
-        # except AttributeError:
-        #     # if context is None, it has not been created for this context yet, so it is not
-        #     # in a simulation
-        #     self._analyze_graph()
-        # MODIFIED 8/27/19 NEW:
-        # FIX: MODIFIED FEEDBACK -
-        #      THIS IS NEEDED HERE (AND NO LATER) TO WORK WITH test_3_mechanisms_2_origins_1_additive_control_1_terminal
-        #      HOWEVER, WOULD BE GOOD IF CONTEXT WERE SET TO EXECUTE TO FILTER DEFERRED_INIT WARNINGS
-        #      (E.G., IN _check_projection_initialization_status)
-        #      MAYBE AT LEAST CALL _analzze_graph WITH APPOPRIATE FLAG SET?
-        # If a scheduler was passed in, first call _analyze_graph with default scheduler
-        if scheduler is not self.scheduler:
             if not skip_analyze_graph:
                 self._analyze_graph(context=context)
-        # Then call _analyze graph with scheduler actually being used (passed in or default)
-        try:
-            if ContextFlags.SIMULATION_MODE not in context.runmode:
-                if not skip_analyze_graph:
-                    self._analyze_graph(scheduler=scheduler, context=context)
-        except AttributeError:
-            # if context is None, it has not been created for this context yet,
-            # so it is not in a simulation
-            if not skip_analyze_graph:
-                self._analyze_graph(scheduler=scheduler, context=context)
-        # MODIFIED 8/27/19 END
 
         self._check_for_unnecessary_feedback_projections()
 
@@ -8398,6 +8273,57 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._initialize_from_context(context, base_context, override=False)
 
         context.composition = self
+
+        if initialize_cycle_values is not None:
+            self.initialize(values=initialize_cycle_values, include_unspecified_nodes=False, context=context)
+
+        if not reset_stateful_functions_to:
+            reset_stateful_functions_to = {}
+
+        for node, vals in reset_stateful_functions_to.items():
+            try:
+                iter(vals)
+            except TypeError:
+                vals = [vals]
+                reset_stateful_functions_to[node] = vals
+            if (isinstance(reset_stateful_functions_when, Never) or
+                    node not in reset_stateful_functions_when) and \
+                    isinstance(node.reset_stateful_function_when, Never):
+                try:
+                    node.reset(**vals, context=context)
+                except TypeError:
+                    node.reset(*vals, context=context)
+
+        # cache and set reset_stateful_function_when conditions for nodes, matching old System behavior
+        # Validate
+        valid_reset_type = True
+        if not isinstance(reset_stateful_functions_when, (Condition, dict)):
+            valid_reset_type = False
+        elif type(reset_stateful_functions_when) == dict:
+            if False in {True if isinstance(k, Mechanism) and isinstance(v, Condition) else
+                         False for k,v in reset_stateful_functions_when.items()}:
+                valid_reset_type = False
+
+        if not valid_reset_type:
+            raise CompositionError(
+                f"{reset_stateful_functions_when} is not a valid specification for reset_integrator_nodes_when of {self.name}. "
+                "reset_integrator_nodes_when must be a Condition or a dict comprised of {Node: Condition} pairs.")
+
+        self._reset_stateful_functions_when_cache = {}
+
+        # use type here to avoid another costly call to isinstance
+        if not type(reset_stateful_functions_when) == dict:
+            for node in self.nodes:
+                try:
+                    if isinstance(node.reset_stateful_function_when, Never):
+                        self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
+                        node.reset_stateful_function_when = reset_stateful_functions_when
+                except AttributeError:
+                    pass
+        else:
+            for node in reset_stateful_functions_when:
+                self._reset_stateful_functions_when_cache[node] = node.reset_stateful_function_when
+                node.reset_stateful_function_when = reset_stateful_functions_when[node]
 
         is_simulation = (context is not None and
                          ContextFlags.SIMULATION_MODE in context.runmode)
@@ -8503,6 +8429,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             if call_after_trial:
                 call_with_pruned_args(call_after_trial, context=context)
+
+        # IMPLEMENTATION NOTE:
+        # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
+        # method whether or not we are at the last trial of the run.
+        # The BEFORE Run controller execution takes place in the execute method,, because we can't execute the controller until after
+        # setup has occurred for the Input CIM.
+        if (self.controller_mode == AFTER and
+            self.controller_time_scale == TimeScale.RUN):
+            try:
+                _comp_ex
+            except NameError:
+                _comp_ex = None
+            self._execute_controller(
+                bin_execute=bin_execute,
+                _comp_ex=_comp_ex,
+                context=context
+            )
 
         # Reset input spec for next trial
         self.parameters.input_specification._set(None, context)
@@ -8667,6 +8610,37 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context.remove_flag(ContextFlags.LEARNING_MODE)
         return learning_results
 
+    def _execute_controller(self, relative_order=AFTER, bin_execute=False, _comp_ex=False, context=None):
+        execution_scheduler = context.composition.scheduler
+        if (self.enable_controller and
+            self.controller_mode == relative_order and
+            self.controller_condition.is_satisfied(scheduler=execution_scheduler,
+                                                   context=context)
+        ):
+
+            # control phase
+            # FIX: SHOULD SET CONTEXT AS CONTROL HERE AND RESET AT END (AS DONE FOR animation BELOW)
+            if (
+                    self.initialization_status != ContextFlags.INITIALIZING
+                    and ContextFlags.SIMULATION_MODE not in context.runmode
+            ):
+                if self.controller and not bin_execute:
+                    # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
+                    # FIX: END REMOVE
+                    context.execution_phase = ContextFlags.PROCESSING
+                    self.controller.execute(context=context)
+
+                if bin_execute:
+                    _comp_ex.execute_node(self.controller)
+
+                context.remove_flag(ContextFlags.PROCESSING)
+
+                # Animate controller (before execution)
+                context.execution_phase = ContextFlags.CONTROL
+                if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
+                    self._animate_execution(self.controller, context)
+                context.remove_flag(ContextFlags.CONTROL)
+
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
     def execute(
             self,
@@ -8752,6 +8726,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # ASSIGNMENTS **************************************************************************************************
 
+        assert not str(bin_execute).endswith("Run")
         if bin_execute == 'Python':
             bin_execute = False
 
@@ -8888,7 +8863,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         )
                     ):
                         vals = reset_stateful_functions_to.get(node, [None])
-                        node.reset(*vals, context=context)
+                        try:
+                            node.reset(**vals, context=context)
+                        except TypeError:
+                            node.reset(*vals, context=context)
                 except AttributeError:
                     pass
 
@@ -8967,33 +8945,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Execute controller --------------------------------------------------------
 
-        if (self.enable_controller and
-            self.controller_mode == BEFORE and
-            self.controller_condition.is_satisfied(scheduler=execution_scheduler,
-                                                   context=context)):
-
-            # control phase
-            # FIX: SHOULD SET CONTEXT AS CONTROL HERE AND RESET AT END (AS DONE FOR animation BELOW)
-            if (
-                    self.initialization_status != ContextFlags.INITIALIZING
-                    and ContextFlags.SIMULATION_MODE not in context.runmode
-            ):
-                if self.controller and not bin_execute:
-                    # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
-                    # FIX: END REMOVE
-                    context.execution_phase = ContextFlags.PROCESSING
-                    self.controller.execute(context=context)
-
-                if bin_execute:
-                    _comp_ex.execute_node(self.controller)
-
-                context.remove_flag(ContextFlags.PROCESSING)
-
-                # Animate controller (before execution)
-                context.execution_phase = ContextFlags.CONTROL
-                if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
-                    self._animate_execution(self.controller, context)
-                context.remove_flag(ContextFlags.CONTROL)
+        try:
+            _comp_ex
+        except NameError:
+            _comp_ex = None
+        # IMPLEMENTATION NOTE:
+        # The BEFORE Run controller execution takes place here, because we can't execute the controller until after
+        # setup has occurred for the Input CIM, whereas the AFTER Run controller execution takes place in the run
+        # method, because there's no way to tell from within the execute method whether or not we are at the last trial
+        # of the run.
+        if (self.controller_time_scale == TimeScale.RUN and
+            scheduler.clock.time.trial == 0):
+                self._execute_controller(
+                    relative_order=BEFORE,
+                    bin_execute=bin_execute,
+                    _comp_ex=_comp_ex,
+                    context=context
+                )
+        elif self.controller_time_scale == TimeScale.TRIAL:
+            self._execute_controller(
+                relative_order=BEFORE,
+                bin_execute=bin_execute,
+                _comp_ex=_comp_ex,
+                context=context
+            )
 
         # EXECUTE EACH EXECUTION SET *********************************************************************************
 
@@ -9001,15 +8976,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         context.execution_phase = ContextFlags.PROCESSING
 
+        try:
+            _comp_ex
+        except NameError:
+            _comp_ex = None
+
         if call_before_pass:
             call_with_pruned_args(call_before_pass, context=context)
 
+        if self.controller_time_scale == TimeScale.PASS:
+            self._execute_controller(
+                relative_order=BEFORE,
+                bin_execute=bin_execute,
+                _comp_ex=_comp_ex,
+                context=context
+            )
+
         # GET execution_set -------------------------------------------------------------------------
         # run scheduler to receive sets of nodes that may be executed at this time step in any order
-        for next_execution_set in execution_scheduler.run(termination_conds=termination_processing,
-                                                          context=context,
-                                                          skip_trial_time_increment=True,
-                                                          ):
+        execution_sets = execution_scheduler.run(termination_conds=termination_processing,
+                                                      context=context,
+                                                      skip_trial_time_increment=True,
+                                                      )
+        if context.runmode == ContextFlags.SIMULATION_MODE:
+            for i in range(scheduler.clock.time.time_step):
+                execution_sets.__next__()
+
+        for next_execution_set in execution_sets:
 
             # SETUP EXECUTION ----------------------------------------------------------------------------
 
@@ -9023,19 +9016,41 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if curr_pass != last_pass:
                 new_pass = True
                 last_pass = curr_pass
-            if call_after_pass:
-                if next_pass_after == curr_pass:
+            if next_pass_after == curr_pass:
+                if call_after_pass:
                     logger.debug(f'next_pass_after {next_pass_after}\tscheduler pass {curr_pass}')
                     call_with_pruned_args(call_after_pass, context=context)
-                    next_pass_after += 1
-            if call_before_pass:
-                if next_pass_before == curr_pass:
+                if self.controller_time_scale == TimeScale.PASS:
+                    self._execute_controller(
+                        relative_order=AFTER,
+                        bin_execute=bin_execute,
+                        _comp_ex=_comp_ex,
+                        context=context
+                    )
+                next_pass_after += 1
+            if next_pass_before == curr_pass:
+                if call_before_pass:
                     call_with_pruned_args(call_before_pass, context=context)
                     logger.debug(f'next_pass_before {next_pass_before}\tscheduler pass {curr_pass}')
-                    next_pass_before += 1
+                if self.controller_time_scale == TimeScale.PASS:
+                    self._execute_controller(
+                        relative_order=BEFORE,
+                        bin_execute=bin_execute,
+                        _comp_ex=_comp_ex,
+                        context=context
+                    )
+                next_pass_before += 1
 
             if call_before_time_step:
                 call_with_pruned_args(call_before_time_step, context=context)
+
+            if self.controller_time_scale == TimeScale.TIME_STEP:
+                self._execute_controller(
+                    relative_order=BEFORE,
+                    bin_execute=bin_execute,
+                    _comp_ex=_comp_ex,
+                    context=context
+                )
 
             # MANAGE EXECUTION OF FEEDBACK / CYCLIC GRAPHS ------------------------------------------------
             # Set up storage of all node values *before* the start of each timestep
@@ -9062,7 +9077,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
 
             # execute each node with EXECUTING in context
-            for node in next_execution_set:
+            for (node_idx, node) in enumerate(next_execution_set):
 
                 node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TIME_STEP, 0)
                 if new_pass:
@@ -9223,6 +9238,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     node.output_ports[i].parameters.value._set(new_values[node][i], context,
                                                                skip_history=True, skip_log=True)
 
+            if self.controller_time_scale == TimeScale.TIME_STEP:
+                self._execute_controller(
+                    relative_order=AFTER,
+                    bin_execute=bin_execute,
+                    _comp_ex=_comp_ex,
+                    context=context
+                )
+
             if call_after_time_step:
                 call_with_pruned_args(call_after_time_step, context=context)
 
@@ -9242,6 +9265,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if call_after_pass:
             call_with_pruned_args(call_after_pass, context=context)
 
+        if self.controller_time_scale == TimeScale.PASS:
+            self._execute_controller(
+                relative_order=AFTER,
+                bin_execute=bin_execute,
+                _comp_ex=_comp_ex,
+                context=context
+            )
 
         # Animate output_CIM
         # FIX: NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THIS -
@@ -9251,31 +9281,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX: END
 
         # EXECUTE CONTROLLER (if controller_mode == AFTER) ************************************************************
-
-        if (self.enable_controller and
-                self.controller_mode == AFTER and
-                self.controller_condition.is_satisfied(scheduler=execution_scheduler,
-                                                       context=context)):
-            # control phase
-            if (
-                    self.initialization_status != ContextFlags.INITIALIZING
-                    and ContextFlags.SIMULATION_MODE not in context.runmode
-            ):
-                context.execution_phase = ContextFlags.CONTROL
-                if self.controller and not bin_execute:
-                    self.controller.execute(context=context)
-
-                if bin_execute:
-                    _comp_ex.freeze_values()
-                    _comp_ex.execute_node(self.controller)
-
-
-
-                # Animate controller (after execution)
-                if self._animate is not False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
-                    self._animate_execution(self.controller, context)
-
-                context.remove_flag(ContextFlags.CONTROL)
+        if self.controller_time_scale == TimeScale.TRIAL:
+            self._execute_controller(
+                relative_order=AFTER,
+                bin_execute=bin_execute,
+                _comp_ex=_comp_ex,
+                context=context
+            )
 
         execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
@@ -9316,17 +9328,69 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _update_learning_parameters(self, context):
         pass
 
-    @handle_external_context(execution_id=NotImplemented)
-    def reset(self, values=None, context=NotImplemented):
-        if context is NotImplemented:
-            context = self.most_recent_context
-
+    @handle_external_context(fallback_most_recent=True)
+    def reset(self, values=None, include_unspecified_nodes=True, context=NotImplemented):
         if not values:
             values = {}
 
         for node in self.stateful_nodes:
+            if not include_unspecified_nodes and node not in values:
+                continue
             reset_val = values.get(node)
             node.reset(reset_val, context=context)
+
+    @handle_external_context(fallback_most_recent=True)
+    def initialize(self, values=None, include_unspecified_nodes=True, context=None):
+        """
+            Initializes the values of nodes within cycles. If `include_unspecified_nodes` is True and a value is
+            provided for a given node, the node will be initialized to that value. If `include_unspecified_nodes` is
+            True and a value is not provided, the node will be initialized to its default value. If
+            `include_unspecified_nodes` is False, then all nodes must have corresponding initialization values. The
+            `DEFAULT` keyword can be used in lieu of a numerical value to reset a node's value to its default.
+
+            If a context is not provided, the most recent context under which the Composition has executed will be used.
+
+            Arguments
+            ----------
+            values: Dict { Node: Node Value }
+                A dictionary contaning key-value pairs of Nodes and initialization values. Nodes within cycles that are
+                not included in this dict will be initialized to their default values.
+
+            include_unspecified_nodes: bool
+                Specifies whether all nodes within cycles should be initialized or only ones specified in the provided
+                values dictionary.
+
+            context: Context
+                The context under which the nodes should be initialized. context will be set to
+                self.most_recent_execution_context if one is not specified.
+
+        """
+        # comp must be initialized from context before cycle values are initialized
+        self._initialize_from_context(context, override=False)
+
+        if not values:
+            values = {}
+
+        cycle_nodes = set(self.get_nodes_by_role(NodeRole.CYCLE) + self.get_nodes_by_role(NodeRole.FEEDBACK_SENDER))
+
+        for node in values:
+            if node not in self.nodes:
+                raise CompositionError(f"{node.name} "
+                                       f"(entry in initialize values arg) is not a node in '{self.name}'")
+            if node not in cycle_nodes:
+                warnings.warn(
+                    f"A value is specified for {node.name} of {self.name} in the 'initialize_cycle_values' "
+                    f"argument of call to run, but it is neither part of a cycle nor a FEEDBACK_SENDER. "
+                    f"Its value will be overwritten when the node first executes, and therefore not used."
+                )
+
+        for node in cycle_nodes:
+            if not include_unspecified_nodes:
+                if node not in values:
+                    continue
+            provided_value = values.get(node)
+            value = provided_value if not provided_value == DEFAULT else node.defaults.value
+            node.initialize(value, context)
 
     def disable_all_history(self):
         """
@@ -9504,6 +9568,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _after_agent_rep_execution(self, context=None):
         pass
 
+    def _update_default_variable(self, *args, **kwargs):
+        # NOTE: Composition should not really have a default_variable,
+        # but does as a result of subclassing from Component.
+        # Subclassing may not be necessary anymore
+        raise TypeError(f'_update_default_variable unsupported for {self.__class__.__name__}')
+
+    def _get_parsed_variable(self, *args, **kwargs):
+        raise TypeError(f'_get_parsed_variable unsupported for {self.__class__.__name__}')
+
 
     # ******************************************************************************************************************
     #                                           LLVM
@@ -9608,17 +9681,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def _dict_summary(self):
-        scheduler_dict = {
-            str(ContextFlags.PROCESSING): self.scheduler._dict_summary
-        }
-
         super_summary = super()._dict_summary
-
-        try:
-            super_summary[self._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]['schedulers'] = scheduler_dict
-        except KeyError:
-            super_summary[self._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK] = {}
-            super_summary[self._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]['schedulers'] = scheduler_dict
 
         nodes_dict = {MODEL_SPEC_ID_PSYNEULINK: {}}
         projections_dict = {MODEL_SPEC_ID_PSYNEULINK: {}}
@@ -9678,6 +9741,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return {
             MODEL_SPEC_ID_COMPOSITION: [{
                 **super_summary,
+                **self.scheduler._dict_summary,
                 **{
                     MODEL_SPEC_ID_NODES: nodes_dict,
                     MODEL_SPEC_ID_PROJECTIONS: projections_dict,

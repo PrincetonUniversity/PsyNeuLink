@@ -42,6 +42,8 @@ class TestLog:
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
+            'mod_offset': 'OFF',
+            'mod_rate': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'termination_measure_value': 'OFF',
@@ -76,6 +78,8 @@ class TestLog:
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
+            'mod_offset': 'OFF',
+            'mod_rate': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'termination_measure_value': 'OFF',
@@ -134,6 +138,8 @@ class TestLog:
             'mod_intercept': 'OFF',
             'mod_noise': 'EXECUTION',
             'mod_slope': 'OFF',
+            'mod_offset': 'OFF',
+            'mod_rate': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'termination_measure_value': 'OFF',
@@ -167,6 +173,8 @@ class TestLog:
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
+            'mod_offset': 'OFF',
+            'mod_rate': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'termination_measure_value': 'OFF',
@@ -285,6 +293,8 @@ class TestLog:
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
+            'mod_offset': 'OFF',
+            'mod_rate': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'termination_measure_value': 'OFF',
@@ -318,6 +328,8 @@ class TestLog:
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
+            'mod_offset': 'OFF',
+            'mod_rate': 'OFF',
             'num_executions_before_finished': 'OFF',
             'noise': 'OFF',
             'termination_measure_value': 'OFF',
@@ -380,6 +392,8 @@ class TestLog:
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'EXECUTION',
+            'mod_offset': 'OFF',
+            'mod_rate': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'termination_measure_value': 'OFF',
@@ -413,6 +427,8 @@ class TestLog:
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'EXECUTION',
+            'mod_offset': 'OFF',
+            'mod_rate': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'termination_measure_value': 'OFF',
@@ -532,6 +548,8 @@ class TestLog:
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
+            'mod_offset': 'OFF',
+            'mod_rate': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'termination_measure_value': 'OFF',
@@ -565,6 +583,8 @@ class TestLog:
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'OFF',
+            'mod_offset': 'OFF',
+            'mod_rate': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'termination_measure_value': 'OFF',
@@ -603,6 +623,8 @@ class TestLog:
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'EXECUTION',
+            'mod_offset': 'OFF',
+            'mod_rate': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'termination_measure_value': 'OFF',
@@ -641,6 +663,8 @@ class TestLog:
             'mod_intercept': 'OFF',
             'mod_noise': 'OFF',
             'mod_slope': 'EXECUTION',
+            'mod_offset': 'OFF',
+            'mod_rate': 'OFF',
             'noise': 'OFF',
             'num_executions_before_finished': 'OFF',
             'termination_measure_value': 'OFF',
@@ -977,6 +1001,15 @@ class TestLog:
             log_dict = lca.log.nparray_dictionary()['Composition-0']
             assert log_dict['Run'] == [[0], [0], [0], [1], [1], [1]]
             assert np.allclose(log_dict['value'], [[[0.52466739, 0.47533261]] * 6])
+
+    def test_log_with_non_full_execution_id_entries(self):
+        t = pnl.TransferMechanism()
+
+        t.parameters.noise.set(0, context=1, override=True)
+        t.parameters.value.set(0, context=2, override=True)
+
+        t.log.nparray()
+        t.log.nparray_dictionary()
 
 
 class TestClearLog:

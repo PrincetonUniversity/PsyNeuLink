@@ -722,6 +722,7 @@ TERMINATION_COMPARISION_OP = 'termination_comparison_op'
 port_value = "Port value"   # Used in Port specification dict to specify Port value
 port_params = "Port params" # Used in Port specification dict to specify Port params
 
+OWNER_MECH = 'owner_mech'
 #endregion
 
 #region ----------------------------------------    MODULATORY MECHANISMS ----------------------------------------------

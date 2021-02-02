@@ -375,7 +375,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.inputport import InputPort, INPUT_PORT
 from psyneulink.core.components.ports.port import _parse_port_spec
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTROL, EXPONENT, EXPONENTS, FUNCTION, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, \
     PARAMS, PREFERENCE_SET_NAME, PROJECTION, PROJECTIONS, PORT_TYPE, VARIABLE, WEIGHT, WEIGHTS
@@ -666,6 +666,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             port.name = "Value of {} [{}]".format(proj.sender.owner.name, proj.sender.name)
             register_instance(port, port.name, InputPort, self._portRegistry, INPUT_PORT)
 
+    @handle_external_context(source=ContextFlags.METHOD)
     def add_to_monitor(self, monitor_specs, context=None):
         """Instantiate `OutputPorts <OutputPort>` to be monitored by the ObjectiveMechanism.
 
@@ -730,11 +731,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             else:
                 reference_value.append(projection_tuple.port.value)
 
-        if not context:
-            from psyneulink.core.globals.context import Context
-            context = Context()
-        context.source = ContextFlags.METHOD
-
         input_ports = self._instantiate_input_ports(monitor_specs=monitor_specs,
                                                       reference_value=reference_value,
                                                       context=context
@@ -761,15 +757,21 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         DEFAULT_WEIGHT = 1
         DEFAULT_EXPONENT = 1
 
-        weights = [input_port.weight for input_port in self.input_ports]
-        exponents = [input_port.exponent for input_port in self.input_ports]
+        weights = [input_port.defaults.weight for input_port in self.input_ports]
+        exponents = [input_port.defaults.exponent for input_port in self.input_ports]
 
-        if hasattr(self.function, WEIGHTS):
+        if WEIGHTS in self.function.parameters:
             if any(weight is not None for weight in weights):
-                self.function.weights = [[weight or DEFAULT_WEIGHT] for weight in weights]
-        if hasattr(self.function, EXPONENTS):
+                self.function.parameters.weights._set(
+                    [[weight or DEFAULT_WEIGHT] for weight in weights],
+                    context
+                )
+        if EXPONENTS in self.function.parameters:
             if any(exponent is not None for exponent in exponents):
-                self.function.exponents = [[exponent or DEFAULT_EXPONENT] for exponent in exponents]
+                self.function.parameters.exponents._set(
+                    [[exponent or DEFAULT_EXPONENT] for exponent in exponents],
+                    context
+                )
         assert True
 
     # # MODIFIED 6/8/19 NEW: [JDC]
@@ -800,14 +802,14 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     @property
     def monitor_weights_and_exponents(self):
-        if hasattr(self.function, WEIGHTS) and self.function.weights is not None:
-            weights = self.function.weights
+        if hasattr(self.function, WEIGHTS) and self.function.weights.base is not None:
+            weights = self.function.weights.base
         else:
-            weights = [input_port.weight for input_port in self.input_ports]
-        if hasattr(self.function, EXPONENTS) and self.function.exponents is not None:
-            exponents = self.function.exponents
+            weights = [input_port.weight.base for input_port in self.input_ports]
+        if hasattr(self.function, EXPONENTS) and self.function.exponents.base is not None:
+            exponents = self.function.exponents.base
         else:
-            exponents = [input_port.exponent for input_port in self.input_ports]
+            exponents = [input_port.exponent.base for input_port in self.input_ports]
         return [(w,e) for w, e in zip(weights,exponents)]
 
     @monitor_weights_and_exponents.setter

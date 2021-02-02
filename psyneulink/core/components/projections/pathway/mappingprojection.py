@@ -299,7 +299,7 @@ from psyneulink.core.globals.keywords import \
     HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_PORT, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, \
     OUTPUT_PORT, PROJECTION_SENDER, VALUE
 from psyneulink.core.globals.log import ContextFlags
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 
@@ -418,10 +418,10 @@ class MappingProjection(PathwayProjection_Base):
                     :type: ``str``
         """
         function = Parameter(LinearMatrix, stateful=False, loggable=False)
-        matrix = Parameter(DEFAULT_MATRIX, modulable=True,
-                           function_parameter=True,
-                           getter=_mapping_projection_matrix_getter,
-                           setter=_mapping_projection_matrix_setter)
+        matrix = FunctionParameter(
+            DEFAULT_MATRIX,
+            setter=_mapping_projection_matrix_setter
+        )
 
     classPreferenceLevel = PreferenceLevel.TYPE
 
@@ -606,7 +606,10 @@ class MappingProjection(PathwayProjection_Base):
                                  receiver_len,
                                  self.receiver.owner.name))
 
-                self.matrix = get_matrix(matrix_spec, mapping_input_len, receiver_len, context=context)
+                self.parameters.matrix._set(
+                    get_matrix(matrix_spec, mapping_input_len, receiver_len, context=context),
+                    context
+                )
 
                 # Since matrix shape has changed, output of self.function may have changed, so update value
                 self._instantiate_value(context=context)

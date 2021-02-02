@@ -39,7 +39,7 @@ class TestControlSpecification:
         comp.add_controller(ctl_mech)
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
-        assert np.allclose(comp.controller.control[0].allocation_samples(),
+        assert np.allclose(comp.controller.control[0].allocation_samples.base(),
                            [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
 
     def test_add_controller_in_comp_constructor_then_add_node_with_control_specified(self):
@@ -60,7 +60,7 @@ class TestControlSpecification:
         comp.add_node(ddm)
         assert comp.controller.control[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert np.allclose(comp.controller.control[0].allocation_samples(),
+        assert np.allclose(comp.controller.control[0].allocation_samples.base(),
                            [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
 
     def test_redundant_control_spec_add_node_with_control_specified_then_controller_in_comp_constructor(self):
@@ -77,7 +77,7 @@ class TestControlSpecification:
         comp.add_controller(pnl.ControlMechanism(control_signals=("drift_rate", ddm)))
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert comp.controller.control_signals[0].allocation_samples is None
+        assert comp.controller.control_signals[0].allocation_samples.base is None
 
     def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_control_specified(self):
         # First create Composition with controller that has HAS control specification,
@@ -92,7 +92,7 @@ class TestControlSpecification:
         comp.add_node(ddm)
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert comp.controller.control_signals[0].allocation_samples is None
+        assert comp.controller.control_signals[0].allocation_samples.base is None
 
     def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_alloc_samples_specified(self):
         # First create Composition with controller that has HAS control specification,
@@ -108,7 +108,7 @@ class TestControlSpecification:
         comp.add_node(ddm)
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert np.allclose(comp.controller.control[0].allocation_samples(), [0.2, 0.5, 0.8])
+        assert np.allclose(comp.controller.control[0].allocation_samples.base(), [0.2, 0.5, 0.8])
 
     def test_deferred_init(self):
         # Test to insure controller works the same regardless of whether it is added to a composition before or after
@@ -355,12 +355,15 @@ class TestControlSpecification:
         comp = pnl.Composition(name='comp',
                            pathways=[mech],
                            controller=pnl.OptimizationControlMechanism(agent_rep=None,
-                                                                       control_signals=(pnl.SLOPE, mech)))
+                                                                       control_signals=(pnl.SLOPE, mech),
+                                                                       search_space=[1]))
         assert comp.controller.composition == comp
         assert any(pnl.SLOPE in p_name for p_name in comp.projections.names)
         assert not any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
 
-        new_ocm = pnl.OptimizationControlMechanism(agent_rep=None, control_signals=(pnl.INTERCEPT, mech))
+        new_ocm = pnl.OptimizationControlMechanism(agent_rep=None,
+                                                   control_signals=(pnl.INTERCEPT, mech),
+                                                   search_space=[1])
         old_ocm = comp.controller
         comp.add_controller(new_ocm)
 
@@ -566,7 +569,7 @@ class TestControlMechanisms:
         assert len(lvoc.input_ports) == 5
 
         for i in range(1,5):
-            assert lvoc.input_ports[i].function.offset == 10.0
+            assert lvoc.input_ports[i].function.offset.base == 10.0
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -627,7 +630,9 @@ class TestControlMechanisms:
         )
         results = ocomp.run([5], bin_execute=mode)
         assert np.allclose(results, [[50]])
-        benchmark(ocomp.run, [5], bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(ocomp.run, [5], bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -692,7 +697,9 @@ class TestControlMechanisms:
         )
         results = ocomp.run([5], bin_execute=mode)
         assert np.allclose(results, [[70]])
-        benchmark(ocomp.run, [5], bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(ocomp.run, [5], bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -757,7 +764,9 @@ class TestControlMechanisms:
         )
         results = ocomp.run([5], bin_execute=mode)
         assert np.allclose(results, [[5]])
-        benchmark(ocomp.run, [5], bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(ocomp.run, [5], bin_execute=mode)
 
     def test_two_tier_ocm(self):
         integrationConstant = 0.8  # Time Constant
@@ -989,7 +998,9 @@ class TestControlMechanisms:
         assert oComp.controller == oController
         res = oComp.run(inputs=[5], bin_execute=mode)
         assert np.allclose(res, [40])
-        benchmark(oComp.run, [5], bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(oComp.run, [5], bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1031,7 +1042,7 @@ class TestControlMechanisms:
             bin_execute=mode
         )
         assert np.allclose(val[0], [5])
-        assert np.allclose(val[1], [0.7573055560600637, 0.4500512583901123])
+        assert np.allclose(val[1], [0.7978996, 0.40776362])
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1056,6 +1067,89 @@ class TestControlMechanisms:
 
 
 class TestModelBasedOptimizationControlMechanisms:
+    def test_ocm_default_function(self):
+        a = pnl.ProcessingMechanism()
+        comp = pnl.Composition(
+            controller_mode=pnl.BEFORE,
+            nodes=[a],
+            controller=pnl.OptimizationControlMechanism(
+                control=pnl.ControlSignal(
+                    modulates=(pnl.SLOPE, a),
+                    intensity_cost_function=lambda x: 0,
+                    adjustment_cost_function=lambda x: 0,
+                    allocation_samples=[1, 10]
+                ),
+                features=[a.input_port],
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    monitor=[a.output_port]
+                ),
+            )
+        )
+        assert type(comp.controller.function) == pnl.GridSearch
+        assert comp.run([1]) == [10]
+
+    def test_ocm_searchspace_arg(self):
+        a = pnl.ProcessingMechanism()
+        comp = pnl.Composition(
+            controller_mode=pnl.BEFORE,
+            nodes=[a],
+            controller=pnl.OptimizationControlMechanism(
+                control=pnl.ControlSignal(
+                    modulates=(pnl.SLOPE, a),
+                    intensity_cost_function=lambda x: 0,
+                    adjustment_cost_function=lambda x: 0,
+                ),
+                features=[a.input_port],
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    monitor=[a.output_port]
+                ),
+                search_space=[pnl.SampleIterator([1, 10])]
+            )
+        )
+        assert type(comp.controller.function) == pnl.GridSearch
+        assert comp.run([1]) == [10]
+
+    @pytest.mark.parametrize("format,nested",
+                             [("list", True), ("list", False),
+                              ("tuple", True), ("tuple", False),
+                              ("SampleIterator", True), ("SampleIterator", False),
+                              ("SampleSpec", True), ("SampleSpec", False),
+                              ("ndArray", True), ("ndArray", False),
+                              ],)
+    def test_ocm_searchspace_format_equivalence(self, format, nested):
+        if format == "list":
+            search_space = [1, 10]
+        elif format == "tuple":
+            search_space = (1, 10)
+        elif format == "SampleIterator":
+            search_space = SampleIterator((1,10))
+        elif format == "SampleSpec":
+            search_space = SampleSpec(1, 10, 9)
+        elif format == "ndArray":
+            search_space = np.array((1, 10))
+
+        if nested:
+            search_space = [search_space]
+
+        a = pnl.ProcessingMechanism()
+        comp = pnl.Composition(
+            controller_mode=pnl.BEFORE,
+            nodes=[a],
+            controller=pnl.OptimizationControlMechanism(
+                control=pnl.ControlSignal(
+                    modulates=(pnl.SLOPE, a),
+                    intensity_cost_function=lambda x: 0,
+                    adjustment_cost_function=lambda x: 0,
+                ),
+                features=[a.input_port],
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    monitor=[a.output_port]
+                ),
+                search_space=search_space
+            )
+        )
+        assert type(comp.controller.function) == pnl.GridSearch
+        assert comp.run([1]) == [10]
 
     def test_evc(self):
         # Mechanisms
@@ -1639,7 +1733,9 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
         assert np.allclose(comp.results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
-        benchmark(comp.run, inputs, bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(comp.run, inputs, bin_execute=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1685,7 +1781,9 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
         assert np.allclose(comp.results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
-        benchmark(comp.run, inputs, bin_execute=mode)
+
+        if benchmark.enabled:
+            benchmark(comp.run, inputs, bin_execute=mode)
 
     def test_model_based_ocm_with_buffer(self):
 
@@ -2040,11 +2138,12 @@ class TestModelBasedOptimizationControlMechanisms:
             assert np.allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
                                log_arr['outer_comp']['mod_slope'])
 
-        # Disable logging for the benchmark run
-        A.log.set_log_conditions(items="mod_slope", log_condition=LogCondition.OFF)
-        A.log.clear_entries()
-        benchmark(comp.run, inputs=inputs, num_trials=10, context='bench_outer_comp', bin_execute=mode)
-        assert len(A.log.get_logged_entries()) == 0
+        if benchmark.enabled:
+            # Disable logging for the benchmark run
+            A.log.set_log_conditions(items="mod_slope", log_condition=LogCondition.OFF)
+            A.log.clear_entries()
+            benchmark(comp.run, inputs=inputs, num_trials=10, context='bench_outer_comp', bin_execute=mode)
+            assert len(A.log.get_logged_entries()) == 0
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2207,3 +2306,276 @@ class TestSampleIterator:
         assert sample_iterator.start == 1
         assert sample_iterator.stop is None
         assert sample_iterator.num == len(sample_list)
+
+
+class TestControlTimeScales:
+
+    def test_time_step_before(self):
+        a = pnl.ProcessingMechanism()
+        b = pnl.ProcessingMechanism()
+        c = pnl.ControlMechanism(
+            default_variable=1,
+            function=pnl.SimpleIntegrator,
+            control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
+        )
+        comp = pnl.Composition(
+            pathways=[a, b],
+            controller=c,
+            controller_mode=pnl.BEFORE,
+            controller_time_scale=pnl.TimeScale.TIME_STEP
+        )
+        comp.run([1], num_trials=2)
+        # Controller executions
+        # (C-<#>) == controller execution followed by val as of the end of that execution, increments by 1
+        # on each execution
+        #
+        #  Trial 1:
+        #    (C-1) a (C-2) b
+        #  Trial 2:
+        #    (C-3) a (C-4) b
+        #
+        assert c.value == [4]
+        assert c.execution_count == 4
+        assert comp.results == [[2], [4]]
+
+    def test_time_step_after(self):
+        a = pnl.ProcessingMechanism()
+        b = pnl.ProcessingMechanism()
+        c = pnl.ControlMechanism(
+            default_variable=1,
+            function=pnl.SimpleIntegrator,
+            control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
+        )
+        comp = pnl.Composition(
+            pathways=[a, b],
+            controller=c,
+            controller_mode=pnl.AFTER,
+            controller_time_scale=pnl.TimeScale.TIME_STEP
+        )
+        comp.run([1], num_trials=2)
+        # Controller executions
+        # (C-<#>) == controller execution followed by val as of the end of that execution, increments by 1
+        # on each execution
+        #
+        #  Trial 1:
+        #    a (C-1) b (C-2)
+        #  Trial 2:
+        #    a (C-3) b (C-4)
+        #
+        assert c.value == [4]
+        assert c.execution_count == 4
+        assert comp.results == [[1], [3]]
+
+    def test_pass_before(self):
+        a = pnl.ProcessingMechanism()
+        b = pnl.ProcessingMechanism()
+        c = pnl.ControlMechanism(
+            default_variable=1,
+            function=pnl.SimpleIntegrator,
+            control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
+        )
+        comp = pnl.Composition(
+            pathways=[a, b],
+            controller=c,
+            controller_mode=pnl.BEFORE,
+            controller_time_scale=pnl.TimeScale.PASS,
+        )
+        comp.scheduler.add_condition(
+            b, pnl.AfterPass(1)
+        )
+        comp.run([1], num_trials=2,)
+        # Controller executions
+        # (C-<#>) == controller execution followed by val as of the end of that execution, increments by 1
+        # on each execution
+        #
+        #  Trial 1:
+        #    (C-1) Pass 1:
+        #       a
+        #    (C-2) Pass 2:
+        #       a
+        #    (C-3) Pass 2:
+        #       a   b
+        #  Trial 2:
+        #    (C-4) Pass 1:
+        #       a
+        #    (C-5) Pass 2:
+        #       a
+        #    (C-6) Pass 3:
+        #       a   b
+        assert c.value == [6]
+        assert c.execution_count == 6
+        assert comp.results == [[3], [6]]
+
+    def test_pass_after(self):
+        a = pnl.ProcessingMechanism()
+        b = pnl.ProcessingMechanism()
+        c = pnl.ControlMechanism(
+            default_variable=1,
+            function=pnl.SimpleIntegrator,
+            control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
+        )
+        comp = pnl.Composition(
+            pathways=[a, b],
+            controller=c,
+            controller_mode=pnl.AFTER,
+            controller_time_scale=pnl.TimeScale.PASS,
+        )
+        comp.scheduler.add_condition(
+            b, pnl.AfterPass(1)
+        )
+        comp.run([1], num_trials=2)
+        # Controller executions
+        # (C-<#>) == controller execution followed by val as of the end of that execution, increments by 1
+        # on each execution
+        #
+        #  Trial 1:
+        #    Pass 1:
+        #       a
+        #       (C-1)
+        #    Pass 2:
+        #       a
+        #       (C-2)
+        #    Pass 2:
+        #       a   b
+        #       (C-3)
+        #  Trial 2:
+        #    Pass 1:
+        #       a
+        #       (C-4)
+        #    Pass 2:
+        #       a
+        #       (C-5)
+        #    Pass 3:
+        #       a   b
+        #       (C-6)
+        assert c.value == [6]
+        assert c.execution_count == 6
+        assert comp.results == [[2], [5]]
+
+    def test_trial_before(self):
+        a = pnl.ProcessingMechanism()
+        b = pnl.ProcessingMechanism()
+        c = pnl.ControlMechanism(
+            default_variable=1,
+            function=pnl.SimpleIntegrator,
+            control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
+        )
+        comp = pnl.Composition(
+            pathways=[a, b],
+            controller=c,
+            controller_mode=pnl.BEFORE,
+            controller_time_scale=pnl.TimeScale.TRIAL
+        )
+        comp.run([1], num_trials=2)
+        # Controller executions
+        # (C-<#>) == controller execution followed by val as of the end of that execution, increments by 1
+        # on each execution
+        #
+        #  (C-1) Trial 1:
+        #    a  b
+        #  (C-2) Trial 2:
+        #    a  b
+        #
+        assert c.value == [2]
+        assert c.execution_count == 2
+        assert comp.results == [[1], [2]]
+
+    def test_trial_after(self):
+        a = pnl.ProcessingMechanism()
+        b = pnl.ProcessingMechanism()
+        c = pnl.ControlMechanism(
+            default_variable=1,
+            function=pnl.SimpleIntegrator,
+            control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
+        )
+        comp = pnl.Composition(
+            pathways=[a, b],
+            controller=c,
+            controller_mode=pnl.AFTER,
+            controller_time_scale=pnl.TimeScale.TRIAL
+        )
+        comp.run([1], num_trials=2)
+        # Controller executions
+        # (C-<#>) == controller execution followed by val as of the end of that execution, increments by 1
+        # on each execution
+        #
+        #  Trial 1:
+        #    a  b
+        #    (C-1)
+        #  Trial 2:
+        #    a  b
+        #    (C-2)
+        #
+        assert c.value == [2]
+        assert c.execution_count == 2
+        assert comp.results == [[1], [1]]
+
+    def test_run_before(self):
+        a = pnl.ProcessingMechanism()
+        b = pnl.ProcessingMechanism()
+        c = pnl.ControlMechanism(
+            default_variable=1,
+            function=pnl.SimpleIntegrator,
+            control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
+        )
+        comp = pnl.Composition(
+            pathways=[a, b],
+            controller=c,
+            controller_mode=pnl.BEFORE,
+            controller_time_scale=pnl.TimeScale.RUN
+        )
+        comp.run([1], num_trials=2)
+        comp.run([1], num_trials=2)
+        # Controller executions
+        # (C-<#>) == controller execution followed by val as of the end of that execution, increments by 1
+        # on each execution
+        #  (C-1)
+        #   Run 1:
+        #    Trial 1:
+        #      a  b
+        #    Trial 2:
+        #      a  b
+        #  (C-2)
+        #   Run 2:
+        #    Trial 1:
+        #      a  b
+        #    Trial 2:
+        #      a  b
+        assert c.value == [2]
+        assert c.execution_count == 2
+        assert comp.results == [[1], [1], [2], [2]]
+
+    def test_run_after(self):
+        a = pnl.ProcessingMechanism()
+        b = pnl.ProcessingMechanism()
+        c = pnl.ControlMechanism(
+            default_variable=1,
+            function=pnl.SimpleIntegrator,
+            control=pnl.ControlSignal(modulates=(pnl.SLOPE, b))
+        )
+        comp = pnl.Composition(
+            pathways=[a, b],
+            controller=c,
+            controller_mode=pnl.AFTER,
+            controller_time_scale=pnl.TimeScale.RUN
+        )
+        comp.run([1], num_trials=2)
+        comp.run([1], num_trials=2)
+        # Controller executions
+        # (C-<#>) == controller execution followed by val as of the end of that execution, increments by 1
+        # on each execution
+        #  (C-1)
+        #   Run 1:
+        #    Trial 1:
+        #      a  b
+        #    Trial 2:
+        #      a  b
+        #  (C-2)
+        #   Run 2:
+        #    Trial 1:
+        #      a  b
+        #    Trial 2:
+        #      a  b
+        assert c.value == [2]
+        assert c.execution_count == 2
+        assert comp.results == [[1], [1], [1], [1]]

@@ -43,9 +43,9 @@ class TestProjectionSpecificationFormats:
                                                  M3_M4_matrix_B,
                                                  M4])
 
-        assert np.allclose(M2_M3_proj.matrix, M2_M3_matrix)
+        assert np.allclose(M2_M3_proj.matrix.base, M2_M3_matrix)
         assert M2.efferents[0] is M2_M3_proj
-        assert np.allclose(M3.efferents[0].matrix, M3_M4_matrix_A)
+        assert np.allclose(M3.efferents[0].matrix.base, M3_M4_matrix_A)
         # This is if different Projections are allowed between the same sender and receiver in different Compositions:
         # assert np.allclose(M3.efferents[1].matrix, M3_M4_matrix_B)
         c.run(inputs={M1:[2, -30]})
@@ -141,9 +141,9 @@ class TestProjectionSpecificationFormats:
                                    output_ports=[(['InputPort-0','InputPort-1'], T1)])
         assert len(T2.output_ports)==1
         assert T2.output_ports[0].efferents[0].receiver.name == 'InputPort-0'
-        assert T2.output_ports[0].efferents[0].matrix.shape == (1,2)
+        assert T2.output_ports[0].efferents[0].matrix.base.shape == (1,2)
         assert T2.output_ports[0].efferents[1].receiver.name == 'InputPort-1'
-        assert T2.output_ports[0].efferents[1].matrix.shape == (1,3)
+        assert T2.output_ports[0].efferents[1].matrix.base.shape == (1,3)
 
     def test_mapping_projection_using_2_item_tuple_and_3_item_tuples_with_index_specs(self):
 
@@ -155,9 +155,9 @@ class TestProjectionSpecificationFormats:
                                                   (['InputPort-0','InputPort-1'], 1, T1)])
         assert len(T2.output_ports)==3
         assert T2.output_ports[0].efferents[0].receiver.name == 'InputPort-0'
-        assert T2.output_ports[0].efferents[0].matrix.shape == (1,2)
+        assert T2.output_ports[0].efferents[0].matrix.base.shape == (1,2)
         assert T2.output_ports[0].efferents[1].receiver.name == 'InputPort-1'
-        assert T2.output_ports[0].efferents[1].matrix.shape == (1,3)
+        assert T2.output_ports[0].efferents[1].matrix.base.shape == (1,3)
         assert T2.output_ports[1].owner_value_index == 2
         assert T2.output_ports[2].owner_value_index == 1
 
@@ -216,49 +216,55 @@ class TestProjectionSpecificationFormats:
         assert T.input_ports[0].mod_afferents[0].sender==G.gating_signals[0]
         assert T.output_ports[0].mod_afferents[0].sender==G.gating_signals[1]
 
-    def test_formats_for_control_specification_for_mechanism_and_function_params(self):
+    control_spec_list = [
+        pnl.CONTROL,
+        pnl.CONTROL_SIGNAL,
+        pnl.CONTROL_PROJECTION,
+        pnl.ControlSignal,
+        pnl.ControlSignal(),
+        pnl.ControlProjection,
+        "CP_OBJECT",
+        pnl.ControlMechanism,
+        pnl.ControlMechanism(),
+        pnl.ControlMechanism,
+        (0.3, pnl.CONTROL),
+        (0.3, pnl.CONTROL_SIGNAL),
+        (0.3, pnl.CONTROL_PROJECTION),
+        (0.3, pnl.ControlSignal),
+        (0.3, pnl.ControlSignal()),
+        (0.3, pnl.ControlProjection),
+        (0.3, "CP_OBJECT"),
+        (0.3, pnl.ControlMechanism),
+        (0.3, pnl.ControlMechanism()),
+        (0.3, pnl.ControlMechanism)
+    ]
 
-        control_spec_list = [
-            pnl.CONTROL,
-            pnl.CONTROL_SIGNAL,
-            pnl.CONTROL_PROJECTION,
-            pnl.ControlSignal,
-            pnl.ControlSignal(),
-            pnl.ControlProjection,
-            "CP_OBJECT",
-            pnl.ControlMechanism,
-            pnl.ControlMechanism(),
-            pnl.ControlMechanism,
-            (0.3, pnl.CONTROL),
-            (0.3, pnl.CONTROL_SIGNAL),
-            (0.3, pnl.CONTROL_PROJECTION),
-            (0.3, pnl.ControlSignal),
-            (0.3, pnl.ControlSignal()),
-            (0.3, pnl.ControlProjection),
-            (0.3, "CP_OBJECT"),
-            (0.3, pnl.ControlMechanism),
-            (0.3, pnl.ControlMechanism()),
-            (0.3, pnl.ControlMechanism)
-        ]
-        for i, ctl_tuple in enumerate([j for j in zip(control_spec_list, reversed(control_spec_list))]):
-            C1, C2 = ctl_tuple
+    @pytest.mark.parametrize(
+        'noise, gain',
+        [(noise, gain) for noise, gain in [j for j in zip(control_spec_list, reversed(control_spec_list))]]
+    )
+    def test_formats_for_control_specification_for_mechanism_and_function_params(self, noise, gain):
+        # This shenanigans is to avoid assigning the same instantiated ControlProjection more than once
+        if noise == 'CP_OBJECT':
+            noise = pnl.ControlProjection()
+        elif isinstance(noise, tuple) and noise[1] == 'CP_OBJECT':
+            noise = (noise[0], pnl.ControlProjection())
+        if gain == 'CP_OBJECT':
+            gain = pnl.ControlProjection()
+        elif isinstance(gain, tuple) and gain[1] == 'CP_OBJECT':
+            gain = (gain[0], pnl.ControlProjection())
 
-            # This shenanigans is to avoid assigning the same instantiated ControlProjection more than once
-            if C1 == 'CP_OBJECT':
-                C1 = pnl.ControlProjection()
-            elif isinstance(C1, tuple) and C1[1] == 'CP_OBJECT':
-                C1 = (C1[0], pnl.ControlProjection())
-            if C2 == 'CP_OBJECT':
-                C2 = pnl.ControlProjection()
-            elif isinstance(C2, tuple) and C2[1] == 'CP_OBJECT':
-                C2 = (C2[0], pnl.ControlProjection())
-
-            R = pnl.RecurrentTransferMechanism(noise=C1,
-                                               function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=C2))
-            assert R.parameter_ports[pnl.NOISE].mod_afferents[0].name in \
-                   'ControlProjection for RecurrentTransferMechanism-{}[noise]'.format(i)
-            assert R.parameter_ports[pnl.GAIN].mod_afferents[0].name in \
-                   'ControlProjection for RecurrentTransferMechanism-{}[gain]'.format(i)
+        R = pnl.RecurrentTransferMechanism(
+            # NOTE: fixed name prevents failures due to registry naming
+            # for parallel test runs
+            name='R-CONTROL',
+            noise=noise,
+            function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=gain)
+        )
+        assert R.parameter_ports[pnl.NOISE].mod_afferents[0].name in \
+                'ControlProjection for R-CONTROL[noise]'
+        assert R.parameter_ports[pnl.GAIN].mod_afferents[0].name in \
+                'ControlProjection for R-CONTROL[gain]'
 
     gating_spec_list = [
         pnl.GATING,

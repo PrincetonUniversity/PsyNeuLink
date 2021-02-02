@@ -62,7 +62,8 @@ class TestLCA:
         # f(new_transfer_input) = 0.53725 * 2.0 = 1.0745
 
         assert np.allclose(C.results, [[[0.2]], [[0.51]], [[0.9905]]])
-        benchmark(C.run, inputs={T: [1.0]}, num_trials=3, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(C.run, inputs={T: [1.0]}, num_trials=3, bin_execute=mode)
 
     @pytest.mark.mechanism
     @pytest.mark.lca_mechanism
@@ -128,7 +129,8 @@ class TestLCA:
         # f(new_transfer_input_2) = 0.9965 * 2.0 = 1.463
 
         assert np.allclose(C.results, [[[0.2, 0.4]], [[0.43, 0.98]], [[0.6705, 1.833]]])
-        benchmark(C.run, inputs={T: [1.0, 2.0]}, num_trials=3, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(C.run, inputs={T: [1.0, 2.0]}, num_trials=3, bin_execute=mode)
 
     def test_equivalance_of_threshold_and_when_finished_condition(self):
         # Note: This tests the equivalence of results when:
@@ -156,9 +158,9 @@ class TestLCA:
     def test_LCAMechanism_matrix(self):
         matrix = [[0,-2],[-2,0]]
         lca1 = LCAMechanism(size=2, leak=0.5, competition=2)
-        assert np.allclose(lca1.matrix, matrix)
+        assert np.allclose(lca1.matrix.base, matrix)
         lca2 = LCAMechanism(size=2, leak=0.5, matrix=matrix)
-        assert np.allclose(lca1.matrix, lca2.matrix)
+        assert np.allclose(lca1.matrix.base, lca2.matrix.base)
 
     # Note: In the following tests, since the LCAMechanism's threshold is specified
     #       it executes until the it reaches threshold.
@@ -177,7 +179,8 @@ class TestLCA:
         comp.add_node(lca)
         result = comp.run(inputs={lca:[1,0]}, bin_execute=mode)
         assert np.allclose(result, [0.70005431, 0.29994569])
-        benchmark(comp.run, inputs={lca:[1,0]}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.run, inputs={lca:[1,0]}, bin_execute=mode)
 
     def test_LCAMechanism_threshold_with_max_vs_next(self):
         lca = LCAMechanism(size=3, leak=0.5, threshold=0.1, threshold_criterion=MAX_VS_NEXT)
@@ -210,7 +213,8 @@ class TestLCA:
         assert np.allclose(result, [[0.19153799, 0.5, 0.80846201]])
         if mode == 'Python':
             assert lca.num_executions_before_finished == 18
-        benchmark(comp.run, inputs={lca:[0,1,2]}, bin_execute=mode)
+        if benchmark.enabled:
+            benchmark(comp.run, inputs={lca:[0,1,2]}, bin_execute=mode)
 
     @pytest.mark.mechanism
     @pytest.mark.lca_mechanism
@@ -280,6 +284,23 @@ class TestLCA:
     #     comp.scheduler.add_condition(response, WhenFinished(lca))
     #     result = comp.run(inputs={lca:[1,0]})
     #     assert np.allclose(result, [[0.71463572, 0.28536428]])
+
+    @pytest.mark.mechanism
+    @pytest.mark.lca_mechanism
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_LCAMechanism_DDM_equivalent(self, mode):
+        lca = LCAMechanism(size=2, leak=0., threshold=1, auto=0, hetero=0,
+                           initial_value=[0, 0], execute_until_finished=False)
+        comp1 = Composition()
+        comp1.add_node(lca)
+        result1 = comp1.run(inputs={lca:[1, -1]}, bin_execute=mode)
+        assert np.allclose(result1, [[0.52497918747894, 0.47502081252106]],)
+
 
 class TestLCAReset:
 

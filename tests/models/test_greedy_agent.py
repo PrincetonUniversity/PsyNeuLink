@@ -59,10 +59,11 @@ def test_simplified_greedy_agent(benchmark, mode):
                                          prey:[[419,69]]},
                                  bin_execute=mode)
     assert np.allclose(run_results, [[-200, -108]])
-    benchmark(agent_comp.run, **{'inputs':{
-        player:[[619,177]],
-        prey:[[419,69]],
-        }, 'bin_execute':mode})
+    if benchmark.enabled:
+        benchmark(agent_comp.run, **{'inputs':{
+            player:[[619,177]],
+            prey:[[419,69]],
+            }, 'bin_execute':mode})
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Greedy Agant Random")
@@ -110,10 +111,11 @@ def test_simplified_greedy_agent_random(benchmark, mode):
     # to produce old numbers, run get_global_seed once before creating
     # each Mechanism with GaussianDistort above
     assert np.allclose(run_results, [[-199.5484223217141, -107.79361870517444]])
-    benchmark(agent_comp.run, **{'inputs':{
-        player:[[619,177]],
-        prey:[[419,69]],
-        }, 'bin_execute':mode})
+    if benchmark.enabled:
+        benchmark(agent_comp.run, **{'inputs':{
+            player:[[619,177]],
+            prey:[[419,69]],
+            }, 'bin_execute':mode})
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Predator Prey")
@@ -126,12 +128,12 @@ def test_simplified_greedy_agent_random(benchmark, mode):
      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
 ])
 @pytest.mark.parametrize("samples", [[0,10],
-    pytest.param([a / 10.0 for a in range(0, 101)]),
     pytest.param([0,3,6,10], marks=pytest.mark.stress),
     pytest.param([0,2,4,6,8,10], marks=pytest.mark.stress),
+    pytest.param([a / 10.0 for a in range(0, 101)]),
 ], ids=lambda x: len(x))
 def test_predator_prey(benchmark, mode, samples):
-    if len(samples) > 10 and mode not in {"LLVMRun", "Python-PTX"}:
+    if len(samples) > 10 and mode not in {"LLVM", "LLVMRun", "Python-PTX"}:
         pytest.skip("This test takes too long")
     # OCM default mode is Python
     mode, ocm_mode = (mode + "-Python").split('-')[0:2]
@@ -210,4 +212,5 @@ def test_predator_prey(benchmark, mode, samples):
                                                     [-0.03479106, -0.47666293],
                                                     [-0.60836214,  0.1760381 ]])
 
-    benchmark(agent_comp.run, inputs=input_dict, bin_execute=mode)
+    if benchmark.enabled:
+        benchmark(agent_comp.run, inputs=input_dict, bin_execute=mode)

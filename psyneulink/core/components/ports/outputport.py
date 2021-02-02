@@ -946,7 +946,7 @@ class OutputPort(Port_Base):
         # if owner is None or reference_value is None:
         if owner is None:
             # Temporarily name OutputPort
-            self._assign_deferred_init_name(name, context)
+            self._assign_deferred_init_name(name)
             # Store args for deferred initialization
             self._store_deferred_init_args(**locals())
 
@@ -1201,7 +1201,7 @@ class OutputPort(Port_Base):
         is_PARAMS_DICT = False
         if fct_variable is None:
             try:
-                if owner.value is not None:
+                if owner.defaults.value is not None:
                     fct_variable = owner.defaults.value[0]
                 # Get owner's value by calling its function
                 else:
@@ -1394,7 +1394,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
                     for item in owner_value))):
         pass
     else:
-        converted_to_2d = convert_to_np_array(owner.value, dimension=2)
+        converted_to_2d = convert_to_np_array(owner.defaults.value, dimension=2)
         # If owner_value is a list of heterogenous elements, use as is
         if converted_to_2d.dtype == object:
             owner_value = owner.defaults.value
@@ -1427,11 +1427,11 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
                     except AttributeError:
                         index = output_port.index
                         output_port_value = owner_value[index]
-                elif output_port.value is None:
+                elif output_port.defaults.value is None:
                     output_port_value = output_port.function()
 
                 else:
-                    output_port_value = output_port.value
+                    output_port_value = output_port.defaults.value
 
             else:
                 # parse output_port
@@ -1500,7 +1500,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
     if context.source & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):
         owner.output_ports.extend(port_list)
     else:
-        owner.output_ports = port_list
+        owner.parameters.output_ports._set(port_list, context)
 
     # Assign value of require_projection_in_composition
     for port in owner.output_ports:

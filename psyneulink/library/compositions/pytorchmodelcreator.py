@@ -1,3 +1,4 @@
+from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.compositions.composition import NodeRole
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -6,6 +7,7 @@ from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGD
 from psyneulink.library.compositions.compiledloss import MSELoss
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.core.globals.keywords import TARGET_MECHANISM
+from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 from .pytorchcomponents import *
 
 try:
@@ -67,13 +69,7 @@ class PytorchModelCreator(torch.nn.Module):
         # 3) Remove empty execution sets
         self.execution_sets = [x for x in self.execution_sets if len(x) > 0]
 
-    # gets the index of 'afferent_node' in the forward info weights list
-    def _get_afferent_node_index(self, node, afferent_node):
-        return [proj.receiver for proj in node.afferents].index(self.component_map[afferent_node])
-
-    def _get_afferent_nodes(self, node):
-        forward_info_weights = self.component_map[node].afferents
-        return [(vertex.component, weights) for (vertex, weights) in forward_info_weights.items()]
+    __deepcopy__ = get_deepcopy_with_shared(shared_types=(Component, ComponentsMeta))
 
     # generates llvm function for self.forward
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
@@ -326,14 +322,6 @@ class PytorchModelCreator(torch.nn.Module):
                 pytorch_rep.matrix.detach().cpu().numpy(), context)
             projection.parameter_ports['matrix'].parameters.value._set(
                 pytorch_rep.matrix.detach().cpu().numpy(), context)
-
-    def copy_outputs_to_psyneulink(self, outputs, context=None):
-        for component, value in outputs.items():
-            detached_value = value.detach().cpu().numpy()
-            component.parameters.value._set(
-                detached_value, context, skip_history=True, skip_log=True)
-            component.output_port.parameters.value._set(
-                detached_value, context, skip_history=True, skip_log=True)
 
     def log_weights(self):
         for proj in self.projections:

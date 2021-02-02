@@ -160,7 +160,7 @@ class TestAccumulator():
         A()
         A()
         val = A()
-        expected_val = [[40.0, 0.2480800486427607, 80.0]]
+        expected_val = [[40.0, -0.43300219, 80.0]]
         for i in range(len(val)):
             for j in range(len(val[i])):
                 assert np.allclose(expected_val[i][j], val[i][j])
@@ -185,9 +185,9 @@ class TestAccumulator():
         C = Composition()
         C.add_linear_processing_pathway([T1, M, T2])
         C.run(inputs={T1: [1.0, 1.0, 1.0]})
-        assert np.allclose(M.matrix, [[ 1.,  0.,  0.], [ 0.,  1.,  0.],[ 0.,  0.,  1.]])
+        assert np.allclose(M.matrix.base, [[ 1.,  0.,  0.], [ 0.,  1.,  0.],[ 0.,  0.,  1.]])
         M.parameter_ports[MATRIX].function.parameters.increment.set(2, C)
         C.run(inputs={T1: [1.0, 1.0, 1.0]})
-        assert np.allclose(M.matrix, [[ 3.,  2.,  2.], [ 2.,  3.,  2.], [ 2.,  2.,  3.]])
+        assert np.allclose(M.matrix.base, [[ 3.,  2.,  2.], [ 2.,  3.,  2.], [ 2.,  2.,  3.]])
         C.run(inputs={T1: [1.0, 1.0, 1.0]})
-        assert np.allclose(M.matrix, [[ 5.,  4.,  4.], [ 4.,  5.,  4.], [ 4.,  4.,  5.]])
+        assert np.allclose(M.matrix.base, [[ 5.,  4.,  4.], [ 4.,  5.,  4.], [ 4.,  4.,  5.]])

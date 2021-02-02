@@ -198,10 +198,9 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.globals.keywords import \
-    CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, INITIALIZER, LCA_MECHANISM, LEAK, LESS_THAN_OR_EQUAL, MATRIX, NAME, \
-    NOISE, RATE, RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, TIME_STEP_SIZE, VALUE, INVERSE_HOLLOW_MATRIX, AUTO
-from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.context import ContextFlags
+    CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, LCA_MECHANISM, LESS_THAN_OR_EQUAL, MATRIX, NAME, \
+    RESULT, TERMINATION_THRESHOLD, TERMINATION_MEASURE, TERMINATION_COMPARISION_OP, VALUE, INVERSE_HOLLOW_MATRIX, AUTO
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism, _recurrent_transfer_mechanism_matrix_getter, _recurrent_transfer_mechanism_matrix_setter
@@ -397,14 +396,18 @@ class LCAMechanism(RecurrentTransferMechanism):
             getter=_recurrent_transfer_mechanism_matrix_getter,
             setter=_recurrent_transfer_mechanism_matrix_setter
         )
-        leak = Parameter(0.5, modulable=True)
+        integration_rate = FunctionParameter(
+            0.5,
+            function_name='integrator_function',
+            function_parameter_name='rate',
+            aliases='leak'
+        )
         auto = Parameter(0.0, modulable=True, aliases='self_excitation')
         hetero = Parameter(-1.0, modulable=True)
         competition = Parameter(1.0, modulable=True)
-        time_step_size = Parameter(0.1, modulable=True)
+        time_step_size = FunctionParameter(0.1, function_name='integrator_function')
 
-        initial_value = None
-        integrator_mode = Parameter(True, setter=_integrator_mode_setter)
+        integrator_mode = Parameter(True, setter=_integrator_mode_setter, valid_types=bool)
         integrator_function = Parameter(LeakyCompetingIntegrator, stateful=False, loggable=False)
         termination_measure = Parameter(max, stateful=False, loggable=False)
 
@@ -425,6 +428,9 @@ class LCAMechanism(RecurrentTransferMechanism):
                 )
 
             return None
+
+        def _validate_integration_rate(self, integration_rate):
+            pass
 
     standard_output_ports = RecurrentTransferMechanism.standard_output_ports.copy()
     standard_output_ports.extend([{NAME:MAX_VS_NEXT,
@@ -587,30 +593,3 @@ class LCAMechanism(RecurrentTransferMechanism):
             termination_comparison_op = termination_comparison_op or GREATER_THAN_OR_EQUAL
 
         return termination_threshold, termination_measure, termination_comparison_op
-
-    def _get_integrated_function_input(self, function_variable, initial_value, noise, context):
-
-        leak = self._get_current_mechanism_param("leak", context)
-        time_step_size = self._get_current_mechanism_param("time_step_size", context)
-
-        # if not self.integrator_function:
-        if self.initialization_status == ContextFlags.INITIALIZING:
-            self.integrator_function.parameters.initializer._set(initial_value, context)
-            self.integrator_function.parameters.previous_value._set(initial_value, context)
-            self.integrator_function.parameters.noise._set(noise, context)
-            self.integrator_function.parameters.time_step_size._set(time_step_size, context)
-            self.integrator_function.parameters.leak._set(leak, context)
-
-        current_input = self.integrator_function._execute(
-            function_variable,
-            context=context,
-            # Should we handle runtime params?
-            runtime_params={
-                INITIALIZER: initial_value,
-                NOISE: noise,
-                LEAK: leak,
-                TIME_STEP_SIZE: time_step_size
-            },
-        )
-
-        return current_input

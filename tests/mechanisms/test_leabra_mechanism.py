@@ -2,10 +2,6 @@ import copy
 import numpy as np
 import pytest
 import random
-try:
-    import leabra
-except ImportError:
-    leabra = None
 
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
@@ -14,9 +10,6 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.globals.keywords import LEARNING
 from psyneulink.library.components.mechanisms.processing.leabramechanism import LeabraMechanism, build_leabra_network, run_leabra_network, train_leabra_network
 
-LEABRA_NOT_AVAILABLE='leabra python module is not installed. Please install it from https://github.com/benureau/leabra'
-
-@pytest.mark.skipif(leabra is None, reason=LEABRA_NOT_AVAILABLE)
 class TestLeabraMechInit:
 
     def test_leabra_init_empty(self):
@@ -54,7 +47,6 @@ class TestLeabraMechInit:
         assert len(val[0]) == 4
 
 
-@pytest.mark.skipif(leabra is None, reason=LEABRA_NOT_AVAILABLE)
 class TestLeabraMechRuntimeParams:
 
     def test_leabra_runtime_alone(self):
@@ -95,7 +87,6 @@ class TestLeabraMechRuntimeParams:
         pass
 
 
-@pytest.mark.skipif(leabra is None, reason=LEABRA_NOT_AVAILABLE)
 class TestLeabraMechPrecision:
 
     def test_leabra_prec_no_train(self):
@@ -255,6 +246,7 @@ class TestLeabraMechPrecision:
             pnl_output_net = out_net[-1]
             diffs_net = np.abs(np.array(pnl_output_net) - np.array(leabra_output))
             assert all(diffs_spec < precision) and all(diffs_net < precision)
+
 
 # class TestLeabraMechInSystem:
 #

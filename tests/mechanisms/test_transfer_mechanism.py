@@ -73,8 +73,9 @@ class TestTransferMechanismInputs:
             EX = e.cuda_execute
 
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     #@pytest.mark.mechanism
     #@pytest.mark.transfer_mechanism
@@ -175,8 +176,9 @@ class TestTransferMechanismNoise:
 
         var = [0 for i in range(VECTOR_SIZE)]
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -192,7 +194,7 @@ class TestTransferMechanismNoise:
         )
         T.reset_stateful_function_when = Never()
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[-1.56404341, -0.51529709, -2.55352727, 0.30284592]])
+        assert np.allclose(val, [[-0.6931771, 1.00018003, 2.5496904, -0.71562799]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -208,7 +210,7 @@ class TestTransferMechanismNoise:
         )
         T.reset_stateful_function_when = Never()
         val = T.execute([0, 0, 0, 0])
-        expected = [0.6202001216069017, 0.840166034615641, 0.7279826246296707, -1.5678942459349325]
+        expected = [[-1.56404341, -3.01320403, -1.22503678, 1.3093712]]
         assert np.allclose(np.asfarray(val[0]), expected)
 
     @pytest.mark.mechanism
@@ -239,8 +241,9 @@ class TestTransferMechanismNoise:
 
         var = [0 for i in range(VECTOR_SIZE)]
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -290,7 +293,7 @@ class TestDistributionFunctions:
         )
 
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[-1.56404341, -0.51529709, -2.55352727, 0.30284592]])
+        assert np.allclose(val, [[-0.6931771 ,  1.00018003,  2.5496904 , -0.71562799]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -322,7 +325,7 @@ class TestDistributionFunctions:
             integrator_mode=True,
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.54571315, 0.29964231, 0.71595475, 0.51908319]])
+        assert np.allclose(val, [[1.53154485, 0.36141864, 0.64740347, 0.87558564]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -336,7 +339,7 @@ class TestDistributionFunctions:
                 noise=UniformToNormalDist(),
                 integration_rate=1.0
             )
-            T.noise.parameters.random_state.get(None).seed(22)
+            T.noise.base.parameters.random_state.get(None).seed(22)
             val = T.execute([0, 0, 0, 0])
             assert np.allclose(val, [[-0.81177443, -0.04593492, -0.20051725, 1.07665147]])
 
@@ -365,7 +368,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.42057158, 0.25891675, 0.51127472, 0.40493414]])
+        assert np.allclose(val, [[0.78379859, 0.30331273, 0.47659695, 0.58338204]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -380,7 +383,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.54571315, 0.29964231, 0.71595475, 0.51908319]])
+        assert np.allclose(val, [[1.53154485, 0.36141864, 0.64740347, 0.87558564]])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -395,7 +398,7 @@ class TestDistributionFunctions:
             integrator_mode=True
         )
         val = T.execute([0, 0, 0, 0])
-        assert np.allclose(val, [[0.11902672, 0.73955962, 8.38161237, 0.49600183]])
+        assert np.allclose(val, [[0.39640095, 0.45094588, 2.88271841, 0.41203028]])
 
 
 class TestTransferMechanismFunctions:
@@ -458,8 +461,9 @@ class TestTransferMechanismFunctions:
 
         var = [0 for i in range(VECTOR_SIZE)]
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[0.5 for i in range(VECTOR_SIZE)]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -488,11 +492,13 @@ class TestTransferMechanismFunctions:
         val1 = EX([0 for i in range(VECTOR_SIZE)])
         val2 = EX([1 for i in range(VECTOR_SIZE)])
         val3 = EX([-1 for i in range(VECTOR_SIZE)])
-        benchmark(EX, [0 for i in range(VECTOR_SIZE)])
 
         assert np.allclose(val1, [[0.0 for i in range(VECTOR_SIZE)]])
         assert np.allclose(val2, [[1.0 for i in range(VECTOR_SIZE)]])
         assert np.allclose(val3, [[0.0 for i in range(VECTOR_SIZE)]])
+
+        if benchmark.enabled:
+            benchmark(EX, [0 for i in range(VECTOR_SIZE)])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -520,8 +526,9 @@ class TestTransferMechanismFunctions:
 
         var = [0 for i in range(VECTOR_SIZE)]
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[1.0 for i in range(VECTOR_SIZE)]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -549,8 +556,9 @@ class TestTransferMechanismFunctions:
 
         var = [0 for i in range(VECTOR_SIZE)]
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[1.0 / VECTOR_SIZE for i in range(VECTOR_SIZE)]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -646,8 +654,9 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[ 0., 0.19, 0.36, 0.51]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -675,8 +684,9 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[ 0., 0.19, 0.36, 0.51]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -705,8 +715,9 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[ 0., 0.0975, 0.19, 0.2775]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     def test_transfer_mech_array_assignments_wrong_size_mech_rate(self):
 
@@ -763,8 +774,9 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
 
     @pytest.mark.mechanism
@@ -796,8 +808,9 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
 
     @pytest.mark.mechanism
@@ -829,10 +842,10 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[ 0.75,  0.775,  0.8, 0.825]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
-    # def test_transfer_mech_array_assignments_wrong_size_mech_init_val(self, benchmark, mode):
     def test_transfer_mech_array_assignments_wrong_size_mech_init_val(self):
 
         with pytest.raises(TransferError) as error_text:
@@ -931,8 +944,9 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[ 0.75, 0.9, 1.05, 1.2 ]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -961,8 +975,9 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[ 0.75, 0.9, 1.05, 1.2 ]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -992,8 +1007,9 @@ class TestTransferMechanismIntegratorFunctionParams:
         var = [1 for i in range(VECTOR_SIZE)]
         EX(var)
         val = EX(var)
-        benchmark(EX, var)
         assert np.allclose(val, [[ 0.75, 0.825, 0.9, 0.975]])
+        if benchmark.enabled:
+            benchmark(EX, var)
 
     # def test_transfer_mech_array_assignments_wrong_size_mech_noise(self, benchmark, mode):
     def test_transfer_mech_array_assignments_wrong_size_mech_noise(self):
@@ -1045,22 +1061,22 @@ class TestTransferMechanismTimeConstant:
             integrator_mode=True
         )
         if mode == 'Python':
-            val1 = T.execute([1 for i in range(VECTOR_SIZE)])
-            val2 = T.execute([1 for i in range(VECTOR_SIZE)])
-            benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
+            EX = T.execute
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(T)
-            val1 = e.execute([1 for i in range(VECTOR_SIZE)])
-            val2 = e.execute([1 for i in range(VECTOR_SIZE)])
-            benchmark(e.execute, [0 for i in range(VECTOR_SIZE)])
+            EX = e.execute
         elif mode == 'PTX':
             e = pnlvm.execution.MechExecution(T)
-            val1 = e.cuda_execute([1 for i in range(VECTOR_SIZE)])
-            val2 = e.cuda_execute([1 for i in range(VECTOR_SIZE)])
-            benchmark(e.cuda_execute, [0 for i in range(VECTOR_SIZE)])
+            EX = e.cuda_execute
+
+        val1 = T.execute([1 for i in range(VECTOR_SIZE)])
+        val2 = T.execute([1 for i in range(VECTOR_SIZE)])
 
         assert np.allclose(val1, [[0.8 for i in range(VECTOR_SIZE)]])
         assert np.allclose(val2, [[0.96 for i in range(VECTOR_SIZE)]])
+
+        if benchmark.enabled:
+            benchmark(T.execute, [0 for i in range(VECTOR_SIZE)])
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -1131,7 +1147,7 @@ class TestTransferMechanismTimeConstant:
             val = e.execute([1, 1, 1, 1])
         assert np.allclose(val, [[0.9, 0.9, 0.9, 0.9]])
 
-        T.noise = 10
+        T.noise.base = 10
 
         if mode == 'Python':
             val = T.execute([1, 2, -3, 0])
@@ -1174,7 +1190,7 @@ class TestTransferMechanismTimeConstant:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_integration_rate_2(self):
-        with pytest.raises(TransferError) as error_text:
+        with pytest.raises(ParameterError) as error_text:
             T = TransferMechanism(
                 name='T',
                 default_variable=[0, 0, 0, 0],
@@ -1184,7 +1200,7 @@ class TestTransferMechanismTimeConstant:
             )
             T.execute([1, 1, 1, 1])
         assert (
-            "Value(s) in \'integration_rate\' arg for" in str(error_text.value)
+            "'integration_rate'" in str(error_text.value)
             and "must be an int or float in the interval [0,1]" in str(error_text.value)
         )
 
@@ -1839,7 +1855,6 @@ class TestIntegratorMode:
         T.parameters.integrator_mode.set(True, context=C)
 
         assert T.parameters.integrator_mode.get(C) is True
-        assert T.has_integrated is True
         assert T.integrator_function is integrator_function
 
         C.run({T: [[1.0], [1.0], [1.0]]})

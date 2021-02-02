@@ -441,7 +441,7 @@ if args.enable_plot:
     plt.plot(response_all3[0])
     plt.plot(response_all3[1])
     plt.plot(response_all3[2])
-    plt.show()
+    plt.show(block=not pnl._called_from_pytest)
     # Second, plot regression plot
     # regression
     reg = np.dot(response_all2, 5) + 115
@@ -454,4 +454,4 @@ if args.enable_plot:
     plt.legend(['color naming', 'word reading'])
     plt.xticks(np.arange(3), ('control', 'incongruent', 'congruent'))
     plt.ylabel('reaction time in ms')
-    plt.show()
+    plt.show(block=not pnl._called_from_pytest)

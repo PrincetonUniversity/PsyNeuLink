@@ -738,11 +738,11 @@ class DefaultAllocationFunction(Function_Base):
                  context=None,
                  params=None,
                  ):
-        num_ctl_sigs = self._get_current_function_param('num_control_signals')
+        num_ctl_sigs = self._get_current_parameter_value('num_control_signals')
         result = np.array([variable[0]] * num_ctl_sigs)
         return self.convert_output_type(result)
 
-    def reset(self, *args, force=False, context=None):
+    def reset(self, *args, force=False, context=None, **kwargs):
         # Override Component.reset which requires that the Component is stateful
         pass
 
@@ -1325,17 +1325,17 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         monitored_output_ports = []
 
-        self.monitor_for_control = self.monitor_for_control or []
-        if not isinstance(self.monitor_for_control, list):
-            self.monitor_for_control = [self.monitor_for_control]
+        monitor_for_control = self.monitor_for_control or []
+        if not isinstance(monitor_for_control, list):
+            monitor_for_control = [monitor_for_control]
 
         # If objective_mechanism is used to specify OutputPorts to be monitored (legacy feature)
         #    move them to monitor_for_control
         if isinstance(self.objective_mechanism, list):
-            self.monitor_for_control.extend(self.objective_mechanism)
+            monitor_for_control.extend(self.objective_mechanism)
 
         # Add items in monitor_for_control to monitored_output_ports
-        for i, item in enumerate(self.monitor_for_control):
+        for i, item in enumerate(monitor_for_control):
             # If it is already in the list received from System, ignore
             if item in monitored_output_ports:
                 # NOTE: this can happen if ControlMechanisms is being constructed by System
@@ -1389,7 +1389,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         # ASSIGN ATTRIBUTES
 
         self._objective_projection = projection_from_objective
-        self.monitor_for_control = self.monitored_output_ports
+        self.parameters.monitor_for_control._set(self.monitored_output_ports, context)
 
     def _instantiate_input_ports(self, context=None):
 
@@ -1432,7 +1432,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         register_category(entry=ControlSignal,
                           base_class=Port_Base,
                           registry=self._portRegistry,
-                          context=context)
+                          )
 
     def _instantiate_control_signals(self, context):
         """Subclassess can override for class-specific implementation (see OptimiziationControlMechanism for example)"""
@@ -1483,7 +1483,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """
 
         if self.output_ports is None:
-            self.output_ports = []
+            self.parameters.output_ports._set([], context)
 
         control_signal = self._instantiate_control_signal_type(control_signal, context)
         control_signal.owner = self
@@ -1532,10 +1532,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         control_signal = _instantiate_port(port_type=ControlSignal,
                                                owner=self,
-                                               variable=self.default_allocation           # User specified value
+                                               variable=self.defaults.default_allocation           # User specified value
                                                         or allocation_parameter_default,  # Parameter default
                                                reference_value=allocation_parameter_default,
-                                               modulation=self.modulation,
+                                               modulation=self.defaults.modulation,
                                                port_spec=control_signal_spec,
                                                context=context)
         if not type(control_signal) in convert_to_list(self.outputPortTypes):

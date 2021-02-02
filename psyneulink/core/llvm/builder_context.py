@@ -86,6 +86,7 @@ class LLVMBuilderContext:
     _llvm_generation = 0
     int32_ty = ir.IntType(32)
     float_ty = ir.DoubleType()
+    bool_ty = ir.IntType(1)
 
     def __init__(self):
         self._modules = []
@@ -265,7 +266,7 @@ class LLVMBuilderContext:
                 val = np.asfarray(val).flatten()
             elif p.name == 'num_estimates':  # Should always be int
                 val = np.int32(0) if val is None else np.int32(val)
-            elif np.isscalar(val) and component._is_param_modulated(p):
+            elif np.ndim(val) == 0 and component._is_param_modulated(p):
                 val = [val]   # modulation adds array wrap
             return self.convert_python_struct_to_llvm_ir(val)
 
@@ -318,7 +319,9 @@ class LLVMBuilderContext:
                 return ir.ArrayType(elems_t[0], len(elems_t))
             return ir.LiteralStructType(elems_t)
         elif type(t) is tuple:
-            elems_t = (self.convert_python_struct_to_llvm_ir(x) for x in t)
+            elems_t = [self.convert_python_struct_to_llvm_ir(x) for x in t]
+            if len(elems_t) > 0 and all(x == elems_t[0] for x in elems_t):
+                return ir.ArrayType(elems_t[0], len(elems_t))
             return ir.LiteralStructType(elems_t)
         elif isinstance(t, enum.Enum):
             # FIXME: Consider enums of non-int type
@@ -431,12 +434,16 @@ def _convert_llvm_ir_to_ctype(t: ir.Type):
     if type_t is ir.VoidType:
         return None
     elif type_t is ir.IntType:
-        if t.width == 32:
-            return ctypes.c_int
+        if t.width == 8:
+            return ctypes.c_int8
+        elif t.width == 16:
+            return ctypes.c_int16
+        elif t.width == 32:
+            return ctypes.c_int32
         elif t.width == 64:
-            return ctypes.c_longlong
+            return ctypes.c_int64
         else:
-            assert False, "Integer type too big!"
+            assert False, "Unknown integer type: {}".format(type_t)
     elif type_t is ir.DoubleType:
         return ctypes.c_double
     elif type_t is ir.FloatType:

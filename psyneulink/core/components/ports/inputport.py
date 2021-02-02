@@ -782,7 +782,7 @@ class InputPort(Port_Base):
         # if owner is None or (variable is None and reference_value is None and projections is None):
         if owner is None:
             # Temporarily name InputPort
-            self._assign_deferred_init_name(name, context)
+            self._assign_deferred_init_name(name)
             # Store args for deferred initialization
             self._store_deferred_init_args(**locals())
 
@@ -811,7 +811,7 @@ class InputPort(Port_Base):
         )
 
         if self.name is self.componentName or self.componentName + '-' in self.name:
-            self._assign_default_port_Name(context=context)
+            self._assign_default_port_Name()
 
     def _assign_variable_from_projection(self, variable, size, projections):
         """Assign variable to value of Projection in projections
@@ -992,7 +992,7 @@ class InputPort(Port_Base):
             (port_spec, weights, exponents, connections)
 
         See Port._parse_port_specific_spec for additional info.
-.
+
         Returns:
              - port_spec:  1st item of tuple if it is a numeric value;  otherwise None
              - params dict with WEIGHT, EXPONENT and/or PROJECTIONS entries if any of these was specified.
@@ -1360,7 +1360,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
     if context.source & (ContextFlags.METHOD | ContextFlags.COMMAND_LINE):
         owner.input_ports.extend(port_list)
     else:
-        owner.input_ports = port_list
+        owner.parameters.input_ports._set(port_list, context)
 
     # Assign value of require_projection_in_composition
     for port in owner.input_ports:
@@ -1373,7 +1373,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
     variable_item_is_OK = False
     for i, input_port in enumerate(owner.input_ports):
         try:
-            variable_item_is_OK = iscompatible(owner.defaults.variable[i], input_port.value)
+            variable_item_is_OK = iscompatible(owner.defaults.variable[i], input_port.defaults.value)
             if not variable_item_is_OK:
                 break
         except IndexError:
@@ -1382,7 +1382,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
 
     if not variable_item_is_OK:
         old_variable = owner.defaults.variable
-        owner.defaults.variable = owner._handle_default_variable(default_variable=[port.value
+        owner.defaults.variable = owner._handle_default_variable(default_variable=[port.defaults.value
                                                                                    for port in owner.input_ports])
 
         if owner.verbosePref:

@@ -73,7 +73,7 @@ class TestRecurrentTransferMechanismInputs:
         R = RecurrentTransferMechanism(auto=1.0)
         np.testing.assert_allclose(R.value, R.defaults.value)
         np.testing.assert_allclose(R.defaults.variable, [[0]])
-        np.testing.assert_allclose(R.matrix, [[1]])
+        np.testing.assert_allclose(R.matrix.base, [[1]])
 
     def test_recurrent_mech_check_attrs(self):
         R = RecurrentTransferMechanism(
@@ -81,19 +81,19 @@ class TestRecurrentTransferMechanismInputs:
             size=3,
             auto=1.0
         )
-        print("matrix = ", R.matrix)
+        print("matrix = ", R.matrix.base)
         print("auto = ", R.auto)
         print("hetero = ", R.hetero)
         # np.testing.assert_allclose(R.value, R.defaults.value)
         # np.testing.assert_allclose(R.defaults.variable, [[0., 0., 0.]])
-        # np.testing.assert_allclose(R.matrix, [[1., 1., 1.], [1., 1., 1.], [1., 1., 1.]])
+        # np.testing.assert_allclose(R.matrix.base, [[1., 1., 1.], [1., 1., 1.], [1., 1., 1.]])
 
     def test_recurrent_mech_check_proj_attrs(self):
         R = RecurrentTransferMechanism(
             name='R',
             size=3
         )
-        np.testing.assert_allclose(R.recurrent_projection.matrix, R.matrix)
+        np.testing.assert_allclose(R.recurrent_projection.matrix.base, R.matrix.base)
         assert R.recurrent_projection.sender is R.output_port
         assert R.recurrent_projection.receiver is R.input_port
 
@@ -119,10 +119,13 @@ class TestRecurrentTransferMechanismInputs:
 
         val1 = EX([10, 12, 0, -1])
         val2 = EX([1, 2, 3, 0])
-        benchmark(EX, [1, 2, 3, 0])
 
+        # The outputs match inputs because recurrent projection is
+        # not used when executing: mech is reset each time
         np.testing.assert_allclose(val1, [[10.0, 12.0, 0, -1]])
-        np.testing.assert_allclose(val2, [[1, 2, 3, 0]])  # because recurrent projection is not used when executing: mech is reset each time
+        np.testing.assert_allclose(val2, [[1, 2, 3, 0]])
+        if benchmark.enabled:
+            benchmark(EX, [1, 2, 3, 0])
 
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
@@ -145,7 +148,6 @@ class TestRecurrentTransferMechanismInputs:
             EX = e.cuda_execute
 
         val = benchmark(EX, [10.0, 10.0, 10.0, 10.0])
-
         np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
 
     @pytest.mark.mechanism
@@ -174,12 +176,47 @@ class TestRecurrentTransferMechanismInputs:
         val2 = EX([[1.0, 2.0]])
         # execute 10 times
         for i in range(10):
-            val = EX([[1.0, 2.0]])
-        benchmark(EX, [[1.0, 2.0]])
+            val10 = EX([[1.0, 2.0]])
 
         assert np.allclose(val1, [[0.50249998, 0.50499983]])
         assert np.allclose(val2, [[0.50497484, 0.50994869]])
-        assert np.allclose(val, [[0.52837327, 0.55656439]])
+        assert np.allclose(val10, [[0.52837327, 0.55656439]])
+        if benchmark.enabled:
+            benchmark(EX, [[1.0, 2.0]])
+
+    @pytest.mark.mechanism
+    @pytest.mark.recurrent_transfer_mechanism
+    @pytest.mark.benchmark(group="RecurrentTransferMechanism")
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_recurrent_mech_lci(self, benchmark, mode):
+        LCI = pnl.LeakyCompetingIntegrator(rate=0.4)
+        R = RecurrentTransferMechanism(size=2,
+                                       hetero=-2.0,
+                                       integrator_mode=True,
+                                       integrator_function=LCI,
+                                       output_ports = [RESULT])
+        if mode == 'Python':
+            EX = R.execute
+        elif mode == 'LLVM':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.execute
+        elif mode == 'PTX':
+            e = pnlvm.execution.MechExecution(R)
+            EX = e.cuda_execute
+
+        val1 = EX([[1.0, 2.0]])
+        val2 = EX([[1.0, 2.0]])
+        # execute 10 times
+        for i in range(10):
+            val10 = EX([[1.0, 2.0]])
+
+        assert np.allclose(val1, [[0.1, 0.2]])
+        assert np.allclose(val2, [[0.196, 0.392]])
+        assert np.allclose(val10, [[0.96822561, 1.93645121]])
+        if benchmark.enabled:
+            benchmark(EX, [[1.0, 2.0]])
 
     # def test_recurrent_mech_inputs_list_of_fns(self):
     #     R = RecurrentTransferMechanism(
@@ -215,8 +252,9 @@ class TestRecurrentTransferMechanismInputs:
             EX = e.cuda_execute
 
         val = EX([10])
-        benchmark(EX, [1])
         np.testing.assert_allclose(val, [[10.]])
+        if benchmark.enabled:
+            benchmark(EX, [1])
 
     def test_recurrent_mech_inputs_list_of_strings(self):
         with pytest.raises(FunctionError) as error_text:
@@ -270,7 +308,7 @@ class TestRecurrentTransferMechanismMatrix:
         )
         val = R.execute([10, 10, 10, 10])
         np.testing.assert_allclose(val, [[10., 10., 10., 10.]])
-        np.testing.assert_allclose(R.recurrent_projection.matrix, get_matrix(matrix, R.size[0], R.size[0]))
+        np.testing.assert_allclose(R.recurrent_projection.matrix.base, get_matrix(matrix, R.size[0], R.size[0]))
 
     @pytest.mark.parametrize("matrix", [np.matrix('1 2; 3 4'), np.array([[1, 2], [3, 4]]), [[1, 2], [3, 4]], '1 2; 3 4'])
     def test_recurrent_mech_matrix_other_spec(self, matrix):
@@ -283,10 +321,10 @@ class TestRecurrentTransferMechanismMatrix:
         val = R.execute([10, 10])
 
         # np.testing.assert_allclose(val, [[10., 10.]])
-        # assert isinstance(R.matrix, np.ndarray)
-        # np.testing.assert_allclose(R.matrix, [[1, 2], [3, 4]])
-        # np.testing.assert_allclose(R.recurrent_projection.matrix, [[1, 2], [3, 4]])
-        # assert isinstance(R.recurrent_projection.matrix, np.ndarray)
+        # assert isinstance(R.matrix.base, np.ndarray)
+        # np.testing.assert_allclose(R.matrix.base, [[1, 2], [3, 4]])
+        # np.testing.assert_allclose(R.recurrent_projection.matrix.base, [[1, 2], [3, 4]])
+        # assert isinstance(R.recurrent_projection.matrix.base, np.ndarray)
 
     def test_recurrent_mech_matrix_auto_spec(self):
         R = RecurrentTransferMechanism(
@@ -294,8 +332,8 @@ class TestRecurrentTransferMechanismMatrix:
             size=3,
             auto=2
         )
-        assert isinstance(R.matrix, np.ndarray)
-        np.testing.assert_allclose(R.matrix, [[2, 1, 1], [1, 2, 1], [1, 1, 2]])
+        assert isinstance(R.matrix.base, np.ndarray)
+        np.testing.assert_allclose(R.matrix.base, [[2, 1, 1], [1, 2, 1], [1, 1, 2]])
         np.testing.assert_allclose(run_twice_in_composition(R, [1, 2, 3], [10, 11, 12]), [17, 19, 21])
 
     def test_recurrent_mech_matrix_hetero_spec(self):
@@ -308,8 +346,8 @@ class TestRecurrentTransferMechanismMatrix:
         # the behavior of execute() changes, feel free to change these numbers
         val = R.execute([-1, -2, -3])
         np.testing.assert_allclose(val, [[-1, -2, -3]])
-        assert isinstance(R.matrix, np.ndarray)
-        np.testing.assert_allclose(R.matrix, [[0, -1, -1], [-1, 0, -1], [-1, -1, 0]])
+        assert isinstance(R.matrix.base, np.ndarray)
+        np.testing.assert_allclose(R.matrix.base, [[0, -1, -1], [-1, 0, -1], [-1, -1, 0]])
         # Execution 1:
         # Recurrent input = [5, 4, 3] | New input = [1, 2, 3] | Total input = [6, 6, 6]
         # Output 1 = [6, 6, 6]
@@ -327,8 +365,8 @@ class TestRecurrentTransferMechanismMatrix:
         )
         val = R.execute([10])
         np.testing.assert_allclose(val, [[10.]])
-        assert isinstance(R.matrix, np.ndarray)
-        np.testing.assert_allclose(R.matrix, [[-2]])
+        assert isinstance(R.matrix.base, np.ndarray)
+        np.testing.assert_allclose(R.matrix.base, [[-2]])
 
     def test_recurrent_mech_matrix_auto_hetero_spec_size_4(self):
         R = RecurrentTransferMechanism(
@@ -339,8 +377,8 @@ class TestRecurrentTransferMechanismMatrix:
         )
         val = R.execute([10, 10, 10, 10])
         np.testing.assert_allclose(val, [[10., 10., 10., 10.]])
-        np.testing.assert_allclose(R.matrix, [[2.2, -3, -3, -3], [-3, 2.2, -3, -3], [-3, -3, 2.2, -3], [-3, -3, -3, 2.2]])
-        assert isinstance(R.matrix, np.ndarray)
+        np.testing.assert_allclose(R.matrix.base, [[2.2, -3, -3, -3], [-3, 2.2, -3, -3], [-3, -3, 2.2, -3], [-3, -3, -3, 2.2]])
+        assert isinstance(R.matrix.base, np.ndarray)
 
     def test_recurrent_mech_matrix_auto_hetero_matrix_spec(self):
         # when auto, hetero, and matrix are all specified, auto and hetero should take precedence
@@ -353,8 +391,8 @@ class TestRecurrentTransferMechanismMatrix:
         )
         val = R.execute([10, 10, 10, 10])
         np.testing.assert_allclose(val, [[10., 10., 10., 10.]])
-        np.testing.assert_allclose(R.matrix, [[2.2, -3, -3, -3], [-3, 2.2, -3, -3], [-3, -3, 2.2, -3], [-3, -3, -3, 2.2]])
-        assert isinstance(R.matrix, np.ndarray)
+        np.testing.assert_allclose(R.matrix.base, [[2.2, -3, -3, -3], [-3, 2.2, -3, -3], [-3, -3, 2.2, -3], [-3, -3, -3, 2.2]])
+        assert isinstance(R.matrix.base, np.ndarray)
 
     def test_recurrent_mech_auto_matrix_spec(self):
         # auto should override the diagonal only
@@ -366,7 +404,7 @@ class TestRecurrentTransferMechanismMatrix:
         )
         val = R.execute([10, 11, 12, 13])
         np.testing.assert_allclose(val, [[10., 11., 12., 13.]])
-        np.testing.assert_allclose(R.matrix, [[2.2, 2, 3, 4], [1, 2.2, 3, 4], [1, 2, 2.2, 4], [1, 2, 3, 2.2]])
+        np.testing.assert_allclose(R.matrix.base, [[2.2, 2, 3, 4], [1, 2.2, 3, 4], [1, 2, 2.2, 4], [1, 2, 3, 2.2]])
 
     def test_recurrent_mech_auto_array_matrix_spec(self):
         R = RecurrentTransferMechanism(
@@ -377,7 +415,7 @@ class TestRecurrentTransferMechanismMatrix:
         )
         val = R.execute([10, 11, 12, 13])
         np.testing.assert_allclose(val, [[10., 11., 12., 13.]])
-        np.testing.assert_allclose(R.matrix, [[1.1, 2, 3, 4], [1, 2.2, 3, 4], [1, 2, 3.3, 4], [1, 2, 3, 4.4]])
+        np.testing.assert_allclose(R.matrix.base, [[1.1, 2, 3, 4], [1, 2.2, 3, 4], [1, 2, 3.3, 4], [1, 2, 3, 4.4]])
 
     def test_recurrent_mech_hetero_float_matrix_spec(self):
         # hetero should override off-diagonal only
@@ -390,7 +428,7 @@ class TestRecurrentTransferMechanismMatrix:
         val = R.execute([1, 2, 3, 4])
         np.testing.assert_allclose(val, [[1., 2., 3., 4.]])
         np.testing.assert_allclose(
-            R.matrix,
+            R.matrix.base,
             [[1, -2.2, -2.2, -2.2], [-2.2, 2, -2.2, -2.2], [-2.2, -2.2, 3, -2.2], [-2.2, -2.2, -2.2, 4]]
         )
 
@@ -404,7 +442,7 @@ class TestRecurrentTransferMechanismMatrix:
         val = R.execute([1, 2, 3, 4])
         np.testing.assert_allclose(val, [[1., 2., 3., 4.]])
         np.testing.assert_allclose(
-            R.matrix,
+            R.matrix.base,
             [[1, -3, -2, -1], [-4, 2, -2, -1], [-4, -3, 3, -1], [-4, -3, -2, 4]]
         )
 
@@ -420,7 +458,7 @@ class TestRecurrentTransferMechanismMatrix:
         val = R.execute([1, 2, 3, 4])
         np.testing.assert_allclose(val, [[1., 2., 3., 4.]])
         np.testing.assert_allclose(
-            R.matrix,
+            R.matrix.base,
             [[1, -3, -2, -1], [-4, 3, -2, -1], [-4, -3, 5, -1], [-4, -3, -2, 7]]
         )
 
@@ -435,7 +473,7 @@ class TestRecurrentTransferMechanismMatrix:
         val = R.execute([1, 2, 3, 4])
         np.testing.assert_allclose(val, [[1., 2., 3., 4.]])
         np.testing.assert_allclose(
-            R.matrix,
+            R.matrix.base,
             [[3, -3, -2, -1], [-4, 3, -2, -1], [-4, -3, 3, -1], [-4, -3, -2, 3]]
         )
 
@@ -450,7 +488,7 @@ class TestRecurrentTransferMechanismMatrix:
         val = R.execute([1, 2, 3, 4])
         np.testing.assert_allclose(val, [[1., 2., 3., 4.]])
         np.testing.assert_allclose(
-            R.matrix,
+            R.matrix.base,
             [[3, 2, 2, 2], [2, 3, 2, 2], [2, 2, 3, 2], [2, 2, 2, 3]]
         )
 
@@ -685,14 +723,14 @@ class TestRecurrentTransferMechanismInProcess:
             function=Linear)
         c = Composition(pathways=[[T1, proj, T2]])
         c.run(inputs={T1: [[1, 2, 3, 4]]})
-        proj.matrix = [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]
-        assert np.allclose(proj.matrix, [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]])
+        proj.matrix.base = [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]
+        assert np.allclose(proj.matrix.base, [[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]])
         # c.run(inputs={T1: [[1, 2, 3, 4]]})
         T1.execute([[1, 2, 3, 4]])
         proj.execute()
         # removed this assert, because before the changes of most_recent_execution_id -> most_recent_context
-        # proj.matrix referred to the 'Process-0' execution_id, even though it was last executed with None
-        # assert np.allclose(proj.matrix, np.array([[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]))
+        # proj.matrix.base referred to the 'Process-0' execution_id, even though it was last executed with None
+        # assert np.allclose(proj.matrix.base, np.array([[2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2], [2, 2, 2, 2]]))
 
     def test_recurrent_mech_process_matrix_change(self):
         R = RecurrentTransferMechanism(
@@ -709,7 +747,7 @@ class TestRecurrentTransferMechanismInProcess:
         np.testing.assert_allclose(T.parameters.value.get(c), [[1, 2, 3, 4]])
         np.testing.assert_allclose(R.parameters.value.get(c), [[1, 2, 3, 4]])
         c.run(inputs={T: [[1, 3, 2, 5]]})
-        np.testing.assert_allclose(R.recurrent_projection.matrix, [[2, 0, 1, 3]] * 4)
+        np.testing.assert_allclose(R.recurrent_projection.matrix.base, [[2, 0, 1, 3]] * 4)
         np.testing.assert_allclose(T.parameters.value.get(c), [[1, 3, 2, 5]])
         np.testing.assert_allclose(R.parameters.value.get(c), [[21, 3, 12, 35]])
 
@@ -728,7 +766,7 @@ class TestRecurrentTransferMechanismInProcess:
         np.testing.assert_allclose(T.parameters.value.get(c), [[1, 2, 3, 4]])
         np.testing.assert_allclose(R.parameters.value.get(c), [[1, 2, 3, 4]])
         c.run(inputs={T: [[1, 3, 2, 5]]})
-        np.testing.assert_allclose(R.recurrent_projection.matrix, [[2, 0, 1, 3]] * 4)
+        np.testing.assert_allclose(R.recurrent_projection.matrix.base, [[2, 0, 1, 3]] * 4)
         np.testing.assert_allclose(T.parameters.value.get(c), [[1, 3, 2, 5]])
         np.testing.assert_allclose(R.parameters.value.get(c), [[21, 3, 12, 35]])
 
@@ -859,8 +897,8 @@ class TestRecurrentTransferMechanismInComposition:
                 [0.1, 0.1, 0.1, 0.1]
             ]
         )
-        np.testing.assert_allclose(R.recurrent_projection.matrix, R.matrix)
-        np.testing.assert_allclose(R.input_port.path_afferents[0].matrix, R.matrix)
+        np.testing.assert_allclose(R.recurrent_projection.matrix.base, R.matrix.base)
+        np.testing.assert_allclose(R.input_port.path_afferents[0].matrix.base, R.matrix.base)
 
         # Test that activity is properly computed prior to learning
         # p = Process(pathway=[R])
@@ -903,9 +941,9 @@ class TestRecurrentTransferMechanismInComposition:
                                        )
 
         c = Composition(pathways=[R])
-        assert R.learning_rate == 0.1
-        assert R.learning_mechanism.learning_rate == 0.1
-        # assert R.learning_mechanism.function.learning_rate == 0.1
+        assert R.learning_rate.base == 0.1
+        assert R.learning_mechanism.learning_rate.base == 0.1
+        # assert R.learning_mechanism.function.learning_rate.base == 0.1
         c.learn(inputs={R:[[1.0, 1.0, 1.0, 1.0]]})
         matrix_1 = [[0., 1.1, 1.1, 1.1],
                     [1.1, 0., 1.1, 1.1],
@@ -913,11 +951,11 @@ class TestRecurrentTransferMechanismInComposition:
                     [1.1, 1.1, 1.1, 0.]]
         assert np.allclose(R.recurrent_projection.mod_matrix, matrix_1)
         print(R.recurrent_projection.mod_matrix)
-        R.learning_rate = 0.9
+        R.learning_rate.base = 0.9
 
-        assert R.learning_rate == 0.9
-        assert R.learning_mechanism.learning_rate == 0.9
-        # assert R.learning_mechanism.function.learning_rate == 0.9
+        assert R.learning_rate.base == 0.9
+        assert R.learning_mechanism.learning_rate.base == 0.9
+        # assert R.learning_mechanism.function.learning_rate.base == 0.9
         c.learn(inputs={R:[[1.0, 1.0, 1.0, 1.0]]})
         matrix_2 = [[0., 1.911125, 1.911125, 1.911125],
                     [1.911125, 0., 1.911125, 1.911125],
@@ -1210,7 +1248,7 @@ class TestDebugProperties:
         print("R.parameters.hetero.get() = ", R.parameters.hetero.get())
 
         print("\n\nMatrix Values ----------------------------------")
-        print("R.matrix = ", R.matrix)
+        print("R.matrix = ", R.matrix.base)
         print("R.parameters.matrix.get() = ", R.parameters.matrix.get())
 
         comp = pnl.Composition()
@@ -1230,7 +1268,7 @@ class TestDebugProperties:
         print("R.parameters.hetero.get(eid) = ", R.parameters.hetero.get(eid))
 
         print("\n\nMatrix Values ----------------------------------")
-        print("R.matrix = ", R.matrix)
+        print("R.matrix = ", R.matrix.base)
         print("R.parameters.matrix.get(eid) = ", R.parameters.matrix.get(eid))
 
     def test_auto(self):
@@ -1249,7 +1287,7 @@ class TestDebugProperties:
         print("R.parameters.hetero.get() = ", R.parameters.hetero.get())
 
         print("\n\nMatrix Values ----------------------------------")
-        print("R.matrix = ", R.matrix)
+        print("R.matrix = ", R.matrix.base)
         print("R.parameters.matrix.get() = ", R.parameters.matrix.get())
 
         comp = pnl.Composition()
@@ -1269,7 +1307,7 @@ class TestDebugProperties:
         print("R.parameters.hetero.get(eid) = ", R.parameters.hetero.get(eid))
 
         print("\n\nMatrix Values ----------------------------------")
-        print("R.matrix = ", R.matrix)
+        print("R.matrix = ", R.matrix.base)
         print("R.parameters.matrix.get(eid) = ", R.parameters.matrix.get(eid))
 
     def test_hetero(self):
@@ -1287,7 +1325,7 @@ class TestDebugProperties:
         print("R.parameters.hetero.get() = ", R.parameters.hetero.get())
 
         print("\n\nMatrix Values ----------------------------------")
-        print("R.matrix = ", R.matrix)
+        print("R.matrix = ", R.matrix.base)
         print("R.parameters.matrix.get() = ", R.parameters.matrix.get())
 
         comp = pnl.Composition()
@@ -1309,7 +1347,7 @@ class TestDebugProperties:
         print("R.parameters.hetero.get(eid) = ", R.parameters.hetero.get(eid))
 
         print("\n\nMatrix Values ----------------------------------")
-        print("R.matrix = ", R.matrix)
+        print("R.matrix = ", R.matrix.base)
         print("R.parameters.matrix.get(eid) = ", R.parameters.matrix.get(eid))
 
     def test_auto_and_hetero(self):
@@ -1331,7 +1369,7 @@ class TestDebugProperties:
         print("R.parameters.hetero.get() = ", R.parameters.hetero.get())
 
         print("\n\nMatrix Values ----------------------------------")
-        print("R.matrix = ", R.matrix)
+        print("R.matrix = ", R.matrix.base)
         print("R.parameters.matrix.get() = ", R.parameters.matrix.get())
 
         comp = pnl.Composition()
@@ -1351,7 +1389,7 @@ class TestDebugProperties:
         print("R.parameters.hetero.get(eid) = ", R.parameters.hetero.get(eid))
 
         print("\n\nMatrix Values ----------------------------------")
-        print("R.matrix = ", R.matrix)
+        print("R.matrix = ", R.matrix.base)
         print("R.parameters.matrix.get(eid) = ", R.parameters.matrix.get(eid))
 
     def test_matrix(self):
@@ -1372,7 +1410,7 @@ class TestDebugProperties:
         print("R.parameters.hetero.get() = ", R.parameters.hetero.get())
 
         print("\n\nMatrix Values ----------------------------------")
-        print("R.matrix = ", R.matrix)
+        print("R.matrix = ", R.matrix.base)
         print("R.parameters.matrix.get() = ", R.parameters.matrix.get())
 
         comp = pnl.Composition()
@@ -1392,5 +1430,5 @@ class TestDebugProperties:
         print("R.parameters.hetero.get(eid) = ", R.parameters.hetero.get(eid))
 
         print("\n\nMatrix Values ----------------------------------")
-        print("R.matrix = ", R.matrix)
+        print("R.matrix = ", R.matrix.base)
         print("R.parameters.matrix.get(eid) = ", R.parameters.matrix.get(eid))

@@ -218,7 +218,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         """
         rate = Parameter(1.0, modulable=True, function_arg=True)
         noise = Parameter(0.0, modulable=True, function_arg=True)
-        previous_value = Parameter(np.array([0]), pnl_internal=True)
+        previous_value = Parameter(np.array([0]), initializer='initializer', pnl_internal=True)
         initializer = Parameter(np.array([0]), pnl_internal=True)
 
     @tc.typecheck
@@ -244,8 +244,6 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
             context=context,
             **kwargs
         )
-
-        self.has_initializers = True
 
     # FIX CONSIDER MOVING THIS TO THE LEVEL OF Function_Base OR EVEN Component
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -274,7 +272,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         for param in request_set:
             value = request_set[param]
             # If param is in Parameter class for function and it is a function_arg:
-            if param in self.parameters.names() and getattr(self.parameters, param).function_arg:
+            if param in self.parameters.names() and getattr(self.parameters, param).function_arg and getattr(self.parameters, param)._user_specified:
                 if value is not None and isinstance(value, (list, np.ndarray)) and len(value)>1:
                     # Store ones with length > 1 in dict for evaluation below
                     params_to_check.update({param:value})
@@ -574,8 +572,6 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
             prefs=prefs,
         )
 
-        self.has_initializers = True
-
     def _accumulator_check_args(self, variable=None, context=None, params=None, target_set=None):
         """validate params and assign any runtime params.
 
@@ -611,7 +607,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         runtime_params = params
         if runtime_params:
             for param_name in runtime_params:
-                if hasattr(self, param_name):
+                if param_name in self.parameters:
                     if param_name in {FUNCTION, INPUT_PORTS, OUTPUT_PORTS}:
                         continue
                     if context.execution_id not in self._runtime_params_reset:
@@ -653,11 +649,11 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
             warnings.warn("{} does not use its variable;  value passed ({}) will be ignored".
                           format(self.__class__.__name__, variable))
 
-        rate = self._get_current_function_param(RATE, context)
-        increment = self._get_current_function_param(INCREMENT, context)
-        noise = self._try_execute_param(self._get_current_function_param(NOISE, context), variable)
+        rate = self._get_current_parameter_value(RATE, context)
+        increment = self._get_current_parameter_value(INCREMENT, context)
+        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
 
-        previous_value = np.atleast_2d(self.get_previous_value(context))
+        previous_value = np.atleast_2d(self.parameters.previous_value._get(context))
 
         value = previous_value * rate + noise + increment
 
@@ -825,8 +821,6 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
             prefs=prefs,
         )
 
-        self.has_initializers = True
-
     def _function(self,
                  variable=None,
                  context=None,
@@ -850,13 +844,13 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         updated value of integral : 2d array
 
         """
-        rate = np.array(self._get_current_function_param(RATE, context)).astype(float)
+        rate = np.array(self._get_current_parameter_value(RATE, context)).astype(float)
 
-        offset = self._get_current_function_param(OFFSET, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
 
         # execute noise if it is a function
-        noise = self._try_execute_param(self._get_current_function_param(NOISE, context), variable)
-        previous_value = self.get_previous_value(context)
+        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
+        previous_value = self.parameters.previous_value._get(context)
         new_value = variable
 
         value = previous_value + (new_value * rate) + noise
@@ -1060,8 +1054,6 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
             prefs=prefs,
         )
 
-        self.has_initializers = True
-
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(
             request_set=request_set,
@@ -1190,15 +1182,15 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         updated value of integral : ndarray (dimension equal to variable)
 
         """
-        rate = np.array(self._get_current_function_param(RATE, context)).astype(float)
-        offset = self._get_current_function_param(OFFSET, context)
+        rate = np.array(self._get_current_parameter_value(RATE, context)).astype(float)
+        offset = self._get_current_parameter_value(OFFSET, context)
         # execute noise if it is a function
-        noise = self._try_execute_param(self._get_current_function_param(NOISE, context), variable)
+        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
 
         # # MODIFIED 6/14/19 OLD:
-        # previous_value = np.atleast_2d(self.get_previous_value(context))
+        # previous_value = np.atleast_2d(self.parameters.previous_value._get(context))
         # # MODIFIED 6/14/19 NEW: [JDC]
-        previous_value = self.get_previous_value(context)
+        previous_value = self.parameters.previous_value._get(context)
         # MODIFIED 6/14/19 END
 
         try:
@@ -1542,8 +1534,8 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         long_term_rate = Parameter(0.1, modulable=True, function_arg=True)
         operation = PRODUCT
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM], function_arg=True)
-        previous_short_term_avg = Parameter(None, pnl_internal=True)
-        previous_long_term_avg = Parameter(None, pnl_internal=True)
+        previous_short_term_avg = Parameter(None, initializer='initial_short_term_avg', pnl_internal=True)
+        previous_long_term_avg = Parameter(None, initializer='initial_long_term_avg', pnl_internal=True)
         short_term_logistic = None
         long_term_logistic = None
 
@@ -1568,12 +1560,6 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
 
-        if not hasattr(self, "initializers"):
-            self.initializers = ["initial_long_term_avg", "initial_short_term_avg"]
-
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["previous_short_term_avg", "previous_long_term_avg"]
-
         super().__init__(
             default_variable=default_variable,
             initializer=initializer,
@@ -1593,8 +1579,6 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
             owner=owner,
             prefs=prefs,
         )
-
-        self.has_initializers = True
 
     def _validate_params(self, request_set, target_set=None, context=None):
 
@@ -1695,11 +1679,11 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         updated value of integral : 2d array
 
         """
-        # rate = np.array(self._get_current_function_param(RATE, context)).astype(float)
+        # rate = np.array(self._get_current_parameter_value(RATE, context)).astype(float)
         # execute noise if it is a function
-        # noise = self._try_execute_param(self._get_current_function_param(NOISE, context), variable)
-        short_term_rate = self._get_current_function_param("short_term_rate", context)
-        long_term_rate = self._get_current_function_param("long_term_rate", context)
+        # noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
+        short_term_rate = self._get_current_parameter_value("short_term_rate", context)
+        long_term_rate = self._get_current_parameter_value("long_term_rate", context)
 
         # Integrate Short Term Utility:
         short_term_avg = self._EWMA_filter(short_term_rate,
@@ -1720,13 +1704,13 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
     def _combine_terms(self, short_term_avg, long_term_avg, context=None):
 
-        short_term_gain = self._get_current_function_param("short_term_gain", context)
-        short_term_bias = self._get_current_function_param("short_term_bias", context)
-        long_term_gain = self._get_current_function_param("long_term_gain", context)
-        long_term_bias = self._get_current_function_param("long_term_bias", context)
-        rate = self._get_current_function_param(RATE, context)
-        operation = self._get_current_function_param(OPERATION, context)
-        offset = self._get_current_function_param(OFFSET, context)
+        short_term_gain = self._get_current_parameter_value("short_term_gain", context)
+        short_term_bias = self._get_current_parameter_value("short_term_bias", context)
+        long_term_gain = self._get_current_parameter_value("long_term_gain", context)
+        long_term_bias = self._get_current_parameter_value("long_term_bias", context)
+        rate = self._get_current_parameter_value(RATE, context)
+        operation = self._get_current_parameter_value(OPERATION, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
 
         # s = 2*rate if rate <= 0.5 else 1
         # l = 2-(2*rate) if rate >= 0.5 else 1
@@ -1754,7 +1738,7 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
 
         return value + offset
 
-    @handle_external_context(execution_id=NotImplemented)
+    @handle_external_context(fallback_most_recent=True)
     def reset(self, short=None, long=None, context=NotImplemented):
         """
         Effectively begins accumulation over again at the specified utilities.
@@ -1771,13 +1755,10 @@ class DualAdaptiveIntegrator(IntegratorFunction):  # ---------------------------
         <DualAdaptiveIntegrator.initial_short_term_avg>` and `initial_long_term_avg
         <DualAdaptiveIntegrator.initial_long_term_avg>` are used.
         """
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.most_recent_context.execution_id
-
         if short is None:
-            short = self._get_current_function_param("initial_short_term_avg", context)
+            short = self._get_current_parameter_value("initial_short_term_avg", context)
         if long is None:
-            long = self._get_current_function_param("initial_long_term_avg", context)
+            long = self._get_current_parameter_value("initial_long_term_avg", context)
 
         self.parameters.previous_short_term_avg.set(short, context)
         self.parameters.previous_long_term_avg.set(long, context)
@@ -2047,8 +2028,6 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
             prefs=prefs,
         )
 
-        self.has_initializers = True
-
     def _validate_params(self, request_set, target_set=None, context=None):
 
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
@@ -2089,15 +2068,15 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         updated value of integral : 2d array
 
         """
-        rate = np.array(self._get_current_function_param(RATE, context)).astype(float)
-        decay = np.array(self._get_current_function_param(DECAY, context)).astype(float)
-        rest = np.array(self._get_current_function_param(REST, context)).astype(float)
+        rate = np.array(self._get_current_parameter_value(RATE, context)).astype(float)
+        decay = np.array(self._get_current_parameter_value(DECAY, context)).astype(float)
+        rest = np.array(self._get_current_parameter_value(REST, context)).astype(float)
         # FIX: only works with "max_val". Keyword MAX_VAL = "MAX_VAL", not max_val
-        max_val = np.array(self._get_current_function_param("max_val", context)).astype(float)
-        min_val = np.array(self._get_current_function_param("min_val", context)).astype(float)
+        max_val = np.array(self._get_current_parameter_value("max_val", context)).astype(float)
+        min_val = np.array(self._get_current_parameter_value("min_val", context)).astype(float)
 
         # execute noise if it is a function
-        noise = self._try_execute_param(self._get_current_function_param(NOISE, context), variable)
+        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
 
         current_input = variable
 
@@ -2113,7 +2092,7 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
                 raise FunctionError("The {} argument of {} ({}) must be an int or float, "
                                     "or a list or array of the same length as its variable ({})".
                                     format(repr(REST), self.__class__.__name__, rest, len(variable)))
-        previous_value = self.get_previous_value(context)
+        previous_value = self.parameters.previous_value._get(context)
 
         current_input = np.atleast_2d(variable)
         prev_val = np.atleast_2d(previous_value)
@@ -2387,7 +2366,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         starting_point = 0.0
         threshold = Parameter(100.0, modulable=True)
         time_step_size = Parameter(1.0, modulable=True)
-        previous_time = Parameter(None, pnl_internal=True)
+        previous_time = Parameter(None, initializer='starting_point', pnl_internal=True)
         seed = Parameter(None, read_only=True)
         random_state = Parameter(None, stateful=True, loggable=False)
         enable_output_type_conversion = Parameter(
@@ -2416,12 +2395,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         if seed is None:
             seed = get_global_seed()
 
-        if not hasattr(self, "initializers"):
-            self.initializers = ["initializer", "starting_point"]
-
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["previous_value", "previous_time"]
-
         random_state = np.random.RandomState([seed])
 
         # Assign here as default, for use in initialization of function
@@ -2439,8 +2412,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             owner=owner,
             prefs=prefs,
         )
-
-        self.has_initializers = True
 
     def _validate_noise(self, noise):
         if noise is not None and not isinstance(noise, float) and not(isinstance(noise, np.ndarray) and np.issubdtype(noise.dtype, np.floating)):
@@ -2473,14 +2444,14 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         updated value of integral : 2d array
 
         """
-        rate = np.array(self._get_current_function_param(RATE, context)).astype(float)
-        noise = self._get_current_function_param(NOISE, context)
-        offset = self._get_current_function_param(OFFSET, context)
-        threshold = self._get_current_function_param(THRESHOLD, context)
-        time_step_size = self._get_current_function_param(TIME_STEP_SIZE, context)
-        random_state = self._get_current_function_param("random_state", context)
+        rate = np.array(self._get_current_parameter_value(RATE, context)).astype(float)
+        noise = self._get_current_parameter_value(NOISE, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
+        threshold = self._get_current_parameter_value(THRESHOLD, context)
+        time_step_size = self._get_current_parameter_value(TIME_STEP_SIZE, context)
+        random_state = self._get_current_parameter_value("random_state", context)
 
-        previous_value = np.atleast_2d(self.get_previous_value(context))
+        previous_value = np.atleast_2d(self.parameters.previous_value._get(context))
 
         random_draw = np.array([random_state.normal() for _ in list(variable)])
         value = previous_value + rate * variable * time_step_size \
@@ -2491,7 +2462,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         # If this NOT an initialization run, update the old value and time
         # If it IS an initialization run, leave as is
         #    (don't want to count it as an execution step)
-        previous_time = self._get_current_function_param('previous_time', context)
+        previous_time = self._get_current_parameter_value('previous_time', context)
         if not self.is_initializing:
             previous_value = adjusted_value
             previous_time = previous_time + time_step_size
@@ -2568,6 +2539,13 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
         time_vo_ptr = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(1), index])
         builder.store(curr_time, time_vo_ptr)
+
+    def reset(self, previous_value=None, previous_time=None, context=None):
+        return super().reset(
+            previous_value=previous_value,
+            previous_time=previous_time,
+            context=context
+        )
 
 
 class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # --------------------------------------------------------------
@@ -2805,7 +2783,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         time_step_size = Parameter(1.0, modulable=True)
         starting_point = 0.0
-        previous_time = Parameter(0.0, pnl_internal=True)
+        previous_time = Parameter(0.0, initializer='starting_point', pnl_internal=True)
         random_state = Parameter(None, stateful=True, loggable=False)
         enable_output_type_conversion = Parameter(
             False,
@@ -2830,12 +2808,6 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
 
-        if not hasattr(self, "initializers"):
-            self.initializers = ["initializer", "starting_point"]
-
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["previous_value", "previous_time"]
-
         if seed is None:
             seed = get_global_seed()
 
@@ -2857,8 +2829,6 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             owner=owner,
             prefs=prefs,
         )
-
-        self.has_initializers = True
 
     def _validate_noise(self, noise):
         if noise is not None and not isinstance(noise, float):
@@ -2891,14 +2861,14 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         updated value of integral : 2d array
 
         """
-        rate = np.array(self._get_current_function_param(RATE, context)).astype(float)
-        decay = self._get_current_function_param(DECAY, context)
-        noise = self._get_current_function_param(NOISE, context)
-        offset = self._get_current_function_param(OFFSET, context)
-        time_step_size = self._get_current_function_param(TIME_STEP_SIZE, context)
-        random_state = self._get_current_function_param('random_state', context)
+        rate = np.array(self._get_current_parameter_value(RATE, context)).astype(float)
+        decay = self._get_current_parameter_value(DECAY, context)
+        noise = self._get_current_parameter_value(NOISE, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
+        time_step_size = self._get_current_parameter_value(TIME_STEP_SIZE, context)
+        random_state = self._get_current_parameter_value('random_state', context)
 
-        previous_value = np.atleast_2d(self.get_previous_value(context))
+        previous_value = np.atleast_2d(self.parameters.previous_value._get(context))
 
         random_normal = random_state.normal()
 
@@ -2911,7 +2881,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         #    (don't want to count it as an execution step)
         adjusted_value = value + offset
 
-        previous_time = self._get_current_function_param('previous_time', context)
+        previous_time = self._get_current_parameter_value('previous_time', context)
         if not self.is_initializing:
             previous_value = adjusted_value
             previous_time = previous_time + time_step_size
@@ -2924,6 +2894,13 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
 
         self.parameters.previous_value._set(previous_value, context)
         return previous_value, previous_time
+
+    def reset(self, previous_value=None, previous_time=None, context=None):
+        return super().reset(
+            previous_value=previous_value,
+            previous_time=previous_time,
+            context=context
+        )
 
 
 class LeakyCompetingIntegrator(IntegratorFunction):  # -----------------------------------------------------------------
@@ -3140,8 +3117,6 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
             prefs=prefs
         )
 
-        self.has_initializers = True
-
     def _function(self,
                  variable=None,
                  context=None,
@@ -3166,14 +3141,14 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         updated value of integral : 2d array
 
         """
-        rate = np.atleast_1d(self._get_current_function_param(RATE, context))
-        initializer = self._get_current_function_param(INITIALIZER, context)  # unnecessary?
-        time_step_size = self._get_current_function_param(TIME_STEP_SIZE, context)
-        offset = self._get_current_function_param(OFFSET, context)
+        rate = np.atleast_1d(self._get_current_parameter_value(RATE, context))
+        initializer = self._get_current_parameter_value(INITIALIZER, context)  # unnecessary?
+        time_step_size = self._get_current_parameter_value(TIME_STEP_SIZE, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
 
         # execute noise if it is a function
-        noise = self._try_execute_param(self._get_current_function_param(NOISE, context), variable)
-        previous_value = self.get_previous_value(context)
+        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
+        previous_value = self.parameters.previous_value._get(context)
         new_value = variable
 
         # Gilzenrat: previous_value + (-previous_value + variable)*self.time_step_size + noise --> rate = -1
@@ -3775,9 +3750,13 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         initial_w = 0.0
         initial_v = 0.0
         t_0 = 0.0
-        previous_w = Parameter(np.array([1.0]), pnl_internal=True)
-        previous_v = Parameter(np.array([1.0]), pnl_internal=True)
-        previous_time = Parameter(0.0, pnl_internal=True)
+        previous_w = Parameter(np.array([1.0]), initializer='initial_w', pnl_internal=True)
+        previous_v = Parameter(np.array([1.0]), initializer='initial_v', pnl_internal=True)
+        previous_time = Parameter(0.0, initializer='t_0', pnl_internal=True)
+
+        # this should be removed because it's unused, but this will
+        # require a larger refactoring on previous_value/value
+        previous_value = Parameter(None, initializer='initializer', pnl_internal=True)
 
         enable_output_type_conversion = Parameter(
             False,
@@ -3825,12 +3804,6 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             for k in unsupported_args:
                 if k in kwargs:
                     del kwargs[k]
-
-        if not hasattr(self, "initializers"):
-            self.initializers = ["initial_v", "initial_w", "t_0"]
-
-        if not hasattr(self, "stateful_attributes"):
-            self.stateful_attributes = ["previous_v", "previous_w", "previous_time"]
 
         super().__init__(
             default_variable=default_variable,
@@ -4059,7 +4032,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         return new_v, new_w
 
     def dv_dt(self, variable, time, v, w, a_v, threshold, b_v, c_v, d_v, e_v, f_v, time_constant_v, context=None):
-        previous_w = self._get_current_function_param('previous_w', context)
+        previous_w = self._get_current_parameter_value('previous_w', context)
 
         val = (a_v * (v ** 3) + (1 + threshold) * b_v * (v ** 2) + (-threshold) * c_v * v + d_v
                + e_v * previous_w + f_v * variable) / time_constant_v
@@ -4071,7 +4044,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         return val
 
     def dw_dt(self, variable, time, w, v, mode, a_w, b_w, c_w, uncorrelated_activity, time_constant_w, context=None):
-        previous_v = self._get_current_function_param('previous_v', context)
+        previous_v = self._get_current_parameter_value('previous_v', context)
 
         # val = np.ones_like(variable)*(mode*a_w*self.previous_v + b_w*w + c_w + (1-mode)*uncorrelated_activity)/time_constant_w
         val = (mode * a_w * previous_v + b_w * w + c_w + (1 - mode) * uncorrelated_activity) / time_constant_w
@@ -4108,30 +4081,30 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         """
 
-        # FIX: SHOULDN'T THERE BE A CALL TO _get_current_function_param('variable', context) HERE??
+        # FIX: SHOULDN'T THERE BE A CALL TO _get_current_parameter_value('variable', context) HERE??
 
         # # FIX: TEMPORARY CHECK UNTIL ARRAY IS SUPPORTED
         # if variable is not None and not np.isscalar(variable) and len(variable)>1:
         #     raise FunctionError("{} presently supports only a scalar variable".format(self.__class__.__name__))
 
-        a_v = self._get_current_function_param("a_v", context)
-        b_v = self._get_current_function_param("b_v", context)
-        c_v = self._get_current_function_param("c_v", context)
-        d_v = self._get_current_function_param("d_v", context)
-        e_v = self._get_current_function_param("e_v", context)
-        f_v = self._get_current_function_param("f_v", context)
-        time_constant_v = self._get_current_function_param("time_constant_v", context)
-        threshold = self._get_current_function_param("threshold", context)
-        a_w = self._get_current_function_param("a_w", context)
-        b_w = self._get_current_function_param("b_w", context)
-        c_w = self._get_current_function_param("c_w", context)
-        uncorrelated_activity = self._get_current_function_param("uncorrelated_activity", context)
-        time_constant_w = self._get_current_function_param("time_constant_w", context)
-        mode = self._get_current_function_param("mode", context)
-        time_step_size = self._get_current_function_param(TIME_STEP_SIZE, context)
-        previous_v = self._get_current_function_param("previous_v", context)
-        previous_w = self._get_current_function_param("previous_w", context)
-        previous_time = self._get_current_function_param("previous_time", context)
+        a_v = self._get_current_parameter_value("a_v", context)
+        b_v = self._get_current_parameter_value("b_v", context)
+        c_v = self._get_current_parameter_value("c_v", context)
+        d_v = self._get_current_parameter_value("d_v", context)
+        e_v = self._get_current_parameter_value("e_v", context)
+        f_v = self._get_current_parameter_value("f_v", context)
+        time_constant_v = self._get_current_parameter_value("time_constant_v", context)
+        threshold = self._get_current_parameter_value("threshold", context)
+        a_w = self._get_current_parameter_value("a_w", context)
+        b_w = self._get_current_parameter_value("b_w", context)
+        c_w = self._get_current_parameter_value("c_w", context)
+        uncorrelated_activity = self._get_current_parameter_value("uncorrelated_activity", context)
+        time_constant_w = self._get_current_parameter_value("time_constant_w", context)
+        mode = self._get_current_parameter_value("mode", context)
+        time_step_size = self._get_current_parameter_value(TIME_STEP_SIZE, context)
+        previous_v = self._get_current_parameter_value("previous_v", context)
+        previous_w = self._get_current_parameter_value("previous_w", context)
+        previous_time = self._get_current_parameter_value("previous_time", context)
 
         # integration_method is a compile time parameter
         integration_method = self.parameters.integration_method.get()
@@ -4202,6 +4175,14 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             self.parameters.previous_time._set(previous_time, context)
 
         return previous_v, previous_w, previous_time
+
+    def reset(self, previous_v=None, previous_w=None, previous_time=None, context=None):
+        return super().reset(
+            previous_v=previous_v,
+            previous_w=previous_w,
+            previous_time=previous_time,
+            context=context
+        )
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         zero_i32 = ctx.int32_ty(0)
@@ -4424,4 +4405,12 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
         sum = builder.fadd(sum, tmp4)
 
         res = builder.fdiv(sum, param_vals["time_constant_w"])
+        return res
+
+    # TODO: remove with changes to previous_value/value as stated in
+    # FitzHughNagumoIntegrator.Parameters
+    @property
+    def stateful_attributes(self):
+        res = super().stateful_attributes
+        res.remove('previous_value')
         return res

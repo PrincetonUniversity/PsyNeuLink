@@ -51,8 +51,8 @@ class TestLCControlMechanism:
             gain_created_by_LC_output_port_1.append(LC.output_ports[0].parameters.value.get(context))
             mod_gain_assigned_to_A.append([A.get_mod_gain(composition)])
             mod_gain_assigned_to_B.append([B.get_mod_gain(composition)])
-            base_gain_assigned_to_A.append(A.function.gain)
-            base_gain_assigned_to_B.append(B.function.gain)
+            base_gain_assigned_to_A.append(A.function.gain.base)
+            base_gain_assigned_to_B.append(B.function.gain.base)
 
         C._analyze_graph()
         benchmark(C.run, inputs={A: [[1.0], [1.0], [1.0], [1.0], [1.0]]},
@@ -86,7 +86,9 @@ class TestLCControlMechanism:
             default_variable = 10.0
         )
         if mode == 'Python':
-            EX = LC.execute
+            def EX(variable):
+                LC.execute(variable)
+                return LC.output_values
         elif mode == 'LLVM':
             e = pnlvm.execution.MechExecution(LC)
             EX = e.execute
@@ -95,19 +97,14 @@ class TestLCControlMechanism:
             EX = e.cuda_execute
 
         val = EX([10.0])
-
-        # LLVM returns combination of all output ports so let's do that for
-        # Python as well
-        if mode == 'Python':
-            val = [s.value for s in LC.output_ports]
-
-        benchmark(EX, [10.0])
-
         # All values are the same because LCControlMechanism assigns all of its ControlSignals to the same value
         # (the 1st item of its function's value).
         # FIX: 6/6/19 - Python returns 3d array but LLVM returns 2d array
         #               (np.allclose bizarrely passes for LLVM because all the values are the same)
         assert np.allclose(val, [[[3.00139776]], [[3.00139776]], [[3.00139776]], [[3.00139776]]])
+
+        if benchmark.enabled:
+            benchmark(EX, [10.0])
 
     def test_lc_control_modulated_mechanisms_all(self):
 

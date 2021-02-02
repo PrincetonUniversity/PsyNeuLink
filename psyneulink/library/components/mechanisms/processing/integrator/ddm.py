@@ -1077,8 +1077,8 @@ class DDM(ProcessingMechanism):
                                format(self.function.name, self.name))
 
             # Convert ER to decision variable:
-            threshold = float(self.function._get_current_function_param(THRESHOLD, context))
-            random_state = self._get_current_mechanism_param("random_state", context)
+            threshold = float(self.function._get_current_parameter_value(THRESHOLD, context))
+            random_state = self._get_current_parameter_value(self.parameters.random_state, context)
             if random_state.rand() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
@@ -1154,24 +1154,21 @@ class DDM(ProcessingMechanism):
 
         return mech_out, builder
 
-    @handle_external_context(execution_id=NotImplemented)
-    def reset(self, *args, force=False, context=None):
+    @handle_external_context(fallback_most_recent=True)
+    def reset(self, *args, force=False, context=None, **kwargs):
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
-
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.most_recent_context.execution_id
 
         # (1) reset function, (2) update mechanism value, (3) update output ports
         if isinstance(self.function, IntegratorFunction):
-            new_values = self.function.reset(*args, context=context)
-            self.parameters.value._set(np.array(new_values), context)
+            new_values = self.function.reset(*args, **kwargs, context=context)
+            self.parameters.value._set(convert_to_np_array(new_values), context)
             self._update_output_ports(context=context)
 
     @handle_external_context()
     def is_finished(self, context=None):
         # find the single numeric entry in previous_value
         try:
-            single_value = self.function.get_previous_value(context)
+            single_value = self.function.parameters.previous_value._get(context)
         except AttributeError:
             # Analytical function so it is always finished after it is called
             return True
@@ -1185,14 +1182,14 @@ class DDM(ProcessingMechanism):
                     break
 
         if (
-            abs(single_value) >= self.function._get_current_function_param(THRESHOLD, context)
+            abs(single_value) >= self.function._get_current_parameter_value(THRESHOLD, context)
             and isinstance(self.function, IntegratorFunction)
         ):
             logger.info(
                 '{0} {1} has reached threshold {2}'.format(
                     type(self).__name__,
                     self.name,
-                    self.function._get_current_function_param(THRESHOLD, context)
+                    self.function._get_current_parameter_value(THRESHOLD, context)
                 )
             )
             return True

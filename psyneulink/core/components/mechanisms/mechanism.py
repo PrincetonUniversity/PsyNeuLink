@@ -921,7 +921,7 @@ Runtime parameter values are specified in the **runtime_params** argument of a M
 of a parameter (as the key) and the value to assign to it, as in the following example::
 
         >>> T = pnl.TransferMechanism(function=Linear)
-        >>> T.function.slope  #doctest: +SKIP
+        >>> T.function.slope.base  #doctest: +SKIP
         1.0   # Default for slope
         >>> T.clip #doctest: +SKIP
         None  # Default for clip is None
@@ -929,7 +929,7 @@ of a parameter (as the key) and the value to assign to it, as in the following e
         ...          runtime_params={"slope": 3.0,
         ...                           "clip": (0,5)}) #doctest: +SKIP
         array([[5.]])  # = 2 (input) * 3 (slope) = 6, but clipped at 5
-        >>> T.function.slope #doctest: +SKIP
+        >>> T.function.slope.base #doctest: +SKIP
         1.0   # slope is restored 1.0
         >>> T.clip     #doctest: +SKIP
         None  # clip is restored to None
@@ -942,7 +942,7 @@ as shown above).
 If a parameter is assigned a new value before the execution, that value is restored after the execution;  that is,
 the parameter is assigned its previous value and *not* its default, as shown below::
 
-        >>> T.function.slope = 10
+        >>> T.function.slope.base = 10
         >>> T.clip = (0,3)
         >>> T.function.slope
         10
@@ -952,7 +952,7 @@ the parameter is assigned its previous value and *not* its default, as shown bel
         ...          runtime_params={"slope": 4.0,
         ...                           "clip": (0,4)}) #doctest: +SKIP
         array([[4.]])  # = 3 (input) * 4 (slope) = 12, but clipped at 4
-        >>> T.function.slope #doctest: +SKIP
+        >>> T.function.slope.base #doctest: +SKIP
         10      # slope is restored 10.0, its previously assigned value
         >>> T.clip #doctest: +SKIP
         (0, 3)  # clip is restored to (0,3), its previously assigned value
@@ -1066,6 +1066,7 @@ Class Reference
 """
 
 import abc
+import copy
 import inspect
 import itertools
 import logging
@@ -1679,7 +1680,7 @@ class Mechanism_Base(Mechanism):
                           base_class=Mechanism_Base,
                           name=name,
                           registry=MechanismRegistry,
-                          context=context)
+                          )
 
         # Create Mechanism's _portRegistry and port type entries
         from psyneulink.core.components.ports.port import Port_Base
@@ -1690,21 +1691,21 @@ class Mechanism_Base(Mechanism):
         register_category(entry=InputPort,
                           base_class=Port_Base,
                           registry=self._portRegistry,
-                          context=context)
+                          )
 
         # ParameterPort
         from psyneulink.core.components.ports.parameterport import ParameterPort
         register_category(entry=ParameterPort,
                           base_class=Port_Base,
                           registry=self._portRegistry,
-                          context=context)
+                          )
 
         # OutputPort
         from psyneulink.core.components.ports.outputport import OutputPort
         register_category(entry=OutputPort,
                           base_class=Port_Base,
                           registry=self._portRegistry,
-                          context=context)
+                          )
 
         super(Mechanism_Base, self).__init__(
             default_variable=default_variable,
@@ -1861,7 +1862,7 @@ class Mechanism_Base(Mechanism):
                         mech_variable_item = args[VARIABLE]
                 else:
                     try:
-                        mech_variable_item = parsed_input_port_spec.value
+                        mech_variable_item = parsed_input_port_spec.defaults.value
                     except AttributeError:
                         mech_variable_item = parsed_input_port_spec.defaults.mech_variable_item
             else:
@@ -1956,7 +1957,7 @@ class Mechanism_Base(Mechanism):
         try:
             function_param_specs = params[FUNCTION_PARAMS]
         except KeyError:
-            if context.source & (ContextFlags.COMMAND_LINE | ContextFlags.PROPERTY):
+            if context.source is ContextFlags.COMMAND_LINE:
                 pass
             elif self.prefs.verbosePref:
                 print("No params specified for {0}".format(self.__class__.__name__))
@@ -2083,44 +2084,64 @@ class Mechanism_Base(Mechanism):
 
         super()._instantiate_function(function=function, function_params=function_params, context=context)
 
-        if self.input_ports and any(input_port.weight is not None for input_port in self.input_ports):
+        if (
+            self.input_ports
+            and any(
+                input_port.parameters.weight._get(context) is not None
+                for input_port in self.input_ports
+            )
+            and 'weights' in self.function.parameters
+        ):
 
             # Construct defaults:
             #    from function.weights if specified else 1's
             try:
-                default_weights = self.function.weights
+                default_weights = self.function.defaults.weights
             except AttributeError:
                 default_weights = None
             if default_weights is None:
                 default_weights = default_weights or [1.0] * len(self.input_ports)
 
             # Assign any weights specified in input_port spec
-            weights = [[input_port.weight if input_port.weight is not None else default_weight]
+            weights = [[input_port.defaults.weight if input_port.defaults.weight is not None else default_weight]
                        for input_port, default_weight in zip(self.input_ports, default_weights)]
-            self.function._weights = weights
+            self.function.parameters.weights._set(weights, context)
 
-        if self.input_ports and any(input_port.exponent is not None for input_port in self.input_ports):
+        if (
+            self.input_ports
+            and any(
+                input_port.parameters.exponent._get(context) is not None
+                for input_port in self.input_ports
+            )
+            and 'exponents' in self.function.parameters
+        ):
 
             # Construct defaults:
             #    from function.weights if specified else 1's
             try:
-                default_exponents = self.function.exponents
+                default_exponents = self.function.defaults.exponents
             except AttributeError:
                 default_exponents = None
             if default_exponents is None:
                 default_exponents = default_exponents or [1.0] * len(self.input_ports)
 
             # Assign any exponents specified in input_port spec
-            exponents = [[input_port.exponent if input_port.exponent is not None else default_exponent]
-                       for input_port, default_exponent in zip(self.input_ports, default_exponents)]
-            self.function._exponents = exponents
+            exponents = [
+                [
+                    input_port.parameters.exponent._get(context)
+                    if input_port.parameters.exponent._get(context) is not None
+                    else default_exponent
+                ]
+                for input_port, default_exponent in zip(self.input_ports, default_exponents)
+            ]
+            self.function.parameters.exponents._set(exponents, context)
 
         # this may be removed when the restriction making all Mechanism values 2D np arrays is lifted
         # ignore warnings of certain Functions that disable conversion
         with warnings.catch_warnings():
             warnings.simplefilter(action='ignore', category=UserWarning)
             self.function.output_type = FunctionOutputType.NP_2D_ARRAY
-            self.function.enable_output_type_conversion = True
+            self.function.parameters.enable_output_type_conversion._set(True, context)
 
         self.function._instantiate_value(context)
 
@@ -2132,14 +2153,15 @@ class Mechanism_Base(Mechanism):
         try:
             for param_name, param_value in self.function.cust_fct_params.items():
                 if param_name not in self.parameter_ports.names:
+                    source_param = getattr(self.function.parameters, param_name)
                     _instantiate_parameter_port(
                         self,
                         param_name,
                         param_value,
                         context=context,
-                        function=self.function
+                        function=self.function,
+                        source=source_param,
                     )
-            self._parse_param_port_sources()
         except AttributeError:
             pass
 
@@ -2191,8 +2213,8 @@ class Mechanism_Base(Mechanism):
         """Stub that can be overidden by subclasses that need to know when a projection is added to the Mechanism"""
         pass
 
-    @handle_external_context(execution_id=NotImplemented)
-    def reset(self, *args, force=False, context=None):
+    @handle_external_context(fallback_most_recent=True)
+    def reset(self, *args, force=False, context=None, **kwargs):
         """Reset `value <Mechanism_Base.value>` if Mechanisms is stateful.
 
         If the mechanism's `function <Mechanism.function>` is an `IntegratorFunction`, or if the mechanism has and
@@ -2243,14 +2265,11 @@ class Mechanism_Base(Mechanism):
         from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
         from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 
-        if context.execution_id is NotImplemented:
-            context.execution_id = self.most_recent_context.execution_id
-
         # If the primary function of the mechanism is stateful:
         # (1) reset it, (2) update value, (3) update output ports
         if isinstance(self.function, StatefulFunction):
-            new_value = self.function.reset(*args, context=context)
-            self.parameters.value._set(np.atleast_2d(new_value), context=context)
+            new_value = self.function.reset(*args, **kwargs, context=context)
+            self.parameters.value._set(convert_to_np_array(new_value, dimension=2), context=context)
             self._update_output_ports(context=context)
 
         # If the mechanism has an auxiliary integrator function:
@@ -2265,7 +2284,7 @@ class Mechanism_Base(Mechanism):
                 )
 
             if self.parameters.integrator_mode._get(context) or force:
-                new_input = self.integrator_function.reset(*args, context=context)[0]
+                new_input = self.integrator_function.reset(*args, **kwargs, context=context)[0]
                 self.parameters.value._set(
                     self.function.execute(variable=new_input, context=context),
                     context=context,
@@ -2283,16 +2302,6 @@ class Mechanism_Base(Mechanism):
         else:
             raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism is not stateful; "
                                  f"it does not have an accumulator to reset.")
-
-    def _get_current_mechanism_param(self, param_name, context=None):
-        if param_name == "variable":
-            raise MechanismError(f"The method '_get_current_mechanism_param' is intended for retrieving the current "
-                                 f"value of a mechanism parameter; 'variable' is not a mechanism parameter. If looking "
-                                 f"for {self.name}'s default variable, try '{self.name}.defaults.variable'.")
-        try:
-            return self._parameter_ports[param_name].parameters.value._get(context)
-        except (AttributeError, TypeError):
-            return getattr(self.parameters, param_name)._get(context)
 
     # when called externally, ContextFlags.PROCESSING is not set. Maintain this behavior here
     # even though it will not update input ports for example
@@ -2771,10 +2780,17 @@ class Mechanism_Base(Mechanism):
     def _get_input_struct_type(self, ctx):
         # Extract the non-modulation portion of InputPort input struct
         input_type_list = [ctx.get_input_struct_type(port).elements[0] for port in self.input_ports]
+
+
         # Get modulatory inputs
-        mod_input_type_list = [ctx.get_output_struct_type(proj) for proj in self.mod_afferents]
-        if len(mod_input_type_list) > 0:
+        if len(self.mod_afferents) > 0:
+            mod_input_type_list = (ctx.get_output_struct_type(proj) for proj in self.mod_afferents)
             input_type_list.append(pnlvm.ir.LiteralStructType(mod_input_type_list))
+        # Prefer an array type if there is no modulation.
+        # This is used to keep ctypes inputs as arrays instead of structs.
+        elif all(t == input_type_list[0] for t in input_type_list):
+            return pnlvm.ir.ArrayType(input_type_list[0], len(input_type_list))
+
         return pnlvm.ir.LiteralStructType(input_type_list)
 
     def _get_param_initializer(self, context):
@@ -2886,6 +2902,9 @@ class Mechanism_Base(Mechanism):
             # Parameter port inputs are {original parameter, [modulations]},
             # fill in the first one.
             data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            assert data_ptr.type == param_in_ptr.type, \
+                "Mishandled modulation type for: {} in '{}' in '{}'".format(
+                    param_ports[i].name, obj.name, self.name)
             b.store(b.load(param_in_ptr), data_ptr)
             return b
 
@@ -2984,7 +3003,7 @@ class Mechanism_Base(Mechanism):
         for scale in [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN]:
             num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(scale.value)])
             new_val = builder.load(num_exec_time_ptr)
-            new_val = builder.add(new_val, ctx.int32_ty(1))
+            new_val = builder.add(new_val, new_val.type(1))
             builder.store(new_val, num_exec_time_ptr)
 
         builder = self._gen_llvm_output_ports(ctx, builder, value, params, state, arg_in, arg_out)
@@ -3573,7 +3592,10 @@ class Mechanism_Base(Mechanism):
         from psyneulink.core.components.ports.inputport import InputPort, _instantiate_input_ports
         from psyneulink.core.components.ports.outputport import OutputPort, _instantiate_output_ports
 
-        context = Context(source=ContextFlags.METHOD)
+        # not transferring execution_id here because later function calls
+        # need execution_id=None to succeed.
+        # TODO: remove context passing for init methods if they don't need it
+        context = Context(source=ContextFlags.METHOD, execution_id=None)
 
         # Put in list to standardize treatment below
         if not isinstance(ports, list):
@@ -3610,13 +3632,16 @@ class Mechanism_Base(Mechanism):
                                                                   context=context)
             for port in instantiated_input_ports:
                 if port.name is port.componentName or port.componentName + '-' in port.name:
-                        port._assign_default_port_Name(context=context)
+                        port._assign_default_port_Name()
             # self._instantiate_function(function=self.function)
         if output_ports:
             instantiated_output_ports = _instantiate_output_ports(self, output_ports, context=context)
 
         if update_variable:
-            self._update_default_variable(self.input_values, context)
+            self._update_default_variable(
+                [copy.deepcopy(port.defaults.value) for port in self.input_ports],
+                context
+            )
 
         return {INPUT_PORTS: instantiated_input_ports,
                 OUTPUT_PORTS: instantiated_output_ports}
@@ -3692,12 +3717,10 @@ class Mechanism_Base(Mechanism):
                                               component=port)
 
             elif port in self.output_ports:
-                if isinstance(port, OutputPort):
-                    index = self.output_ports.index(port)
-                else:
-                    index = self.output_ports.index(self.output_ports[port])
                 delete_port_Projections(port.efferents.copy(), port)
-                del self.output_values[index]
+                # NOTE: removed below del because output_values is
+                # generated on the fly. These comments can be removed
+                # del self.output_values[index]
                 del self.output_ports[port]
                 # If port is subclass of OutputPort:
                 #    check if regsistry has category for that class, and if so, use that
