@@ -416,6 +416,10 @@ class ConditionGenerator:
                                           self.ctx.int32_ty(1)])
         return builder.load(ts_ptr)
 
+    def get_global_ts(self, builder, cond_ptr):
+        ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
+        return builder.load(ts_ptr)
+
     def generate_update_after_run(self, builder, cond_ptr, node):
         status_ptr = self.__get_node_status_ptr(builder, cond_ptr, node)
         status = builder.load(status_ptr)
@@ -426,33 +430,32 @@ class ConditionGenerator:
         status = builder.insert_value(status, runs, 0)
 
         # Update time stamp
-        ts = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
-        ts = builder.load(ts)
+        ts = self.get_global_ts(builder, cond_ptr)
         status = builder.insert_value(status, ts, 1)
 
         builder.store(status, status_ptr)
 
     def generate_ran_this_pass(self, builder, cond_ptr, node):
-        global_ts = builder.load(builder.gep(cond_ptr, [self._zero, self._zero, self._zero]))
+        global_ts = self.get_global_ts(builder, cond_ptr)
+        global_trial = builder.extract_value(global_ts, 0)
         global_pass = builder.extract_value(global_ts, 1)
-        global_run = builder.extract_value(global_ts, 0)
 
         node_ts = self.__get_node_ts(builder, cond_ptr, node)
+        node_trial = builder.extract_value(node_ts, 0)
         node_pass = builder.extract_value(node_ts, 1)
-        node_run = builder.extract_value(node_ts, 0)
 
         pass_eq = builder.icmp_signed("==", node_pass, global_pass)
-        run_eq = builder.icmp_signed("==", node_run, global_run)
-        return builder.and_(pass_eq, run_eq)
+        trial_eq = builder.icmp_signed("==", node_trial, global_trial)
+        return builder.and_(pass_eq, trial_eq)
 
     def generate_ran_this_trial(self, builder, cond_ptr, node):
-        global_ts = builder.load(builder.gep(cond_ptr, [self._zero, self._zero, self._zero]))
-        global_run = builder.extract_value(global_ts, 0)
+        global_ts = self.get_global_ts(builder, cond_ptr)
+        global_trial = builder.extract_value(global_ts, 0)
 
         node_ts = self.__get_node_ts(builder, cond_ptr, node)
-        node_run = builder.extract_value(node_ts, 0)
+        node_trial = builder.extract_value(node_ts, 0)
 
-        return builder.icmp_signed("==", node_run, global_run)
+        return builder.icmp_signed("==", node_trial, global_trial)
 
     def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_callbacks):
 
@@ -498,16 +501,14 @@ class ConditionGenerator:
 
         elif isinstance(condition, AtTrial):
             trial_num = condition.args[0]
-            ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
-            ts = builder.load(ts_ptr)
-            trial = builder.extract_value(ts, 0)
+            global_ts = self.get_global_ts(builder, cond_ptr)
+            trial = builder.extract_value(global_ts, 0)
             return builder.icmp_unsigned("==", trial, trial.type(trial_num))
 
         elif isinstance(condition, AtPass):
             pass_num = condition.args[0]
-            ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
-            ts = builder.load(ts_ptr)
-            current_pass = builder.extract_value(ts, 1)
+            global_ts = self.get_global_ts(builder, cond_ptr)
+            current_pass = builder.extract_value(global_ts, 1)
             return builder.icmp_unsigned("==", current_pass,
                                          current_pass.type(pass_num))
 
