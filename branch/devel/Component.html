@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.8.5.1+11.g1608d0b76b documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.8.5.1+12.g2ef99756d2 documentation</title>
   
 
   
@@ -96,7 +96,7 @@
               
               
                 <div class="version">
-                  0.8.5.1+11
+                  0.8.5.1+12
                 </div>
               
             
@@ -452,7 +452,7 @@ argument, using a value of <code class="xref any docutils literal notranslate"><
 </div>
 <div class="section" id="execution">
 <span id="component-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>A Component is executed when its <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.execute" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method is called, which in turn calls its <a class="reference internal" href="#component-function"><span class="std std-ref">function</span></a>.</p>
+<p>A Component is executed when its <a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method is called, which in turn calls its <a class="reference internal" href="#component-function"><span class="std std-ref">function</span></a>.</p>
 <div class="section" id="lazy-updating">
 <span id="component-lazy-updating"></span><h3><em>Lazy Updating</em><a class="headerlink" href="#lazy-updating" title="Permalink to this headline">¶</a></h3>
 <p>In general, only <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> are executed from the command line (i.e., from the console or in a
@@ -493,14 +493,14 @@ Mechanisms (see <a class="reference internal" href="Composition.html#composition
 </ul>
 <ul class="simple" id="component-execute-until-finished">
 <li><p><strong>execute_until_finished</strong> – determines whether the Component executes until its <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method returns True.
-If it is False, then the Component executes only once per call to its <code class="xref any docutils literal notranslate"><span class="pre">execute</span></code> method,
+If it is False, then the Component executes only once per call to its <a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method,
 irrespective of its <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method;  if it is True then, depending on how its class implements and handles its
-<a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method, the Component may execute more than once per call to its <code class="xref any docutils literal notranslate"><span class="pre">execute</span></code> method.</p></li>
+<a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> method, the Component may execute more than once per call to its <a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method.</p></li>
 </ul>
 <ul class="simple" id="component-num-executions-before-finished">
 <li><p><strong>num_executions_before_finished</strong> – contains the number of times the Component has executed prior to finishing
 (and since it last finished);  depending upon the class, these may all be within a single call to the Component’s
-<code class="xref any docutils literal notranslate"><span class="pre">execute</span></code> method, or extend over several calls.  It is set to 0 each time <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> evalutes
+<a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method, or extend over several calls.  It is set to 0 each time <a class="reference internal" href="#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> evalutes
 to True. Note that this is distinct from the <a class="reference internal" href="#component-execution-count"><span class="std std-ref">execution_count</span></a> and <a class="reference internal" href="#component-num-executions"><span class="std std-ref">num_executions</span></a> attributes.</p></li>
 </ul>
 <ul class="simple" id="component-max-executions-before-finished">
@@ -1145,9 +1145,15 @@ value based on its default_variable.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt id="psyneulink.core.components.component.Component.execute">
+<code class="sig-name descname">execute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">runtime_params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Executes Component’s <a class="reference internal" href="#component-function"><span class="std std-ref">function</span></a>.  See Component-specific execute method for details.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt id="psyneulink.core.components.component.Component.is_finished">
 <code class="sig-name descname">is_finished</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.is_finished" title="Permalink to this definition">¶</a></dt>
-<dd><p>set by a Component to signal completion of its <a class="reference internal" href="#component-execution"><span class="std std-ref">execution</span></a> in a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>; used by <a class="reference internal" href="Condition.html#conditions-component-based"><span class="std std-ref">Component-based Conditions</span></a> to predicate the
+<dd><p>Set by a Component to signal completion of its <a class="reference internal" href="#component-execution"><span class="std std-ref">execution</span></a> in a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>; used by <a class="reference internal" href="Condition.html#conditions-component-based"><span class="std std-ref">Component-based Conditions</span></a> to predicate the
 execution of one or more other Components on a Component.</p>
 </dd></dl>
 

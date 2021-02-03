@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Preferences &mdash; PsyNeuLink 0.8.5.1+11.g1608d0b76b documentation</title>
+  <title>Preferences &mdash; PsyNeuLink 0.8.5.1+12.g2ef99756d2 documentation</title>
   
 
   
@@ -96,7 +96,7 @@
               
               
                 <div class="version">
-                  0.8.5.1+11
+                  0.8.5.1+12
                 </div>
               
             
@@ -197,13 +197,17 @@
   <div class="section" id="preferences">
 <h1>Preferences<a class="headerlink" href="#preferences" title="Permalink to this headline">¶</a></h1>
 <p>Standard prefereces:</p>
-<ul class="simple">
+<ul>
 <li><p>verbose (bool): enables/disables reporting of (non-exception) warnings and system function</p></li>
 <li><p>paramValidation (bool): enables/disables run-time validation of the execute method of a Function object</p></li>
-<li><dl class="simple">
-<dt>reportOutput ([bool, str]): enables/disables reporting of execution of execute method:</dt><dd><p>True prints input/output, ‘params’ or ‘parameters’ includes parameter values</p>
-</dd>
-</dl>
+<li><p>reportOutput ([bool, str]): enables/disables reporting execution of <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>'s <a class="reference internal" href="Component.html#component-execution"><span class="std std-ref">execute</span></a>
+method to console:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code> prints record of execution, including the input and output of the Component;</p></li>
+<li><p>‘params’ or ‘parameters’ includes report of the Component’s <a class="reference internal" href="Parameters.html"><span class="doc">parameter</span></a> values.</p></li>
+</ul>
+</div></blockquote>
 </li>
 <li><p>log (bool): sets LogCondition for a given Component</p></li>
 <li><p>functionRunTimeParams (Modulation): uses run-time params to modulate execute method params</p></li>
