@@ -123,8 +123,8 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
                 self.register[k] = numpy_handlers
 
         name_constants = {
-            True: ir.IntType(1)(1),
-            False: ir.IntType(1)(0),
+            True: ctx.bool_ty(1),
+            False: ctx.bool_ty(0),
         }
         self.name_constants = name_constants
         super().__init__()
@@ -883,7 +883,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
 
         # Allocate run set structure
-        run_set_type = ir.ArrayType(ir.IntType(1), len(composition.nodes))
+        run_set_type = ir.ArrayType(ctx.bool_ty, len(composition.nodes))
         run_set_ptr = builder.alloca(run_set_type, name="run_set")
         builder.store(run_set_type(None), run_set_ptr)
 
@@ -919,7 +919,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         builder.position_at_end(loop_body)
 
         zero = ctx.int32_ty(0)
-        any_cond = ir.IntType(1)(0)
+        any_cond = ctx.bool_ty(0)
         # Calculate execution set before running the mechanisms
         for idx, node in enumerate(composition.nodes):
             run_set_node_ptr = builder.gep(run_set_ptr,

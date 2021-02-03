@@ -2965,7 +2965,7 @@ class Mechanism_Base(Mechanism):
         return fun_out, builder
 
     def _gen_llvm_is_finished_cond(self, ctx, builder, params, state):
-        return pnlvm.ir.IntType(1)(1)
+        return ctx.bool_ty(1)
 
     def _gen_llvm_mechanism_functions(self, ctx, builder, params, state, arg_in,
                                       ip_output, *, tags:frozenset):
@@ -3043,8 +3043,7 @@ class Mechanism_Base(Mechanism):
                 ctx.get_input_struct_type(self).as_pointer(),
                 ctx.get_output_struct_type(self).as_pointer()]
 
-        builder = ctx.create_llvm_function(args, self,
-                                           return_type=pnlvm.ir.IntType(1),
+        builder = ctx.create_llvm_function(args, self, return_type=ctx.bool_ty,
                                            tags=tags)
         params, state = builder.function.args[:2]
         finished = self._gen_llvm_is_finished_cond(ctx, builder, params, state)
@@ -3083,7 +3082,7 @@ class Mechanism_Base(Mechanism):
         args_t = [a.type for a in builder.function.args]
         internal_builder = ctx.create_llvm_function(args_t, self,
                                                     name=builder.function.name + "_internal",
-                                                    return_type=pnlvm.ir.IntType(1))
+                                                    return_type=ctx.bool_ty)
         iparams, istate, iin, iout = internal_builder.function.args[:4]
         internal_builder, is_finished = self._gen_llvm_function_internal(ctx, internal_builder,
                                                                          iparams, istate, iin, iout, tags=tags)
