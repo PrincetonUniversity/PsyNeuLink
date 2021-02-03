@@ -7,7 +7,8 @@ Standard prefereces:
 
 - paramValidation (bool): enables/disables run-time validation of the execute method of a Function object
 
-- reportOutput (bool): enables/disables reporting of execution of execute method
+- reportOutput ([bool, str]): enables/disables reporting of execution of execute method:
+   True prints input/output, 'params' or 'parameters' includes parameter values
 
 - log (bool): sets LogCondition for a given Component
 

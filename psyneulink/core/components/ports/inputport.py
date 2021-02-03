@@ -992,7 +992,7 @@ class InputPort(Port_Base):
             (port_spec, weights, exponents, connections)
 
         See Port._parse_port_specific_spec for additional info.
-.
+
         Returns:
              - port_spec:  1st item of tuple if it is a numeric value;  otherwise None
              - params dict with WEIGHT, EXPONENT and/or PROJECTIONS entries if any of these was specified.
@@ -1360,7 +1360,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
     if context.source & (ContextFlags.METHOD | ContextFlags.COMMAND_LINE):
         owner.input_ports.extend(port_list)
     else:
-        owner.input_ports = port_list
+        owner.parameters.input_ports._set(port_list, context)
 
     # Assign value of require_projection_in_composition
     for port in owner.input_ports:

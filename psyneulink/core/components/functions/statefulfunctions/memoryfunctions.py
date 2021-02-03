@@ -25,6 +25,7 @@ Functions that store and can return a record of their input.
 from collections import deque
 
 import numpy as np
+import numbers
 import typecheck as tc
 import warnings
 
@@ -317,6 +318,8 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
 
         # Apply rate and/or noise, if they are specified, to all stored items
         if len(previous_value):
+            # TODO: remove this shape hack when buffer shapes made consistent
+            noise = np.reshape(noise, np.asarray(previous_value[0]).shape)
             previous_value = convert_to_np_array(previous_value) * rate + noise
 
         previous_value = deque(previous_value, maxlen=self.parameters.history._get(context))
@@ -1097,8 +1100,15 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
             memory = [[0]* self.parameters.key_size._get(context), [0]* self.parameters.val_size._get(context)]
         # Store variable to dict:
-        if noise:
-            key += noise
+        if noise is not None:
+            key = np.asarray(key, dtype=float)
+            if isinstance(noise, numbers.Number):
+                key += noise
+            else:
+                # assume array with same shape as variable
+                # TODO: does val need noise?
+                key += noise[KEYS]
+
         if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.rand()):
             self._store_memory(variable, context)
 

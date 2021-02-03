@@ -520,7 +520,7 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared,\
     is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, \
-    get_all_explicit_arguments, call_with_pruned_args, safe_equals
+    get_all_explicit_arguments, call_with_pruned_args, safe_equals, safe_len
 from psyneulink.core.scheduling.condition import Never
 
 __all__ = [
@@ -650,7 +650,14 @@ def make_parameter_property(param):
                 f' for example, <object>.{param.name}.base = {value}',
                 FutureWarning,
             )
-        getattr(self.parameters, p.name)._set(value, self.most_recent_context)
+        try:
+            getattr(self.parameters, p.name).set(value, self.most_recent_context)
+        except ParameterError as e:
+            if 'Pass override=True to force set.' in str(e):
+                raise ParameterError(
+                    f"Parameter '{p.name}' is read-only. Set at your own risk."
+                    f' Use .parameters.{p.name}.set with override=True to force set.'
+                ) from None
 
     return property(getter).setter(setter)
 
@@ -1002,7 +1009,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             return None
 
         def _parse_modulable(self, param_name, param_value):
-            from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
+            from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
+            from psyneulink.core.components.ports.modulatorysignals import ModulatorySignal
+            from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+
             # assume 2-tuple with class/instance as second item is a proper
             # modulatory spec, can possibly add in a flag on acceptable
             # classes in the future
@@ -1018,14 +1028,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 )
             ):
                 value = param_value[0]
-            # assume a DistributionFunction is allowed to persist, for noise
             elif (
-                (
-                    is_instance_or_subclass(param_value, Component)
-                    and not is_instance_or_subclass(
-                        param_value,
-                        DistributionFunction
-                    )
+                is_instance_or_subclass(
+                    param_value,
+                    (ModulatoryMechanism_Base, ModulatorySignal, ModulatoryProjection_Base)
                 )
                 or (
                     isinstance(param_value, str)
@@ -1286,9 +1292,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         if not hasattr(self, 'ports'):
             blacklist.add("value")
         def _is_compilation_state(p):
-            val = p.get()   # memoize for this function
-            return val is not None and p.name not in blacklist and \
-                   (p.name in whitelist or isinstance(val, Component))
+            #FIXME: This should use defaults instead of 'p.get'
+            return p.name not in blacklist and \
+                   (p.name in whitelist or isinstance(p.get(), Component))
 
         return filter(_is_compilation_state, self.parameters)
 
@@ -2040,8 +2046,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 if isinstance(val, Function):
                     val.owner = self
 
+                val = p._parse(val)
                 p._validate(val)
-                p.set(val, context=context, skip_history=True, override=True)
+                p._set(val, context=context, skip_history=True, override=True)
 
             if isinstance(p.default_value, Function):
                 p.default_value.owner = p
@@ -2704,7 +2711,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         return value
 
-    def _validate_function(self, function):
+    def _validate_function(self, function, context=None):
         """Check that either params[FUNCTION] and/or self.execute are implemented
 
         # FROM _validate_params:
@@ -2752,7 +2759,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             or isinstance(function, types.MethodType)
             or is_instance_or_subclass(function, Function)
         ):
-            self.function = function
+            self.parameters.function._set(function, context)
             return
         # self.function is NOT OK, so raise exception
         else:
@@ -2813,7 +2820,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # Specification is a standard python function, so wrap as a UserDefnedFunction
         # Note:  parameter_ports for function's parameters will be created in_instantiate_attributes_after_function
         if isinstance(function, types.FunctionType):
-            self.function = UserDefinedFunction(default_variable=function_variable,
+            function = UserDefinedFunction(default_variable=function_variable,
                                                 custom_function=function,
                                                 owner=self,
                                                 context=context)
@@ -2840,9 +2847,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             # class default functions should always be copied, otherwise anything this component
             # does with its function will propagate to anything else that wants to use
             # the default
-            if function.owner is None:
-                self.function = function
-            elif function.owner is self:
+            if function.owner is self:
                 try:
                     if function._is_pnl_inherent:
                         # This will most often occur if a Function instance is
@@ -2860,15 +2865,15 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                             ' psyneulinkhelp@princeton.edu or'
                             ' https://github.com/PrincetonUniversity/PsyNeuLink/issues'
                         )
-                        self.function = copy.deepcopy(function)
+                        function = copy.deepcopy(function)
                 except AttributeError:
-                    self.function = function
-            else:
-                self.function = copy.deepcopy(function)
+                    pass
+            elif function.owner is not None:
+                function = copy.deepcopy(function)
 
             # set owner first because needed for is_initializing calls
-            self.function.owner = self
-            self.function._update_default_variable(function_variable, context)
+            function.owner = self
+            function._update_default_variable(function_variable, context)
 
         # Specification is Function class
         # Note:  parameter_ports for function's parameters will be created in_instantiate_attributes_after_function
@@ -2899,10 +2904,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                         pass
 
             _, kwargs = prune_unused_args(function.__init__, args=[], kwargs=kwargs_to_instantiate)
-            self.function = function(default_variable=function_variable, owner=self, **kwargs)
+            function = function(default_variable=function_variable, owner=self, **kwargs)
 
         else:
             raise ComponentError(f'Unsupported function type: {type(function)}, function={function}.')
+
+        self.parameters.function._set(function, context)
 
         # KAM added 6/14/18 for functions that do not pass their has_initializers status up to their owner via property
         # FIX: need comprehensive solution for has_initializers; need to determine whether ports affect mechanism's
@@ -3154,6 +3161,77 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     raise
 
         return parameter._get(context)
+
+    def _try_execute_param(self, param, var, context=None):
+        def fill_recursively(arr, value, indices=()):
+            if arr.ndim == 0:
+                try:
+                    value = value(context=context)
+                except TypeError:
+                    try:
+                        value = value()
+                    except TypeError:
+                        pass
+                return value
+
+            try:
+                len_value = len(value)
+                len_arr = safe_len(arr)
+
+                if len_value > len_arr:
+                    if len_arr == len_value - 1:
+                        ignored_items_str = f'Item {len_value - 1}'
+                    else:
+                        ignored_items_str = f'The items {len_arr} to {len_value - 1}'
+
+                    warnings.warn(
+                        f'The length of {value} is greater than that of {arr}.'
+                        f'{ignored_items_str} will be ignored for index {indices}'
+                    )
+            except TypeError:
+                # if noise value is not an iterable, ignore shape warnings
+                pass
+
+            for i, _ in enumerate(arr):
+                new_indices = indices + (i,)  # for error reporting
+                try:
+                    arr[i] = fill_recursively(arr[i], value[i], new_indices)
+                except (IndexError, TypeError):
+                    arr[i] = fill_recursively(arr[i], value, new_indices)
+
+            return arr
+
+        var = convert_all_elements_to_np_array(var, cast_from=np.integer, cast_to=float)
+
+        # handle simple wrapping of a Component (e.g. from ParameterPort in
+        # case of set after Component instantiation)
+        if (
+            (isinstance(param, list) and len(param) == 1)
+            or (isinstance(param, np.ndarray) and param.shape == (1,))
+        ):
+            if isinstance(param[0], Component):
+                param = param[0]
+
+        # Currently most noise functions do not return noise in the same
+        # shape as their variable:
+        if isinstance(param, Component):
+            try:
+                if param.defaults.value.shape == var.shape:
+                    return param(context=context)
+            except AttributeError:
+                pass
+
+        # special case where var is shaped same as param, but with extra dims
+        # assign param elements to deepest dim of var (ex: param [1, 2, 3], var [[0, 0, 0]])
+        try:
+            if param.shape != var.shape:
+                if param.shape == np.squeeze(var).shape:
+                    param = param.reshape(var.shape)
+        except AttributeError:
+            pass
+
+        fill_recursively(var, param)
+        return var
 
     def _increment_execution_count(self, count=1):
         self.parameters.execution_count.set(self.execution_count + count, override=True)
@@ -3768,4 +3846,4 @@ class ParameterValue:
 
     @base.setter
     def base(self, value):
-        self._parameter._set(value, self._owner.most_recent_context)
+        self._parameter.set(value, self._owner.most_recent_context)

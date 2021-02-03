@@ -1500,7 +1500,7 @@ def _instantiate_output_ports(owner, output_ports=None, context=None):
     if context.source & (ContextFlags.COMMAND_LINE | ContextFlags.METHOD):
         owner.output_ports.extend(port_list)
     else:
-        owner.output_ports = port_list
+        owner.parameters.output_ports._set(port_list, context)
 
     # Assign value of require_projection_in_composition
     for port in owner.output_ports:
