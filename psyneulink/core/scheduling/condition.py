@@ -1482,6 +1482,8 @@ class AllHaveRun(_DependencyValidation, Condition):
 
     """
     def __init__(self, *dependencies, time_scale=TimeScale.TRIAL):
+        self.time_scale = time_scale
+
         def func(*dependencies, scheduler=None, execution_id=None):
             if len(dependencies) == 0:
                 dependencies = scheduler.nodes

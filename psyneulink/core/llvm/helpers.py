@@ -12,7 +12,8 @@ from llvmlite import ir
 from contextlib import contextmanager
 from ctypes import util
 
-from ..scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
+from ..scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
+from ..scheduling.time import TimeScale
 from .debug import debug_env
 
 
@@ -322,18 +323,17 @@ class ConditionGenerator:
         self._zero = ctx.int32_ty(0) if ctx is not None else None
 
     def get_private_condition_struct_type(self, composition):
-        time_stamp_struct = ir.LiteralStructType([self.ctx.int32_ty,   # Run
+        time_stamp_struct = ir.LiteralStructType([self.ctx.int32_ty,   # Trial
                                                   self.ctx.int32_ty,   # Pass
                                                   self.ctx.int32_ty])  # Step
 
+        status_struct = ir.LiteralStructType([
+                    self.ctx.int32_ty,  # number of executions in this run
+                    time_stamp_struct   # time stamp of last execution
+                ])
         structure = ir.LiteralStructType([
             time_stamp_struct,  # current time stamp
-            ir.ArrayType(       # for each node
-                ir.LiteralStructType([
-                    self.ctx.int32_ty,  # number of executions
-                    time_stamp_struct   # time stamp of last execution
-                ]), len(composition.nodes)
-            )
+            ir.ArrayType(status_struct, len(composition.nodes))  # for each node
         ])
         return structure
 
@@ -416,6 +416,10 @@ class ConditionGenerator:
                                           self.ctx.int32_ty(1)])
         return builder.load(ts_ptr)
 
+    def get_global_ts(self, builder, cond_ptr):
+        ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
+        return builder.load(ts_ptr)
+
     def generate_update_after_run(self, builder, cond_ptr, node):
         status_ptr = self.__get_node_status_ptr(builder, cond_ptr, node)
         status = builder.load(status_ptr)
@@ -426,49 +430,48 @@ class ConditionGenerator:
         status = builder.insert_value(status, runs, 0)
 
         # Update time stamp
-        ts = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
-        ts = builder.load(ts)
+        ts = self.get_global_ts(builder, cond_ptr)
         status = builder.insert_value(status, ts, 1)
 
         builder.store(status, status_ptr)
 
     def generate_ran_this_pass(self, builder, cond_ptr, node):
-        global_ts = builder.load(builder.gep(cond_ptr, [self._zero, self._zero, self._zero]))
+        global_ts = self.get_global_ts(builder, cond_ptr)
+        global_trial = builder.extract_value(global_ts, 0)
         global_pass = builder.extract_value(global_ts, 1)
-        global_run = builder.extract_value(global_ts, 0)
 
         node_ts = self.__get_node_ts(builder, cond_ptr, node)
+        node_trial = builder.extract_value(node_ts, 0)
         node_pass = builder.extract_value(node_ts, 1)
-        node_run = builder.extract_value(node_ts, 0)
 
         pass_eq = builder.icmp_signed("==", node_pass, global_pass)
-        run_eq = builder.icmp_signed("==", node_run, global_run)
-        return builder.and_(pass_eq, run_eq)
+        trial_eq = builder.icmp_signed("==", node_trial, global_trial)
+        return builder.and_(pass_eq, trial_eq)
 
     def generate_ran_this_trial(self, builder, cond_ptr, node):
-        global_ts = builder.load(builder.gep(cond_ptr, [self._zero, self._zero, self._zero]))
-        global_run = builder.extract_value(global_ts, 0)
+        global_ts = self.get_global_ts(builder, cond_ptr)
+        global_trial = builder.extract_value(global_ts, 0)
 
         node_ts = self.__get_node_ts(builder, cond_ptr, node)
-        node_run = builder.extract_value(node_ts, 0)
+        node_trial = builder.extract_value(node_ts, 0)
 
-        return builder.icmp_signed("==", node_run, global_run)
+        return builder.icmp_signed("==", node_trial, global_trial)
 
     def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_callbacks):
 
 
         if isinstance(condition, Always):
-            return ir.IntType(1)(1)
+            return self.ctx.bool_ty(1)
 
         if isinstance(condition, Never):
-            return ir.IntType(1)(0)
+            return self.ctx.bool_ty(0)
 
         elif isinstance(condition, Not):
             orig_condition = self.generate_sched_condition(builder, condition.condition, cond_ptr, node, is_finished_callbacks)
             return builder.not_(orig_condition)
 
         elif isinstance(condition, All):
-            agg_cond = ir.IntType(1)(1)
+            agg_cond = self.ctx.bool_ty(1)
             for cond in condition.args:
                 cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks)
                 agg_cond = builder.and_(agg_cond, cond_res)
@@ -480,24 +483,34 @@ class ConditionGenerator:
             if len(condition.args) > 0:
                 dependencies = condition.args
 
-            run_cond = ir.IntType(1)(1)
+            run_cond = self.ctx.bool_ty(1)
             for node in dependencies:
-                node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
+                if condition.time_scale == TimeScale.TRIAL:
+                    node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
+                elif condition.time_scale == TimeScale.PASS:
+                    node_ran = self.generate_ran_this_pass(builder, cond_ptr, node)
+                else:
+                    assert False, "Unsupported 'AllHaveRun' time scale: {}".format(condition.time_scale)
                 run_cond = builder.and_(run_cond, node_ran)
             return run_cond
 
+        elif isinstance(condition, Any):
+            agg_cond = self.ctx.bool_ty(0)
+            for cond in condition.args:
+                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks)
+                agg_cond = builder.or_(agg_cond, cond_res)
+            return agg_cond
+
         elif isinstance(condition, AtTrial):
             trial_num = condition.args[0]
-            ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
-            ts = builder.load(ts_ptr)
-            trial = builder.extract_value(ts, 0)
+            global_ts = self.get_global_ts(builder, cond_ptr)
+            trial = builder.extract_value(global_ts, 0)
             return builder.icmp_unsigned("==", trial, trial.type(trial_num))
 
         elif isinstance(condition, AtPass):
             pass_num = condition.args[0]
-            ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
-            ts = builder.load(ts_ptr)
-            current_pass = builder.extract_value(ts, 1)
+            global_ts = self.get_global_ts(builder, cond_ptr)
+            current_pass = builder.extract_value(global_ts, 1)
             return builder.icmp_unsigned("==", current_pass,
                                          current_pass.type(pass_num))
 
@@ -561,7 +574,7 @@ class ConditionGenerator:
         elif isinstance(condition, WhenFinishedAny):
             assert len(condition.args) > 0
 
-            run_cond = ir.IntType(1)(0)
+            run_cond = self.ctx.bool_ty(0)
             for node in condition.args:
                 target = is_finished_callbacks[node]
                 is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
@@ -574,7 +587,7 @@ class ConditionGenerator:
         elif isinstance(condition, WhenFinishedAll):
             assert len(condition.args) > 0
 
-            run_cond = ir.IntType(1)(1)
+            run_cond = self.ctx.bool_ty(1)
             for node in condition.args:
                 target = is_finished_callbacks[node]
                 is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
