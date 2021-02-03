@@ -1596,18 +1596,21 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         self.parameters.value.history_min_length = self._termination_measure_num_items_expected - 1
 
-    def _report_mechanism_execution(self, input, params, output, context=None):
+    def _report_mechanism_execution(self, input, params=None, output=None, context=None):
         """Override super to report previous_input rather than input, and selected params
         """
         # KAM Changed 8/29/17 print_input = self.previous_input --> print_input = input
         # because self.previous_input is not a valid attrib of TransferMechanism
 
         print_input = input
-        print_params = params.copy()
-        # Suppress reporting of range (not currently used)
-        del print_params[CLIP]
+        try:
+            params = params.copy()
+            # Suppress reporting of range (not currently used)
+            del params[CLIP]
+        except (AttributeError, KeyError):
+            pass
 
-        super()._report_mechanism_execution(input_val=print_input, params=print_params, context=context)
+        super()._report_mechanism_execution(input_val=print_input, params=params, context=context)
 
     @handle_external_context()
     def is_finished(self, context=None):
