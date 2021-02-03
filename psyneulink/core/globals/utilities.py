@@ -132,6 +132,7 @@ __all__ = [
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
+    'contains_type'
 ]
 
 logger = logging.getLogger(__name__)
@@ -1789,3 +1790,25 @@ def gen_friendly_comma_str(items):
             divider = f',{divider}'
 
         return f"{', '.join(items[:-1])}{divider}{items[-1]}"
+
+
+def contains_type(
+    arr: collections.abc.Iterable,
+    typ: typing.Union[type, typing.Tuple[type, ...]]
+) -> bool:
+    """
+        Returns:
+            True if **arr** is a possibly nested Iterable that contains
+            an instance of **typ** (or one type in **typ** if tuple)
+
+        Note: `isinstance(**arr**, **typ**)` should be used to check
+        **arr** itself if needed
+    """
+    try:
+        for a in arr:
+            if isinstance(a, typ) or (a is not arr and contains_type(a, typ)):
+                return True
+    except TypeError:
+        pass
+
+    return False

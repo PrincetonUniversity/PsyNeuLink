@@ -12,6 +12,8 @@ from llvmlite import ir
 from contextlib import contextmanager
 from ctypes import util
 
+from ..scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
+from ..scheduling.time import TimeScale
 from .debug import debug_env
 
 
@@ -158,17 +160,6 @@ def csch(ctx, builder, x):
     den = builder.fsub(e2x, e2x.type(1))
     return builder.fdiv(num, den)
 
-def call_elementwise_operation(ctx, builder, x, operation, output_ptr):
-    """Recurse through an array structure and call operation on each scalar element of the structure. Store result in output_ptr"""
-    if isinstance(x.type.pointee, ir.ArrayType):
-        with array_ptr_loop(builder, x, str(x) + "_elementwise_op") as (b1, idx):
-            element_ptr = b1.gep(x, [ctx.int32_ty(0), idx])
-            output_element_ptr = b1.gep(output_ptr, [ctx.int32_ty(0), idx])
-            call_elementwise_operation(ctx, b1, element_ptr, operation, output_ptr=output_element_ptr)
-    else:
-        val = operation(ctx, builder, builder.load(x))
-        builder.store(val, output_ptr)
-
 def is_close(builder, val1, val2, rtol=1e-05, atol=1e-08):
     diff = builder.fsub(val1, val2, "is_close_diff")
     diff_neg = fneg(builder, diff, "is_close_fneg_diff")
@@ -207,15 +198,15 @@ def is_pointer(x):
 def is_floating_point(x):
     type_t = getattr(x, "type", x)
     # dereference pointer
-    if is_pointer(x):
-        type_t = x.type.pointee
+    if is_pointer(type_t):
+        type_t = type_t.pointee
     return isinstance(type_t, (ir.DoubleType, ir.FloatType, ir.HalfType))
 
 def is_integer(x):
     type_t = getattr(x, "type", x)
     # dereference pointer
-    if is_pointer(x):
-        type_t = x.type.pointee
+    if is_pointer(type_t):
+        type_t = type_t.pointee
     return isinstance(type_t, ir.IntType)
 
 def is_scalar(x):
@@ -223,21 +214,58 @@ def is_scalar(x):
 
 def is_vector(x):
     type_t = getattr(x, "type", x)
-    if is_pointer(x):
-        type_t = x.type.pointee
+    if is_pointer(type_t):
+        type_t = type_t.pointee
     return isinstance(type_t, ir.ArrayType) and is_scalar(type_t.element)
 
 def is_2d_matrix(x):
     type_t = getattr(x, "type", x)
-    if is_pointer(x):
-        type_t = x.type.pointee
+    if is_pointer(type_t):
+        type_t = type_t.pointee
     return isinstance(type_t, ir.ArrayType) and is_vector(type_t.element)
 
 def is_boolean(x):
     type_t = getattr(x, "type", x)
-    if is_pointer(x):
-        type_t = x.type.pointee
+    if is_pointer(type_t):
+        type_t = type_t.pointee
     return isinstance(type_t, ir.IntType) and type_t.width == 1
+
+def get_array_shape(x):
+    x_ty = x.type
+    if is_pointer(x):
+        x_ty = x_ty.pointee
+
+    assert isinstance(x_ty, ir.ArrayType), f"Tried to get shape of non-array type: {x_ty}"
+    dimensions = []
+    while hasattr(x_ty, "count"):
+        dimensions.append(x_ty.count)
+        x_ty = x_ty.element
+
+    return dimensions
+
+def array_from_shape(shape, element_ty):
+    array_ty = element_ty
+    for dim in reversed(shape):
+        array_ty = ir.ArrayType(array_ty, dim)
+    return array_ty
+
+def recursive_iterate_arrays(ctx, builder, u, *args):
+    """Recursively iterates over all elements in scalar arrays of the same shape"""
+    assert isinstance(u.type.pointee, ir.ArrayType), "Can only iterate over arrays!"
+    assert all(len(u.type.pointee) == len(v.type.pointee) for v in args), "Tried to iterate over differing lengths!"
+    with array_ptr_loop(builder, u, "recursive_iteration") as (b, idx):
+        u_ptr = b.gep(u, [ctx.int32_ty(0), idx])
+        arg_ptrs = (b.gep(v, [ctx.int32_ty(0), idx]) for v in args)
+        if is_scalar(u_ptr):
+            yield (u_ptr, *arg_ptrs)
+        else:
+            yield from recursive_iterate_arrays(ctx, b, u_ptr, *arg_ptrs)
+
+# TODO: Remove this function. Can be replaced by `recursive_iterate_arrays`
+def call_elementwise_operation(ctx, builder, x, operation, output_ptr):
+    """Recurse through an array structure and call operation on each scalar element of the structure. Store result in output_ptr"""
+    for (inp_ptr, out_ptr) in recursive_iterate_arrays(ctx, builder, x, output_ptr):
+        builder.store(operation(ctx, builder, builder.load(inp_ptr)), out_ptr)
 
 def printf(builder, fmt, *args, override_debug=False):
     if "print_values" not in debug_env and not override_debug:
@@ -295,18 +323,17 @@ class ConditionGenerator:
         self._zero = ctx.int32_ty(0) if ctx is not None else None
 
     def get_private_condition_struct_type(self, composition):
-        time_stamp_struct = ir.LiteralStructType([self.ctx.int32_ty,
-                                                  self.ctx.int32_ty,
-                                                  self.ctx.int32_ty])
+        time_stamp_struct = ir.LiteralStructType([self.ctx.int32_ty,   # Trial
+                                                  self.ctx.int32_ty,   # Pass
+                                                  self.ctx.int32_ty])  # Step
 
+        status_struct = ir.LiteralStructType([
+                    self.ctx.int32_ty,  # number of executions in this run
+                    time_stamp_struct   # time stamp of last execution
+                ])
         structure = ir.LiteralStructType([
             time_stamp_struct,  # current time stamp
-            ir.ArrayType(       # for each node
-                ir.LiteralStructType([
-                    self.ctx.int32_ty,  # number of executions
-                    time_stamp_struct   # time stamp of last execution
-                ]), len(composition.nodes)
-            )
+            ir.ArrayType(status_struct, len(composition.nodes))  # for each node
         ])
         return structure
 
@@ -335,15 +362,16 @@ class ConditionGenerator:
         Indices greater than that of the one are zeroed.
         """
 
-        # Validate count tuple
+        # Only one element should be non-zero
         assert count.count(0) == len(count) - 1
 
         # Get timestruct pointer
         ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
         ts = builder.load(ts_ptr)
 
+        assert len(ts.type) == len(count)
         # Update run, pass, step of ts
-        for idx in range(3):
+        for idx in range(len(ts.type)):
             if all(v == 0 for v in count[:idx]):
                 el = builder.extract_value(ts, idx)
                 el = builder.add(el, self.ctx.int32_ty(count[idx]))
@@ -356,22 +384,27 @@ class ConditionGenerator:
 
     def ts_compare(self, builder, ts1, ts2, comp):
         assert comp == '<'
-        part_eq = []
-        part_cmp = []
 
-        for element in range(3):
+        # True if all elements to the left of the current one are equal
+        prefix_eq = self.ctx.bool_ty(1)
+        result = self.ctx.bool_ty(0)
+
+        assert ts1.type == ts2.type
+        for element in range(len(ts1.type)):
             a = builder.extract_value(ts1, element)
             b = builder.extract_value(ts2, element)
-            part_eq.append(builder.icmp_signed('==', a, b))
-            part_cmp.append(builder.icmp_signed(comp, a, b))
 
-        trial = builder.and_(builder.not_(part_eq[0]), part_cmp[0])
-        run = builder.and_(part_eq[0],
-                           builder.and_(builder.not_(part_eq[1]), part_cmp[1]))
-        step = builder.and_(builder.and_(part_eq[0], part_eq[1]),
-                            part_cmp[2])
+            # Use existing prefix_eq to construct expression
+            # for the current element
+            element_comp = builder.icmp_signed(comp, a, b)
+            current_comp = builder.and_(prefix_eq, element_comp)
+            result = builder.or_(result, current_comp)
 
-        return builder.or_(trial, builder.or_(run, step))
+            # Update prefix_eq
+            element_eq = builder.icmp_signed('==', a, b)
+            prefix_eq = builder.and_(prefix_eq, element_eq)
+
+        return result
 
     def __get_node_status_ptr(self, builder, cond_ptr, node):
         node_idx = self.ctx.int32_ty(self.composition.nodes.index(node))
@@ -381,6 +414,10 @@ class ConditionGenerator:
         status_ptr = self.__get_node_status_ptr(builder, cond_ptr, node)
         ts_ptr = builder.gep(status_ptr, [self.ctx.int32_ty(0),
                                           self.ctx.int32_ty(1)])
+        return builder.load(ts_ptr)
+
+    def get_global_ts(self, builder, cond_ptr):
+        ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
         return builder.load(ts_ptr)
 
     def generate_update_after_run(self, builder, cond_ptr, node):
@@ -393,50 +430,48 @@ class ConditionGenerator:
         status = builder.insert_value(status, runs, 0)
 
         # Update time stamp
-        ts = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
-        ts = builder.load(ts)
+        ts = self.get_global_ts(builder, cond_ptr)
         status = builder.insert_value(status, ts, 1)
 
         builder.store(status, status_ptr)
 
     def generate_ran_this_pass(self, builder, cond_ptr, node):
-        global_ts = builder.load(builder.gep(cond_ptr, [self._zero, self._zero, self._zero]))
+        global_ts = self.get_global_ts(builder, cond_ptr)
+        global_trial = builder.extract_value(global_ts, 0)
         global_pass = builder.extract_value(global_ts, 1)
-        global_run = builder.extract_value(global_ts, 0)
 
         node_ts = self.__get_node_ts(builder, cond_ptr, node)
+        node_trial = builder.extract_value(node_ts, 0)
         node_pass = builder.extract_value(node_ts, 1)
-        node_run = builder.extract_value(node_ts, 0)
 
         pass_eq = builder.icmp_signed("==", node_pass, global_pass)
-        run_eq = builder.icmp_signed("==", node_run, global_run)
-        return builder.and_(pass_eq, run_eq)
+        trial_eq = builder.icmp_signed("==", node_trial, global_trial)
+        return builder.and_(pass_eq, trial_eq)
 
     def generate_ran_this_trial(self, builder, cond_ptr, node):
-        global_ts = builder.load(builder.gep(cond_ptr, [self._zero, self._zero, self._zero]))
-        global_run = builder.extract_value(global_ts, 0)
+        global_ts = self.get_global_ts(builder, cond_ptr)
+        global_trial = builder.extract_value(global_ts, 0)
 
         node_ts = self.__get_node_ts(builder, cond_ptr, node)
-        node_run = builder.extract_value(node_ts, 0)
+        node_trial = builder.extract_value(node_ts, 0)
 
-        return builder.icmp_signed("==", node_run, global_run)
+        return builder.icmp_signed("==", node_trial, global_trial)
 
     def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_callbacks):
 
-        from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
 
         if isinstance(condition, Always):
-            return ir.IntType(1)(1)
+            return self.ctx.bool_ty(1)
 
         if isinstance(condition, Never):
-            return ir.IntType(1)(0)
+            return self.ctx.bool_ty(0)
 
         elif isinstance(condition, Not):
-            condition = condition.condition
-            return builder.not_(self.generate_sched_condition(builder, condition, cond_ptr, node, is_finished_callbacks))
+            orig_condition = self.generate_sched_condition(builder, condition.condition, cond_ptr, node, is_finished_callbacks)
+            return builder.not_(orig_condition)
 
         elif isinstance(condition, All):
-            agg_cond = ir.IntType(1)(1)
+            agg_cond = self.ctx.bool_ty(1)
             for cond in condition.args:
                 cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks)
                 agg_cond = builder.and_(agg_cond, cond_res)
@@ -448,35 +483,41 @@ class ConditionGenerator:
             if len(condition.args) > 0:
                 dependencies = condition.args
 
-            run_cond = ir.IntType(1)(1)
-            array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
+            run_cond = self.ctx.bool_ty(1)
             for node in dependencies:
-                node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
+                if condition.time_scale == TimeScale.TRIAL:
+                    node_ran = self.generate_ran_this_trial(builder, cond_ptr, node)
+                elif condition.time_scale == TimeScale.PASS:
+                    node_ran = self.generate_ran_this_pass(builder, cond_ptr, node)
+                else:
+                    assert False, "Unsupported 'AllHaveRun' time scale: {}".format(condition.time_scale)
                 run_cond = builder.and_(run_cond, node_ran)
             return run_cond
 
+        elif isinstance(condition, Any):
+            agg_cond = self.ctx.bool_ty(0)
+            for cond in condition.args:
+                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks)
+                agg_cond = builder.or_(agg_cond, cond_res)
+            return agg_cond
+
         elif isinstance(condition, AtTrial):
             trial_num = condition.args[0]
-            ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
-            ts = builder.load(ts_ptr)
-            trial = builder.extract_value(ts, 0)
+            global_ts = self.get_global_ts(builder, cond_ptr)
+            trial = builder.extract_value(global_ts, 0)
             return builder.icmp_unsigned("==", trial, trial.type(trial_num))
 
         elif isinstance(condition, AtPass):
             pass_num = condition.args[0]
-            ts_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self._zero])
-            ts = builder.load(ts_ptr)
-            current_pass = builder.extract_value(ts, 1)
+            global_ts = self.get_global_ts(builder, cond_ptr)
+            current_pass = builder.extract_value(global_ts, 1)
             return builder.icmp_unsigned("==", current_pass,
                                          current_pass.type(pass_num))
 
         elif isinstance(condition, EveryNCalls):
             target, count = condition.args
 
-            target_idx = self.ctx.int32_ty(self.composition.nodes.index(target))
-
-            array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
-            target_status = builder.load(builder.gep(array_ptr, [self._zero, target_idx]))
+            target_status = builder.load(self.__get_node_status_ptr(builder, cond_ptr, target))
 
             # Check number of runs
             target_runs = builder.extract_value(target_status, 0, target.name + " runs")
@@ -496,42 +537,20 @@ class ConditionGenerator:
         elif isinstance(condition, BeforeNCalls):
             target, count = condition.args
 
-            target_idx = self.ctx.int32_ty(self.composition.nodes.index(target))
-
-            array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
-            target_status = builder.load(builder.gep(array_ptr, [self._zero, target_idx]))
+            target_status = builder.load(self.__get_node_status_ptr(builder, cond_ptr, target))
 
             # Check number of runs
             target_runs = builder.extract_value(target_status, 0, target.name + " runs")
-            less_than_call_count = builder.icmp_unsigned('<', target_runs, self.ctx.int32_ty(count))
-
-            # Check that we have not run yet
-            my_time_stamp = self.__get_node_ts(builder, cond_ptr, node)
-            target_time_stamp = self.__get_node_ts(builder, cond_ptr, target)
-            ran_after_me = self.ts_compare(builder, my_time_stamp, target_time_stamp, '<')
-
-            # Return: target.calls % N == 0 AND me.last_time < target.last_time
-            return builder.and_(less_than_call_count, ran_after_me)
+            return builder.icmp_unsigned('<', target_runs, self.ctx.int32_ty(count))
 
         elif isinstance(condition, AtNCalls):
             target, count = condition.args
 
-            target_idx = self.ctx.int32_ty(self.composition.nodes.index(target))
-
-            array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
-            target_status = builder.load(builder.gep(array_ptr, [self._zero, target_idx]))
+            target_status = builder.load(self.__get_node_status_ptr(builder, cond_ptr, target))
 
             # Check number of runs
             target_runs = builder.extract_value(target_status, 0, target.name + " runs")
-            less_than_call_count = builder.icmp_unsigned('==', target_runs, self.ctx.int32_ty(count))
-
-            # Check that we have not run yet
-            my_time_stamp = self.__get_node_ts(builder, cond_ptr, node)
-            target_time_stamp = self.__get_node_ts(builder, cond_ptr, target)
-            ran_after_me = self.ts_compare(builder, my_time_stamp, target_time_stamp, '<')
-
-            # Return: target.calls % N == 0 AND me.last_time < target.last_time
-            return builder.and_(less_than_call_count, ran_after_me)
+            return builder.icmp_unsigned('==', target_runs, self.ctx.int32_ty(count))
 
         elif isinstance(condition, AfterNCalls):
             target, count = condition.args
@@ -543,15 +562,7 @@ class ConditionGenerator:
 
             # Check number of runs
             target_runs = builder.extract_value(target_status, 0, target.name + " runs")
-            less_than_call_count = builder.icmp_unsigned('>=', target_runs, self.ctx.int32_ty(count))
-
-            # Check that we have not run yet
-            my_time_stamp = self.__get_node_ts(builder, cond_ptr, node)
-            target_time_stamp = self.__get_node_ts(builder, cond_ptr, target)
-            ran_after_me = self.ts_compare(builder, my_time_stamp, target_time_stamp, '<')
-
-            # Return: target.calls % N == 0 AND me.last_time < target.last_time
-            return builder.and_(less_than_call_count, ran_after_me)
+            return builder.icmp_unsigned('>=', target_runs, self.ctx.int32_ty(count))
 
         elif isinstance(condition, WhenFinished):
             # The first argument is the target node
@@ -563,7 +574,7 @@ class ConditionGenerator:
         elif isinstance(condition, WhenFinishedAny):
             assert len(condition.args) > 0
 
-            run_cond = ir.IntType(1)(0)
+            run_cond = self.ctx.bool_ty(0)
             for node in condition.args:
                 target = is_finished_callbacks[node]
                 is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))
@@ -576,7 +587,7 @@ class ConditionGenerator:
         elif isinstance(condition, WhenFinishedAll):
             assert len(condition.args) > 0
 
-            run_cond = ir.IntType(1)(1)
+            run_cond = self.ctx.bool_ty(1)
             for node in condition.args:
                 target = is_finished_callbacks[node]
                 is_finished_f = self.ctx.import_llvm_function(target[0], tags=frozenset({"is_finished", "node_wrapper"}))

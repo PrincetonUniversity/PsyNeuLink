@@ -1797,7 +1797,7 @@ class TestExecutionOrder:
         D.set_log_conditions("OutputPort-0")
         cycle_nodes = [B, C, D]
         for cycle_node in cycle_nodes:
-            cycle_node.output_ports[0].value = [1.0]
+            cycle_node.output_ports[0].parameters.value.set([1.0], override=True)
 
         comp.run(inputs={A: [1.0]})
         expected_values = {A: 1.0,
@@ -4322,10 +4322,11 @@ class TestSchedulerConditions:
                               (pnl.WhenFinishedAny, [[1.0, 1.0]]),
                               (pnl.WhenFinishedAll, [[1.0, 1.0]]),
                               (pnl.All, [[1.0, 1.0]]),
+                              (pnl.Any, [[1.0, 1.0]]),
                               (pnl.Not, [[.05, .05]]),
                               (pnl.AllHaveRun, [[.05, .05]]),
                               (pnl.Always, [[0.05, 0.05]]),
-                              #(pnl.AtPass, [[.3, .3]]), #FIXME: Differing result between llvm and python
+                              (pnl.AtPass, [[.3, .3]]), #FIXME: Differing result between llvm and python
                               (pnl.AtTrial,[[0.05, 0.05]]),
                               #(pnl.Never), #TODO: Find a good test case for this!
                             ])
@@ -4360,6 +4361,8 @@ class TestSchedulerConditions:
         elif condition is pnl.WhenFinishedAll:
             comp.scheduler.add_condition(response, condition(decisionMaker))
         elif condition is pnl.All:
+            comp.scheduler.add_condition(response, condition(pnl.WhenFinished(decisionMaker)))
+        elif condition is pnl.Any:
             comp.scheduler.add_condition(response, condition(pnl.WhenFinished(decisionMaker)))
         elif condition is pnl.Not:
             comp.scheduler.add_condition(response, condition(pnl.WhenFinished(decisionMaker)))
