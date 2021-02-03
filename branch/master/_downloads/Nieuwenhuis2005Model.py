@@ -75,7 +75,7 @@ decision_layer = pnl.LCAMechanism(
 decision_layer.set_log_conditions('value')  # Log value of the decision layer
 
 for output_port in decision_layer.output_ports:
-    output_port.value *= 0.0                                       # Set initial output values for decision layer to 0
+    output_port.parameters.value.set(output_port.value * 0.0, override=True)  # Set initial output values for decision layer to 0
 
 # Create Response Layer  --- [ Target1, Target2 ]
 response_layer = pnl.LCAMechanism(
@@ -93,7 +93,7 @@ response_layer = pnl.LCAMechanism(
 
 response_layer.set_log_conditions('RESULT')     # Log RESULT of the response layer
 for output_port in response_layer.output_ports:
-    output_port.value *= 0.0                   # Set initial output values for response layer to 0
+    output_port.parameters.value.set(output_port.value * 0.0, override=True)  # Set initial output values for response layer to 0
 
 # Connect mechanisms --------------------------------------------------------------------------------------------------
 # Weight matrix from Input Layer --> Decision Layer
@@ -164,7 +164,7 @@ LC.set_log_conditions('value')
 # Set initial gain to G + k*initial_w, when the System runs the very first time,
 # since the decison layer executes before the LC and hence needs one initial gain value to start with.
 for output_port in LC.output_ports:
-    output_port.value *= G + k * initial_w
+    output_port.parameters.value.set(output_port.value * (G + k * initial_w), override=True)
 
 task = pnl.Composition()
 task.add_linear_processing_pathway(decision_pathway)
@@ -212,10 +212,10 @@ task.run(stim_list_dict, num_trials=trials)
 LC_results = LC.log.nparray()[1][1]        # get logged results
 LC_results_w = np.zeros([trials])          # get LC_results_w
 for i in range(trials):
-    LC_results_w[i] = LC_results[4][i + 1][2][0][0]
+    LC_results_w[i] = LC_results[5][i + 1][2][0][0]
 LC_results_v = np.zeros([trials])          # get LC_results_v
 for i in range(trials):
-    LC_results_v[i] = LC_results[4][i + 1][1][0][0]
+    LC_results_v[i] = LC_results[5][i + 1][1][0][0]
 
 
 def h_v(v, C, d):                   # Compute h(v)
