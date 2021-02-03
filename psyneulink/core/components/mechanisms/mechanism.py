@@ -2536,8 +2536,7 @@ class Mechanism_Base(Mechanism):
         if self.prefs.reportOutputPref and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING):
             self._report_mechanism_execution(
                 self.get_input_values(context),
-                self.parameters.values(),
-                self.output_port.parameters.value._get(context),
+                output=self.output_port.parameters.value._get(context),
                 context=context
             )
 
@@ -3138,7 +3137,7 @@ class Mechanism_Base(Mechanism):
             input_val = self.get_input_values(context)
         if output is None:
             output = self.output_port.parameters.value._get(context)
-        params = params or self.parameters.values()
+        params = params or {p.name: p._get(context) for p in self.parameters}
 
         if 'mechanism' in self.name or 'Mechanism' in self.name:
             mechanism_string = ' '
@@ -3154,7 +3153,12 @@ class Mechanism_Base(Mechanism):
 
         print("\n\'{}\'{} executed:\n- input:  {}".format(self.name, mechanism_string, input_string))
 
-        if params:
+        try:
+            include_params = re.match('param(eter)?s?', self.reportOutputPref, flags=re.IGNORECASE)
+        except TypeError:
+            include_params = False
+
+        if include_params:
             print("- params:")
             # Sort for consistency of output
             params_keys_sorted = sorted(params.keys())
@@ -3184,7 +3188,7 @@ class Mechanism_Base(Mechanism):
                     for fct_param_name in func_params_keys_sorted:
                         print("\t\t{}: {}".
                               format(fct_param_name,
-                                     str(getattr(self.function.parameters, fct_param_name)).__str__().strip("[]")))
+                                     str(getattr(self.function.parameters, fct_param_name)._get(context)).__str__().strip("[]")))
 
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #   if you want more specific output, you can add conditional tests here
