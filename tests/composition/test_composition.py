@@ -4322,10 +4322,11 @@ class TestSchedulerConditions:
                               (pnl.WhenFinishedAny, [[1.0, 1.0]]),
                               (pnl.WhenFinishedAll, [[1.0, 1.0]]),
                               (pnl.All, [[1.0, 1.0]]),
+                              (pnl.Any, [[1.0, 1.0]]),
                               (pnl.Not, [[.05, .05]]),
                               (pnl.AllHaveRun, [[.05, .05]]),
                               (pnl.Always, [[0.05, 0.05]]),
-                              #(pnl.AtPass, [[.3, .3]]), #FIXME: Differing result between llvm and python
+                              (pnl.AtPass, [[.3, .3]]), #FIXME: Differing result between llvm and python
                               (pnl.AtTrial,[[0.05, 0.05]]),
                               #(pnl.Never), #TODO: Find a good test case for this!
                             ])
@@ -4360,6 +4361,8 @@ class TestSchedulerConditions:
         elif condition is pnl.WhenFinishedAll:
             comp.scheduler.add_condition(response, condition(decisionMaker))
         elif condition is pnl.All:
+            comp.scheduler.add_condition(response, condition(pnl.WhenFinished(decisionMaker)))
+        elif condition is pnl.Any:
             comp.scheduler.add_condition(response, condition(pnl.WhenFinished(decisionMaker)))
         elif condition is pnl.Not:
             comp.scheduler.add_condition(response, condition(pnl.WhenFinished(decisionMaker)))

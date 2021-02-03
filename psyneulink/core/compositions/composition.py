@@ -2396,7 +2396,7 @@ from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array
-from psyneulink.core.scheduling.condition import All, Always, Condition, EveryNCalls, Never
+from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, PreferenceSet, _assign_prefs
@@ -9405,16 +9405,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 break
             dep_group = group
 
-        # NOTE: This is not ideal we don't need to depend on
-        # the entire previous group. Only our dependencies
-        cond = [EveryNCalls(dep, 1) for dep in dep_group]
-        if node not in self.scheduler.conditions:
-            cond.append(Always())
-        else:
-            node_conds = self.scheduler.conditions[node]
-            cond.append(node_conds)
+        # This condition is used to check of the step has passed.
+        # Not all nodes in the previous step need to execute
+        # (they might have other conditions), but if any one does we're good
+        # FIXME: This will fail if none of the previously considered
+        # nodes executes in this pass, but that is unlikely.
+        conds = [Any(*(AllHaveRun(dep, time_scale=TimeScale.PASS) for dep in dep_group))] if len(dep_group) else []
+        if node in self.scheduler.conditions:
+            conds.append(self.scheduler.conditions[node])
 
-        return All(*cond)
+        return All(*conds)
 
     def _input_matches_variable(self, input_value, var):
         var_shape = convert_to_np_array(var).shape
