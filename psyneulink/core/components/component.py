@@ -338,7 +338,8 @@ COMMENT
 Execution
 ---------
 
-A Component is executed when its `execute` method is called, which in turn calls its `function <Component_Function>`.
+A Component is executed when its `execute <Component.execute>` method is called, which in turn calls its `function
+<Component_Function>`.
 
 .. _Component_Lazy_Updating:
 
@@ -3028,6 +3029,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     @handle_external_context()
     def execute(self, variable=None, context=None, runtime_params=None):
+        """Executes Component's `function <Component_Function>`.  See Component-specific execute method for details.
+        """
+
         if context is None:
             try:
                 context = self.owner.most_recent_context
@@ -3102,7 +3106,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     def is_finished(self, context=None):
         """
-            set by a Component to signal completion of its `execution <Component_Execution>` in a `TRIAL
+            Set by a Component to signal completion of its `execution <Component_Execution>` in a `TRIAL
             <TimeScale.TRIAL>`; used by `Component-based Conditions <Conditions_Component_Based>` to predicate the
             execution of one or more other Components on a Component.
         """
