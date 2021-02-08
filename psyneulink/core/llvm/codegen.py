@@ -843,6 +843,10 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
         nodes_states = helpers.get_param_ptr(builder, composition, state, "nodes")
 
+        # Allocate temporary output storage
+        output_storage = builder.alloca(data.type.pointee, name="output_storage")
+
+        # Get locations of number of executions.
         num_exec_locs = {}
         for idx, node in enumerate(composition._all_nodes):
             node_state = builder.gep(nodes_states, [ctx.int32_ty(0),
@@ -850,6 +854,14 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             num_exec_locs[node] = helpers.get_state_ptr(builder, node,
                                                         node_state,
                                                         "num_executions")
+
+        # Generate pointers to 'is_finished' callbacks
+        is_finished_callbacks = {}
+        for node in composition.nodes:
+            args = [state, params, comp_in, data, output_storage]
+            wrapper = ctx.get_node_wrapper(composition, node)
+            is_finished_callbacks[node] = (wrapper, args)
+
 
         # Reset internal TRIAL clock for each node
         for time_loc in num_exec_locs.values():
@@ -873,6 +885,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                 node_reinit_f = ctx.import_llvm_function(node_w, tags=node_tags.union({"reset"}))
                 builder.call(node_reinit_f, [state, params, comp_in, data, data])
 
+        # Run controller if it's enabled in 'BEFORE' mode
         if simulation is False and composition.enable_controller and \
            composition.controller_mode == BEFORE:
             assert composition.controller is not None
@@ -887,19 +900,11 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         run_set_ptr = builder.alloca(run_set_type, name="run_set")
         builder.store(run_set_type(None), run_set_ptr)
 
-        # Allocate temporary output storage
-        output_storage = builder.alloca(data.type.pointee, name="output_storage")
 
         iter_ptr = builder.alloca(ctx.int32_ty, name="iter_counter")
         builder.store(ctx.int32_ty(0), iter_ptr)
 
-        # Generate pointers to 'is_finished' callbacks
-        is_finished_callbacks = {}
-        for node in composition.nodes:
-            args = [state, params, comp_in, data, output_storage]
-            wrapper = ctx.get_node_wrapper(composition, node)
-            is_finished_callbacks[node] = (wrapper, args)
-
+        # Start the main loop structure
         loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
         builder.branch(loop_condition)
 
