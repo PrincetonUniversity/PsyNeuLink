@@ -457,7 +457,8 @@ class ConditionGenerator:
 
         return builder.icmp_signed("==", node_trial, global_trial)
 
-    def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_callbacks):
+    def generate_sched_condition(self, builder, condition, cond_ptr, node,
+                                 is_finished_callbacks, num_exec_locs):
 
 
         if isinstance(condition, Always):
@@ -467,13 +468,13 @@ class ConditionGenerator:
             return self.ctx.bool_ty(0)
 
         elif isinstance(condition, Not):
-            orig_condition = self.generate_sched_condition(builder, condition.condition, cond_ptr, node, is_finished_callbacks)
+            orig_condition = self.generate_sched_condition(builder, condition.condition, cond_ptr, node, is_finished_callbacks, num_exec_locs)
             return builder.not_(orig_condition)
 
         elif isinstance(condition, All):
             agg_cond = self.ctx.bool_ty(1)
             for cond in condition.args:
-                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks)
+                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks, num_exec_locs)
                 agg_cond = builder.and_(agg_cond, cond_res)
             return agg_cond
 
@@ -497,7 +498,7 @@ class ConditionGenerator:
         elif isinstance(condition, Any):
             agg_cond = self.ctx.bool_ty(0)
             for cond in condition.args:
-                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks)
+                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks, num_exec_locs)
                 agg_cond = builder.or_(agg_cond, cond_res)
             return agg_cond
 
