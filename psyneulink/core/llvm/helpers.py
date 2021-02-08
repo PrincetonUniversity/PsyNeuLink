@@ -537,9 +537,7 @@ class ConditionGenerator:
 
         elif isinstance(condition, BeforeNCalls):
             target, count = condition.args
-            # FIXME: Add support for other scales.
-            # This needs to be stored in the condition itself.
-            scale = TimeScale.TRIAL.value
+            scale = condition.time_scale.value
             target_num_execs_in_scale = builder.gep(num_exec_locs[target],
                                                     [self.ctx.int32_ty(0),
                                                      self.ctx.int32_ty(scale)])
@@ -549,9 +547,7 @@ class ConditionGenerator:
 
         elif isinstance(condition, AtNCalls):
             target, count = condition.args
-            # FIXME: Add support for other scales.
-            # This needs to be stored in the condition itself.
-            scale = TimeScale.TRIAL.value
+            scale = condition.time_scale.value
             target_num_execs_in_scale = builder.gep(num_exec_locs[target],
                                                     [self.ctx.int32_ty(0),
                                                      self.ctx.int32_ty(scale)])
@@ -560,9 +556,7 @@ class ConditionGenerator:
 
         elif isinstance(condition, AfterNCalls):
             target, count = condition.args
-            # FIXME: Add support for other scales.
-            # This needs to be stored in the condition itself.
-            scale = TimeScale.TRIAL.value
+            scale = condition.time_scale.value
             target_num_execs_in_scale = builder.gep(num_exec_locs[target],
                                                     [self.ctx.int32_ty(0),
                                                      self.ctx.int32_ty(scale)])
