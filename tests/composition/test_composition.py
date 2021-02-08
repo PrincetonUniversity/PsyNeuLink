@@ -4306,13 +4306,12 @@ class TestCallBeforeAfterTimescale:
 class TestSchedulerConditions:
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
-                                     #FIXME: "Exec" versions see different shape of previous_value parameter ([0] vs. [[0]])
-                                     #pytest.param('LLVM', marks=pytest.mark.llvm),
-                                     #pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                     pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                     #pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                    ])
+                                      # 'LLVM' mode is not supported, because synchronization of compiler and python values during execution is not implemented.
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                     ])
     @pytest.mark.parametrize(["condition", "expected_result"],
                              [(pnl.EveryNCalls, [[.25, .25]]),
                               (pnl.BeforeNCalls, [[.05, .05]]),
