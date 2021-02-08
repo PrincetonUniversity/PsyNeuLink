@@ -537,33 +537,37 @@ class ConditionGenerator:
 
         elif isinstance(condition, BeforeNCalls):
             target, count = condition.args
+            # FIXME: Add support for other scales.
+            # This needs to be stored in the condition itself.
+            scale = TimeScale.TRIAL.value
+            target_num_execs_in_scale = builder.gep(num_exec_locs[target],
+                                                    [self.ctx.int32_ty(0),
+                                                     self.ctx.int32_ty(scale)])
+            num_execs = builder.load(target_num_execs_in_scale)
 
-            target_status = builder.load(self.__get_node_status_ptr(builder, cond_ptr, target))
-
-            # Check number of runs
-            target_runs = builder.extract_value(target_status, 0, target.name + " runs")
-            return builder.icmp_unsigned('<', target_runs, self.ctx.int32_ty(count))
+            return builder.icmp_unsigned('<', num_execs, self.ctx.int32_ty(count))
 
         elif isinstance(condition, AtNCalls):
             target, count = condition.args
-
-            target_status = builder.load(self.__get_node_status_ptr(builder, cond_ptr, target))
-
-            # Check number of runs
-            target_runs = builder.extract_value(target_status, 0, target.name + " runs")
-            return builder.icmp_unsigned('==', target_runs, self.ctx.int32_ty(count))
+            # FIXME: Add support for other scales.
+            # This needs to be stored in the condition itself.
+            scale = TimeScale.TRIAL.value
+            target_num_execs_in_scale = builder.gep(num_exec_locs[target],
+                                                    [self.ctx.int32_ty(0),
+                                                     self.ctx.int32_ty(scale)])
+            num_execs = builder.load(target_num_execs_in_scale)
+            return builder.icmp_unsigned('==', num_execs, self.ctx.int32_ty(count))
 
         elif isinstance(condition, AfterNCalls):
             target, count = condition.args
-
-            target_idx = self.ctx.int32_ty(self.composition.nodes.index(target))
-
-            array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
-            target_status = builder.load(builder.gep(array_ptr, [self._zero, target_idx]))
-
-            # Check number of runs
-            target_runs = builder.extract_value(target_status, 0, target.name + " runs")
-            return builder.icmp_unsigned('>=', target_runs, self.ctx.int32_ty(count))
+            # FIXME: Add support for other scales.
+            # This needs to be stored in the condition itself.
+            scale = TimeScale.TRIAL.value
+            target_num_execs_in_scale = builder.gep(num_exec_locs[target],
+                                                    [self.ctx.int32_ty(0),
+                                                     self.ctx.int32_ty(scale)])
+            num_execs = builder.load(target_num_execs_in_scale)
+            return builder.icmp_unsigned('>=', num_execs, self.ctx.int32_ty(count))
 
         elif isinstance(condition, WhenFinished):
             # The first argument is the target node
