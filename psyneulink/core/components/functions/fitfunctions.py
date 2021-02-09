@@ -48,16 +48,18 @@ def simulation_likelihood(sim_data,
 
     Parameters
     ----------
-    sim_data: This must be a 3D numpy array where the first dimension is the trial, the
-    second dimension is the simulation number, and the final dimension is data points.
+    sim_data: Data collected over many simulations. This must be either a 2D or 3D numpy array.
+        If 2D, the first dimension is the simulation number and the second dimension is data points. That is,
+        each row is a simulation. If 3D, the first dimension is the trial, the second dimension is the
+        simulation number, and the final dimension is data points.
 
     exp_data: This must be a numpy array with identical format as the simulation data, with the exception
-    that there is no simulation dimension.
+        that there is no simulation dimension.
 
     categorical_dims: a list of indices that indicate categorical dimensions of a data point.
 
     combine_trials: Combine data across all trials into a single likelihood estimate, this assumes
-    that the parameters of the simulations are identical across trials.
+        that the parameters of the simulations are identical across trials.
 
     Returns
     -------
@@ -65,6 +67,10 @@ def simulation_likelihood(sim_data,
     experimental data.
 
     """
+
+    # Add a singleton dimension for trials if needed.
+    if sim_data.ndim == 2:
+        sim_data = sim_data[None, :, :]
 
     if combine_trials and sim_data.shape[0] > 1:
         sim_data = np.vstack(sim_data)[None, :, :]
@@ -252,59 +258,49 @@ class MaxLikelihoodEstimator:
 
     def __init__(self,
                  log_likelihood_function: typing.Callable,
-                 fit_params_bounds: typing.Dict[str, typing.Tuple],
-                 fixed_params: typing.Optional[typing.Dict[Parameter, typing.Any]]):
+                 fit_params_bounds: typing.Dict[str, typing.Tuple]):
         self.log_likelihood_function = log_likelihood_function
         self.fit_params_bounds = fit_params_bounds
 
-        if fixed_params is not None:
-            self.fixed_params = fixed_params
-        else:
-            self.fixed_params = {}
+    def _print_param_vec(self, p, end="\n"):
+        print(', '.join(f'{name}={value:.5f}' for name, value in p.items()), end=end)
 
     def fit(self):
 
         bounds = list(self.fit_params_bounds.values())
 
-        # Check if any of are fixed params are in parameters to fit, this is a mistake
-        for fixed_p, val in self.fixed_params.items():
-            if fixed_p in self.fit_params_bounds:
-                raise ValueError(f"Fixed parameter ({fixed_p}) is also present in the parameters to fit.")
-
-        def print_param_vec(p, end="\n"):
-            print(', '.join(f'{name}={value:.5f}' for name, value in p.items()), end=end)
-
         # Create a wrapper function for the objective.
         def neg_log_like(x):
             params = dict(zip(self.fit_params_bounds.keys(), x))
-            # print_param_vec(params, end="")
-
-            p = -self.log_likelihood_function(**self.fixed_params, **params)
-            # print(f" neg_log_like={p:.5f}")
+            t0 = time.time()
+            p = -self.log_likelihood_function(**params)
+            elapsed = time.time() - t0
+            self._print_param_vec(params, end="")
+            print(f", Neg-Log-Likelihood: {p}, CallTime={elapsed}")
             return p
 
-        t0 = time.time()
+        # If the user has rich installed, make a nice progress bar
+        try:
+            from rich.progress import Progress
 
-        def print_callback(x, convergence):
-            global t0
-            t1 = time.time()
-            params = dict(zip(self.fit_params_bounds.keys(), x))
-            print_param_vec(params, end="")
-            print(f", convergence={convergence:.5f}, iter_time={t1 - t0} secs")
-            t0 = t1
+            with Progress() as progress:
+                opt_task = progress.add_task("Maximum likelihood optimization ...", total=100, start=False)
 
-        t0 = time.time()
+                def progress_callback(x, convergence):
+                    convergence_pct = 100.0 * convergence
+                    progress.update(opt_task, completed=convergence_pct)
 
-        # with Progress() as progress:
-        #     opt_task = progress.add_task("Maximum likelihood optimization ...", total=100, start=False)
-        #
-        #     def progress_callback(x, convergence):
-        #         convergence = 100.0 * convergence
-        #         progress.update(opt_task, completed=convergence)
+                r = differential_evolution(neg_log_like, bounds, callback=progress_callback, maxiter=500)
 
-        r = differential_evolution(neg_log_like, bounds, callback=print_callback, maxiter=500, workers=6)
+        # Otherwise, just print crap to the console
+        except ModuleNotFoundError:
 
-        print(f"Search Time: {(time.time() - t0) / 60.0} minutes")
+            def progress_callback(x, convergence):
+                params = dict(zip(self.fit_params_bounds.keys(), x))
+                self._print_param_vec(params, end="")
+                print(f", convergence={convergence:.5f}")
+
+            r = differential_evolution(neg_log_like, bounds, callback=progress_callback, maxiter=500)
 
         # Bind the fitted parameters to their names
         fitted_params = dict(zip(list(self.fit_params_bounds.keys()), r.x))
@@ -312,7 +308,6 @@ class MaxLikelihoodEstimator:
 
         # Save all the results
         output_dict = {
-            'fixed_params': self.fixed_params,
             'fitted_params': fitted_params,
             'likelihood': r.fun,
         }

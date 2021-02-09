@@ -95,6 +95,7 @@ def ddm_pdf_simulate(drift_rate=0.75, threshold=1.0, noise=0.1, starting_point=0
 
     return df
 
+
 def ddm_plot_check():
     ddm_params = dict(starting_point=0.1, drift_rate=0.3, noise=1.0, threshold=0.6, non_decision_time=0.8)
 
@@ -150,7 +151,8 @@ def ddm_plot_check():
 from psyneulink.core.components.functions.fitfunctions import simulation_likelihood, make_likelihood_function, \
     MaxLikelihoodEstimator
 
-ddm_params = dict(starting_value=0.1, rate=0.3, noise=1.0, threshold=0.6, non_decision_time=0.15)
+ddm_params = dict(starting_value=np.array([0.0]), rate=0.3, noise=1.0,
+                  threshold=0.6, non_decision_time=0.15, time_step_size=0.01)
 
 # Create a simple one mechanism composition containing a DDM in integrator mode.
 decision = pnl.DDM(function=pnl.DriftDiffusionIntegrator(**ddm_params),
@@ -178,25 +180,29 @@ data_to_fit = np.squeeze(np.array(comp.results))
 
 # Create a likelihood function from the composition itself, this is done
 # using probability density approximation via kernel density estimation.
-likelihood_func, param_map = make_likelihood_function(composition=comp,
-                                                      fit_params=[decision.function.parameters.rate,
-                                                                  decision.function.parameters.starting_value,
-                                                                  decision.function.parameters.non_decision_time],
-                                                      inputs=inputs_dict,
-                                                      categorical_dims=np.array([True, False]),
-                                                      data_to_fit=data_to_fit,
-                                                      num_simulations=1000,
-                                                      fixed_params={
-                                                          decision.function.parameters.threshold: ddm_params['threshold'],
-                                                          decision.function.parameters.noise: ddm_params['noise'],
-                                                          decision.function.parameters.time_step_size: ddm_params['time_step_size']
-                                                      },
-                                                      combine_trials=True)
+likelihood_func, param_map = make_likelihood_function(
+    composition=comp,
+    fit_params=[decision.function.parameters.rate,
+                decision.function.parameters.threshold,
+                decision.function.parameters.non_decision_time],
+    fixed_params={
+      decision.function.parameters.starting_value: ddm_params['starting_value'],
+      decision.function.parameters.noise: ddm_params['noise'],
+      decision.function.parameters.time_step_size: ddm_params['time_step_size']
+    },
+    inputs=inputs_dict,
+    categorical_dims=np.array([True, False]),
+    data_to_fit=data_to_fit,
+    num_simulations=1000,
+    combine_trials=True)
 
-print(likelihood_func(rate=0.3, starting_value=np.array([0.1]), non_decision_time=0.15))
+mle = MaxLikelihoodEstimator(log_likelihood_function=likelihood_func,
+                             fit_params_bounds={
+                                'rate':              (0.0, 1.0),
+                                'threshold':         (0.0, 1.0),
+                                'non_decision_time': (0.0, 1.0),
+                             })
 
-params_to_fit = {
-    'rate':              (0.0, 1.0),
-    'starting_point':    (0.001, 1.0),
-}
+fit_results = mle.fit()
 
+print(fit_results)
