@@ -4313,8 +4313,7 @@ class TestSchedulerConditions:
                                       pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
     @pytest.mark.parametrize("condition,scale,expected_result",
-                             [(pnl.EveryNCalls, None, [[.25, .25]]),
-                              (pnl.BeforeNCalls, TimeScale.TRIAL, [[.05, .05]]),
+                             [(pnl.BeforeNCalls, TimeScale.TRIAL, [[.05, .05]]),
                               (pnl.BeforeNCalls, TimeScale.PASS, [[.05, .05]]),
                               (pnl.AtNCalls, TimeScale.TRIAL, [[.25, .25]]),
                               (pnl.AtNCalls, TimeScale.RUN, [[.25, .25]]),
@@ -4346,9 +4345,7 @@ class TestSchedulerConditions:
         comp = pnl.Composition()
         comp.add_linear_processing_pathway([decisionMaker, response])
 
-        if condition is pnl.EveryNCalls:
-            comp.scheduler.add_condition(response, condition(decisionMaker, 5))
-        elif condition is pnl.BeforeNCalls:
+        if condition is pnl.BeforeNCalls:
             comp.scheduler.add_condition(response, condition(decisionMaker, 5,
                                                              time_scale=scale))
         elif condition is pnl.AtNCalls:

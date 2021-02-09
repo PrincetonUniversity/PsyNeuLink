@@ -12,7 +12,7 @@ from llvmlite import ir
 from contextlib import contextmanager
 from ctypes import util
 
-from ..scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
+from ..scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
 from ..scheduling.time import TimeScale
 from .debug import debug_env
 
@@ -514,26 +514,6 @@ class ConditionGenerator:
             current_pass = builder.extract_value(global_ts, 1)
             return builder.icmp_unsigned("==", current_pass,
                                          current_pass.type(pass_num))
-
-        elif isinstance(condition, EveryNCalls):
-            target, count = condition.args
-
-            target_status = builder.load(self.__get_node_status_ptr(builder, cond_ptr, target))
-
-            # Check number of runs
-            target_runs = builder.extract_value(target_status, 0, target.name + " runs")
-            ran = builder.icmp_unsigned('>', target_runs, self._zero)
-            remainder = builder.urem(target_runs, self.ctx.int32_ty(count))
-            divisible = builder.icmp_unsigned('==', remainder, self._zero)
-            completedNruns = builder.and_(ran, divisible)
-
-            # Check that we have not run yet
-            my_time_stamp = self.__get_node_ts(builder, cond_ptr, node)
-            target_time_stamp = self.__get_node_ts(builder, cond_ptr, target)
-            ran_after_me = self.ts_compare(builder, my_time_stamp, target_time_stamp, '<')
-
-            # Return: target.calls % N == 0 AND me.last_time < target.last_time
-            return builder.and_(completedNruns, ran_after_me)
 
         elif isinstance(condition, BeforeNCalls):
             target, count = condition.args
