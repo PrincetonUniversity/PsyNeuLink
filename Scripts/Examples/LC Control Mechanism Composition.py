@@ -7,7 +7,7 @@ user_specified_gain = 1.0
 
 A = TransferMechanism(function=Logistic(gain=user_specified_gain), name='A')
 B = TransferMechanism(function=Logistic(gain=user_specified_gain), name='B')
-# B.output_ports[0].value *= 0.0  # Reset after init | Doesn't matter here b/c default var = zero, no intercept
+# B.output_ports[0].parameters.value.set(0.0, override=True)  # Reset after init | Doesn't matter here b/c default var = zero, no intercept
 
 LC = LCControlMechanism(
     modulated_mechanisms=[A, B],

@@ -1401,7 +1401,10 @@ class Log:
             # If any time values are empty, revert to indexing the entries;
             #    this requires that all entries have the same length
             else:
-                max_len = max([len(self.logged_entries[e][eid]) for e in entries])
+                try:
+                    max_len = max([len(self.logged_entries[e][eid]) for e in entries])
+                except KeyError:
+                    max_len = 0
 
                 # If there are no time values, only support entries of the same length
                 # Must dealias both e and zeroth entry because either/both of these could be 'value'
@@ -1751,7 +1754,11 @@ class Log:
         # entry = self._dealias_owner_name(entry)
         row = []
         time_col = iter(time_values)
-        data = self.logged_entries[entry][execution_id]
+        try:
+            data = self.logged_entries[entry][execution_id]
+        except KeyError:
+            return [None]
+
         time = next(time_col, None)
         for i in range(len(self.logged_entries[entry][execution_id])):
             # iterate through log entry tuples:

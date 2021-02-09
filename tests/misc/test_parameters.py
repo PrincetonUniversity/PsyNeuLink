@@ -2,6 +2,18 @@ import copy
 import numpy as np
 import psyneulink as pnl
 import pytest
+import re
+import warnings
+
+
+def shared_parameter_warning_regex(param_name, shared_name=None):
+    if shared_name is None:
+        shared_name = param_name
+
+    return (
+        f'Specification of the "{param_name}" parameter.*conflicts'
+        f' with specification of its shared parameter "{shared_name}"'
+    )
 
 
 # (ancestor, child, should_override)
@@ -339,12 +351,56 @@ class TestSharedParameters:
     def test_conflict_warning(self):
         with pytest.warns(
             UserWarning,
-            match=(
-                'Specification of the "integration_rate" parameter.*conflicts'
-                ' with specification of its shared parameter "rate"'
-            )
+            match=shared_parameter_warning_regex('integration_rate', 'rate')
         ):
             pnl.TransferMechanism(
                 integration_rate=.1,
                 integrator_function=pnl.AdaptiveIntegrator(rate=.2)
             )
+
+    @pytest.mark.parametrize(
+        'mech_type, param_name, shared_param_name, param_value',
+        [
+            (pnl.LCAMechanism, 'noise', 'noise', pnl.GaussianDistort),
+            (pnl.LCAMechanism, 'noise', 'noise', pnl.GaussianDistort()),
+            (pnl.TransferMechanism, 'noise', 'noise', pnl.NormalDist),
+            (pnl.TransferMechanism, 'noise', 'noise', pnl.NormalDist()),
+            (pnl.TransferMechanism, 'noise', 'noise', [pnl.NormalDist()]),
+        ]
+    )
+    def test_conflict_no_warning(
+        self,
+        mech_type,
+        param_name,
+        shared_param_name,
+        param_value
+    ):
+        # pytest doesn't support inverse warning assertion for specific
+        # warning only
+        with warnings.catch_warnings():
+            warnings.simplefilter(action='error', category=UserWarning)
+            try:
+                mech_type(**{param_name: param_value})
+            except UserWarning as w:
+                if re.match(shared_parameter_warning_regex(param_name, shared_param_name), str(w)):
+                    raise
+
+    def test_conflict_no_warning_parser(self):
+        # replace with different class/parameter if _parse_noise ever implemented
+        assert not hasattr(pnl.AdaptiveIntegrator.Parameters, '_parse_noise')
+        pnl.AdaptiveIntegrator.Parameters._parse_noise = lambda self, noise: 2 * noise
+
+        # pytest doesn't support inverse warning assertion for specific
+        # warning only
+        with warnings.catch_warnings():
+            warnings.simplefilter(action='error', category=UserWarning)
+            try:
+                pnl.TransferMechanism(
+                    noise=2,
+                    integrator_function=pnl.AdaptiveIntegrator(noise=1)
+                )
+            except UserWarning as w:
+                if re.match(shared_parameter_warning_regex('noise'), str(w)):
+                    raise
+
+        delattr(pnl.AdaptiveIntegrator.Parameters, '_parse_noise')

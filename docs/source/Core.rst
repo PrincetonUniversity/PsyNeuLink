@@ -17,3 +17,4 @@ Core
    - `Registry`
    - `Preferences`
    - `json`
+   - `Compilation`
