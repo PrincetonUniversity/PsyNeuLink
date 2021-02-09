@@ -327,19 +327,15 @@ class ConditionGenerator:
                                                   self.ctx.int32_ty,   # Pass
                                                   self.ctx.int32_ty])  # Step
 
-        status_struct = ir.LiteralStructType([
-                    self.ctx.int32_ty,  # number of executions in this run
-                    time_stamp_struct   # time stamp of last execution
-                ])
         structure = ir.LiteralStructType([
             time_stamp_struct,  # current time stamp
-            ir.ArrayType(status_struct, len(composition.nodes))  # for each node
+            ir.ArrayType(time_stamp_struct, len(composition.nodes))  # for each node
         ])
         return structure
 
     def get_private_condition_initializer(self, composition):
         return ((0, 0, 0),
-                tuple((0, (-1, -1, -1)) for _ in composition.nodes))
+                tuple((-1, -1, -1) for _ in composition.nodes))
 
     def get_condition_struct_type(self, composition=None):
         composition = self.composition if composition is None else composition
@@ -406,14 +402,13 @@ class ConditionGenerator:
 
         return result
 
-    def __get_node_status_ptr(self, builder, cond_ptr, node):
+    def __get_node_ts_ptr(self, builder, cond_ptr, node):
         node_idx = self.ctx.int32_ty(self.composition.nodes.index(node))
-        return builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1), node_idx])
+        return builder.gep(cond_ptr, [self._zero, self._zero,
+                                      self.ctx.int32_ty(1), node_idx])
 
     def __get_node_ts(self, builder, cond_ptr, node):
-        status_ptr = self.__get_node_status_ptr(builder, cond_ptr, node)
-        ts_ptr = builder.gep(status_ptr, [self.ctx.int32_ty(0),
-                                          self.ctx.int32_ty(1)])
+        ts_ptr = self.__get_node_ts_ptr(builder, cond_ptr, node)
         return builder.load(ts_ptr)
 
     def get_global_ts(self, builder, cond_ptr):
@@ -421,19 +416,10 @@ class ConditionGenerator:
         return builder.load(ts_ptr)
 
     def generate_update_after_run(self, builder, cond_ptr, node):
-        status_ptr = self.__get_node_status_ptr(builder, cond_ptr, node)
-        status = builder.load(status_ptr)
-
-        # Update number of runs
-        runs = builder.extract_value(status, 0)
-        runs = builder.add(runs, self.ctx.int32_ty(1))
-        status = builder.insert_value(status, runs, 0)
-
-        # Update time stamp
+        # Copy global TS
+        ts_ptr = self.__get_node_ts_ptr(builder, cond_ptr, node)
         ts = self.get_global_ts(builder, cond_ptr)
-        status = builder.insert_value(status, ts, 1)
-
-        builder.store(status, status_ptr)
+        builder.store(ts, ts_ptr)
 
     def generate_ran_this_pass(self, builder, cond_ptr, node):
         global_ts = self.get_global_ts(builder, cond_ptr)
