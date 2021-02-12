@@ -8385,6 +8385,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except StopIteration:
                 break
 
+            if self.reportOutputPref:
+                print(f"\nTrial {trial_num}")
+
             # execute processing
             # pass along the stimuli for this trial
             trial_output = self.execute(inputs=execution_stimuli,
@@ -9249,6 +9252,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if call_after_time_step:
                 call_with_pruned_args(call_after_time_step, context=context)
 
+            if self.reportOutputPref:
+                print('\n---------------------------')
+
         context.remove_flag(ContextFlags.PROCESSING)
 
         #Update matrix parameter of PathwayProjections being learned with learning_enabled==AFTER
@@ -9306,11 +9312,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         output_values = []
         for port in self.output_CIM.output_ports:
             output_values.append(port.parameters.value._get(context))
-
-        if self.reportOutputPref:
-            print("\n)
-
-
 
         return output_values
 
