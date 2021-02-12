@@ -9307,6 +9307,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for port in self.output_CIM.output_ports:
             output_values.append(port.parameters.value._get(context))
 
+        if self.reportOutputPref:
+            print("\n)
+
+
+
         return output_values
 
     def __call__(self, *args, **kwargs):
