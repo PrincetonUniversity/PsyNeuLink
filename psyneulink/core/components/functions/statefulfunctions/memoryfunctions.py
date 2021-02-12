@@ -780,7 +780,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         out_val_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
 
         # Check retrieval probability
-        retr_ptr = builder.alloca(pnlvm.ir.IntType(1))
+        retr_ptr = builder.alloca(ctx.bool_ty)
         builder.store(retr_ptr.type.pointee(1), retr_ptr)
         retr_prob_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, RETRIEVAL_PROB)
 
@@ -844,7 +844,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
             builder.store(selected_val, out_val_ptr)
 
         # Check storage probability
-        store_ptr = builder.alloca(pnlvm.ir.IntType(1))
+        store_ptr = builder.alloca(ctx.bool_ty)
         builder.store(store_ptr.type.pointee(1), store_ptr)
         store_prob_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, STORAGE_PROB)
 
@@ -866,14 +866,14 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         with builder.if_then(store, likely=True):
 
             # Check if such key already exists
-            is_new_key_ptr = builder.alloca(pnlvm.ir.IntType(1))
+            is_new_key_ptr = builder.alloca(ctx.bool_ty)
             builder.store(is_new_key_ptr.type.pointee(1), is_new_key_ptr)
             with pnlvm.helpers.for_loop_zero_inc(builder, entries, "distance_loop") as (b,idx):
                 cmp_key_ptr = b.gep(keys_ptr, [ctx.int32_ty(0), idx])
 
                 # Vector compare
                 # TODO: move this to helpers
-                key_differs_ptr = b.alloca(pnlvm.ir.IntType(1))
+                key_differs_ptr = b.alloca(ctx.bool_ty)
                 b.store(key_differs_ptr.type.pointee(0), key_differs_ptr)
                 with pnlvm.helpers.array_ptr_loop(b, cmp_key_ptr, "key_compare") as (b2, idx2):
                     var_key_element = b2.gep(var_key_ptr, [ctx.int32_ty(0), idx2])
