@@ -12,7 +12,7 @@ from llvmlite import ir
 from contextlib import contextmanager
 from ctypes import util
 
-from ..scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, EveryNCalls, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
+from ..scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
 from ..scheduling.time import TimeScale
 from .debug import debug_env
 
@@ -327,19 +327,15 @@ class ConditionGenerator:
                                                   self.ctx.int32_ty,   # Pass
                                                   self.ctx.int32_ty])  # Step
 
-        status_struct = ir.LiteralStructType([
-                    self.ctx.int32_ty,  # number of executions in this run
-                    time_stamp_struct   # time stamp of last execution
-                ])
         structure = ir.LiteralStructType([
             time_stamp_struct,  # current time stamp
-            ir.ArrayType(status_struct, len(composition.nodes))  # for each node
+            ir.ArrayType(time_stamp_struct, len(composition.nodes))  # for each node
         ])
         return structure
 
     def get_private_condition_initializer(self, composition):
         return ((0, 0, 0),
-                tuple((0, (-1, -1, -1)) for _ in composition.nodes))
+                tuple((-1, -1, -1) for _ in composition.nodes))
 
     def get_condition_struct_type(self, composition=None):
         composition = self.composition if composition is None else composition
@@ -406,14 +402,13 @@ class ConditionGenerator:
 
         return result
 
-    def __get_node_status_ptr(self, builder, cond_ptr, node):
+    def __get_node_ts_ptr(self, builder, cond_ptr, node):
         node_idx = self.ctx.int32_ty(self.composition.nodes.index(node))
-        return builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1), node_idx])
+        return builder.gep(cond_ptr, [self._zero, self._zero,
+                                      self.ctx.int32_ty(1), node_idx])
 
     def __get_node_ts(self, builder, cond_ptr, node):
-        status_ptr = self.__get_node_status_ptr(builder, cond_ptr, node)
-        ts_ptr = builder.gep(status_ptr, [self.ctx.int32_ty(0),
-                                          self.ctx.int32_ty(1)])
+        ts_ptr = self.__get_node_ts_ptr(builder, cond_ptr, node)
         return builder.load(ts_ptr)
 
     def get_global_ts(self, builder, cond_ptr):
@@ -421,19 +416,10 @@ class ConditionGenerator:
         return builder.load(ts_ptr)
 
     def generate_update_after_run(self, builder, cond_ptr, node):
-        status_ptr = self.__get_node_status_ptr(builder, cond_ptr, node)
-        status = builder.load(status_ptr)
-
-        # Update number of runs
-        runs = builder.extract_value(status, 0)
-        runs = builder.add(runs, self.ctx.int32_ty(1))
-        status = builder.insert_value(status, runs, 0)
-
-        # Update time stamp
+        # Copy global TS
+        ts_ptr = self.__get_node_ts_ptr(builder, cond_ptr, node)
         ts = self.get_global_ts(builder, cond_ptr)
-        status = builder.insert_value(status, ts, 1)
-
-        builder.store(status, status_ptr)
+        builder.store(ts, ts_ptr)
 
     def generate_ran_this_pass(self, builder, cond_ptr, node):
         global_ts = self.get_global_ts(builder, cond_ptr)
@@ -457,7 +443,8 @@ class ConditionGenerator:
 
         return builder.icmp_signed("==", node_trial, global_trial)
 
-    def generate_sched_condition(self, builder, condition, cond_ptr, node, is_finished_callbacks):
+    def generate_sched_condition(self, builder, condition, cond_ptr, node,
+                                 is_finished_callbacks, num_exec_locs):
 
 
         if isinstance(condition, Always):
@@ -467,13 +454,13 @@ class ConditionGenerator:
             return self.ctx.bool_ty(0)
 
         elif isinstance(condition, Not):
-            orig_condition = self.generate_sched_condition(builder, condition.condition, cond_ptr, node, is_finished_callbacks)
+            orig_condition = self.generate_sched_condition(builder, condition.condition, cond_ptr, node, is_finished_callbacks, num_exec_locs)
             return builder.not_(orig_condition)
 
         elif isinstance(condition, All):
             agg_cond = self.ctx.bool_ty(1)
             for cond in condition.args:
-                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks)
+                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks, num_exec_locs)
                 agg_cond = builder.and_(agg_cond, cond_res)
             return agg_cond
 
@@ -497,7 +484,7 @@ class ConditionGenerator:
         elif isinstance(condition, Any):
             agg_cond = self.ctx.bool_ty(0)
             for cond in condition.args:
-                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks)
+                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks, num_exec_locs)
                 agg_cond = builder.or_(agg_cond, cond_res)
             return agg_cond
 
@@ -514,55 +501,33 @@ class ConditionGenerator:
             return builder.icmp_unsigned("==", current_pass,
                                          current_pass.type(pass_num))
 
-        elif isinstance(condition, EveryNCalls):
-            target, count = condition.args
-
-            target_status = builder.load(self.__get_node_status_ptr(builder, cond_ptr, target))
-
-            # Check number of runs
-            target_runs = builder.extract_value(target_status, 0, target.name + " runs")
-            ran = builder.icmp_unsigned('>', target_runs, self._zero)
-            remainder = builder.urem(target_runs, self.ctx.int32_ty(count))
-            divisible = builder.icmp_unsigned('==', remainder, self._zero)
-            completedNruns = builder.and_(ran, divisible)
-
-            # Check that we have not run yet
-            my_time_stamp = self.__get_node_ts(builder, cond_ptr, node)
-            target_time_stamp = self.__get_node_ts(builder, cond_ptr, target)
-            ran_after_me = self.ts_compare(builder, my_time_stamp, target_time_stamp, '<')
-
-            # Return: target.calls % N == 0 AND me.last_time < target.last_time
-            return builder.and_(completedNruns, ran_after_me)
-
         elif isinstance(condition, BeforeNCalls):
             target, count = condition.args
+            scale = condition.time_scale.value
+            target_num_execs_in_scale = builder.gep(num_exec_locs[target],
+                                                    [self.ctx.int32_ty(0),
+                                                     self.ctx.int32_ty(scale)])
+            num_execs = builder.load(target_num_execs_in_scale)
 
-            target_status = builder.load(self.__get_node_status_ptr(builder, cond_ptr, target))
-
-            # Check number of runs
-            target_runs = builder.extract_value(target_status, 0, target.name + " runs")
-            return builder.icmp_unsigned('<', target_runs, self.ctx.int32_ty(count))
+            return builder.icmp_unsigned('<', num_execs, self.ctx.int32_ty(count))
 
         elif isinstance(condition, AtNCalls):
             target, count = condition.args
-
-            target_status = builder.load(self.__get_node_status_ptr(builder, cond_ptr, target))
-
-            # Check number of runs
-            target_runs = builder.extract_value(target_status, 0, target.name + " runs")
-            return builder.icmp_unsigned('==', target_runs, self.ctx.int32_ty(count))
+            scale = condition.time_scale.value
+            target_num_execs_in_scale = builder.gep(num_exec_locs[target],
+                                                    [self.ctx.int32_ty(0),
+                                                     self.ctx.int32_ty(scale)])
+            num_execs = builder.load(target_num_execs_in_scale)
+            return builder.icmp_unsigned('==', num_execs, self.ctx.int32_ty(count))
 
         elif isinstance(condition, AfterNCalls):
             target, count = condition.args
-
-            target_idx = self.ctx.int32_ty(self.composition.nodes.index(target))
-
-            array_ptr = builder.gep(cond_ptr, [self._zero, self._zero, self.ctx.int32_ty(1)])
-            target_status = builder.load(builder.gep(array_ptr, [self._zero, target_idx]))
-
-            # Check number of runs
-            target_runs = builder.extract_value(target_status, 0, target.name + " runs")
-            return builder.icmp_unsigned('>=', target_runs, self.ctx.int32_ty(count))
+            scale = condition.time_scale.value
+            target_num_execs_in_scale = builder.gep(num_exec_locs[target],
+                                                    [self.ctx.int32_ty(0),
+                                                     self.ctx.int32_ty(scale)])
+            num_execs = builder.load(target_num_execs_in_scale)
+            return builder.icmp_unsigned('>=', num_execs, self.ctx.int32_ty(count))
 
         elif isinstance(condition, WhenFinished):
             # The first argument is the target node

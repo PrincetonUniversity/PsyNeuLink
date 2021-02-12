@@ -4306,31 +4306,32 @@ class TestCallBeforeAfterTimescale:
 class TestSchedulerConditions:
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
-                                     #FIXME: "Exec" versions see different shape of previous_value parameter ([0] vs. [[0]])
-                                     #pytest.param('LLVM', marks=pytest.mark.llvm),
-                                     #pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                     pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                     #pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                    ])
-    @pytest.mark.parametrize(["condition", "expected_result"],
-                             [(pnl.EveryNCalls, [[.25, .25]]),
-                              (pnl.BeforeNCalls, [[.05, .05]]),
-                              (pnl.AtNCalls, [[.25, .25]]),
-                              (pnl.AfterNCalls, [[.25, .25]]),
-                              (pnl.WhenFinished, [[1.0, 1.0]]),
-                              (pnl.WhenFinishedAny, [[1.0, 1.0]]),
-                              (pnl.WhenFinishedAll, [[1.0, 1.0]]),
-                              (pnl.All, [[1.0, 1.0]]),
-                              (pnl.Any, [[1.0, 1.0]]),
-                              (pnl.Not, [[.05, .05]]),
-                              (pnl.AllHaveRun, [[.05, .05]]),
-                              (pnl.Always, [[0.05, 0.05]]),
-                              (pnl.AtPass, [[.3, .3]]), #FIXME: Differing result between llvm and python
-                              (pnl.AtTrial,[[0.05, 0.05]]),
+                                      # 'LLVM' mode is not supported, because synchronization of compiler and python values during execution is not implemented.
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                     ])
+    @pytest.mark.parametrize("condition,scale,expected_result",
+                             [(pnl.BeforeNCalls, TimeScale.TRIAL, [[.05, .05]]),
+                              (pnl.BeforeNCalls, TimeScale.PASS, [[.05, .05]]),
+                              (pnl.AtNCalls, TimeScale.TRIAL, [[.25, .25]]),
+                              (pnl.AtNCalls, TimeScale.RUN, [[.25, .25]]),
+                              (pnl.AfterNCalls, TimeScale.TRIAL, [[.25, .25]]),
+                              (pnl.AfterNCalls, TimeScale.PASS, [[.05, .05]]),
+                              (pnl.WhenFinished, None, [[1.0, 1.0]]),
+                              (pnl.WhenFinishedAny, None, [[1.0, 1.0]]),
+                              (pnl.WhenFinishedAll, None, [[1.0, 1.0]]),
+                              (pnl.All, None, [[1.0, 1.0]]),
+                              (pnl.Any, None, [[1.0, 1.0]]),
+                              (pnl.Not, None, [[.05, .05]]),
+                              (pnl.AllHaveRun, None, [[.05, .05]]),
+                              (pnl.Always, None, [[0.05, 0.05]]),
+                              (pnl.AtPass, None, [[.3, .3]]),
+                              (pnl.AtTrial, None, [[0.05, 0.05]]),
                               #(pnl.Never), #TODO: Find a good test case for this!
                             ])
-    def test_scheduler_conditions(self, mode, condition, expected_result):
+    def test_scheduler_conditions(self, mode, condition, scale, expected_result):
         decisionMaker = pnl.DDM(
                         function=pnl.DriftDiffusionIntegrator(starting_point=0,
                                                               threshold=1,
@@ -4342,18 +4343,20 @@ class TestSchedulerConditions:
         response = pnl.ProcessingMechanism(size=2, name="GATE")
 
         comp = pnl.Composition()
-        comp.add_node(decisionMaker)
-        comp.add_node(response)
-        comp.add_projection(pnl.MappingProjection(), sender=decisionMaker, receiver=response)
+        comp.add_linear_processing_pathway([decisionMaker, response])
 
-        if condition is pnl.EveryNCalls:
-            comp.scheduler.add_condition(response, condition(decisionMaker, 5))
-        elif condition is pnl.BeforeNCalls:
-            comp.scheduler.add_condition(response, condition(decisionMaker, 5))
+        if condition is pnl.BeforeNCalls:
+            comp.scheduler.add_condition(response, condition(decisionMaker, 5,
+                                                             time_scale=scale))
         elif condition is pnl.AtNCalls:
-            comp.scheduler.add_condition(response, condition(decisionMaker, 5))
+            comp.scheduler.add_condition(response, condition(decisionMaker, 5,
+                                                             time_scale=scale))
         elif condition is pnl.AfterNCalls:
-            comp.scheduler.add_condition(response, condition(decisionMaker, 5))
+            # Mechanisms run only once per PASS unless they are in
+            # 'run_until_finished' mode.
+            c = 1 if scale is TimeScale.PASS else 5
+            comp.scheduler.add_condition(response, condition(decisionMaker, c,
+                                                             time_scale=scale))
         elif condition is pnl.WhenFinished:
             comp.scheduler.add_condition(response, condition(decisionMaker))
         elif condition is pnl.WhenFinishedAny:
