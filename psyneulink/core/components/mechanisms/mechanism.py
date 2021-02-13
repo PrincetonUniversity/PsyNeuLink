@@ -3150,7 +3150,7 @@ class Mechanism_Base(Mechanism):
         except TypeError:
             input_string = input_val
 
-        print("\n\'{}\'{} executed:\n- input:  {}".format(self.name, mechanism_string, input_string))
+        print(f"\n\'{self.name}\'{mechanism_string} executed:\n- input:  {input_string}")
 
         try:
             include_params = re.match('param(eter)?s?', self.reportOutputPref, flags=re.IGNORECASE)
@@ -3180,7 +3180,7 @@ class Mechanism_Base(Mechanism):
                     param_is_function = True
                 else:
                     param = param_value
-                print("\t{}: {}".format(param_name, str(param).__str__().strip("[]")))
+                print(f"\t{param_name}: {str(param).__str__().strip('[]')}")
                 if param_is_function:
                     # Sort for consistency of output
                     func_params_keys_sorted = sorted(self.function.parameters.names())
@@ -3196,7 +3196,7 @@ class Mechanism_Base(Mechanism):
         except TypeError:
             output_string = output
 
-        print("- output: {}".format(output_string))
+        print(f"- output: {output_string}")
 
     @tc.typecheck
     def _show_structure(self,
