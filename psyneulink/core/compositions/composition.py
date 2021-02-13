@@ -8385,8 +8385,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except StopIteration:
                 break
 
+            # If printing to console, report Trial Number
             if self.reportOutputPref:
-                print(f"\nTrial {trial_num}")
+                print(f"\nTrial {trial_num} ====================================")
 
             # execute processing
             # pass along the stimuli for this trial
@@ -9079,6 +9080,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
 
+            # if printing to console, print execution_set number if any nodes have reportOutputPrefs set
+            if self.reportOutputPref:
+                if any(node.reportOutputPref for node in next_execution_set):
+                    print(f'\n Time Step {execution_scheduler.clock.time.time_step}')
+                    show_execution_set_separator = True
+                else:
+                    show_execution_set_separator = False
+
             # execute each node with EXECUTING in context
             for (node_idx, node) in enumerate(next_execution_set):
 
@@ -9252,8 +9261,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if call_after_time_step:
                 call_with_pruned_args(call_after_time_step, context=context)
 
-            if self.reportOutputPref:
-                print('\n---------------------------')
+
+            # If printing to console, generate execution_set separator
+            if self.reportOutputPref and show_execution_set_separator:
+                print('\n--------------------------------------------')
 
         context.remove_flag(ContextFlags.PROCESSING)
 

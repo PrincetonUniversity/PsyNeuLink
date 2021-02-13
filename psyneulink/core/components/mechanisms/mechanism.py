@@ -3196,7 +3196,7 @@ class Mechanism_Base(Mechanism):
         except TypeError:
             output_string = output
 
-        print("- output: {output_string}")
+        print(f"- output: {output_string}")
 
     @tc.typecheck
     def _show_structure(self,
