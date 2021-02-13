@@ -9080,7 +9080,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
 
-            # if printing to console, print execution_set number if any nodes have reportOutputPrefs set
+            # if printing to console, print time_step if any nodes have reportOutputPrefs set
             if self.reportOutputPref:
                 if any(node.reportOutputPref for node in next_execution_set):
                     print(f'\n Time Step {execution_scheduler.clock.time.time_step}')
