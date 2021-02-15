@@ -1080,32 +1080,61 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
     builder.store(cond_init, cond)
 
     runs = builder.load(runs_ptr, "runs")
-    with helpers.for_loop_zero_inc(builder, runs, "run_loop") as (b, iters):
-        # Get the right input stimulus
-        input_idx = b.urem(iters, b.load(inputs_ptr))
-        data_in_ptr = b.gep(data_in, [input_idx])
+    iters_ptr = builder.alloca(runs.type)
+    builder.store(iters_ptr.type.pointee(0), iters_ptr)
 
-        # Reset internal clocks of each node
-        for idx, node in enumerate(composition._all_nodes):
-            node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-            num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
-            num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.RUN.value)])
-            builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+    # Start the main loop structure
+    loop_condition = builder.append_basic_block(name="run_loop_condition")
+    builder.branch(loop_condition)
 
-        # Call execution
-        exec_tags = tags.difference({"run"})
-        exec_f = ctx.import_llvm_function(composition, tags=exec_tags)
-        b.call(exec_f, [state, params, data_in_ptr, data, cond])
+    # Generate a while not 'end condition' loop
+    builder.position_at_end(loop_condition)
 
-        if not simulation:
-            # Extract output_CIM result
-            idx = composition._get_node_index(composition.output_CIM)
-            result_ptr = b.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0),
-                                      ctx.int32_ty(idx)])
-            output_ptr = b.gep(data_out, [iters])
-            result = b.load(result_ptr)
-            b.store(result, output_ptr)
+    # Iter cond
+    iters = builder.load(iters_ptr)
+    iter_cond = builder.icmp_unsigned("<", iters, runs)
 
+    # Increment. Use new name to not taint 'iters'
+    new_iters = builder.add(iters, iters.type(1))
+    builder.store(new_iters, iters_ptr)
+
+    loop_body = builder.append_basic_block(name="run_loop_body")
+    exit_block = builder.append_basic_block(name="run_exit")
+
+    builder.cbranch(iter_cond, loop_body, exit_block)
+
+    # Generate loop body
+    builder.position_at_end(loop_body)
+
+    # Get the right input stimulus
+    input_idx = builder.urem(iters, builder.load(inputs_ptr))
+    data_in_ptr = builder.gep(data_in, [input_idx])
+
+    # Reset internal 'RUN' clocks of each node
+    for idx, node in enumerate(composition._all_nodes):
+        node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
+        num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
+        num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.RUN.value)])
+        builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+
+    # Call execution
+    exec_tags = tags.difference({"run"})
+    exec_f = ctx.import_llvm_function(composition, tags=exec_tags)
+    builder.call(exec_f, [state, params, data_in_ptr, data, cond])
+
+    if not simulation:
+        # Extract output_CIM result
+        idx = composition._get_node_index(composition.output_CIM)
+        result_ptr = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0),
+                                        ctx.int32_ty(idx)])
+        output_ptr = builder.gep(data_out, [iters])
+        result = builder.load(result_ptr)
+        builder.store(result, output_ptr)
+
+    builder.branch(loop_condition)
+
+    # Exit
+    builder.position_at_end(exit_block)
     builder.ret_void()
     return llvm_func
 
