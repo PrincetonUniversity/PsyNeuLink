@@ -912,14 +912,14 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         # Generate a while not 'end condition' loop
         builder.position_at_end(loop_condition)
 
-        run_cond = cond_gen.generate_sched_condition(
+        trial_term_cond = cond_gen.generate_sched_condition(
             builder, composition.termination_processing[TimeScale.TRIAL],
             cond, None, is_finished_callbacks, num_exec_locs)
-        run_cond = builder.not_(run_cond, name="not_run_cond")
+        trial_cond = builder.not_(trial_term_cond, name="not_trial_term_cond")
 
         loop_body = builder.append_basic_block(name="scheduling_loop_body")
-        exit_block = builder.append_basic_block(name="exit")
-        builder.cbranch(run_cond, loop_body, exit_block)
+        exit_block = builder.append_basic_block(name="trial_exit")
+        builder.cbranch(trial_cond, loop_body, exit_block)
 
         # Generate loop body
         builder.position_at_end(loop_body)
