@@ -399,12 +399,11 @@ def _gen_cuda_kernel_wrapper_module(function):
         input_count = builder.load(args[6])
 
     for i, arg in enumerate(args):
-        # Don't adjust #inputs and #trials
         if isinstance(arg.type, ir.PointerType):
             offset = global_id
             if is_comp_run:
-                # #runs and #trials needs to be the same
-                if i >= 5:
+                # #inputs needs to be the same for comp run
+                if i == 6:
                     offset = ir.IntType(32)(0)
                 # data arrays need special handling
                 elif i == 4:  # data_out

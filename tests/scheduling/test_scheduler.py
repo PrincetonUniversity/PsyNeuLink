@@ -1594,3 +1594,26 @@ class TestFeedback:
         if mode == 'Python':
             result = np.asfarray(result[0])
         assert np.allclose(result, expected_result)
+
+
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                     ])
+    @pytest.mark.parametrize("condition,scale,expected_result",
+                             [(pnl.AtTrial, None, [[[1.0]], [[2.0]]]),
+                             ])
+    def test_run_term_conditions(self, mode, condition, scale, expected_result):
+        incrementing_mechanism = pnl.ProcessingMechanism(
+            function=pnl.SimpleIntegrator
+        )
+        comp = pnl.Composition(
+            pathways=[incrementing_mechanism]
+        )
+        comp.scheduler.termination_conds = {
+            pnl.TimeScale.RUN: condition(2)
+        }
+        r = comp.run(inputs=[1], num_trials=5, bin_execute=mode)
+        assert np.allclose(r, expected_result[-1])
+        assert np.allclose(comp.results, expected_result)
