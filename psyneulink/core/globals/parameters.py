@@ -274,6 +274,7 @@ import collections
 import copy
 import itertools
 import logging
+import toposort
 import types
 import typing
 import weakref
@@ -489,6 +490,29 @@ class ParametersTemplate:
             self._owner_ref = weakref.proxy(value)
         except TypeError:
             self._owner_ref = value
+
+    @property
+    def _in_dependency_order(self):
+        """
+            Returns:
+                list[Parameter] - a list of Parameters such that any
+                Parameter is placed before all of its
+                `dependencies <Parameter.dependencies>`
+        """
+        parameter_function_ordering = list(toposort.toposort({
+            p.name: p.dependencies for p in self if p.dependencies is not None
+        }))
+        parameter_function_ordering = list(
+            itertools.chain.from_iterable(parameter_function_ordering)
+        )
+
+        def ordering(p):
+            try:
+                return parameter_function_ordering.index(p.name)
+            except ValueError:
+                return -1
+
+        return sorted(self, key=ordering)
 
 
 class Defaults(ParametersTemplate):
@@ -731,7 +755,7 @@ class Parameter(ParameterBase):
             shape
 
         dependencies
-            for Functions; if not None, this contains a set of Parameter
+            if not None, this contains a set of Parameter
             names corresponding to Parameters whose values must be
             instantiated before that of this Parameter
 
