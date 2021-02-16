@@ -283,7 +283,7 @@ from toposort import toposort
 
 from psyneulink.core.globals.context import Context, handle_external_context
 from psyneulink.core.globals.json import JSONDumpable
-from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Condition, ConditionSet, EveryNCalls, Never
+from psyneulink.core.scheduling.condition import AllHaveRun, Always, Condition, ConditionSet, Never
 from psyneulink.core.scheduling.time import Clock, TimeScale
 
 __all__ = [
@@ -574,10 +574,8 @@ class Scheduler(JSONDumpable):
 
                 if node_index > 0:
                     dependencies = list(self.consideration_queue[i - 1])
-                    if len(dependencies) == 1:
-                        cond = EveryNCalls(dependencies[0], 1)
-                    elif len(dependencies) > 1:
-                        cond = All(*[EveryNCalls(x, 1) for x in dependencies])
+                    if len(dependencies) > 0:
+                        cond = AllHaveRun(*dependencies, time_scale=TimeScale.PASS)
                     else:
                         raise SchedulerError(f'{self}: Empty consideration set in consideration_queue[{i - 1}]')
                 else:
