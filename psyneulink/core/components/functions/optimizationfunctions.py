@@ -1459,7 +1459,7 @@ class GridSearch(OptimizationFunction):
 
         # KDM 8/22/19: nonstateful direction here - OK?
         direction = "<" if self.direction == MINIMIZE else ">"
-        replace_ptr = builder.alloca(pnlvm.ir.IntType(1))
+        replace_ptr = builder.alloca(ctx.bool_ty)
 
         # Check the value against current min
         with pnlvm.helpers.for_loop_zero_inc(builder, count, "compare_loop") as (b, idx):

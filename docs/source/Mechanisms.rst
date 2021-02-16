@@ -1,10 +1,11 @@
 Mechanisms
 ==========
 
-.. toctree::
-   :maxdepth: 3
-
 .. container:: subclasses
-   *Subclasses*
-   ProcessingMechanisms
-   ModulatoryMechanisms
+
+   .. toctree::
+      :maxdepth: 3
+
+      *Subclasses:*
+      ProcessingMechanisms
+      ModulatoryMechanisms

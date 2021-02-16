@@ -107,7 +107,7 @@ from psyneulink.core.components.functions.function import Function_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.globals.keywords import FUNCTION, INPUT_PORTS, LEABRA_FUNCTION, LEABRA_FUNCTION_TYPE, LEABRA_MECHANISM, NETWORK, OUTPUT_PORTS, PREFERENCE_SET_NAME
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import FunctionParameter, Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.scheduling.time import TimeScale
@@ -297,18 +297,6 @@ class LeabraFunction(Function_Base):
             return train_leabra_network(network, input_pattern=variable[0], output_pattern=variable[1])
 
 
-def _network_getter(owning_component=None, context=None):
-    try:
-        return owning_component.function.parameters.network._get(context)
-    except AttributeError:
-        return None
-
-
-def _network_setter(value, owning_component=None, context=None):
-    owning_component.function.parameters.network._set(value, context)
-    return value
-
-
 def _training_flag_setter(value, self=None, owning_component=None, context=None):
     if value is not self._get(context):
         try:
@@ -479,7 +467,9 @@ class LeabraMechanism(ProcessingMechanism_Base):
         hidden_sizes = None
         quarter_size = 50
 
-        network = Parameter(None, getter=_network_getter, setter=_network_setter)
+        function = Parameter(LeabraFunction, stateful=False, loggable=False)
+
+        network = FunctionParameter(None)
         training_flag = Parameter(False, setter=_training_flag_setter)
 
     def __init__(self,
@@ -524,8 +514,6 @@ class LeabraMechanism(ProcessingMechanism_Base):
         ]
 
         super().__init__(
-            # override instantiate_function instead of doing this?
-            function=LeabraFunction(network=network),
             size=size,
             network=network,
             input_size=input_size,
