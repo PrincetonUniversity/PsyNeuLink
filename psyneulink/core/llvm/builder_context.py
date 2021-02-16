@@ -392,10 +392,11 @@ def _gen_cuda_kernel_wrapper_module(function):
 
     # Runs need special handling. data_in and data_out are one dimensional,
     # but hold entries for all parallel invocations.
+    # comp_state, comp_params, comp_data, comp_in, comp_out, #trials, #inputs
     is_comp_run = len(args) == 7
     if is_comp_run:
-        runs_count = args[5]
-        input_count = args[6]
+        runs_count = builder.load(args[5])
+        input_count = builder.load(args[6])
 
     for i, arg in enumerate(args):
         # Don't adjust #inputs and #trials
@@ -406,10 +407,10 @@ def _gen_cuda_kernel_wrapper_module(function):
                 if i >= 5:
                     offset = ir.IntType(32)(0)
                 # data arrays need special handling
-                elif is_comp_run and i == 4:  # data_out
-                    offset = builder.mul(global_id, builder.load(runs_count))
-                elif is_comp_run and i == 3:  # data_in
-                    offset = builder.mul(global_id, builder.load(input_count))
+                elif i == 4:  # data_out
+                    offset = builder.mul(global_id, runs_count)
+                elif i == 3:  # data_in
+                    offset = builder.mul(global_id, input_count)
             elif is_grid_evaluate:
                 # all but #2 and #3 are shared
                 if i != 2 and i != 3:
