@@ -755,7 +755,7 @@ class Parameter(ParameterBase):
             shape
 
         dependencies
-            for Functions; if not None, this contains a set of Parameter
+            if not None, this contains a set of Parameter
             names corresponding to Parameters whose values must be
             instantiated before that of this Parameter
 
