@@ -3134,6 +3134,7 @@ class Mechanism_Base(Mechanism):
 
         from rich import print
         from rich.panel import Panel
+        from psyneulink.core.scheduling.time import Time
 
         console_output = ''
 
@@ -3207,11 +3208,14 @@ class Mechanism_Base(Mechanism):
                     # Sort for consistency of output
                     func_params_keys_sorted = sorted(self.function.parameters.names())
                     for fct_param_name in func_params_keys_sorted:
-                        print("\t\t{}: {}".
+                        # print("\t\t{}: {}".
+                        #       format(fct_param_name,
+                        #              str(getattr(self.function.parameters, fct_param_name)._get(context)).__str__().strip("[]")))
+                        console_output += ("\n\t\t{}: {}".
                               format(fct_param_name,
                                      str(getattr(self.function.parameters, fct_param_name)._get(context)).__str__().strip("[]")))
 
-        print(Panel(console_output, expand=False))
+        print(Panel(console_output, width=100, title=f'[yellow]{self.name}'))
 
     @tc.typecheck
     def _show_structure(self,
