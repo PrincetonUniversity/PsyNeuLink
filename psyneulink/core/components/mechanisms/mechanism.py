@@ -3132,6 +3132,8 @@ class Mechanism_Base(Mechanism):
 
     def _report_mechanism_execution(self, input_val=None, params=None, output=None, context=None):
 
+        from rich import print
+
         if input_val is None:
             input_val = self.get_input_values(context)
         if output is None:

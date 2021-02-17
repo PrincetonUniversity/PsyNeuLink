@@ -2344,6 +2344,7 @@ import sys
 import numpy as np
 import typecheck as tc
 
+from rich import print
 from PIL import Image
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
@@ -8387,7 +8388,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # If printing to console, report Trial Number
             if self.reportOutputPref:
-                print(f"\nTrial {trial_num} ====================================")
+                print(f"\n[bold blue]Trial {trial_num} ====================================[/bold blue]")
 
             # execute processing
             # pass along the stimuli for this trial
@@ -9083,7 +9084,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # if printing to console, print time_step if any nodes have reportOutputPrefs set
             if self.reportOutputPref:
                 if any(node.reportOutputPref for node in next_execution_set):
-                    print(f'\n Time Step {execution_scheduler.clock.time.time_step}')
+                    print(f'[bold red]\n Time Step {execution_scheduler.clock.time.time_step}[/bold red]')
                     show_execution_set_separator = True
                 else:
                     show_execution_set_separator = False
@@ -9264,7 +9265,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # If printing to console, generate execution_set separator
             if self.reportOutputPref and show_execution_set_separator:
-                print('\n--------------------------------------------')
+                print('[bold red]\n--------------------------------------------[/bold red]')
 
         context.remove_flag(ContextFlags.PROCESSING)
 
