@@ -25,11 +25,14 @@ jobs:
             python-architecture: 'x86'
             os: windows-latest
 
+    outputs:
+      on_master: ${{ steps.on_master.outputs.on_master }}
+
     steps:
     - name: Checkout sources
       uses: actions/checkout@v2
       with:
-        fetch-depth: 10
+        fetch-depth: 0
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2.2.1
@@ -99,16 +102,27 @@ jobs:
         path: tests_out.xml
       if: success() || failure()
 
-    # Actions below build bdist wheel. Run only for tags.
+    # Actions below build bdist wheel. Run only for tags on master.
+    - name: Check if on master
+      id: on_master
+      shell: bash
+      run: |
+        git branch -a --contains $GITHUB_REF
+        git describe --always --tags
+        export ON_MASTER=$(git branch -a --contains $GITHUB_REF | grep -q '^  remotes/origin/master$' && echo "master" || echo "")
+        echo "Found out: ${ON_MASTER}"
+        echo ::set-output name=on_master::$ON_MASTER
+      if: contains(github.ref, 'tags')
+
     - name: Build dist
       run: |
         pip install setuptools wheel
         python setup.py sdist bdist_wheel
-      if: contains(github.ref, 'tags')
+      if: contains(github.ref, 'tags') && steps.on_master.outputs.on_master == 'master'
 
     - name: Upload dist packages
       uses: actions/upload-artifact@v2.2.2
       with:
         name: dist-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         path: dist/
-      if: contains(github.ref, 'tags')
+      if: contains(github.ref, 'tags') && steps.on_master.outputs.on_master == 'master'
