@@ -565,23 +565,13 @@ class Scheduler(JSONDumpable):
         unspecified_nodes = []
         for node in self.nodes:
             if node not in self.conditions:
-                # determine parent nodes
-                node_index = 0
-                for i in range(len(self.consideration_queue)):
-                    if node in self.consideration_queue[i]:
-                        node_index = i
-                        break
-
-                if node_index > 0:
-                    dependencies = list(self.consideration_queue[i - 1])
-                    if len(dependencies) == 1:
-                        cond = EveryNCalls(dependencies[0], 1)
-                    elif len(dependencies) > 1:
-                        cond = All(*[EveryNCalls(x, 1) for x in dependencies])
-                    else:
-                        raise SchedulerError(f'{self}: Empty consideration set in consideration_queue[{i - 1}]')
-                else:
+                dependencies = list(self.dependency_dict[node])
+                if len(dependencies) == 0:
                     cond = Always()
+                elif len(dependencies) == 1:
+                    cond = EveryNCalls(dependencies[0], 1)
+                else:
+                    cond = All(*[EveryNCalls(x, 1) for x in dependencies])
 
                 self.conditions.add_condition(node, cond)
                 unspecified_nodes.append(node)
