@@ -3133,6 +3133,9 @@ class Mechanism_Base(Mechanism):
     def _report_mechanism_execution(self, input_val=None, params=None, output=None, context=None):
 
         from rich import print
+        from rich.panel import Panel
+
+        console_output = ''
 
         if input_val is None:
             input_val = self.get_input_values(context)
@@ -3143,8 +3146,9 @@ class Mechanism_Base(Mechanism):
         if 'mechanism' in self.name or 'Mechanism' in self.name:
             mechanism_string = ' '
         else:
-            mechanism_string = ' mechanism'
+            mechanism_string = ' mechanism '
 
+        # print input
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #      if you want more specific output, you can add conditional tests here
         try:
@@ -3152,15 +3156,30 @@ class Mechanism_Base(Mechanism):
         except TypeError:
             input_string = input_val
 
-        print(f"\n\'{self.name}\'{mechanism_string} executed:\n- input:  {input_string}")
+        # print(f"\n\'{self.name}\'{mechanism_string} executed:\n- input:  {input_string}")
+        # print(f"\'{self.name}\'{mechanism_string} executed:\n- [italic]input:[/italic]  {input_string}")
+        console_output += f"[yellow bold]\'{self.name}\'[/]{mechanism_string}executed:\n- input: {input_string}"
 
+        # print output
+        # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
+        #   if you want more specific output, you can add conditional tests here
+        try:
+            output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output]))
+        except TypeError:
+            output_string = output
+
+        # print(f"- output: {output_string}")
+        console_output += f"\n- output: {output_string}"
+
+        # print params
         try:
             include_params = re.match('param(eter)?s?', self.reportOutputPref, flags=re.IGNORECASE)
         except TypeError:
             include_params = False
 
         if include_params:
-            print("- params:")
+            # print("- params:")
+            console_output += (f"\n- params:")
             # Sort for consistency of output
             params_keys_sorted = sorted(params.keys())
             for param_name in params_keys_sorted:
@@ -3182,7 +3201,8 @@ class Mechanism_Base(Mechanism):
                     param_is_function = True
                 else:
                     param = param_value
-                print(f"\t{param_name}: {str(param).__str__().strip('[]')}")
+                # print(f"\t{param_name}: {str(param).__str__().strip('[]')}")
+                console_output += f"\n\t{param_name}: {str(param).__str__().strip('[]')}"
                 if param_is_function:
                     # Sort for consistency of output
                     func_params_keys_sorted = sorted(self.function.parameters.names())
@@ -3191,14 +3211,7 @@ class Mechanism_Base(Mechanism):
                               format(fct_param_name,
                                      str(getattr(self.function.parameters, fct_param_name)._get(context)).__str__().strip("[]")))
 
-        # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
-        #   if you want more specific output, you can add conditional tests here
-        try:
-            output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output]))
-        except TypeError:
-            output_string = output
-
-        print(f"- output: {output_string}")
+        print(Panel(console_output, expand=False))
 
     @tc.typecheck
     def _show_structure(self,

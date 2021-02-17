@@ -2345,6 +2345,7 @@ import numpy as np
 import typecheck as tc
 
 from rich import print
+from rich.panel import Panel
 from PIL import Image
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
@@ -8388,7 +8389,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # If printing to console, report Trial Number
             if self.reportOutputPref:
-                print(f"\n[bold blue]Trial {trial_num} ====================================[/bold blue]")
+                print(f"\n[bold red]TRIAL {trial_num} =========================================[/]")
+                # print(Panel(f"[bold red]TRIAL {trial_num}[/]",expand=False))
 
             # execute processing
             # pass along the stimuli for this trial
@@ -9084,10 +9086,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # if printing to console, print time_step if any nodes have reportOutputPrefs set
             if self.reportOutputPref:
                 if any(node.reportOutputPref for node in next_execution_set):
-                    print(f'[bold red]\n Time Step {execution_scheduler.clock.time.time_step}[/bold red]')
-                    show_execution_set_separator = True
-                else:
-                    show_execution_set_separator = False
+                    print(f'[bold blue]\nTime Step {execution_scheduler.clock.time.time_step}')
+                          # f'-------------------------------------[/]')
+                    # print(Panel(f'[bold blue]Time Step {execution_scheduler.clock.time.time_step}[/]',
+                    #             expand=False))
 
             # execute each node with EXECUTING in context
             for (node_idx, node) in enumerate(next_execution_set):
@@ -9261,11 +9263,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             if call_after_time_step:
                 call_with_pruned_args(call_after_time_step, context=context)
-
-
-            # If printing to console, generate execution_set separator
-            if self.reportOutputPref and show_execution_set_separator:
-                print('[bold red]\n--------------------------------------------[/bold red]')
 
         context.remove_flag(ContextFlags.PROCESSING)
 
