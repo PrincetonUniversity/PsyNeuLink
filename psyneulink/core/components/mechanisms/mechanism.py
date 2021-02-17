@@ -3159,7 +3159,9 @@ class Mechanism_Base(Mechanism):
 
         # print(f"\n\'{self.name}\'{mechanism_string} executed:\n- input:  {input_string}")
         # print(f"\'{self.name}\'{mechanism_string} executed:\n- [italic]input:[/italic]  {input_string}")
-        console_output += f"[yellow bold]\'{self.name}\'[/]{mechanism_string}executed:\n- input: {input_string}"
+        # console_output += f"[yellow bold]\'{self.name}\'[/]{mechanism_string}executed:\n- input: {input_string}"
+        # console_output += f"Mechanism executed:\n"
+        console_output += f"input: {input_string}"
 
         # print output
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
@@ -3170,7 +3172,7 @@ class Mechanism_Base(Mechanism):
             output_string = output
 
         # print(f"- output: {output_string}")
-        console_output += f"\n- output: {output_string}"
+        console_output += f"\noutput: {output_string}"
 
         # print params
         try:
@@ -3215,7 +3217,16 @@ class Mechanism_Base(Mechanism):
                               format(fct_param_name,
                                      str(getattr(self.function.parameters, fct_param_name)._get(context)).__str__().strip("[]")))
 
-        print(Panel(console_output, width=100, title=f'[yellow]{self.name}'))
+        if include_params:
+            width = 100
+            expand = True
+        else:
+            width = None
+            expand = False
+        print(Panel(console_output,
+                    width=width,
+                    expand=expand,
+                    title=f'[yellow]{self.name}'))
 
     @tc.typecheck
     def _show_structure(self,
