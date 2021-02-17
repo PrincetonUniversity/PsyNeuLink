@@ -195,9 +195,9 @@ def test_helper_all_close(mode):
 
 @pytest.mark.llvm
 @pytest.mark.parametrize("ir_argtype,format_spec,values_to_check", [
-    (pnlvm.ir.IntType(32), "%u", range(0, 100)),
+    (pnlvm.ir.IntType(32), "%u", range(0, 20)),
     (pnlvm.ir.IntType(64), "%ld", [int(-4E10), int(-3E10), int(-2E10)]),
-    (pnlvm.ir.DoubleType(), "%lf", [x *.5 for x in range(0, 10)]),
+    (pnlvm.ir.DoubleType(), "%lf", [x *.5 for x in range(0, 5)]),
     ], ids=["i32", "i64", "double"])
 @pytest.mark.skipif(sys.platform == 'win32', reason="Loading C library is complicated on windows")
 def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):

@@ -2532,13 +2532,15 @@ class Mechanism_Base(Mechanism):
             if not self.parameters.execute_until_finished._get(context):
                 break
 
-        # REPORT EXECUTION
-        if self.prefs.reportOutputPref and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING):
-            self._report_mechanism_execution(
-                self.get_input_values(context),
-                output=self.output_port.parameters.value._get(context),
-                context=context
-            )
+        # REPORT EXECUTION if called from command line
+        #  If called by a Composition, it handles reporting.
+        if context.flags & ContextFlags.COMMAND_LINE == ContextFlags.COMMAND_LINE:
+            if self.prefs.reportOutputPref and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING):
+                self._report_mechanism_execution(
+                    self.get_input_values(context),
+                    output=self.output_port.parameters.value._get(context),
+                    context=context
+                )
 
         return value
 
@@ -3134,7 +3136,8 @@ class Mechanism_Base(Mechanism):
 
         from rich import print
         from rich.panel import Panel
-        from psyneulink.core.scheduling.time import Time
+        from rich.console import RenderGroup
+        from rich import box
 
         console_output = ''
 
@@ -3182,7 +3185,7 @@ class Mechanism_Base(Mechanism):
 
         if include_params:
             # print("- params:")
-            console_output += (f"\n- params:")
+            params_string = (f"\n- params:")
             # Sort for consistency of output
             params_keys_sorted = sorted(params.keys())
             for param_name in params_keys_sorted:
@@ -3205,7 +3208,7 @@ class Mechanism_Base(Mechanism):
                 else:
                     param = param_value
                 # print(f"\t{param_name}: {str(param).__str__().strip('[]')}")
-                console_output += f"\n\t{param_name}: {str(param).__str__().strip('[]')}"
+                params_string += f"\n\t{param_name}: {str(param).__str__().strip('[]')}"
                 if param_is_function:
                     # Sort for consistency of output
                     func_params_keys_sorted = sorted(self.function.parameters.names())
@@ -3213,20 +3216,24 @@ class Mechanism_Base(Mechanism):
                         # print("\t\t{}: {}".
                         #       format(fct_param_name,
                         #              str(getattr(self.function.parameters, fct_param_name)._get(context)).__str__().strip("[]")))
-                        console_output += ("\n\t\t{}: {}".
+                        params_string += ("\n\t\t{}: {}".
                               format(fct_param_name,
                                      str(getattr(self.function.parameters, fct_param_name)._get(context)).__str__().strip("[]")))
 
         if include_params:
             width = 100
             expand = True
+            console_output = RenderGroup(console_output,Panel(params_string))
+            params_string
         else:
             width = None
             expand = False
         print(Panel(console_output,
+                    box=box.HEAVY,
                     width=width,
                     expand=expand,
-                    title=f'[yellow]{self.name}'))
+                    title=f'[yellow]{self.name}',
+                    highlight=True))
 
     @tc.typecheck
     def _show_structure(self,

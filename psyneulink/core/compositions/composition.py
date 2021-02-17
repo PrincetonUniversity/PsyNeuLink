@@ -9086,7 +9086,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # if printing to console, print time_step if any nodes have reportOutputPrefs set
             if self.reportOutputPref:
                 if any(node.reportOutputPref for node in next_execution_set):
-                    print(f'[bold blue]\nTime Step {execution_scheduler.clock.time.time_step}')
+                    print(f'[bold blue]\nTime Step {execution_scheduler.clock.time.time_step} ---[/]')
+                          # f'\nNodes executed:')
                           # f'-------------------------------------[/]')
                     # print(Panel(f'[bold blue]Time Step {execution_scheduler.clock.time.time_step}[/]',
                     #             expand=False))
