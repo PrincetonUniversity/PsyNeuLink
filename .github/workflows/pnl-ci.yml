@@ -126,3 +126,72 @@ jobs:
         name: dist-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         path: dist/
       if: contains(github.ref, 'tags') && steps.on_master.outputs.on_master == 'master'
+
+  publish:
+    strategy:
+      matrix:
+        python-version: [3.7]
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
+    needs: [build]
+    if: contains(github.ref, 'tags') && contains(needs.*.outputs.on_master, 'master')
+
+    steps:
+    - name: Download sdist and wheels
+      uses: actions/download-artifact@v2
+      with:
+        name: dist-${{ matrix.os }}-${{ matrix.python-version }}-x64
+        path: dist/
+
+    - name: Upload dist files to PyPI
+      id: file_assets
+      shell: bash
+      run: |
+        # Include implicit dependency on setuptools{,-rust}
+        # and preinstall wheel
+        pip3 install setuptools setuptools-rust wheel
+        pip3 install twine
+        # This expects TWINE_USERNAME, TWINE_PASSWORD, and TWINE_REPOSITORY
+        # environment variables
+        if [ -n "$TWINE_REPOSITORY" ]; then
+                twine upload dist/*
+        fi
+        cd dist
+        echo ::set-output name=src_file_name::$(ls *.tar.gz)
+        echo ::set-output name=whl_file_name::$(ls *.whl)
+
+      env:
+        TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+        TWINE_REPOSITORY: ${{ secrets.TWINE_REPOSITORY }}
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: true
+
+    - name: Upload release asset sdist
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: dist/${{ steps.file_assets.outputs.src_file_name }}
+        asset_name: ${{ steps.file_assets.outputs.src_file_name }}
+        asset_content_type: application/gzip
+
+    - name: Upload release asset wheel
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: dist/${{ steps.file_assets.outputs.whl_file_name }}
+        asset_name: ${{ steps.file_assets.outputs.whl_file_name }}
+        asset_content_type: application/octet-stream
