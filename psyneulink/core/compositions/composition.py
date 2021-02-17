@@ -9151,6 +9151,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             node.execute(context=context,
                                          runtime_params=execution_runtime_params,
                                          )
+                            node._report_mechanism_execution(
+                                input=node.get_input_values(context),
+                                output=node.output_port.parameters.value._get(context),
+                                context=context
+                            )
 
                         # Reset runtim_params
                         # Reset any specified for Mechanism
