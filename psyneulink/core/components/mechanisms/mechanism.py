@@ -2534,7 +2534,7 @@ class Mechanism_Base(Mechanism):
 
         # REPORT EXECUTION if called from command line
         #  If called by a Composition, it handles reporting.
-        if context.flags & ContextFlags.COMMAND_LINE == ContextFlags.COMMAND_LINE:
+        if context.source == ContextFlags.COMMAND_LINE:
             if self.prefs.reportOutputPref and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 self._report_mechanism_execution(
                     self.get_input_values(context),
