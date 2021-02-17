@@ -627,11 +627,15 @@ class CompExecution(CUDAExecution):
             self._bin_run_multi_func.wrap_call(self._state_struct, self._param_struct,
                                                self._data_struct, inputs, outputs,
                                                runs_count, input_count, self._ct_len)
+            return _convert_ctype_to_python(outputs)
         else:
             self._bin_run_func.wrap_call(self._state_struct, self._param_struct,
                                          self._data_struct, inputs, outputs,
                                          runs_count, input_count)
-        return _convert_ctype_to_python(outputs)
+
+            # Extract only #trials elements in case the run exited early
+            assert runs_count.value <= runs, "Composition ran more times than allowed!"
+            return _convert_ctype_to_python(outputs)[0:runs_count.value]
 
     def cuda_run(self, inputs, runs, num_input_sets):
         # Create input buffer
@@ -650,10 +654,15 @@ class CompExecution(CUDAExecution):
         output_size = ctypes.sizeof(output_type)
         data_out = jit_engine.pycuda.driver.mem_alloc(output_size)
 
-        runs_count = jit_engine.pycuda.driver.In(np.int32(runs))
+        # number of trials argument
+        runs_np = np.array([runs] * len(self._execution_contexts), dtype=np.int32)
+        runs_count = jit_engine.pycuda.driver.InOut(runs_np)
+        self._uploaded_bytes['input'] += runs_np.nbytes
+        self._downloaded_bytes['input'] += runs_np.nbytes
+
+        # input_count argument
         input_count = jit_engine.pycuda.driver.In(np.int32(num_input_sets))
-        # runs_count + input_count
-        self._uploaded_bytes['input'] += 8
+        self._uploaded_bytes['input'] += 4
 
         self._bin_run_func.cuda_call(self._cuda_state_struct,
                                      self._cuda_param_struct,
@@ -663,7 +672,12 @@ class CompExecution(CUDAExecution):
 
         # Copy the data struct from the device
         ct_out = self.download_ctype(data_out, output_type, 'result')
-        return _convert_ctype_to_python(ct_out)
+        if len(self._execution_contexts) > 1:
+            return _convert_ctype_to_python(ct_out)
+        else:
+            # Extract only #trials elements in case the run exited early
+            assert runs_np[0] <= runs, "Composition ran more times than allowed!"
+            return _convert_ctype_to_python(ct_out)[0:runs_np[0]]
 
     def cuda_evaluate(self, variable, search_space):
         ocm = self._composition.controller
