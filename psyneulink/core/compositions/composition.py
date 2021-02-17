@@ -2908,8 +2908,11 @@ class NodeRole(enum.Enum):
     TERMINAL = enum.auto()
 
 
-def _report_node_execution(node, input_val=None, params=None, output_val=None, context=None):
-
+def _report_node_execution(node,
+                           input_val=None,
+                           params=None,
+                           output_val=None,
+                           context=None):
         import re
         import types
         from rich import print
@@ -9436,6 +9439,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         output_values = []
         for port in self.output_CIM.output_ports:
             output_values.append(port.parameters.value._get(context))
+
+        _report_node_execution(
+            self,
+            input_val=self.get_input_values(context),
+            output_val=self.output_port.parameters.value._get(context),
+            context=context
+        )
 
         return output_values
 
