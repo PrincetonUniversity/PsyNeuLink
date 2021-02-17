@@ -2908,6 +2908,114 @@ class NodeRole(enum.Enum):
     TERMINAL = enum.auto()
 
 
+def _report_node_execution(node, input_val=None, params=None, output_val=None, context=None):
+
+        import re
+        import types
+        from rich import print
+        from rich.panel import Panel
+        from rich.console import RenderGroup
+        from rich import box
+        from psyneulink.core.components.shellclasses import Function
+        from psyneulink.core.globals.keywords import FUNCTION_PARAMS
+
+        console_output = ''
+
+        if input_val is None:
+            input_val = node.get_input_values(context)
+        if output_val is None:
+            output = node.output_port.parameters.value._get(context)
+        params = params or {p.name: p._get(context) for p in node.parameters}
+
+        if 'mechanism' in node.name or 'Mechanism' in node.name:
+            mechanism_string = ' '
+        else:
+            mechanism_string = ' mechanism '
+
+        # print input
+        # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
+        #      if you want more specific output, you can add conditional tests here
+        try:
+            input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
+        except TypeError:
+            input_string = input_val
+
+        # print(f"\n\'{node.name}\'{mechanism_string} executed:\n- input:  {input_string}")
+        # print(f"\'{node.name}\'{mechanism_string} executed:\n- [italic]input:[/italic]  {input_string}")
+        # console_output += f"[yellow bold]\'{node.name}\'[/]{mechanism_string}executed:\n- input: {input_string}"
+        # console_output += f"Mechanism executed:\n"
+        console_output += f"input: {input_string}"
+
+        # print output
+        # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
+        #   if you want more specific output, you can add conditional tests here
+        try:
+            output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output_val]))
+        except TypeError:
+            output_string = output
+
+        # print(f"- output: {output_string}")
+        console_output += f"\noutput: {output_string}"
+
+        # print params
+        try:
+            include_params = re.match('param(eter)?s?', node.reportOutputPref, flags=re.IGNORECASE)
+        except TypeError:
+            include_params = False
+
+        if include_params:
+            # print("- params:")
+            params_string = (f"\n- params:")
+            # Sort for consistency of output
+            params_keys_sorted = sorted(params.keys())
+            for param_name in params_keys_sorted:
+                # No need to report:
+                #    function_params here, as they will be reported for the function itself below;
+                #    input_ports or output_ports, as these are inherent in the structure
+                if param_name in {FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS}:
+                    continue
+                param_is_function = False
+                param_value = params[param_name]
+                if isinstance(param_value, Function):
+                    param = param_value.name
+                    param_is_function = True
+                elif isinstance(param_value, type(Function)):
+                    param = param_value.__name__
+                    param_is_function = True
+                elif isinstance(param_value, (types.FunctionType, types.MethodType)):
+                    param = param_value.__node__.__class__.__name__
+                    param_is_function = True
+                else:
+                    param = param_value
+                # print(f"\t{param_name}: {str(param).__str__().strip('[]')}")
+                params_string += f"\n\t{param_name}: {str(param).__str__().strip('[]')}"
+                if param_is_function:
+                    # Sort for consistency of output
+                    func_params_keys_sorted = sorted(node.function.parameters.names())
+                    for fct_param_name in func_params_keys_sorted:
+                        # print("\t\t{}: {}".
+                        #       format(fct_param_name,
+                        #              str(getattr(node.function.parameters, fct_param_name)._get(context)).__str__().strip("[]")))
+                        params_string += ("\n\t\t{}: {}".
+                              format(fct_param_name,
+                                     str(getattr(node.function.parameters, fct_param_name)._get(context)).__str__().strip("[]")))
+
+        if include_params:
+            width = 100
+            expand = True
+            console_output = RenderGroup(console_output,Panel(params_string))
+            params_string
+        else:
+            width = None
+            expand = False
+        print(Panel(console_output,
+                    box=box.HEAVY,
+                    width=width,
+                    expand=expand,
+                    title=f'[yellow]{node.name}',
+                    highlight=True))
+
+
 class Composition(Composition_Base, metaclass=ComponentsMeta):
     """
     Composition(                           \
@@ -9151,9 +9259,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             node.execute(context=context,
                                          runtime_params=execution_runtime_params,
                                          )
-                            node._report_mechanism_execution(
-                                input=node.get_input_values(context),
-                                output=node.output_port.parameters.value._get(context),
+                            _report_node_execution(
+                                node,
+                                input_val=node.get_input_values(context),
+                                output_val=node.output_port.parameters.value._get(context),
                                 context=context
                             )
 
