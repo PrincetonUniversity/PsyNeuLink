@@ -1226,7 +1226,7 @@ class DDM(ProcessingMechanism):
         try:
             prev_val_ptr = pnlvm.helpers.get_state_ptr(builder, self.function, func_state_ptr, "previous_value")
         except ValueError:
-            return pnlvm.ir.IntType(1)(1)
+            return ctx.bool_ty(1)
 
         # Extract scalar value from ptr
         prev_val_ptr = builder.gep(prev_val_ptr, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])

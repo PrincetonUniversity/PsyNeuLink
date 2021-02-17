@@ -487,7 +487,6 @@ import inspect
 import itertools
 import logging
 import numbers
-import toposort
 import types
 import warnings
 
@@ -2025,7 +2024,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 else:
                     param_defaults[p.source.name] = param_defaults[p.name]
 
-        for p in filter(lambda x: not isinstance(x, (ParameterAlias, SharedParameter)), self.parameters):
+        for p in filter(lambda x: not isinstance(x, (ParameterAlias, SharedParameter)), self.parameters._in_dependency_order):
             # copy spec so it is not overwritten later
             # TODO: check if this is necessary
             p.spec = copy_parameter_value(p.spec)
@@ -2086,19 +2085,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """
         from psyneulink.core.components.shellclasses import Function
 
-        parameter_function_ordering = list(toposort.toposort({
-            p.name: p.dependencies for p in self.parameters if p.dependencies is not None
-        }))
-        parameter_function_ordering = list(itertools.chain.from_iterable(parameter_function_ordering))
-
-        def ordering(p):
-            try:
-                return parameter_function_ordering.index(p.name)
-            except ValueError:
-                return -1
-
         # (this originally occurred in _validate_params)
-        for p in sorted(self.parameters, key=ordering):
+        for p in self.parameters._in_dependency_order:
             if p.getter is None:
                 val = p._get(context)
                 if (
@@ -2189,7 +2177,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         self._override_unspecified_shared_parameters(context)
 
     def _override_unspecified_shared_parameters(self, context):
-        for param_name, param in self.parameters.values(show_all=True).items():
+        for param in self.parameters._in_dependency_order:
             if (
                 isinstance(param, SharedParameter)
                 and not isinstance(param.source, ParameterAlias)
@@ -2985,7 +2973,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         )
         self._instantiate_value(context)
 
-        for p in self.parameters:
+        for p in self.parameters._in_dependency_order:
             val = p._get(context)
             if (
                 not p.reference

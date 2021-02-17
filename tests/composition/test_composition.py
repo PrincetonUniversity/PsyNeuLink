@@ -4303,85 +4303,6 @@ class TestCallBeforeAfterTimescale:
 #         assert 925 == output[0][0]
 
 
-class TestSchedulerConditions:
-    @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python',
-                                     #FIXME: "Exec" versions see different shape of previous_value parameter ([0] vs. [[0]])
-                                     #pytest.param('LLVM', marks=pytest.mark.llvm),
-                                     #pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                     pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                     #pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                    ])
-    @pytest.mark.parametrize(["condition", "expected_result"],
-                             [(pnl.EveryNCalls, [[.25, .25]]),
-                              (pnl.BeforeNCalls, [[.05, .05]]),
-                              (pnl.AtNCalls, [[.25, .25]]),
-                              (pnl.AfterNCalls, [[.25, .25]]),
-                              (pnl.WhenFinished, [[1.0, 1.0]]),
-                              (pnl.WhenFinishedAny, [[1.0, 1.0]]),
-                              (pnl.WhenFinishedAll, [[1.0, 1.0]]),
-                              (pnl.All, [[1.0, 1.0]]),
-                              (pnl.Any, [[1.0, 1.0]]),
-                              (pnl.Not, [[.05, .05]]),
-                              (pnl.AllHaveRun, [[.05, .05]]),
-                              (pnl.Always, [[0.05, 0.05]]),
-                              (pnl.AtPass, [[.3, .3]]), #FIXME: Differing result between llvm and python
-                              (pnl.AtTrial,[[0.05, 0.05]]),
-                              #(pnl.Never), #TODO: Find a good test case for this!
-                            ])
-    def test_scheduler_conditions(self, mode, condition, expected_result):
-        decisionMaker = pnl.DDM(
-                        function=pnl.DriftDiffusionIntegrator(non_decision_time=0,
-                                                              threshold=1,
-                                                              noise=0.0),
-                        reset_stateful_function_when=pnl.AtTrialStart(),
-                        output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME],
-                        name='DDM')
-
-        response = pnl.ProcessingMechanism(size=2, name="GATE")
-
-        comp = pnl.Composition()
-        comp.add_node(decisionMaker)
-        comp.add_node(response)
-        comp.add_projection(pnl.MappingProjection(), sender=decisionMaker, receiver=response)
-
-        if condition is pnl.EveryNCalls:
-            comp.scheduler.add_condition(response, condition(decisionMaker, 5))
-        elif condition is pnl.BeforeNCalls:
-            comp.scheduler.add_condition(response, condition(decisionMaker, 5))
-        elif condition is pnl.AtNCalls:
-            comp.scheduler.add_condition(response, condition(decisionMaker, 5))
-        elif condition is pnl.AfterNCalls:
-            comp.scheduler.add_condition(response, condition(decisionMaker, 5))
-        elif condition is pnl.WhenFinished:
-            comp.scheduler.add_condition(response, condition(decisionMaker))
-        elif condition is pnl.WhenFinishedAny:
-            comp.scheduler.add_condition(response, condition(decisionMaker))
-        elif condition is pnl.WhenFinishedAll:
-            comp.scheduler.add_condition(response, condition(decisionMaker))
-        elif condition is pnl.All:
-            comp.scheduler.add_condition(response, condition(pnl.WhenFinished(decisionMaker)))
-        elif condition is pnl.Any:
-            comp.scheduler.add_condition(response, condition(pnl.WhenFinished(decisionMaker)))
-        elif condition is pnl.Not:
-            comp.scheduler.add_condition(response, condition(pnl.WhenFinished(decisionMaker)))
-        elif condition is pnl.AllHaveRun:
-            comp.scheduler.add_condition(response, condition(decisionMaker))
-        elif condition is pnl.Always:
-            comp.scheduler.add_condition(response, condition())
-        elif condition is pnl.AtPass:
-            comp.scheduler.add_condition(response, condition(5))
-        elif condition is pnl.AtTrial:
-            comp.scheduler.add_condition(response, condition(0))
-
-        result = comp.run([0.05], bin_execute=mode)
-        #HACK: The result is an object dtype in Python mode for some reason?
-        if mode == 'Python':
-            result = np.asfarray(result[0])
-        assert np.allclose(result, expected_result)
-
-
 class TestNestedCompositions:
 
     @pytest.mark.composition
@@ -7068,8 +6989,8 @@ class TestMisc:
                 drift_rate=(1.0),
                 threshold=(0.1654),
                 noise=(0.5),
-                starting_value=(0),
-                non_decision_time=0.25,
+                starting_point=(0),
+                t0=0.25,
             ),
             name='Decision',
         )
@@ -7098,8 +7019,8 @@ class TestMisc:
                     ),
                 ),
                 noise=(0.5),
-                starting_value=(0),
-                non_decision_time=0.45
+                starting_point=(0),
+                t0=0.45
             ),
             name='second_DDM',
         )

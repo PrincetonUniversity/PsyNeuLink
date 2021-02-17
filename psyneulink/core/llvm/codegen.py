@@ -123,8 +123,8 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
                 self.register[k] = numpy_handlers
 
         name_constants = {
-            True: ir.IntType(1)(1),
-            False: ir.IntType(1)(0),
+            True: ctx.bool_ty(1),
+            False: ctx.bool_ty(0),
         }
         self.name_constants = name_constants
         super().__init__()
@@ -843,6 +843,10 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
         nodes_states = helpers.get_param_ptr(builder, composition, state, "nodes")
 
+        # Allocate temporary output storage
+        output_storage = builder.alloca(data.type.pointee, name="output_storage")
+
+        # Get locations of number of executions.
         num_exec_locs = {}
         for idx, node in enumerate(composition._all_nodes):
             node_state = builder.gep(nodes_states, [ctx.int32_ty(0),
@@ -851,11 +855,20 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                                                         node_state,
                                                         "num_executions")
 
-        # Reset internal TRIAL clock for each node
+        # Generate pointers to 'is_finished' callbacks
+        is_finished_callbacks = {}
+        for node in composition.nodes:
+            args = [state, params, comp_in, data, output_storage]
+            wrapper = ctx.get_node_wrapper(composition, node)
+            is_finished_callbacks[node] = (wrapper, args)
+
+
+        # Reset internal TRIAL/PASS/TIME_STEP clock for each node
         for time_loc in num_exec_locs.values():
-            num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
-                                                       ctx.int32_ty(TimeScale.TRIAL.value)])
-            builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+            for scale in (TimeScale.TRIAL, TimeScale.PASS, TimeScale.TIME_STEP):
+                num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
+                                                           ctx.int32_ty(scale.value)])
+                builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
 
         # Check if there's anything to reset
         for node in composition._all_nodes:
@@ -867,12 +880,13 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                 continue
 
             reinit_cond = cond_gen.generate_sched_condition(
-                builder, when, cond, node, None)
+                builder, when, cond, node, is_finished_callbacks, num_exec_locs)
             with builder.if_then(reinit_cond):
                 node_w = ctx.get_node_wrapper(composition, node)
                 node_reinit_f = ctx.import_llvm_function(node_w, tags=node_tags.union({"reset"}))
                 builder.call(node_reinit_f, [state, params, comp_in, data, data])
 
+        # Run controller if it's enabled in 'BEFORE' mode
         if simulation is False and composition.enable_controller and \
            composition.controller_mode == BEFORE:
             assert composition.controller is not None
@@ -883,43 +897,35 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
 
         # Allocate run set structure
-        run_set_type = ir.ArrayType(ir.IntType(1), len(composition.nodes))
+        run_set_type = ir.ArrayType(ctx.bool_ty, len(composition.nodes))
         run_set_ptr = builder.alloca(run_set_type, name="run_set")
         builder.store(run_set_type(None), run_set_ptr)
 
-        # Allocate temporary output storage
-        output_storage = builder.alloca(data.type.pointee, name="output_storage")
 
         iter_ptr = builder.alloca(ctx.int32_ty, name="iter_counter")
         builder.store(ctx.int32_ty(0), iter_ptr)
 
-        # Generate pointers to 'is_finished' callbacks
-        is_finished_callbacks = {}
-        for node in composition.nodes:
-            args = [state, params, comp_in, data, output_storage]
-            wrapper = ctx.get_node_wrapper(composition, node)
-            is_finished_callbacks[node] = (wrapper, args)
-
+        # Start the main loop structure
         loop_condition = builder.append_basic_block(name="scheduling_loop_condition")
         builder.branch(loop_condition)
 
         # Generate a while not 'end condition' loop
         builder.position_at_end(loop_condition)
 
-        run_cond = cond_gen.generate_sched_condition(
+        trial_term_cond = cond_gen.generate_sched_condition(
             builder, composition.termination_processing[TimeScale.TRIAL],
-            cond, None, is_finished_callbacks)
-        run_cond = builder.not_(run_cond, name="not_run_cond")
+            cond, None, is_finished_callbacks, num_exec_locs)
+        trial_cond = builder.not_(trial_term_cond, name="not_trial_term_cond")
 
         loop_body = builder.append_basic_block(name="scheduling_loop_body")
-        exit_block = builder.append_basic_block(name="exit")
-        builder.cbranch(run_cond, loop_body, exit_block)
+        exit_block = builder.append_basic_block(name="trial_exit")
+        builder.cbranch(trial_cond, loop_body, exit_block)
 
         # Generate loop body
         builder.position_at_end(loop_body)
 
         zero = ctx.int32_ty(0)
-        any_cond = ir.IntType(1)(0)
+        any_cond = ctx.bool_ty(0)
         # Calculate execution set before running the mechanisms
         for idx, node in enumerate(composition.nodes):
             run_set_node_ptr = builder.gep(run_set_ptr,
@@ -927,21 +933,19 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                                            name="run_cond_ptr_" + node.name)
             node_cond = cond_gen.generate_sched_condition(
                 builder, composition._get_processing_condition_set(node),
-                cond, node, is_finished_callbacks)
+                cond, node, is_finished_callbacks, num_exec_locs)
             ran = cond_gen.generate_ran_this_pass(builder, cond, node)
             node_cond = builder.and_(node_cond, builder.not_(ran),
                                      name="run_cond_" + node.name)
             any_cond = builder.or_(any_cond, node_cond, name="any_ran_cond")
             builder.store(node_cond, run_set_node_ptr)
 
-        # Reset internal TIME_STEP and PASS clock for each node
+        # Reset internal TIME_STEP clock for each node
+        # NOTE: This is done _after_ condition evluation, otherwise
+        #       TIME_STEP related conditions will only see 0 executions
         for time_loc in num_exec_locs.values():
             num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
                                                        ctx.int32_ty(TimeScale.TIME_STEP.value)])
-            builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
-            # FIXME: Move pass reset to actual pass count
-            num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
-                                                       ctx.int32_ty(TimeScale.PASS.value)])
             builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
 
         for idx, node in enumerate(composition.nodes):
@@ -976,6 +980,8 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                 builder.store(builder.load(out_ptr), data_ptr)
 
         # Update step counter
+        # FIXME: This shouldn't really happen. If no node is run,
+        #        there's no change to the scheduling conditions and we hang.
         with builder.if_then(any_cond):
             builder.block.name = "inc_step"
             cond_gen.bump_ts(builder, cond)
@@ -996,6 +1002,11 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             builder.store(zero, iter_ptr)
             # Bumping automatically zeros lower elements
             cond_gen.bump_ts(builder, cond, (0, 1, 0))
+            # Reset internal PASS clock for each node
+            for time_loc in num_exec_locs.values():
+                num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
+                                                           ctx.int32_ty(TimeScale.PASS.value)])
+                builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
 
         builder.branch(loop_condition)
 
@@ -1033,7 +1044,7 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
     for a in llvm_func.args:
         a.attributes.add('noalias')
 
-    state, params, data, data_in, data_out, runs_ptr, inputs_ptr = llvm_func.args
+    state, params, data, data_in, data_out, trials_ptr, inputs_ptr = llvm_func.args
     # simulation does not care about the output
     # it extracts results of the controller objective mechanism
     if simulation:
@@ -1068,32 +1079,70 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
     cond_init = cond_type(cond_gen.get_condition_initializer())
     builder.store(cond_init, cond)
 
-    runs = builder.load(runs_ptr, "runs")
-    with helpers.for_loop_zero_inc(builder, runs, "run_loop") as (b, iters):
-        # Get the right input stimulus
-        input_idx = b.urem(iters, b.load(inputs_ptr))
-        data_in_ptr = b.gep(data_in, [input_idx])
+    trials = builder.load(trials_ptr, "trials")
+    iters_ptr = builder.alloca(trials.type)
+    builder.store(iters_ptr.type.pointee(0), iters_ptr)
 
-        # Reset internal clocks of each node
-        for idx, node in enumerate(composition._all_nodes):
-            node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-            num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
-            num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.RUN.value)])
-            builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+    # Start the main loop structure
+    loop_condition = builder.append_basic_block(name="run_loop_condition")
+    builder.branch(loop_condition)
 
-        # Call execution
-        exec_tags = tags.difference({"run"})
-        exec_f = ctx.import_llvm_function(composition, tags=exec_tags)
-        b.call(exec_f, [state, params, data_in_ptr, data, cond])
+    # Generate a while not 'end condition' loop
+    builder.position_at_end(loop_condition)
 
-        if not simulation:
-            # Extract output_CIM result
-            idx = composition._get_node_index(composition.output_CIM)
-            result_ptr = b.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0),
-                                      ctx.int32_ty(idx)])
-            output_ptr = b.gep(data_out, [iters])
-            result = b.load(result_ptr)
-            b.store(result, output_ptr)
+    run_term_cond = cond_gen.generate_sched_condition(
+        builder, composition.termination_processing[TimeScale.RUN],
+        cond, None, None, None)
+    run_cond = builder.not_(run_term_cond, name="not_run_term_cond")
+
+    # Iter cond
+    iters = builder.load(iters_ptr)
+    iter_cond = builder.icmp_unsigned("<", iters, trials)
+
+    # Increment. Use new name to not taint 'iters'
+    new_iters = builder.add(iters, iters.type(1))
+    builder.store(new_iters, iters_ptr)
+
+    loop_body = builder.append_basic_block(name="run_loop_body")
+    exit_block = builder.append_basic_block(name="run_exit")
+
+    run_cond = builder.and_(run_cond, iter_cond)
+    builder.cbranch(run_cond, loop_body, exit_block)
+
+    # Generate loop body
+    builder.position_at_end(loop_body)
+
+    # Get the right input stimulus
+    input_idx = builder.urem(iters, builder.load(inputs_ptr))
+    data_in_ptr = builder.gep(data_in, [input_idx])
+
+    # Reset internal 'RUN' clocks of each node
+    for idx, node in enumerate(composition._all_nodes):
+        node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
+        num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
+        num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.RUN.value)])
+        builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+
+    # Call execution
+    exec_tags = tags.difference({"run"})
+    exec_f = ctx.import_llvm_function(composition, tags=exec_tags)
+    builder.call(exec_f, [state, params, data_in_ptr, data, cond])
+
+    if not simulation:
+        # Extract output_CIM result
+        idx = composition._get_node_index(composition.output_CIM)
+        result_ptr = builder.gep(data, [ctx.int32_ty(0), ctx.int32_ty(0),
+                                        ctx.int32_ty(idx)])
+        output_ptr = builder.gep(data_out, [iters])
+        result = builder.load(result_ptr)
+        builder.store(result, output_ptr)
+
+    builder.branch(loop_condition)
+
+    # Exit
+    builder.position_at_end(exit_block)
+    # Store number of executed trials
+    builder.store(iters, trials_ptr)
 
     builder.ret_void()
     return llvm_func
@@ -1116,7 +1165,7 @@ def gen_multirun_wrapper(ctx, function: ir.Function) -> ir.Function:
     # but hold entries for all parallel invocations.
     is_comp_run = len(function.args) == 7
     if is_comp_run:
-        runs_count = builder.load(multirun_f.args[5])
+        trials_count = builder.load(multirun_f.args[5])
         input_count = builder.load(multirun_f.args[6])
 
     with helpers.for_loop_zero_inc(builder, multi_runs, "multi_run_loop") as (b, index):
@@ -1129,9 +1178,13 @@ def gen_multirun_wrapper(ctx, function: ir.Function) -> ir.Function:
                 # #runs and #trials needs to be the same for every invocation
                 if is_comp_run and i >= 5:
                     offset = ctx.int32_ty(0)
+                    # Reset trial count for every invocation.
+                    # Previous runs might have finished earlier
+                    if i == 5:
+                        builder.store(trials_count, arg)
                 # data arrays need special handling
                 elif is_comp_run and i == 4:  # data_out
-                    offset = b.mul(index, runs_count)
+                    offset = b.mul(index, trials_count)
                 elif is_comp_run and i == 3:  # data_in
                     offset = b.mul(index, input_count)
 
