@@ -8848,8 +8848,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # input_string = [f'{key.name}: {[float("{:0.3}".format(float(i))) for i in val].__str__().strip("[]")}' for key,val in inputs.items()]
             # input_string = [f'{key.name}: {[float("{:0.3}".format(float(i))) for i in val]}'
             #                 for key,val in inputs.items()].__str__().strip("[]")
-            input_string = str([f'{key.name}: {[float("{:0.3}".format(float(i))) for i in val]}'
-                            for key,val in inputs.items()]).strip("[]")
+            # input_string = str([f'{key.name}: {[float("{:0.3}".format(float(i))) for i in val]}'
+            #                 for key,val in inputs.items()]).strip("[]")
             # input_string = \
             #     re.sub(r"',", '',
             #         [f'\n{key.name}: {[float("{:0.3}".format(float(i))) for i in val]}'
@@ -8857,7 +8857,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # print(f"\n[bold yellow]{self.name} TRIAL {trial_num} =========================================\n\n"
             #       f"[bold green]input:[/][/] {input_string}")
-
             print(f"\n[bold yellow]{self.name} TRIAL {trial_num} =========================================\n\n"
                   f"[bold green]input:[/][/]")
             for i in [f'  {key.name}: {[float("{:0.3}".format(float(i))) for i in val]}' for key,
@@ -9458,27 +9457,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _comp_ex.execute_node(self.output_CIM)
             return _comp_ex.extract_node_output(self.output_CIM)
 
+        # Reset context flags
         context.execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(context=context)
         context.execution_phase = ContextFlags.IDLE
 
+        # Assign output_values
         output_values = []
         for port in self.output_CIM.output_ports:
             output_values.append(port.parameters.value._get(context))
 
+
+        # Report output for trial
         output_val = self.output_port.parameters.value._get(context)
         if self.reportOutputPref:
-            _report_node_execution(
-                self,
-                input_val=self.get_input_values(context),
-                output_val=output_val,
-                context=context
-            )
-        try:
-            output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output_val]))
-        except TypeError:
-            output_string = output_val
-        print(f"\n[bold red]result:[/] {output_string}\n")
+            # comp_report = _report_node_execution(self,
+            #                                      input_val=self.get_input_values(context),
+            #                                      output_val=output_val,
+            #                                      context=context
+            #                                      )
+            try:
+                output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output_val]))
+            except TypeError:
+                output_string = output_val
+            print(f"\n[bold red]result:[/] {output_string} from {self.get_nodes_by_role(NodeRole.OUTPUT)}")
 
         return output_values
 
