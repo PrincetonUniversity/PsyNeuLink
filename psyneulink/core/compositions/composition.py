@@ -8844,9 +8844,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #     input_string = [float("{:0.3}".format(float(i))) for i in input_vals].__str__().strip("[]")
             # except TypeError:
             #     input_string = input_vals
-            input_string = [f"{key.name}: {val}" for key,val in inputs.items()]
+            # input_string = [f"{key.name}: {val}" for key,val in inputs.items()]
+            # input_string = [f'{key.name}: {[float("{:0.3}".format(float(i))) for i in val].__str__().strip("[]")}' for key,val in inputs.items()]
+            # input_string = [f'{key.name}: {[float("{:0.3}".format(float(i))) for i in val]}'
+            #                 for key,val in inputs.items()].__str__().strip("[]")
+            input_string = str([f'{key.name}: {[float("{:0.3}".format(float(i))) for i in val]}'
+                            for key,val in inputs.items()]).strip("[]")
+            # input_string = \
+            #     re.sub(r"',", '',
+            #         [f'\n{key.name}: {[float("{:0.3}".format(float(i))) for i in val]}'
+            #                     for key,val in inputs.items()].__str__().strip("[]"))
+
+            # print(f"\n[bold yellow]{self.name} TRIAL {trial_num} =========================================\n\n"
+            #       f"[bold green]input:[/][/] {input_string}")
+
             print(f"\n[bold yellow]{self.name} TRIAL {trial_num} =========================================\n\n"
-                  f"[bold green]input:[/][/] {input_string}")
+                  f"[bold green]input:[/][/]")
+            for i in [f'  {key.name}: {[float("{:0.3}".format(float(i))) for i in val]}' for key,
+                                                                                             val in inputs.items()]:
+                print(i)
 
 
         # ASSIGNMENTS **************************************************************************************************
@@ -9342,7 +9358,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # ADD rich.Panel for node to time_step_report
                 if node.reportOutputPref:
-                    _time_step_report.append(_report_node_execution(node,
+                    _time_step_report.append(
+                        _report_node_execution(node,
                                                input_val=node.get_input_values(context),
                                                output_val=node.output_port.parameters.value._get(context),
                                                context=context
