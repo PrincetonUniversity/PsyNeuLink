@@ -3010,7 +3010,7 @@ def _report_node_execution(node,
             width = None
             expand = False
         return Panel(node_report,
-                     box=box.HEAVY,
+                     # box=box.HEAVY,
                      width=width,
                      expand=expand,
                      title=f'[yellow]{node.name}',
@@ -9380,14 +9380,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if call_after_time_step:
                 call_with_pruned_args(call_after_time_step, context=context)
 
-            # # if reporting to console, print time_step if any nodes have reportOutputPrefs set
-            #         if self.reportOutputPref and any(node.reportOutputPref for node in next_execution_set):
 
-            print()
-            print(Panel(RenderGroup(*_time_step_report),
-                        title=f'[bold blue]\nTime Step {execution_scheduler.clock.time.time_step}[/]',
-                        expand=False)
-                  )
+            # if reporting to console, print time_step if any nodes have reportOutputPrefs set
+            if self.reportOutputPref and any(node.reportOutputPref for node in next_execution_set):
+                print()
+                print(Panel(RenderGroup(*_time_step_report),
+                            box=box.SQUARE,
+                            title=f'[bold blue]\nTime Step {execution_scheduler.clock.time.time_step}[/]',
+                            expand=False)
+                      )
             # print('\n') XXX
 
         context.remove_flag(ContextFlags.PROCESSING)
