@@ -9216,9 +9216,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
 
-            # if reporting to console, print time_step if any nodes have reportOutputPrefs set
-            if self.reportOutputPref and any(node.reportOutputPref for node in next_execution_set):
-                _time_step_report = [] # Contains rich.Panel for each node executed in time_step
+            _time_step_report = [] # Contains rich.Panel for each node executed in time_step
 
             # execute each node with EXECUTING in context
             for (node_idx, node) in enumerate(next_execution_set):
