@@ -12,7 +12,7 @@ from llvmlite import ir
 from contextlib import contextmanager
 from ctypes import util
 
-from ..scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, AtNCalls, AfterNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
+from ..scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, AtNCalls, AfterNCalls, EveryNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
 from ..scheduling.time import TimeScale
 from .debug import debug_env
 
@@ -514,6 +514,16 @@ class ConditionGenerator:
             current_pass = builder.extract_value(global_ts, 1)
             return builder.icmp_unsigned("==", current_pass,
                                          current_pass.type(pass_num))
+
+        elif isinstance(condition, EveryNCalls):
+            target, count = condition.args
+            assert count == 1, "EveryNCalls isonly supprted with count == 1"
+
+            target_ts = self.__get_node_ts(builder, cond_ptr, target)
+            node_ts = self.__get_node_ts(builder, cond_ptr, node)
+
+            # If target ran after node did its TS will be greater node's
+            return self.ts_compare(builder, node_ts, target_ts, '<')
 
         elif isinstance(condition, BeforeNCalls):
             target, count = condition.args
