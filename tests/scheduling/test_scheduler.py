@@ -1551,6 +1551,7 @@ class TestFeedback:
     @pytest.mark.parametrize("condition,scale,expected_result",
                              [(pnl.BeforeNCalls, TimeScale.TRIAL, [[.05, .05]]),
                               (pnl.BeforeNCalls, TimeScale.PASS, [[.05, .05]]),
+                              (pnl.EveryNCalls, None, [[0.05, .05]]),
                               (pnl.AtNCalls, TimeScale.TRIAL, [[.25, .25]]),
                               (pnl.AtNCalls, TimeScale.RUN, [[.25, .25]]),
                               (pnl.AfterNCalls, TimeScale.TRIAL, [[.25, .25]]),
@@ -1593,6 +1594,8 @@ class TestFeedback:
             c = 1 if scale is TimeScale.PASS else 5
             comp.scheduler.add_condition(response, condition(decisionMaker, c,
                                                              time_scale=scale))
+        elif condition is pnl.EveryNCalls:
+            comp.scheduler.add_condition(response, condition(decisionMaker, 1))
         elif condition is pnl.WhenFinished:
             comp.scheduler.add_condition(response, condition(decisionMaker))
         elif condition is pnl.WhenFinishedAny:
