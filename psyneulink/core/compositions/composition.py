@@ -8839,10 +8839,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             trial_num = scheduler.clock.time.trial
             # print trial separator and input array to Composition
             print(f"\n[bold yellow]{self.name} TRIAL {trial_num} =========================================\n\n"
-                  f"[bold green]input:[/][/] {[i.tolist() for i in self.get_input_values(context)]}\nto nodes:")
-            # print name of each INPUT Mechanism for the Composition the input it will receive
-            for i in [f'  {key.name}: {val.tolist()}' for key, val in inputs.items()]:
-                print(i)
+                  # f"[bold green]input:[/][/] {[i.tolist() for i in self.get_input_values(context)]}\nto nodes:")
+                  f"[bold green]input:[/][/] {[i.tolist() for i in self.get_input_values(context)]}")
+            # # print name of each INPUT Mechanism for the Composition the input it will receive
+            # for i in [f'  {key.name}: {val.tolist()}' for key, val in inputs.items()]:
+            #     print(i)
 
 
         # ASSIGNMENTS **************************************************************************************************
@@ -9451,8 +9452,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Report output for trial
         if self.reportOutputPref:
-            print(f"\n[bold red]result:[/] {[r.tolist() for r in output_values]}\nfrom nodes:")
-            # print name of each OUTPPUT Mechanism for the Composition and its value
+            # print result of Composition execution
+            print(f"\n[bold red]result:[/] {[r.tolist() for r in output_values]}")
+            # print result of Composition execution and name of each OUTPUT Mechanism for the Composition and its value
+            # print(f"\n[bold red]result:[/] {[r.tolist() for r in output_values]}\nfrom nodes:")
             # for output_node, output_CIM_ports in self.output_CIM_ports.items():
             #     print(f'  {output_node.owner.name}: {output_CIM_ports[1].parameters.value._get(context)}')
 

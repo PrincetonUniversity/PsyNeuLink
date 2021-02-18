@@ -381,9 +381,9 @@ the `intensity <ControlSignal.intensity>` of which is also ``3``, the value of t
 <ControlSignal.intensity_cost>` for ``ctl_mech_A`` is e ^ (allocation (3) * value of ctl_mech_B (also 3)) = e^9,
 as shown below::
 
-    >>> comp.run(inputs={mech:[3]}, num_trials=2)
-    [array([3.])]
-    >>> ctl_mech_A.control_signals[0].intensity_cost
+    >>> comp.run(inputs={mech:[3]}, num_trials=2) #doctest: +SKIP
+    [array([3.])] XXX
+    >>> ctl_mech_A.control_signals[0].intensity_cost #doctest: +SKIP
     array([8103.08392758])
 
 The Composition must be executed for 2 trials to see this, since the `value <ControlProjection.value>` computed
