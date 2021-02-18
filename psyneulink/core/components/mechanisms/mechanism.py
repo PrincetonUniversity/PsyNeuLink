@@ -2537,11 +2537,12 @@ class Mechanism_Base(Mechanism):
         if context.source == ContextFlags.COMMAND_LINE:
             if self.prefs.reportOutputPref and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING):
                 from psyneulink.core.compositions.composition import _report_node_execution
-                _report_node_execution(
-                    self,
-                    input_val=self.get_input_values(context),
-                    output_val=self.output_port.parameters.value._get(context),
-                    context=context
+                from rich import print
+                print(
+                    _report_node_execution(self,
+                                           input_val=self.get_input_values(context),
+                                           output_val=self.output_port.parameters.value._get(context),
+                                           context=context)
                 )
 
         return value

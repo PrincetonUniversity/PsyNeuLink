@@ -2340,12 +2340,16 @@ import networkx
 import typing
 import warnings
 import sys
+import re
+import types
 
 import numpy as np
 import typecheck as tc
 
-from rich import print
+from rich import print, box
 from rich.panel import Panel
+from rich.console import RenderGroup
+
 from PIL import Image
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
@@ -2913,12 +2917,6 @@ def _report_node_execution(node,
                            params=None,
                            output_val=None,
                            context=None):
-        import re
-        import types
-        from rich import print
-        from rich.panel import Panel
-        from rich.console import RenderGroup
-        from rich import box
         from psyneulink.core.components.shellclasses import Function
         from psyneulink.core.globals.keywords import FUNCTION_PARAMS
 
@@ -3011,12 +3009,12 @@ def _report_node_execution(node,
         else:
             width = None
             expand = False
-        print(Panel(console_output,
-                    box=box.HEAVY,
-                    width=width,
-                    expand=expand,
-                    title=f'[yellow]{node.name}',
-                    highlight=True))
+        return Panel(console_output,
+                     box=box.HEAVY,
+                     width=width,
+                     expand=expand,
+                     title=f'[yellow]{node.name}',
+                     highlight=True)
 
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
@@ -8500,7 +8498,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # If printing to console, report Trial Number
             if self.reportOutputPref:
-                print(f"\n[bold red]TRIAL {trial_num} =========================================[/]")
+                input_vals = self.get_input_values(context)
+                try:
+                    input_string = [float("{:0.3}".format(float(i))) for i in input_vals].__str__().strip("[]")
+                except TypeError:
+                    input_string = input_vals
+                # input_string = [x.tolist() for x in self.input_values]
+                print(f"\n[bold yellow]{self.name} TRIAL {trial_num} =========================================\n\n"
+                      f"[bold green]input:[/][/] {input_string}")
                 # print(Panel(f"[bold red]TRIAL {trial_num}[/]",expand=False))
 
             # execute processing
@@ -9197,11 +9202,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # if printing to console, print time_step if any nodes have reportOutputPrefs set
             if self.reportOutputPref:
                 if any(node.reportOutputPref for node in next_execution_set):
-                    print(f'[bold blue]\nTime Step {execution_scheduler.clock.time.time_step} ---[/]')
-                          # f'\nNodes executed:')
+                    # print(f'[bold blue]\nTime Step {execution_scheduler.clock.time.time_step} ---[/]')
+                          # f'\nNodes reporting execution:')
                           # f'-------------------------------------[/]')
                     # print(Panel(f'[bold blue]Time Step {execution_scheduler.clock.time.time_step}[/]',
                     #             expand=False))
+                    _time_step_report = [] # Contains rich.Panel for each node executed in time_step
 
             # execute each node with EXECUTING in context
             for (node_idx, node) in enumerate(next_execution_set):
@@ -9262,13 +9268,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             node.execute(context=context,
                                          runtime_params=execution_runtime_params,
                                          )
-                            _report_node_execution(
-                                node,
-                                input_val=node.get_input_values(context),
-                                output_val=node.output_port.parameters.value._get(context),
-                                context=context
-                            )
-
                         # Reset runtim_params
                         # Reset any specified for Mechanism
                         if context.execution_id in node._runtime_params_reset:
@@ -9345,6 +9344,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if self._animate is not False and self._animate_unit == COMPONENT:
                     self._animate_execution(node, context)
 
+                # ADD rich.Panel for node to time_step_report
+                if node.reportOutputPref:
+                    _time_step_report.append(_report_node_execution(node,
+                                               input_val=node.get_input_values(context),
+                                               output_val=node.output_port.parameters.value._get(context),
+                                               context=context
+                                               ))
 
                 # MANAGE INPUTS (for next execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -9381,6 +9387,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             if call_after_time_step:
                 call_with_pruned_args(call_after_time_step, context=context)
+
+            print()
+            print(Panel(RenderGroup(*_time_step_report),
+                        title=f'[bold blue]\nTime Step {execution_scheduler.clock.time.time_step}[/]',
+                        expand=False)
+                  )
+            # print('\n') XXX
 
         context.remove_flag(ContextFlags.PROCESSING)
 
@@ -9440,12 +9453,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for port in self.output_CIM.output_ports:
             output_values.append(port.parameters.value._get(context))
 
-        _report_node_execution(
-            self,
-            input_val=self.get_input_values(context),
-            output_val=self.output_port.parameters.value._get(context),
-            context=context
-        )
+        output_val = self.output_port.parameters.value._get(context)
+        if self.reportOutputPref:
+            _report_node_execution(
+                self,
+                input_val=self.get_input_values(context),
+                output_val=output_val,
+                context=context
+            )
+        try:
+            output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output_val]))
+        except TypeError:
+            output_string = output_val
+        print(f"\n[bold red]result:[/] {output_string}\n")
 
         return output_values
 
