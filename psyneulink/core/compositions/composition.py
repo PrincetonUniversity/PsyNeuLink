@@ -2920,7 +2920,7 @@ def _report_node_execution(node,
         from psyneulink.core.components.shellclasses import Function
         from psyneulink.core.globals.keywords import FUNCTION_PARAMS
 
-        console_output = ''
+        node_report = ''
 
         if input_val is None:
             input_val = node.get_input_values(context)
@@ -2943,9 +2943,9 @@ def _report_node_execution(node,
 
         # print(f"\n\'{node.name}\'{mechanism_string} executed:\n- input:  {input_string}")
         # print(f"\'{node.name}\'{mechanism_string} executed:\n- [italic]input:[/italic]  {input_string}")
-        # console_output += f"[yellow bold]\'{node.name}\'[/]{mechanism_string}executed:\n- input: {input_string}"
-        # console_output += f"Mechanism executed:\n"
-        console_output += f"input: {input_string}"
+        # node_report += f"[yellow bold]\'{node.name}\'[/]{mechanism_string}executed:\n- input: {input_string}"
+        # node_report += f"Mechanism executed:\n"
+        node_report += f"input: {input_string}"
 
         # print output
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
@@ -2956,7 +2956,7 @@ def _report_node_execution(node,
             output_string = output
 
         # print(f"- output: {output_string}")
-        console_output += f"\noutput: {output_string}"
+        node_report += f"\noutput: {output_string}"
 
         # print params
         try:
@@ -3004,12 +3004,12 @@ def _report_node_execution(node,
         if include_params:
             width = 100
             expand = True
-            console_output = RenderGroup(console_output,Panel(params_string))
+            node_report = RenderGroup(node_report,Panel(params_string))
             params_string
         else:
             width = None
             expand = False
-        return Panel(console_output,
+        return Panel(node_report,
                      box=box.HEAVY,
                      width=width,
                      expand=expand,
@@ -8496,20 +8496,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except StopIteration:
                 break
 
-            # If printing to console, report Trial Number
-            if self.reportOutputPref:
-                input_vals = self.get_input_values(context)
-                try:
-                    input_string = [float("{:0.3}".format(float(i))) for i in input_vals].__str__().strip("[]")
-                except TypeError:
-                    input_string = input_vals
-                # input_string = [x.tolist() for x in self.input_values]
-                print(f"\n[bold yellow]{self.name} TRIAL {trial_num} =========================================\n\n"
-                      f"[bold green]input:[/][/] {input_string}")
-                # print(Panel(f"[bold red]TRIAL {trial_num}[/]",expand=False))
-
-            # execute processing
-            # pass along the stimuli for this trial
+            # execute processing, passing stimuli for this trial
             trial_output = self.execute(inputs=execution_stimuli,
                                         scheduler=scheduler,
                                         termination_processing=termination_processing,
@@ -8846,6 +8833,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             output value of the final Mechanism executed in the Composition : various
         """
+
+        # If reporting to console, report trial number and Composition's input
+        if self.reportOutputPref:
+            trial_num = scheduler.clock.time.trial
+            # input_string = [x.tolist() for x in self.input_values]
+            # input_vals = self.get_input_values(context)
+            # input_vals = []
+            # try:
+            #     input_string = [float("{:0.3}".format(float(i))) for i in input_vals].__str__().strip("[]")
+            # except TypeError:
+            #     input_string = input_vals
+            input_string = [f"{key.name}: {val}" for key,val in inputs.items()]
+            print(f"\n[bold yellow]{self.name} TRIAL {trial_num} =========================================\n\n"
+                  f"[bold green]input:[/][/] {input_string}")
+
 
         # ASSIGNMENTS **************************************************************************************************
 
@@ -9199,15 +9201,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
 
-            # if printing to console, print time_step if any nodes have reportOutputPrefs set
-            if self.reportOutputPref:
-                if any(node.reportOutputPref for node in next_execution_set):
-                    # print(f'[bold blue]\nTime Step {execution_scheduler.clock.time.time_step} ---[/]')
-                          # f'\nNodes reporting execution:')
-                          # f'-------------------------------------[/]')
-                    # print(Panel(f'[bold blue]Time Step {execution_scheduler.clock.time.time_step}[/]',
-                    #             expand=False))
-                    _time_step_report = [] # Contains rich.Panel for each node executed in time_step
+            # if reporting to console, print time_step if any nodes have reportOutputPrefs set
+            if self.reportOutputPref and any(node.reportOutputPref for node in next_execution_set):
+                _time_step_report = [] # Contains rich.Panel for each node executed in time_step
 
             # execute each node with EXECUTING in context
             for (node_idx, node) in enumerate(next_execution_set):
