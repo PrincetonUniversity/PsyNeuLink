@@ -86,7 +86,7 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     Subclass of `ProcessingMechanism <ProcessingMechanism>` that acts as interface between a Composition and its
     inputs from and outputs to the environment or other Mechanisms (if it is a nested Composition).
 
-    See `Mechanism <Mechanism_Class_Reference>` for arguments and additonal attributes.
+    See `Mechanism <Mechanism_Class_Reference>` for arguments and additional attributes.
 
     Attributes
     ----------
