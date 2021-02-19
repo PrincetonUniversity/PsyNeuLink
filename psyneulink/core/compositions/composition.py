@@ -2428,12 +2428,13 @@ CompositionRegistry = {}
 # Console report styles
 # node
 node_panel_color = 'orange1'
-node_panel_box = box.ASCII
+# node_panel_box = box.SIMPLE
+node_panel_box = box.ROUNDED
 # time_step
-time_step_panel_color = 'dodger_blue3'
+time_step_panel_color = 'dodger_blue2'
 time_step_panel_box = box.SQUARE
 # trial
-trial_panel_color = 'dark_blue'
+trial_panel_color = 'dodger_blue3'
 trial_input_color = 'green'
 trial_output_color = 'red'
 trial_panel_box = box.HEAVY
@@ -3022,7 +3023,7 @@ def _report_node_execution(node,
             width = None
             expand = False
         return Panel(node_report,
-                     # box=box.HEAVY,
+                     box=node_panel_box,
                      border_style=node_panel_color,
                      width=width,
                      expand=expand,
@@ -9487,7 +9488,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             print(Panel(RenderGroup(*_trial_report),
                         box=trial_panel_box,
                         border_style=trial_panel_color,
-                        title=f'[bold {trial_panel_color}]\n{self.name}: Trial {trial_num}[/]',
+                        title=f'[bold{trial_panel_color}] {self.name}: Trial {trial_num} [/]',
                         expand=False)
                   )
 

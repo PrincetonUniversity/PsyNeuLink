@@ -31,6 +31,9 @@ from ._version import get_versions
 from .core import *
 from .library import *
 
+# from rich import print, box
+# print("Initializing...")
+
 _pnl_global_names = [
     'primary_registries', 'System', 'Process'
 ]
