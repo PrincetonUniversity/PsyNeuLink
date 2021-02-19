@@ -9389,7 +9389,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             title=f'[bold blue]\nTime Step {execution_scheduler.clock.time.time_step}[/]',
                             expand=False)
                       )
-            # print('\n') XXX
 
         context.remove_flag(ContextFlags.PROCESSING)
 
