@@ -9218,10 +9218,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
 
-            if rich_report:
-                _time_step_report = [] # Contains rich.Panel for each node executed in time_step
-            elif any(node.reportOutputPref for node in next_execution_set):
-                print(f'[{time_step_panel_color}]Time Step {execution_scheduler.clock.time.time_step} ---------')
+            if self.reportOutputPref:
+                if rich_report:
+                    _time_step_report = [] # Contains rich.Panel for each node executed in time_step
+                elif any(node.reportOutputPref for node in next_execution_set):
+                    print(f'[{time_step_panel_color}]Time Step {execution_scheduler.clock.time.time_step} ---------')
 
             # execute each node with EXECUTING in context
             for (node_idx, node) in enumerate(next_execution_set):
@@ -9359,7 +9360,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._animate_execution(node, context)
 
                 # ADD rich.Panel for node to time_step_report
-                if node.reportOutputPref:
+                if self.reportOutputPref and node.reportOutputPref:
                     if rich_report:
                         _time_step_report.append(
                             _report_node_execution(node,
