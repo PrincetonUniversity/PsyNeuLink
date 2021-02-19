@@ -2425,6 +2425,18 @@ logger = logging.getLogger(__name__)
 
 CompositionRegistry = {}
 
+# Console report styles
+# node
+node_panel_color = 'orange1'
+node_panel_box = box.ASCII
+# time_step
+time_step_panel_color = 'dodger_blue3'
+time_step_panel_box = box.SQUARE
+# trial
+trial_panel_color = 'dark_blue'
+trial_input_color = 'green'
+trial_output_color = 'red'
+trial_panel_box = box.HEAVY
 
 class CompositionError(Exception):
 
@@ -3011,9 +3023,10 @@ def _report_node_execution(node,
             expand = False
         return Panel(node_report,
                      # box=box.HEAVY,
+                     border_style=node_panel_color,
                      width=width,
                      expand=expand,
-                     title=f'[yellow]{node.name}',
+                     title=f'[{node_panel_color}]{node.name}',
                      highlight=True)
 
 
@@ -8845,7 +8858,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     # for i in [f'  {key.name}: {val.tolist()}' for key, val in inputs.items()]:
         #     #     print(i)
             trial_num = scheduler.clock.time.trial
-            _trial_report = [f"\n[bold green]input:[/] {[i.tolist() for i in self.get_input_values(context)]}"]
+            _trial_report = [f"\n[bold {trial_input_color}]input:[/]"
+                             f" {[i.tolist() for i in self.get_input_values(context)]}"]
 
         # ASSIGNMENTS **************************************************************************************************
 
@@ -9392,8 +9406,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #       )
                 _trial_report.append("")
                 _trial_report.append(Panel(RenderGroup(*_time_step_report),
-                                           box=box.HEAVY,
-                                           title=f'[bold blue]\nTime Step {execution_scheduler.clock.time.time_step}[/]',
+                                           # box=box.HEAVY,
+                                           border_style=time_step_panel_color,
+                                           box=time_step_panel_box,
+                                           title=f'[bold {time_step_panel_color}]\nTime Step '
+                                                 f'{execution_scheduler.clock.time.time_step}[/]',
                                            expand=False))
 
         context.remove_flag(ContextFlags.PROCESSING)
@@ -9465,11 +9482,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # # for output_node, output_CIM_ports in self.output_CIM_ports.items():
             # #     print(f'  {output_node.owner.name}: {output_CIM_ports[1].parameters.value._get(context)}')
 
-            _trial_report.append(f"\n[bold red]result:[/] {[r.tolist() for r in output_values]}\n")
+            _trial_report.append(f"\n[bold {trial_output_color}]result:[/] {[r.tolist() for r in output_values]}\n")
             print()
             print(Panel(RenderGroup(*_trial_report),
-                        box=box.DOUBLE,
-                        title=f'[bold yellow]\n{self.name}: Trial {trial_num}[/]',
+                        box=trial_panel_box,
+                        border_style=trial_panel_color,
+                        title=f'[bold {trial_panel_color}]\n{self.name}: Trial {trial_num}[/]',
                         expand=False)
                   )
 
