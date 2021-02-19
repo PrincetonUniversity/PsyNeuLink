@@ -8851,16 +8851,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If reporting to console, report trial number and Composition's input
         if self.reportOutputPref:
         #     trial_num = scheduler.clock.time.trial
-        #     # print trial separator and input array to Composition
-        #     print(f"\n[bold yellow]{self.name} TRIAL {trial_num} =========================================\n\n"
-        #           # f"[bold green]input:[/][/] {[i.tolist() for i in self.get_input_values(context)]}\nto nodes:")
-        #           f"[bold green]input:[/][/] {[i.tolist() for i in self.get_input_values(context)]}")
-        #     # # print name of each INPUT Mechanism for the Composition the input it will receive
-        #     # for i in [f'  {key.name}: {val.tolist()}' for key, val in inputs.items()]:
-        #     #     print(i)
             trial_num = scheduler.clock.time.trial
-            _trial_report = [f"\n[bold {trial_input_color}]input:[/]"
-                             f" {[i.tolist() for i in self.get_input_values(context)]}"]
+            try:
+                if 'terse' in self.reportOutputPref:
+                    rich_report = False
+                else:
+                    rich_report = True
+            except TypeError:
+                    rich_report = True
+            if rich_report:
+                _trial_report = [f"\n[bold {trial_panel_color}]input:[/]"
+                                 f" {[i.tolist() for i in self.get_input_values(context)]}"]
+            else:
+                # print trial separator and input array to Composition
+                print(f"[bold {trial_panel_color}]{self.name} TRIAL {trial_num} ====================")
 
         # ASSIGNMENTS **************************************************************************************************
 
@@ -9214,7 +9218,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
 
-            _time_step_report = [] # Contains rich.Panel for each node executed in time_step
+            if rich_report:
+                _time_step_report = [] # Contains rich.Panel for each node executed in time_step
+            elif any(node.reportOutputPref for node in next_execution_set):
+                print(f'[{time_step_panel_color}]Time Step {execution_scheduler.clock.time.time_step} ---------')
 
             # execute each node with EXECUTING in context
             for (node_idx, node) in enumerate(next_execution_set):
@@ -9353,12 +9360,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # ADD rich.Panel for node to time_step_report
                 if node.reportOutputPref:
-                    _time_step_report.append(
-                        _report_node_execution(node,
-                                               input_val=node.get_input_values(context),
-                                               output_val=node.output_port.parameters.value._get(context),
-                                               context=context
-                                               ))
+                    if rich_report:
+                        _time_step_report.append(
+                            _report_node_execution(node,
+                                                   input_val=node.get_input_values(context),
+                                                   output_val=node.output_port.parameters.value._get(context),
+                                                   context=context
+                                                   ))
+                    else:
+                        print(f'[{node_panel_color}]{node.name} executed')
 
                 # MANAGE INPUTS (for next execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -9398,7 +9408,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
             # if reporting to console, print time_step if any nodes have reportOutputPref set
-            if self.reportOutputPref and any(node.reportOutputPref for node in next_execution_set):
+            if self.reportOutputPref and any(node.reportOutputPref for node in next_execution_set) and rich_report:
                 # print()
                 # print(Panel(RenderGroup(*_time_step_report),
                 #             box=box.SQUARE,
@@ -9475,7 +9485,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output_values.append(port.parameters.value._get(context))
 
         # Report output for trial
-        if self.reportOutputPref:
+        if self.reportOutputPref and rich_report:
             # # print result of Composition execution
             # print(f"\n[bold red]result:[/] {[r.tolist() for r in output_values]}")
             # # print result of Composition execution and name of each OUTPUT Mechanism for the Composition and its value
