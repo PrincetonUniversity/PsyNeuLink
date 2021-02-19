@@ -9381,7 +9381,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 call_with_pruned_args(call_after_time_step, context=context)
 
 
-            # if reporting to console, print time_step if any nodes have reportOutputPrefs set
+            # if reporting to console, print time_step if any nodes have reportOutputPref set
             if self.reportOutputPref and any(node.reportOutputPref for node in next_execution_set):
                 print()
                 print(Panel(RenderGroup(*_time_step_report),
