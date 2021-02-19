@@ -2941,11 +2941,6 @@ def _report_node_execution(node,
             output = node.output_port.parameters.value._get(context)
         params = params or {p.name: p._get(context) for p in node.parameters}
 
-        if 'mechanism' in node.name or 'Mechanism' in node.name:
-            mechanism_string = ' '
-        else:
-            mechanism_string = ' mechanism '
-
         # print input
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #      if you want more specific output, you can add conditional tests here
@@ -9218,10 +9213,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
 
-            if rich_report:
-                _time_step_report = [] # Contains rich.Panel for each node executed in time_step
-            elif any(node.reportOutputPref for node in next_execution_set):
-                print(f'[{time_step_panel_color}]Time Step {execution_scheduler.clock.time.time_step} ---------')
+            if self.reportOutputPref:
+                if rich_report:
+                    _time_step_report = [] # Contains rich.Panel for each node executed in time_step
+                elif any(node.reportOutputPref for node in next_execution_set):
+                    print(f'[{time_step_panel_color}]Time Step {execution_scheduler.clock.time.time_step} ---------')
 
             # execute each node with EXECUTING in context
             for (node_idx, node) in enumerate(next_execution_set):
