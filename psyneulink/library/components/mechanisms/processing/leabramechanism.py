@@ -470,7 +470,7 @@ class LeabraMechanism(ProcessingMechanism_Base):
         function = Parameter(LeabraFunction, stateful=False, loggable=False)
 
         network = FunctionParameter(None)
-        training_flag = Parameter(False, setter=_training_flag_setter)
+        training_flag = Parameter(False, setter=_training_flag_setter, dependencies='network')
 
     def __init__(self,
                  network=None,
