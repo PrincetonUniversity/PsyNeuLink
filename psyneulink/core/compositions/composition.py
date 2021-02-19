@@ -2941,11 +2941,6 @@ def _report_node_execution(node,
             output = node.output_port.parameters.value._get(context)
         params = params or {p.name: p._get(context) for p in node.parameters}
 
-        if 'mechanism' in node.name or 'Mechanism' in node.name:
-            mechanism_string = ' '
-        else:
-            mechanism_string = ' mechanism '
-
         # print input
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #      if you want more specific output, you can add conditional tests here
