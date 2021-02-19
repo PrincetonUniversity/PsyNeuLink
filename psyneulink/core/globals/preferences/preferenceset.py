@@ -582,7 +582,10 @@ class PreferenceSet(object):
         # if pref_ivar_name is LOG_PREF:
         #     self.validate_log(candidate_setting, self)
 
-        setting_OK = iscompatible(candidate_setting, reference_setting, **{kwCompatibilityType:Enum})
+        setting_OK = (
+            iscompatible(candidate_setting, reference_setting, **{kwCompatibilityType:Enum})
+            or isinstance(candidate_setting, bool)
+        )
         # setting_OK = iscompatible(candidate_setting, reference_setting)
 
         # if not setting_OK and (isinstance(candidate_setting, Enum) or isinstance(reference_setting, Enum)):

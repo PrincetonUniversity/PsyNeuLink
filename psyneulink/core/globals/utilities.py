@@ -121,7 +121,7 @@ __all__ = [
     'get_all_explicit_arguments', 'get_modulationOperation_name', 'get_value_from_array',
     'insert_list', 'is_matrix_spec', 'all_within_range',
     'is_comparison_operator',  'iscompatible', 'is_component', 'is_distance_metric', 'is_iterable', 'is_matrix',
-    'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_same_function_spec', 'is_unit_interval',
+    'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_number', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec',
     'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
     'make_readonly_property',
@@ -293,6 +293,13 @@ def is_numeric(x):
     return iscompatible(x, **{kwCompatibilityNumeric:True, kwCompatibilityLength:0})
 
 
+def is_number(x):
+    return (
+        isinstance(x, numbers.Number)
+        and not isinstance(x, (bool, Enum))
+    )
+
+
 def is_matrix_spec(m):
     return isinstance(m, str) and m in MATRIX_KEYWORD_VALUES
 
@@ -387,7 +394,6 @@ def iscompatible(candidate, reference=None, **kargs):
     :param args: (dict)
     :return:
     """
-
     # If the two are equal, can settle it right here
     # IMPLEMENTATION NOTE: remove the duck typing when numpy supports a direct comparison of iterables
     try:
@@ -458,8 +464,8 @@ def iscompatible(candidate, reference=None, **kargs):
     # MODIFIED 10/29/17 NEW:
     # IMPLEMENTATION NOTE: This allows a number in an ndarray to match a float or int
     # If both the candidate and reference are either a number or an ndarray of dim 0, consider it a match
-    if ((isinstance(candidate, numbers.Number) or (isinstance(candidate, np.ndarray) and candidate.ndim == 0)) or
-            (isinstance(reference, numbers.Number) or (isinstance(reference, np.ndarray) and reference.ndim == 0))):
+    if ((is_number(candidate) or (isinstance(candidate, np.ndarray) and candidate.ndim == 0)) or
+            (is_number(reference) or (isinstance(reference, np.ndarray) and reference.ndim == 0))):
         return True
     # MODIFIED 10/29/17 END
 
@@ -468,14 +474,14 @@ def iscompatible(candidate, reference=None, **kargs):
     #   should be added as option in future (i.e., to disallow it)
     if (isinstance(candidate, match_type) or
             (isinstance(candidate, (list, np.ndarray)) and (issubclass(match_type, (list, np.ndarray)))) or
-            (isinstance(candidate, numbers.Number) and issubclass(match_type,numbers.Number)) or
+            (is_number(candidate) and issubclass(match_type,numbers.Number)) or
             # IMPLEMENTATION NOTE: Allow UserDict types to match dict (make this an option in the future)
             (isinstance(candidate, UserDict) and match_type is dict) or
             # IMPLEMENTATION NOTE: Allow UserList types to match list (make this an option in the future)
             (isinstance(candidate, UserList) and match_type is list) or
             # IMPLEMENTATION NOTE: This is needed when kwCompatiblityType is not specified
             #                      and so match_type==list as default
-            (isinstance(candidate, numbers.Number) and issubclass(match_type,list)) or
+            (is_number(candidate) and issubclass(match_type,list)) or
                 (isinstance(candidate, np.ndarray) and issubclass(match_type,list))
         ):
 
@@ -493,12 +499,10 @@ def iscompatible(candidate, reference=None, **kargs):
         #                 candidate.value is match_type.__dict__['_member_map_'][candidate.name].value):
         #         return False
         # This version simply enforces the constraint that, if either is an enum of some sort, then both must be
-        if (kargs[kwCompatibilityType] is Enum and
-                (isinstance(candidate, Enum) != isinstance(match_type, (Enum, IntEnum, EnumMeta)))
-            ):
-            return False
+        if kargs[kwCompatibilityType] is Enum:
+            return isinstance(candidate, Enum) == isinstance(match_type, (Enum, IntEnum, EnumMeta))
 
-        if isinstance(candidate, numbers.Number):
+        if is_number(candidate):
             return True
         if number_only:
             if isinstance(candidate, np.ndarray) and candidate.ndim ==0 and np.isreal(candidate):
@@ -516,7 +520,7 @@ def iscompatible(candidate, reference=None, **kargs):
                         else:
                             return True
                 else:
-                    if not isinstance(value, numbers.Number):
+                    if not is_number(value):
                         try:
                             # True for autograd ArrayBox (and maybe other types?)
                             # if isinstance(value._value, numbers.Number):
