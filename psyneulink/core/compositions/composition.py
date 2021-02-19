@@ -2340,9 +2340,15 @@ import networkx
 import typing
 import warnings
 import sys
+import re
+import types
 
 import numpy as np
 import typecheck as tc
+
+from rich import print, box
+from rich.panel import Panel
+from rich.console import RenderGroup
 
 from PIL import Image
 from copy import deepcopy, copy
@@ -2419,6 +2425,19 @@ logger = logging.getLogger(__name__)
 
 CompositionRegistry = {}
 
+# Console report styles
+# node
+node_panel_color = 'orange1'
+# node_panel_box = box.SIMPLE
+node_panel_box = box.ROUNDED
+# time_step
+time_step_panel_color = 'dodger_blue2'
+time_step_panel_box = box.SQUARE
+# trial
+trial_panel_color = 'dodger_blue3'
+trial_input_color = 'green'
+trial_output_color = 'red'
+trial_panel_box = box.HEAVY
 
 class CompositionError(Exception):
 
@@ -2904,6 +2923,107 @@ class NodeRole(enum.Enum):
     LEARNING_OBJECTIVE = enum.auto()
     OUTPUT = enum.auto()
     TERMINAL = enum.auto()
+
+
+def _report_node_execution(node,
+                           input_val=None,
+                           params=None,
+                           output_val=None,
+                           context=None):
+        from psyneulink.core.components.shellclasses import Function
+        from psyneulink.core.globals.keywords import FUNCTION_PARAMS
+
+        node_report = ''
+
+        if input_val is None:
+            input_val = node.get_input_values(context)
+        if output_val is None:
+            output = node.output_port.parameters.value._get(context)
+        params = params or {p.name: p._get(context) for p in node.parameters}
+
+        # print input
+        # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
+        #      if you want more specific output, you can add conditional tests here
+        try:
+            input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
+        except TypeError:
+            input_string = input_val
+
+        # print(f"\n\'{node.name}\'{mechanism_string} executed:\n- input:  {input_string}")
+        # print(f"\'{node.name}\'{mechanism_string} executed:\n- [italic]input:[/italic]  {input_string}")
+        # node_report += f"[yellow bold]\'{node.name}\'[/]{mechanism_string}executed:\n- input: {input_string}"
+        # node_report += f"Mechanism executed:\n"
+        node_report += f"input: {input_string}"
+
+        # print output
+        # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
+        #   if you want more specific output, you can add conditional tests here
+        try:
+            output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output_val]))
+        except TypeError:
+            output_string = output
+
+        # print(f"- output: {output_string}")
+        node_report += f"\noutput: {output_string}"
+
+        # print params
+        try:
+            include_params = re.match('param(eter)?s?', node.reportOutputPref, flags=re.IGNORECASE)
+        except TypeError:
+            include_params = False
+
+        if include_params:
+            # print("- params:")
+            params_string = (f"\n- params:")
+            # Sort for consistency of output
+            params_keys_sorted = sorted(params.keys())
+            for param_name in params_keys_sorted:
+                # No need to report:
+                #    function_params here, as they will be reported for the function itself below;
+                #    input_ports or output_ports, as these are inherent in the structure
+                if param_name in {FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS}:
+                    continue
+                param_is_function = False
+                param_value = params[param_name]
+                if isinstance(param_value, Function):
+                    param = param_value.name
+                    param_is_function = True
+                elif isinstance(param_value, type(Function)):
+                    param = param_value.__name__
+                    param_is_function = True
+                elif isinstance(param_value, (types.FunctionType, types.MethodType)):
+                    param = param_value.__node__.__class__.__name__
+                    param_is_function = True
+                else:
+                    param = param_value
+                # print(f"\t{param_name}: {str(param).__str__().strip('[]')}")
+                params_string += f"\n\t{param_name}: {str(param).__str__().strip('[]')}"
+                if param_is_function:
+                    # Sort for consistency of output
+                    func_params_keys_sorted = sorted(node.function.parameters.names())
+                    for fct_param_name in func_params_keys_sorted:
+                        # print("\t\t{}: {}".
+                        #       format(fct_param_name,
+                        #              str(getattr(node.function.parameters, fct_param_name)._get(context)).__str__().strip("[]")))
+                        params_string += ("\n\t\t{}: {}".
+                              format(fct_param_name,
+                                     str(getattr(node.function.parameters, fct_param_name)._get(context)).__str__().strip("[]")))
+
+        if include_params:
+            width = 100
+            expand = True
+            node_report = RenderGroup(node_report,Panel(params_string))
+            params_string
+        else:
+            width = None
+            expand = False
+        return Panel(node_report,
+                     box=node_panel_box,
+                     border_style=node_panel_color,
+                     width=width,
+                     expand=expand,
+                     title=f'[{node_panel_color}]{node.name}',
+                     highlight=True)
 
 
 class Composition(Composition_Base, metaclass=ComponentsMeta):
@@ -8385,12 +8505,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except StopIteration:
                 break
 
-            # If printing to console, report Trial Number
-            if self.reportOutputPref:
-                print(f"\nTrial {trial_num} ====================================")
-
-            # execute processing
-            # pass along the stimuli for this trial
+            # execute processing, passing stimuli for this trial
             trial_output = self.execute(inputs=execution_stimuli,
                                         scheduler=scheduler,
                                         termination_processing=termination_processing,
@@ -8727,6 +8842,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             output value of the final Mechanism executed in the Composition : various
         """
+
+        # If reporting to console, report trial number and Composition's input
+        if self.reportOutputPref:
+        #     trial_num = scheduler.clock.time.trial
+            trial_num = scheduler.clock.time.trial
+            try:
+                if 'terse' in self.reportOutputPref:
+                    rich_report = False
+                else:
+                    rich_report = True
+            except TypeError:
+                    rich_report = True
+            if rich_report:
+                _trial_report = [f"\n[bold {trial_panel_color}]input:[/]"
+                                 f" {[i.tolist() for i in self.get_input_values(context)]}"]
+            else:
+                # print trial separator and input array to Composition
+                print(f"[bold {trial_panel_color}]{self.name} TRIAL {trial_num} ====================")
 
         # ASSIGNMENTS **************************************************************************************************
 
@@ -9080,13 +9213,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
 
-            # if printing to console, print time_step if any nodes have reportOutputPrefs set
             if self.reportOutputPref:
-                if any(node.reportOutputPref for node in next_execution_set):
-                    print(f'\n Time Step {execution_scheduler.clock.time.time_step}')
-                    show_execution_set_separator = True
-                else:
-                    show_execution_set_separator = False
+                if rich_report:
+                    _time_step_report = [] # Contains rich.Panel for each node executed in time_step
+                elif any(node.reportOutputPref for node in next_execution_set):
+                    print(f'[{time_step_panel_color}]Time Step {execution_scheduler.clock.time.time_step} ---------')
 
             # execute each node with EXECUTING in context
             for (node_idx, node) in enumerate(next_execution_set):
@@ -9147,7 +9278,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             node.execute(context=context,
                                          runtime_params=execution_runtime_params,
                                          )
-
                         # Reset runtim_params
                         # Reset any specified for Mechanism
                         if context.execution_id in node._runtime_params_reset:
@@ -9224,6 +9354,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if self._animate is not False and self._animate_unit == COMPONENT:
                     self._animate_execution(node, context)
 
+                # ADD rich.Panel for node to time_step_report
+                if self.reportOutputPref and node.reportOutputPref:
+                    if rich_report:
+                        _time_step_report.append(
+                            _report_node_execution(node,
+                                                   input_val=node.get_input_values(context),
+                                                   output_val=node.output_port.parameters.value._get(context),
+                                                   context=context
+                                                   ))
+                    else:
+                        print(f'[{node_panel_color}]{node.name} executed')
 
                 # MANAGE INPUTS (for next execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -9262,9 +9403,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 call_with_pruned_args(call_after_time_step, context=context)
 
 
-            # If printing to console, generate execution_set separator
-            if self.reportOutputPref and show_execution_set_separator:
-                print('\n--------------------------------------------')
+            # if reporting to console, print time_step if any nodes have reportOutputPref set
+            if self.reportOutputPref and any(node.reportOutputPref for node in next_execution_set) and rich_report:
+                # print()
+                # print(Panel(RenderGroup(*_time_step_report),
+                #             box=box.SQUARE,
+                #             title=f'[bold blue]\nTime Step {execution_scheduler.clock.time.time_step}[/]',
+                #             expand=False)
+                #       )
+                _trial_report.append("")
+                _trial_report.append(Panel(RenderGroup(*_time_step_report),
+                                           # box=box.HEAVY,
+                                           border_style=time_step_panel_color,
+                                           box=time_step_panel_box,
+                                           title=f'[bold {time_step_panel_color}]\nTime Step '
+                                                 f'{execution_scheduler.clock.time.time_step}[/]',
+                                           expand=False))
 
         context.remove_flag(ContextFlags.PROCESSING)
 
@@ -9316,13 +9470,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _comp_ex.execute_node(self.output_CIM)
             return _comp_ex.extract_node_output(self.output_CIM)
 
+        # Reset context flags
         context.execution_phase = ContextFlags.PROCESSING
         self.output_CIM.execute(context=context)
         context.execution_phase = ContextFlags.IDLE
 
+        # Assign output_values
         output_values = []
         for port in self.output_CIM.output_ports:
             output_values.append(port.parameters.value._get(context))
+
+        # Report output for trial
+        if self.reportOutputPref and rich_report:
+            # # print result of Composition execution
+            # print(f"\n[bold red]result:[/] {[r.tolist() for r in output_values]}")
+            # # print result of Composition execution and name of each OUTPUT Mechanism for the Composition and its value
+            # # print(f"\n[bold red]result:[/] {[r.tolist() for r in output_values]}\nfrom nodes:")
+            # # for output_node, output_CIM_ports in self.output_CIM_ports.items():
+            # #     print(f'  {output_node.owner.name}: {output_CIM_ports[1].parameters.value._get(context)}')
+
+            _trial_report.append(f"\n[bold {trial_output_color}]result:[/] {[r.tolist() for r in output_values]}\n")
+            print()
+            print(Panel(RenderGroup(*_trial_report),
+                        box=trial_panel_box,
+                        border_style=trial_panel_color,
+                        title=f'[bold{trial_panel_color}] {self.name}: Trial {trial_num} [/]',
+                        expand=False)
+                  )
 
         return output_values
 
