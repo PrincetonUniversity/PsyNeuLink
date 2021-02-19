@@ -8836,15 +8836,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # If reporting to console, report trial number and Composition's input
         if self.reportOutputPref:
+        #     trial_num = scheduler.clock.time.trial
+        #     # print trial separator and input array to Composition
+        #     print(f"\n[bold yellow]{self.name} TRIAL {trial_num} =========================================\n\n"
+        #           # f"[bold green]input:[/][/] {[i.tolist() for i in self.get_input_values(context)]}\nto nodes:")
+        #           f"[bold green]input:[/][/] {[i.tolist() for i in self.get_input_values(context)]}")
+        #     # # print name of each INPUT Mechanism for the Composition the input it will receive
+        #     # for i in [f'  {key.name}: {val.tolist()}' for key, val in inputs.items()]:
+        #     #     print(i)
             trial_num = scheduler.clock.time.trial
-            # print trial separator and input array to Composition
-            print(f"\n[bold yellow]{self.name} TRIAL {trial_num} =========================================\n\n"
-                  # f"[bold green]input:[/][/] {[i.tolist() for i in self.get_input_values(context)]}\nto nodes:")
-                  f"[bold green]input:[/][/] {[i.tolist() for i in self.get_input_values(context)]}")
-            # # print name of each INPUT Mechanism for the Composition the input it will receive
-            # for i in [f'  {key.name}: {val.tolist()}' for key, val in inputs.items()]:
-            #     print(i)
-
+            _trial_report = [f"\n[bold green]input:[/] {[i.tolist() for i in self.get_input_values(context)]}"]
 
         # ASSIGNMENTS **************************************************************************************************
 
@@ -9383,12 +9384,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # if reporting to console, print time_step if any nodes have reportOutputPref set
             if self.reportOutputPref and any(node.reportOutputPref for node in next_execution_set):
-                print()
-                print(Panel(RenderGroup(*_time_step_report),
-                            box=box.SQUARE,
-                            title=f'[bold blue]\nTime Step {execution_scheduler.clock.time.time_step}[/]',
-                            expand=False)
-                      )
+                # print()
+                # print(Panel(RenderGroup(*_time_step_report),
+                #             box=box.SQUARE,
+                #             title=f'[bold blue]\nTime Step {execution_scheduler.clock.time.time_step}[/]',
+                #             expand=False)
+                #       )
+                _trial_report.append("")
+                _trial_report.append(Panel(RenderGroup(*_time_step_report),
+                                           box=box.HEAVY,
+                                           title=f'[bold blue]\nTime Step {execution_scheduler.clock.time.time_step}[/]',
+                                           expand=False))
 
         context.remove_flag(ContextFlags.PROCESSING)
 
@@ -9452,12 +9458,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Report output for trial
         if self.reportOutputPref:
-            # print result of Composition execution
-            print(f"\n[bold red]result:[/] {[r.tolist() for r in output_values]}")
-            # print result of Composition execution and name of each OUTPUT Mechanism for the Composition and its value
-            # print(f"\n[bold red]result:[/] {[r.tolist() for r in output_values]}\nfrom nodes:")
-            # for output_node, output_CIM_ports in self.output_CIM_ports.items():
-            #     print(f'  {output_node.owner.name}: {output_CIM_ports[1].parameters.value._get(context)}')
+            # # print result of Composition execution
+            # print(f"\n[bold red]result:[/] {[r.tolist() for r in output_values]}")
+            # # print result of Composition execution and name of each OUTPUT Mechanism for the Composition and its value
+            # # print(f"\n[bold red]result:[/] {[r.tolist() for r in output_values]}\nfrom nodes:")
+            # # for output_node, output_CIM_ports in self.output_CIM_ports.items():
+            # #     print(f'  {output_node.owner.name}: {output_CIM_ports[1].parameters.value._get(context)}')
+
+            _trial_report.append(f"\n[bold red]result:[/] {[r.tolist() for r in output_values]}\n")
+            print()
+            print(Panel(RenderGroup(*_trial_report),
+                        box=box.DOUBLE,
+                        title=f'[bold yellow]\n{self.name}: Trial {trial_num}[/]',
+                        expand=False)
+                  )
 
         return output_values
 
