@@ -2532,13 +2532,18 @@ class Mechanism_Base(Mechanism):
             if not self.parameters.execute_until_finished._get(context):
                 break
 
-        # REPORT EXECUTION
-        if self.prefs.reportOutputPref and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING):
-            self._report_mechanism_execution(
-                self.get_input_values(context),
-                output=self.output_port.parameters.value._get(context),
-                context=context
-            )
+        # REPORT EXECUTION if called from command line
+        #  If called by a Composition, it handles reporting.
+        if context.source == ContextFlags.COMMAND_LINE:
+            if self.prefs.reportOutputPref and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING):
+                from psyneulink.core.compositions.composition import _report_node_execution
+                from rich import print
+                print(
+                    _report_node_execution(self,
+                                           input_val=self.get_input_values(context),
+                                           output_val=self.output_port.parameters.value._get(context),
+                                           context=context)
+                )
 
         return value
 
@@ -2965,7 +2970,7 @@ class Mechanism_Base(Mechanism):
         return fun_out, builder
 
     def _gen_llvm_is_finished_cond(self, ctx, builder, params, state):
-        return pnlvm.ir.IntType(1)(1)
+        return ctx.bool_ty(1)
 
     def _gen_llvm_mechanism_functions(self, ctx, builder, params, state, arg_in,
                                       ip_output, *, tags:frozenset):
@@ -3043,8 +3048,7 @@ class Mechanism_Base(Mechanism):
                 ctx.get_input_struct_type(self).as_pointer(),
                 ctx.get_output_struct_type(self).as_pointer()]
 
-        builder = ctx.create_llvm_function(args, self,
-                                           return_type=pnlvm.ir.IntType(1),
+        builder = ctx.create_llvm_function(args, self, return_type=ctx.bool_ty,
                                            tags=tags)
         params, state = builder.function.args[:2]
         finished = self._gen_llvm_is_finished_cond(ctx, builder, params, state)
@@ -3083,7 +3087,7 @@ class Mechanism_Base(Mechanism):
         args_t = [a.type for a in builder.function.args]
         internal_builder = ctx.create_llvm_function(args_t, self,
                                                     name=builder.function.name + "_internal",
-                                                    return_type=pnlvm.ir.IntType(1))
+                                                    return_type=ctx.bool_ty)
         iparams, istate, iin, iout = internal_builder.function.args[:4]
         internal_builder, is_finished = self._gen_llvm_function_internal(ctx, internal_builder,
                                                                          iparams, istate, iin, iout, tags=tags)
@@ -3130,74 +3134,6 @@ class Mechanism_Base(Mechanism):
         builder.position_at_end(end_block)
 
         return builder
-
-    def _report_mechanism_execution(self, input_val=None, params=None, output=None, context=None):
-
-        if input_val is None:
-            input_val = self.get_input_values(context)
-        if output is None:
-            output = self.output_port.parameters.value._get(context)
-        params = params or {p.name: p._get(context) for p in self.parameters}
-
-        if 'mechanism' in self.name or 'Mechanism' in self.name:
-            mechanism_string = ' '
-        else:
-            mechanism_string = ' mechanism'
-
-        # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
-        #      if you want more specific output, you can add conditional tests here
-        try:
-            input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
-        except TypeError:
-            input_string = input_val
-
-        print("\n\'{}\'{} executed:\n- input:  {}".format(self.name, mechanism_string, input_string))
-
-        try:
-            include_params = re.match('param(eter)?s?', self.reportOutputPref, flags=re.IGNORECASE)
-        except TypeError:
-            include_params = False
-
-        if include_params:
-            print("- params:")
-            # Sort for consistency of output
-            params_keys_sorted = sorted(params.keys())
-            for param_name in params_keys_sorted:
-                # No need to report:
-                #    function_params here, as they will be reported for the function itself below;
-                #    input_ports or output_ports, as these are inherent in the structure
-                if param_name in {FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS}:
-                    continue
-                param_is_function = False
-                param_value = params[param_name]
-                if isinstance(param_value, Function):
-                    param = param_value.name
-                    param_is_function = True
-                elif isinstance(param_value, type(Function)):
-                    param = param_value.__name__
-                    param_is_function = True
-                elif isinstance(param_value, (types.FunctionType, types.MethodType)):
-                    param = param_value.__self__.__class__.__name__
-                    param_is_function = True
-                else:
-                    param = param_value
-                print("\t{}: {}".format(param_name, str(param).__str__().strip("[]")))
-                if param_is_function:
-                    # Sort for consistency of output
-                    func_params_keys_sorted = sorted(self.function.parameters.names())
-                    for fct_param_name in func_params_keys_sorted:
-                        print("\t\t{}: {}".
-                              format(fct_param_name,
-                                     str(getattr(self.function.parameters, fct_param_name)._get(context)).__str__().strip("[]")))
-
-        # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
-        #   if you want more specific output, you can add conditional tests here
-        try:
-            output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output]))
-        except TypeError:
-            output_string = output
-
-        print("- output: {}".format(output_string))
 
     @tc.typecheck
     def _show_structure(self,

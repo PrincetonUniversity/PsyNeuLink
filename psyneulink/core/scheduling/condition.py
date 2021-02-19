@@ -1243,6 +1243,8 @@ class BeforeNCalls(_DependencyValidation, Condition):
 
     """
     def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
+        self.time_scale = time_scale
+
         def func(dependency, n, scheduler=None, execution_id=None):
             try:
                 num_calls = scheduler.counts_total[execution_id][time_scale][dependency]
@@ -1279,6 +1281,8 @@ class AtNCalls(_DependencyValidation, Condition):
 
     """
     def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
+        self.time_scale = time_scale
+
         def func(dependency, n, scheduler=None, execution_id=None):
             try:
                 num_calls = scheduler.counts_total[execution_id][time_scale][dependency]
@@ -1339,6 +1343,8 @@ class AfterNCalls(_DependencyValidation, Condition):
 
     """
     def __init__(self, dependency, n, time_scale=TimeScale.TRIAL):
+        self.time_scale = time_scale
+
         def func(dependency, n, scheduler=None, execution_id=None):
             try:
                 num_calls = scheduler.counts_total[execution_id][time_scale][dependency]
@@ -1482,6 +1488,8 @@ class AllHaveRun(_DependencyValidation, Condition):
 
     """
     def __init__(self, *dependencies, time_scale=TimeScale.TRIAL):
+        self.time_scale = time_scale
+
         def func(*dependencies, scheduler=None, execution_id=None):
             if len(dependencies) == 0:
                 dependencies = scheduler.nodes
