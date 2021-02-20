@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Preferences &mdash; PsyNeuLink 0.8.5.1+47.gaabefef documentation</title>
+  <title>Preferences &mdash; PsyNeuLink 0.8.6.0 documentation</title>
   
 
   
@@ -27,6 +27,7 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -95,7 +96,7 @@
               
               
                 <div class="version">
-                  0.8.5.1+47
+                  0.8.6.0
                 </div>
               
             
@@ -197,24 +198,20 @@
 <h1>Preferences<a class="headerlink" href="#preferences" title="Permalink to this headline">¶</a></h1>
 <p>Standard prefereces:</p>
 <ul>
-<li><p class="first">verbose (bool): enables/disables reporting of (non-exception) warnings and system function</p>
-</li>
-<li><p class="first">paramValidation (bool): enables/disables run-time validation of the execute method of a Function object</p>
-</li>
-<li><p class="first">reportOutput ([bool, str]): enables/disables reporting execution of <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>’s <a class="reference internal" href="Component.html#component-execution"><span class="std std-ref">execute</span></a>
+<li><p>verbose (bool): enables/disables reporting of (non-exception) warnings and system function</p></li>
+<li><p>paramValidation (bool): enables/disables run-time validation of the execute method of a Function object</p></li>
+<li><p>reportOutput ([bool, str]): enables/disables reporting execution of <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>'s <a class="reference internal" href="Component.html#component-execution"><span class="std std-ref">execute</span></a>
 method to console:</p>
 <blockquote>
 <div><ul class="simple">
-<li><code class="docutils literal"><span class="pre">True</span></code>: prints record of execution, including the input and output of the Component;</li>
-<li>‘params’ or ‘parameters’: includes report of the Component’s <a class="reference internal" href="Parameters.html"><span class="doc">parameter</span></a> values.</li>
-<li>‘terse’: (Composition only) restricts output to just a listing of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">trials</span></code></a>, <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">time_steps</span></code></a> and <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">nodes</span></a> executed.</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>: prints record of execution, including the input and output of the Component;</p></li>
+<li><p>‘params’ or ‘parameters’: includes report of the Component’s <a class="reference internal" href="Parameters.html"><span class="doc">parameter</span></a> values.</p></li>
+<li><p>‘terse’: (Composition only) restricts output to just a listing of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trials</span></code></a>, <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">time_steps</span></code></a> and <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">nodes</span></a> executed.</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first">log (bool): sets LogCondition for a given Component</p>
-</li>
-<li><p class="first">functionRunTimeParams (Modulation): uses run-time params to modulate execute method params</p>
-</li>
+<li><p>log (bool): sets LogCondition for a given Component</p></li>
+<li><p>functionRunTimeParams (Modulation): uses run-time params to modulate execute method params</p></li>
 </ul>
 <p>[ADDITIONAL DOCUMENTATION COMING…]</p>
 </div>
@@ -268,21 +265,12 @@ method to console:</p>
   
 
      
-       <script type="text/javascript">
-           var DOCUMENTATION_OPTIONS = {
-               URL_ROOT:'./',
-               VERSION:'0.8.5.1+47.gaabefef',
-               LANGUAGE:'None',
-               COLLAPSE_INDEX:false,
-               FILE_SUFFIX:'.html',
-               HAS_SOURCE:  true,
-               SOURCELINK_SUFFIX: '.txt'
-           };
-       </script>
-         <script type="text/javascript" src="_static/jquery.js"></script>
-         <script type="text/javascript" src="_static/underscore.js"></script>
-         <script type="text/javascript" src="_static/doctools.js"></script>
-         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/doctools.js"></script>
+         <script src="_static/language_data.js"></script>
+         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   
