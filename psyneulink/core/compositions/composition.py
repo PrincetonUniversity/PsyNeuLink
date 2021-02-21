@@ -8487,7 +8487,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             trial_output = None
 
         import time
-        from rich.progress import Progress, track
+        from rich.progress import Progress
 
         with Progress() as progress:
             run_trials_task = progress.add_task(f"[red]Executing {self.name}...",
@@ -8497,9 +8497,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
             # for trial_num in track(range(num_trials),description=f'Executing {self.name}'):
-
-                progress.update(run_trials_task, advance=1)
-                time.sleep(0.02)
 
                 # Execute call before trial "hook" (user defined function)
                 if call_before_trial:
@@ -8564,6 +8561,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if call_after_trial:
                     call_with_pruned_args(call_after_trial, context=context)
 
+                progress.update(run_trials_task, advance=1, refresh=True)
+                time.sleep(0.02)
 
             # IMPLEMENTATION NOTE:
             # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
@@ -8610,8 +8609,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     node.reset_stateful_function_when = self._reset_stateful_functions_when_cache[node]
                 except KeyError:
                     pass
-
-            progress.update(run_trials_task, completed=True)
 
             return trial_output
 
