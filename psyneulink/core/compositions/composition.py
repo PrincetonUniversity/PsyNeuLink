@@ -8489,132 +8489,131 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         import time
         from rich.progress import Progress, track
 
-        progress = Progress()
+        with Progress() as progress:
+            run_trials_task = progress.add_task(f"[red]Executing {self.name}...",
+                                           total=num_trials,
+                                           visible=self.reportOutputPref is False)
 
-        run_trials_task = progress.add_task(f"[red]Executing {self.name}...",
-                                       total=num_trials,
-                                       visible=self.reportOutputPref is False)
+            # Loop over the length of the list of inputs - each input represents a TRIAL
+            for trial_num in range(num_trials):
+            # for trial_num in track(range(num_trials),description=f'Executing {self.name}'):
 
-        # Loop over the length of the list of inputs - each input represents a TRIAL
-        for trial_num in range(num_trials):
-        # for trial_num in track(range(num_trials),description=f'Executing {self.name}'):
+                progress.update(run_trials_task, advance=1)
+                time.sleep(0.02)
 
-            progress.update(run_trials_task, advance=1/num_trials)
-            time.sleep(0.02)
+                # Execute call before trial "hook" (user defined function)
+                if call_before_trial:
+                    call_with_pruned_args(call_before_trial, context=context)
 
-            # Execute call before trial "hook" (user defined function)
-            if call_before_trial:
-                call_with_pruned_args(call_before_trial, context=context)
+                if termination_processing[TimeScale.RUN].is_satisfied(
+                    scheduler=scheduler,
+                    context=context
+                ):
+                    progress.update(run_trials_task, completed=True)
+                    break
 
-            if termination_processing[TimeScale.RUN].is_satisfied(
-                scheduler=scheduler,
-                context=context
-            ):
-                progress.update(run_trials_task, completed=True)
-                break
+                # PROCESSING ------------------------------------------------------------------------
+                # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
+                try:
+                    execution_stimuli = self._parse_trial_inputs(inputs, trial_num)
+                except StopIteration:
+                    progress.update(run_trials_task, completed=True)
+                    break
 
-            # PROCESSING ------------------------------------------------------------------------
-            # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
-            try:
-                execution_stimuli = self._parse_trial_inputs(inputs, trial_num)
-            except StopIteration:
-                progress.update(run_trials_task, completed=True)
-                break
+                # execute processing, passing stimuli for this trial
+                trial_output = self.execute(inputs=execution_stimuli,
+                                            scheduler=scheduler,
+                                            termination_processing=termination_processing,
+                                            call_before_time_step=call_before_time_step,
+                                            call_before_pass=call_before_pass,
+                                            call_after_time_step=call_after_time_step,
+                                            call_after_pass=call_after_pass,
+                                            reset_stateful_functions_to=reset_stateful_functions_to,
+                                            context=context,
+                                            base_context=base_context,
+                                            clamp_input=clamp_input,
+                                            runtime_params=runtime_params,
+                                            skip_initialization=True,
+                                            bin_execute=bin_execute,
+                                            )
 
-            # execute processing, passing stimuli for this trial
-            trial_output = self.execute(inputs=execution_stimuli,
-                                        scheduler=scheduler,
-                                        termination_processing=termination_processing,
-                                        call_before_time_step=call_before_time_step,
-                                        call_before_pass=call_before_pass,
-                                        call_after_time_step=call_after_time_step,
-                                        call_after_pass=call_after_pass,
-                                        reset_stateful_functions_to=reset_stateful_functions_to,
-                                        context=context,
-                                        base_context=base_context,
-                                        clamp_input=clamp_input,
-                                        runtime_params=runtime_params,
-                                        skip_initialization=True,
-                                        bin_execute=bin_execute,
-                                        )
+                # ---------------------------------------------------------------------------------
+                # store the result of this execution in case it will be the final result
 
-            # ---------------------------------------------------------------------------------
-            # store the result of this execution in case it will be the final result
+                # object.results.append(result)
+                if isinstance(trial_output, collections.abc.Iterable):
+                    result_copy = trial_output.copy()
+                else:
+                    result_copy = trial_output
 
-            # object.results.append(result)
-            if isinstance(trial_output, collections.abc.Iterable):
-                result_copy = trial_output.copy()
-            else:
-                result_copy = trial_output
+                if ContextFlags.SIMULATION_MODE not in context.runmode:
+                    results.append(result_copy)
+                    self.parameters.results._set(results, context)
 
-            if ContextFlags.SIMULATION_MODE not in context.runmode:
-                results.append(result_copy)
-                self.parameters.results._set(results, context)
+                    if not self.parameters.retain_old_simulation_data._get():
+                        if self.controller is not None:
+                            # if any other special parameters store simulation info that needs to be cleaned up
+                            # consider dedicating a function to it here
+                            # this will not be caught above because it resides in the base context (context)
+                            if not self.parameters.simulation_results.retain_old_simulation_data:
+                                self.parameters.simulation_results._get(context).clear()
 
-                if not self.parameters.retain_old_simulation_data._get():
-                    if self.controller is not None:
-                        # if any other special parameters store simulation info that needs to be cleaned up
-                        # consider dedicating a function to it here
-                        # this will not be caught above because it resides in the base context (context)
-                        if not self.parameters.simulation_results.retain_old_simulation_data:
-                            self.parameters.simulation_results._get(context).clear()
+                            if not self.controller.parameters.simulation_ids.retain_old_simulation_data:
+                                self.controller.parameters.simulation_ids._get(context).clear()
 
-                        if not self.controller.parameters.simulation_ids.retain_old_simulation_data:
-                            self.controller.parameters.simulation_ids._get(context).clear()
-
-            if call_after_trial:
-                call_with_pruned_args(call_after_trial, context=context)
+                if call_after_trial:
+                    call_with_pruned_args(call_after_trial, context=context)
 
 
-        # IMPLEMENTATION NOTE:
-        # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
-        # method whether or not we are at the last trial of the run.
-        # The BEFORE Run controller execution takes place in the execute method,, because we can't execute the controller until after
-        # setup has occurred for the Input CIM.
-        if (self.controller_mode == AFTER and
-            self.controller_time_scale == TimeScale.RUN):
-            try:
-                _comp_ex
-            except NameError:
-                _comp_ex = None
-            self._execute_controller(
-                bin_execute=bin_execute,
-                _comp_ex=_comp_ex,
-                context=context
-            )
+            # IMPLEMENTATION NOTE:
+            # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
+            # method whether or not we are at the last trial of the run.
+            # The BEFORE Run controller execution takes place in the execute method,, because we can't execute the controller until after
+            # setup has occurred for the Input CIM.
+            if (self.controller_mode == AFTER and
+                self.controller_time_scale == TimeScale.RUN):
+                try:
+                    _comp_ex
+                except NameError:
+                    _comp_ex = None
+                self._execute_controller(
+                    bin_execute=bin_execute,
+                    _comp_ex=_comp_ex,
+                    context=context
+                )
 
-        # Reset input spec for next trial
-        self.parameters.input_specification._set(None, context)
+            # Reset input spec for next trial
+            self.parameters.input_specification._set(None, context)
 
-        scheduler.get_clock(context)._increment_time(TimeScale.RUN)
+            scheduler.get_clock(context)._increment_time(TimeScale.RUN)
 
-        self.most_recent_context = context
+            self.most_recent_context = context
 
-        if self._animate is not False:
-            # Save list of gifs in self._animation as movie file
-            movie_path = self._animation_directory + '/' + self._movie_filename
-            self._animation[0].save(fp=movie_path,
-                                    format='GIF',
-                                    save_all=True,
-                                    append_images=self._animation[1:],
-                                    duration=self._image_duration * 1000,
-                                    loop=0)
-            # print(f'\nSaved movie for {self.name} in {self._animation_directory}/{self._movie_filename}')
-            print(f"\nSaved movie for '{self.name}' in '{self._movie_filename}'")
-            if self._show_animation:
-                movie = Image.open(movie_path)
-                movie.show()
+            if self._animate is not False:
+                # Save list of gifs in self._animation as movie file
+                movie_path = self._animation_directory + '/' + self._movie_filename
+                self._animation[0].save(fp=movie_path,
+                                        format='GIF',
+                                        save_all=True,
+                                        append_images=self._animation[1:],
+                                        duration=self._image_duration * 1000,
+                                        loop=0)
+                # print(f'\nSaved movie for {self.name} in {self._animation_directory}/{self._movie_filename}')
+                print(f"\nSaved movie for '{self.name}' in '{self._movie_filename}'")
+                if self._show_animation:
+                    movie = Image.open(movie_path)
+                    movie.show()
 
-        # Undo override of reset_stateful_function_when conditions
-        for node in self.nodes:
-            try:
-                node.reset_stateful_function_when = self._reset_stateful_functions_when_cache[node]
-            except KeyError:
-                pass
+            # Undo override of reset_stateful_function_when conditions
+            for node in self.nodes:
+                try:
+                    node.reset_stateful_function_when = self._reset_stateful_functions_when_cache[node]
+                except KeyError:
+                    pass
 
-        progress.update(run_trials_task, completed=True)
+            progress.update(run_trials_task, completed=True)
 
-        return trial_output
+            return trial_output
 
     @handle_external_context()
     def learn(
