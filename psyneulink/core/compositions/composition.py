@@ -8488,11 +8488,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         import time
         from rich.progress import Progress
+        self._trial_report = None
 
-        with Progress() as progress:
+        with Progress(auto_refresh=False) as progress:
             run_trials_task = progress.add_task(f"[red]Executing {self.name}...",
-                                           total=num_trials,
-                                           visible=self.reportOutputPref is False)
+                                                total=num_trials,
+                                                # visible=self.reportOutputPref is False
+                                                )
 
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
@@ -8563,6 +8565,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if call_after_trial:
                     call_with_pruned_args(call_after_trial, context=context)
 
+                if self._trial_report:
+                    progress.console.print(self._trial_report)
                 progress.update(run_trials_task, advance=1, refresh=True)
                 time.sleep(0.02)
 
@@ -8872,8 +8876,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except TypeError:
                     rich_report = True
             if rich_report:
-                _trial_report = [f"\n[bold {trial_panel_color}]input:[/]"
-                                 f" {[i.tolist() for i in self.get_input_values(context)]}"]
+                self._trial_report = [f"\n[bold {trial_panel_color}]input:[/]"
+                                      f" {[i.tolist() for i in self.get_input_values(context)]}"]
             else:
                 # print trial separator and input array to Composition
                 print(f"[bold {trial_panel_color}]{self.name} TRIAL {trial_num} ====================")
@@ -9428,8 +9432,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #             title=f'[bold blue]\nTime Step {execution_scheduler.clock.time.time_step}[/]',
                 #             expand=False)
                 #       )
-                _trial_report.append("")
-                _trial_report.append(Panel(RenderGroup(*_time_step_report),
+                self._trial_report.append("")
+                self._trial_report.append(Panel(RenderGroup(*_time_step_report),
                                            # box=box.HEAVY,
                                            border_style=time_step_panel_color,
                                            box=time_step_panel_box,
@@ -9506,14 +9510,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # # for output_node, output_CIM_ports in self.output_CIM_ports.items():
             # #     print(f'  {output_node.owner.name}: {output_CIM_ports[1].parameters.value._get(context)}')
 
-            _trial_report.append(f"\n[bold {trial_output_color}]result:[/] {[r.tolist() for r in output_values]}\n")
-            print()
-            print(Panel(RenderGroup(*_trial_report),
-                        box=trial_panel_box,
-                        border_style=trial_panel_color,
-                        title=f'[bold{trial_panel_color}] {self.name}: Trial {trial_num} [/]',
-                        expand=False)
-                  )
+            self._trial_report.append(f"\n[bold {trial_output_color}]result:[/]"
+                                      f" {[r.tolist() for r in output_values]}\n")
+            self._trial_report = Panel(RenderGroup(*self._trial_report),
+                                       box=trial_panel_box,
+                                       border_style=trial_panel_color,
+                                       title=f'[bold{trial_panel_color}] {self.name}: Trial {trial_num} [/]',
+                                       expand=False)
+            # print()
+            # print(Panel(RenderGroup(*self._trial_report),
+            #             box=trial_panel_box,
+            #             border_style=trial_panel_color,
+            #             title=f'[bold{trial_panel_color}] {self.name}: Trial {trial_num} [/]',
+            #             expand=False)
+            #       )
 
         return output_values
 
