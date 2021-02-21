@@ -8507,6 +8507,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context=context
                 ):
                     progress.update(run_trials_task, completed=True)
+                    # progress.update(run_trials_task, advance=num_trials-trial_num)
                     break
 
                 # PROCESSING ------------------------------------------------------------------------
@@ -8515,6 +8516,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_stimuli = self._parse_trial_inputs(inputs, trial_num)
                 except StopIteration:
                     progress.update(run_trials_task, completed=True)
+                    # progress.update(run_trials_task, advance=num_trials-trial_num)
                     break
 
                 # execute processing, passing stimuli for this trial
