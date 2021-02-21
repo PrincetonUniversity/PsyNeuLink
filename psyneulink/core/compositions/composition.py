@@ -8488,11 +8488,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         from rich.progress import Progress
         self._trial_report = None
+        show_progress = not (context.runmode & ContextFlags.LEARNING_MODE)
 
         with Progress(auto_refresh=False) as progress:
-            run_trials_task = progress.add_task(f"[red]Executing {self.name}...",
-                                                total=num_trials,
-                                                )
+
+            if show_progress:
+                run_trials_task = progress.add_task(f"[red]Executing {self.name}...",
+                                                    total=num_trials,
+                                                    )
 
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
@@ -8505,7 +8508,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     scheduler=scheduler,
                     context=context
                 ):
-                    progress.update(run_trials_task, completed=True)
+                    if show_progress:
+                        progress.update(run_trials_task, completed=True)
                     break
 
                 # PROCESSING ------------------------------------------------------------------------
@@ -8513,7 +8517,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 try:
                     execution_stimuli = self._parse_trial_inputs(inputs, trial_num)
                 except StopIteration:
-                    progress.update(run_trials_task, completed=True)
+                    if show_progress:
+                        progress.update(run_trials_task, completed=True)
                     break
 
                 # execute processing, passing stimuli for this trial
@@ -8560,9 +8565,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if call_after_trial:
                     call_with_pruned_args(call_after_trial, context=context)
 
-                if self._trial_report:
-                    progress.console.print(self._trial_report)
-                progress.update(run_trials_task, advance=1, refresh=True)
+                if show_progress:
+                    if self._trial_report:
+                        progress.console.print(self._trial_report)
+                    progress.update(run_trials_task, advance=1, refresh=True)
 
             # IMPLEMENTATION NOTE:
             # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
