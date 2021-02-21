@@ -8486,17 +8486,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             trial_output = None
 
-        # import time
-        # from rich.progress import Progress
-        #
-        # progress = Progress()
+        import time
+        from rich.progress import Progress, track
 
-        # run_trials_task = progress.add_task(f"[red]Executing {self.name}...",
-        #                                total=num_trials,
-        #                                visible=self.reportOutputPref is False)
+        progress = Progress()
+
+        run_trials_task = progress.add_task(f"[red]Executing {self.name}...",
+                                       total=num_trials,
+                                       visible=self.reportOutputPref is False)
 
         # Loop over the length of the list of inputs - each input represents a TRIAL
         for trial_num in range(num_trials):
+        # for trial_num in track(range(num_trials),description=f'Executing {self.name}'):
+
+            progress.update(run_trials_task, advance=1/num_trials)
+            time.sleep(0.02)
 
             # Execute call before trial "hook" (user defined function)
             if call_before_trial:
@@ -8506,7 +8510,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 scheduler=scheduler,
                 context=context
             ):
-                # progress.update(run_trials_task, completed=True)
+                progress.update(run_trials_task, completed=True)
                 break
 
             # PROCESSING ------------------------------------------------------------------------
@@ -8514,7 +8518,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             try:
                 execution_stimuli = self._parse_trial_inputs(inputs, trial_num)
             except StopIteration:
-                # progress.update(run_trials_task, completed=True)
+                progress.update(run_trials_task, completed=True)
                 break
 
             # execute processing, passing stimuli for this trial
@@ -8561,8 +8565,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if call_after_trial:
                 call_with_pruned_args(call_after_trial, context=context)
 
-            # progress.update(run_trials_task, advance=1)
-            # time.sleep(0.02)
 
         # IMPLEMENTATION NOTE:
         # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
@@ -8610,7 +8612,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except KeyError:
                 pass
 
-        # progress.update(run_trials_task, completed=True)
+        progress.update(run_trials_task, completed=True)
 
         return trial_output
 
