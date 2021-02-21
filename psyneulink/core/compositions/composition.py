@@ -8486,19 +8486,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             trial_output = None
 
-        import time
         from rich.progress import Progress
         self._trial_report = None
 
         with Progress(auto_refresh=False) as progress:
             run_trials_task = progress.add_task(f"[red]Executing {self.name}...",
                                                 total=num_trials,
-                                                # visible=self.reportOutputPref is False
                                                 )
 
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
-            # for trial_num in track(range(num_trials),description=f'Executing {self.name}'):
 
                 # Execute call before trial "hook" (user defined function)
                 if call_before_trial:
@@ -8509,7 +8506,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context=context
                 ):
                     progress.update(run_trials_task, completed=True)
-                    # progress.update(run_trials_task, advance=num_trials-trial_num)
                     break
 
                 # PROCESSING ------------------------------------------------------------------------
@@ -8518,7 +8514,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_stimuli = self._parse_trial_inputs(inputs, trial_num)
                 except StopIteration:
                     progress.update(run_trials_task, completed=True)
-                    # progress.update(run_trials_task, advance=num_trials-trial_num)
                     break
 
                 # execute processing, passing stimuli for this trial
@@ -8568,7 +8563,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if self._trial_report:
                     progress.console.print(self._trial_report)
                 progress.update(run_trials_task, advance=1, refresh=True)
-                time.sleep(0.02)
 
             # IMPLEMENTATION NOTE:
             # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
