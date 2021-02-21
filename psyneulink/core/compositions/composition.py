@@ -8491,13 +8491,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         with Progress() as progress:
 
-            run_trials = progress.add_task(f"[red]Executing {self.name}...",
+            run_trials_task = progress.add_task(f"[red]Executing {self.name}...",
                                            total=num_trials,
                                            visible=self.reportOutputPref is False)
             trial_num = 0
 
             while not progress.finished:
-                progress.update(run_trials, advance=1)
+                progress.update(run_trials_task, advance=1)
                 time.sleep(0.02)
 
             # Loop over the length of the list of inputs - each input represents a TRIAL
