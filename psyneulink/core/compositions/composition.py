@@ -8486,68 +8486,85 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             trial_output = None
 
-        # Loop over the length of the list of inputs - each input represents a TRIAL
-        for trial_num in range(num_trials):
-            # Execute call before trial "hook" (user defined function)
-            if call_before_trial:
-                call_with_pruned_args(call_before_trial, context=context)
+        import time
+        from rich.progress import Progress
 
-            if termination_processing[TimeScale.RUN].is_satisfied(
-                scheduler=scheduler,
-                context=context
-            ):
-                break
+        with Progress() as progress:
 
-            # PROCESSING ------------------------------------------------------------------------
-            # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
-            try:
-                execution_stimuli = self._parse_trial_inputs(inputs, trial_num)
-            except StopIteration:
-                break
+            run_trials = progress.add_task(f"[red]Executing {self.name}...",
+                                           total=num_trials,
+                                           visible=self.reportOutputPref is False)
+            trial_num = 0
 
-            # execute processing, passing stimuli for this trial
-            trial_output = self.execute(inputs=execution_stimuli,
-                                        scheduler=scheduler,
-                                        termination_processing=termination_processing,
-                                        call_before_time_step=call_before_time_step,
-                                        call_before_pass=call_before_pass,
-                                        call_after_time_step=call_after_time_step,
-                                        call_after_pass=call_after_pass,
-                                        reset_stateful_functions_to=reset_stateful_functions_to,
-                                        context=context,
-                                        base_context=base_context,
-                                        clamp_input=clamp_input,
-                                        runtime_params=runtime_params,
-                                        skip_initialization=True,
-                                        bin_execute=bin_execute,
-                                        )
+            while not progress.finished:
+                progress.update(run_trials, advance=1)
+                time.sleep(0.02)
 
-            # ---------------------------------------------------------------------------------
-            # store the result of this execution in case it will be the final result
+            # Loop over the length of the list of inputs - each input represents a TRIAL
+            # for trial_num in range(num_trials):
 
-            # object.results.append(result)
-            if isinstance(trial_output, collections.abc.Iterable):
-                result_copy = trial_output.copy()
-            else:
-                result_copy = trial_output
+                # Execute call before trial "hook" (user defined function)
+                if call_before_trial:
+                    call_with_pruned_args(call_before_trial, context=context)
 
-            if ContextFlags.SIMULATION_MODE not in context.runmode:
-                results.append(result_copy)
-                self.parameters.results._set(results, context)
+                if termination_processing[TimeScale.RUN].is_satisfied(
+                    scheduler=scheduler,
+                    context=context
+                ):
+                    break
 
-                if not self.parameters.retain_old_simulation_data._get():
-                    if self.controller is not None:
-                        # if any other special parameters store simulation info that needs to be cleaned up
-                        # consider dedicating a function to it here
-                        # this will not be caught above because it resides in the base context (context)
-                        if not self.parameters.simulation_results.retain_old_simulation_data:
-                            self.parameters.simulation_results._get(context).clear()
+                # PROCESSING ------------------------------------------------------------------------
+                # Prepare stimuli from the outside world  -- collect the inputs for this TRIAL and store them in a dict
+                try:
+                    execution_stimuli = self._parse_trial_inputs(inputs, trial_num)
+                except StopIteration:
+                    break
 
-                        if not self.controller.parameters.simulation_ids.retain_old_simulation_data:
-                            self.controller.parameters.simulation_ids._get(context).clear()
+                # execute processing, passing stimuli for this trial
+                trial_output = self.execute(inputs=execution_stimuli,
+                                            scheduler=scheduler,
+                                            termination_processing=termination_processing,
+                                            call_before_time_step=call_before_time_step,
+                                            call_before_pass=call_before_pass,
+                                            call_after_time_step=call_after_time_step,
+                                            call_after_pass=call_after_pass,
+                                            reset_stateful_functions_to=reset_stateful_functions_to,
+                                            context=context,
+                                            base_context=base_context,
+                                            clamp_input=clamp_input,
+                                            runtime_params=runtime_params,
+                                            skip_initialization=True,
+                                            bin_execute=bin_execute,
+                                            )
 
-            if call_after_trial:
-                call_with_pruned_args(call_after_trial, context=context)
+                # ---------------------------------------------------------------------------------
+                # store the result of this execution in case it will be the final result
+
+                # object.results.append(result)
+                if isinstance(trial_output, collections.abc.Iterable):
+                    result_copy = trial_output.copy()
+                else:
+                    result_copy = trial_output
+
+                if ContextFlags.SIMULATION_MODE not in context.runmode:
+                    results.append(result_copy)
+                    self.parameters.results._set(results, context)
+
+                    if not self.parameters.retain_old_simulation_data._get():
+                        if self.controller is not None:
+                            # if any other special parameters store simulation info that needs to be cleaned up
+                            # consider dedicating a function to it here
+                            # this will not be caught above because it resides in the base context (context)
+                            if not self.parameters.simulation_results.retain_old_simulation_data:
+                                self.parameters.simulation_results._get(context).clear()
+
+                            if not self.controller.parameters.simulation_ids.retain_old_simulation_data:
+                                self.controller.parameters.simulation_ids._get(context).clear()
+
+                if call_after_trial:
+                    call_with_pruned_args(call_after_trial, context=context)
+
+                trial_num += 1
 
         # IMPLEMENTATION NOTE:
         # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
