@@ -8519,10 +8519,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #                                         )
 
         global progress
+        global simulation_progress
         run_progress = progress
 
         if show_progress:
-            global simulation_progress
             if context.runmode & ContextFlags.SIMULATION_MODE: # Suppress output for simulations
                 run_progress = simulation_progress
                 run_trials_task = next((task.id for task in progress.tasks if self.name in task.description), None) or \
