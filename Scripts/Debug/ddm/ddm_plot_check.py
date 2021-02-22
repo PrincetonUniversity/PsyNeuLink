@@ -151,7 +151,7 @@ def ddm_plot_check():
 from psyneulink.core.components.functions.fitfunctions import simulation_likelihood, make_likelihood_function, \
     MaxLikelihoodEstimator
 
-ddm_params = dict(starting_value=np.array([0.0]), rate=0.3, noise=1.0,
+ddm_params = dict(starting_value=0.0, rate=0.3, noise=1.0,
                   threshold=0.6, non_decision_time=0.15, time_step_size=0.01)
 
 # Create a simple one mechanism composition containing a DDM in integrator mode.
@@ -178,31 +178,31 @@ comp.run(inputs=inputs_dict,
 # reaction time.
 data_to_fit = np.squeeze(np.array(comp.results))
 
+
+
 # Create a likelihood function from the composition itself, this is done
 # using probability density approximation via kernel density estimation.
-likelihood_func, param_map = make_likelihood_function(
+likelihood, param_map = make_likelihood_function(
     composition=comp,
     fit_params=[decision.function.parameters.rate,
-                decision.function.parameters.threshold,
+                decision.function.parameters.starting_value,
                 decision.function.parameters.non_decision_time],
-    fixed_params={
-      decision.function.parameters.starting_value: ddm_params['starting_value'],
-      decision.function.parameters.noise: ddm_params['noise'],
-      decision.function.parameters.time_step_size: ddm_params['time_step_size']
-    },
     inputs=inputs_dict,
     categorical_dims=np.array([True, False]),
     data_to_fit=data_to_fit,
-    num_simulations=1000,
+    num_simulations=100,
     combine_trials=True)
 
-mle = MaxLikelihoodEstimator(log_likelihood_function=likelihood_func,
+params_to_recover = {k: ddm_params[k] for k in param_map.values()}
+print(f"Parameters to recover: {params_to_recover}")
+print(f"Data Neg-Log-Likelihood: {-likelihood(**params_to_recover)}")
+
+mle = MaxLikelihoodEstimator(log_likelihood_function=likelihood,
                              fit_params_bounds={
                                 'rate':              (0.0, 1.0),
-                                'threshold':         (0.0, 1.0),
+                                'starting_value':    (0.0, 1.0),
                                 'non_decision_time': (0.0, 1.0),
                              })
 
-fit_results = mle.fit()
+fit_results = mle.fit(display_iter=True, save_iterations=True)
 
-print(fit_results)
