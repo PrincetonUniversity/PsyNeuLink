@@ -8517,8 +8517,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #                                         total=num_trials,
         #                                         )
 
+        global progress
+        run_progress = progress
+
         if show_progress:
-            global progress
             global simulation_progress
             if context.runmode & ContextFlags.SIMULATION_MODE: # Suppress output for simulations
                 run_progress = simulation_progress
@@ -8528,7 +8530,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                     visible=False
                                                     )
             else:
-                run_progress = progress
                 run_trials_task = next((task.id for task in progress.tasks if self.name in task.description), None) or \
                                   progress.add_task(f"[red]Executing {self.name}...",
                                                     total=num_trials,
