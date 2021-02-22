@@ -16,13 +16,13 @@ Overview
 A Scheduler is used to generate the order in which the `Components <Component>` of a `Composition <Composition>` are
 executed. By default, a Scheduler executes Components in an order determined by the pattern of `Projections
 <Projection>` among the `Mechanisms <Mechanism>` in the `Composition <Composition>`, with each Mechanism executed once
-per `PASS` through the Composition. For example, in a `Composition` in which a Mechanism A projects to a Mechanism B
-that projects to a Mechanism C, A will execute first followed by B, and then C in each `PASS` through the Composition.
-However, a Scheduler can be used to implement more complex patterns of execution, by specifying `Conditions <Condition>`
-that determine when and how many times individual Components execute, and whether and how this depends on the execution
-of other Components. Any executable Component in a Composition can be assigned a Condition, and Conditions can be
-combined in arbitrary ways to generate any pattern of execution of the Components in a Composition that is logically
-possible.
+per `PASS` through the Composition. For example, in a `Composition` in which a Mechanism *A* projects to a Mechanism
+*B* that projects to a Mechanism *C*, *A* will execute first followed by *B*, and then *C* in each `PASS` through the
+Composition. However, a Scheduler can be used to implement more complex patterns of execution, by specifying
+`Conditions <Condition>` that determine when and how many times individual Components execute, and whether and how
+this depends on the execution of other Components. Any executable Component in a Composition can be assigned a
+Condition, and Conditions can be combined in arbitrary ways to generate any pattern of execution of the Components
+in a Composition that is logically possible.
 
 .. note::
    In general, `Mechanisms <Mechanism>` are the Components of a Composition that are most commonly associated with
@@ -38,10 +38,6 @@ Creating a Scheduler
 A Scheduler can be created explicitly using its constructor.  However, more commonly it is created automatically
 for a `Composition <Composition>` when it is created.  When creating a Scheduler explicitly, the set of `Components
 <Component>` to be executed and their order must be specified in the Scheduler's constructor using one the following:
-
-COMMENT:
-   JDC: WE MAY WANT TO CHANGE THE NAME OF THE ARGUMENT TO 'COMPOSITION` ONCE THAT IS IMPLEMENTED, TO BE FULLY GENERAL
-COMMENT
 
 * a `Composition` in the **composition** argument - if a Composition is specified,
   the Scheduler is created using the nodes and edges in the Composition's `graph <Composition.graph_processing>`.
@@ -159,13 +155,14 @@ execution, over which every Component in the Composition has been considered for
 <consideration_set>` may be assigned to execute on each `PASS`, since different Conditions may be satisfied.
 
 The Scheduler continues to make `PASS`es through the `consideration_queue` until a `termination Condition
-<Scheduler_Termination_Conditions>` is satisfied. If no termination Conditions are specified, the Scheduler terminates
-a `TRIAL <TimeScale.TRIAL>` when every Component has been specified for execution at least once (corresponding to the
-`AllHaveRun` Condition).  However, other termination Conditions can be specified, that may cause the Scheduler to
-terminate a `TRIAL <TimeScale.TRIAL>` earlier  or later (e.g., when the  Condition for a particular Component or set of
-Components is met).  When the Scheduler terminates a `TRIAL <TimeScale.TRIAL>`, the `Composition <Composition>` begins
-processing the next input specified in the call to its `run <Composition.run>` method.  Thus, a `TRIAL
-<TimeScale.TRIAL>` is defined as the scope of processing associated with a given input to the Composition.
+<Scheduler_Termination_Conditions>` is satisfied. If no termination Conditions are specified, by default the Scheduler
+terminates a `TRIAL <TimeScale.TRIAL>` when every Component has been specified for execution at least once
+(corresponding to the `AllHaveRun` Condition).  However, other termination Conditions can be specified,
+that may cause the Scheduler to terminate a `TRIAL <TimeScale.TRIAL>` earlier  or later (e.g., when the  Condition
+for a particular Component or set of Components is met).  When the Scheduler terminates a `TRIAL <TimeScale.TRIAL>`,
+the `Composition <Composition>` begins processing the next input specified in the call to its `run <Composition.run>`
+method. Thus, a `TRIAL <TimeScale.TRIAL>` is defined as the scope of processing associated with a given input to the
+Composition.
 
 .. _Scheduler_Termination_Conditions:
 
@@ -565,23 +562,13 @@ class Scheduler(JSONDumpable):
         unspecified_nodes = []
         for node in self.nodes:
             if node not in self.conditions:
-                # determine parent nodes
-                node_index = 0
-                for i in range(len(self.consideration_queue)):
-                    if node in self.consideration_queue[i]:
-                        node_index = i
-                        break
-
-                if node_index > 0:
-                    dependencies = list(self.consideration_queue[i - 1])
-                    if len(dependencies) == 1:
-                        cond = EveryNCalls(dependencies[0], 1)
-                    elif len(dependencies) > 1:
-                        cond = All(*[EveryNCalls(x, 1) for x in dependencies])
-                    else:
-                        raise SchedulerError(f'{self}: Empty consideration set in consideration_queue[{i - 1}]')
-                else:
+                dependencies = list(self.dependency_dict[node])
+                if len(dependencies) == 0:
                     cond = Always()
+                elif len(dependencies) == 1:
+                    cond = EveryNCalls(dependencies[0], 1)
+                else:
+                    cond = All(*[EveryNCalls(x, 1) for x in dependencies])
 
                 self.conditions.add_condition(node, cond)
                 unspecified_nodes.append(node)

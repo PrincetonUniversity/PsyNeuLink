@@ -193,6 +193,31 @@ class TestScheduler:
                             [np.array([[2.]]), np.array([[1.]])]]
         assert np.allclose(expected_results, np.asfarray(C.results))
 
+    def test_default_condition_1(self):
+        A = pnl.TransferMechanism(name='A')
+        B = pnl.TransferMechanism(name='B')
+        C = pnl.TransferMechanism(name='C')
+
+        comp = pnl.Composition(pathways=[[A, C], [A, B, C]])
+        comp.scheduler.add_condition(A, AtPass(1))
+        comp.scheduler.add_condition(B, Always())
+
+        output = list(comp.scheduler.run())
+        expected_output = [B, A, B, C]
+        assert output == pytest.helpers.setify_expected_output(expected_output)
+
+    def test_default_condition_2(self):
+        A = pnl.TransferMechanism(name='A')
+        B = pnl.TransferMechanism(name='B')
+        C = pnl.TransferMechanism(name='C')
+
+        comp = pnl.Composition(pathways=[[A, B], [C]])
+        comp.scheduler.add_condition(C, AtPass(1))
+
+        output = list(comp.scheduler.run())
+        expected_output = [A, B, {C, A}]
+        assert output == pytest.helpers.setify_expected_output(expected_output)
+
 
 class TestLinear:
 
@@ -1526,6 +1551,7 @@ class TestFeedback:
     @pytest.mark.parametrize("condition,scale,expected_result",
                              [(pnl.BeforeNCalls, TimeScale.TRIAL, [[.05, .05]]),
                               (pnl.BeforeNCalls, TimeScale.PASS, [[.05, .05]]),
+                              (pnl.EveryNCalls, None, [[0.05, .05]]),
                               (pnl.AtNCalls, TimeScale.TRIAL, [[.25, .25]]),
                               (pnl.AtNCalls, TimeScale.RUN, [[.25, .25]]),
                               (pnl.AfterNCalls, TimeScale.TRIAL, [[.25, .25]]),
@@ -1568,6 +1594,8 @@ class TestFeedback:
             c = 1 if scale is TimeScale.PASS else 5
             comp.scheduler.add_condition(response, condition(decisionMaker, c,
                                                              time_scale=scale))
+        elif condition is pnl.EveryNCalls:
+            comp.scheduler.add_condition(response, condition(decisionMaker, 1))
         elif condition is pnl.WhenFinished:
             comp.scheduler.add_condition(response, condition(decisionMaker))
         elif condition is pnl.WhenFinishedAny:
