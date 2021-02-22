@@ -2425,6 +2425,17 @@ logger = logging.getLogger(__name__)
 
 CompositionRegistry = {}
 
+# rich Progress tracking ---------------------------
+
+from rich.progress import Progress
+class SimulationProgress(Progress):
+    def start(self):
+        return
+    def stop(self):
+        return
+progress = Progress(auto_refresh=False)
+simulation_progress = SimulationProgress(auto_refresh=False)
+
 # Console report styles
 # node
 node_panel_color = 'orange1'
@@ -2438,6 +2449,7 @@ trial_panel_color = 'dodger_blue3'
 trial_input_color = 'green'
 trial_output_color = 'red'
 trial_panel_box = box.HEAVY
+# ---------------------------------------------------
 
 class CompositionError(Exception):
 
@@ -3310,7 +3322,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     classPreferenceLevel = PreferenceLevel.CATEGORY
 
     _model_spec_generic_type_name = 'graph'
-
 
     class Parameters(ParametersBase):
         """
@@ -8486,16 +8497,44 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             trial_output = None
 
-        from rich.progress import Progress
         self._trial_report = None
-        show_progress = not (context.runmode & ContextFlags.LEARNING_MODE)
 
-        with Progress(auto_refresh=False) as progress:
 
-            if show_progress:
-                run_trials_task = progress.add_task(f"[red]Executing {self.name}...",
+
+        show_progress = (num_trials != sys.maxsize) # Hack to prevent crash when generator
+
+        # if context.runmode & ContextFlags.SIMULATION_MODE: # Suppress output for simulations
+        #     show_progress = False
+        # if show_progress:
+        #     global progress
+        #     run_trials_task = progress.add_task(f"[red]Executing {self.name}...",
+        #                                         total=num_trials,
+        #                                         )
+
+        # if show_progress:
+        #     global progress
+        #     run_trials_task = progress.add_task(f"[red]Executing {self.name}...",
+        #                                         total=num_trials,
+        #                                         )
+
+        if show_progress:
+            global progress
+            global simulation_progress
+            if context.runmode & ContextFlags.SIMULATION_MODE: # Suppress output for simulations
+                run_progress = simulation_progress
+                run_trials_task = next((task.id for task in progress.tasks if self.name in task.description), None) or \
+                                  progress.add_task(f"[red]Simulating {self.name}...",
+                                                    total=num_trials,
+                                                    visible=False
+                                                    )
+            else:
+                run_progress = progress
+                run_trials_task = next((task.id for task in progress.tasks if self.name in task.description), None) or \
+                                  progress.add_task(f"[red]Executing {self.name}...",
                                                     total=num_trials,
                                                     )
+
+        with run_progress:
 
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
@@ -8509,7 +8548,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context=context
                 ):
                     if show_progress:
-                        progress.update(run_trials_task, completed=True)
+                        progress.update(run_trials_task,
+                                        description=f'{self.name}: {trial_num} of {num_trials} trials executed',
+                                        refresh=True,
+                                        completed=True)
                     break
 
                 # PROCESSING ------------------------------------------------------------------------
@@ -8518,7 +8560,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_stimuli = self._parse_trial_inputs(inputs, trial_num)
                 except StopIteration:
                     if show_progress:
-                        progress.update(run_trials_task, completed=True)
+                        progress.update(run_trials_task,
+                                        description=f'{self.name}: {trial_num} of {num_trials} trials executed',
+                                        refresh=True,
+                                        completed=True)
                     break
 
                 # execute processing, passing stimuli for this trial
@@ -8568,7 +8613,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if show_progress:
                     if self._trial_report:
                         progress.console.print(self._trial_report)
-                    progress.update(run_trials_task, advance=1, refresh=True)
+                        progress.console.print('')
+                    if context.runmode & ContextFlags.SIMULATION_MODE:
+                        execution_string = 'simulated'
+                    else:
+                        execution_string = 'executed'
+                    progress.update(run_trials_task,
+                                    description=f'{self.name}: {trial_num+1} of {num_trials} trials {execution_string}',
+                                    advance=1,
+                                    refresh=True)
 
             # IMPLEMENTATION NOTE:
             # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
@@ -9432,7 +9485,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #             title=f'[bold blue]\nTime Step {execution_scheduler.clock.time.time_step}[/]',
                 #             expand=False)
                 #       )
-                self._trial_report.append("")
+                # self._trial_report.append("")
                 self._trial_report.append(Panel(RenderGroup(*_time_step_report),
                                            # box=box.HEAVY,
                                            border_style=time_step_panel_color,

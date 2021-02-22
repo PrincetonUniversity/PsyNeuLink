@@ -381,7 +381,9 @@ the `intensity <ControlSignal.intensity>` of which is also ``3``, the value of t
 <ControlSignal.intensity_cost>` for ``ctl_mech_A`` is e ^ (allocation (3) * value of ctl_mech_B (also 3)) = e^9,
 as shown below::
 
-    >>> comp.run(inputs={mech:[3]}, num_trials=2)
+    >>> result = comp.run(inputs={mech:[3]}, num_trials=2)
+    Composition-0: 2 of 2 trials executed ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+    >>> result
     [array([3.])]
     >>> ctl_mech_A.control_signals[0].intensity_cost
     array([8103.08392758])
