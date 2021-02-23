@@ -73,30 +73,29 @@ def test_mat_scalar(benchmark, op, builtin, result, mode):
     assert np.allclose(res, result)
 
 
+@pytest.mark.parametrize('mode', ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
 @pytest.mark.benchmark(group="Dot")
-def test_dot_numpy(benchmark):
-    numpy_res = benchmark(np.dot, vector, u)
-    assert np.allclose(numpy_res, dot_res)
+def test_dot(benchmark, mode):
+    if mode == 'Python':
+        ex = lambda : np.dot(vector, u)
+    elif mode == 'LLVM':
+        bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm")
+        def ex():
+            bin_f(ct_vec, ct_u, DIM_X, DIM_Y, ct_vec_res)
+            return llvm_vec_res
+    elif mode == 'PTX':
+        bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm")
+        cuda_vec = pnlvm.jit_engine.pycuda.driver.In(vector)
+        cuda_mat = pnlvm.jit_engine.pycuda.driver.In(u)
+        cuda_res = pnlvm.jit_engine.pycuda.driver.Out(llvm_vec_res)
+        def ex():
+            bin_f.cuda_call(cuda_vec, cuda_mat, np.int32(DIM_X), np.int32(DIM_Y), cuda_res)
+            return llvm_vec_res
 
-
-@pytest.mark.llvm
-@pytest.mark.benchmark(group="Dot")
-def test_dot_llvm(benchmark):
-    llvm_fun = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm")
-    benchmark(llvm_fun, ct_vec, ct_u, DIM_X, DIM_Y, ct_vec_res)
-    assert np.allclose(llvm_vec_res, dot_res)
-
-
-@pytest.mark.llvm
-@pytest.mark.cuda
-@pytest.mark.benchmark(group="Dot")
-def test_dot_cuda(benchmark):
-    llvm_fun = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm")
-    cuda_vec = pnlvm.jit_engine.pycuda.driver.In(vector)
-    cuda_mat = pnlvm.jit_engine.pycuda.driver.In(u)
-    cuda_res = pnlvm.jit_engine.pycuda.driver.Out(llvm_vec_res)
-    benchmark(llvm_fun.cuda_call, cuda_vec, cuda_mat, np.int32(DIM_X), np.int32(DIM_Y), cuda_res)
-    assert np.allclose(llvm_vec_res, dot_res)
+    res = benchmark(ex)
+    assert np.allclose(res, dot_res)
 
 
 @pytest.mark.llvm
@@ -135,31 +134,30 @@ def test_dot_llvm_constant_dim(benchmark, mode):
     assert np.allclose(llvm_vec_res, dot_res)
 
 
+@pytest.mark.parametrize('mode', ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
 @pytest.mark.benchmark(group="Dot")
-def test_dot_transposed_numpy(benchmark):
-    numpy_res = benchmark(np.dot, trans_vector, u.transpose())
-    assert np.allclose(numpy_res, trans_dot_res)
+def test_dot_transposed(benchmark, mode):
+    if mode == 'Python':
+        trans_u = u.transpose()
+        ex = lambda : np.dot(trans_vector, trans_u)
+    elif mode == 'LLVM':
+        bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm_transposed")
+        def ex():
+            bin_f(ct_tvec, ct_u, DIM_X, DIM_Y, ct_tvec_res)
+            return llvm_tvec_res
+    elif mode == 'PTX':
+        bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm_transposed")
+        cuda_vec = pnlvm.jit_engine.pycuda.driver.In(trans_vector)
+        cuda_mat = pnlvm.jit_engine.pycuda.driver.In(u)
+        cuda_res = pnlvm.jit_engine.pycuda.driver.Out(llvm_tvec_res)
+        def ex():
+            bin_f.cuda_call(cuda_vec, cuda_mat, np.int32(DIM_X), np.int32(DIM_Y), cuda_res)
+            return llvm_tvec_res
 
-
-@pytest.mark.llvm
-@pytest.mark.benchmark(group="Dot")
-def test_dot_transposed_llvm(benchmark):
-    llvm_fun = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm_transposed")
-    benchmark(llvm_fun, ct_tvec, ct_u, DIM_X, DIM_Y, ct_tvec_res)
-    assert np.allclose(llvm_tvec_res, trans_dot_res)
-
-
-@pytest.mark.llvm
-@pytest.mark.cuda
-@pytest.mark.benchmark(group="Dot")
-def test_dot_transposed_cuda(benchmark):
-    llvm_fun = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm_transposed")
-    cuda_vec = pnlvm.jit_engine.pycuda.driver.In(trans_vector)
-    cuda_mat = pnlvm.jit_engine.pycuda.driver.In(u)
-    cuda_res = pnlvm.jit_engine.pycuda.driver.Out(llvm_tvec_res)
-    benchmark(llvm_fun.cuda_call, cuda_vec, cuda_mat,
-              np.int32(DIM_X), np.int32(DIM_Y), cuda_res)
-    assert np.allclose(llvm_tvec_res, trans_dot_res)
+    res = benchmark(ex)
+    assert np.allclose(res, trans_dot_res)
 
 
 @pytest.mark.llvm
