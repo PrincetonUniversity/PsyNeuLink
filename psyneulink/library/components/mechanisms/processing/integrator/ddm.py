@@ -865,11 +865,11 @@ class DDM(ProcessingMechanism):
 
         # New (1/19/2021) default behavior of DDM mechanism is to reset stateful functions
         # on each new trial.
-        self.reset_stateful_function_when = AtTrialStart()
+        self.reset_stateful_function_when = kwargs.get('reset_stateful_function_when', AtTrialStart())
 
         # New (1/19/2021) default behaviour of DDM mechanism is to execute until finished. That
         # is, it should execute until it reaches its threshold.
-        self.execute_until_finished = True
+        self.execute_until_finished = kwargs.get('execute_until_finished', True)
 
         # FIXME: Set maximum executions absurdly large to avoid early termination
         self.max_executions_before_finished = sys.maxsize

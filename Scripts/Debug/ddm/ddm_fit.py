@@ -3,13 +3,6 @@ import numpy as np
 import pandas as pd
 import psyneulink as pnl
 
-import matplotlib.pyplot as plt
-plt.rcParams["figure.figsize"] = (20,10)
-
-import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
-
 from psyneulink.core.components.functions.fitfunctions import make_likelihood_function, \
     MaxLikelihoodEstimator
 
@@ -23,6 +16,8 @@ decision = pnl.DDM(function=pnl.DriftDiffusionIntegrator(**ddm_params),
 
 comp = pnl.Composition()
 comp.add_node(decision)
+
+#%%
 
 # Lets generate an "experimental" dataset to fit. This is a parameter recovery test
 # The input will be 500 trials of the same constant stimulus drift rate of 1
@@ -43,6 +38,7 @@ data_to_fit = pd.DataFrame(np.squeeze(np.array(comp.results)),
                            columns=['decision', 'rt'])
 data_to_fit['decision'] = pd.Categorical(data_to_fit['decision'])
 
+#%%
 
 # Create a likelihood function from the composition itself, this is done
 # using probability density approximation via kernel density estimation.
@@ -62,8 +58,8 @@ print(f"Data Neg-Log-Likelihood: {-likelihood(**params_to_recover)}")
 mle = MaxLikelihoodEstimator(log_likelihood_function=likelihood,
                              fit_params_bounds={
                                 'rate':              (0.0, 1.0),
-                                'starting_value':    (0.0, 1.0),
+                                'starting_value':    (0.0, 0.9),
                                 'non_decision_time': (0.0, 1.0),
                              })
 
-fit_results = mle.fit(display_iter=False, save_iterations=True)
+fit_results = mle.fit(display_iter=True, save_iterations=True)

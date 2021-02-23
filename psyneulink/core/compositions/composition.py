@@ -10165,13 +10165,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         return make_likelihood_function(composition=self, *args, **kwargs)
 
-    def fit(self, *args, **kwargs):
-        """
-        Fit parameters of this composition to an experimental dataset.
-        """
-        raise NotImplemented("Need to implement this!")
-
-
 
 def get_compositions():
     """Return list of Compositions in caller's namespace."""
