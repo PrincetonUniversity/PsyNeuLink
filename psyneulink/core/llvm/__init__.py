@@ -133,6 +133,7 @@ def init_builtins():
         builtins.setup_csch(ctx)
         builtins.setup_coth(ctx)
         builtins.setup_tanh(ctx)
+        builtins.setup_is_close(ctx)
 
         # PRNG
         builtins.setup_mersenne_twister(ctx)

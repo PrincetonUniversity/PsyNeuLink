@@ -122,7 +122,7 @@ def test_helper_is_close(mode):
             val2_ptr = b1.gep(in2, [index])
             val1 = b1.load(val1_ptr)
             val2 = b1.load(val2_ptr)
-            close = pnlvm.helpers.is_close(b1, val1, val2)
+            close = pnlvm.helpers.is_close(ctx, b1, val1, val2)
             out_ptr = b1.gep(out, [index])
             out_val = b1.select(close, val1.type(1), val1.type(0))
             res = b1.select(close, out_ptr.type.pointee(1),
@@ -169,7 +169,7 @@ def test_helper_all_close(mode):
         block = function.append_basic_block(name="entry")
         builder = ir.IRBuilder(block)
 
-        all_close = pnlvm.helpers.all_close(builder, in1, in2)
+        all_close = pnlvm.helpers.all_close(ctx, builder, in1, in2)
         res = builder.select(all_close, out.type.pointee(1), out.type.pointee(0))
         builder.store(res, out)
         builder.ret_void()

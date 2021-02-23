@@ -150,21 +150,14 @@ def csch(ctx, builder, x):
     return builder.call(csch_f, [x])
 
 
-def is_close(builder, val1, val2, rtol=1e-05, atol=1e-08):
-    diff = builder.fsub(val1, val2, "is_close_diff")
-    diff_neg = fneg(builder, diff, "is_close_fneg_diff")
-    ltz = builder.fcmp_ordered("<", diff, diff.type(0.0), "is_close_ltz")
-    abs_diff = builder.select(ltz, diff_neg, diff, "is_close_abs")
-
-    rev2 = fneg(builder, val2, "is_close_fneg2")
-    ltz2 = builder.fcmp_ordered("<", val2, val2.type(0.0), "is_close_ltz2")
-    abs2 = builder.select(ltz2, rev2, val2, "is_close_abs2")
-    rtol = builder.fmul(abs2.type(rtol), abs2, "is_close_rtol")
-    atol = builder.fadd(rtol, rtol.type(atol), "is_close_atol")
-    return builder.fcmp_ordered("<=", abs_diff, atol, "is_close_cmp")
+def is_close(ctx, builder, val1, val2, rtol=1e-05, atol=1e-08):
+    is_close_f = ctx.get_builtin("is_close")
+    rtol_val = val1.type(rtol)
+    atol_val = val1.type(atol)
+    return builder.call(is_close_f, [val1, val2, rtol_val, atol_val])
 
 
-def all_close(builder, arr1, arr2, rtol=1e-05, atol=1e-08):
+def all_close(ctx, builder, arr1, arr2, rtol=1e-05, atol=1e-08):
     assert arr1.type == arr2.type
     all_ptr = builder.alloca(ir.IntType(1))
     builder.store(all_ptr.type.pointee(1), all_ptr)
@@ -173,7 +166,7 @@ def all_close(builder, arr1, arr2, rtol=1e-05, atol=1e-08):
         val2_ptr = b1.gep(arr1, [idx.type(0), idx])
         val1 = b1.load(val1_ptr)
         val2 = b1.load(val2_ptr)
-        res_close = is_close(b1, val1, val2, rtol, atol)
+        res_close = is_close(ctx, b1, val1, val2, rtol, atol)
 
         all_val = b1.load(all_ptr)
         all_val = b1.and_(all_val, res_close)
