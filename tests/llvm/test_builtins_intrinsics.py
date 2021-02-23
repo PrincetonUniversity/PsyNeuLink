@@ -12,7 +12,10 @@ y = np.random.rand()
                          (np.exp, (x,), "__pnl_builtin_exp", np.exp(x)),
                          (np.log, (x,), "__pnl_builtin_log", np.log(x)),
                          (np.power, (x,y), "__pnl_builtin_pow", np.power(x, y)),
-                         ], ids=["EXP", "LOG", "POW"])
+                         (np.tanh, (x,), "__pnl_builtin_tanh", np.tanh(x)),
+                         (lambda x: 1 / np.tanh(x), (x,), "__pnl_builtin_coth", 1 / np.tanh(x)),
+                         (lambda x: 1 / np.sinh(x), (x,), "__pnl_builtin_csch", 1 / np.sinh(x)),
+                         ], ids=["EXP", "LOG", "POW", "TANH", "COTH", "CSCH"])
 @pytest.mark.parametrize("mode", ['Python',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
@@ -40,4 +43,4 @@ def test_builtin_op(benchmark, op, args, builtin, result, mode):
             bin_f.cuda_call(*(np.double(p) for p in a), ptx_res_arg)
             return ptx_res
     res = benchmark(f, *args)
-    assert res == result
+    assert np.allclose(res, result)
