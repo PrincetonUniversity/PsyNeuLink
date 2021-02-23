@@ -158,28 +158,6 @@ def setup_vec_sum(ctx):
 
     builder.ret_void()
 
-# Setup vector copy builtin
-def setup_vec_copy(ctx):
-    # Setup types
-    double_ptr_ty = ctx.float_ty.as_pointer()
-
-    # builtin vector copy func
-    # param1: ptr to vector 1
-    # param2: sizeof vector
-    # param3: ptr to output vector (make sure this is same size as param3)
-    builder = _setup_builtin_func_builder(ctx, "vec_copy", (double_ptr_ty, ctx.int32_ty, double_ptr_ty))
-    u, x, o = builder.function.args
-
-    # Copy
-    with helpers.for_loop_zero_inc(builder, x, "copy") as (b1, index):
-        u_ptr = b1.gep(u, [index])
-        o_ptr = b1.gep(o, [index])
-        u_val = b1.load(u_ptr)
-
-        b1.store(u_val, o_ptr)
-
-    builder.ret_void()
-
 
 # Setup vector subtraction builtin
 def setup_vec_sub(ctx):

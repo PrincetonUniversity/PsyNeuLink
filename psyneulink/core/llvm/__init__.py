@@ -137,7 +137,6 @@ def init_builtins():
         builtins.setup_mat_add(ctx)
         builtins.setup_vec_sub(ctx)
         builtins.setup_mat_sub(ctx)
-        builtins.setup_vec_copy(ctx)
         builtins.setup_vec_hadamard(ctx)
         builtins.setup_mat_hadamard(ctx)
         builtins.setup_vec_scalar_mult(ctx)
