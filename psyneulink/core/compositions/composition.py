@@ -8508,17 +8508,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Set modes relevant to rich.progress
         _show_progress = True # for future use as option to fully suppress progress reporting
         _simulation_mode = (context.runmode & ContextFlags.SIMULATION_MODE)
-        _indeterminate = (num_trials != sys.maxsize) # when num_trials is not known (e.g., a generator is for inputs)
+        _indeterminate = (num_trials == sys.maxsize) # when num_trials is not known (e.g., a generator is for inputs)
 
         # Set rich.progress parameters
+
         if _simulation_mode:
             _execution_mode_str = 'Simulat'
         else:
             _execution_mode_str = 'Execut'
+
         if _indeterminate:
-            start = True
+            _start = False
+            _num_trials_str = ''
         else:
-            start = False
+            _start = True
+            _num_trials_str = f' of {num_trials}'
+
         if _show_progress:
             if _simulation_mode: # Suppress output for simulations
                 run_progress = simulation_progress
@@ -8531,7 +8536,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 run_trials_task = next((task.id for task in progress.tasks if self.name in task.description), None) or \
                                   progress.add_task(f"[red]{_execution_mode_str}ing {self.name}...",
                                                     total=num_trials,
-                                                    start=start
+                                                    start=_start
                                                     )
 
         with run_progress: # run in context of relevant rich.progress (normal or simulation)
@@ -8550,7 +8555,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if _show_progress:
                         progress.update(run_trials_task,
                                         description=f'{self.name}: '
-                                                    f'{_execution_mode_str}ed {trial_num} of {num_trials} trials',
+                                                    f'{_execution_mode_str}ed',
                                         refresh=True,
                                         completed=True)
                     break
@@ -8563,7 +8568,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if _show_progress:
                         progress.update(run_trials_task,
                                         description=f'{self.name}: '
-                                                    f'{_execution_mode_str}ed {trial_num} of {num_trials} trials',
+                                                    f'{_execution_mode_str}ed {trial_num}{_num_trials_str} trials',
                                         refresh=True,
                                         completed=True)
                     break
@@ -8617,8 +8622,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         progress.console.print(self._trial_report)
                         progress.console.print('')
                     progress.update(run_trials_task,
-                                    description=f'{self.name}:'
-                                                f'{_execution_mode_str}ed:  {trial_num+1} of {num_trials} trials',
+                                    description=f'{self.name}: '
+                                                f'{_execution_mode_str}ed {trial_num+1}{_num_trials_str} trials',
                                     advance=1,
                                     refresh=True)
 
