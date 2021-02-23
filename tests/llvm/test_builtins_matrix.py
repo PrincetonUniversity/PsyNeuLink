@@ -128,10 +128,9 @@ def test_dot_llvm_constant_dim(benchmark, mode):
     if mode == 'CPU':
         benchmark(binf2, ct_vec, ct_u, ct_vec_res)
     else:
-        import pycuda
-        cuda_vec = pycuda.driver.In(vector)
-        cuda_mat = pycuda.driver.In(u)
-        cuda_res = pycuda.driver.Out(llvm_vec_res)
+        cuda_vec = pnlvm.jit_engine.pycuda.driver.In(vector)
+        cuda_mat = pnlvm.jit_engine.pycuda.driver.In(u)
+        cuda_res = pnlvm.jit_engine.pycuda.driver.Out(llvm_vec_res)
         benchmark(binf2.cuda_call, cuda_vec, cuda_mat, cuda_res)
     assert np.allclose(llvm_vec_res, dot_res)
 
@@ -192,9 +191,8 @@ def test_dot_transposed_llvm_constant_dim(benchmark, mode):
     if mode == 'CPU':
         benchmark(binf2, ct_tvec, ct_u, ct_tvec_res)
     else:
-        import pycuda
-        cuda_vec = pycuda.driver.In(trans_vector)
-        cuda_mat = pycuda.driver.In(u)
-        cuda_res = pycuda.driver.Out(llvm_tvec_res)
+        cuda_vec = pnlvm.jit_engine.pycuda.driver.In(trans_vector)
+        cuda_mat = pnlvm.jit_engine.pycuda.driver.In(u)
+        cuda_res = pnlvm.jit_engine.pycuda.driver.Out(llvm_tvec_res)
         benchmark(binf2.cuda_call, cuda_vec, cuda_mat, cuda_res)
     assert np.allclose(llvm_tvec_res, trans_dot_res)
