@@ -7,15 +7,11 @@ x = np.random.rand()
 y = np.random.rand()
 
 
-exp_res = np.exp(x)
-log_res = np.log(x)
-pow_res = np.power(x, y)
-
 @pytest.mark.benchmark(group="Builtins")
 @pytest.mark.parametrize("op, args, builtin, result", [
-                         (np.exp, (x,), "__pnl_builtin_exp", exp_res),
-                         (np.log, (x,), "__pnl_builtin_log", log_res),
-                         (np.power, (x,y), "__pnl_builtin_pow", pow_res),
+                         (np.exp, (x,), "__pnl_builtin_exp", np.exp(x)),
+                         (np.log, (x,), "__pnl_builtin_log", np.log(x)),
+                         (np.power, (x,y), "__pnl_builtin_pow", np.power(x, y)),
                          ], ids=["EXP", "LOG", "POW"])
 @pytest.mark.parametrize("mode", ['Python',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
