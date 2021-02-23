@@ -2522,7 +2522,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         val = builder.fadd(val, factor)
 
         val = builder.fadd(val, offset)
-        neg_threshold = builder.fsub(threshold.type(0), threshold)
+        neg_threshold = pnlvm.helpers.fneg(builder, threshold)
         val = pnlvm.helpers.fclamp(builder, val, neg_threshold, threshold)
 
         # Store value result
