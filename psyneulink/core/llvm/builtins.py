@@ -19,8 +19,9 @@ from .builder_context import LLVMBuilderContext, _BUILTIN_PREFIX
 debug_env = debug.debug_env
 
 
-def _setup_builtin_func_builder(ctx, name, args):
-    builder = ctx.create_llvm_function(args, None, _BUILTIN_PREFIX + name)
+def _setup_builtin_func_builder(ctx, name, args, *, return_type=ir.VoidType()):
+    builder = ctx.create_llvm_function(args, None, _BUILTIN_PREFIX + name,
+                                       return_type=return_type)
 
     # Add noalias attribute
     for a in builder.function.args:
@@ -385,6 +386,48 @@ def setup_mat_add(ctx):
             b2.store(o_val, o_ptr)
 
     builder.ret_void()
+
+def setup_csch(ctx):
+    builder = _setup_builtin_func_builder(ctx, "csch", (ctx.float_ty,),
+                                          return_type=ctx.float_ty)
+    x = builder.function.args[0]
+    exp_f = ctx.get_builtin("exp", [x.type])
+    # (2e**x)/(e**2x - 1)
+    ex = builder.call(exp_f, [x])
+    num = builder.fmul(ex.type(2), ex)
+    _2x = builder.fmul(x.type(2), x)
+    e2x = builder.call(exp_f, [_2x])
+    den = builder.fsub(e2x, e2x.type(1))
+    res = builder.fdiv(num, den)
+    builder.ret(res)
+
+
+def setup_tanh(ctx):
+    builder = _setup_builtin_func_builder(ctx, "tanh", (ctx.float_ty,),
+                                          return_type=ctx.float_ty)
+    x = builder.function.args[0]
+    exp_f = ctx.get_builtin("exp", [x.type])
+    # (e**2x - 1)/(e**2x + 1)
+    _2x = builder.fmul(x.type(2), x)
+    e2x = builder.call(exp_f, [_2x])
+    num = builder.fsub(e2x, e2x.type(1))
+    den = builder.fadd(e2x, e2x.type(1))
+    res = builder.fdiv(num, den)
+    builder.ret(res)
+
+
+def setup_coth(ctx):
+    builder = _setup_builtin_func_builder(ctx, "coth", (ctx.float_ty,),
+                                          return_type=ctx.float_ty)
+    x = builder.function.args[0]
+    exp_f = ctx.get_builtin("exp", [x.type])
+    # (e**2x + 1)/(e**2x - 1)
+    _2x = builder.fmul(x.type(2), x)
+    e2x = builder.call(exp_f, [_2x])
+    num = builder.fadd(e2x, e2x.type(1))
+    den = builder.fsub(e2x, e2x.type(1))
+    res = builder.fdiv(num, den)
+    builder.ret(res)
 
 
 def setup_pnl_intrinsics(ctx):

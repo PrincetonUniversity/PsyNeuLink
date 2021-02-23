@@ -128,10 +128,18 @@ if ptx_enabled:
 # Initialize builtins
 def init_builtins():
     with LLVMBuilderContext.get_global() as ctx:
+        # Numeric
         builtins.setup_pnl_intrinsics(ctx)
+        builtins.setup_csch(ctx)
+        builtins.setup_coth(ctx)
+        builtins.setup_tanh(ctx)
+
+        # PRNG
+        builtins.setup_mersenne_twister(ctx)
+
+        # Matrix/Vector
         builtins.setup_vxm(ctx)
         builtins.setup_vxm_transposed(ctx)
-        builtins.setup_mersenne_twister(ctx)
         builtins.setup_vec_add(ctx)
         builtins.setup_vec_sum(ctx)
         builtins.setup_mat_add(ctx)
