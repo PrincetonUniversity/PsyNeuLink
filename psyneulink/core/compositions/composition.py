@@ -8501,7 +8501,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
 
-        show_progress = (num_trials != sys.maxsize) # Hack to prevent crash when generator
+        # show_progress = (num_trials != sys.maxsize) # Hack to prevent crash when generator
+        show_progress = True
+        if (num_trials != sys.maxsize):
+            start = True
+        else:
+            start = False
 
         # if context.runmode & ContextFlags.SIMULATION_MODE: # Suppress output for simulations
         #     show_progress = False
@@ -8533,6 +8538,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 run_trials_task = next((task.id for task in progress.tasks if self.name in task.description), None) or \
                                   progress.add_task(f"[red]Executing {self.name}...",
                                                     total=num_trials,
+                                                    start=start
                                                     )
 
         with run_progress:
