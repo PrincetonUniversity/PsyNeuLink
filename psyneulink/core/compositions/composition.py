@@ -2427,8 +2427,7 @@ logger = logging.getLogger(__name__)
 
 CompositionRegistry = {}
 
-# rich Progress tracking ---------------------------
-
+# rich Progress Tracking -----------------------------------
 class SimulationProgress(Progress):
     def start(self):
         return
@@ -2436,7 +2435,6 @@ class SimulationProgress(Progress):
         return
 progress = Progress(auto_refresh=False)
 simulation_progress = SimulationProgress(auto_refresh=False)
-
 # Console report styles
 # node
 node_panel_color = 'orange1'
@@ -8503,46 +8501,40 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
         # show_progress = (num_trials != sys.maxsize) # Hack to prevent crash when generator
-        show_progress = True
-        if (num_trials != sys.maxsize):
+        global progress
+        global simulation_progress
+        run_progress = progress # default progress Object
+
+        # Set modes relevant to rich.progress
+        _show_progress = True # for future use as option to fully suppress progress reporting
+        _simulation_mode = (context.runmode & ContextFlags.SIMULATION_MODE)
+        _indeterminate = (num_trials != sys.maxsize) # when num_trials is not known (e.g., a generator is for inputs)
+
+        # Set rich.progress parameters
+        if _simulation_mode:
+            _execution_mode_str = 'Simulat'
+        else:
+            _execution_mode_str = 'Execut'
+        if _indeterminate:
             start = True
         else:
             start = False
-
-        # if context.runmode & ContextFlags.SIMULATION_MODE: # Suppress output for simulations
-        #     show_progress = False
-        # if show_progress:
-        #     global progress
-        #     run_trials_task = progress.add_task(f"[red]Executing {self.name}...",
-        #                                         total=num_trials,
-        #                                         )
-
-        # if show_progress:
-        #     global progress
-        #     run_trials_task = progress.add_task(f"[red]Executing {self.name}...",
-        #                                         total=num_trials,
-        #                                         )
-
-        global progress
-        global simulation_progress
-        run_progress = progress
-
-        if show_progress:
-            if context.runmode & ContextFlags.SIMULATION_MODE: # Suppress output for simulations
+        if _show_progress:
+            if _simulation_mode: # Suppress output for simulations
                 run_progress = simulation_progress
                 run_trials_task = next((task.id for task in progress.tasks if self.name in task.description), None) or \
-                                  progress.add_task(f"[red]Simulating {self.name}...",
+                                  progress.add_task(f"[red]{_execution_mode_str}ing {self.name}...",
                                                     total=num_trials,
                                                     visible=False
                                                     )
             else:
                 run_trials_task = next((task.id for task in progress.tasks if self.name in task.description), None) or \
-                                  progress.add_task(f"[red]Executing {self.name}...",
+                                  progress.add_task(f"[red]{_execution_mode_str}ing {self.name}...",
                                                     total=num_trials,
                                                     start=start
                                                     )
 
-        with run_progress:
+        with run_progress: # run in context of relevant rich.progress (normal or simulation)
 
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
@@ -8555,9 +8547,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     scheduler=scheduler,
                     context=context
                 ):
-                    if show_progress:
+                    if _show_progress:
                         progress.update(run_trials_task,
-                                        description=f'{self.name}: {trial_num} of {num_trials} trials executed',
+                                        description=f'{self.name}: '
+                                                    f'{_execution_mode_str}ed {trial_num} of {num_trials} trials',
                                         refresh=True,
                                         completed=True)
                     break
@@ -8567,9 +8560,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 try:
                     execution_stimuli = self._parse_trial_inputs(inputs, trial_num)
                 except StopIteration:
-                    if show_progress:
+                    if _show_progress:
                         progress.update(run_trials_task,
-                                        description=f'{self.name}: {trial_num} of {num_trials} trials executed',
+                                        description=f'{self.name}: '
+                                                    f'{_execution_mode_str}ed {trial_num} of {num_trials} trials',
                                         refresh=True,
                                         completed=True)
                     break
@@ -8618,16 +8612,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if call_after_trial:
                     call_with_pruned_args(call_after_trial, context=context)
 
-                if show_progress:
+                if _show_progress:
                     if self._trial_report:
                         progress.console.print(self._trial_report)
                         progress.console.print('')
-                    if context.runmode & ContextFlags.SIMULATION_MODE:
-                        execution_string = 'simulated'
-                    else:
-                        execution_string = 'executed'
                     progress.update(run_trials_task,
-                                    description=f'{self.name}: {trial_num+1} of {num_trials} trials {execution_string}',
+                                    description=f'{self.name}:'
+                                                f'{_execution_mode_str}ed:  {trial_num+1} of {num_trials} trials',
                                     advance=1,
                                     refresh=True)
 
