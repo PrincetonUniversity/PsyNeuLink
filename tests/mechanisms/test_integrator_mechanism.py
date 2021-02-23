@@ -793,7 +793,7 @@ class TestIntegratorRate:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=DriftDiffusionIntegrator(
-                rate=5.0
+                rate=5.0, time_step_size=1.0
             )
         )
         # P = Process(pathway=[I])
