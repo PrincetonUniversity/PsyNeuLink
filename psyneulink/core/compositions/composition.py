@@ -2349,6 +2349,8 @@ import typecheck as tc
 from rich import print, box
 from rich.panel import Panel
 from rich.console import RenderGroup
+from rich.progress import Progress
+
 
 from PIL import Image
 from copy import deepcopy, copy
@@ -2427,7 +2429,6 @@ CompositionRegistry = {}
 
 # rich Progress tracking ---------------------------
 
-from rich.progress import Progress
 class SimulationProgress(Progress):
     def start(self):
         return
@@ -8523,10 +8524,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #                                         )
 
         global progress
+        global simulation_progress
         run_progress = progress
 
         if show_progress:
-            global simulation_progress
             if context.runmode & ContextFlags.SIMULATION_MODE: # Suppress output for simulations
                 run_progress = simulation_progress
                 run_trials_task = next((task.id for task in progress.tasks if self.name in task.description), None) or \
