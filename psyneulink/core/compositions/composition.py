@@ -2415,6 +2415,7 @@ from psyneulink.library.components.mechanisms.processing.objective.predictionerr
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
     AutoAssociativeLearningMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
+from psyneulink.core.components.functions.fitfunctions import make_likelihood_function
 
 __all__ = [
     'Composition', 'CompositionError', 'CompositionRegistry', 'EdgeType', 'get_compositions', 'NodeRole'
@@ -10156,6 +10157,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _animate_execution(self, active_items, context):
         self._show_graph._animate_execution(active_items, context)
+
+    def make_likelihood_function(self, *args, **kwargs):
+        """
+        This method invokes :func:`~psyneulink.core.components.functions.fitfunctions.make_likelihood_function`
+        on the composition.
+        """
+        return make_likelihood_function(composition=self, *args, **kwargs)
+
+    def fit(self, *args, **kwargs):
+        """
+        Fit parameters of this composition to an experimental dataset.
+        """
+        raise NotImplemented("Need to implement this!")
+
 
 
 def get_compositions():

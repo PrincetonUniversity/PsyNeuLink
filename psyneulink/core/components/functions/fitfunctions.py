@@ -53,9 +53,8 @@ def simulation_likelihood(sim_data,
     """
     Compute the likelihood of a simulation dataset (or the parameters that generated it) conditional
     on a set of experimental data. This function essentially just computes the kernel density estimate (KDE)
-    of the simulation data at the experimental data points.
-    If no experimental data is provided just return the KDE evaluated at default points provided by the fastkde
-    library.
+    of the simulation data at the experimental data points. If no experimental data is provided just return
+    the KDE evaluated at default points provided by the fastkde library.
 
     Some related work:
 
@@ -90,7 +89,8 @@ def simulation_likelihood(sim_data,
     exp_data: This must be a numpy array with identical format as the simulation data, with the exception
         that there is no simulation dimension.
 
-    categorical_dims: a list of indices that indicate categorical dimensions of a data point.
+    categorical_dims: a list of indices that indicate categorical dimensions of a data point. Length must be
+        the same length as last dimension of sim_data and exp_data.
 
     combine_trials: Combine data across all trials into a single likelihood estimate, this assumes
         that the parameters of the simulations are identical across trials.
@@ -108,6 +108,9 @@ def simulation_likelihood(sim_data,
 
     if combine_trials and sim_data.shape[0] > 1:
         sim_data = np.vstack(sim_data)[None, :, :]
+
+    if type(categorical_dims) != np.ndarray:
+        categorical_dims = np.array(categorical_dims)
 
     con_sim_data = sim_data[:, :, ~categorical_dims]
     cat_sim_data = sim_data[:, :, categorical_dims]
@@ -195,7 +198,6 @@ def simulation_likelihood(sim_data,
                "output values of the composition. Also make sure parameter ranges you are searching over "
                "are reasonable for your data."))
 
-
         return kdes_eval
 
     else:
@@ -205,9 +207,9 @@ def simulation_likelihood(sim_data,
 def make_likelihood_function(composition: 'psyneulink.core.composition.Composition',
                              fit_params: typing.List[Parameter],
                              inputs: typing.Union[np.ndarray, typing.List],
-                             categorical_dims: np.ndarray,
-                             data_to_fit: np.ndarray,
-                             num_simulations: int = 1000,
+                             data_to_fit: typing.Union[np.ndarray, pd.DataFrame],
+                             categorical_dims: typing.Union[np.ndarray, None] = None,
+                             num_sims_per_trial: int = 1000,
                              fixed_params: typing.Optional[typing.Dict[Parameter, typing.Any]] = None,
                              combine_trials=True):
     """
@@ -220,7 +222,7 @@ def make_likelihood_function(composition: 'psyneulink.core.composition.Compositi
     composition: A PsyNeuLink composition. This function returns a function that runs
         many simulations of this composition to generate a kernel density estimate of the likelihood
         of a dataset under different parameter settings. The output (composition.results) should match
-        the format in data_to_fit.
+        the columns of data_to_fit exactly.
     fit_params: A list of PsyNeuLink parameters to fit. Each on of these parameters will map to
         an argument of the likelihood function that is returned. Values passed via these arguments
         will be assigned to the composition before simulation.
@@ -229,24 +231,25 @@ def make_likelihood_function(composition: 'psyneulink.core.composition.Compositi
         arguments to the likelihood function.
     inputs: A set of inputs to pass to the composition on each simulation of the likelihood. These
         inputs are passed directly to the composition run method as is.
-    categorical_dims: A 1D logical array, where each dimension corresponds to an output dimension
-        of the PsyNeuLink composition. If True, the dimension should be considered categorical, if False,
-        it should be treated as continuous. Categorical is suitable for outputs that will only take on
-        a handful of unique values, such as the decision value of a DDM.
-    data_to_fit: A 2D numpy array where the first dimension is the trial number and the columns are
+    categorical_dims: If data_to_fit is a pandas DataFrame, this parameter is ignored and any Categorical column
+        is considered categorical. If data_to_fit is a ndarray, categorical_dims should be a 1D logical array, where
+        each element corresponds to a column of data_to_fit. If the element is True, the dimension should be considered
+        categorical, if False, it should be treated as continuous. Categorical is suitable for outputs that will only
+        take on a handful of unique values, such as the decision value of a DDM or LCA.
+    data_to_fit: Either 2D numpy array or Pandas DataFrame, where the rows are trials and the columns are
         in the same format as outputs of the PsyNeuLink composition. This data essentially describes at
         what values the KDE of the likelihood should be evaluated.
-    num_simulations: The number of simulations (per trial) to run to construct the KDE likelihood.
+    num_sims_per_trial: The number of simulations per trial to run to construct the KDE likelihood.
     combine_trials: Whether we can combine simulations across trials for one estimate of the likelihood.
-        This can dramatically increase the speed of the likelihood function by allowing a smaller number
-        of total simulations to run per trial. However, this cannot be done if the trial by trial state
-        of the composition is maintained.
+        This can dramatically increase the speed of fitting by allowing a smaller number
+        of total simulations to run per trial. However, this cannot be done if the likelihood will change across
+        trials.
 
     Returns
     -------
     A tuple containing:
         - the likelihood function
-        - A dict which maps elements of fit_params to their string function argument names.
+        - A dict which maps elements of fit_params to their keyword argument names in the likelihood function.
     """
 
     # We need to parse the inputs like composition does to get the number of trials
@@ -261,6 +264,20 @@ def make_likelihood_function(composition: 'psyneulink.core.composition.Compositi
     dupe_counts = [all_param_names[:i].count(all_param_names[i])+1 for i in range(len(all_param_names))]
     all_param_names = [name if count == 1 else f"{name}_{count}" for name, count in zip(all_param_names, dupe_counts)]
     param_name_map = dict(zip(fit_params, all_param_names))
+
+    if type(data_to_fit) == np.ndarray:
+        if data_to_fit.ndim != 2:
+            raise ValueError("data_to_fit must be a 2D")
+
+        # Assume all dimensions are continuous if this wasn't specified by the user and their data is a numpy array
+        if categorical_dims is None:
+            categorical_dims = [False for i in range(data_to_fit.shape[1])]
+
+    elif type(data_to_fit) == pd.DataFrame:
+        categorical_dims = [data_to_fit[c].dtype.name == "category" for c in data_to_fit.columns]
+
+    else:
+        raise ValueError("data_to_fit must be a 2D numpy array or a Pandas DataFrame")
 
     def log_likelihood(**kwargs):
         context = Context()
@@ -296,7 +313,7 @@ def make_likelihood_function(composition: 'psyneulink.core.composition.Compositi
         # Run the composition for all simulations, this corresponds to looping over the input
         # num_simulations times.
         composition.run(inputs=inputs,
-                        num_trials=num_simulations * num_trials,
+                        num_trials=num_sims_per_trial * num_trials,
                         bin_execute=True,
                         context=context)
 
@@ -306,7 +323,8 @@ def make_likelihood_function(composition: 'psyneulink.core.composition.Compositi
         sim_data = np.array(np.vsplit(results, num_trials))
 
         # Compute the likelihood given the data
-        like = simulation_likelihood(sim_data=sim_data, exp_data=data_to_fit,
+        like = simulation_likelihood(sim_data=sim_data,
+                                     exp_data=data_to_fit.to_numpy().astype(float),
                                      categorical_dims=categorical_dims,
                                      combine_trials=combine_trials)
 
