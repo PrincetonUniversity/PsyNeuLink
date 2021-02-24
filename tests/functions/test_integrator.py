@@ -141,7 +141,12 @@ def test_execute(func, mode, variable, noise, params, benchmark):
         if func[1] == DriftIntFun:
             pytest.skip("DriftDiffusionIntegrator doesn't support functional noise")
 
-    f = func[0](default_variable=variable, noise=noise, **params)
+    # If we are dealing with a DriftDiffusionIntegrator, noise and time_step_size defaults
+    # have changed since this test was created. Hard code their old values.
+    if 'DriftDiffusionIntegrator' in str(func[0]):
+        f = func[0](default_variable=variable, noise=np.sqrt(noise), time_step_size=1.0, **params)
+    else:
+        f = func[0](default_variable=variable, noise=noise, **params)
 
     if mode == 'Python':
         ex = f

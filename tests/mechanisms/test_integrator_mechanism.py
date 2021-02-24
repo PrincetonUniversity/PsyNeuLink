@@ -1173,7 +1173,8 @@ class TestIntegratorNoise:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=DriftDiffusionIntegrator(
-                noise=5.0,
+                noise=np.sqrt(5.0),
+                time_step_size=1.0,
             ),
         )
 
