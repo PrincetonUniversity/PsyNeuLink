@@ -66,7 +66,7 @@ names = [
 @pytest.mark.distance_function
 @pytest.mark.benchmark
 @pytest.mark.parametrize("metric, normalize, fail, expected", test_data, ids=names)
-@pytest.mark.parametrize("variable", [test_var, test_var.astype(np.float32), test_var.tolist()], ids=["np.float", "np.float32", "list"])
+@pytest.mark.parametrize("variable", [test_var, test_var.astype(np.float32), test_var.tolist()], ids=["np.default", "np.float32", "list"])
 @pytest.mark.parametrize("mode", ['Python',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])

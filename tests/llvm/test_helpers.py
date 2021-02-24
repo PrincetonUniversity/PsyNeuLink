@@ -430,8 +430,8 @@ def test_helper_numerical(mode, op, var, expected):
 @pytest.mark.parametrize('mode', ['CPU',
                                   pytest.param('PTX', marks=pytest.mark.cuda)])
 @pytest.mark.parametrize('var,expected', [
-    (np.array([1,2,3], dtype=np.float), np.array([2,3,4], dtype=np.float)),
-    (np.array([[1,2],[3,4]], dtype=np.float), np.array([[2,3],[4,5]], dtype=np.float)),
+    (np.array([1,2,3], dtype=np.float64), np.array([2,3,4], dtype=np.float64)),
+    (np.array([[1,2],[3,4]], dtype=np.float64), np.array([[2,3],[4,5]], dtype=np.float64)),
 ], ids=["vector", "matrix"])
 def test_helper_elementwise_op(mode, var, expected):
     with pnlvm.LLVMBuilderContext() as ctx:
