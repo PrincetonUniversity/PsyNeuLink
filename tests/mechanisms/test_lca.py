@@ -44,7 +44,7 @@ class TestLCA:
 
         #  - - - - - - - - - - - - - -  - - - - - - - - - - - -
 
-        C.run(inputs={T: [1.0]}, num_trials=3, bin_execute=mode)
+        C.run(inputs={T: [1.0]}, num_trials=3, execution_mode=mode)
 
         # - - - - - - - TRIAL 1 - - - - - - -
 
@@ -63,7 +63,7 @@ class TestLCA:
 
         assert np.allclose(C.results, [[[0.2]], [[0.51]], [[0.9905]]])
         if benchmark.enabled:
-            benchmark(C.run, inputs={T: [1.0]}, num_trials=3, bin_execute=mode)
+            benchmark(C.run, inputs={T: [1.0]}, num_trials=3, execution_mode=mode)
 
     @pytest.mark.mechanism
     @pytest.mark.lca_mechanism
@@ -102,7 +102,7 @@ class TestLCA:
 
         #  - - - - - - - - - - - - - -  - - - - - - - - - - - -
 
-        C.run(inputs={T: [1.0, 2.0]}, num_trials=3, bin_execute=mode)
+        C.run(inputs={T: [1.0, 2.0]}, num_trials=3, execution_mode=mode)
 
         # - - - - - - - TRIAL 1 - - - - - - -
 
@@ -130,7 +130,7 @@ class TestLCA:
 
         assert np.allclose(C.results, [[[0.2, 0.4]], [[0.43, 0.98]], [[0.6705, 1.833]]])
         if benchmark.enabled:
-            benchmark(C.run, inputs={T: [1.0, 2.0]}, num_trials=3, bin_execute=mode)
+            benchmark(C.run, inputs={T: [1.0, 2.0]}, num_trials=3, execution_mode=mode)
 
     def test_equivalance_of_threshold_and_when_finished_condition(self):
         # Note: This tests the equivalence of results when:
@@ -177,10 +177,10 @@ class TestLCA:
         lca = LCAMechanism(size=2, leak=0.5, threshold=0.7)
         comp = Composition()
         comp.add_node(lca)
-        result = comp.run(inputs={lca:[1,0]}, bin_execute=mode)
+        result = comp.run(inputs={lca:[1,0]}, execution_mode=mode)
         assert np.allclose(result, [0.70005431, 0.29994569])
         if benchmark.enabled:
-            benchmark(comp.run, inputs={lca:[1,0]}, bin_execute=mode)
+            benchmark(comp.run, inputs={lca:[1,0]}, execution_mode=mode)
 
     def test_LCAMechanism_threshold_with_max_vs_next(self):
         lca = LCAMechanism(size=3, leak=0.5, threshold=0.1, threshold_criterion=MAX_VS_NEXT)
@@ -209,12 +209,12 @@ class TestLCA:
         lca = LCAMechanism(size=3, leak=0.5, threshold=0.01, threshold_criterion=CONVERGENCE)
         comp = Composition()
         comp.add_node(lca)
-        result = comp.run(inputs={lca:[0,1,2]}, bin_execute=mode)
+        result = comp.run(inputs={lca:[0,1,2]}, execution_mode=mode)
         assert np.allclose(result, [[0.19153799, 0.5, 0.80846201]])
         if mode == 'Python':
             assert lca.num_executions_before_finished == 18
         if benchmark.enabled:
-            benchmark(comp.run, inputs={lca:[0,1,2]}, bin_execute=mode)
+            benchmark(comp.run, inputs={lca:[0,1,2]}, execution_mode=mode)
 
     @pytest.mark.mechanism
     @pytest.mark.lca_mechanism
@@ -232,7 +232,7 @@ class TestLCA:
         response = ProcessingMechanism(size=2)
         comp = Composition()
         comp.add_linear_processing_pathway([lca_thresh, response])
-        result1 = comp.run(inputs={lca_thresh:[1,0]}, bin_execute=mode)
+        result1 = comp.run(inputs={lca_thresh:[1,0]}, execution_mode=mode)
 
         lca_termination = LCAMechanism(size=2,
                                        leak=0.5,
@@ -242,7 +242,7 @@ class TestLCA:
         comp2 = Composition()
         response2 = ProcessingMechanism(size=2)
         comp2.add_linear_processing_pathway([lca_termination,response2])
-        result2 = comp2.run(inputs={lca_termination:[1,0]}, bin_execute=mode)
+        result2 = comp2.run(inputs={lca_termination:[1,0]}, execution_mode=mode)
         assert np.allclose(result1, result2)
 
     def test_equivalance_of_threshold_and_termination_specifications_max_vs_next(self):
@@ -298,8 +298,8 @@ class TestLCA:
                            initial_value=[0, 0], execute_until_finished=False)
         comp1 = Composition()
         comp1.add_node(lca)
-        result1 = comp1.run(inputs={lca:[1, -1]}, bin_execute=mode)
-        assert np.allclose(result1, [[0.52497918747894, 0.47502081252106]],)
+        result1 = comp1.run(inputs={lca:[1, -1]}, execution_mode=mode)
+        assert np.allclose(result1, [[0.52497918747894, 0.47502081252106]])
 
 
 class TestLCAReset:

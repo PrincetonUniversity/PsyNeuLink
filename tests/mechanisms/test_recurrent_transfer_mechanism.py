@@ -1155,7 +1155,7 @@ class TestCustomCombinationFunction:
         C.add_node(I1)
         C.add_node(I2)
 
-        C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, bin_execute=mode)
+        C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, execution_mode=mode)
 
         assert np.allclose(expected, C.results)
 
@@ -1202,7 +1202,7 @@ class TestCustomCombinationFunction:
         if not has_initializers2:
             exp = list(zip((x[0] for x in exp), def_res))
 
-        C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, bin_execute=mode)
+        C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, execution_mode=mode)
 
         assert np.allclose(exp, C.results)
 
@@ -1226,10 +1226,10 @@ class TestCustomCombinationFunction:
         C = pnl.Composition()
         C.add_node(I1)
 
-        results = C.run(inputs={I1: [[1.0]]}, num_trials=1, bin_execute=mode)
+        results = C.run(inputs={I1: [[1.0]]}, num_trials=1, execution_mode=mode)
         if mode == 'Python':
             assert I1.parameters.is_finished_flag.get(C) is until_finished
-        results2 = C.run(inputs={I1: [[1.0]]}, num_trials=1, bin_execute=mode)
+        results2 = C.run(inputs={I1: [[1.0]]}, num_trials=1, execution_mode=mode)
         assert np.allclose(expected[0], results)
         assert np.allclose(expected[1], results2)
 

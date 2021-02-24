@@ -188,7 +188,7 @@ class TestConnectCompositionsViaCIMS:
         # comp3:
         # input = 5.0
         # output = 180.0
-        res = comp3.run(inputs={comp1: [[5.]]}, bin_execute=mode)
+        res = comp3.run(inputs={comp1: [[5.]]}, execution_mode=mode)
         assert np.allclose(res, [[[180.0]]])
         if mode == 'Python':
             assert np.allclose(comp1.output_port.parameters.value.get(comp3), [30.0])
@@ -256,7 +256,7 @@ class TestConnectCompositionsViaCIMS:
         output = outer_composition.run(
             inputs={inner_composition_1: [[[5.0], [50.0]]]},
             scheduler=sched,
-            bin_execute=mode
+            execution_mode=mode
         )
 
         assert np.allclose(output, [[[180.], [1800.]]])
@@ -331,7 +331,7 @@ class TestConnectCompositionsViaCIMS:
                                           B: [1.0]},
                 inner_composition_2: [[12.0]]},
             scheduler=sched,
-            bin_execute=mode
+            execution_mode=mode
         )
         assert np.allclose(output, [[[36.]]])
 
@@ -422,7 +422,7 @@ class TestConnectCompositionsViaCIMS:
                                       B: [[1.0], [1.5], [1.5]]},
                 inner_composition_2: [[12.0], [11.5], [12.5]]},
             scheduler=sched,
-            bin_execute=mode
+            execution_mode=mode
         )
 
         # trial 0:

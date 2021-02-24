@@ -72,7 +72,7 @@ class TestCompositionMethods:
                                     "epochs": 10
                                     },
                                     minibatch_size=minibatch_size,
-                                    bin_execute=mode)
+                                    execution_mode=mode)
 
 
         assert len(results) == 4 // minibatch_size
