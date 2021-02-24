@@ -2435,8 +2435,9 @@ class SimulationProgress(Progress):
     def stop(self):
         return
 progress = Progress(auto_refresh=False)
-simulation_progress = SimulationProgress("[progress.description]{task.description}", BarColumn(), '', '',
-                                         auto_refresh=False)
+# simulation_progress = SimulationProgress("[progress.description]{task.description}", BarColumn(), '', '',
+#                                          auto_refresh=False)
+simulation_progress = SimulationProgress(auto_refresh=False)
 
 
 # Console report styles
@@ -8533,7 +8534,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 run_progress = simulation_progress
                 run_trials_task = progress.add_task(f"[red]{_execution_mode_str}ing {self.name}...",
                                                     total=num_trials,
-                                                    visible=False
+                                                    # visible=False
                                                     )
             else:
                 run_trials_task = progress.add_task(f"[red]{_execution_mode_str}ing {self.name}...",
