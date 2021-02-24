@@ -2348,6 +2348,7 @@ import typecheck as tc
 
 from rich import print, box
 from rich.panel import Panel
+from rich.columns import Columns
 from rich.console import RenderGroup
 from rich.progress import Progress, BarColumn, SpinnerColumn
 
@@ -2434,12 +2435,8 @@ class SimulationProgress(Progress):
     def stop(self):
         return
 progress = Progress(auto_refresh=False)
-# simulation_progress = SimulationProgress("[progress.description]{task.description}",
-#                                          SpinnerColumn(),
-#                                          SpinnerColumn(),
-#                                          SpinnerColumn(),
-#                                          auto_refresh=False)
-simulation_progress = SimulationProgress(auto_refresh=False)
+simulation_progress = SimulationProgress("[progress.description]{task.description}", BarColumn(), '', '',
+                                         auto_refresh=False)
 
 
 # Console report styles
@@ -8527,30 +8524,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if _indeterminate:
             _start = False
             _num_trials_str = ''
-            # run_progress.columns[1] = SpinnerColumn()
         else:
             _start = True
             _num_trials_str = f' of {num_trials}'
-            # run_progress.columns[1] = BarColumn()
 
         if _show_progress:
             if _simulation_mode: # Suppress output for simulations
                 run_progress = simulation_progress
-                # run_trials_task = next((task.id for task in progress.tasks if self.name in task.description), None) or \
-                #                   progress.add_task(f"[red]{_execution_mode_str}ing {self.name}...",
-                #                                     total=num_trials,
-                #                                     visible=False
-                #                                     )
                 run_trials_task = progress.add_task(f"[red]{_execution_mode_str}ing {self.name}...",
                                                     total=num_trials,
-                                                    # visible=False
+                                                    visible=False
                                                     )
             else:
-                # run_trials_task = next((task.id for task in progress.tasks if self.name in task.description), None) or \
-                #                   progress.add_task(f"[red]{_execution_mode_str}ing {self.name}...",
-                #                                     total=num_trials,
-                #                                     start=_start
-                #                                     )
                 run_trials_task = progress.add_task(f"[red]{_execution_mode_str}ing {self.name}...",
                                                     total=num_trials,
                                                     start=_start
