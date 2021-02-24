@@ -1474,7 +1474,7 @@ class GridSearch(OptimizationFunction):
             # Python does "is_close" check first.
             # This implements reservoir sampling
             with b.if_then(select_random):
-                close = pnlvm.helpers.is_close(b, value, min_value)
+                close = pnlvm.helpers.is_close(ctx, b, value, min_value)
                 with b.if_else(close) as (tb, eb):
                     with tb:
                         opt_count = b.load(opt_count_ptr)

@@ -19,8 +19,9 @@ from .builder_context import LLVMBuilderContext, _BUILTIN_PREFIX
 debug_env = debug.debug_env
 
 
-def _setup_builtin_func_builder(ctx, name, args):
-    builder = ctx.create_llvm_function(args, None, _BUILTIN_PREFIX + name)
+def _setup_builtin_func_builder(ctx, name, args, *, return_type=ir.VoidType()):
+    builder = ctx.create_llvm_function(args, None, _BUILTIN_PREFIX + name,
+                                       return_type=return_type)
 
     # Add noalias attribute
     for a in builder.function.args:
@@ -155,28 +156,6 @@ def setup_vec_sum(ctx):
         u_val = b1.load(u_ptr)
         u_sum = b1.fadd(u_val, builder.load(o))
         b1.store(u_sum, o)
-
-    builder.ret_void()
-
-# Setup vector copy builtin
-def setup_vec_copy(ctx):
-    # Setup types
-    double_ptr_ty = ctx.float_ty.as_pointer()
-
-    # builtin vector copy func
-    # param1: ptr to vector 1
-    # param2: sizeof vector
-    # param3: ptr to output vector (make sure this is same size as param3)
-    builder = _setup_builtin_func_builder(ctx, "vec_copy", (double_ptr_ty, ctx.int32_ty, double_ptr_ty))
-    u, x, o = builder.function.args
-
-    # Copy
-    with helpers.for_loop_zero_inc(builder, x, "copy") as (b1, index):
-        u_ptr = b1.gep(u, [index])
-        o_ptr = b1.gep(o, [index])
-        u_val = b1.load(u_ptr)
-
-        b1.store(u_val, o_ptr)
 
     builder.ret_void()
 
@@ -407,6 +386,70 @@ def setup_mat_add(ctx):
             b2.store(o_val, o_ptr)
 
     builder.ret_void()
+
+
+def setup_is_close(ctx):
+    builder = _setup_builtin_func_builder(ctx, "is_close", [ctx.float_ty,
+                                                            ctx.float_ty,
+                                                            ctx.float_ty,
+                                                            ctx.float_ty],
+                                          return_type=ctx.bool_ty)
+    val1, val2, rtol, atol = builder.function.args
+
+    fabs_f = ctx.get_builtin("fabs", [val2.type])
+
+    diff = builder.fsub(val1, val2, "is_close_diff")
+    abs_diff = builder.call(fabs_f, [diff], "is_close_abs")
+
+    abs2 = builder.call(fabs_f, [val2], "abs_val2")
+
+    rtol = builder.fmul(rtol, abs2, "is_close_rtol")
+    tol = builder.fadd(rtol, atol, "is_close_atol")
+    res  = builder.fcmp_ordered("<=", abs_diff, tol, "is_close_cmp")
+    builder.ret(res)
+
+
+def setup_csch(ctx):
+    builder = _setup_builtin_func_builder(ctx, "csch", (ctx.float_ty,),
+                                          return_type=ctx.float_ty)
+    x = builder.function.args[0]
+    exp_f = ctx.get_builtin("exp", [x.type])
+    # (2e**x)/(e**2x - 1)
+    ex = builder.call(exp_f, [x])
+    num = builder.fmul(ex.type(2), ex)
+    _2x = builder.fmul(x.type(2), x)
+    e2x = builder.call(exp_f, [_2x])
+    den = builder.fsub(e2x, e2x.type(1))
+    res = builder.fdiv(num, den)
+    builder.ret(res)
+
+
+def setup_tanh(ctx):
+    builder = _setup_builtin_func_builder(ctx, "tanh", (ctx.float_ty,),
+                                          return_type=ctx.float_ty)
+    x = builder.function.args[0]
+    exp_f = ctx.get_builtin("exp", [x.type])
+    # (e**2x - 1)/(e**2x + 1)
+    _2x = builder.fmul(x.type(2), x)
+    e2x = builder.call(exp_f, [_2x])
+    num = builder.fsub(e2x, e2x.type(1))
+    den = builder.fadd(e2x, e2x.type(1))
+    res = builder.fdiv(num, den)
+    builder.ret(res)
+
+
+def setup_coth(ctx):
+    builder = _setup_builtin_func_builder(ctx, "coth", (ctx.float_ty,),
+                                          return_type=ctx.float_ty)
+    x = builder.function.args[0]
+    exp_f = ctx.get_builtin("exp", [x.type])
+    # (e**2x + 1)/(e**2x - 1)
+    _2x = builder.fmul(x.type(2), x)
+    e2x = builder.call(exp_f, [_2x])
+    num = builder.fadd(e2x, e2x.type(1))
+    den = builder.fsub(e2x, e2x.type(1))
+    res = builder.fdiv(num, den)
+    builder.ret(res)
 
 
 def setup_pnl_intrinsics(ctx):

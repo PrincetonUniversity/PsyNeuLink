@@ -293,8 +293,8 @@ class TestMiscTrainingFunctionality:
     @pytest.mark.parametrize(
         'learning_rate, weight_decay, optimizer_type, expected', [
             (10, 0, 'sgd', [[[0.9863038667851067]], [[0.9944287263151904]], [[0.9934801466163382]], [[0.9979153035411085]]]),
-            (1.5, 1, 'sgd', None),
-            (1.5, 1, 'adam', None),
+            (1.5, 1, 'sgd', [[[0.33226742]], [[0.4492334]], [[0.75459534]], [[0.44477028]]]),
+            (1.5, 1, 'adam', [[[0.43109927]], [[0.33088828]], [[0.40094236]], [[0.57104689]]]),
         ]
     )
     @pytest.mark.parametrize("mode", ['Python',
@@ -340,7 +340,8 @@ class TestMiscTrainingFunctionality:
                                                 "targets": {xor_out:xor_targets},
                                                 "epochs": 10}, bin_execute=mode)
 
-        if expected is not None:
+        # FIXME: LLVM version is broken with learning rate == 1.5
+        if learning_rate != 1.5 or mode == "Python":
             assert np.allclose(results_before_proc, expected)
 
         if benchmark.enabled:
