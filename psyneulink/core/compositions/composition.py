@@ -8131,6 +8131,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             termination_processing=None,
             skip_analyze_graph=False,
             animate=False,
+            show_progress=True,
+            show_output=None,
             log=False,
             scheduler=None,
             bin_execute=False,
@@ -8504,6 +8506,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._trial_report = None
 
 
+        # Show output if specified in call to method or on Composition's pref
+        if show_output is None:
+            # if argument is not specified in call, defer to reportOutputPref, otherwise use specification in argument
+            show_output = self.reportOutputPref
 
         # show_progress = (num_trials != sys.maxsize) # Hack to prevent crash when generator
         global progress
@@ -8511,7 +8517,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         run_progress = progress # default progress Object
 
         # Set modes relevant to rich.progress
-        _show_progress = True # for future use as option to fully suppress progress reporting
         _simulation_mode = (context.runmode & ContextFlags.SIMULATION_MODE)
         _indeterminate = (num_trials == sys.maxsize) # when num_trials is not known (e.g., a generator is for inputs)
 
@@ -8529,7 +8534,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _start = True
             _num_trials_str = f' of {num_trials}'
 
-        if _show_progress:
+        if show_progress:
             if _simulation_mode: # Suppress output for simulations
                 run_progress = simulation_progress
                 run_trials_task = progress.add_task(f"[red]{_execution_mode_str}ing {self.name}...",
@@ -8541,6 +8546,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                     total=num_trials,
                                                     start=_start
                                                     )
+
+        print()
 
         with run_progress: # run in context of relevant rich.progress (normal or simulation)
 
@@ -8555,7 +8562,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     scheduler=scheduler,
                     context=context
                 ):
-                    if _show_progress:
+                    if show_progress:
                         progress.update(run_trials_task,
                                         description=f'{self.name}: '
                                                     f'{_execution_mode_str}ed',
@@ -8568,7 +8575,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 try:
                     execution_stimuli = self._parse_trial_inputs(inputs, trial_num)
                 except StopIteration:
-                    if _show_progress:
+                    if show_progress:
                         progress.update(run_trials_task,
                                         description=f'{self.name}: '
                                                     f'{_execution_mode_str}ed {trial_num}{_num_trials_str} trials',
@@ -8590,6 +8597,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             clamp_input=clamp_input,
                                             runtime_params=runtime_params,
                                             skip_initialization=True,
+                                            show_output=show_output,
                                             bin_execute=bin_execute,
                                             )
 
@@ -8620,10 +8628,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if call_after_trial:
                     call_with_pruned_args(call_after_trial, context=context)
 
-                if _show_progress:
+                if show_output:
                     if self._trial_report:
                         progress.console.print(self._trial_report)
                         progress.console.print('')
+                if show_progress:
                     progress.update(run_trials_task,
                                     description=f'{self.name}: '
                                                 f'{_execution_mode_str}ed {trial_num+1}{_num_trials_str} trials',
@@ -8857,6 +8866,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             clamp_input=SOFT_CLAMP,
             runtime_params=None,
             skip_initialization=False,
+            show_output=None,
             bin_execute=False,
             ):
         """
@@ -8924,13 +8934,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output value of the final Mechanism executed in the Composition : various
         """
 
+        # Show output if specified in call to method or on Composition's pref
+        if show_output is None:
+            # if argument is not specified in call, defer to reportOutputPref, otherwise use specification in argument
+            show_output = self.reportOutputPref
+
         # If reporting to console, report trial number and Composition's input
-        if self.reportOutputPref:
-        #     trial_num = scheduler.clock.time.trial
+        if show_output:
+
             trial_num = scheduler.clock.time.trial
+
+            show_output = str(show_output)
             try:
-                if 'terse' in self.reportOutputPref:
+                if 'terse' in show_output:   # give precedence to argument in call to execute
                     rich_report = False
+                # elif 'terse' in self.reportOutputPref:
+                #     rich_report = False
                 else:
                     rich_report = True
             except TypeError:
@@ -9294,10 +9313,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
 
-            if self.reportOutputPref:
+            if show_output:
                 if rich_report:
                     _time_step_report = [] # Contains rich.Panel for each node executed in time_step
-                elif any(node.reportOutputPref for node in next_execution_set):
+                elif any(node.reportOutputPref for node in next_execution_set) or show_output is 'all':
                     print(f'[{time_step_panel_color}]Time Step {execution_scheduler.clock.time.time_step} ---------')
 
             # execute each node with EXECUTING in context
@@ -9436,7 +9455,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._animate_execution(node, context)
 
                 # ADD rich.Panel for node to time_step_report
-                if self.reportOutputPref and node.reportOutputPref:
+                if show_output and (node.reportOutputPref or show_output is ALL):
                     if rich_report:
                         _time_step_report.append(
                             _report_node_execution(node,
@@ -9484,15 +9503,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 call_with_pruned_args(call_after_time_step, context=context)
 
 
-            # if reporting to console, print time_step if any nodes have reportOutputPref set
-            if self.reportOutputPref and any(node.reportOutputPref for node in next_execution_set) and rich_report:
-                # print()
-                # print(Panel(RenderGroup(*_time_step_report),
-                #             box=box.SQUARE,
-                #             title=f'[bold blue]\nTime Step {execution_scheduler.clock.time.time_step}[/]',
-                #             expand=False)
-                #       )
-                # self._trial_report.append("")
+            # if reporting to console, print time_step if any nodes have reportOutputPref set or show_ouput is ALL
+            if (show_output and
+                    (any(node.reportOutputPref for node in next_execution_set) or show_output is ALL)
+                    and rich_report):
                 self._trial_report.append(Panel(RenderGroup(*_time_step_report),
                                            # box=box.HEAVY,
                                            border_style=time_step_panel_color,
@@ -9562,7 +9576,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output_values.append(port.parameters.value._get(context))
 
         # Report output for trial
-        if self.reportOutputPref and rich_report:
+        if show_output and rich_report:
             # # print result of Composition execution
             # print(f"\n[bold red]result:[/] {[r.tolist() for r in output_values]}")
             # # print result of Composition execution and name of each OUTPUT Mechanism for the Composition and its value
