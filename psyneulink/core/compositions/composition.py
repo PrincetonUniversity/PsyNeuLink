@@ -2333,7 +2333,6 @@ Class Reference
 import collections
 import enum
 import functools
-import inspect
 import itertools
 import logging
 import networkx
@@ -2348,17 +2347,16 @@ import typecheck as tc
 
 from rich import print, box
 from rich.panel import Panel
-from rich.columns import Columns
 from rich.console import RenderGroup
 from rich.progress import Progress, BarColumn, SpinnerColumn
 
 
 from PIL import Image
 from copy import deepcopy, copy
-from inspect import isgenerator, isgeneratorfunction
+from inspect import isgenerator, isgeneratorfunction, currentframe
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET
+from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, EXECUTION_SET, SHOW_CIM, SHOW_CONTROLLER
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.learningfunctions import \
@@ -2370,8 +2368,7 @@ from psyneulink.core.components.mechanisms.processing.compositioninterfacemechan
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
-    OptimizationControlMechanism, AGENT_REP
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
@@ -2389,17 +2386,15 @@ from psyneulink.core.components.ports.modulatorysignals.controlsignal import Con
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
-    COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, DEFAULT, \
-    FEEDBACK, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, INSET, \
-    LABELS, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
-    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
+    AFTER, ALL, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROLLER, CONTROL_SIGNAL, DEFAULT, FEEDBACK, \
+    HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
+    LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
-    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, \
-    ROLES, SAMPLE, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
-    TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT, OWNER_MECH
+    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PULSE_CLAMP, \
+    SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, TARGET, TARGET_MECHANISM, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.registry import register_category
@@ -2408,7 +2403,7 @@ from psyneulink.core.globals.utilities import \
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import Time, TimeScale
-from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, PreferenceSet, _assign_prefs
+from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism
@@ -8128,9 +8123,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_after_trial=None,
             termination_processing=None,
             skip_analyze_graph=False,
-            animate=False,
-            show_progress=True,
             show_output=None,
+            show_progress=True,
+            animate=False,
             log=False,
             scheduler=None,
             execution_mode=False,
@@ -8227,6 +8222,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                BETTER DESCRIPTION NEEDED
             COMMENT
 
+        show_output : bool, ``terse``, ``all`` or None : default None
+            specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial as
+            it is generated.  If set to False no output is generated.  If set to None, the output is determined by
+            the `reportOutputPort <Preferences.reportOutputPref>` preference of individual Nodes.
+            If set to ``terse``, a single line is generated reporting the execution of each Node for which its
+            reportOutputPref is True.  If set to ``all``, the output of the Composition and all its Nodes is reported.
+
+        show_progress : bool : default True
+            specifies whether to show progress of execution in real time.  If the number trials to be executed is
+            explicitly specified, the number of trials executed, a progress bar, and time remaining are displayed;
+            if the number of trials is not explicitly specified (e.g., it is specified using a generator),
+            then a "spinner" is displayed during execution, and then the total number of trials executed is
+            displayed once complete.
+
         animate : dict or bool : default False
             specifies use of the `show_graph <ShowGraph.show_graph>` method to generate a gif movie showing the
             sequence of Components executed in a run (see `example <BasicsAndPrimer_Stroop_Example_Animation_Figure>`).
@@ -8266,7 +8275,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             * *SHOW*: bool (default=\\ `False`\\ ) -- specifies whether to show the animation after it is
               constructed, using the OS's default viewer.
 
-        log : bool, LogCondition : default False
+        log : bool or LogCondition : default False
             Sets the `log_condition <Parameter.log_condition>` for every primary `node <Composition.nodes>` and
             `projection <Composition.projections>` in the Composition, if it is not already set.
 
@@ -8509,7 +8518,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # if argument is not specified in call, defer to reportOutputPref, otherwise use specification in argument
             show_output = self.reportOutputPref
 
-        # show_progress = (num_trials != sys.maxsize) # Hack to prevent crash when generator
         global progress
         global simulation_progress
         run_progress = progress # default progress Object
@@ -8581,23 +8589,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         completed=True)
                     break
 
-            # execute processing, passing stimuli for this trial
-            trial_output = self.execute(inputs=execution_stimuli,
-                                        scheduler=scheduler,
-                                        termination_processing=termination_processing,
-                                        call_before_time_step=call_before_time_step,
-                                        call_before_pass=call_before_pass,
-                                        call_after_time_step=call_after_time_step,
-                                        call_after_pass=call_after_pass,
-                                        reset_stateful_functions_to=reset_stateful_functions_to,
-                                        context=context,
-                                        base_context=base_context,
-                                        clamp_input=clamp_input,
-                                        runtime_params=runtime_params,
-                                        skip_initialization=True,
-                                        execution_mode=execution_mode,
-                                        show_output=show_output,
-                                        )
+                # execute processing, passing stimuli for this trial
+                trial_output = self.execute(inputs=execution_stimuli,
+                                            scheduler=scheduler,
+                                            termination_processing=termination_processing,
+                                            call_before_time_step=call_before_time_step,
+                                            call_before_pass=call_before_pass,
+                                            call_after_time_step=call_after_time_step,
+                                            call_after_pass=call_after_pass,
+                                            reset_stateful_functions_to=reset_stateful_functions_to,
+                                            context=context,
+                                            base_context=base_context,
+                                            clamp_input=clamp_input,
+                                            runtime_params=runtime_params,
+                                            skip_initialization=True,
+                                            execution_mode=execution_mode,
+                                            show_output=show_output
+                                            )
 
                 # ---------------------------------------------------------------------------------
                 # store the result of this execution in case it will be the final result
@@ -10259,5 +10267,5 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 def get_compositions():
     """Return list of Compositions in caller's namespace."""
-    frame = inspect.currentframe()
+    frame = currentframe()
     return [c for c in frame.f_back.f_locals.values() if isinstance(c, Composition)]

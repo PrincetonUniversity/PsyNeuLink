@@ -479,6 +479,7 @@ class AutodiffComposition(Composition):
                 runtime_params=None,
                 execution_mode=False,
                 skip_initialization=False,
+                show_output=None,
                 ):
         self._assign_execution_ids(context)
         context.composition = self
@@ -528,6 +529,7 @@ class AutodiffComposition(Composition):
                                                         clamp_input=clamp_input,
                                                         runtime_params=runtime_params,
                                                         execution_mode=execution_mode,
+                                                        show_output=show_output
                                                         )
 
     def _get_state_struct_type(self, ctx):
