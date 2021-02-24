@@ -2435,8 +2435,6 @@ class SimulationProgress(Progress):
     def stop(self):
         return
 progress = Progress(auto_refresh=False)
-# simulation_progress = SimulationProgress("[progress.description]{task.description}", BarColumn(), '', '',
-#                                          auto_refresh=False)
 simulation_progress = SimulationProgress(auto_refresh=False)
 
 
