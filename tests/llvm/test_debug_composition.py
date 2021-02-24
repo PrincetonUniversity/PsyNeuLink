@@ -31,8 +31,8 @@ def test_debug_comp(mode, debug_env):
     comp.add_linear_processing_pathway([A, B])
 
     inputs_dict = {A: [5]}
-    output1 = comp.run(inputs=inputs_dict, bin_execute=mode)
-    output2 = comp.run(inputs=inputs_dict, bin_execute=mode)
+    output1 = comp.run(inputs=inputs_dict, execution_mode=mode)
+    output2 = comp.run(inputs=inputs_dict, execution_mode=mode)
     # restore old debug env var and cleanup the debug configuration
     if old_env is None:
         del os.environ["PNL_LLVM_DEBUG"]

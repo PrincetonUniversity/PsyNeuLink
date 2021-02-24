@@ -628,11 +628,11 @@ class TestControlMechanisms:
                                                    intensity_cost_function=pnl.Linear(slope=0.0),
                                                    allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))])
         )
-        results = ocomp.run([5], bin_execute=mode)
+        results = ocomp.run([5], execution_mode=mode)
         assert np.allclose(results, [[50]])
 
         if benchmark.enabled:
-            benchmark(ocomp.run, [5], bin_execute=mode)
+            benchmark(ocomp.run, [5], execution_mode=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -695,11 +695,11 @@ class TestControlMechanisms:
                                                                                      stop=5.0,
                                                                                      num=5))])
         )
-        results = ocomp.run([5], bin_execute=mode)
+        results = ocomp.run([5], execution_mode=mode)
         assert np.allclose(results, [[70]])
 
         if benchmark.enabled:
-            benchmark(ocomp.run, [5], bin_execute=mode)
+            benchmark(ocomp.run, [5], execution_mode=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -762,11 +762,11 @@ class TestControlMechanisms:
                                                                                      stop=5.0,
                                                                                      num=5))])
         )
-        results = ocomp.run([5], bin_execute=mode)
+        results = ocomp.run([5], execution_mode=mode)
         assert np.allclose(results, [[5]])
 
         if benchmark.enabled:
-            benchmark(ocomp.run, [5], bin_execute=mode)
+            benchmark(ocomp.run, [5], execution_mode=mode)
 
     def test_two_tier_ocm(self):
         integrationConstant = 0.8  # Time Constant
@@ -996,11 +996,11 @@ class TestControlMechanisms:
         iComp.add_controller(iController)
         assert iComp.controller == iController
         assert oComp.controller == oController
-        res = oComp.run(inputs=[5], bin_execute=mode)
+        res = oComp.run(inputs=[5], execution_mode=mode)
         assert np.allclose(res, [40])
 
         if benchmark.enabled:
-            benchmark(oComp.run, [5], bin_execute=mode)
+            benchmark(oComp.run, [5], execution_mode=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1039,7 +1039,7 @@ class TestControlMechanisms:
                     monitor: [[1], [5], [1], [5]],
                     rtm: [[1,0], [1,0] ,[1,0], [1,0]]
                 },
-            bin_execute=mode
+            execution_mode=mode
         )
         assert np.allclose(val[0], [5])
         assert np.allclose(val[1], [0.7978996, 0.40776362])
@@ -1062,7 +1062,7 @@ class TestControlMechanisms:
         comp = pnl.Composition()
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         inputs = {mech:[[0.5]], control_mech:[0.2]}
-        results = comp.run(inputs=inputs, num_trials=1, bin_execute=mode)
+        results = comp.run(inputs=inputs, num_trials=1, execution_mode=mode)
         assert np.allclose(comp.results, [[[0.375]]])
 
 
@@ -1729,13 +1729,13 @@ class TestModelBasedOptimizationControlMechanisms:
 
         inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
 
-        comp.run(inputs=inputs, bin_execute=mode)
+        comp.run(inputs=inputs, execution_mode=mode)
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
         assert np.allclose(comp.results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
 
         if benchmark.enabled:
-            benchmark(comp.run, inputs, bin_execute=mode)
+            benchmark(comp.run, inputs, execution_mode=mode)
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -1777,13 +1777,13 @@ class TestModelBasedOptimizationControlMechanisms:
 
         inputs = {A: [[[1.0]], [[2.0]], [[3.0]]]}
 
-        comp.run(inputs=inputs, bin_execute=mode)
+        comp.run(inputs=inputs, execution_mode=mode)
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
         assert np.allclose(comp.results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
 
         if benchmark.enabled:
-            benchmark(comp.run, inputs, bin_execute=mode)
+            benchmark(comp.run, inputs, execution_mode=mode)
 
     def test_model_based_ocm_with_buffer(self):
 
@@ -2128,7 +2128,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         inputs = {A: [[[1.0]]]}
 
-        comp.run(inputs=inputs, num_trials=10, context='outer_comp', bin_execute=mode)
+        comp.run(inputs=inputs, num_trials=10, context='outer_comp', execution_mode=mode)
         assert np.allclose(comp.results, [[[0.7310585786300049]], [[0.999999694097773]], [[0.999999694097773]], [[0.9999999979388463]], [[0.9999999979388463]], [[0.999999694097773]], [[0.9999999979388463]], [[0.999999999986112]], [[0.999999694097773]], [[0.9999999999999993]]])
 
         # control signal value (mod slope) is chosen randomly from all of the control signal values
@@ -2142,7 +2142,7 @@ class TestModelBasedOptimizationControlMechanisms:
             # Disable logging for the benchmark run
             A.log.set_log_conditions(items="mod_slope", log_condition=LogCondition.OFF)
             A.log.clear_entries()
-            benchmark(comp.run, inputs=inputs, num_trials=10, context='bench_outer_comp', bin_execute=mode)
+            benchmark(comp.run, inputs=inputs, num_trials=10, context='bench_outer_comp', execution_mode=mode)
             assert len(A.log.get_logged_entries()) == 0
 
     @pytest.mark.control
@@ -2179,7 +2179,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                       allocation_samples=[-1, 1])
                 ]))
         results = comp.run(inputs={input_a: [[5]], input_b: [[-2]]},
-                           bin_execute=mode)
+                           execution_mode=mode)
 
         # The controller of this model uses two control signals: one that modulates the slope of input_a and one that modulates
         # the slope of input_b. Both control signals have two possible values: -1 or 1.

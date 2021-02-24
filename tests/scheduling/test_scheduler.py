@@ -1533,7 +1533,7 @@ class TestFeedback:
         comp.scheduler.add_condition(response, pnl.WhenFinished(attention))
         comp.scheduler.add_condition(counter, pnl.Always())
         inputs = {attention: [[0.5]], counter: [[2.0]]}
-        result = comp.run(inputs=inputs, bin_execute=mode)
+        result = comp.run(inputs=inputs, execution_mode=mode)
         if mode == 'Python':
             assert attention.execution_count == 3
             assert counter.execution_count == 1 if in_one_pass else 3
@@ -1617,7 +1617,7 @@ class TestFeedback:
         elif condition is pnl.AtTrial:
             comp.scheduler.add_condition(response, condition(0))
 
-        result = comp.run([0.05], bin_execute=mode)
+        result = comp.run([0.05], execution_mode=mode)
         #HACK: The result is an object dtype in Python mode for some reason?
         if mode == 'Python':
             result = np.asfarray(result[0])
@@ -1642,6 +1642,6 @@ class TestFeedback:
         comp.scheduler.termination_conds = {
             pnl.TimeScale.RUN: condition(2)
         }
-        r = comp.run(inputs=[1], num_trials=5, bin_execute=mode)
+        r = comp.run(inputs=[1], num_trials=5, execution_mode=mode)
         assert np.allclose(r, expected_result[-1])
         assert np.allclose(comp.results, expected_result)

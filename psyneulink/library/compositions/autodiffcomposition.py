@@ -477,7 +477,7 @@ class AutodiffComposition(Composition):
                 clamp_input=SOFT_CLAMP,
                 targets=None,
                 runtime_params=None,
-                bin_execute=False,
+                execution_mode=False,
                 skip_initialization=False,
                 ):
         self._assign_execution_ids(context)
@@ -527,7 +527,7 @@ class AutodiffComposition(Composition):
                                                         base_context=base_context,
                                                         clamp_input=clamp_input,
                                                         runtime_params=runtime_params,
-                                                        bin_execute=bin_execute,
+                                                        execution_mode=execution_mode,
                                                         )
 
     def _get_state_struct_type(self, ctx):

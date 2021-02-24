@@ -55,7 +55,7 @@ def test_autodiff_forward(mode):
     xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
     xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-    outputs = xor.run(inputs=[0,0], bin_execute=mode)
+    outputs = xor.run(inputs=[0,0], execution_mode=mode)
     assert np.allclose(outputs, [[0.9479085241082691]])
 
 @pytest.mark.pytorch
@@ -181,7 +181,7 @@ class TestMiscTrainingFunctionality:
         #                               epochs=10)
         results_before_proc = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
                                               "targets": {xor_out:xor_targets},
-                                              "epochs": 10}, bin_execute=mode)
+                                              "epochs": 10}, execution_mode=mode)
 
         # get weight parameters from pytorch
         pt_weights_hid_bp = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
@@ -244,7 +244,7 @@ class TestMiscTrainingFunctionality:
 
         xor.learn(inputs = {"inputs": {xor_in:xor_inputs},
                           "targets": {xor_out:xor_targets},
-                          "epochs": 10}, bin_execute=mode)
+                          "epochs": 10}, execution_mode=mode)
 
     @pytest.mark.parametrize("mode", ['Python',
                                     #   pytest.param('LLVMRun', marks=[pytest.mark.llvm, pytest.mark.skip]), # Not implemented?
@@ -283,10 +283,10 @@ class TestMiscTrainingFunctionality:
 
         xor.learn(inputs={"inputs": {xor_in:xor_inputs},
                         "targets": {xor_out:xor_targets},
-                        "epochs": 10}, bin_execute=mode)
+                        "epochs": 10}, execution_mode=mode)
         xor.learn(inputs={"inputs": {xor_in: xor_inputs},
                         "targets": {xor_out: xor_targets},
-                        "epochs": 10}, bin_execute=mode)
+                        "epochs": 10}, execution_mode=mode)
 
 
     @pytest.mark.benchmark(group="Optimizer specs")
@@ -338,7 +338,7 @@ class TestMiscTrainingFunctionality:
         #                               epochs=10)
         results_before_proc = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
                                                 "targets": {xor_out:xor_targets},
-                                                "epochs": 10}, bin_execute=mode)
+                                                "epochs": 10}, execution_mode=mode)
 
         # FIXME: LLVM version is broken with learning rate == 1.5
         if learning_rate != 1.5 or mode == "Python":
@@ -347,7 +347,7 @@ class TestMiscTrainingFunctionality:
         if benchmark.enabled:
             benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
                                          "targets": {xor_out:xor_targets},
-                                         "epochs": 10}, bin_execute=mode)
+                                         "epochs": 10}, execution_mode=mode)
 
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
@@ -399,7 +399,7 @@ class TestMiscTrainingFunctionality:
         # train the model for a few epochs
         result = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
                                  "targets": {xor_out:xor_targets},
-                                 "epochs": 10}, bin_execute=mode)
+                                 "epochs": 10}, execution_mode=mode)
 
         # get weight parameters from pytorch
         pt_weights_hid = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
@@ -463,14 +463,14 @@ class TestTrainingCorrectness:
         if calls == 'single':
             results = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
                                         "targets": {xor_out:xor_targets},
-                                        "epochs": eps}, bin_execute=mode)
+                                        "epochs": eps}, execution_mode=mode)
 
         else:
             input_dict = {"inputs": {xor_in: xor_inputs},
                           "targets": {xor_out: xor_targets},
                           "epochs": 1}
             for i in range(eps):
-                results = xor.learn(inputs=input_dict, bin_execute=mode)
+                results = xor.learn(inputs=input_dict, execution_mode=mode)
 
         assert len(results) == len(expected)
         for r, t in zip(results, expected):
@@ -479,7 +479,7 @@ class TestTrainingCorrectness:
         if benchmark.enabled:
             benchmark(xor.learn, inputs={"inputs": {xor_in: xor_inputs},
                                          "targets": {xor_out: xor_targets},
-                                         "epochs": eps}, bin_execute=mode)
+                                         "epochs": eps}, execution_mode=mode)
 
 
     # tests whether semantic network created as autodiff composition learns properly
@@ -655,7 +655,7 @@ class TestTrainingCorrectness:
         # TRAIN THE MODEL
         results = sem_net.learn(inputs={'inputs': inputs_dict,
                                         'targets': targets_dict,
-                                        'epochs': eps}, bin_execute=mode)
+                                        'epochs': eps}, execution_mode=mode)
 
         # CHECK CORRECTNESS
         expected = [[[0.13455769, 0.12924714, 0.13288172, 0.1404659 , 0.14305814,
@@ -786,7 +786,7 @@ class TestTrainingCorrectness:
         if benchmark.enabled:
             benchmark(sem_net.learn, inputs={'inputs': inputs_dict,
                                              'targets': targets_dict,
-                                             'epochs': eps}, bin_execute=mode)
+                                             'epochs': eps}, execution_mode=mode)
 
     @pytest.mark.parametrize("mode", ['Python',
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
@@ -947,11 +947,11 @@ class TestTrainingCorrectness:
             minibatch_size=1,
             patience=patience,
             min_delta=min_delt,
-            bin_execute=mode
+            execution_mode=mode
         )
         mnet.run(
             inputs=input_set['inputs'],
-            bin_execute=mode
+            execution_mode=mode
         )
         output = np.array(mnet.parameters.results.get(mnet)[-15:]).reshape(225)
 
@@ -1300,7 +1300,7 @@ class TestTrainingTime:
                              epochs=eps,
                              learning_rate=0.1,
                              controller=opt,
-                             bin_execute=mode)
+                             execution_mode=mode)
         end = timeit.default_timer()
         comp_time = end - start
 
@@ -1374,7 +1374,7 @@ class TestTrainingTime:
 
         # SET UP COMPOSITION
 
-        xor = AutodiffComposition(bin_execute=mode)
+        xor = AutodiffComposition(execution_mode=mode)
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -1405,7 +1405,7 @@ class TestTrainingTime:
                          epochs=eps,
                          learning_rate=0.1,
                          controller=opt,
-                         bin_execute=mode)
+                         execution_mode=mode)
         end = timeit.default_timer()
         comp_time = end - start
 
@@ -2468,10 +2468,10 @@ class TestNested:
         no_training_input = {xor_autodiff: no_training_input_dict}
 
         learning_context = Context()
-        result1 = xor_autodiff.learn(inputs=input_dict, bin_execute=mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
+        result1 = xor_autodiff.learn(inputs=input_dict, execution_mode=mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
         result1 = np.array(result1).flatten()
         assert np.allclose(result1, np.array(xor_targets).flatten(), atol=0.1)
-        result2 = parentComposition.run(inputs=no_training_input, bin_execute=mode, context=learning_context)
+        result2 = parentComposition.run(inputs=no_training_input, execution_mode=mode, context=learning_context)
 
         assert np.allclose(result2, [[0]], atol=0.1)
 
@@ -2537,9 +2537,9 @@ class TestNested:
         input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
         learning_context = Context()
-        result1 = xor_autodiff.run(inputs=input[xor_autodiff]['inputs'], bin_execute=mode, context=learning_context)
-        xor_autodiff.learn(inputs=input_dict, bin_execute=mode, context=learning_context, patience=patience, min_delta=min_delta)
-        result2 = parentComposition.run(inputs=no_training_input, bin_execute=mode, context=learning_context)
+        result1 = xor_autodiff.run(inputs=input[xor_autodiff]['inputs'], execution_mode=mode, context=learning_context)
+        xor_autodiff.learn(inputs=input_dict, execution_mode=mode, context=learning_context, patience=patience, min_delta=min_delta)
+        result2 = parentComposition.run(inputs=no_training_input, execution_mode=mode, context=learning_context)
 
         assert np.allclose(result2, [[0]], atol=0.1)
 
@@ -2873,7 +2873,7 @@ class TestNested:
         input = {sem_net: input_dict}
         no_training_input = {sem_net: inputs_dict.copy()}
 
-        sem_net.learn(inputs=input_dict, bin_execute=mode)
+        sem_net.learn(inputs=input_dict, execution_mode=mode)
 
         if mode != 'Python':
             #FIXME: Enable the rest of the test when recompilation is supported

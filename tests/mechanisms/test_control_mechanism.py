@@ -215,7 +215,7 @@ class TestLCControlMechanism:
         control_mech = pnl.ControlMechanism(control=mech.input_ports)
         comp = pnl.Composition()
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
-        results = comp.run(inputs={mech:[[2],[2],[2]], control_mech:[2]}, num_trials=2, bin_execute=mode)
+        results = comp.run(inputs={mech:[[2],[2],[2]], control_mech:[2]}, num_trials=2, execution_mode=mode)
         np.allclose(results, [[4],[4],[4]])
 
     @pytest.mark.parametrize('mode', ['Python',
@@ -231,7 +231,7 @@ class TestLCControlMechanism:
         control_mech = pnl.ControlMechanism(control=mech.output_ports)
         comp = pnl.Composition()
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
-        results = comp.run(inputs={mech:[[2]], control_mech:[3]}, num_trials=2, bin_execute=mode)
+        results = comp.run(inputs={mech:[[2]], control_mech:[3]}, num_trials=2, execution_mode=mode)
         np.allclose(results, [[6],[6],[6]])
 
     def test_control_signal_default_allocation_specification(self):
