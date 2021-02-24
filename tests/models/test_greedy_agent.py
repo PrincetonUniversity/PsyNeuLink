@@ -57,13 +57,13 @@ def test_simplified_greedy_agent(benchmark, mode):
 
     run_results = agent_comp.run(inputs={player:[[619,177]],
                                          prey:[[419,69]]},
-                                 bin_execute=mode)
+                                 execution_mode=mode)
     assert np.allclose(run_results, [[-200, -108]])
     if benchmark.enabled:
         benchmark(agent_comp.run, **{'inputs':{
             player:[[619,177]],
             prey:[[419,69]],
-            }, 'bin_execute':mode})
+            }, 'execution_mode':mode})
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Greedy Agant Random")
@@ -105,7 +105,7 @@ def test_simplified_greedy_agent_random(benchmark, mode):
 
     run_results = agent_comp.run(inputs={player:[[619,177]],
                                          prey:[[419,69]]},
-                                 bin_execute=mode)
+                                 execution_mode=mode)
     # KDM 12/4/19: modified results due to global seed offset of
     # GaussianDistort assignment.
     # to produce old numbers, run get_global_seed once before creating
@@ -115,7 +115,7 @@ def test_simplified_greedy_agent_random(benchmark, mode):
         benchmark(agent_comp.run, **{'inputs':{
             player:[[619,177]],
             prey:[[419,69]],
-            }, 'bin_execute':mode})
+            }, 'execution_mode':mode})
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Predator Prey")
@@ -199,7 +199,7 @@ def test_predator_prey(benchmark, mode, samples):
                   predator_obs:[[-0.03479106, -0.47666293]],
                   prey_obs:[[-0.60836214,  0.1760381 ]],
                  }
-    run_results = agent_comp.run(inputs=input_dict, num_trials=2, bin_execute=mode)
+    run_results = agent_comp.run(inputs=input_dict, num_trials=2, execution_mode=mode)
 
     if len(samples) == 2:
         # KDM 12/4/19: modified results due to global seed offset of
@@ -213,4 +213,4 @@ def test_predator_prey(benchmark, mode, samples):
                                                     [-0.60836214,  0.1760381 ]])
 
     if benchmark.enabled:
-        benchmark(agent_comp.run, inputs=input_dict, bin_execute=mode)
+        benchmark(agent_comp.run, inputs=input_dict, execution_mode=mode)

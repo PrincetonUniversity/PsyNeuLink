@@ -132,7 +132,7 @@ def test_necker_cube(benchmark, mode, n_nodes, n_time_steps, expected):
     }
 
     # run the model
-    res = bp_comp.run(input_dict, num_trials=n_time_steps, bin_execute=mode)
+    res = bp_comp.run(input_dict, num_trials=n_time_steps, execution_mode=mode)
     np.testing.assert_allclose(res, expected)
 
     # Test that order of CIM ports follows order of Nodes in self.nodes
@@ -146,7 +146,7 @@ def test_necker_cube(benchmark, mode, n_nodes, n_time_steps, expected):
 
     if benchmark.enabled:
         benchmark.group = "Necker Cube {}-{}".format(n_nodes, n_time_steps)
-        benchmark(bp_comp.run, input_dict, num_trials=n_time_steps, bin_execute=mode)
+        benchmark(bp_comp.run, input_dict, num_trials=n_time_steps, execution_mode=mode)
 
 
 @pytest.mark.model
@@ -233,7 +233,7 @@ def test_vectorized_necker_cube(benchmark, mode):
                   node4: np.random.random((1,16))
                  }
 
-    result = comp2.run(input_dict, num_trials=10, bin_execute=mode)
+    result = comp2.run(input_dict, num_trials=10, execution_mode=mode)
     assert np.allclose(result,
             [[ 2636.29181172,  -662.53579899,  2637.35386946,  -620.15550833,
                -595.55319772,  2616.74310649,  -442.74286574,  2588.4778162 ,
@@ -245,4 +245,4 @@ def test_vectorized_necker_cube(benchmark, mode):
                 615.39758884, -2599.45663784,   462.67291695, -2570.99427346]])
 
     if benchmark.enabled:
-        benchmark(comp2.run, input_dict, num_trials=10, bin_execute=mode)
+        benchmark(comp2.run, input_dict, num_trials=10, execution_mode=mode)

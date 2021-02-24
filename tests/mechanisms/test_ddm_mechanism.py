@@ -667,13 +667,13 @@ def test_DDM_in_composition(benchmark, mode):
     C = pnl.Composition()
     C.add_linear_processing_pathway([M])
     inputs = {M: [10]}
-    val = C.run(inputs, num_trials=2, bin_execute=mode)
+    val = C.run(inputs, num_trials=2, execution_mode=mode)
     # FIXME: Python version returns dtype=object
     val = np.asfarray(val)
     assert np.allclose(val[0], [2.0])
     assert np.allclose(val[1], [0.2])
     if benchmark.enabled:
-        benchmark(C.run, inputs, num_trials=2, bin_execute=mode)
+        benchmark(C.run, inputs, num_trials=2, execution_mode=mode)
 
 
 @pytest.mark.ddm_mechanism
@@ -708,7 +708,7 @@ def test_DDM_threshold_modulation(mode):
     C.add_node(monitor)
     C.add_node(control)
     inputs = {M:[1], monitor:[3]}
-    val = C.run(inputs, num_trials=1, bin_execute=mode)
+    val = C.run(inputs, num_trials=1, execution_mode=mode)
     # FIXME: Python version returns dtype=object
     val = np.asfarray(val)
     assert np.allclose(val[0], [60.0])
@@ -733,7 +733,7 @@ def test_ddm_is_finished(mode, noise, threshold, expected_results):
                 function=DriftDiffusionIntegrator(threshold=threshold, noise=noise))
     comp.add_node(ddm)
 
-    results = comp.run([0], bin_execute=mode)
+    results = comp.run([0], execution_mode=mode)
 
     results = [x for x in np.array(results).flatten()] #HACK: The result is an object dtype in Python mode for some reason?
     assert np.allclose(results, np.array(expected_results).flatten())
@@ -807,6 +807,6 @@ def test_DDMMechanism_LCA_equivalent(mode):
     ddm = DDM(default_variable=[0], function=DriftDiffusionIntegrator(rate=1, time_step_size=0.1))
     comp2 = Composition()
     comp2.add_node(ddm)
-    result2 = comp2.run(inputs={ddm:[1]}, bin_execute=mode)
+    result2 = comp2.run(inputs={ddm:[1]}, execution_mode=mode)
     assert np.allclose(np.asfarray(result2[0]), [0.1])
     assert np.allclose(np.asfarray(result2[1]), [0.1])

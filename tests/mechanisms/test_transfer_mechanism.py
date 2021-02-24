@@ -1981,17 +1981,17 @@ class TestOnResumeIntegratorMode:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism")
-    @pytest.mark.parametrize('bin_execute', ['Python',
-                                             # 'LLVM' mode is not supported
-                                             # the comparison values and checks
-                                             # are not synced between binary
-                                             # and Python structures
-                                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                             pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                            ])
-    def test_termination_measures(self, bin_execute):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      # 'LLVM' mode is not supported
+                                      # the comparison values and checks
+                                      # are not synced between binary
+                                      # and Python structures
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                     ])
+    def test_termination_measures(self, mode):
         stim_input = ProcessingMechanism(size=2, name='Stim Input')
         stim_percept = TransferMechanism(name='Stimulus', size=2, function=Logistic)
         instruction_input = ProcessingMechanism(size=2, function=Linear(slope=10))
@@ -2013,10 +2013,10 @@ class TestOnResumeIntegratorMode:
         comp.add_linear_processing_pathway([instruction_input, attention, stim_percept])
         inputs = {stim_input: [[1, 1], [1, 1]],
                   instruction_input: [[1, -1], [-1, 1]]}
-        result = comp.run(inputs=inputs, bin_execute=bin_execute)
+        result = comp.run(inputs=inputs, execution_mode=mode)
 
         assert np.allclose(result, [[0.43636140750487973, 0.47074475219780554]])
-        if bin_execute == 'Python':
+        if mode == 'Python':
             assert decision.num_executions.time_step == 1
             assert decision.num_executions.pass_ == 2
             assert decision.num_executions.trial== 1
