@@ -2421,7 +2421,7 @@ from psyneulink.library.components.projections.pathway.autoassociativeprojection
 
 __all__ = [
     'Composition', 'CompositionError', 'CompositionRegistry', 'EdgeType', 'get_compositions', 'NodeRole'
-    ]
+]
 
 
 logger = logging.getLogger(__name__)
