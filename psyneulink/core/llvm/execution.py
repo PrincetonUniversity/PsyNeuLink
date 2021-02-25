@@ -286,6 +286,21 @@ class CompExecution(CUDAExecution):
             self.__conds = None
             self._ct_len = ctypes.c_int(len(execution_ids))
 
+    @staticmethod
+    def get(composition, context, additional_tags=frozenset()):
+        executions = composition._compilation_data.execution._get(context)
+        if executions is None:
+            executions = dict()
+            composition._compilation_data.execution._set(executions, context)
+
+        execution = executions.get(additional_tags, None)
+        if execution is None:
+            execution = pnlvm.CompExecution(composition, [context.execution_id],
+                                            additional_tags=additional_tags)
+            executions[additional_tags] = execution
+
+        return execution
+
     @property
     def _bin_func(self):
         if self.__bin_func is not None:
