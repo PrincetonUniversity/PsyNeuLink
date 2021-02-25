@@ -278,12 +278,13 @@ class CompExecution(CUDAExecution):
         self.__frozen_vals = None
         self.__tags = frozenset(additional_tags)
 
+        self.__conds = None
+
         # TODO: Consolidate these
         if len(execution_ids) > 1:
             self.__state_struct = None
             self.__param_struct = None
             self.__data_struct = None
-            self.__conds = None
             self._ct_len = ctypes.c_int(len(execution_ids))
 
     @staticmethod
@@ -330,26 +331,22 @@ class CompExecution(CUDAExecution):
 
     @property
     def _conditions(self):
-        if len(self._execution_contexts) > 1:
-            if self.__conds is None:
-                cond_type = self._bin_func_multirun.byref_arg_types[4] * len(self._execution_contexts)
-                gen = helpers.ConditionGenerator(None, self._composition)
-                cond_initializer = (gen.get_condition_initializer() for _ in self._execution_contexts)
-                self.__conds = cond_type(*cond_initializer)
-            return self.__conds
-
-        conds = self._composition._compilation_data.scheduler_conditions._get(self._execution_contexts[0])
-        if conds is None:
-            cond_type = self._bin_func.byref_arg_types[4]
+        if self.__conds is None:
             gen = helpers.ConditionGenerator(None, self._composition)
-            cond_initializer = gen.get_condition_initializer()
-            conds = cond_type(*cond_initializer)
-            self._composition._compilation_data.scheduler_conditions._set(conds, context=self._execution_contexts[0])
+            if len(self._execution_contexts) > 1:
+                cond_type = self._bin_func_multirun.byref_arg_types[4] * len(self._execution_contexts)
+                cond_initializer = (gen.get_condition_initializer() for _ in self._execution_contexts)
+            else:
+                cond_type = self._bin_func.byref_arg_types[4]
+                cond_initializer = gen.get_condition_initializer()
+
+            self.__conds = cond_type(*cond_initializer)
             if "stat" in self.__debug_env:
                 print("Instantiated condition struct ( size:" ,
                       _pretty_size(ctypes.sizeof(struct_ty)), ")",
                       "for", self._composition.name)
-        return conds
+
+        return self.__conds
 
     def _get_compilation_param(self, name, initializer, arg, context):
         param = getattr(self._composition._compilation_data, name)

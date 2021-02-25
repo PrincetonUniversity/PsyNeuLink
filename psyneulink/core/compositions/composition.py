@@ -3352,7 +3352,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         parameter_struct = None
         state_struct = None
         data_struct = None
-        scheduler_conditions = None
 
 
     def __init__(
