@@ -78,6 +78,7 @@ from psyneulink.core.globals.keywords import MASKED_MAPPING_PROJECTION, MATRIX
 from psyneulink.core.globals.parameters import check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.core.globals.utilities import is_numeric_scalar
 
 __all__ = [
     'MaskedMappingProjection', 'MaskedMappingProjectionError',
@@ -206,9 +207,9 @@ class MaskedMappingProjection(MappingProjection):
                                  target_set=target_set,
                                  context=context)
 
-        if MASK in target_set and target_set[MASK]:
+        if MASK in target_set and target_set[MASK] is not None:
             mask = target_set[MASK]
-            if isinstance(mask, (int, float)):
+            if is_numeric_scalar(mask):
                 return
             mask_shape = np.array(mask).shape
             matrix = get_matrix(self.defaults.matrix,

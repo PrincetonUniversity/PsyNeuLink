@@ -14,6 +14,7 @@ from psyneulink.core.components.functions.nonstateful.optimizationfunctions impo
     SEARCH_SPACE,
 )
 from psyneulink.core.globals.parameters import SharedParameter, check_user_specified
+from psyneulink.core.globals.utilities import try_extract_0d_array_item
 
 from psyneulink._typing import (
     Dict,
@@ -648,6 +649,7 @@ class PECOptimizationFunction(OptimizationFunction):
         # Get a seed to pass to scipy for its search. Make this dependent on the seed of the
         # OCM
         seed_for_scipy = self._get_current_parameter_value('initial_seed', context)
+        seed_for_scipy = try_extract_0d_array_item(seed_for_scipy)
 
         direction = 1 if self.direction == "minimize" else -1
 

@@ -18,7 +18,7 @@
 from collections.abc import Iterator
 from decimal import Decimal, getcontext
 from inspect import isclass
-from numbers import Number
+from psyneulink.core.globals.utilities import is_numeric_scalar
 
 import numpy as np
 from beartype import beartype
@@ -43,7 +43,7 @@ def _validate_function(source, function):
     if result is None:
         raise SampleIteratorError("Function specified for {} ({}) does not return a result)".
                                   format(source_name, repr(function)))
-    if not isinstance(result, Number):
+    if not is_numeric_scalar(result):
         raise SampleIteratorError("Function specified for {} ({}) does not return a number)".
                                   format(source_name, repr(function)))
 

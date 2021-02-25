@@ -793,7 +793,7 @@ class TestTransferMechanismIntegratorFunctionParams:
                     noise=[i / 10 for i in range(VECTOR_SIZE + 1)]
             )
         assert (
-            "Noise parameter ([0.0, 0.1, 0.2, 0.3, 0.4])" in str(error_text.value) and
+            "Noise parameter ([0.  0.1 0.2 0.3 0.4])" in str(error_text.value) and
             "does not match default variable ([[0 0 0 0]]);" in str(error_text.value) and
             "must be specified as a float, a function, or an array of the appropriate shape ((1, 4))."
             in str(error_text.value)

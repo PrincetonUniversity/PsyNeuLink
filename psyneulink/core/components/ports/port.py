@@ -807,7 +807,7 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.socket import ConnectionInfo
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_to_np_array, get_args, is_value_spec, iscompatible, \
-    MODULATION_OVERRIDE, type_match
+    MODULATION_OVERRIDE, try_extract_0d_array_item, type_match
 
 __all__ = [
     'Port_Base', 'port_keywords', 'port_type_keywords', 'PortError', 'PortRegistry', 'PORT_SPEC'
@@ -2968,7 +2968,7 @@ def _parse_port_spec(port_type=None,
                 pass
 
         else:
-            port_specification = port_spec[PORT_SPEC_ARG]
+            port_specification = try_extract_0d_array_item(port_spec[PORT_SPEC_ARG])
 
         # Delete the Port specification dictionary from port_spec
         del port_spec[PORT_SPEC_ARG]

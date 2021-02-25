@@ -618,7 +618,13 @@ def iscompatible(candidate, reference=None, **kargs):
                 # Matrices can't be checked recursively, so convert to array
                 if isinstance(value, np.matrix):
                     value = value.A
-                if isinstance(value, (list, np.ndarray)):
+                if isinstance(value, (list, np.ndarray)) and not is_numeric_scalar(value):
+                    try:
+                        if value.ndim == 0:
+                            return recursively_check_elements_for_numeric(value.item())
+                    except AttributeError:
+                        pass
+
                     for item in value:
                         if not recursively_check_elements_for_numeric(item):
                             return False

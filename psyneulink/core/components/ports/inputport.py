@@ -595,7 +595,7 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    append_type_to_name, convert_to_np_array, is_numeric, iscompatible, kwCompatibilityLength, convert_to_list, parse_valid_identifier
+    append_type_to_name, is_numeric_scalar, convert_to_np_array, is_numeric, iscompatible, kwCompatibilityLength, convert_to_list, parse_valid_identifier
 
 __all__ = [
     'InputPort', 'InputPortError', 'port_type_keywords', 'SHADOW_INPUTS',
@@ -1004,12 +1004,12 @@ class InputPort(Port_Base):
                                          f"({function}){owner_name}.")
 
         if WEIGHT in target_set and target_set[WEIGHT] is not None:
-            if not isinstance(target_set[WEIGHT], (int, float)):
+            if not is_numeric_scalar(target_set[WEIGHT]):
                 raise InputPortError(f"'{WEIGHT}' parameter of {self.name} for {self.owner.name} "
                                      f"({target_set[WEIGHT]}) must be an int or float.")
 
         if EXPONENT in target_set and target_set[EXPONENT] is not None:
-            if not isinstance(target_set[EXPONENT], (int, float)):
+            if not is_numeric_scalar(target_set[EXPONENT]):
                 raise InputPortError(f"'{EXPONENT}' parameter of {self.name} for {self.owner.name}"
                                      f"({ target_set[EXPONENT]}) must be an int or float.")
 

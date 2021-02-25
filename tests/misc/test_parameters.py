@@ -345,8 +345,9 @@ class TestSharedParameters:
         for eid in eids:
             obj.execute(np.array([eid, eid]), context=eid)
 
+        context = pnl.Context(execution_id=eid)
         assert all([
-            obj_param.get(eid) is source.get(eid)
+            obj_param._get(context) is source._get(context)
             for eid in eids
         ])
 

@@ -896,7 +896,7 @@ from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.keywords import \
     (AUTO, CONTROL, DEFAULT_INPUT, DEFAULT_VARIABLE, EM_COMPOSITION, FULL_CONNECTIVITY_MATRIX,
      GAIN, IDENTITY_MATRIX, MULTIPLICATIVE_PARAM, NAME, PARAMS, PRODUCT, PROJECTIONS, RANDOM, SIZE, VARIABLE)
-from psyneulink.core.globals.utilities import all_within_range
+from psyneulink.core.globals.utilities import is_numeric_scalar
 from psyneulink.core.llvm import ExecutionMode
 
 
@@ -1344,18 +1344,17 @@ class EMComposition(AutodiffComposition):
                 return f"must be a list of strings."
 
         def _validate_memory_decay_rate(self, memory_decay_rate):
-            if memory_decay_rate in {None, AUTO}:
+            if memory_decay_rate is None or memory_decay_rate == AUTO:
                 return
-            if not (isinstance(memory_decay_rate, (float, int)) and all_within_range(memory_decay_rate, 0, 1)):
+            if not is_numeric_scalar(memory_decay_rate) and not (0 <= memory_decay_rate <= 1):
                 return f"must be a float in the interval [0,1]."
 
         def _validate_softmax_gain(self, softmax_gain):
-            if softmax_gain != CONTROL and not isinstance(softmax_gain, (float, int)):
+            if softmax_gain != CONTROL and not is_numeric_scalar(softmax_gain):
                 return f"must be a scalar or the keyword 'CONTROL'."
 
         def _validate_storage_prob(self, storage_prob):
-            storage_prob = float(storage_prob)
-            if not all_within_range(storage_prob, 0, 1):
+            if not is_numeric_scalar(storage_prob) and not (0 <= storage_prob <= 1):
                 return f"must be a float in the interval [0,1]."
 
     @check_user_specified
@@ -1574,7 +1573,7 @@ class EMComposition(AutodiffComposition):
                 # Fill with specified value
                 elif isinstance(memory_fill, (list, float, int)):
                     entry = [np.full(len(field), memory_fill).tolist() for field in entry_template]
-                entries = [np.array(entry, dtype=object)] * num_entries
+                entries = [np.array(entry, dtype=object) for _ in range(num_entries)]
 
             return np.array(np.array(entries,dtype=object), dtype=object)
 

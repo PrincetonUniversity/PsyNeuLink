@@ -2955,7 +2955,7 @@ from psyneulink.core.globals.parameters import Parameter, ParametersBase, check_
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import ContentAddressableList, call_with_pruned_args, convert_to_list, \
+from psyneulink.core.globals.utilities import ContentAddressableList, call_with_pruned_args, convert_all_elements_to_np_array, convert_to_list, \
     nesting_depth, convert_to_np_array, is_numeric, is_matrix, is_matrix_keyword, parse_valid_identifier
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never, AtNCalls, BeforeNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
@@ -8007,7 +8007,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     pathway,
                                     learning_function: Union[Type[LearningFunction], LearningFunction, Callable] = None,
                                     loss_spec: Optional[Loss] = Loss.MSE,
-                                    learning_rate: Optional[Union[int, float]] = None,
+                                    learning_rate: Optional[Union[int, float, np.ndarray]] = None,
                                     error_function=LinearCombination,
                                     learning_update: Union[bool, Literal['online', 'after']] = 'after',
                                     default_projection_matrix=None,
@@ -12957,6 +12957,8 @@ _
                                                                               entry,
                                                                               param_key,
                                                                               param_spec[entry])
+            if is_numeric(param_spec):
+                param_spec = convert_all_elements_to_np_array(param_spec)
             return (param_spec, param_condition)
 
         if runtime_params is None:

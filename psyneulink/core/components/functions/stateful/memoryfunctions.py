@@ -53,7 +53,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 from psyneulink.core.globals.utilities import \
-    all_within_range, convert_to_np_array, convert_to_list, convert_all_elements_to_np_array
+    all_within_range, convert_all_elements_to_np_array, convert_to_np_array, convert_to_list, is_numeric_scalar
 
 __all__ = ['MemoryFunction', 'Buffer', 'DictionaryMemory', 'ContentAddressableMemory', 'RETRIEVAL_PROB', 'STORAGE_PROB']
 
@@ -64,6 +64,7 @@ class MemoryFunction(StatefulFunction):  # -------------------------------------
     # TODO: refactor to avoid skip of direct super
     def _update_default_variable(self, new_default_variable, context=None):
         if not self.parameters.initializer._user_specified:
+            new_default_variable = convert_all_elements_to_np_array(new_default_variable)
             # use * 0 instead of zeros_like to deal with ragged arrays
             self._initialize_previous_value([new_default_variable * 0], context)
 
@@ -351,9 +352,14 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         if len(previous_value):
             # TODO: remove this shape hack when buffer shapes made consistent
             noise = np.reshape(noise, np.asarray(previous_value[0]).shape)
+            variable = np.reshape(variable, np.asarray(previous_value[0]).shape)
             previous_value = convert_to_np_array(previous_value) * rate + noise
 
-        previous_value = deque(previous_value, maxlen=self.parameters.history._get(context))
+        maxlen = self.parameters.history._get(context)
+        previous_value = deque(
+            previous_value,
+            maxlen=maxlen.item() if maxlen is not None else None
+        )
 
         previous_value.append(variable)
 
@@ -1757,7 +1763,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if granularity == 'per_field':
             # Note: this is just used for reporting, and not determining storage or retrieval
             # Report None if any element of cue, candidate or field_weights is None or empty list:
-            distances_by_field = np.array([None] * num_fields)
+            distances_by_field = np.full(num_fields, None)
             # If field_weights is scalar, splay out as array of length num_fields so can iterate through all of them
             if len(field_weights)==1:
                 field_weights = np.full(num_fields, field_weights[0])
@@ -2533,7 +2539,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             fct_msg = 'Function'
         try:
             distance_result = distance_function(test_var, context=context)
-            if not np.isscalar(distance_result):
+            if not is_numeric_scalar(distance_result):
                 raise FunctionError("Value returned by {} specified for {} ({}) must return a scalar".
                                     format(repr(DISTANCE_FUNCTION), self.__name__.__class__, distance_result))
         except:
@@ -2564,9 +2570,9 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                                 f'({result}) must return an array of the same length it receives')
 
     def _get_default_entry(self, context):
-        key = [0] * self.parameters.key_size._get(context)
-        val = [0] * self.parameters.val_size._get(context)
-        return [key, val]
+        key = np.zeros((self.parameters.key_size._get(context),))
+        val = np.zeros((self.parameters.val_size._get(context),))
+        return convert_to_np_array([key, val])
 
     def _initialize_previous_value(self, initializer, context=None):
         """Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_value
@@ -2686,8 +2692,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
         # Set key_size and val_size if this is the first entry
         if len(self.parameters.previous_value._get(context)[KEYS]) == 0:
-            self.parameters.key_size._set(len(key), context)
-            self.parameters.val_size._set(len(val), context)
+            self.parameters.key_size._set(np.array(len(key)), context)
+            self.parameters.val_size._set(np.array(len(val)), context)
 
         # Retrieve value from current dict with key that best matches key
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.uniform()):
@@ -2712,11 +2718,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             self._store_memory([key, val], context)
 
         # Return 3d array with keys and vals as lists
-        # IMPLEMENTATION NOTE:  if try to create np.ndarray directly, and keys and vals have same length
-        #                       end up with array of arrays, rather than array of lists
-        ret_val = convert_to_np_array([list(memory[0]),[]])
-        ret_val[1] = list(memory[1])
-        return ret_val
+        return memory
 
     @beartype
     def _validate_memory(self, memory: Union[list, np.ndarray], context):
@@ -2798,8 +2800,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         best_match_key = _memory[KEYS][index_of_selected_item]
         best_match_val = _memory[VALS][index_of_selected_item]
 
-        # Return as list of lists
-        return [list(best_match_key), list(best_match_val)]
+        return convert_all_elements_to_np_array([best_match_key, best_match_val])
 
     @beartype
     def _store_memory(self, memory:Union[list, np.ndarray], context):

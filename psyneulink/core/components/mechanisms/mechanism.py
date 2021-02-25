@@ -1116,7 +1116,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, \
-    iscompatible, kwCompatibilityNumeric, convert_to_list, parse_valid_identifier
+    iscompatible, kwCompatibilityNumeric, convert_to_list, is_numeric, parse_valid_identifier
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.scheduling.time import TimeScale
 
@@ -1139,7 +1139,7 @@ class MechParamsDict(UserDict):
 
 def _input_port_variables_getter(owning_component=None, context=None):
     try:
-        return [input_port.parameters.variable._get(context) for input_port in owning_component.input_ports]
+        return convert_all_elements_to_np_array([input_port.parameters.variable._get(context) for input_port in owning_component.input_ports])
     except (AttributeError, TypeError):
         return None
 
@@ -1617,7 +1617,10 @@ class Mechanism_Base(Mechanism):
         def _parse_input_ports(self, input_ports):
             if input_ports is None:
                 return input_ports
-            elif not isinstance(input_ports, list):
+            elif (
+                not isinstance(input_ports, list)
+                and not (isinstance(input_ports, np.ndarray) and input_ports.ndim > 0)
+            ):
                 input_ports = [input_ports]
 
             spec_list = []
@@ -1857,7 +1860,10 @@ class Mechanism_Base(Mechanism):
         default_variable_from_input_ports = []
         input_port_variable_was_specified = None
 
-        if not isinstance(input_ports, list):
+        if (
+            not isinstance(input_ports, list)
+            and not (isinstance(input_ports, np.ndarray) and input_ports.ndim > 0)
+        ):
             input_ports = [input_ports]
 
         for i, s in enumerate(input_ports):
@@ -2470,7 +2476,7 @@ class Mechanism_Base(Mechanism):
         # EXECUTE MECHANISM
 
         if self.parameters.is_finished_flag._get(context) is True:
-            self.parameters.num_executions_before_finished._set(0, override=True, context=context)
+            self.parameters.num_executions_before_finished._set(np.array(0), override=True, context=context)
 
         while True:
 
@@ -2794,6 +2800,11 @@ class Mechanism_Base(Mechanism):
                     continue
                 # Move param specification dict for item to entry with same key in <COMPONENT>_SPECIFIC_PARAMS dict
                 item_specific_dict = {key : outer_dict.pop(key)}
+                item_specific_dict = {
+                    k: convert_all_elements_to_np_array(v) if is_numeric(v) else v
+                    for (k, v) in item_specific_dict.items()
+                }
+
                 if specific_dict_name in dest_dict:
                     dest_dict[specific_dict_name].update(item_specific_dict)
                 else:

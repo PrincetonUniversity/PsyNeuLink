@@ -174,7 +174,10 @@ class PNLJSONEncoder(json.JSONEncoder):
         elif isinstance(o, SampleIterator):
             return f'{o.__class__.__name__}({repr(o.specification)})'
         elif isinstance(o, numpy.ndarray):
-            return list(o)
+            try:
+                return list(o)
+            except TypeError:
+                return o.item()
         elif isinstance(o, numpy.random.RandomState):
             return f'numpy.random.RandomState({o.seed})'
         elif isinstance(o, numpy.number):

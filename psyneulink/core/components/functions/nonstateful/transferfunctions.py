@@ -1116,8 +1116,8 @@ class Logistic(TransferFunction):  # -------------------------------------------
         model = super().as_mdf_model()
 
         # x_0 is included in bias in MDF logistic
-        self._set_mdf_arg(model, 'bias', model.args['bias'] - model.args['x_0'])
-        self._set_mdf_arg(model, 'x_0', 0)
+        self._set_mdf_arg(model, 'bias', np.array(model.args['bias'] - model.args['x_0']))
+        self._set_mdf_arg(model, 'x_0', np.array(0))
 
         if model.args['scale'] != 1.0:
             warnings.warn(

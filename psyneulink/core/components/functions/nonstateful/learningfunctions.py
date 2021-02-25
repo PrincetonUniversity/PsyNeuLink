@@ -47,7 +47,7 @@ from psyneulink.core.globals.keywords import \
     MATRIX, Loss
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
-from psyneulink.core.globals.utilities import is_numeric, scalar_distance, convert_to_np_array, all_within_range
+from psyneulink.core.globals.utilities import is_numeric, scalar_distance, convert_to_np_array, all_within_range, safe_len, is_numeric_scalar
 
 __all__ = ['LearningFunction', 'Kohonen', 'Hebbian', 'ContrastiveHebbian',
            'Reinforcement', 'BayesGLM', 'BackPropagation', 'TDLearning', 'EMStorage',
@@ -831,10 +831,10 @@ class BayesGLM(LearningFunction):
                 # if both are specified, make sure they are the same size
                 if (isinstance(self.mu_0, (list, np.ndarray))
                         and isinstance(self.sigma_0, (list, np.ndarray))
-                        and len(self.mu_0) != len(self.sigma_0)):
+                        and safe_len(self.mu_0) != safe_len(self.sigma_0)):
                     raise FunctionError("Length of {} ({}) does not match length of {} ({}) for {}".
-                                        format(repr('mu_0'), len(self.mu_0),
-                                                    repr('sigma_0'), len(self.sigma_0),
+                                        format(repr('mu_0'), safe_len(self.mu_0),
+                                               repr('sigma_0'), safe_len(self.sigma_0),
                                                          self.__class.__.__name__))
                 # allow their size to determine the size of variable
                 if isinstance(self.mu_0, (list, np.ndarray)):
@@ -855,22 +855,22 @@ class BayesGLM(LearningFunction):
         if np.array(variable).dtype != object:
             variable = np.atleast_2d(variable)
 
-        n = len(variable[0])
+        n = safe_len(variable[0])
 
-        if isinstance(self.mu_0, (int, float)):
+        if is_numeric_scalar(self.mu_0):
             self.mu_prior = np.full((n, 1),self.mu_0)
         else:
-            if len(self.mu_0) != n:
+            if safe_len(self.mu_0) != n:
                 raise FunctionError("Length of mu_0 ({}) does not match number of predictors ({})".
-                                    format(len(self.mu_0), n))
-            self.mu_prior = np.array(self.mu_0).reshape(len(self._mu_0),1)
+                                    format(safe_len(self.mu_0), n))
+            self.mu_prior = np.array(self.mu_0).reshape(safe_len(self._mu_0), 1)
 
-        if isinstance(self.sigma_0, (int, float)):
+        if is_numeric_scalar(self.sigma_0):
             Lambda_0 = (1 / (self.sigma_0 ** 2)) * np.eye(n)
         else:
-            if len(self.sigma_0) != n:
+            if safe_len(self.sigma_0) != n:
                 raise FunctionError("Length of sigma_0 ({}) does not match number of predictors ({})".
-                                    format(len(self.sigma_0), n))
+                                    format(safe_len(self.sigma_0), n))
             Lambda_0 = (1 / (np.array(self.sigma_0) ** 2)) * np.eye(n)
         self.Lambda_prior = Lambda_0
 

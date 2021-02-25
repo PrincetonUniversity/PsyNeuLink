@@ -424,7 +424,7 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.globals.keywords import EPISODIC_MEMORY_MECHANISM,MULTIPLICATIVE_PARAM, NAME, OWNER_VALUE, VARIABLE
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
-from psyneulink.core.globals.utilities import deprecation_warning, convert_to_np_array, convert_all_elements_to_np_array
+from psyneulink.core.globals.utilities import deprecation_warning, convert_all_elements_to_np_array
 
 __all__ = ['EpisodicMemoryMechanism', 'KEY_INPUT', 'VALUE_INPUT', 'KEY_OUTPUT', 'VALUE_OUTPUT']
 
@@ -689,7 +689,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         if self._dictionary_memory:
             # If assoc has not been specified, add empty list to call to function (which expects two items in its variable)
             if len(variable) != 2:
-                return convert_to_np_array([variable[0],[]])
+                return convert_all_elements_to_np_array([variable[0], []])
             else:
                 # Check that both are assigned inputs:
                 missing_inputs = [self.input_ports.names[i] for i,t in enumerate([v for v in variable]) if t is None]

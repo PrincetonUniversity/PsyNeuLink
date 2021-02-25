@@ -171,8 +171,8 @@ from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
-    convert_to_np_array, get_global_seed, is_instance_or_subclass, object_has_single_value, parameter_spec, parse_valid_identifier, safe_len,
-    SeededRandomState, contains_type, is_numeric, NumericCollections,
+    convert_all_elements_to_np_array, convert_to_np_array, get_global_seed, is_instance_or_subclass, object_has_single_value, parameter_spec, parse_valid_identifier, safe_len,
+    SeededRandomState, try_extract_0d_array_item, contains_type, is_numeric, NumericCollections,
     random_matrix
 )
 
@@ -184,7 +184,7 @@ __all__ = [
 
 EPSILON = np.finfo(float).eps
 # numeric to allow modulation, invalid to identify unseeded state
-DEFAULT_SEED = -1
+DEFAULT_SEED = np.array(-1)
 
 FunctionRegistry = {}
 
@@ -343,7 +343,8 @@ def _output_type_setter(value, owning_component):
 
 
 def _seed_setter(value, owning_component, context):
-    if value in {None, DEFAULT_SEED}:
+    value = try_extract_0d_array_item(value)
+    if value is None or value == DEFAULT_SEED:
         value = get_global_seed()
 
     # Remove any old PRNG state
@@ -758,13 +759,12 @@ class Function_Base(Function):
         return value
 
     def convert_output_type(self, value, output_type=None):
+        value = convert_all_elements_to_np_array(value)
         if output_type is None:
             if not self.enable_output_type_conversion or self.output_type is None:
                 return value
             else:
                 output_type = self.output_type
-
-        value = convert_to_np_array(value)
 
         # Type conversion (specified by output_type):
 
@@ -861,6 +861,8 @@ class Function_Base(Function):
                 extra_noise_functions.append(noise_func_model)
                 return noise_func_model.id
             elif isinstance(noise, (list, np.ndarray)):
+                if noise.ndim == 0:
+                    return None
                 return type(noise)(handle_noise(item) for item in noise)
             else:
                 return None
