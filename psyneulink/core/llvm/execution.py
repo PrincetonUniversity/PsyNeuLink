@@ -279,12 +279,11 @@ class CompExecution(CUDAExecution):
         self.__tags = frozenset(additional_tags)
 
         self.__conds = None
+        self._state = None
+        self._param = None
+        self._data = None
 
-        # TODO: Consolidate these
         if len(execution_ids) > 1:
-            self.__state_struct = None
-            self.__param_struct = None
-            self.__data_struct = None
             self._ct_len = ctypes.c_int(len(execution_ids))
 
     @staticmethod
@@ -348,14 +347,19 @@ class CompExecution(CUDAExecution):
 
         return self.__conds
 
-    def _get_compilation_param(self, name, initializer, arg, context):
-        param = getattr(self._composition._compilation_data, name)
-        struct = param._get(context)
+    def _get_compilation_param(self, name, init_method, arg):
+        struct = getattr(self, name)
         if struct is None:
-            initializer = getattr(self._composition, initializer)(context)
             struct_ty = self._bin_func.byref_arg_types[arg]
+            init_f = getattr(self._composition, init_method)
+            if len(self._execution_contexts) > 1:
+                struct_ty = struct_ty * len(self._execution_contexts)
+                initializer = (init_f(ex) for ex in self._execution_contexts)
+            else:
+                initializer = init_f(self._execution_contexts[0])
+
             struct = struct_ty(*initializer)
-            param._set(struct, context=context)
+            setattr(self, name, struct)
             if "stat" in self.__debug_env:
                 print("Instantiated struct:", name, "( size:" ,
                       _pretty_size(ctypes.sizeof(struct_ty)), ")",
@@ -363,47 +367,23 @@ class CompExecution(CUDAExecution):
 
         return struct
 
-    def _get_multirun_struct(self, arg, init):
-        struct_ty = self._bin_func_multirun.byref_arg_types[arg] * len(self._execution_contexts)
-        initializer = (getattr(self._composition, init)(ex) for ex in self._execution_contexts)
-        return struct_ty(*initializer)
-
     @property
     def _param_struct(self):
-        if len(self._execution_contexts) > 1:
-            if self.__param_struct is None:
-                self.__param_struct = self._get_multirun_struct(1, '_get_param_initializer')
-            return self.__param_struct
-
-        return self._get_compilation_param('parameter_struct', '_get_param_initializer', 1, self._execution_contexts[0])
+        return self._get_compilation_param('_param', '_get_param_initializer', 1)
 
     @property
     def _state_struct(self):
-        if len(self._execution_contexts) > 1:
-            if self.__state_struct is None:
-                self.__state_struct = self._get_multirun_struct(0, '_get_state_initializer')
-            return self.__state_struct
-
-        return self._get_compilation_param('state_struct', '_get_state_initializer', 0, self._execution_contexts[0])
+        return self._get_compilation_param('_state', '_get_state_initializer', 0)
 
     @property
     def _data_struct(self):
         # Run wrapper changed argument order
         arg = 2 if self._bin_func is self.__bin_run_func else 3
-
-        if len(self._execution_contexts) > 1:
-            if self.__data_struct is None:
-                self.__data_struct = self._get_multirun_struct(arg, '_get_data_initializer')
-            return self.__data_struct
-
-        return self._get_compilation_param('data_struct', '_get_data_initializer', arg, self._execution_contexts[0])
+        return self._get_compilation_param('_data', '_get_data_initializer', arg)
 
     @_data_struct.setter
     def _data_struct(self, data_struct):
-        if len(self._execution_contexts) > 1:
-            self.__data_struct = data_struct
-        else:
-            self._composition._compilation_data.data_struct._set(data_struct, context=self._execution_contexts[0])
+        self._data = data_struct
 
     def _copy_params_to_pnl(self, context=None, component=None, params=None):
         # need to special case compositions

@@ -3349,10 +3349,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     class _CompilationData(ParametersBase):
         execution = None
-        parameter_struct = None
-        state_struct = None
-        data_struct = None
-
 
     def __init__(
             self,
