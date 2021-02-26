@@ -67,6 +67,26 @@ class Execution:
     def __init__(self):
         self._debug_env = debug_env
 
+    def _get_compilation_param(self, name, init_method, arg):
+        struct = getattr(self, name)
+        if struct is None:
+            struct_ty = self._bin_func.byref_arg_types[arg]
+            init_f = getattr(self._obj, init_method)
+            if len(self._execution_contexts) > 1:
+                struct_ty = struct_ty * len(self._execution_contexts)
+                initializer = (init_f(ex) for ex in self._execution_contexts)
+            else:
+                initializer = init_f(self._execution_contexts[0])
+
+            struct = struct_ty(*initializer)
+            setattr(self, name, struct)
+            if "stat" in self._debug_env:
+                print("Instantiated struct:", name, "( size:" ,
+                      _pretty_size(ctypes.sizeof(struct_ty)), ")",
+                      "for", self._obj.name)
+
+        return struct
+
 
 class CUDAExecution(Execution):
     def __init__(self, buffers=['param_struct', 'state_struct', 'out']):
@@ -305,6 +325,10 @@ class CompExecution(CUDAExecution):
         return execution
 
     @property
+    def _obj(self):
+        return self._composition
+
+    @property
     def _bin_func(self):
         if self.__bin_func is not None:
             assert len(self._execution_contexts) == 1
@@ -349,26 +373,6 @@ class CompExecution(CUDAExecution):
                       "for", self._composition.name)
 
         return self.__conds
-
-    def _get_compilation_param(self, name, init_method, arg):
-        struct = getattr(self, name)
-        if struct is None:
-            struct_ty = self._bin_func.byref_arg_types[arg]
-            init_f = getattr(self._composition, init_method)
-            if len(self._execution_contexts) > 1:
-                struct_ty = struct_ty * len(self._execution_contexts)
-                initializer = (init_f(ex) for ex in self._execution_contexts)
-            else:
-                initializer = init_f(self._execution_contexts[0])
-
-            struct = struct_ty(*initializer)
-            setattr(self, name, struct)
-            if "stat" in self._debug_env:
-                print("Instantiated struct:", name, "( size:" ,
-                      _pretty_size(ctypes.sizeof(struct_ty)), ")",
-                      "for", self._composition.name)
-
-        return struct
 
     @property
     def _param_struct(self):
