@@ -7,6 +7,23 @@ from rich.panel import Panel
 from psyneulink.core.globals.keywords import FULL
 from psyneulink.core.globals.context import ContextFlags
 
+
+class PNLProgressError(Exception):
+
+    def __init__(self, error_value):
+        self.error_value = error_value
+
+    def __str__(self):
+        return repr(self.error_value)
+
+
+class OutputReport():
+    def __init__(self, id):
+        self.progress_report_id = id
+        self.trial_report = []
+        self.time_step_report = []
+
+
 class PNLProgress:
     """
     A singleton context wrapper around rich progress bars. It returns the currently active progress context instance
@@ -23,8 +40,7 @@ class PNLProgress:
             # Instantiate a rich progress context\object. It is not started yet.
             cls._instance._progress = Progress(disable=not show_progress, auto_refresh=False)
             cls._show_progress = show_progress
-            cls._trial_report = None
-            cls._time_step_report = None
+            cls._progress_reports = []
 
             # This counter is incremented on each context __enter__ and decrements
             # on each __exit__. We need this to make sure we don't call progress
@@ -105,23 +121,40 @@ class PNLProgress:
                 _start = True
                 self._num_trials_str = f' of {num_trials}'
 
-            return self._progress.add_task(f"[red]{self._execution_mode_str}ing {comp.name}...",
-                                           total=num_trials,
-                                           start=_start,
-                                           visible=True
-                                           )
+            # FIX: CONTEXTUALIZE FOR RICH
+            id = self._progress.add_task(f"[red]{self._execution_mode_str}ing {comp.name}...",
+                                         total=num_trials,
+                                         start=_start,
+                                         visible=True
+                                         )
+
+            # self._progress_reports += [OutputReport(id)]
+            # return progress_report
+            return OutputReport(id)
+
+            # FIX: ??KEEP:
             print()
 
-
-    def report_progress(self, caller, task, trial_num):
+    def report_progress(self, caller, progress_report, trial_num):
         if self._show_progress:
-            self._progress.update(task,
-                                  description=f'{caller.name}: '
-                                              f'{self._execution_mode_str}ed {trial_num+1}{self._num_trials_str} trials',
-                                  advance=1,
-                                  refresh=True)
+            if isinstance(trial_num, int):
+                self._progress.update(progress_report.progress_report_id,
+                                      description=f'{caller.name}: '
+                                                  f'{self._execution_mode_str}ed {trial_num+1}{self._num_trials_str} trials',
+                                      advance=1,
+                                      refresh=True)
+            elif trial_num is 'completed':
+                self._progress.update(progress_report.id,
+                                description=f'{caller.name}: '
+                                            f'{self._execution_mode_str}ed {trial_num}{self._num_trials_str} trials',
+                                refresh=True,
+                                completed=True)
+            else:
+                assert False, f"Invalid 'trial_num' arg to PNLProgress.report_progress from {caller.name}: " \
+                              f"'{trial_num}'"
 
-    def report_output(self, caller, scheduler, show_output, content, context, nodes_to_report=False, node=None):
+    def report_output(self, caller, progress_report, scheduler, show_output, content, context, nodes_to_report=False,
+                      node=None):
 
         # if it is None, defer to Composition's # reportOutputPref
         if show_output is not False:  # if it is False, leave as is to suppress output
@@ -142,14 +175,16 @@ class PNLProgress:
 
         if content is 'trial_init':
 
+            progress_report._trial_report = []
+
             if show_output is not False:  # if it is False, suppress output
                 show_output = show_output or caller.reportOutputPref # if it is None, defer to Composition's
                 # reportOutputPref
 
                 #  if rich report, report trial number and Composition's input
                 if rich_report:
-                    self._trial_report = [f"\n[bold {trial_panel_color}]input:[/]"
-                                          f" {[i.tolist() for i in caller.get_input_values(context)]}"]
+                    progress_report._trial_report = [f"\n[bold {trial_panel_color}]input:[/]"
+                                                     f" {[i.tolist() for i in caller.get_input_values(context)]}"]
                 else:
                     # print trial separator and input array to Composition
                     print(f"[bold {trial_panel_color}]{caller.name} TRIAL {trial_num} ====================")
@@ -157,7 +192,7 @@ class PNLProgress:
         elif content is 'time_step_init':
             if show_output:
                 if rich_report:
-                    self._time_step_report = [] # Contains rich.Panel for each node executed in time_step
+                    progress_report._time_step_report = [] # Contains rich.Panel for each node executed in time_step
                 elif nodes_to_report:
                     print(f'[{time_step_panel_color}]Time Step {scheduler.clock.time.time_step} ---------')
 
@@ -166,7 +201,7 @@ class PNLProgress:
                 assert False  # FIX: NEED ERROR MESSAGE HERE
             if show_output and (node.reportOutputPref or show_output is FULL):
                 if rich_report:
-                    self._time_step_report.append(
+                    progress_report._time_step_report.append(
                         _report_node_execution(node,
                                                input_val=node.get_input_values(context),
                                                output_val=node.output_port.parameters.value._get(context),
@@ -177,37 +212,31 @@ class PNLProgress:
 
         elif content is 'time_step':
             if (show_output and (nodes_to_report or show_output is FULL) and rich_report):
-                self._trial_report.append(Panel(RenderGroup(*self._time_step_report),
-                                           # box=box.HEAVY,
-                                           border_style=time_step_panel_color,
-                                           box=time_step_panel_box,
-                                           title=f'[bold {time_step_panel_color}]\nTime Step '
-                                                 f'{scheduler.clock.time.time_step}[/]',
-                                           expand=False))
+                progress_report._trial_report.append(Panel(RenderGroup(*progress_report._time_step_report),
+                                                           # box=box.HEAVY,
+                                                           border_style=time_step_panel_color,
+                                                           box=time_step_panel_box,
+                                                           title=f'[bold {time_step_panel_color}]\nTime Step '
+                                                                 f'{scheduler.clock.time.time_step}[/]',
+                                                           expand=False))
 
         elif content is 'trial':
             if show_output and rich_report:
                 output_values = []
                 for port in caller.output_CIM.output_ports:
                     output_values.append(port.parameters.value._get(context))
-                self._trial_report.append(f"\n[bold {trial_output_color}]result:[/]"
+                progress_report._trial_report.append(f"\n[bold {trial_output_color}]result:[/]"
                                           f" {[r.tolist() for r in output_values]}\n")
-                self._trial_report = Panel(RenderGroup(*self._trial_report),
+                progress_report._trial_report = Panel(RenderGroup(*progress_report._trial_report),
                                            box=trial_panel_box,
                                            border_style=trial_panel_color,
                                            title=f'[bold{trial_panel_color}] {caller.name}: Trial {trial_num} [/]',
                                            expand=False)
 
-        # if content is 'run':
-        #     if show_output and comp._trial_report:
-        #             progress.console.print(comp._trial_report)
-        #             progress.console.print('')
-        #     if show_progress:
-        #         progress.update(run_trials_task,
-        #                         description=f'{comp.name}: '
-        #                                     f'{_execution_mode_str}ed {trial_num+1}{_num_trials_str} trials',
-        #                         advance=1,
-        #                         refresh=True)
+        if content is 'run':
+            if show_output and progress_report.trial_report:
+                self._progress.cnsole.print(progress_report.trial_report)
+                self._progress.console.print('')
 
 
 # ####################################################

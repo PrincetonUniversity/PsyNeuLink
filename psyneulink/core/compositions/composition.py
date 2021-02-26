@@ -8396,13 +8396,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     scheduler=scheduler,
                     context=context
                 ):
-                    # FIX: PROGRESS STUFF ################################################################################
-                    if show_progress:
-                        progress.update(run_trials_task,
-                                        description=f'{self.name}: '
-                                                    f'{_execution_mode_str}ed',
-                                        refresh=True,
-                                        completed=True)
+                    progress.report_progress(self, progress_report, 'completed')
                     break
 
                 # PROCESSING ------------------------------------------------------------------------
@@ -8410,13 +8404,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 try:
                     execution_stimuli = self._parse_trial_inputs(inputs, trial_num)
                 except StopIteration:
-                    # FIX: PROGRESS STUFF ################################################################################
-                    if show_progress:
-                        progress.update(run_trials_task,
-                                        description=f'{self.name}: '
-                                                    f'{_execution_mode_str}ed {trial_num}{_num_trials_str} trials',
-                                        refresh=True,
-                                        completed=True)
+                    progress.report_progress(self, progress_report, 'completed')
                     break
 
                 # execute processing, passing stimuli for this trial
@@ -8464,11 +8452,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if call_after_trial:
                     call_with_pruned_args(call_after_trial, context=context)
 
-                # FIX: PROGRESS STUFF
-                # progress.report_output(self, scheduler, show_output, 'run', context)
-                if show_output and self._trial_report:
-                        progress.console.print(self._trial_report)
-                        progress.console.print('')
+                progress.report_output(self, progress_report, scheduler, show_output, 'run', context)
                 progress.report_progress(self, progress_report, trial_num)
 
             # IMPLEMENTATION NOTE:
@@ -8700,6 +8684,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             skip_initialization=False,
             execution_mode=False,
             progress=None,
+            progress_report=None,
             show_output=None,
             ):
         """
@@ -8767,11 +8752,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output value of the final Mechanism executed in the Composition : various
         """
 
-        progress = progress or PNLProgress(show_progress=False)
+        if not progress:
+            progress = progress or PNLProgress(show_progress=False)
+        if not progress_report:
+            progress_report = progress.start_progress_report(self,1,context)
+
         execution_scheduler = scheduler or self.scheduler
 
         # Report trial_num and Composition input
-        progress.report_output(self, execution_scheduler, show_output, 'trial_init', context)
+        progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial_init', context)
 
         # ASSIGNMENTS **************************************************************************************************
 
@@ -9116,7 +9105,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # INITIALIZE self._time_step_report AND SHOW TIME_STEP DIVIDER
             nodes_to_report = any(node.reportOutputPref for node in next_execution_set) or show_output is FULL
-            progress.report_output(self, execution_scheduler, show_output, 'time_step_init', context,
+            progress.report_output(self, progress_report, execution_scheduler, show_output, 'time_step_init', context,
                                    nodes_to_report=True)
 
             # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -9247,6 +9236,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if len(node.parameter_CIM.afferents) == 0 else False
                     ret = node.execute(context=context,
                                        execution_mode=nested_execution_mode,
+                                       progress=progress,
+                                       progress_report=progress_report,
                                        show_output=show_output)
 
                     # Get output info from nested execution
@@ -9264,7 +9255,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._animate_execution(node, context)
 
                 # Add report for node to time_step_report
-                progress.report_output(self, execution_scheduler, show_output, 'node', context, node=node)
+                progress.report_output(self,
+                                       progress_report,
+                                       execution_scheduler,
+                                       show_output,
+                                       'node',
+                                       context,
+                                       node=node)
 
                 # MANAGE INPUTS (for next execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -9304,7 +9301,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
             # Add report for time_step to trial_report
-            progress.report_output(self, execution_scheduler, show_output, 'time_step', context,
+            progress.report_output(self, progress_report, execution_scheduler, show_output, 'time_step', context,
                                    nodes_to_report= nodes_to_report)
 
         context.remove_flag(ContextFlags.PROCESSING)
@@ -9368,7 +9365,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output_values.append(port.parameters.value._get(context))
 
         # Report output for trial
-        progress.report_output(self, execution_scheduler, show_output, 'trial', context)
+        progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial', context)
 
         return output_values
 
