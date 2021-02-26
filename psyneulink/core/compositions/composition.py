@@ -8381,34 +8381,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             trial_output = None
 
 
-        with PNLProgress(show_progress=not show_progress) as progress:
+        with PNLProgress(show_progress=show_progress) as progress:
 
-            # FIX: PROGRESS STUFF ################################################################################
-            if show_progress:
-
-                # Simulation mode:
-                if context.runmode & ContextFlags.SIMULATION_MODE:
-                    _execution_mode_str = 'Simulat'
-                    _visible = False
-                else:
-                    _execution_mode_str = 'Execut'
-                    _visible = False
-
-                # when num_trials is not known (e.g., a generator is for inputs)
-                # FIX: NEED TO ADD _start SOMEWHERE
-                if num_trials == sys.maxsize:
-                    _start = False
-                    _num_trials_str = ''
-                else:
-                    _start = True
-                    _num_trials_str = f' of {num_trials}'
-
-                run_trials_task = progress.add_task(f"[red]{_execution_mode_str}ing {self.name}...",
-                                                    total=num_trials,
-                                                    visible=True
-                                                    )
-                print()
-            # FIX: END PROGRESS STUFF ################################################################################
+            progress_report = progress.start_progress_report(self, num_trials, context)
 
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
@@ -8494,12 +8469,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if show_output and self._trial_report:
                         progress.console.print(self._trial_report)
                         progress.console.print('')
-                if show_progress:
-                    progress.update(run_trials_task,
-                                    description=f'{self.name}: '
-                                                f'{_execution_mode_str}ed {trial_num+1}{_num_trials_str} trials',
-                                    advance=1,
-                                    refresh=True)
+                progress.report_progress(self, progress_report, trial_num)
 
             # IMPLEMENTATION NOTE:
             # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
@@ -8797,11 +8767,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output value of the final Mechanism executed in the Composition : various
         """
 
-        progress = progress or PNLProgress()
+        progress = progress or PNLProgress(show_progress=False)
         execution_scheduler = scheduler or self.scheduler
 
         # Report trial_num and Composition input
-        progress.report_output(self, scheduler, show_output, 'trial_init', context)
+        progress.report_output(self, execution_scheduler, show_output, 'trial_init', context)
 
         # ASSIGNMENTS **************************************************************************************************
 
@@ -9146,7 +9116,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # INITIALIZE self._time_step_report AND SHOW TIME_STEP DIVIDER
             nodes_to_report = any(node.reportOutputPref for node in next_execution_set) or show_output is FULL
-            progress.report_output(self, show_output, 'time_step_init', context, nodes_to_report=True)
+            progress.report_output(self, execution_scheduler, show_output, 'time_step_init', context,
+                                   nodes_to_report=True)
 
             # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             if self._animate is not False and self._animate_unit == EXECUTION_SET:
@@ -9333,8 +9304,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
             # Add report for time_step to trial_report
-            _report_output(self, execution_scheduler, show_output, 'time_step', context,
-                                nodes_to_report= nodes_to_report)
+            progress.report_output(self, execution_scheduler, show_output, 'time_step', context,
+                                   nodes_to_report= nodes_to_report)
 
         context.remove_flag(ContextFlags.PROCESSING)
 
@@ -9397,7 +9368,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output_values.append(port.parameters.value._get(context))
 
         # Report output for trial
-        progress.report_output(comp, execution_scheduler, show_output, 'trial', context)
+        progress.report_output(self, execution_scheduler, show_output, 'trial', context)
 
         return output_values
 

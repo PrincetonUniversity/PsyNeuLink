@@ -1,10 +1,11 @@
-import time, re
+import time, re, sys
 from rich import print, box
 from rich.console import RenderGroup
 from rich.progress import Progress, BarColumn, SpinnerColumn, Spinner
 from rich.panel import Panel
 
 from psyneulink.core.globals.keywords import FULL
+from psyneulink.core.globals.context import ContextFlags
 
 class PNLProgress:
     """
@@ -15,16 +16,13 @@ class PNLProgress:
     """
     _instance = None
 
-    def __new__(cls, **kwargs) -> 'PNLProgress':
+    def __new__(cls, show_progress=True, mode='rich') -> 'PNLProgress':
         if cls._instance is None:
             cls._instance = super(PNLProgress, cls).__new__(cls)
 
-            disable = kwargs['show_progress']
-            # context = kwargs['context']
-            # num_trials = kwargs['num_trials']
-
             # Instantiate a rich progress context\object. It is not started yet.
-            cls._instance._progress = Progress(disable=disable, auto_refresh=False)
+            cls._instance._progress = Progress(disable=not show_progress, auto_refresh=False)
+            cls._show_progress = show_progress
             cls._trial_report = None
             cls._time_step_report = None
 
@@ -59,7 +57,7 @@ class PNLProgress:
         # Keep track of a reference count of how many times we have given a reference.
         self._ref_count = self._ref_count + 1
 
-        return self._progress
+        return self
 
     def __exit__(self, type, value, traceback) -> None:
         """
@@ -85,6 +83,43 @@ class PNLProgress:
             # Destroy the singleton, very important. If we don't do this, the rich progress
             # bar will grow and grow and never be deallocated until the end of program.
             PNLProgress._destroy()
+
+    def start_progress_report(self, comp, num_trials, context):
+
+        if self._show_progress:
+
+            # Simulation mode:
+            if context.runmode & ContextFlags.SIMULATION_MODE:
+                self._execution_mode_str = 'Simulat'
+                _visible = False
+            else:
+                self._execution_mode_str = 'Execut'
+                _visible = False
+
+            # when num_trials is not known (e.g., a generator is for inputs)
+            # FIX: NEED TO ADD _start SOMEWHERE
+            if num_trials == sys.maxsize:
+                _start = False
+                self._num_trials_str = ''
+            else:
+                _start = True
+                self._num_trials_str = f' of {num_trials}'
+
+            return self._progress.add_task(f"[red]{self._execution_mode_str}ing {comp.name}...",
+                                           total=num_trials,
+                                           start=_start,
+                                           visible=True
+                                           )
+            print()
+
+
+    def report_progress(self, caller, task, trial_num):
+        if self._show_progress:
+            self._progress.update(task,
+                                  description=f'{caller.name}: '
+                                              f'{self._execution_mode_str}ed {trial_num+1}{self._num_trials_str} trials',
+                                  advance=1,
+                                  refresh=True)
 
     def report_output(self, caller, scheduler, show_output, content, context, nodes_to_report=False, node=None):
 
