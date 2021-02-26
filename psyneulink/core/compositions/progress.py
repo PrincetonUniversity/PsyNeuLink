@@ -17,8 +17,10 @@ class PNLProgressError(Exception):
         return repr(self.error_value)
 
 
-class OutputReport():
-    def __init__(self, id):
+class ProgressReport():
+    def __init__(self, id, runmode, num_trials):
+        self.runmode = runmode
+        self.num_trials = num_trials
         self.progress_report_id = id
         self.trial_report = []
         self.time_step_report = []
@@ -106,31 +108,28 @@ class PNLProgress:
 
             # Simulation mode:
             if context.runmode & ContextFlags.SIMULATION_MODE:
-                self._execution_mode_str = 'Simulat'
+                run_mode = 'Simulat'
                 visible = False
             else:
-                self._execution_mode_str = 'Execut'
+                run_mode = 'Execut'
                 visible = True
 
             # when num_trials is not known (e.g., a generator is for inputs)
             # FIX: NEED TO ADD _start SOMEWHERE
             if num_trials == sys.maxsize:
-                _start = False
-                self._num_trials_str = ''
+                start = False
+                num_trials = 0
             else:
-                _start = True
-                self._num_trials_str = f' of {num_trials}'
+                start = True
 
             # FIX: CONTEXTUALIZE FOR RICH
-            id = self._progress.add_task(f"[red]{self._execution_mode_str}ing {comp.name}...",
+            id = self._progress.add_task(f"[red]{run_mode}ing {comp.name}...",
                                          total=num_trials,
-                                         start=_start,
+                                         start=start,
                                          visible=visible
                                          )
 
-            # self._progress_reports += [OutputReport(id)]
-            # return progress_report
-            return OutputReport(id)
+            return ProgressReport(id, run_mode, num_trials)
 
             # FIX: ??KEEP:
             print()
@@ -138,17 +137,15 @@ class PNLProgress:
     def report_progress(self, caller, progress_report, trial_num):
         if self._show_progress:
             if isinstance(trial_num, int):
+                if progress_report.num_trials:
+                    num_trials_str = f' of {progress_report.num_trials}'
+                else:
+                    num_trials_str = ''
                 self._progress.update(progress_report.progress_report_id,
                                       description=f'{caller.name}: '
-                                                  f'{self._execution_mode_str}ed {trial_num+1}{self._num_trials_str} trials',
+                                                  f'{progress_report.runmode}ed {trial_num+1}{num_trials_str} trials',
                                       advance=1,
                                       refresh=True)
-            elif trial_num is 'completed':
-                self._progress.update(progress_report.progress_report_id,
-                                description=f'{caller.name}: '
-                                            f'{self._execution_mode_str}ed {trial_num}{self._num_trials_str} trials',
-                                refresh=True,
-                                completed=True)
             else:
                 assert False, f"Invalid 'trial_num' arg to PNLProgress.report_progress from {caller.name}: " \
                               f"'{trial_num}'"
@@ -297,14 +294,6 @@ class PNLProgress:
 
 
 # # rich Progress Tracking -----------------------------------
-# class SimulationProgress(Progress):
-#     def start(self):
-#         return
-#     def stop(self):
-#         return
-# progress = Progress(auto_refresh=False)
-# simulation_progress = SimulationProgress(auto_refresh=False)
-#
 
 # Console report styles
 # node
@@ -345,10 +334,6 @@ def _report_node_execution(node,
         except TypeError:
             input_string = input_val
 
-        # print(f"\n\'{node.name}\'{mechanism_string} executed:\n- input:  {input_string}")
-        # print(f"\'{node.name}\'{mechanism_string} executed:\n- [italic]input:[/italic]  {input_string}")
-        # node_report += f"[yellow bold]\'{node.name}\'[/]{mechanism_string}executed:\n- input: {input_string}"
-        # node_report += f"Mechanism executed:\n"
         node_report += f"input: {input_string}"
 
         # print output
@@ -359,7 +344,6 @@ def _report_node_execution(node,
         except TypeError:
             output_string = output
 
-        # print(f"- output: {output_string}")
         node_report += f"\noutput: {output_string}"
 
         # print params
@@ -392,15 +376,11 @@ def _report_node_execution(node,
                     param_is_function = True
                 else:
                     param = param_value
-                # print(f"\t{param_name}: {str(param).__str__().strip('[]')}")
                 params_string += f"\n\t{param_name}: {str(param).__str__().strip('[]')}"
                 if param_is_function:
                     # Sort for consistency of output
                     func_params_keys_sorted = sorted(node.function.parameters.names())
                     for fct_param_name in func_params_keys_sorted:
-                        # print("\t\t{}: {}".
-                        #       format(fct_param_name,
-                        #              str(getattr(node.function.parameters, fct_param_name)._get(context)).__str__().strip("[]")))
                         params_string += ("\n\t\t{}: {}".
                               format(fct_param_name,
                                      str(getattr(node.function.parameters, fct_param_name)._get(context)).__str__().strip("[]")))
