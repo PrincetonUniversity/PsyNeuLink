@@ -231,15 +231,14 @@ class FuncExecution(CUDAExecution):
         new_variable = np.asfarray(np.atleast_2d(variable),
                                    dtype=self._vi_dty)
 
+        ct_vi = np.ctypeslib.as_ctypes(new_variable)
         if len(self._execution_contexts) > 1:
             # wrap_call casts the arguments so we only need contiguous data
             # layout
-            ct_vi = np.ctypeslib.as_ctypes(new_variable)
             self._bin_multirun.wrap_call(self._param_struct,
                                          self._state_struct,
                                          ct_vi, self._ct_vo, self._ct_len)
         else:
-            ct_vi = np.ctypeslib.as_ctypes(new_variable)
             self._bin_func(ctypes.byref(self._param_struct),
                            ctypes.byref(self._state_struct),
                            ct_vi, ctypes.byref(self._ct_vo))
