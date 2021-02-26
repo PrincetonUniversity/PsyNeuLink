@@ -15,12 +15,18 @@ class PNLProgress:
     """
     _instance = None
 
-    def __new__(cls, disable: bool = False, **kwargs) -> 'PNLProgress':
+    def __new__(cls, **kwargs) -> 'PNLProgress':
         if cls._instance is None:
             cls._instance = super(PNLProgress, cls).__new__(cls)
 
+            disable = kwargs['show_progress']
+            # context = kwargs['context']
+            # num_trials = kwargs['num_trials']
+
             # Instantiate a rich progress context\object. It is not started yet.
-            cls._instance._progress = Progress(disable=disable, auto_refresh=False, **kwargs)
+            cls._instance._progress = Progress(disable=disable, auto_refresh=False)
+            cls._trial_report = None
+            cls._time_step_report = None
 
             # This counter is incremented on each context __enter__ and decrements
             # on each __exit__. We need this to make sure we don't call progress
@@ -79,6 +85,95 @@ class PNLProgress:
             # Destroy the singleton, very important. If we don't do this, the rich progress
             # bar will grow and grow and never be deallocated until the end of program.
             PNLProgress._destroy()
+
+    def report_output(self, caller, scheduler, show_output, content, context, nodes_to_report=False, node=None):
+
+        # if it is None, defer to Composition's # reportOutputPref
+        if show_output is not False:  # if it is False, leave as is to suppress output
+            show_output = show_output or caller.reportOutputPref
+
+        show_output = str(show_output)
+        try:
+            if 'terse' in show_output:   # give precedence to argument in call to execute
+                rich_report = False
+            # elif 'terse' in self.reportOutputPref:
+            #     rich_report = False
+            else:
+                rich_report = True
+        except TypeError:
+                rich_report = True
+
+        trial_num = scheduler.clock.time.trial
+
+        if content is 'trial_init':
+
+            if show_output is not False:  # if it is False, suppress output
+                show_output = show_output or caller.reportOutputPref # if it is None, defer to Composition's
+                # reportOutputPref
+
+                #  if rich report, report trial number and Composition's input
+                if rich_report:
+                    self._trial_report = [f"\n[bold {trial_panel_color}]input:[/]"
+                                          f" {[i.tolist() for i in caller.get_input_values(context)]}"]
+                else:
+                    # print trial separator and input array to Composition
+                    print(f"[bold {trial_panel_color}]{caller.name} TRIAL {trial_num} ====================")
+
+        elif content is 'time_step_init':
+            if show_output:
+                if rich_report:
+                    self._time_step_report = [] # Contains rich.Panel for each node executed in time_step
+                elif nodes_to_report:
+                    print(f'[{time_step_panel_color}]Time Step {scheduler.clock.time.time_step} ---------')
+
+        elif content is 'node':
+            if not node:
+                assert False  # FIX: NEED ERROR MESSAGE HERE
+            if show_output and (node.reportOutputPref or show_output is FULL):
+                if rich_report:
+                    self._time_step_report.append(
+                        _report_node_execution(node,
+                                               input_val=node.get_input_values(context),
+                                               output_val=node.output_port.parameters.value._get(context),
+                                               context=context
+                                               ))
+                else:
+                    print(f'[{node_panel_color}]{node.name} executed')
+
+        elif content is 'time_step':
+            if (show_output and (nodes_to_report or show_output is FULL) and rich_report):
+                self._trial_report.append(Panel(RenderGroup(*self._time_step_report),
+                                           # box=box.HEAVY,
+                                           border_style=time_step_panel_color,
+                                           box=time_step_panel_box,
+                                           title=f'[bold {time_step_panel_color}]\nTime Step '
+                                                 f'{scheduler.clock.time.time_step}[/]',
+                                           expand=False))
+
+        elif content is 'trial':
+            if show_output and rich_report:
+                output_values = []
+                for port in caller.output_CIM.output_ports:
+                    output_values.append(port.parameters.value._get(context))
+                self._trial_report.append(f"\n[bold {trial_output_color}]result:[/]"
+                                          f" {[r.tolist() for r in output_values]}\n")
+                self._trial_report = Panel(RenderGroup(*self._trial_report),
+                                           box=trial_panel_box,
+                                           border_style=trial_panel_color,
+                                           title=f'[bold{trial_panel_color}] {caller.name}: Trial {trial_num} [/]',
+                                           expand=False)
+
+        # if content is 'run':
+        #     if show_output and comp._trial_report:
+        #             progress.console.print(comp._trial_report)
+        #             progress.console.print('')
+        #     if show_progress:
+        #         progress.update(run_trials_task,
+        #                         description=f'{comp.name}: '
+        #                                     f'{_execution_mode_str}ed {trial_num+1}{_num_trials_str} trials',
+        #                         advance=1,
+        #                         refresh=True)
+
 
 # ####################################################
 # # An Example
@@ -257,91 +352,4 @@ def _report_node_execution(node,
                      expand=expand,
                      title=f'[{node_panel_color}]{node.name}',
                      highlight=True)
-
-def _report_output(comp=None, scheduler, show_output, content, context,
-                        nodes_to_report=False,
-                        node=None):
-
-
-    show_output = str(show_output)
-    try:
-        if 'terse' in show_output:   # give precedence to argument in call to execute
-            rich_report = False
-        # elif 'terse' in self.reportOutputPref:
-        #     rich_report = False
-        else:
-            rich_report = True
-    except TypeError:
-            rich_report = True
-
-    trial_num = scheduler.clock.time.trial
-
-    if content is 'trial_init':
-
-        if show_output is not False:  # if it is False, suppress output
-            show_output = show_output or comp.reportOutputPref # if it is None, defer to Composition's reportOutputPref
-
-            #  if rich report, report trial number and Composition's input
-            if rich_report:
-                comp._trial_report = [f"\n[bold {trial_panel_color}]input:[/]"
-                                      f" {[i.tolist() for i in comp.get_input_values(context)]}"]
-            else:
-                # print trial separator and input array to Composition
-                print(f"[bold {trial_panel_color}]{comp.name} TRIAL {trial_num} ====================")
-
-    elif content is 'time_step_init':
-        if show_output:
-            if rich_report:
-                comp._time_step_report = [] # Contains rich.Panel for each node executed in time_step
-            elif nodes_to_report:
-                print(f'[{time_step_panel_color}]Time Step {scheduler.clock.time.time_step} ---------')
-
-    elif content is 'node':
-        if not node:
-            assert False  # FIX: NEED ERROR MESSAGE HERE
-        if show_output and (node.reportOutputPref or show_output is FULL):
-            if rich_report:
-                comp._time_step_report.append(
-                    _report_node_execution(node,
-                                           input_val=node.get_input_values(context),
-                                           output_val=node.output_port.parameters.value._get(context),
-                                           context=context
-                                           ))
-            else:
-                print(f'[{node_panel_color}]{node.name} executed')
-
-    elif content is 'time_step':
-        if (show_output and (nodes_to_report or show_output is FULL) and rich_report):
-            comp._trial_report.append(Panel(RenderGroup(*comp._time_step_report),
-                                       # box=box.HEAVY,
-                                       border_style=time_step_panel_color,
-                                       box=time_step_panel_box,
-                                       title=f'[bold {time_step_panel_color}]\nTime Step '
-                                             f'{scheduler.clock.time.time_step}[/]',
-                                       expand=False))
-
-    elif content is 'trial':
-        if show_output and rich_report:
-            output_values = []
-            for port in comp.output_CIM.output_ports:
-                output_values.append(port.parameters.value._get(context))
-            comp._trial_report.append(f"\n[bold {trial_output_color}]result:[/]"
-                                      f" {[r.tolist() for r in output_values]}\n")
-            comp._trial_report = Panel(RenderGroup(*comp._trial_report),
-                                       box=trial_panel_box,
-                                       border_style=trial_panel_color,
-                                       title=f'[bold{trial_panel_color}] {comp.name}: Trial {trial_num} [/]',
-                                       expand=False)
-
-    if content is 'run':
-        if show_output and comp._trial_report:
-                progress.console.print(comp._trial_report)
-                progress.console.print('')
-        if show_progress:
-            progress.update(run_trials_task,
-                            description=f'{comp.name}: '
-                                        f'{_execution_mode_str}ed {trial_num+1}{_num_trials_str} trials',
-                            advance=1,
-                            refresh=True)
-
 
