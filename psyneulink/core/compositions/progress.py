@@ -107,10 +107,10 @@ class PNLProgress:
             # Simulation mode:
             if context.runmode & ContextFlags.SIMULATION_MODE:
                 self._execution_mode_str = 'Simulat'
-                _visible = False
+                visible = False
             else:
                 self._execution_mode_str = 'Execut'
-                _visible = False
+                visible = True
 
             # when num_trials is not known (e.g., a generator is for inputs)
             # FIX: NEED TO ADD _start SOMEWHERE
@@ -125,7 +125,7 @@ class PNLProgress:
             id = self._progress.add_task(f"[red]{self._execution_mode_str}ing {comp.name}...",
                                          total=num_trials,
                                          start=_start,
-                                         visible=True
+                                         visible=visible
                                          )
 
             # self._progress_reports += [OutputReport(id)]
@@ -155,6 +155,9 @@ class PNLProgress:
 
     def report_output(self, caller, progress_report, scheduler, show_output, content, context, nodes_to_report=False,
                       node=None):
+
+        if not progress_report:
+            return
 
         # if it is None, defer to Composition's # reportOutputPref
         if show_output is not False:  # if it is False, leave as is to suppress output
@@ -236,7 +239,7 @@ class PNLProgress:
 
         if content is 'run':
             if show_output and progress_report.trial_report:
-                self._progress.cnsole.print(progress_report.trial_report)
+                self._progress.console.print(progress_report.trial_report)
                 self._progress.console.print('')
 
 

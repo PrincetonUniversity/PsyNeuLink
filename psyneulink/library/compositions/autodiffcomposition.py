@@ -480,6 +480,8 @@ class AutodiffComposition(Composition):
                 execution_mode=False,
                 skip_initialization=False,
                 show_output=None,
+                progress=None,
+                progress_report=None
                 ):
         self._assign_execution_ids(context)
         context.composition = self

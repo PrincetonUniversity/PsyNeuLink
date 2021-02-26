@@ -8396,7 +8396,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     scheduler=scheduler,
                     context=context
                 ):
-                    progress.report_progress(self, progress_report, 'completed')
+                    # progress.report_progress(self, progress_report, 'completed')
                     break
 
                 # PROCESSING ------------------------------------------------------------------------
@@ -8404,7 +8404,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 try:
                     execution_stimuli = self._parse_trial_inputs(inputs, trial_num)
                 except StopIteration:
-                    progress.report_progress(self, progress_report, 'completed')
+                    # progress.report_progress(self, progress_report, 'completed')
                     break
 
                 # execute processing, passing stimuli for this trial
@@ -8422,7 +8422,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             runtime_params=runtime_params,
                                             skip_initialization=True,
                                             execution_mode=execution_mode,
-                                            show_output=show_output
+                                            show_output=show_output,
+                                            progress=progress,
+                                            progress_report=progress_report
                                             )
 
                 # ---------------------------------------------------------------------------------
