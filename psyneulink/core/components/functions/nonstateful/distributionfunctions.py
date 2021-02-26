@@ -39,7 +39,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, DIST_FUNCTION_TYPE, BETA, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_ANALYTICAL_FUNCTION, \
     EXPONENTIAL_DIST_FUNCTION, GAMMA_DIST_FUNCTION, HIGH, LOW, MULTIPLICATIVE_PARAM, NOISE, NORMAL_DIST_FUNCTION, \
     SCALE, STANDARD_DEVIATION, THRESHOLD, UNIFORM_DIST_FUNCTION, WALD_DIST_FUNCTION
-from psyneulink.core.globals.utilities import convert_to_np_array, ValidParamSpecType
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, convert_to_np_array, ValidParamSpecType
 from psyneulink.core.globals.preferences.basepreferenceset import ValidPrefSet
 
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
@@ -1321,9 +1321,11 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
         # Compute moments (mean, variance, skew) of condiational response time distributions
         moments = DriftDiffusionAnalytical._compute_conditional_rt_moments(drift_rate, noise, threshold, bias, non_decision_time)
 
-        return rt, er, \
-               moments['mean_rt_plus'], moments['var_rt_plus'], moments['skew_rt_plus'], \
-               moments['mean_rt_minus'], moments['var_rt_minus'], moments['skew_rt_minus']
+        return convert_all_elements_to_np_array([
+            rt, er,
+            moments['mean_rt_plus'], moments['var_rt_plus'], moments['skew_rt_plus'],
+            moments['mean_rt_minus'], moments['var_rt_minus'], moments['skew_rt_minus']
+        ])
 
     @staticmethod
     def _compute_conditional_rt_moments(drift_rate, noise, threshold, starting_value, non_decision_time):

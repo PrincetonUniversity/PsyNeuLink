@@ -101,7 +101,7 @@ from psyneulink.core.globals.parameters import \
     FunctionParameter, Parameter, get_validator_by_function, check_user_specified
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, ValidPrefSet
-from psyneulink.core.globals.utilities import ValidParamSpecType, safe_len, is_matrix_keyword
+from psyneulink.core.globals.utilities import ValidParamSpecType, convert_all_elements_to_np_array, safe_len, is_matrix_keyword
 
 __all__ = ['Angle', 'BinomialDistort', 'Dropout', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity',
            'Linear', 'LinearMatrix', 'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
@@ -3159,6 +3159,7 @@ class SoftMax(TransferFunction):
             output = []
             for item in variable:
                 output.append(self.apply_softmax(item, gain, output_type))
+            output = convert_all_elements_to_np_array(output)
         else:
             output = self.apply_softmax(variable, gain, output_type)
 

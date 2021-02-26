@@ -4859,7 +4859,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
             self.parameters.previous_w._set(previous_w, context)
             self.parameters.previous_time._set(previous_time, context)
 
-        return previous_v, previous_w, previous_time
+        return convert_all_elements_to_np_array([previous_v, previous_w, previous_time])
 
     def reset(self, previous_v=None, previous_w=None, previous_time=None, context=None):
         return super().reset(
