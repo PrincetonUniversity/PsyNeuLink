@@ -366,9 +366,6 @@ class CompExecution(CUDAExecution):
         self._data = data_struct
 
     def _copy_params_to_pnl(self, context=None, component=None, params=None):
-        # need to special case compositions
-        from psyneulink.core.compositions import Composition
-        from psyneulink.core.components.projections.pathway import MappingProjection
 
         if component is None:
             component = self._composition
@@ -377,29 +374,30 @@ class CompExecution(CUDAExecution):
             assert component == self._composition
             params = self._param_struct
 
-        if isinstance(component, Composition):
-            # first handle all inner projections
-            params_projections_list = getattr(params, params._fields_[1][0])
-            for idx, projection in enumerate(component._inner_projections):
-                projection_params = getattr(params_projections_list, params_projections_list._fields_[idx][0])
-                self._copy_params_to_pnl(context=context, component=projection, params=projection_params)
-
-            # now recurse on all nodes
-            params_node_list = getattr(params, params._fields_[0][0])
-            for idx, node in enumerate(component._all_nodes):
-                node_params = getattr(params_node_list, params_node_list._fields_[idx][0])
-                self._copy_params_to_pnl(context=context, component=node, params=node_params)
-        elif isinstance(component, MappingProjection):
-            # we copy all ids back
-            for idx, attribute in enumerate(component.llvm_param_ids):
-                to_set = getattr(component.parameters, attribute)
+        for idx, attribute in enumerate(component.llvm_param_ids):
+            if attribute == 'nodes':
+                params_node_list = getattr(params, params._fields_[idx][0])
+                for node_id, node in enumerate(component._all_nodes):
+                    node_params = getattr(params_node_list,
+                                          params_node_list._fields_[node_id][0])
+                    self._copy_params_to_pnl(context=context, component=node,
+                                             params=node_params)
+            elif attribute == 'projections':
+                params_projection_list = getattr(params, params._fields_[idx][0])
+                for proj_id, projection in enumerate(component._inner_projections):
+                    projection_params = getattr(params_projection_list,
+                                                params_projection_list._fields_[proj_id][0])
+                    self._copy_params_to_pnl(context=context,
+                                             component=projection,
+                                             params=projection_params)
+            elif attribute == 'matrix':
+                pnl_param = component.parameters.matrix
                 parameter_ctype = getattr(params, params._fields_[idx][0])
                 value = _convert_ctype_to_python(parameter_ctype)
-                if attribute == 'matrix':
-                    # special case since we have to unflatten matrix
-                    # FIXME: this seems to break something when generalized for all attributes
-                    value = np.array(value).reshape(component.parameters.matrix._get(context).shape)
-                    to_set._set(value, context=context)
+                # Unflatten the matrix
+                # FIXME: this seems to break something when generalized for all attributes
+                value = np.array(value).reshape(pnl_param._get(context).shape)
+                pnl_param._set(value, context=context)
 
     def _extract_node_struct(self, node, data):
         # context structure consists of a list of node contexts,
