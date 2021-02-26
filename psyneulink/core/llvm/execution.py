@@ -661,7 +661,7 @@ class CompExecution(CUDAExecution):
         assert len(bin_func.byref_arg_types) == 6
 
         # There are 6 arguments to evaluate:
-        # comp_param, comp_state, allocations, results, output, input, comp_data
+        # comp_param, comp_state, allocations, results, input, comp_data
         # all but #2 and #3 are shared
 
         # Directly initialized structures
