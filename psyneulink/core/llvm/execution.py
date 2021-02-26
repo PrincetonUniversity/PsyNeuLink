@@ -63,16 +63,21 @@ def _pretty_size(size):
     return "{:.2f} {}".format(size, u)
 
 
-class CUDAExecution:
+class Execution:
+    def __init__(self):
+        self._debug_env = debug_env
+
+
+class CUDAExecution(Execution):
     def __init__(self, buffers=['param_struct', 'state_struct', 'out']):
+        super().__init__()
         for b in buffers:
             setattr(self, "_buffer_cuda_" + b, None)
         self._uploaded_bytes = Counter()
         self._downloaded_bytes = Counter()
-        self.__debug_env = debug_env
 
     def __del__(self):
-        if "cuda_data" in self.__debug_env:
+        if "cuda_data" in self._debug_env:
             try:
                 name = self._bin_func.name
             except AttributeError:
@@ -166,7 +171,6 @@ class FuncExecution(CUDAExecution):
             Context(execution_id=eid) for eid in execution_ids
         ]
         self._component = component
-        self.__debug_env = debug_env
 
         par_struct_ty, ctx_struct_ty, vi_ty, vo_ty = self._bin_func.byref_arg_types
 
@@ -183,7 +187,7 @@ class FuncExecution(CUDAExecution):
         self._ct_vo = vo_ty()
         self._vi_ty = vi_ty
         self._vi_dty = _element_dtype(vi_ty)
-        if "stat" in self.__debug_env:
+        if "stat" in self._debug_env:
             print("Input struct size:", _pretty_size(ctypes.sizeof(vi_ty)),
                   "for", self._component.name)
             print("Output struct size:", _pretty_size(ctypes.sizeof(vo_ty)),
@@ -197,7 +201,7 @@ class FuncExecution(CUDAExecution):
             struct_ty = self._bin_func.byref_arg_types[arg]
             struct = struct_ty(*initializer)
             param._set(struct, context=context)
-            if "stat" in self.__debug_env:
+            if "stat" in self._debug_env:
                 print("Instantiated struct:", name, "( size:" ,
                       _pretty_size(ctypes.sizeof(struct_ty)), ")",
                       "for", self._component.name)
@@ -274,7 +278,6 @@ class CompExecution(CUDAExecution):
         self.__bin_func = None
         self.__bin_run_func = None
         self.__bin_run_multi_func = None
-        self.__debug_env = debug_env
         self.__frozen_vals = None
         self.__tags = frozenset(additional_tags)
 
@@ -340,7 +343,7 @@ class CompExecution(CUDAExecution):
                 cond_initializer = gen.get_condition_initializer()
 
             self.__conds = cond_type(*cond_initializer)
-            if "stat" in self.__debug_env:
+            if "stat" in self._debug_env:
                 print("Instantiated condition struct ( size:" ,
                       _pretty_size(ctypes.sizeof(struct_ty)), ")",
                       "for", self._composition.name)
@@ -360,7 +363,7 @@ class CompExecution(CUDAExecution):
 
             struct = struct_ty(*initializer)
             setattr(self, name, struct)
-            if "stat" in self.__debug_env:
+            if "stat" in self._debug_env:
                 print("Instantiated struct:", name, "( size:" ,
                       _pretty_size(ctypes.sizeof(struct_ty)), ")",
                       "for", self._composition.name)
@@ -473,7 +476,7 @@ class CompExecution(CUDAExecution):
         else:
             input_data = ([x] for x in self._composition._build_variable_for_input_CIM(inputs))
 
-        if "stat" in self.__debug_env:
+        if "stat" in self._debug_env:
             print("Input struct size:", _pretty_size(ctypes.sizeof(c_input)),
                   "for", self._composition.name)
         return c_input(*_tupleize(input_data))
@@ -509,7 +512,7 @@ class CompExecution(CUDAExecution):
         self._bin_func(self._state_struct, self._param_struct,
                        inputs, self.__frozen_vals, self._data_struct)
 
-        if "comp_node_debug" in self.__debug_env:
+        if "comp_node_debug" in self._debug_env:
             print("RAN: {}. CTX: {}".format(node, self.extract_node_state(node)))
             print("RAN: {}. Params: {}".format(node, self.extract_node_params(node)))
             print("RAN: {}. Results: {}".format(node, self.extract_node_output(node)))
@@ -607,7 +610,7 @@ class CompExecution(CUDAExecution):
             ct_vo = ct_vo * len(self._execution_contexts)
         outputs = ct_vo()
 
-        if "stat" in self.__debug_env:
+        if "stat" in self._debug_env:
             print("Input struct size:", _pretty_size(ctypes.sizeof(inputs)),
                   "for", self._composition.name)
             print("Output struct size:", _pretty_size(ctypes.sizeof(outputs)),
