@@ -128,11 +128,9 @@ class PNLProgress:
                                          start=start,
                                          visible=visible
                                          )
-
             return ProgressReport(id, run_mode, num_trials)
 
             # FIX: ??KEEP:
-            print()
 
     def report_progress(self, caller, progress_report, trial_num):
         if self._show_progress:
@@ -213,6 +211,7 @@ class PNLProgress:
 
         elif content is 'time_step':
             if (show_output and (nodes_to_report or show_output is FULL) and rich_report):
+                progress_report.trial_report.append('')
                 progress_report.trial_report.append(Panel(RenderGroup(*progress_report.time_step_report),
                                                            # box=box.HEAVY,
                                                            border_style=time_step_panel_color,
@@ -293,9 +292,8 @@ class PNLProgress:
 # run()
 
 
-# # rich Progress Tracking -----------------------------------
 
-# Console report styles
+# rich console report styles
 # node
 node_panel_color = 'orange1'
 # node_panel_box = box.SIMPLE
