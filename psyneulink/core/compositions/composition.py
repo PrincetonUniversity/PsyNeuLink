@@ -2386,7 +2386,7 @@ from psyneulink.core.components.ports.modulatorysignals.controlsignal import Con
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROLLER, CONTROL_SIGNAL, DEFAULT, FEEDBACK, \
+    AFTER, ALL, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROLLER, CONTROL_SIGNAL, DEFAULT, FEEDBACK, FULL, \
     HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
@@ -8513,10 +8513,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._trial_report = None
 
 
-        # Show output if specified in call to method or on Composition's pref
-        if show_output is None:
-            # if argument is not specified in call, defer to reportOutputPref, otherwise use specification in argument
-            show_output = self.reportOutputPref
+        # # Show output if specified in call to method or on Composition's pref
+        # if show_output is None:
+        #     # if argument is not specified in call, defer to reportOutputPref, otherwise use specification in argument
+        #     show_output = self.reportOutputPref
+
+        if show_output is not False:  # if it is False, suppress output
+            show_output = show_output or self.reportOutputPref # if it is None, defer to Composition's reportOutputPref
 
         global progress
         global simulation_progress
@@ -8556,6 +8559,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         print()
 
         with run_progress: # run in context of relevant rich.progress (normal or simulation)
+
+            # -------
+            #
+            # with PNLProgressContext(**show_options:  based on runmode, output destination) as progress
+            #
+            # -------
 
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
@@ -8634,8 +8643,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if call_after_trial:
                     call_with_pruned_args(call_after_trial, context=context)
 
-                if show_output:
-                    if self._trial_report:
+                if show_output and self._trial_report:
                         progress.console.print(self._trial_report)
                         progress.console.print('')
                 if show_progress:
@@ -8940,13 +8948,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output value of the final Mechanism executed in the Composition : various
         """
 
-        # Show output if specified in call to method or on Composition's pref
-        if show_output is None:
-            # if argument is not specified in call, defer to reportOutputPref, otherwise use specification in argument
-            show_output = self.reportOutputPref
+        # # Show output if specified in call to method or on Composition's pref
+        # if show_output is None:
+        #     # if argument is not specified in call, defer to reportOutputPref, otherwise use specification in argument
+        #     show_output = self.reportOutputPref
 
         # If reporting to console, report trial number and Composition's input
+        # if show_output is not False:  # if it is False, suppress output
         if show_output:
+            show_output = show_output or self.reportOutputPref # if it is None, defer to Composition's reportOutputPref
 
             trial_num = scheduler.clock.time.trial
 
@@ -9322,7 +9332,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if show_output:
                 if rich_report:
                     _time_step_report = [] # Contains rich.Panel for each node executed in time_step
-                elif any(node.reportOutputPref for node in next_execution_set) or show_output is 'all':
+                elif any(node.reportOutputPref for node in next_execution_set) or show_output is FULL:
                     print(f'[{time_step_panel_color}]Time Step {execution_scheduler.clock.time.time_step} ---------')
 
             # execute each node with EXECUTING in context
@@ -9461,7 +9471,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._animate_execution(node, context)
 
                 # ADD rich.Panel for node to time_step_report
-                if show_output and (node.reportOutputPref or show_output is ALL):
+                if show_output and (node.reportOutputPref or show_output is FULL):
                     if rich_report:
                         _time_step_report.append(
                             _report_node_execution(node,
@@ -9509,9 +9519,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 call_with_pruned_args(call_after_time_step, context=context)
 
 
-            # if reporting to console, print time_step if any nodes have reportOutputPref set or show_ouput is ALL
+            # if reporting to console, print time_step if any nodes have reportOutputPref set or show_output is FULL
             if (show_output and
-                    (any(node.reportOutputPref for node in next_execution_set) or show_output is ALL)
+                    (any(node.reportOutputPref is True for node in next_execution_set) or show_output is FULL)
                     and rich_report):
                 self._trial_report.append(Panel(RenderGroup(*_time_step_report),
                                            # box=box.HEAVY,
