@@ -144,7 +144,7 @@ class PNLProgress:
                                       advance=1,
                                       refresh=True)
             elif trial_num is 'completed':
-                self._progress.update(progress_report.id,
+                self._progress.update(progress_report.progress_report_id,
                                 description=f'{caller.name}: '
                                             f'{self._execution_mode_str}ed {trial_num}{self._num_trials_str} trials',
                                 refresh=True,
@@ -159,8 +159,9 @@ class PNLProgress:
         # if it is None, defer to Composition's # reportOutputPref
         if show_output is not False:  # if it is False, leave as is to suppress output
             show_output = show_output or caller.reportOutputPref
+        if show_output:
+            show_output = str(show_output)
 
-        show_output = str(show_output)
         try:
             if 'terse' in show_output:   # give precedence to argument in call to execute
                 rich_report = False
@@ -175,7 +176,7 @@ class PNLProgress:
 
         if content is 'trial_init':
 
-            progress_report._trial_report = []
+            progress_report.trial_report = []
 
             if show_output is not False:  # if it is False, suppress output
                 show_output = show_output or caller.reportOutputPref # if it is None, defer to Composition's
@@ -183,7 +184,7 @@ class PNLProgress:
 
                 #  if rich report, report trial number and Composition's input
                 if rich_report:
-                    progress_report._trial_report = [f"\n[bold {trial_panel_color}]input:[/]"
+                    progress_report.trial_report = [f"\n[bold {trial_panel_color}]input:[/]"
                                                      f" {[i.tolist() for i in caller.get_input_values(context)]}"]
                 else:
                     # print trial separator and input array to Composition
@@ -192,7 +193,7 @@ class PNLProgress:
         elif content is 'time_step_init':
             if show_output:
                 if rich_report:
-                    progress_report._time_step_report = [] # Contains rich.Panel for each node executed in time_step
+                    progress_report.time_step_report = [] # Contains rich.Panel for each node executed in time_step
                 elif nodes_to_report:
                     print(f'[{time_step_panel_color}]Time Step {scheduler.clock.time.time_step} ---------')
 
@@ -201,7 +202,7 @@ class PNLProgress:
                 assert False  # FIX: NEED ERROR MESSAGE HERE
             if show_output and (node.reportOutputPref or show_output is FULL):
                 if rich_report:
-                    progress_report._time_step_report.append(
+                    progress_report.time_step_report.append(
                         _report_node_execution(node,
                                                input_val=node.get_input_values(context),
                                                output_val=node.output_port.parameters.value._get(context),
@@ -212,7 +213,7 @@ class PNLProgress:
 
         elif content is 'time_step':
             if (show_output and (nodes_to_report or show_output is FULL) and rich_report):
-                progress_report._trial_report.append(Panel(RenderGroup(*progress_report._time_step_report),
+                progress_report.trial_report.append(Panel(RenderGroup(*progress_report.time_step_report),
                                                            # box=box.HEAVY,
                                                            border_style=time_step_panel_color,
                                                            box=time_step_panel_box,
@@ -225,9 +226,9 @@ class PNLProgress:
                 output_values = []
                 for port in caller.output_CIM.output_ports:
                     output_values.append(port.parameters.value._get(context))
-                progress_report._trial_report.append(f"\n[bold {trial_output_color}]result:[/]"
+                progress_report.trial_report.append(f"\n[bold {trial_output_color}]result:[/]"
                                           f" {[r.tolist() for r in output_values]}\n")
-                progress_report._trial_report = Panel(RenderGroup(*progress_report._trial_report),
+                progress_report.trial_report = Panel(RenderGroup(*progress_report.trial_report),
                                            box=trial_panel_box,
                                            border_style=trial_panel_color,
                                            title=f'[bold{trial_panel_color}] {caller.name}: Trial {trial_num} [/]',
