@@ -3348,12 +3348,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
     class _CompilationData(ParametersBase):
-        ptx_execution = None
-        parameter_struct = None
-        state_struct = None
-        data_struct = None
-        scheduler_conditions = None
-
+        execution = None
 
     def __init__(
             self,
@@ -8454,13 +8449,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             assert not is_simulation
             try:
                 comp_ex_tags = frozenset({"learning"}) if self._is_learning(context) else frozenset()
+                _comp_ex = pnlvm.CompExecution.get(self, context, additional_tags=comp_ex_tags)
                 if execution_mode is True or execution_mode.startswith('LLVM'):
-                    _comp_ex = pnlvm.CompExecution(self, [context.execution_id], additional_tags=comp_ex_tags)
                     results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
                 elif execution_mode.startswith('PTX'):
-                    self.__ptx_initialize(context, additional_tags=comp_ex_tags)
-                    EX = self._compilation_data.ptx_execution._get(context)
-                    results += EX.cuda_run(inputs, num_trials, num_inputs_sets)
+                    results += _comp_ex.cuda_run(inputs, num_trials, num_inputs_sets)
+                else:
+                    assert False, "Unknown execution mode: {}".format(execution_mode)
 
                 # Update the parameter for results
                 self.parameters.results._set(results, context)
@@ -8935,17 +8930,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Simulations are run as part of the controller node wrapper.
                 assert not is_simulation
                 try:
+                    llvm_inputs = self._validate_execution_inputs(inputs)
+                    _comp_ex = pnlvm.CompExecution.get(self, context)
                     if execution_mode is True or execution_mode.startswith('LLVM'):
-                        llvm_inputs = self._validate_execution_inputs(inputs)
-                        _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
                         _comp_ex.execute(llvm_inputs)
-                        return _comp_ex.extract_node_output(self.output_CIM)
                     elif execution_mode.startswith('PTX'):
-                        llvm_inputs = self._validate_execution_inputs(inputs)
-                        self.__ptx_initialize(context)
-                        __execution = self._compilation_data.ptx_execution._get(context)
-                        __execution.cuda_execute(llvm_inputs)
-                        return __execution.extract_node_output(self.output_CIM)
+                        _comp_ex.cuda_execute(llvm_inputs)
+                    else:
+                        assert False, "Unknown execution mode: {}".format(execution_mode)
+
+                    return _comp_ex.extract_node_output(self.output_CIM)
                 except Exception as e:
                     if execution_mode is not True:
                         raise e from None
@@ -8960,7 +8954,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              (n is not self.controller or not is_simulation))
 
             try:
-                _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
+                _comp_ex = pnlvm.CompExecution.get(self, context)
                 # Compile all mechanism wrappers
                 for m in mechanisms:
                     _comp_ex._set_bin_node(m)
@@ -9853,13 +9847,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return pnlvm.codegen.gen_composition_run(ctx, self, tags=tags)
         else:
             return pnlvm.codegen.gen_composition_exec(ctx, self, tags=tags)
-
-    def __ptx_initialize(self, context=None, additional_tags=frozenset()):
-        if self._compilation_data.ptx_execution._get(context) is None:
-            self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self,
-                                                                          [context.execution_id],
-                                                                          additional_tags=additional_tags),
-                                                      context)
 
     def enable_logging(self):
         for item in self.nodes + self.projections:
