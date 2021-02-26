@@ -192,6 +192,9 @@ class FuncExecution(CUDAExecution):
         ]
         self._component = component
 
+        self._param = None
+        self._state = None
+
         par_struct_ty, ctx_struct_ty, vi_ty, vo_ty = self._bin_func.byref_arg_types
 
         if len(execution_ids) > 1:
@@ -199,9 +202,6 @@ class FuncExecution(CUDAExecution):
             self._ct_len = ctypes.c_int(len(execution_ids))
             vo_ty = vo_ty * len(execution_ids)
             vi_ty = vi_ty * len(execution_ids)
-
-            self.__param_struct = None
-            self.__state_struct = None
 
         self._vo_ty = vo_ty
         self._ct_vo = vo_ty()
@@ -213,43 +213,17 @@ class FuncExecution(CUDAExecution):
             print("Output struct size:", _pretty_size(ctypes.sizeof(vo_ty)),
                   "for", self._component.name)
 
-    def _get_compilation_param(self, name, initializer, arg, context):
-        param = getattr(self._component._compilation_data, name)
-        struct = param._get(context)
-        if struct is None:
-            initializer = getattr(self._component, initializer)(context)
-            struct_ty = self._bin_func.byref_arg_types[arg]
-            struct = struct_ty(*initializer)
-            param._set(struct, context=context)
-            if "stat" in self._debug_env:
-                print("Instantiated struct:", name, "( size:" ,
-                      _pretty_size(ctypes.sizeof(struct_ty)), ")",
-                      "for", self._component.name)
-
-        return struct
-
-    def _get_multirun_struct(self, arg, init):
-        struct_ty = self._bin_multirun.byref_arg_types[arg] * len(self._execution_contexts)
-        initializer = (getattr(self._component, init)(ex_id) for ex_id in self._execution_contexts)
-        return struct_ty(*initializer)
+    @property
+    def _obj(self):
+        return self._component
 
     @property
     def _param_struct(self):
-        if len(self._execution_contexts) > 1:
-            if self.__param_struct is None:
-                self.__param_struct = self._get_multirun_struct(0, '_get_param_initializer')
-            return self.__param_struct
-
-        return self._get_compilation_param('parameter_struct', '_get_param_initializer', 0, self._execution_contexts[0])
+        return self._get_compilation_param('_param', '_get_param_initializer', 0)
 
     @property
     def _state_struct(self):
-        if len(self._execution_contexts) > 1:
-            if self.__state_struct is None:
-                self.__state_struct = self._get_multirun_struct(1, '_get_state_initializer')
-            return self.__state_struct
-
-        return self._get_compilation_param('state_struct', '_get_state_initializer', 1, self._execution_contexts[0])
+        return self._get_compilation_param('_state', '_get_state_initializer', 1)
 
     def execute(self, variable):
         # Make sure function inputs are 2d.

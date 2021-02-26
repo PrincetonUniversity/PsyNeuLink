@@ -1068,10 +1068,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         '_init_args',
     ])
 
-    class _CompilationData(ParametersBase):
-        parameter_struct = None
-        state_struct = None
-
     def __init__(self,
                  default_variable,
                  param_defaults,
@@ -1242,8 +1238,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self.initialization_status = ContextFlags.INITIALIZED
 
-        self._compilation_data = self._CompilationData(owner=self)
-
         self._update_parameter_components(context)
 
     def __repr__(self):
@@ -1269,7 +1263,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             # may be in DEFERRED INIT, so parameters/defaults belongs to class
             newone.parameters._owner = newone
             newone.defaults._owner = newone
-            newone._compilation_data._owner = newone
 
         # by copying, this instance is no longer "inherent" to a single
         # 'import psyneulink' call
