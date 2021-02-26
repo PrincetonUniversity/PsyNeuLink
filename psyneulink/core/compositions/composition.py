@@ -8954,11 +8954,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     show_output = self.reportOutputPref
 
         # If reporting to console, report trial number and Composition's input
-        # if show_output is not False:  # if it is False, suppress output
-        if show_output:
+        if show_output is not False:  # if it is False, suppress output
+        # if show_output:
             show_output = show_output or self.reportOutputPref # if it is None, defer to Composition's reportOutputPref
 
-            trial_num = scheduler.clock.time.trial
+            # trial_num = scheduler.clock.time.trial
+            try:
+                trial_num = scheduler.clock.time.trial
+            except AttributeError:
+                trial_num = self.scheduler.clock.time.trial
 
             show_output = str(show_output)
             try:
@@ -9454,7 +9458,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     nested_execution_mode = execution_mode \
                         if len(node.parameter_CIM.afferents) == 0 else False
                     ret = node.execute(context=context,
-                                       execution_mode=nested_execution_mode)
+                                       execution_mode=nested_execution_mode,
+                                       show_output=show_output)
 
                     # Get output info from nested execution
                     if execution_mode:
