@@ -20,6 +20,10 @@ class PNLProgressError(Exception):
 
 
 class ProgressReport():
+    """
+    Object used to package reporting for a call to Composition.run()
+    """
+
     def __init__(self, id, runmode, num_trials):
         self.runmode = runmode  # indicates whether run is in DEFAULT_MODE or SIMULATION_MODE
         self.num_trials = num_trials
@@ -30,7 +34,7 @@ class ProgressReport():
 
 class PNLProgress:
     """
-    A singleton context object that provides interface to rich progress bars and pnl_view.
+    A singleton context object that provides interface to output and progress reporting (e.g., rich and pnl_view)
     It returns the currently active progress context instance if one has been instantiated already in another scope.
     It deallocates the progress bar when the outermost context is released.
     """
@@ -44,16 +48,16 @@ class PNLProgress:
 
             cls._use_rich = False not in show_progress and (k in show_progress for k in {True, 'rich'})
             cls._use_pnl_view = False not in show_progress and (k in show_progress for k in {True, 'pnl_view'})
+            cls._show_simulations = False not in show_progress and 'simulations' in show_progress
 
-            # Check for specification of rich
+            # Instantiate rich Progress object
             if cls._use_rich:
                 # Instantiate a rich progress context\object
                 # - it is not started until the self.start_progress_report() method is called
-                # - auto_refresh is disabled to accomodate IDEs (such as PyCharm and Jupyter Notebooks
-                # cls._instance._rich_progress = RichProgress(disable=show_rich, auto_refresh=False)
+                # - auto_refresh is disabled to accommodate IDEs (such as PyCharm and Jupyter Notebooks)
                 cls._instance._rich_progress = RichProgress(auto_refresh=False)
 
-            # Check for specification of pnl_view
+            # Instantiate interface to PsyNeuLinkView
             if cls._use_pnl_view:
                 warnings.warn("'pnl_view' not yet supported as an option for show_progress of Composition.run()")
 
@@ -125,7 +129,7 @@ class PNLProgress:
             # Simulation mode:
             if context.runmode & ContextFlags.SIMULATION_MODE:
                 run_mode = 'Simulat'
-                visible = False
+                visible = self._show_simulations
             else:
                 run_mode = 'Execut'
                 visible = True
