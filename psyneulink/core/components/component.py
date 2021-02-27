@@ -2979,7 +2979,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
                 try:
                     val._update_default_variable(function_default_variable, context)
-                    p.default_value._update_default_variable(copy.deepcopy(function_default_variable), context)
+                    if isinstance(p.default_value, Component):
+                        p.default_value._update_default_variable(function_default_variable, context)
                 except (AttributeError, TypeError):
                     pass
 
