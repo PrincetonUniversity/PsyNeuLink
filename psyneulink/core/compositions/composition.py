@@ -8099,12 +8099,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             If set to ``terse``, a single line is generated reporting the execution of each Node for which its
             reportOutputPref is True.  If set to ``all``, the output of the Composition and all its Nodes is reported.
 
-        show_progress : bool : default True
-            specifies whether to show progress of execution in real time.  If the number trials to be executed is
-            explicitly specified, the number of trials executed, a progress bar, and time remaining are displayed;
-            if the number of trials is not explicitly specified (e.g., it is specified using a generator),
-            then a "spinner" is displayed during execution, and then the total number of trials executed is
-            displayed once complete.
+        show_progress : bool, 'console', 'pnl_view', 'simulations', or list : default True
+            specifies whether to show progress and/or output of execution in real time.  If the number trials to be
+            executed is explicitly specified, the number of trials executed, a progress bar, and time remaining are
+            displayed; if the number of trials is not explicitly specified (e.g., it is specified using a generator),
+            then a "spinner" is displayed during execution and the the total number of trials executed is displayed
+            once complete.  The following optionsn can be used to specify what and where the information is displayed:
+
+            * 'console' - directs output to the console
+
+            .. _technical_note::
+            * 'pnl_view' - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT]
+
+            * 'simulations' - reports simulations executed by `OptimizationControlMechanism`.
 
         animate : dict or bool : default False
             specifies use of the `show_graph <ShowGraph.show_graph>` method to generate a gif movie showing the
@@ -8752,6 +8759,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output value of the final Mechanism executed in the Composition : various
         """
 
+        # If execute method is called directly, need to create PNLProgress object if reporting
         if not progress:
             progress = progress or PNLProgress(show_progress=True)
         if not progress_report:

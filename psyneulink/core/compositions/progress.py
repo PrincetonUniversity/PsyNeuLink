@@ -46,7 +46,7 @@ class PNLProgress:
 
             show_progress = convert_to_list(show_progress)
 
-            cls._use_rich = False not in show_progress and (k in show_progress for k in {True, 'rich'})
+            cls._use_rich = False not in show_progress and (k in show_progress for k in {True, 'console'})
             cls._use_pnl_view = False not in show_progress and (k in show_progress for k in {True, 'pnl_view'})
             cls._show_simulations = False not in show_progress and 'simulations' in show_progress
 
