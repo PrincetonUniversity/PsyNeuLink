@@ -46,6 +46,13 @@ def pytest_runtest_setup(item):
 
     doctest.ELLIPSIS_MARKER = "[...]"
 
+def pytest_generate_tests(metafunc):
+    if "func_mode" in metafunc.fixturenames:
+        metafunc.parametrize("func_mode", ['Python',
+                                           pytest.param('LLVM', marks=pytest.mark.llvm),
+                                           pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                          ])
+
 
 def pytest_runtest_call(item):
     # seed = int(item.config.getoption('--pnl-seed'))

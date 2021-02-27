@@ -73,19 +73,16 @@ def test_mat_scalar(benchmark, op, builtin, result, mode):
     assert np.allclose(res, result)
 
 
-@pytest.mark.parametrize('mode', ['Python',
-                                  pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
 @pytest.mark.benchmark(group="Dot")
-def test_dot(benchmark, mode):
-    if mode == 'Python':
+def test_dot(benchmark, func_mode):
+    if func_mode == 'Python':
         ex = lambda : np.dot(vector, u)
-    elif mode == 'LLVM':
+    elif func_mode == 'LLVM':
         bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm")
         def ex():
             bin_f(ct_vec, ct_u, DIM_X, DIM_Y, ct_vec_res)
             return llvm_vec_res
-    elif mode == 'PTX':
+    elif func_mode == 'PTX':
         bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm")
         cuda_vec = pnlvm.jit_engine.pycuda.driver.In(vector)
         cuda_mat = pnlvm.jit_engine.pycuda.driver.In(u)
@@ -134,20 +131,17 @@ def test_dot_llvm_constant_dim(benchmark, mode):
     assert np.allclose(llvm_vec_res, dot_res)
 
 
-@pytest.mark.parametrize('mode', ['Python',
-                                  pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
 @pytest.mark.benchmark(group="Dot")
-def test_dot_transposed(benchmark, mode):
-    if mode == 'Python':
+def test_dot_transposed(benchmark, func_mode):
+    if func_mode == 'Python':
         trans_u = u.transpose()
         ex = lambda : np.dot(trans_vector, trans_u)
-    elif mode == 'LLVM':
+    elif func_mode == 'LLVM':
         bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm_transposed")
         def ex():
             bin_f(ct_tvec, ct_u, DIM_X, DIM_Y, ct_tvec_res)
             return llvm_tvec_res
-    elif mode == 'PTX':
+    elif func_mode == 'PTX':
         bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm_transposed")
         cuda_vec = pnlvm.jit_engine.pycuda.driver.In(trans_vector)
         cuda_mat = pnlvm.jit_engine.pycuda.driver.In(u)

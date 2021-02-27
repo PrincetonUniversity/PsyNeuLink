@@ -24,20 +24,17 @@ expected = np.linalg.norm(v1 - v2)
 @pytest.mark.distance_function
 @pytest.mark.benchmark
 @pytest.mark.parametrize("executions", [1,10,100])
-@pytest.mark.parametrize("mode", ['Python',
-                                  pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-def test_function(benchmark, executions, mode):
+def test_function(benchmark, executions, func_mode):
     f = Functions.Distance(default_variable=test_var, metric=kw.EUCLIDEAN)
     benchmark.group = "DistanceFunction multirun {}".format(executions)
     var = [test_var for _ in range(executions)] if executions > 1 else test_var
-    if mode == 'Python':
+    if func_mode == 'Python':
         e = lambda x : [f.function(x[i]) for i in range(executions)]
         res = benchmark(e if executions > 1 else f.function, var)
-    elif mode == 'LLVM':
+    elif func_mode == 'LLVM':
         e = pnlvm.execution.FuncExecution(f, [None for _ in range(executions)])
         res = benchmark(e.execute, var)
-    elif mode == 'PTX':
+    elif func_mode == 'PTX':
         e = pnlvm.execution.FuncExecution(f, [None for _ in range(executions)])
         res = benchmark(e.cuda_execute, var)
     assert np.allclose(res, [expected for _ in range(executions)])

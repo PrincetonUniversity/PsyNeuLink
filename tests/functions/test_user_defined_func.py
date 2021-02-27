@@ -19,21 +19,17 @@ class TestBinaryOperations:
                         (np.ones(2), np.array([1, 2])),
                         (np.ones((2, 2)), np.array([[1, 2], [3, 4]])),
                         ], ids=["scalar-scalar", "vec-scalar", "scalar-vec", "mat-scalar", "scalar-mat", "vec-vec", "mat-mat"])
-    @pytest.mark.parametrize("mode", ['Python',
-                                             pytest.param('LLVM', marks=pytest.mark.llvm),
-                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                            ])
     @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_add(self, param1, param2, mode, benchmark):
+    def test_user_def_func_add(self, param1, param2, func_mode, benchmark):
         # default val is same shape as expected output
         def myFunction(_, param1, param2):
             # we only use param1 and param2 to avoid automatic shape changes of the variable
             return param1 + param2
 
         U = UserDefinedFunction(custom_function=myFunction, param1=param1, param2=param2)
-        if mode == 'LLVM':
+        if func_mode == 'LLVM':
             e = pnlvm.execution.FuncExecution(U).execute
-        elif mode == 'PTX':
+        elif func_mode == 'PTX':
             e = pnlvm.execution.FuncExecution(U).cuda_execute
         else:
             e = U
@@ -50,21 +46,17 @@ class TestBinaryOperations:
                         (np.ones(2), np.array([2.])),
                         (np.ones((2, 2)), np.array([[1, 2], [3, 4]])),
                         ], ids=["scalar-scalar", "vec-scalar", "scalar-vec", "mat-scalar", "scalar-mat", "vec-vec", "vec-vec-differing", "mat-mat"])
-    @pytest.mark.parametrize("mode", ['Python',
-                                             pytest.param('LLVM', marks=pytest.mark.llvm),
-                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                            ])
     @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_mul(self, param1, param2, mode, benchmark):
+    def test_user_def_func_mul(self, param1, param2, func_mode, benchmark):
         # default val is same shape as expected output
         def myFunction(_, param1, param2):
             # we only use param1 and param2 to avoid automatic shape changes of the variable
             return param1 * param2
 
         U = UserDefinedFunction(custom_function=myFunction, param1=param1, param2=param2)
-        if mode == 'LLVM':
+        if func_mode == 'LLVM':
             e = pnlvm.execution.FuncExecution(U).execute
-        elif mode == 'PTX':
+        elif func_mode == 'PTX':
             e = pnlvm.execution.FuncExecution(U).cuda_execute
         else:
             e = U
@@ -81,21 +73,17 @@ class TestBinaryOperations:
                     (np.ones(2), np.array([2.])),
                     (np.ones((2, 2)), np.array([[1, 2], [3, 4]])),
                     ], ids=["scalar-scalar", "vec-scalar", "scalar-vec", "mat-scalar", "scalar-mat", "vec-vec", "vec-vec-differing", "mat-mat"])
-    @pytest.mark.parametrize("mode", ['Python',
-                                             pytest.param('LLVM', marks=pytest.mark.llvm),
-                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                            ])
     @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_div(self, param1, param2, mode, benchmark):
+    def test_user_def_func_div(self, param1, param2, func_mode, benchmark):
         # default val is same shape as expected output
         def myFunction(_, param1, param2):
             # we only use param1 and param2 to avoid automatic shape changes of the variable
             return param1 / param2
 
         U = UserDefinedFunction(custom_function=myFunction, param1=param1, param2=param2)
-        if mode == 'LLVM':
+        if func_mode == 'LLVM':
             e = pnlvm.execution.FuncExecution(U).execute
-        elif mode == 'PTX':
+        elif func_mode == 'PTX':
             e = pnlvm.execution.FuncExecution(U).cuda_execute
         else:
             e = U
@@ -106,12 +94,8 @@ class TestBinaryOperations:
                         "AND",
                         "OR",
                         ])
-    @pytest.mark.parametrize("mode", ['Python',
-                                             pytest.param('LLVM', marks=pytest.mark.llvm),
-                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                            ])
     @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_boolop(self, op, mode, benchmark):
+    def test_user_def_func_boolop(self, op, func_mode, benchmark):
         if op == "AND":
             def myFunction(variable):
                 var1 = True
@@ -132,9 +116,9 @@ class TestBinaryOperations:
                     return 0.0
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=[0])
-        if mode == 'LLVM':
+        if func_mode == 'LLVM':
             e = pnlvm.execution.FuncExecution(U).execute
-        elif mode == 'PTX':
+        elif func_mode == 'PTX':
             e = pnlvm.execution.FuncExecution(U).cuda_execute
         else:
             e = U
@@ -149,12 +133,8 @@ class TestBinaryOperations:
                         ("Gt", 1.0, 2.0, 0.0),
                         ("GtE", 1.0, 2.0, 0.0),
                         ])
-    @pytest.mark.parametrize("mode", ['Python',
-                                             pytest.param('LLVM', marks=pytest.mark.llvm),
-                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                            ])
     @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_cmpop(self, op, var1, var2, expected, mode, benchmark):
+    def test_user_def_func_cmpop(self, op, var1, var2, expected, func_mode, benchmark):
         # we explicitly use np here to ensure that the result is castable to float in the scalar-scalar case
         if op == "Eq":
             def myFunction(variable, var1, var2):
@@ -194,9 +174,9 @@ class TestBinaryOperations:
                     return 0.0
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=[0], var1=var1, var2=var2)
-        if mode == 'LLVM':
+        if func_mode == 'LLVM':
             e = pnlvm.execution.FuncExecution(U).execute
-        elif mode == 'PTX':
+        elif func_mode == 'PTX':
             e = pnlvm.execution.FuncExecution(U).cuda_execute
         else:
             e = U
@@ -247,12 +227,8 @@ class TestBinaryOperations:
                         ("GtE", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[1.0, 0.0], [0.0, 0.0]]),
                         ("GtE", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[1.0, 1.0], [1.0, 1.0]]),
                         ])
-    @pytest.mark.parametrize("mode", ['Python',
-                                             pytest.param('LLVM', marks=pytest.mark.llvm),
-                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                            ])
     @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_cmpop_numpy(self, op, var1, var2, expected, mode, benchmark):
+    def test_user_def_func_cmpop_numpy(self, op, var1, var2, expected, func_mode, benchmark):
         # we explicitly use np here to ensure that the result is castable to float in the scalar-scalar case
         if op == "Eq":
             def myFunction(variable, var1, var2):
@@ -274,9 +250,9 @@ class TestBinaryOperations:
                 return np.greater_equal(var1, var2).astype(float)
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=[0], var1=var1, var2=var2)
-        if mode == 'LLVM':
+        if func_mode == 'LLVM':
             e = pnlvm.execution.FuncExecution(U).execute
-        elif mode == 'PTX':
+        elif func_mode == 'PTX':
             e = pnlvm.execution.FuncExecution(U).cuda_execute
         else:
             e = U
@@ -285,31 +261,23 @@ class TestBinaryOperations:
 
 class TestUserDefFunc:
 
-    @pytest.mark.parametrize("mode", ['Python',
-                                             pytest.param('LLVM', marks=pytest.mark.llvm),
-                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                            ])
     @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func(self, mode, benchmark):
+    def test_user_def_func(self, func_mode, benchmark):
         def myFunction(variable, param1, param2):
             return variable * 2 + param2
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]], param2=3)
-        if mode == 'LLVM':
+        if func_mode == 'LLVM':
             e = pnlvm.execution.FuncExecution(U).execute
-        elif mode == 'PTX':
+        elif func_mode == 'PTX':
             e = pnlvm.execution.FuncExecution(U).cuda_execute
         else:
             e = U
         val = benchmark(e, [1, 3])
         assert np.allclose(val, [[5, 9]])
 
-    @pytest.mark.parametrize("mode", ['Python',
-                                             pytest.param('LLVM', marks=pytest.mark.llvm),
-                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                            ])
     @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_branching(self, mode, benchmark):
+    def test_user_def_func_branching(self, func_mode, benchmark):
         def myFunction(variable, param1, param2):
             if variable[0][0] > 0 and variable[0][1] > 0:
                 return variable * 2 + param2
@@ -317,9 +285,9 @@ class TestUserDefFunc:
                 return variable * -2 + param2
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]], param2=3)
-        if mode == 'LLVM':
+        if func_mode == 'LLVM':
             e = pnlvm.execution.FuncExecution(U).execute
-        elif mode == 'PTX':
+        elif func_mode == 'PTX':
             e = pnlvm.execution.FuncExecution(U).cuda_execute
         else:
             e = U
@@ -328,21 +296,17 @@ class TestUserDefFunc:
         val2 = e([[-1, 3]])
         assert np.allclose(val2, [[5, -3]])
 
-    @pytest.mark.parametrize("mode", ['Python',
-                                             pytest.param('LLVM', marks=pytest.mark.llvm),
-                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                            ])
     @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_variable_index(self, mode, benchmark):
+    def test_user_def_func_variable_index(self, func_mode, benchmark):
         def myFunction(variable):
             variable[0][0] = variable[0][0] + 5
             variable[0][1] = variable[0][1] + 7
             return variable
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]])
-        if mode == 'LLVM':
+        if func_mode == 'LLVM':
             e = pnlvm.execution.FuncExecution(U).execute
-        elif mode == 'PTX':
+        elif func_mode == 'PTX':
             e = pnlvm.execution.FuncExecution(U).cuda_execute
         else:
             e = U
@@ -354,38 +318,30 @@ class TestUserDefFunc:
                         (np.ones((2))),
                         (np.ones((2, 2)))
                         ], ids=["scalar", "vec-2d", "mat"])
-    @pytest.mark.parametrize("mode", ['Python',
-                                             pytest.param('LLVM', marks=pytest.mark.llvm),
-                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                            ])
     @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_usub(self, variable, mode, benchmark):
+    def test_user_def_func_usub(self, variable, func_mode, benchmark):
         def myFunction(variable, param):
             return -param
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=variable, param=variable)
-        if mode == 'LLVM':
+        if func_mode == 'LLVM':
             e = pnlvm.execution.FuncExecution(U).execute
-        elif mode == 'PTX':
+        elif func_mode == 'PTX':
             e = pnlvm.execution.FuncExecution(U).cuda_execute
         else:
             e = U
         val = benchmark(e, variable)
         assert np.allclose(val, -variable)
 
-    @pytest.mark.parametrize("mode", ['Python',
-                                             pytest.param('LLVM', marks=pytest.mark.llvm),
-                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                            ])
     @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_reward_func(self, mode, benchmark):
+    def test_user_def_reward_func(self, func_mode, benchmark):
         variable = [[1,2,3,4]]
         def myFunction(x,t0=0.48):
             return (x[0][0]>0).astype(float) * (x[0][2]>0).astype(float) / (np.max([x[0][1],x[0][3]]) + t0)
         U = UserDefinedFunction(custom_function=myFunction, default_variable=variable, param=variable)
-        if mode == 'LLVM':
+        if func_mode == 'LLVM':
             e = pnlvm.execution.FuncExecution(U).execute
-        elif mode == 'PTX':
+        elif func_mode == 'PTX':
             e = pnlvm.execution.FuncExecution(U).cuda_execute
         else:
             e = U
@@ -399,12 +355,8 @@ class TestUserDefFunc:
                         ("BOOL", 1.0),
                         ("TUPLE", (1, 2, 3, 4))
                         ])
-    @pytest.mark.parametrize("mode", ['Python',
-                                             pytest.param('LLVM', marks=pytest.mark.llvm),
-                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                            ])
     @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_assign(self, dtype, expected, mode, benchmark):
+    def test_user_def_func_assign(self, dtype, expected, func_mode, benchmark):
         if dtype == "SCALAR":
             def myFunction(variable):
                 var = 1.0
@@ -427,9 +379,9 @@ class TestUserDefFunc:
                 return var
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=0)
-        if mode == 'LLVM':
+        if func_mode == 'LLVM':
             e = pnlvm.execution.FuncExecution(U).execute
-        elif mode == 'PTX':
+        elif func_mode == 'PTX':
             e = pnlvm.execution.FuncExecution(U).cuda_execute
         else:
             e = U
@@ -448,12 +400,8 @@ class TestUserDefFunc:
                     ("NP_MAX", [[2.0, 1.0], [6.0, 2.0]], 6),
                     ("FLATTEN", [[1.0, 2.0], [3.0, 4.0]], [1.0, 2.0, 3.0, 4.0])
                     ])
-    @pytest.mark.parametrize("mode", ['Python',
-                                             pytest.param('LLVM', marks=pytest.mark.llvm),
-                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                            ])
     @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_numpy(self, op, variable, expected, mode, benchmark):
+    def test_user_def_func_numpy(self, op, variable, expected, func_mode, benchmark):
         if op == "TANH":
             def myFunction(variable):
                 return np.tanh(variable)
@@ -477,9 +425,9 @@ class TestUserDefFunc:
             def myFunction(variable):
                 return variable.flatten()
         U = UserDefinedFunction(custom_function=myFunction, default_variable=variable)
-        if mode == 'LLVM':
+        if func_mode == 'LLVM':
             e = pnlvm.execution.FuncExecution(U).execute
-        elif mode == 'PTX':
+        elif func_mode == 'PTX':
             e = pnlvm.execution.FuncExecution(U).cuda_execute
         else:
             e = U
@@ -516,12 +464,8 @@ class TestUserDefFunc:
                     ("MAX_MULTI", [1,], 6),
                     ("MAX", [1.0, 3.0, 2.0], 3.0),
                     ])
-    @pytest.mark.parametrize("mode", ['Python',
-                                             pytest.param('LLVM', marks=pytest.mark.llvm),
-                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                            ])
     @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_builtin(self, op, variable, expected, mode, benchmark):
+    def test_user_def_func_builtin(self, op, variable, expected, func_mode, benchmark):
         if op == "SUM":
             def myFunction(variable):
                 return sum(variable)
@@ -540,9 +484,9 @@ class TestUserDefFunc:
                 return max(1, 2, 3, 4, 5, 6, -1, -2)
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=variable)
-        if mode == 'LLVM':
+        if func_mode == 'LLVM':
             e = pnlvm.execution.FuncExecution(U).execute
-        elif mode == 'PTX':
+        elif func_mode == 'PTX':
             e = pnlvm.execution.FuncExecution(U).cuda_execute
         else:
             e = U
