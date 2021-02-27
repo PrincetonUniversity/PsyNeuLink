@@ -342,7 +342,7 @@ class CompExecution(CUDAExecution):
             self.__conds = cond_type(*cond_initializer)
             if "stat" in self._debug_env:
                 print("Instantiated condition struct ( size:" ,
-                      _pretty_size(ctypes.sizeof(struct_ty)), ")",
+                      _pretty_size(ctypes.sizeof(cond_type)), ")",
                       "for", self._composition.name)
 
         return self.__conds
