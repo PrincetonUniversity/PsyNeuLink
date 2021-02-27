@@ -42,18 +42,19 @@ class PNLProgress:
 
             show_progress = convert_to_list(show_progress)
 
+            cls._use_rich = False not in show_progress and (k in show_progress for k in {True, 'rich'})
+            cls._use_pnl_view = False not in show_progress and (k in show_progress for k in {True, 'pnl_view'})
+
             # Check for specification of rich
-            if False not in show_progress and any(k in show_progress for k in {True, 'rich'})
+            if cls._use_rich:
                 # Instantiate a rich progress context\object
                 # - it is not started until the self.start_progress_report() method is called
                 # - auto_refresh is disabled to accomodate IDEs (such as PyCharm and Jupyter Notebooks
                 # cls._instance._rich_progress = RichProgress(disable=show_rich, auto_refresh=False)
                 cls._instance._rich_progress = RichProgress(auto_refresh=False)
-                cls._use_rich = True
 
             # Check for specification of pnl_view
-            if False not in show_progress and (k in show_progress for k in {True, 'pnl_view'})
-                cls._use_pnl_view = True
+            if cls._use_pnl_view:
                 warnings.warn("'pnl_view' not yet supported as an option for show_progress of Composition.run()")
 
             cls._progress_reports = []
