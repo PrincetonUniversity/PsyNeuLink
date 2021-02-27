@@ -1072,9 +1072,7 @@ class TestTransferMechanismTimeConstant:
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
-    @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=[pytest.mark.llvm, pytest.mark.skip])])
-    def test_transfer_mech_integration_rate_0_8_initial_0_5(self, mode):
+    def test_transfer_mech_integration_rate_0_8_initial_0_5(self, mech_mode):
         T = TransferMechanism(
             name='T',
             default_variable=[0, 0, 0, 0],
@@ -1083,20 +1081,29 @@ class TestTransferMechanismTimeConstant:
             initial_value=np.array([[.5, .5, .5, .5]]),
             integrator_mode=True
         )
-        if mode == 'Python':
+        if mech_mode == 'Python':
             val = T.execute([1, 1, 1, 1])
-        elif mode == 'LLVM':
+        elif mech_mode == 'LLVM':
             e = pnlvm.execution.MechExecution(T)
             val = e.execute([1, 1, 1, 1])
+        elif mech_mode == 'PTX':
+            e = pnlvm.execution.MechExecution(T)
+            val = e.cuda_execute([1, 1, 1, 1])
         assert np.allclose(val, [[0.9, 0.9, 0.9, 0.9]])
+
+        # FIXME: The code bellow modifies parameter value.
+        #        This is not support in compiled mode.
+        if mech_mode != 'Python':
+            return
 
         T.noise.base = 10
 
-        if mode == 'Python':
+        if mech_mode == 'Python':
             val = T.execute([1, 2, -3, 0])
-        elif mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(T)
+        elif mech_mode == 'LLVM':
             val = e.execute([1, 2, -3, 0])
+        elif mech_mode == 'PTX':
+            val = e.cuda_execute([1, 2, -3, 0])
         assert np.allclose(val, [[10.98, 11.78, 7.779999999999999, 10.18]]) # testing noise changes to an integrator
 
     # @pytest.mark.mechanism
