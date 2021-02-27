@@ -1,11 +1,13 @@
-import time, re, sys
-from rich import print, box
-from rich.console import RenderGroup
-from rich.progress import Progress, BarColumn, SpinnerColumn, Spinner
-from rich.panel import Panel
+import time, re, sys, warnings
 
 from psyneulink.core.globals.keywords import FULL
 from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.utilities import convert_to_list
+
+from rich import print, box
+from rich.console import RenderGroup
+from rich.progress import Progress as RichProgress
+from rich.panel import Panel
 
 
 class PNLProgressError(Exception):
@@ -19,29 +21,41 @@ class PNLProgressError(Exception):
 
 class ProgressReport():
     def __init__(self, id, runmode, num_trials):
-        self.runmode = runmode
+        self.runmode = runmode  # indicates whether run is in DEFAULT_MODE or SIMULATION_MODE
         self.num_trials = num_trials
-        self.progress_report_id = id
+        self.progress_report_id = id # used for task id in rich
         self.trial_report = []
         self.time_step_report = []
 
 
 class PNLProgress:
     """
-    A singleton context wrapper around rich progress bars. It returns the currently active progress context instance
-    if one has been instantiated already in another scope. It deallocates the progress bar when the outermost
-    context is released. This class could be extended to return any object that implements the subset of rich's task
-    based progress API.
+    A singleton context object that provides interface to rich progress bars and pnl_view.
+    It returns the currently active progress context instance if one has been instantiated already in another scope.
+    It deallocates the progress bar when the outermost context is released.
     """
     _instance = None
 
-    def __new__(cls, show_progress=True, mode='rich') -> 'PNLProgress':
+    def __new__(cls, show_progress=True) -> 'PNLProgress':
         if cls._instance is None:
             cls._instance = super(PNLProgress, cls).__new__(cls)
 
-            # Instantiate a rich progress context\object. It is not started yet.
-            cls._instance._progress = Progress(disable=not show_progress, auto_refresh=False)
-            cls._show_progress = show_progress
+            show_progress = convert_to_list(show_progress)
+
+            # Check for specification of rich
+            if False not in show_progress and any(k in show_progress for k in {True, 'rich'})
+                # Instantiate a rich progress context\object
+                # - it is not started until the self.start_progress_report() method is called
+                # - auto_refresh is disabled to accomodate IDEs (such as PyCharm and Jupyter Notebooks
+                # cls._instance._rich_progress = RichProgress(disable=show_rich, auto_refresh=False)
+                cls._instance._rich_progress = RichProgress(auto_refresh=False)
+                cls._use_rich = True
+
+            # Check for specification of pnl_view
+            if False not in show_progress and (k in show_progress for k in {True, 'pnl_view'})
+                cls._use_pnl_view = True
+                warnings.warn("'pnl_view' not yet supported as an option for show_progress of Composition.run()")
+
             cls._progress_reports = []
 
             # This counter is incremented on each context __enter__ and decrements
@@ -60,17 +74,18 @@ class PNLProgress:
         """
         cls._instance = None
 
-    def __enter__(self) -> Progress:
+    def __enter__(self):
         """
-        This currently returns a singleton of the rich.Progress class.
+        This  returns a singleton of the PNLProgress class.
         Returns:
-            A new singleton rich progress context if none is currently active, otherwise, it returns the currently
+            A new singleton PNL progress context if none is currently active, otherwise, it returns the currently
             active context.
         """
 
-        # If this is the top level call to with PNLProgress(), start the progress
-        if self._ref_count == 0 and not self._progress.disable:
-            self._progress.start()
+        # If this is the top level call to with PNLProgress(), start progress reporting
+        if self._ref_count == 0:
+            if self._use_rich:
+                self._rich_progress.start()
 
         # Keep track of a reference count of how many times we have given a reference.
         self._ref_count = self._ref_count + 1
@@ -94,9 +109,9 @@ class PNLProgress:
         # If all references are released, stop progress reporting and destroy the singleton.
         if self._ref_count == 0:
 
-            # If the progress bar is not disabled, stop it.
-            if not self._progress.disable:
-                self._progress.stop()
+            # If the rich progress bar is not disabled, stop it.
+            if self._use_rich:
+                self._rich_progress.stop()
 
             # Destroy the singleton, very important. If we don't do this, the rich progress
             # bar will grow and grow and never be deallocated until the end of program.
@@ -104,7 +119,7 @@ class PNLProgress:
 
     def start_progress_report(self, comp, num_trials, context):
 
-        if self._show_progress:
+        if self._use_rich:
 
             # Simulation mode:
             if context.runmode & ContextFlags.SIMULATION_MODE:
@@ -123,7 +138,7 @@ class PNLProgress:
                 start = True
 
             # FIX: CONTEXTUALIZE FOR RICH
-            id = self._progress.add_task(f"[red]{run_mode}ing {comp.name}...",
+            id = self._rich_progress.add_task(f"[red]{run_mode}ing {comp.name}...",
                                          total=num_trials,
                                          start=start,
                                          visible=visible
@@ -133,13 +148,13 @@ class PNLProgress:
             # FIX: ??KEEP:
 
     def report_progress(self, caller, progress_report, trial_num):
-        if self._show_progress:
+        if self._use_rich:
             if isinstance(trial_num, int):
                 if progress_report.num_trials:
                     num_trials_str = f' of {progress_report.num_trials}'
                 else:
                     num_trials_str = ''
-                self._progress.update(progress_report.progress_report_id,
+                self._rich_progress.update(progress_report.progress_report_id,
                                       description=f'{caller.name}: '
                                                   f'{progress_report.runmode}ed {trial_num+1}{num_trials_str} trials',
                                       advance=1,
@@ -235,8 +250,8 @@ class PNLProgress:
 
         if content is 'run':
             if show_output and progress_report.trial_report:
-                self._progress.console.print(progress_report.trial_report)
-                self._progress.console.print('')
+                self._rich_progress.console.print(progress_report.trial_report)
+                self._rich_progress.console.print('')
 
 
 # ####################################################

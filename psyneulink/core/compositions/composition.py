@@ -8753,7 +8753,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         if not progress:
-            progress = progress or PNLProgress(show_progress=False)
+            progress = progress or PNLProgress(show_progress=True)
         if not progress_report:
             progress_report = progress.start_progress_report(self,1,context)
 
