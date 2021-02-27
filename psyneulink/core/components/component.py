@@ -3829,7 +3829,7 @@ class ParameterValue:
 
     @property
     def base(self):
-        return self._parameter._get(self._owner.most_recent_context)
+        return self._parameter.get(self._owner.most_recent_context)
 
     @base.setter
     def base(self, value):
