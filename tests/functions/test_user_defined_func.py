@@ -434,21 +434,17 @@ class TestUserDefFunc:
         val = benchmark(e, variable)
         assert np.allclose(val, expected)
 
-    @pytest.mark.parametrize("mode", ['Python',
-                                             pytest.param('LLVM', marks=pytest.mark.llvm),
-                                             pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                            ])
     @pytest.mark.benchmark(group="UDF in Mechanism")
-    def test_udf_in_mechanism(self, mode, benchmark):
+    def test_udf_in_mechanism(self, mech_mode, benchmark):
         def myFunction(variable, param1, param2):
             return sum(variable[0]) + 2
 
         myMech = ProcessingMechanism(function=myFunction, size=4, name='myMech')
         # assert 'param1' in myMech.parameter_ports.names # <- FIX reinstate when problem with function params is fixed
         # assert 'param2' in myMech.parameter_ports.names # <- FIX reinstate when problem with function params is fixed
-        if mode == 'LLVM':
+        if mech_mode == 'LLVM':
             e = pnlvm.execution.MechExecution(myMech).execute
-        elif mode == 'PTX':
+        elif mech_mode == 'PTX':
             e = pnlvm.execution.MechExecution(myMech).cuda_execute
         else:
             e = myMech.execute

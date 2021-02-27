@@ -11,10 +11,7 @@ class TestOutputPorts:
 
     @pytest.mark.mechanism
     @pytest.mark.lca_mechanism
-    @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=pytest.mark.llvm),
-                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-    def test_output_port_variable_spec(self, mode):
+    def test_output_port_variable_spec(self, mech_mode):
         # Test specification of OutputPort's variable
         mech = pnl.ProcessingMechanism(default_variable=[[1.],[2.],[3.]],
                                        name='MyMech',
@@ -28,19 +25,19 @@ class TestOutputPorts:
         expected = [[3.],[2.],[1.],[[1.],[2.],[3.]], [0]]
         for i, e in zip(mech.output_values, expected):
             assert np.array_equal(i, e)
-        if mode == 'Python':
+        if mech_mode == 'Python':
             EX = mech.execute
-        elif mode == 'LLVM':
+        elif mech_mode == 'LLVM':
             e = pnlvm.execution.MechExecution(mech)
             EX = e.execute
-        elif mode == 'PTX':
+        elif mech_mode == 'PTX':
             e = pnlvm.execution.MechExecution(mech)
             EX = e.cuda_execute
         EX([[1.],[2.],[3.]])
         EX([[1.],[2.],[3.]])
         EX([[1.],[2.],[3.]])
         res = EX([[1.],[2.],[3.]])
-        if mode == 'Python':
+        if mech_mode == 'Python':
             res = mech.output_values
         expected = [[3.],[2.],[1.],[[1.],[2.],[3.]], [4]]
         for i, e in zip(res, expected):

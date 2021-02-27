@@ -113,19 +113,14 @@ class TestThreshold:
         (2., [2.0, 4.0, 5.0, 5.0, 5.0]),
         (-2., [-2.0, -4.0, -5.0, -5.0, -5.0]),
         ], ids=["POSITIVE", "NEGATIVE"])
-    @pytest.mark.parametrize("mode", [
-        'Python',
-        pytest.param('LLVM', marks=pytest.mark.llvm),
-        pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-    ])
-    def test_threshold_stops_accumulation(self, mode, variable, expected, benchmark):
+    def test_threshold_stops_accumulation(self, mech_mode, variable, expected, benchmark):
         D = DDM(name='DDM',
                 function=DriftDiffusionIntegrator(threshold=5.0))
-        if mode == 'Python':
+        if mech_mode == 'Python':
             ex = D.execute
-        elif mode == 'LLVM':
+        elif mech_mode == 'LLVM':
             ex = pnlvm.execution.MechExecution(D).execute
-        elif mode == 'PTX':
+        elif mech_mode == 'PTX':
             ex = pnlvm.execution.MechExecution(D).cuda_execute
 
         decision_variables = []
@@ -244,22 +239,17 @@ class TestOutputPorts:
 @pytest.mark.ddm_mechanism
 @pytest.mark.mechanism
 @pytest.mark.benchmark
-@pytest.mark.parametrize("mode", [
-    'Python',
-    pytest.param('LLVM', marks=pytest.mark.llvm),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-])
-def test_DDM_Integrator_Bogacz(benchmark, mode):
+def test_DDM_Integrator_Bogacz(benchmark, mech_mode):
     stim = 10
     T = DDM(
         name='DDM',
         function=DriftDiffusionAnalytical()
     )
-    if mode == 'Python':
+    if mech_mode == 'Python':
         ex = T.execute
-    elif mode == 'LLVM':
+    elif mech_mode == 'LLVM':
         ex = pnlvm.execution.MechExecution(T).execute
-    elif mode == 'PTX':
+    elif mech_mode == 'PTX':
         ex = pnlvm.execution.MechExecution(T).cuda_execute
     val = ex(stim)[0]
     assert np.allclose(val, [1.0])
@@ -298,12 +288,7 @@ def test_DDM_Integrator_Bogacz(benchmark, mode):
     (0.5, 8.194383551861414),
     (2., 6.388767103722829),
     ], ids=["0", "0.5", "2.0"])
-@pytest.mark.parametrize("mode", [
-    'Python',
-    pytest.param('LLVM', marks=pytest.mark.llvm),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-])
-def test_DDM_noise(mode, benchmark, noise, expected):
+def test_DDM_noise(mech_mode, benchmark, noise, expected):
     T = DDM(
         name='DDM',
         function=DriftDiffusionIntegrator(
@@ -312,11 +297,11 @@ def test_DDM_noise(mode, benchmark, noise, expected):
             time_step_size=1.0
         )
     )
-    if mode == 'Python':
+    if mech_mode == 'Python':
         ex = T.execute
-    elif mode == 'LLVM':
+    elif mech_mode == 'LLVM':
         ex = pnlvm.execution.MechExecution(T).execute
-    elif mode == 'PTX':
+    elif mech_mode == 'PTX':
         ex = pnlvm.execution.MechExecution(T).cuda_execute
 
     val = ex([10])
@@ -432,15 +417,10 @@ def test_DDM_input_fn():
 @pytest.mark.parametrize("rate, expected", [
     (5, 50), (5., 50), ([5], 50), (-5.0, -50),
     ], ids=["int", "float", "list", "negative"])
-@pytest.mark.parametrize("mode", [
-    'Python',
-    pytest.param('LLVM', marks=pytest.mark.llvm),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-])
 # ******
 # Should negative pass?
 # ******
-def test_DDM_rate(benchmark, rate, expected, mode):
+def test_DDM_rate(benchmark, rate, expected, mech_mode):
     stim = [10]
     T = DDM(
         name='DDM',
@@ -450,11 +430,11 @@ def test_DDM_rate(benchmark, rate, expected, mode):
             time_step_size=1.0
         ),
     )
-    if mode == 'Python':
+    if mech_mode == 'Python':
         ex = T.execute
-    elif mode == 'LLVM':
+    elif mech_mode == 'LLVM':
         ex = pnlvm.execution.MechExecution(T).execute
-    elif mode == 'PTX':
+    elif mech_mode == 'PTX':
         ex = pnlvm.execution.MechExecution(T).cuda_execute
     val = float(ex(stim)[0][0][0])
     assert val == expected

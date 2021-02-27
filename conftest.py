@@ -47,11 +47,17 @@ def pytest_runtest_setup(item):
     doctest.ELLIPSIS_MARKER = "[...]"
 
 def pytest_generate_tests(metafunc):
+    mech_and_func_modes = ['Python',
+                           pytest.param('LLVM', marks=pytest.mark.llvm),
+                           pytest.param('PTX', marks=[pytest.mark.llvm,
+                                                      pytest.mark.cuda])
+                          ]
+
     if "func_mode" in metafunc.fixturenames:
-        metafunc.parametrize("func_mode", ['Python',
-                                           pytest.param('LLVM', marks=pytest.mark.llvm),
-                                           pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])
-                                          ])
+        metafunc.parametrize("func_mode", mech_and_func_modes)
+
+    if "mech_mode" in metafunc.fixturenames:
+        metafunc.parametrize("mech_mode", mech_and_func_modes)
 
 
 def pytest_runtest_call(item):
