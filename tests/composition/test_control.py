@@ -943,12 +943,7 @@ class TestControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel")
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVM', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                     ])
-    def test_multilevel_control(self, mode, benchmark):
+    def test_multilevel_control(self, comp_mode, benchmark):
         oA = pnl.TransferMechanism(
             name='OuterA',
         )
@@ -996,20 +991,15 @@ class TestControlMechanisms:
         iComp.add_controller(iController)
         assert iComp.controller == iController
         assert oComp.controller == oController
-        res = oComp.run(inputs=[5], execution_mode=mode)
+        res = oComp.run(inputs=[5], execution_mode=comp_mode)
         assert np.allclose(res, [40])
 
         if benchmark.enabled:
-            benchmark(oComp.run, [5], execution_mode=mode)
+            benchmark(oComp.run, [5], execution_mode=comp_mode)
 
     @pytest.mark.control
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVM', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                     ])
-    def test_recurrent_control(self, mode):
+    def test_recurrent_control(self, comp_mode):
         monitor = pnl.TransferMechanism(default_variable=[[0.0]],
                                     size=1,
                                     function=pnl.Linear(slope=1, intercept=0),
@@ -1039,7 +1029,7 @@ class TestControlMechanisms:
                     monitor: [[1], [5], [1], [5]],
                     rtm: [[1,0], [1,0] ,[1,0], [1,0]]
                 },
-            execution_mode=mode
+            execution_mode=comp_mode
         )
         assert np.allclose(val[0], [5])
         assert np.allclose(val[1], [0.7978996, 0.40776362])
@@ -2090,12 +2080,7 @@ class TestModelBasedOptimizationControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel")
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVM', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                     ])
-    def test_grid_search_random_selection(self, mode, benchmark):
+    def test_grid_search_random_selection(self, comp_mode, benchmark):
         A = pnl.ProcessingMechanism(name='A')
 
         A.log.set_log_conditions(items="mod_slope")
@@ -2122,12 +2107,12 @@ class TestModelBasedOptimizationControlMechanisms:
 
         inputs = {A: [[[1.0]]]}
 
-        comp.run(inputs=inputs, num_trials=10, context='outer_comp', execution_mode=mode)
+        comp.run(inputs=inputs, num_trials=10, context='outer_comp', execution_mode=comp_mode)
         assert np.allclose(comp.results, [[[0.7310585786300049]], [[0.999999694097773]], [[0.999999694097773]], [[0.9999999979388463]], [[0.9999999979388463]], [[0.999999694097773]], [[0.9999999979388463]], [[0.999999999986112]], [[0.999999694097773]], [[0.9999999999999993]]])
 
         # control signal value (mod slope) is chosen randomly from all of the control signal values
         # that correspond to a net outcome of 1
-        if mode == 'Python':
+        if comp_mode == 'Python':
             log_arr = A.log.nparray_dictionary()
             assert np.allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
                                log_arr['outer_comp']['mod_slope'])
@@ -2136,15 +2121,12 @@ class TestModelBasedOptimizationControlMechanisms:
             # Disable logging for the benchmark run
             A.log.set_log_conditions(items="mod_slope", log_condition=LogCondition.OFF)
             A.log.clear_entries()
-            benchmark(comp.run, inputs=inputs, num_trials=10, context='bench_outer_comp', execution_mode=mode)
+            benchmark(comp.run, inputs=inputs, num_trials=10, context='bench_outer_comp', execution_mode=comp_mode)
             assert len(A.log.get_logged_entries()) == 0
 
     @pytest.mark.control
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                     ])
-    def test_input_CIM_assignment(self, mode):
+    def test_input_CIM_assignment(self, comp_mode):
         input_a = pnl.ProcessingMechanism(name='oa', function=pnl.Linear(slope=1))
         input_b = pnl.ProcessingMechanism(name='ob', function=pnl.Linear(slope=1))
         output = pnl.ProcessingMechanism(name='oc')
@@ -2173,7 +2155,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                       allocation_samples=[-1, 1])
                 ]))
         results = comp.run(inputs={input_a: [[5]], input_b: [[-2]]},
-                           execution_mode=mode)
+                           execution_mode=comp_mode)
 
         # The controller of this model uses two control signals: one that modulates the slope of input_a and one that modulates
         # the slope of input_b. Both control signals have two possible values: -1 or 1.
