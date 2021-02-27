@@ -740,10 +740,14 @@ def copy_iterable_with_shared(obj, shared_types=None, memo=None):
     all_types_using_recursion = dict_types + list_types + tuple_types
 
     if isinstance(obj, dict_types):
-        result = obj.__class__()
+        result = copy.copy(obj)
+        del_keys = set()
         for (k, v) in obj.items():
             # key can never be unhashable dict or list
             new_k = k if isinstance(k, shared_types) else copy.deepcopy(k, memo)
+
+            if new_k is not k:
+                del_keys.add(k)
 
             if isinstance(v, all_types_using_recursion):
                 new_v = copy_iterable_with_shared(v, shared_types, memo)
@@ -757,6 +761,8 @@ def copy_iterable_with_shared(obj, shared_types=None, memo=None):
             except UtilitiesError:
                 # handle ReadOnlyOrderedDict
                 result.__additem__(new_k, new_v)
+        for k in del_keys:
+            del result[k]
 
     elif isinstance(obj, list_types + tuple_types):
         is_tuple = isinstance(obj, tuple_types)
