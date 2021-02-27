@@ -59,6 +59,8 @@ def pytest_generate_tests(metafunc):
     if "mech_mode" in metafunc.fixturenames:
         metafunc.parametrize("mech_mode", mech_and_func_modes)
 
+    if "comp_mode" in metafunc.fixturenames:
+        metafunc.parametrize("comp_mode", get_comp_execution_modes())
 
 def pytest_runtest_call(item):
     # seed = int(item.config.getoption('--pnl-seed'))
@@ -78,6 +80,15 @@ def pytest_runtest_teardown(item):
 
     pnlvm.cleanup()
 
+@pytest.helpers.register
+def get_comp_execution_modes():
+    return ['Python',
+            pytest.param('LLVM', marks=pytest.mark.llvm),
+            pytest.param('LLVMExec', marks=pytest.mark.llvm),
+            pytest.param('LLVMRun', marks=pytest.mark.llvm),
+            pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+            pytest.param('PTXRun', marks=[pytest.mark.llvm,  pytest.mark.cuda])
+           ]
 
 @pytest.helpers.register
 def expand_np_ndarray(arr):

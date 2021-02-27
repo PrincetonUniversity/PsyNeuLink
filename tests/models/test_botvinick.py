@@ -23,13 +23,7 @@ import psyneulink.core.components.functions.transferfunctions
 @pytest.mark.parametrize("reps", [1,
                                   pytest.param(10, marks=pytest.mark.stress),
                                   pytest.param(100, marks=pytest.mark.stress)])
-@pytest.mark.parametrize("mode", ['Python',
-                                  pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                  pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                  pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                  pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-def test_botvinick_model(benchmark, mode, reps):
+def test_botvinick_model(benchmark, comp_mode, reps):
     benchmark.group = "Botvinick (scale " + str(reps / 100) + ")"
 
     # SET UP MECHANISMS ----------------------------------------------------------------------------------------------------
@@ -198,7 +192,7 @@ def test_botvinick_model(benchmark, mode, reps):
 
         return results
 
-    res = run(mode)
+    res = run(comp_mode)
     # the corresponding output port indices in composition results
     # these were 0 and 1 in the prior version of the test
     response_results_index = 3
@@ -290,4 +284,4 @@ def test_botvinick_model(benchmark, mode, reps):
         assert np.allclose(res[2][ntrials0 - 1][response_decision_energy_index], [0.94440397])
         assert np.allclose(res[2][-1][response_decision_energy_index], [0.90033387])
     if benchmark.enabled:
-        benchmark(run, mode)
+        benchmark(run, comp_mode)

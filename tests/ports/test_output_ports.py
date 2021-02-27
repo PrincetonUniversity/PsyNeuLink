@@ -45,13 +45,7 @@ class TestOutputPorts:
 
     @pytest.mark.mechanism
     @pytest.mark.lca_mechanism
-    @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-    def test_output_port_variable_spec_composition(self, mode):
+    def test_output_port_variable_spec_composition(self, comp_mode):
         # Test specification of OutputPort's variable
         # OutputPort mech.output_ports['all'] has a different dimensionality than the other OutputPorts;
         #    as a consequence, when added as a terminal node, the Composition can't construct an IDENTITY_MATRIX
@@ -68,7 +62,7 @@ class TestOutputPorts:
                                        ])
         C = pnl.Composition(name='MyComp')
         C.add_node(node=mech)
-        outs = C.run(inputs={mech: [[1.],[2.],[3.]]}, execution_mode=mode)
+        outs = C.run(inputs={mech: [[1.],[2.],[3.]]}, execution_mode=comp_mode)
         assert np.array_equal(outs, [[3], [2], [1], [1]])
-        outs = C.run(inputs={mech: [[1.],[2.],[3.]]}, execution_mode=mode)
+        outs = C.run(inputs={mech: [[1.],[2.],[3.]]}, execution_mode=comp_mode)
         assert np.array_equal(outs, [[3], [2], [1], [2]])

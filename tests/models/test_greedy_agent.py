@@ -16,13 +16,7 @@ from psyneulink.core.globals.keywords import VARIANCE, NORMED_L0_SIMILARITY
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Greedy Agent")
-@pytest.mark.parametrize("mode", ['Python',
-    pytest.param('LLVM', marks=[pytest.mark.llvm]),
-    pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
-    pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-def test_simplified_greedy_agent(benchmark, mode):
+def test_simplified_greedy_agent(benchmark, comp_mode):
     # These should probably be replaced by reference to ForagerEnv constants:
     obs_len = 2
     action_len = 2
@@ -57,23 +51,17 @@ def test_simplified_greedy_agent(benchmark, mode):
 
     run_results = agent_comp.run(inputs={player:[[619,177]],
                                          prey:[[419,69]]},
-                                 execution_mode=mode)
+                                 execution_mode=comp_mode)
     assert np.allclose(run_results, [[-200, -108]])
     if benchmark.enabled:
         benchmark(agent_comp.run, **{'inputs':{
             player:[[619,177]],
             prey:[[419,69]],
-            }, 'execution_mode':mode})
+            }, 'execution_mode':comp_mode})
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Greedy Agant Random")
-@pytest.mark.parametrize("mode", ['Python',
-    pytest.param('LLVM', marks=[pytest.mark.llvm]),
-    pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
-    pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-def test_simplified_greedy_agent_random(benchmark, mode):
+def test_simplified_greedy_agent_random(benchmark, comp_mode):
     # These should probably be replaced by reference to ForagerEnv constants:
     obs_len = 2
     action_len = 2
@@ -105,7 +93,7 @@ def test_simplified_greedy_agent_random(benchmark, mode):
 
     run_results = agent_comp.run(inputs={player:[[619,177]],
                                          prey:[[419,69]]},
-                                 execution_mode=mode)
+                                 execution_mode=comp_mode)
     # KDM 12/4/19: modified results due to global seed offset of
     # GaussianDistort assignment.
     # to produce old numbers, run get_global_seed once before creating
@@ -115,7 +103,7 @@ def test_simplified_greedy_agent_random(benchmark, mode):
         benchmark(agent_comp.run, **{'inputs':{
             player:[[619,177]],
             prey:[[419,69]],
-            }, 'execution_mode':mode})
+            }, 'execution_mode':comp_mode})
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Predator Prey")

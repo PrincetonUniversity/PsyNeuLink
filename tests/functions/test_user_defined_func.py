@@ -489,40 +489,26 @@ class TestUserDefFunc:
         val = benchmark(e, variable)
         assert np.allclose(val, expected)
 
-    @pytest.mark.parametrize("mode", ['Python',
-                                             pytest.param('LLVM', marks=pytest.mark.llvm),
-                                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                             pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                            ])
     @pytest.mark.benchmark(group="UDF as Composition Origin")
-    def test_udf_composition_origin(self, mode, benchmark):
+    def test_udf_composition_origin(self, comp_mode, benchmark):
         def myFunction(variable, context):
             return [variable[0][1], variable[0][0]]
 
         myMech = ProcessingMechanism(function=myFunction, size=3, name='myMech')
         T = TransferMechanism(size=2, function=Linear)
         c = Composition(pathways=[myMech, T])
-        benchmark(c.run, inputs={myMech: [[1, 3, 5]]}, execution_mode=mode)
+        benchmark(c.run, inputs={myMech: [[1, 3, 5]]}, execution_mode=comp_mode)
         assert np.allclose(c.results[0][0], [3, 1])
 
-    @pytest.mark.parametrize("mode", ['Python',
-                                             pytest.param('LLVM', marks=pytest.mark.llvm),
-                                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                             pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                            ])
     @pytest.mark.benchmark(group="UDF as Composition Terminal")
-    def test_udf_composition_terminal(self, mode, benchmark):
+    def test_udf_composition_terminal(self, comp_mode, benchmark):
         def myFunction(variable, context):
             return [variable[0][2], variable[0][0]]
 
         myMech = ProcessingMechanism(function=myFunction, size=3, name='myMech')
         T2 = TransferMechanism(size=3, function=Linear)
         c2 = Composition(pathways=[[T2, myMech]])
-        benchmark(c2.run, inputs={T2: [[1, 2, 3]]}, execution_mode=mode)
+        benchmark(c2.run, inputs={T2: [[1, 2, 3]]}, execution_mode=comp_mode)
         assert(np.allclose(c2.results[0][0], [3, 1]))
 
     def test_udf_with_pnl_func(self):
