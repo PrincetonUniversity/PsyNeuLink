@@ -62,6 +62,10 @@ def pytest_generate_tests(metafunc):
     if "comp_mode" in metafunc.fixturenames:
         metafunc.parametrize("comp_mode", get_comp_execution_modes())
 
+    if "autodiff_mode" in metafunc.fixturenames:
+        auto_modes = ['Python', pytest.param('LLVMRun', marks=pytest.mark.llvm)]
+        metafunc.parametrize("autodiff_mode", auto_modes)
+
 def pytest_runtest_call(item):
     # seed = int(item.config.getoption('--pnl-seed'))
     seed = 0
