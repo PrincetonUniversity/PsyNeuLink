@@ -1190,6 +1190,8 @@ class TestStatefulness:
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.parametrize('mode', ['Python',
+                                      # 'LLVM' mode is not supported, because
+                                      # 'reset_when' needs compiled scheduler
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
