@@ -44,15 +44,25 @@ ct_tvec_res = llvm_tvec_res.ctypes.data_as(ctypes.POINTER(ctypes.c_double))
                          (np.subtract, "__pnl_builtin_mat_sub", mat_sub_res),
                          (np.multiply, "__pnl_builtin_mat_hadamard", mat_mul_res),
                          ], ids=["ADD", "SUB", "MUL"])
-@pytest.mark.parametrize("mode", ['Python',
-                                  pytest.param('LLVM', marks=pytest.mark.llvm)])
-def test_mat_hadamard(benchmark, op, builtin, result, mode):
-    if mode == 'Python':
-        res = benchmark(op, u, v)
-    elif mode == 'LLVM':
-        llvm_fun = pnlvm.LLVMBinaryFunction.get(builtin)
-        benchmark(llvm_fun, ct_u, ct_v, DIM_X, DIM_Y, ct_mat_res)
-        res = llvm_mat_res
+def test_mat_hadamard(benchmark, op, builtin, result, func_mode):
+    if func_mode == 'Python':
+        def ex():
+            return op(u, v)
+    elif func_mode == 'LLVM':
+        bin_f = pnlvm.LLVMBinaryFunction.get(builtin)
+        def ex():
+            bin_f(ct_u, ct_v, DIM_X, DIM_Y, ct_mat_res)
+            return llvm_mat_res
+    elif func_mode == 'PTX':
+        bin_f = pnlvm.LLVMBinaryFunction.get(builtin)
+        cuda_u = pnlvm.jit_engine.pycuda.driver.In(u)
+        cuda_v = pnlvm.jit_engine.pycuda.driver.In(v)
+        cuda_res = pnlvm.jit_engine.pycuda.driver.Out(llvm_mat_res)
+        def ex():
+            bin_f.cuda_call(cuda_u, cuda_v, np.int32(DIM_X), np.int32(DIM_Y), cuda_res)
+            return llvm_mat_res
+
+    res = benchmark(ex)
     assert np.allclose(res, result)
 
 
@@ -61,15 +71,24 @@ def test_mat_hadamard(benchmark, op, builtin, result, mode):
                          (np.add, "__pnl_builtin_mat_scalar_add", mat_sadd_res),
                          (np.multiply, "__pnl_builtin_mat_scalar_mult", mat_smul_res),
                          ], ids=["ADD", "MUL"])
-@pytest.mark.parametrize("mode", ['Python',
-                                  pytest.param('LLVM', marks=pytest.mark.llvm)])
-def test_mat_scalar(benchmark, op, builtin, result, mode):
-    if mode == 'Python':
-        res = benchmark(op, u, scalar)
-    elif mode == 'LLVM':
-        llvm_fun = pnlvm.LLVMBinaryFunction.get(builtin)
-        benchmark(llvm_fun, ct_u, scalar, DIM_X, DIM_Y, ct_mat_res)
-        res = llvm_mat_res
+def test_mat_scalar(benchmark, op, builtin, result, func_mode):
+    if func_mode == 'Python':
+        def ex():
+            return op(u, scalar)
+    elif func_mode == 'LLVM':
+        bin_f = pnlvm.LLVMBinaryFunction.get(builtin)
+        def ex():
+            bin_f(ct_u, scalar, DIM_X, DIM_Y, ct_mat_res)
+            return llvm_mat_res
+    elif func_mode == 'PTX':
+        bin_f = pnlvm.LLVMBinaryFunction.get(builtin)
+        cuda_u = pnlvm.jit_engine.pycuda.driver.In(u)
+        cuda_res = pnlvm.jit_engine.pycuda.driver.Out(llvm_mat_res)
+        def ex():
+            bin_f.cuda_call(cuda_u, np.float64(scalar), np.int32(DIM_X), np.int32(DIM_Y), cuda_res)
+            return llvm_mat_res
+
+    res = benchmark(ex)
     assert np.allclose(res, result)
 
 
