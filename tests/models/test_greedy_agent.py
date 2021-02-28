@@ -107,14 +107,8 @@ def test_simplified_greedy_agent_random(benchmark, comp_mode):
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Predator Prey")
-@pytest.mark.parametrize("mode", ['Python',
-     pytest.param('Python-PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-     pytest.param('LLVM', marks=[pytest.mark.llvm]),
-     pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
-     pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-     pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-     pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-])
+@pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
+                                 [pytest.helpers.cuda_param('Python-PTX')])
 @pytest.mark.parametrize("samples", [[0,10],
     pytest.param([0,3,6,10], marks=pytest.mark.stress),
     pytest.param([0,2,4,6,8,10], marks=pytest.mark.stress),

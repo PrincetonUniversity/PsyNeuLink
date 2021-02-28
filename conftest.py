@@ -91,6 +91,10 @@ def get_comp_execution_modes():
            ]
 
 @pytest.helpers.register
+def cuda_param(val):
+    return pytest.param(val, marks=[pytest.mark.llvm, pytest.mark.cuda])
+
+@pytest.helpers.register
 def expand_np_ndarray(arr):
     # this will fail on an input containing a float (not np.ndarray)
     try:
