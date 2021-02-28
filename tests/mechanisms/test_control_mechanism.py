@@ -11,8 +11,7 @@ class TestLCControlMechanism:
     @pytest.mark.mechanism
     @pytest.mark.control_mechanism
     @pytest.mark.benchmark(group="LCControlMechanism Default")
-    @pytest.mark.parametrize("mode", ['Python'])
-    def test_lc_control_mechanism_as_controller(self, benchmark, mode):
+    def test_lc_control_mechanism_as_controller(self, benchmark):
         G = 1.0
         k = 0.5
         starting_value_LC = 2.0
