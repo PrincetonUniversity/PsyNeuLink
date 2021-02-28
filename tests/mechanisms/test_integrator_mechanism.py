@@ -364,19 +364,18 @@ class TestReset:
 
 VECTOR_SIZE=4
 
-def _get_mechanism_execution(mech, mode):
-    if mode == 'Python':
+def _get_mechanism_execution(mech, mech_mode):
+    if mech_mode == 'Python':
         def ex(variable):
             mech.execute(variable)
             return mech.output_values
         return ex
-    elif mode == 'LLVM':
-        e = pnlvm.execution.MechExecution(mech)
-        return e.execute
-    elif mode == 'PTX':
-        e = pnlvm.execution.MechExecution(mech)
-        return e.cuda_execute
-    assert False, "Unknown execution mode: {}".format(mode)
+    elif mech_mode == 'LLVM':
+        return pnlvm.execution.MechExecution(mech).execute
+    elif mech_mode == 'PTX':
+        return pnlvm.execution.MechExecution(mech).cuda_execute
+    else:
+        assert False, "Unknown execution mode: {}".format(mech_mode)
 
 class TestIntegratorFunctions:
 
