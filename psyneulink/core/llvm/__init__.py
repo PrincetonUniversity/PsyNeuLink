@@ -9,6 +9,7 @@
 # ********************************************* LLVM bindings **************************************************************
 
 import ctypes
+import enum
 import functools
 import numpy as np
 from typing import Set
@@ -24,7 +25,21 @@ from .execution import *
 from .execution import _tupleize
 from .jit_engine import *
 
-__all__ = ['LLVMBuilderContext']
+__all__ = ['LLVMBuilderContext', 'ExecutionMode']
+
+class ExecutionMode(enum.Flag):
+    Python   = 0
+    LLVM     = enum.auto()
+    PTX      = enum.auto()
+    _Run      = enum.auto()
+    _Exec     = enum.auto()
+    _Fallback = enum.auto()
+
+    Auto = _Fallback | _Run | _Exec | LLVM
+    LLVMRun = LLVM | _Run
+    LLVMExec = LLVM | _Exec
+    PTXRun = PTX | _Run
+    PTXExec = PTX | _Exec
 
 
 _compiled_modules: Set[ir.Module] = set()

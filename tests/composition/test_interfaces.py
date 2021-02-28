@@ -183,7 +183,7 @@ class TestConnectCompositionsViaCIMS:
         # output = 180.0
         res = comp3.run(inputs={comp1: [[5.]]}, execution_mode=comp_mode)
         assert np.allclose(res, [[[180.0]]])
-        if comp_mode == 'Python':
+        if comp_mode is pnlvm.ExecutionMode.Python:
             assert np.allclose(comp1.output_port.parameters.value.get(comp3), [30.0])
             assert np.allclose(comp2.output_port.parameters.value.get(comp3), [180.0])
             assert np.allclose(comp3.output_port.parameters.value.get(comp3), [180.0])
@@ -246,7 +246,7 @@ class TestConnectCompositionsViaCIMS:
         )
 
         assert np.allclose(output, [[[180.], [1800.]]])
-        if comp_mode == 'Python':
+        if comp_mode is pnlvm.ExecutionMode.Python:
             assert np.allclose(inner_composition_1.get_output_values(outer_composition), [[30.], [300.]])
             assert np.allclose(inner_composition_2.get_output_values(outer_composition), [[180.], [1800.]])
             assert np.allclose(outer_composition.get_output_values(outer_composition), [[180.], [1800.]])
@@ -314,7 +314,7 @@ class TestConnectCompositionsViaCIMS:
         )
         assert np.allclose(output, [[[36.]]])
 
-        if comp_mode == 'Python':
+        if comp_mode is pnlvm.ExecutionMode.Python:
             assert np.allclose(A.get_output_values(outer_composition), [[1.0]])
             assert np.allclose(B.get_output_values(outer_composition), [[2.0]])
             assert np.allclose(C.get_output_values(outer_composition), [[9.0]])

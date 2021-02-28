@@ -13,10 +13,9 @@ debug_options=["const_input=[[[7]]]", "const_input", "const_data", "const_params
 options_combinations = (";".join(("debug_info", *c)) for i in range(len(debug_options) + 1) for c in combinations(debug_options, i))
 
 @pytest.mark.composition
-@pytest.mark.parametrize("mode", [
-                                  pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                  pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
-                                  ])
+@pytest.mark.parametrize("mode", [pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
+                                  pytest.helpers.cuda_param(pnlvm.ExecutionMode.PTXRun)
+                                 ])
 @pytest.mark.parametrize("debug_env", [comb for comb in options_combinations if comb.count("const_input") < 2])
 def test_debug_comp(mode, debug_env):
     # save old debug env var

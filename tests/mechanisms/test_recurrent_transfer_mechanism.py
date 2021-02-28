@@ -1098,13 +1098,14 @@ class TestCustomCombinationFunction:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    @pytest.mark.parametrize('mode', ['Python',
+    @pytest.mark.parametrize('mode', [pnl.ExecutionMode.Python,
                                       # 'LLVM' mode is not supported, because
                                       # 'reset_when' needs compiled scheduler
-                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                     ])
     @pytest.mark.parametrize('cond0, cond1, expected', [
         (pnl.Never(), pnl.AtTrial(2),
          [[np.array([0.5]), np.array([0.5])],
@@ -1148,13 +1149,14 @@ class TestCustomCombinationFunction:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    @pytest.mark.parametrize('mode', ['Python',
+    @pytest.mark.parametrize('mode', [pnl.ExecutionMode.Python,
                                       # 'LLVM' mode is not supported, because
                                       # 'reset_when' needs compiled scheduler
-                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                     ])
     @pytest.mark.parametrize('cond0, cond1, expected', [
         (pnl.AtPass(0), pnl.AtTrial(2),
          [[np.array([0.5]), np.array([0.5])],
@@ -1197,14 +1199,15 @@ class TestCustomCombinationFunction:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    @pytest.mark.parametrize('mode', ['Python',
+    @pytest.mark.parametrize('mode', [pnl.ExecutionMode.Python,
                                       # 'LLVM' mode is not supported, because
                                       # synchronization of mechanism status
                                       # between Python and LLVM is not implemented
-                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                     ])
     @pytest.mark.parametrize('until_finished, expected', [
         (True, [[[[0.96875]]], [[[0.9990234375]]]]), # The 5th and the 10th iteration
         (False, [[[[0.5]]], [[[0.75]]]]), # The first and the second iteration
@@ -1219,7 +1222,7 @@ class TestCustomCombinationFunction:
         C.add_node(I1)
 
         results = C.run(inputs={I1: [[1.0]]}, num_trials=1, execution_mode=mode)
-        if mode == 'Python':
+        if mode is pnl.ExecutionMode.Python:
             assert I1.parameters.is_finished_flag.get(C) is until_finished
         results2 = C.run(inputs={I1: [[1.0]]}, num_trials=1, execution_mode=mode)
         assert np.allclose(expected[0], results)

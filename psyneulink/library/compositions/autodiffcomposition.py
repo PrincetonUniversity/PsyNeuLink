@@ -477,7 +477,7 @@ class AutodiffComposition(Composition):
                 clamp_input=SOFT_CLAMP,
                 targets=None,
                 runtime_params=None,
-                execution_mode=False,
+                execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
                 skip_initialization=False,
                 ):
         self._assign_execution_ids(context)

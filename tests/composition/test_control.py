@@ -574,7 +574,7 @@ class TestControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel GridSearch")
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python])
     def test_multilevel_ocm_gridsearch_conflicting_directions(self, mode, benchmark):
         oa = pnl.TransferMechanism(name='oa')
         ob = pnl.TransferMechanism(name='ob')
@@ -637,7 +637,7 @@ class TestControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel GridSearch")
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python])
     def test_multilevel_ocm_gridsearch_maximize(self, mode, benchmark):
         oa = pnl.TransferMechanism(name='oa')
         ob = pnl.TransferMechanism(name='ob')
@@ -704,7 +704,7 @@ class TestControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Multilevel GridSearch")
-    @pytest.mark.parametrize("mode", ['Python'])
+    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python])
     def test_multilevel_ocm_gridsearch_minimize(self, mode, benchmark):
         oa = pnl.TransferMechanism(name='oa')
         ob = pnl.TransferMechanism(name='ob')
@@ -1679,8 +1679,12 @@ class TestModelBasedOptimizationControlMechanisms:
     @pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
                                      [pytest.helpers.cuda_param('Python-PTX')])
     def test_model_based_ocm_after(self, benchmark, mode):
-        # OCM default mode is Python
-        mode, ocm_mode = (mode + "-Python").split('-')[0:2]
+        if mode == 'Python-PTX':
+            mode = pnl.ExecutionMode.Python
+            ocm_mode = 'PTX'
+        else:
+            # OCM default mode is Python
+            ocm_mode = 'Python'
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
@@ -1722,8 +1726,12 @@ class TestModelBasedOptimizationControlMechanisms:
     @pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
                                      [pytest.helpers.cuda_param('Python-PTX')])
     def test_model_based_ocm_before(self, benchmark, mode):
-        # OCM default mode is Python
-        mode, ocm_mode = (mode + "-Python").split('-')[0:2]
+        if mode == 'Python-PTX':
+            mode = pnl.ExecutionMode.Python
+            ocm_mode = 'PTX'
+        else:
+            # OCM default mode is Python
+            ocm_mode = 'Python'
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
@@ -2102,7 +2110,7 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # control signal value (mod slope) is chosen randomly from all of the control signal values
         # that correspond to a net outcome of 1
-        if comp_mode == 'Python':
+        if comp_mode is pnl.ExecutionMode.Python:
             log_arr = A.log.nparray_dictionary()
             assert np.allclose([[1.], [15.], [15.], [20.], [20.], [15.], [20.], [25.], [15.], [35.]],
                                log_arr['outer_comp']['mod_slope'])

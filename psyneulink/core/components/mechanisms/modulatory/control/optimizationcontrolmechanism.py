@@ -1022,8 +1022,8 @@ class OptimizationControlMechanism(ControlMechanism):
             context.composition = self.agent_rep
 
             # We shouldn't get this far if execution mode is not Python
-            exec_mode = self.parameters.comp_execution_mode._get(context)
-            assert exec_mode == "Python"
+            assert self.parameters.comp_execution_mode._get(context) == "Python"
+            exec_mode = pnlvm.ExecutionMode.Python
             result = self.agent_rep.evaluate(self.parameters.feature_values._get(context),
                                              control_allocation,
                                              self.parameters.num_estimates._get(context),
