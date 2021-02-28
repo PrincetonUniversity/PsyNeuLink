@@ -1166,9 +1166,9 @@ class TestCustomCombinationFunction:
           [np.array([0.5]), np.array([0.96875])]]),
         ], ids=lambda x: str(x) if isinstance(x, pnl.Condition) else "")
     @pytest.mark.parametrize('has_initializers2', [True, False],
-                             ids=lambda x: "initializers1" if x else "NO initializers1")
+                             ids=["initializers1", "NO initializers1"])
     @pytest.mark.parametrize('has_initializers1', [True, False],
-                             ids=lambda x: "initializers2" if x else "NO initializers2")
+                             ids=["initializers2", "NO initializers2"])
     def test_reset_stateful_function_when_has_initializers_composition(self, mode, cond0, cond1, expected,
                                            has_initializers1, has_initializers2):
         I1 = pnl.RecurrentTransferMechanism(integrator_mode=True,
