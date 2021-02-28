@@ -199,7 +199,7 @@ class TestMiscTrainingFunctionality:
         'loss', ['l1', 'poissonnll']
     )
     def test_various_loss_specs(self, loss, autodiff_mode):
-        if autodiff_mode != 'Python':
+        if autodiff_mode is not pnl.ExecutionMode.Python:
             pytest.skip("Loss spec not yet implemented!")
 
         xor_in = TransferMechanism(name='xor_in',
@@ -242,7 +242,7 @@ class TestMiscTrainingFunctionality:
                             "epochs": 10}, execution_mode=autodiff_mode)
 
     def test_pytorch_loss_spec(self, autodiff_mode):
-        if autodiff_mode != 'Python':
+        if autodiff_mode is not pnl.ExecutionMode.Python:
             pytest.skip("Loss spec not yet implemented!")
 
         import torch
@@ -333,7 +333,7 @@ class TestMiscTrainingFunctionality:
                                                 "epochs": 10}, execution_mode=autodiff_mode)
 
         # FIXME: LLVM version is broken with learning rate == 1.5
-        if learning_rate != 1.5 or autodiff_mode == "Python":
+        if learning_rate != 1.5 or autodiff_mode is pnl.ExecutionMode.Python:
             assert np.allclose(results_before_proc, expected)
 
         if benchmark.enabled:
@@ -344,7 +344,7 @@ class TestMiscTrainingFunctionality:
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
     def test_params_stay_separate(self, autodiff_mode):
-        if autodiff_mode != 'Python':
+        if autodiff_mode is not pnl.ExecutionMode.Python:
             pytest.skip("Compiled weights are always copied back!")
 
         xor_in = TransferMechanism(name='xor_in',
@@ -2455,7 +2455,7 @@ class TestNested:
     )
     def test_xor_nested_no_train_then_train(self, num_epochs, learning_rate,
                                             patience, min_delta, autodiff_mode):
-        if autodiff_mode != 'Python':
+        if autodiff_mode is not pnl.ExecutionMode.Python:
             pytest.skip("")
         # the inputs we will provide to the model
         xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
@@ -2844,7 +2844,7 @@ class TestNested:
 
         sem_net.learn(inputs=input_dict, execution_mode=autodiff_mode)
 
-        if autodiff_mode != 'Python':
+        if autodiff_mode is not pnl.ExecutionMode.Python:
             #FIXME: Enable the rest of the test when recompilation is supported
             return
 

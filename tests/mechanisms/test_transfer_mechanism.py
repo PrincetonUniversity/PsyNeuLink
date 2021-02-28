@@ -1925,15 +1925,15 @@ class TestOnResumeIntegratorMode:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism")
-    @pytest.mark.parametrize('mode', ['Python',
+    @pytest.mark.parametrize('mode', [pnlvm.ExecutionMode.Python,
                                       # 'LLVM' mode is not supported
                                       # the comparison values and checks
                                       # are not synced between binary
                                       # and Python structures
-                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param(pnlvm.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
+                                      pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
+                                      pytest.param(pnlvm.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param(pnlvm.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
     def test_termination_measures(self, mode):
         stim_input = ProcessingMechanism(size=2, name='Stim Input')
@@ -1960,7 +1960,7 @@ class TestOnResumeIntegratorMode:
         result = comp.run(inputs=inputs, execution_mode=mode)
 
         assert np.allclose(result, [[0.43636140750487973, 0.47074475219780554]])
-        if mode == 'Python':
+        if mode is pnlvm.ExecutionMode.Python:
             assert decision.num_executions.time_step == 1
             assert decision.num_executions.pass_ == 2
             assert decision.num_executions.trial== 1

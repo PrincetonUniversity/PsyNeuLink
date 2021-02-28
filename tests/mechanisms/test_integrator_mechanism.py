@@ -1188,13 +1188,14 @@ class TestStatefulness:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    @pytest.mark.parametrize('mode', ['Python',
+    @pytest.mark.parametrize('mode', [pnl.ExecutionMode.Python,
                                       # 'LLVM' mode is not supported, because
                                       # 'reset_when' needs compiled scheduler
-                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                     ])
     @pytest.mark.parametrize('cond0, cond1, expected', [
         (pnl.Never(), pnl.AtTrial(2),
          [[np.array([0.5]), np.array([0.5])],

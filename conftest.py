@@ -63,7 +63,8 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize("comp_mode", get_comp_execution_modes())
 
     if "autodiff_mode" in metafunc.fixturenames:
-        auto_modes = ['Python', pytest.param('LLVMRun', marks=pytest.mark.llvm)]
+        auto_modes = [pnlvm.ExecutionMode.Python,
+                      pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm)]
         metafunc.parametrize("autodiff_mode", auto_modes)
 
 def pytest_runtest_call(item):
@@ -86,12 +87,12 @@ def pytest_runtest_teardown(item):
 
 @pytest.helpers.register
 def get_comp_execution_modes():
-    return ['Python',
-            pytest.param('LLVM', marks=pytest.mark.llvm),
-            pytest.param('LLVMExec', marks=pytest.mark.llvm),
-            pytest.param('LLVMRun', marks=pytest.mark.llvm),
-            pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-            pytest.param('PTXRun', marks=[pytest.mark.llvm,  pytest.mark.cuda])
+    return [pnlvm.ExecutionMode.Python,
+            pytest.param(pnlvm.ExecutionMode.LLVM, marks=pytest.mark.llvm),
+            pytest.param(pnlvm.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
+            pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
+            pytest.param(pnlvm.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
+            pytest.param(pnlvm.ExecutionMode.PTXRun, marks=[pytest.mark.llvm,  pytest.mark.cuda])
            ]
 
 @pytest.helpers.register
