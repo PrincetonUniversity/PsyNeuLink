@@ -2947,7 +2947,7 @@ class TestRun:
         assert np.allclose([250], output)
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python']) # LLVM needs SimpleIntegrator
+    @pytest.mark.parametrize("mode", ['Python']) # LLVM doesn't support EveryNCalls fr N > 1
     def test_run_2_mechanisms_with_scheduling_AAB_integrator(self, mode):
         comp = Composition()
 
