@@ -5650,10 +5650,12 @@ class TestInputSpecifications:
 class TestProperties:
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python', True,
-                                      pytest.param('LLVM', marks=(pytest.mark.xfail, pytest.mark.llvm)),
-                                      pytest.param('LLVMExec', marks=(pytest.mark.xfail, pytest.mark.llvm)),
-                                      pytest.param('LLVMRun', marks=(pytest.mark.xfail, pytest.mark.llvm)),
-                                      pytest.param('PTXExec', marks=(pytest.mark.xfail, pytest.mark.llvm))])
+                                      pytest.param('LLVM', marks=[pytest.mark.xfail, pytest.mark.llvm]),
+                                      pytest.param('LLVMExec', marks=[pytest.mark.xfail, pytest.mark.llvm]),
+                                      pytest.param('LLVMRun', marks=[pytest.mark.xfail, pytest.mark.llvm]),
+                                      pytest.param('PTXExec', marks=[pytest.mark.xfail, pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.xfail, pytest.mark.llvm, pytest.mark.cuda]),
+                                     ])
     def test_llvm_fallback(self, mode):
         comp = Composition()
         # FIXME: using num_executions is a hack. The name collides with
