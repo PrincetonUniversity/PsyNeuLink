@@ -117,15 +117,10 @@ class CUDAExecution(Execution):
         # CUDA uses the same function for single and multi run
         return self._bin_func
 
-    def _get_ctype_bytes(self, data):
-        # Return dummy buffer. CUDA does not handle 0 size well.
-        if ctypes.sizeof(data) == 0:
-            return bytearray(b'aaaa')
-        return bytearray(data)
-
     def upload_ctype(self, data, name='other'):
         self._uploaded_bytes[name] += ctypes.sizeof(data)
-        return jit_engine.pycuda.driver.to_device(self._get_ctype_bytes(data))
+        assert ctypes.sizeof(data) != 0
+        return jit_engine.pycuda.driver.to_device(bytearray(data))
 
     def download_ctype(self, source, ty, name='other'):
         self._downloaded_bytes[name] += ctypes.sizeof(ty)
