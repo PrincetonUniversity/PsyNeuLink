@@ -2541,11 +2541,10 @@ class Mechanism_Base(Mechanism):
                 if self.prefs.reportOutputPref is 'terse':
                     print(f'{self.name} executed')
                 else:
-                    print(
-                        _report_node_execution(self,
-                                               input_val=self.get_input_values(context),
-                                               output_val=self.output_port.parameters.value._get(context),
-                                               context=context))
+                    print(_report_node_execution(self,
+                                                 input_val=self.get_input_values(context),
+                                                 output_val=self.output_port.parameters.value._get(context),
+                                                 context=context))
         return value
 
     def _get_variable_from_input(self, input, context=None):

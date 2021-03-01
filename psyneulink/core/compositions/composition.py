@@ -3354,7 +3354,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if nodes is not None:
             nodes = convert_to_list(nodes)
             for node in nodes:
-                self.add_node(node)
+                self._add_node(node)
 
         # FIX 4/8/20 [JDC]: TEST THIS
         if projections is not None:
@@ -3486,8 +3486,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                               NODES
     # ******************************************************************************************************************
 
+
     @handle_external_context(source = ContextFlags.COMPOSITION)
     def add_node(self, node, required_roles=None, context=None):
+        """"""
+        return self._add_node(node=node, required_roles=required_roles, context=context)
+
+    @handle_external_context(source = ContextFlags.COMPOSITION)
+    def _add_node(self, node, required_roles=None, context=None):
         """
             Add a Composition Node (`Mechanism <Mechanism>` or `Composition`) to Composition, if it is not already added
 
@@ -3565,6 +3571,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         except NameError:
             pass
 
+        if context.source & ContextFlags.COMMAND_LINE:
+            self._analyze_graph()
+
     def _instantiate_deferred_init_control(self, node, context=None):
         """
         If node is a Composition with a controller, activate its nodes' deferred init control specs for its controller.
@@ -3620,12 +3629,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             nodes = convert_to_list(nodes)
         for node in nodes:
             if isinstance(node, (Mechanism, Composition)):
-                self.add_node(node, required_roles, context)
+                self._add_node(node, required_roles, context)
             elif isinstance(node, tuple):
                 node_specific_roles = convert_to_list(node[1])
                 if required_roles:
                     node_specific_roles.append(required_roles)
-                self.add_node(node=node[0], required_roles=node_specific_roles, context=context)
+                self._add_node(node=node[0], required_roles=node_specific_roles, context=context)
             else:
                 raise CompositionError(f"Node specified in 'add_nodes' method of '{self.name}' {Composition.__name__} "
                                        f"({node}) must be a {Mechanism.__name__}, {Composition.__name__}, "
@@ -3938,7 +3947,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(component, (Mechanism, Composition)):
                     if isinstance(component, Composition):
                         component._analyze_graph()
-                    self.add_node(component)
+                    self._add_node(component)
                 elif isinstance(component, Projection):
                     projections.append((component, False))
                 elif isinstance(component, tuple):
@@ -3952,10 +3961,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    "specification (True or False).".format(component, node.name))
                     elif isinstance(component[0], (Mechanism, Composition)):
                         if isinstance(component[1], NodeRole):
-                            self.add_node(node=component[0], required_roles=component[1])
+                            self._add_node(node=component[0], required_roles=component[1])
                         elif isinstance(component[1], list):
                             if isinstance(component[1][0], NodeRole):
-                                self.add_node(node=component[0], required_roles=component[1])
+                                self._add_node(node=component[0], required_roles=component[1])
                             else:
                                 raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. "
                                                        "If a tuple is used to specify a Mechanism or Composition, then "
@@ -5493,7 +5502,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # add all nodes first
         for node in nodes:
-            self.add_node(node)
+            self._add_node(node)
 
         # then projections
         for p in projections:
@@ -6826,7 +6835,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                      receiver=learning_mechanism.error_signal_input_ports[i])
                 error_projections.append(error_projection)
 
-        self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING)
+        self._add_node(learning_mechanism, required_roles=NodeRole.LEARNING)
         try:
             act_in_projection = MappingProjection(sender=input_source.output_ports[0],
                                                 receiver=learning_mechanism.input_ports[0])
@@ -7067,7 +7076,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 
         if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
-            self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
+            self._add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
 
         self.node_ordering.append(controller)
 
@@ -8462,6 +8471,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 progress.report_output(self, progress_report, scheduler, show_output, 'run', context)
                 progress.report_progress(self, progress_report, trial_num)
 
+
             # IMPLEMENTATION NOTE:
             # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
             # method whether or not we are at the last trial of the run.
@@ -8759,336 +8769,265 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output value of the final Mechanism executed in the Composition : various
         """
 
-        # If execute method is called directly, need to create PNLProgress object if reporting
-        if not progress:
-            progress = progress or PNLProgress(show_progress=True)
-        if not progress_report:
-            progress_report = progress.start_progress_report(self,1,context)
+        with PNLProgress(show_progress=True) as progress:
 
-        execution_scheduler = scheduler or self.scheduler
+            # If execute method is called directly, need to create PNLProgress object if reporting
+            # if not progress:
+            #     progress = progress or PNLProgress(show_progress=True)
+            # # MODIFIED 2/28/21 OLD:
+            # # if progress_report is None:
+            # if not (context.source & ContextFlags.COMPOSITION):
+            # MODIFIED 2/28/21 NEW:
+            if not (context.source & ContextFlags.COMPOSITION) or progress_report is None:
+            # MODIFIED 2/28/21 END
+                progress_report = progress.start_progress_report(comp=self, num_trials=1, context=context)
+                show_output = True
 
-        # Report trial_num and Composition input
-        progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial_init', context)
+            execution_scheduler = scheduler or self.scheduler
 
-        # ASSIGNMENTS **************************************************************************************************
+            # Report trial_num and Composition input
+            progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial_init', context)
+            # # MODIFIED 2/28/21 NEW:
+            # progress.report_progress(self, progress_report, 0)
+            # MODIFIED 2/28/21 END
 
-        assert not str(execution_mode).endswith("Run")
-        if execution_mode == 'Python':
-            execution_mode = False
+            # ASSIGNMENTS **************************************************************************************************
 
-        if not hasattr(self, '_animate'):
-            # These are meant to be assigned in run method;  needed here for direct call to execute method
-            self._animate = False
+            assert not str(execution_mode).endswith("Run")
+            if execution_mode == 'Python':
+                execution_mode = False
 
-        # KAM Note 4/29/19
-        # The nested var is set to True if the Composition is nested in another Composition, otherwise False
-        # Later on, this is used to determine:
-        #   (1) whether to initialize from context
-        #   (2) whether to assign values to CIM from input dict (if not nested) or simply execute CIM (if nested)
-        nested = False
-        if len(self.input_CIM.path_afferents) > 0:
-            nested = True
+            if not hasattr(self, '_animate'):
+                # These are meant to be assigned in run method;  needed here for direct call to execute method
+                self._animate = False
 
-        runtime_params = self._parse_runtime_params_conditions(runtime_params)
+            # KAM Note 4/29/19
+            # The nested var is set to True if the Composition is nested in another Composition, otherwise False
+            # Later on, this is used to determine:
+            #   (1) whether to initialize from context
+            #   (2) whether to assign values to CIM from input dict (if not nested) or simply execute CIM (if nested)
+            nested = False
+            if len(self.input_CIM.path_afferents) > 0:
+                nested = True
 
-        # Assign the same execution_ids to all nodes in the Composition and get it (if it was None)
-        self._assign_execution_ids(context)
+            runtime_params = self._parse_runtime_params_conditions(runtime_params)
 
-        context.composition = self
+            # Assign the same execution_ids to all nodes in the Composition and get it (if it was None)
+            self._assign_execution_ids(context)
 
-        input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+            context.composition = self
 
-        if termination_processing is None:
-            termination_processing = self.termination_processing
+            input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
-        # if execute was called from command line and no inputs were specified, assign default inputs to highest level
-        # composition (i.e. not on any nested Compositions)
-        if not inputs and not nested and ContextFlags.COMMAND_LINE in context.source:
-            inputs = self._validate_input_dict_node_roles({})
-        # Skip initialization if possible (for efficiency):
-        # - and(context has not changed
-        # -     structure of the graph has not changed
-        # -     not a nested composition
-        # -     its not a simulation)
-        # - or(gym forage env is being used)
-        # (e.g., when run is called externally repeated for the same environment)
-        # KAM added HACK below "or self.env is None" in order to merge in interactive inputs fix for speed improvement
-        # TBI: Clean way to call _initialize_from_context if context has not changed, BUT composition has changed
-        # for example:
-        # comp.run()
-        # comp.add_node(new_node)
-        # comp.run().
-        # context has not changed on the comp, BUT new_node's execution id needs to be set from None --> ID
-        if self.most_recent_context != context or self.env is None:
-            # initialize from base context but don't overwrite any values already set for this context
-            if (
-                not skip_initialization
-                and not nested
-                or context is None
-                and context.execution_phase is not ContextFlags.SIMULATION_MODE
-            ):
-                self._initialize_from_context(context, base_context, override=False)
-                context.composition = self
+            if termination_processing is None:
+                termination_processing = self.termination_processing
 
-        # Run compiled execution (if compiled execution was requested
-        # NOTE: This should be as high up as possible,
-        # but still after the context has been initialized
-        if execution_mode:
-            is_simulation = (context is not None and
-                             ContextFlags.SIMULATION_MODE in context.runmode)
-            # Try running in Exec mode first
-            if (execution_mode is True or str(execution_mode).endswith('Exec')):
-                # There's no mode to execute simulations.
-                # Simulations are run as part of the controller node wrapper.
-                assert not is_simulation
+            # if execute was called from command line and no inputs were specified, assign default inputs to highest level
+            # composition (i.e. not on any nested Compositions)
+            if not inputs and not nested and ContextFlags.COMMAND_LINE in context.source:
+                inputs = self._validate_input_dict_node_roles({})
+            # Skip initialization if possible (for efficiency):
+            # - and(context has not changed
+            # -     structure of the graph has not changed
+            # -     not a nested composition
+            # -     its not a simulation)
+            # - or(gym forage env is being used)
+            # (e.g., when run is called externally repeated for the same environment)
+            # KAM added HACK below "or self.env is None" in order to merge in interactive inputs fix for speed improvement
+            # TBI: Clean way to call _initialize_from_context if context has not changed, BUT composition has changed
+            # for example:
+            # comp.run()
+            # comp.add_node(new_node)
+            # comp.run().
+            # context has not changed on the comp, BUT new_node's execution id needs to be set from None --> ID
+            if self.most_recent_context != context or self.env is None:
+                # initialize from base context but don't overwrite any values already set for this context
+                if (
+                    not skip_initialization
+                    and not nested
+                    or context is None
+                    and context.execution_phase is not ContextFlags.SIMULATION_MODE
+                ):
+                    self._initialize_from_context(context, base_context, override=False)
+                    context.composition = self
+
+            # Run compiled execution (if compiled execution was requested
+            # NOTE: This should be as high up as possible,
+            # but still after the context has been initialized
+            if execution_mode:
+                is_simulation = (context is not None and
+                                 ContextFlags.SIMULATION_MODE in context.runmode)
+                # Try running in Exec mode first
+                if (execution_mode is True or str(execution_mode).endswith('Exec')):
+                    # There's no mode to execute simulations.
+                    # Simulations are run as part of the controller node wrapper.
+                    assert not is_simulation
+                    try:
+                        if execution_mode is True or execution_mode.startswith('LLVM'):
+                            llvm_inputs = self._validate_execution_inputs(inputs)
+                            _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
+                            _comp_ex.execute(llvm_inputs)
+                            return _comp_ex.extract_node_output(self.output_CIM)
+                        elif execution_mode.startswith('PTX'):
+                            llvm_inputs = self._validate_execution_inputs(inputs)
+                            self.__ptx_initialize(context)
+                            __execution = self._compilation_data.ptx_execution._get(context)
+                            __execution.cuda_execute(llvm_inputs)
+                            return __execution.extract_node_output(self.output_CIM)
+                    except Exception as e:
+                        if execution_mode is not True:
+                            raise e from None
+
+                        warnings.warn("Failed to execute `{}': {}".format(self.name, str(e)))
+
+                # Exec failed for some reason, we can still try node level execution_mode
+                # Filter out nested compositions. They are not executed in this mode
+                # Filter out controller if running simulation.
+                mechanisms = (n for n in self._all_nodes
+                              if isinstance(n, Mechanism) and
+                                 (n is not self.controller or not is_simulation))
+
                 try:
-                    if execution_mode is True or execution_mode.startswith('LLVM'):
-                        llvm_inputs = self._validate_execution_inputs(inputs)
-                        _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
-                        _comp_ex.execute(llvm_inputs)
-                        return _comp_ex.extract_node_output(self.output_CIM)
-                    elif execution_mode.startswith('PTX'):
-                        llvm_inputs = self._validate_execution_inputs(inputs)
-                        self.__ptx_initialize(context)
-                        __execution = self._compilation_data.ptx_execution._get(context)
-                        __execution.cuda_execute(llvm_inputs)
-                        return __execution.extract_node_output(self.output_CIM)
+                    _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
+                    # Compile all mechanism wrappers
+                    for m in mechanisms:
+                        _comp_ex._set_bin_node(m)
                 except Exception as e:
                     if execution_mode is not True:
                         raise e from None
 
-                    warnings.warn("Failed to execute `{}': {}".format(self.name, str(e)))
-
-            # Exec failed for some reason, we can still try node level execution_mode
-            # Filter out nested compositions. They are not executed in this mode
-            # Filter out controller if running simulation.
-            mechanisms = (n for n in self._all_nodes
-                          if isinstance(n, Mechanism) and
-                             (n is not self.controller or not is_simulation))
-
-            try:
-                _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
-                # Compile all mechanism wrappers
-                for m in mechanisms:
-                    _comp_ex._set_bin_node(m)
-            except Exception as e:
-                if execution_mode is not True:
-                    raise e from None
-
-                warnings.warn("Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e)))
-                execution_mode = False
+                    warnings.warn("Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e)))
+                    execution_mode = False
 
 
-        # Generate first frame of animation without any active_items
-        if self._animate is not False:
-            # If context fails, the scheduler has no data for it yet.
-            # It also may be the first, so fall back to default execution_id
-            try:
-                self._animate_execution(INITIAL_FRAME, context)
-            except KeyError:
-                old_eid = context.execution_id
-                context.execution_id = self.default_execution_id
-                self._animate_execution(INITIAL_FRAME, context)
-                context.execution_id = old_eid
-
-        # Set num_executions.TRIAL to 0 for every node
-        # Reset any nodes that have satisfied 'reset_stateful_function_when' conditions.
-        if not reset_stateful_functions_to:
-            reset_stateful_functions_to = {}
-
-        for node in self.nodes:
-            node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TRIAL, 0)
-            if node.parameters.has_initializers._get(context):
+            # Generate first frame of animation without any active_items
+            if self._animate is not False:
+                # If context fails, the scheduler has no data for it yet.
+                # It also may be the first, so fall back to default execution_id
                 try:
-                    if (
-                        node.reset_stateful_function_when.is_satisfied(
-                            scheduler=execution_scheduler,
-                            context=context
-                        )
-                    ):
-                        vals = reset_stateful_functions_to.get(node, [None])
-                        try:
-                            node.reset(**vals, context=context)
-                        except TypeError:
-                            node.reset(*vals, context=context)
-                except AttributeError:
-                    pass
+                    self._animate_execution(INITIAL_FRAME, context)
+                except KeyError:
+                    old_eid = context.execution_id
+                    context.execution_id = self.default_execution_id
+                    self._animate_execution(INITIAL_FRAME, context)
+                    context.execution_id = old_eid
 
-        # FIX 5/28/20
-        context.remove_flag(ContextFlags.PREPARING)
+            # Set num_executions.TRIAL to 0 for every node
+            # Reset any nodes that have satisfied 'reset_stateful_function_when' conditions.
+            if not reset_stateful_functions_to:
+                reset_stateful_functions_to = {}
 
-        # EXECUTE INPUT CIM ********************************************************************************************
+            for node in self.nodes:
+                node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TRIAL, 0)
+                if node.parameters.has_initializers._get(context):
+                    try:
+                        if (
+                            node.reset_stateful_function_when.is_satisfied(
+                                scheduler=execution_scheduler,
+                                context=context
+                            )
+                        ):
+                            vals = reset_stateful_functions_to.get(node, [None])
+                            try:
+                                node.reset(**vals, context=context)
+                            except TypeError:
+                                node.reset(*vals, context=context)
+                    except AttributeError:
+                        pass
 
-        # FIX: 6/12/19 MOVE TO EXECUTE BELOW?
-        # Handles Input CIM and Parameter CIM execution.
-        #
-        # FIX: 8/21/19
-        # If self is a nested composition, its input CIM will obtain its value in one of two ways,
-        # depending on whether or not it is being executed within a simulation.
-        # If it is a simulation, then we need to use the _build_variable_for_input_CIM method, which parses the inputs
-        # argument of the execute method into a suitable shape for the input ports of the input_CIM.
-        # If it is not a simulation, we can simply execute the input CIM.
-        #
-        # If self is an unnested composition, we must update the input ports for any input nodes that are Compositions.
-        # This is done to update the variable for their input CIMs, which allows the _adjust_execution_stimuli
-        # method to properly validate input for those nodes.
-        # -DS
+            # FIX 5/28/20
+            context.remove_flag(ContextFlags.PREPARING)
 
-        context.execution_phase = ContextFlags.PROCESSING
-        if inputs is not None:
-            inputs = self._validate_execution_inputs(inputs)
-            build_CIM_input = self._build_variable_for_input_CIM(inputs)
+            # EXECUTE INPUT CIM ********************************************************************************************
 
-        if execution_mode:
-            _comp_ex.execute_node(self.input_CIM, inputs)
-            # FIXME: parameter_CIM should be executed here as well,
-            #        but node execution of nested compositions with
-            #        outside control is not supported yet.
-            assert not nested or len(self.parameter_CIM.afferents) == 0
-        elif nested:
-            # check that inputs are specified - autodiff does not in some cases
-            if ContextFlags.SIMULATION_MODE in context.runmode and inputs is not None:
-                self.input_CIM.execute(build_CIM_input, context=context)
+            # FIX: 6/12/19 MOVE TO EXECUTE BELOW?
+            # Handles Input CIM and Parameter CIM execution.
+            #
+            # FIX: 8/21/19
+            # If self is a nested composition, its input CIM will obtain its value in one of two ways,
+            # depending on whether or not it is being executed within a simulation.
+            # If it is a simulation, then we need to use the _build_variable_for_input_CIM method, which parses the inputs
+            # argument of the execute method into a suitable shape for the input ports of the input_CIM.
+            # If it is not a simulation, we can simply execute the input CIM.
+            #
+            # If self is an unnested composition, we must update the input ports for any input nodes that are Compositions.
+            # This is done to update the variable for their input CIMs, which allows the _adjust_execution_stimuli
+            # method to properly validate input for those nodes.
+            # -DS
+
+            context.execution_phase = ContextFlags.PROCESSING
+            if inputs is not None:
+                inputs = self._validate_execution_inputs(inputs)
+                build_CIM_input = self._build_variable_for_input_CIM(inputs)
+
+            if execution_mode:
+                _comp_ex.execute_node(self.input_CIM, inputs)
+                # FIXME: parameter_CIM should be executed here as well,
+                #        but node execution of nested compositions with
+                #        outside control is not supported yet.
+                assert not nested or len(self.parameter_CIM.afferents) == 0
+            elif nested:
+                # check that inputs are specified - autodiff does not in some cases
+                if ContextFlags.SIMULATION_MODE in context.runmode and inputs is not None:
+                    self.input_CIM.execute(build_CIM_input, context=context)
+                else:
+                    assert inputs is None, "Ignoring composition input!"
+                    self.input_CIM.execute(context=context)
+                self.parameter_CIM.execute(context=context)
             else:
-                assert inputs is None, "Ignoring composition input!"
-                self.input_CIM.execute(context=context)
-            self.parameter_CIM.execute(context=context)
-        else:
-            self.input_CIM.execute(build_CIM_input, context=context)
+                self.input_CIM.execute(build_CIM_input, context=context)
 
-            # Update nested compositions
-            for comp in (node for node in self.get_nodes_by_role(NodeRole.INPUT) if isinstance(node, Composition)):
-                for port in comp.input_ports:
-                    port._update(context=context)
+                # Update nested compositions
+                for comp in (node for node in self.get_nodes_by_role(NodeRole.INPUT) if isinstance(node, Composition)):
+                    for port in comp.input_ports:
+                        port._update(context=context)
 
-        # FIX: 6/12/19 Deprecate?
-        # Manage input clamping
+            # FIX: 6/12/19 Deprecate?
+            # Manage input clamping
 
-        # 1 because call_before_pass is called before the main
-        # scheduler loop to ensure it happens regardless of whether
-        # the scheduler terminates a trial immediately
-        next_pass_before = 1
-        next_pass_after = 1
-        last_pass = None
+            # 1 because call_before_pass is called before the main
+            # scheduler loop to ensure it happens regardless of whether
+            # the scheduler terminates a trial immediately
+            next_pass_before = 1
+            next_pass_after = 1
+            last_pass = None
 
-        if clamp_input:
-            soft_clamp_inputs = self._identify_clamp_inputs(SOFT_CLAMP, clamp_input, input_nodes)
-            hard_clamp_inputs = self._identify_clamp_inputs(HARD_CLAMP, clamp_input, input_nodes)
-            pulse_clamp_inputs = self._identify_clamp_inputs(PULSE_CLAMP, clamp_input, input_nodes)
-            no_clamp_inputs = self._identify_clamp_inputs(NO_CLAMP, clamp_input, input_nodes)
+            if clamp_input:
+                soft_clamp_inputs = self._identify_clamp_inputs(SOFT_CLAMP, clamp_input, input_nodes)
+                hard_clamp_inputs = self._identify_clamp_inputs(HARD_CLAMP, clamp_input, input_nodes)
+                pulse_clamp_inputs = self._identify_clamp_inputs(PULSE_CLAMP, clamp_input, input_nodes)
+                no_clamp_inputs = self._identify_clamp_inputs(NO_CLAMP, clamp_input, input_nodes)
 
-        # Animate input_CIM
-        # FIX: COORDINATE WITH REFACTORING OF PROCESSING/CONTROL CONTEXT
-        #      (NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THAT)
-        if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
-            self._animate_execution(self.input_CIM, context)
-        # FIX: END
-        context.remove_flag(ContextFlags.PROCESSING)
+            # Animate input_CIM
+            # FIX: COORDINATE WITH REFACTORING OF PROCESSING/CONTROL CONTEXT
+            #      (NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THAT)
+            if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
+                self._animate_execution(self.input_CIM, context)
+            # FIX: END
+            context.remove_flag(ContextFlags.PROCESSING)
 
-        # EXECUTE CONTROLLER (if specified for BEFORE) *****************************************************************
+            # EXECUTE CONTROLLER (if specified for BEFORE) *****************************************************************
 
-        # Execute controller --------------------------------------------------------
+            # Execute controller --------------------------------------------------------
 
-        try:
-            _comp_ex
-        except NameError:
-            _comp_ex = None
-        # IMPLEMENTATION NOTE:
-        # The BEFORE Run controller execution takes place here, because we can't execute the controller until after
-        # setup has occurred for the Input CIM, whereas the AFTER Run controller execution takes place in the run
-        # method, because there's no way to tell from within the execute method whether or not we are at the last trial
-        # of the run.
-        if (self.controller_time_scale == TimeScale.RUN and
-            scheduler.clock.time.trial == 0):
-                self._execute_controller(
-                    relative_order=BEFORE,
-                    execution_mode=execution_mode,
-                    _comp_ex=_comp_ex,
-                    context=context
-                )
-        elif self.controller_time_scale == TimeScale.TRIAL:
-            self._execute_controller(
-                relative_order=BEFORE,
-                execution_mode=execution_mode,
-                _comp_ex=_comp_ex,
-                context=context
-            )
-
-        # EXECUTE EACH EXECUTION SET *********************************************************************************
-
-        # PREPROCESS (get inputs, call_before_pass, animate first frame) ----------------------------------
-
-        context.execution_phase = ContextFlags.PROCESSING
-
-        try:
-            _comp_ex
-        except NameError:
-            _comp_ex = None
-
-        if call_before_pass:
-            call_with_pruned_args(call_before_pass, context=context)
-
-        if self.controller_time_scale == TimeScale.PASS:
-            self._execute_controller(
-                relative_order=BEFORE,
-                execution_mode=execution_mode,
-                _comp_ex=_comp_ex,
-                context=context
-            )
-
-        # GET execution_set -------------------------------------------------------------------------
-        # run scheduler to receive sets of nodes that may be executed at this time step in any order
-        execution_sets = execution_scheduler.run(termination_conds=termination_processing,
-                                                      context=context,
-                                                      skip_trial_time_increment=True,
-                                                      )
-        if context.runmode == ContextFlags.SIMULATION_MODE:
-            for i in range(scheduler.clock.time.time_step):
-                execution_sets.__next__()
-
-        for next_execution_set in execution_sets:
-
-            # SETUP EXECUTION ----------------------------------------------------------------------------
-
-            # IMPLEMENTATION NOTE KDM 1/15/20:
-            # call_*after*_pass is called here because we can't tell at the end of this code block whether a PASS has
-            # ended or not. The scheduler only modifies the pass after we receive an execution_set. So, we only know a
-            # PASS has ended in retrospect after the scheduler has changed the clock to indicate it. So, we have to run
-            # call_after_pass before the next PASS (here) or after this code block (see call to call_after_pass below)
-            curr_pass = execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL)
-            new_pass = False
-            if curr_pass != last_pass:
-                new_pass = True
-                last_pass = curr_pass
-            if next_pass_after == curr_pass:
-                if call_after_pass:
-                    logger.debug(f'next_pass_after {next_pass_after}\tscheduler pass {curr_pass}')
-                    call_with_pruned_args(call_after_pass, context=context)
-                if self.controller_time_scale == TimeScale.PASS:
-                    self._execute_controller(
-                        relative_order=AFTER,
-                        execution_mode=execution_mode,
-                        _comp_ex=_comp_ex,
-                        context=context
-                    )
-                next_pass_after += 1
-            if next_pass_before == curr_pass:
-                if call_before_pass:
-                    call_with_pruned_args(call_before_pass, context=context)
-                    logger.debug(f'next_pass_before {next_pass_before}\tscheduler pass {curr_pass}')
-                if self.controller_time_scale == TimeScale.PASS:
+            try:
+                _comp_ex
+            except NameError:
+                _comp_ex = None
+            # IMPLEMENTATION NOTE:
+            # The BEFORE Run controller execution takes place here, because we can't execute the controller until after
+            # setup has occurred for the Input CIM, whereas the AFTER Run controller execution takes place in the run
+            # method, because there's no way to tell from within the execute method whether or not we are at the last trial
+            # of the run.
+            if (self.controller_time_scale == TimeScale.RUN and
+                scheduler.clock.time.trial == 0):
                     self._execute_controller(
                         relative_order=BEFORE,
                         execution_mode=execution_mode,
                         _comp_ex=_comp_ex,
                         context=context
                     )
-                next_pass_before += 1
-
-            if call_before_time_step:
-                call_with_pruned_args(call_before_time_step, context=context)
-
-            if self.controller_time_scale == TimeScale.TIME_STEP:
+            elif self.controller_time_scale == TimeScale.TRIAL:
                 self._execute_controller(
                     relative_order=BEFORE,
                     execution_mode=execution_mode,
@@ -9096,207 +9035,333 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context=context
                 )
 
-            # MANAGE EXECUTION OF FEEDBACK / CYCLIC GRAPHS ------------------------------------------------
-            # Set up storage of all node values *before* the start of each timestep
-            # If nodes within a timestep are connected by projections, those projections must pass their senders'
-            # values from the beginning of the timestep (i.e. their "frozen values")
-            # This ensures that the order in which nodes execute does not affect the results of this timestep
-            frozen_values = {}
-            new_values = {}
-            if execution_mode:
-                _comp_ex.freeze_values()
+            # EXECUTE EACH EXECUTION SET *********************************************************************************
 
-            # PURGE LEARNING IF NOT ENABLED ----------------------------------------------------------------
-            # If learning is turned off, check for any learning related nodes and remove them from the execution set
-            if not self._is_learning(context):
-                next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
+            # PREPROCESS (get inputs, call_before_pass, animate first frame) ----------------------------------
 
-            # INITIALIZE self._time_step_report AND SHOW TIME_STEP DIVIDER
-            nodes_to_report = any(node.reportOutputPref for node in next_execution_set) or show_output is FULL
-            progress.report_output(self, progress_report, execution_scheduler, show_output, 'time_step_init', context,
-                                   nodes_to_report=True)
+            context.execution_phase = ContextFlags.PROCESSING
 
-            # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            if self._animate is not False and self._animate_unit == EXECUTION_SET:
-                context.execution_phase = ContextFlags.PROCESSING
-                self._animate_execution(next_execution_set, context)
+            try:
+                _comp_ex
+            except NameError:
+                _comp_ex = None
 
-            # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
+            if call_before_pass:
+                call_with_pruned_args(call_before_pass, context=context)
 
+            if self.controller_time_scale == TimeScale.PASS:
+                self._execute_controller(
+                    relative_order=BEFORE,
+                    execution_mode=execution_mode,
+                    _comp_ex=_comp_ex,
+                    context=context
+                )
 
-            # execute each node with EXECUTING in context
-            for (node_idx, node) in enumerate(next_execution_set):
+            # GET execution_set -------------------------------------------------------------------------
+            # run scheduler to receive sets of nodes that may be executed at this time step in any order
+            execution_sets = execution_scheduler.run(termination_conds=termination_processing,
+                                                          context=context,
+                                                          skip_trial_time_increment=True,
+                                                          )
+            if context.runmode == ContextFlags.SIMULATION_MODE:
+                for i in range(scheduler.clock.time.time_step):
+                    execution_sets.__next__()
 
-                node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TIME_STEP, 0)
-                if new_pass:
-                    node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.PASS, 0)
+            for next_execution_set in execution_sets:
 
+                # SETUP EXECUTION ----------------------------------------------------------------------------
 
-                # Store values of all nodes in this execution_set for use by other nodes in the execution set
-                #    throughout this timestep (e.g., for recurrent Projections)
-                frozen_values[node] = node.get_output_values(context)
+                # IMPLEMENTATION NOTE KDM 1/15/20:
+                # call_*after*_pass is called here because we can't tell at the end of this code block whether a PASS has
+                # ended or not. The scheduler only modifies the pass after we receive an execution_set. So, we only know a
+                # PASS has ended in retrospect after the scheduler has changed the clock to indicate it. So, we have to run
+                # call_after_pass before the next PASS (here) or after this code block (see call to call_after_pass below)
+                curr_pass = execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL)
+                new_pass = False
+                if curr_pass != last_pass:
+                    new_pass = True
+                    last_pass = curr_pass
+                if next_pass_after == curr_pass:
+                    if call_after_pass:
+                        logger.debug(f'next_pass_after {next_pass_after}\tscheduler pass {curr_pass}')
+                        call_with_pruned_args(call_after_pass, context=context)
+                    if self.controller_time_scale == TimeScale.PASS:
+                        self._execute_controller(
+                            relative_order=AFTER,
+                            execution_mode=execution_mode,
+                            _comp_ex=_comp_ex,
+                            context=context
+                        )
+                    next_pass_after += 1
+                if next_pass_before == curr_pass:
+                    if call_before_pass:
+                        call_with_pruned_args(call_before_pass, context=context)
+                        logger.debug(f'next_pass_before {next_pass_before}\tscheduler pass {curr_pass}')
+                    if self.controller_time_scale == TimeScale.PASS:
+                        self._execute_controller(
+                            relative_order=BEFORE,
+                            execution_mode=execution_mode,
+                            _comp_ex=_comp_ex,
+                            context=context
+                        )
+                    next_pass_before += 1
 
-                # FIX: 6/12/19 Deprecate?
-                # Handle input clamping
-                if node in input_nodes:
-                    if clamp_input:
-                        if node in hard_clamp_inputs:
-                            # clamp = HARD_CLAMP --> "turn off" recurrent projection
-                            if hasattr(node, "recurrent_projection"):
-                                node.recurrent_projection.sender.parameters.value._set([0.0], context)
-                        elif node in no_clamp_inputs:
-                            for input_port in node.input_ports:
-                                self.input_CIM_ports[input_port][1].parameters.value._set(0.0, context)
+                if call_before_time_step:
+                    call_with_pruned_args(call_before_time_step, context=context)
 
-                # EXECUTE A MECHANISM ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                if self.controller_time_scale == TimeScale.TIME_STEP:
+                    self._execute_controller(
+                        relative_order=BEFORE,
+                        execution_mode=execution_mode,
+                        _comp_ex=_comp_ex,
+                        context=context
+                    )
 
-                if isinstance(node, Mechanism):
+                # MANAGE EXECUTION OF FEEDBACK / CYCLIC GRAPHS ------------------------------------------------
+                # Set up storage of all node values *before* the start of each timestep
+                # If nodes within a timestep are connected by projections, those projections must pass their senders'
+                # values from the beginning of the timestep (i.e. their "frozen values")
+                # This ensures that the order in which nodes execute does not affect the results of this timestep
+                frozen_values = {}
+                new_values = {}
+                if execution_mode:
+                    _comp_ex.freeze_values()
 
-                    execution_runtime_params = {}
-                    if node in runtime_params:
-                        execution_runtime_params.update(self._get_satisfied_runtime_param_values(runtime_params[node],
-                                                                                                 execution_scheduler,
-                                                                                                 context))
+                # PURGE LEARNING IF NOT ENABLED ----------------------------------------------------------------
+                # If learning is turned off, check for any learning related nodes and remove them from the execution set
+                if not self._is_learning(context):
+                    next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
-                    # (Re)set context.execution_phase to PROCESSING by default
+                # INITIALIZE self._time_step_report AND SHOW TIME_STEP DIVIDER
+                nodes_to_report = any(node.reportOutputPref for node in next_execution_set) or show_output is FULL
+                progress.report_output(self, progress_report, execution_scheduler, show_output, 'time_step_init', context,
+                                       nodes_to_report=True)
+
+                # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                if self._animate is not False and self._animate_unit == EXECUTION_SET:
                     context.execution_phase = ContextFlags.PROCESSING
+                    self._animate_execution(next_execution_set, context)
 
-                    # Set to LEARNING if Mechanism receives any PathwayProjections that are being learned
-                    #   for which learning_enabled == True or ONLINE (i.e., not False or AFTER)
-                    #   Implementation Note: RecurrentTransferMechanisms are special cased as the
-                    #   AutoAssociativeMechanism should be handling learning - not the RTM itself.
-                    if self._is_learning(context) and not isinstance(node, RecurrentTransferMechanism):
-                        projections = set(self.projections).intersection(set(node.path_afferents))
-                        if any([p for p in projections if
-                                any([a for a in p.parameter_ports[MATRIX].mod_afferents
-                                     if (hasattr(a, 'learning_enabled') and a.learning_enabled in {True, ONLINE})])]):
-                            context.replace_flag(ContextFlags.PROCESSING, ContextFlags.LEARNING)
-
-                    # Execute Mechanism
-                    if execution_mode:
-                        _comp_ex.execute_node(node)
-                    else:
-                        if node is not self.controller:
-                            if nested and node in self.get_nodes_by_role(NodeRole.INPUT):
-                                for port in node.input_ports:
-                                    port._update(context=context)
-                            node.execute(context=context,
-                                         runtime_params=execution_runtime_params,
-                                         )
-                        # Reset runtim_params
-                        # Reset any specified for Mechanism
-                        if context.execution_id in node._runtime_params_reset:
-                            for key in node._runtime_params_reset[context.execution_id]:
-                                node._set_parameter_value(key, node._runtime_params_reset[context.execution_id][key],
-                                                          context)
-                        node._runtime_params_reset[context.execution_id] = {}
-                        # Reset any specified for Mechanism's function
-                        if context.execution_id in node.function._runtime_params_reset:
-                            for key in node.function._runtime_params_reset[context.execution_id]:
-                                node.function._set_parameter_value(
-                                        key,
-                                        node.function._runtime_params_reset[context.execution_id][key],
-                                        context)
-                        node.function._runtime_params_reset[context.execution_id] = {}
-
-                    # Set execution_phase for node's context back to IDLE
-                    if self._is_learning(context):
-                        context.replace_flag(ContextFlags.LEARNING, ContextFlags.PROCESSING)
-                    context.remove_flag(ContextFlags.PROCESSING)
-
-                # EXECUTE A NESTED COMPOSITION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-                elif isinstance(node, Composition):
-
-                    if execution_mode:
-                        # Invoking nested composition passes data via Python
-                        # structures. Make sure all sources get their latest values
-                        srcs = (proj.sender.owner for proj in node.input_CIM.afferents)
-                        for srnode in srcs:
-                            if srnode is self.input_CIM or srnode in self.nodes:
-                                data_loc = srnode
-                            else:
-                                # Consuming output from another nested composition
-                                assert srnode.composition in self.nodes
-                                assert srnode is srnode.composition.output_CIM
-                                data_loc = srnode.composition
-
-                            # Set current Python values to LLVM results
-                            data = _comp_ex.extract_frozen_node_output(data_loc)
-                            for op, v in zip(srnode.output_ports, data):
-                                op.parameters.value._set(
-                                  v, context, skip_history=True, skip_log=True)
-
-                        # Update afferent projections and input ports.
-                        node.input_CIM._update_input_ports(context=context)
-
-                    # Pass outer context to nested Composition
-                    context.composition = node
-                    if ContextFlags.SIMULATION_MODE in context.runmode:
-                        is_simulating = True
-                        context.remove_flag(ContextFlags.SIMULATION_MODE)
-                    else:
-                        is_simulating = False
-
-                    # Run node-level compiled nested composition
-                    # only if there are no control projections
-                    nested_execution_mode = execution_mode \
-                        if len(node.parameter_CIM.afferents) == 0 else False
-                    ret = node.execute(context=context,
-                                       execution_mode=nested_execution_mode,
-                                       progress=progress,
-                                       progress_report=progress_report,
-                                       show_output=show_output)
-
-                    # Get output info from nested execution
-                    if execution_mode:
-                        # Update result in binary data structure
-                        _comp_ex.insert_node_output(node, ret)
-
-                    if is_simulating:
-                        context.add_flag(ContextFlags.SIMULATION_MODE)
-
-                    context.composition = self
-
-                # ANIMATE node ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-                if self._animate is not False and self._animate_unit == COMPONENT:
-                    self._animate_execution(node, context)
-
-                # Add report for node to time_step_report
-                progress.report_output(self,
-                                       progress_report,
-                                       execution_scheduler,
-                                       show_output,
-                                       'node',
-                                       context,
-                                       node=node)
-
-                # MANAGE INPUTS (for next execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-                # FIX: 6/12/19 Deprecate?
-                # Handle input clamping
-                if node in input_nodes:
-                    if clamp_input:
-                        if node in pulse_clamp_inputs:
-                            for input_port in node.input_ports:
-                                # clamp = None --> "turn off" input node
-                                self.input_CIM_ports[input_port][1].parameters.value._set(0, context)
-
-                # Store new value generated by node,
-                #    then set back to frozen value for use by other nodes in execution_set
-                new_values[node] = node.get_output_values(context)
-                for i in range(len(node.output_ports)):
-                    node.output_ports[i].parameters.value._set(frozen_values[node][i], context,
-                                                               skip_history=True, skip_log=True)
+                # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
 
 
-            # Set all nodes to new values
-            for node in next_execution_set:
-                for i in range(len(node.output_ports)):
-                    node.output_ports[i].parameters.value._set(new_values[node][i], context,
-                                                               skip_history=True, skip_log=True)
+                # execute each node with EXECUTING in context
+                for (node_idx, node) in enumerate(next_execution_set):
 
-            if self.controller_time_scale == TimeScale.TIME_STEP:
+                    node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TIME_STEP, 0)
+                    if new_pass:
+                        node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.PASS, 0)
+
+
+                    # Store values of all nodes in this execution_set for use by other nodes in the execution set
+                    #    throughout this timestep (e.g., for recurrent Projections)
+                    frozen_values[node] = node.get_output_values(context)
+
+                    # FIX: 6/12/19 Deprecate?
+                    # Handle input clamping
+                    if node in input_nodes:
+                        if clamp_input:
+                            if node in hard_clamp_inputs:
+                                # clamp = HARD_CLAMP --> "turn off" recurrent projection
+                                if hasattr(node, "recurrent_projection"):
+                                    node.recurrent_projection.sender.parameters.value._set([0.0], context)
+                            elif node in no_clamp_inputs:
+                                for input_port in node.input_ports:
+                                    self.input_CIM_ports[input_port][1].parameters.value._set(0.0, context)
+
+                    # EXECUTE A MECHANISM ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+                    if isinstance(node, Mechanism):
+
+                        execution_runtime_params = {}
+                        if node in runtime_params:
+                            execution_runtime_params.update(self._get_satisfied_runtime_param_values(runtime_params[node],
+                                                                                                     execution_scheduler,
+                                                                                                     context))
+
+                        # (Re)set context.execution_phase to PROCESSING by default
+                        context.execution_phase = ContextFlags.PROCESSING
+
+                        # Set to LEARNING if Mechanism receives any PathwayProjections that are being learned
+                        #   for which learning_enabled == True or ONLINE (i.e., not False or AFTER)
+                        #   Implementation Note: RecurrentTransferMechanisms are special cased as the
+                        #   AutoAssociativeMechanism should be handling learning - not the RTM itself.
+                        if self._is_learning(context) and not isinstance(node, RecurrentTransferMechanism):
+                            projections = set(self.projections).intersection(set(node.path_afferents))
+                            if any([p for p in projections if
+                                    any([a for a in p.parameter_ports[MATRIX].mod_afferents
+                                         if (hasattr(a, 'learning_enabled') and a.learning_enabled in {True, ONLINE})])]):
+                                context.replace_flag(ContextFlags.PROCESSING, ContextFlags.LEARNING)
+
+                        # Execute Mechanism
+                        if execution_mode:
+                            _comp_ex.execute_node(node)
+                        else:
+                            if node is not self.controller:
+                                if nested and node in self.get_nodes_by_role(NodeRole.INPUT):
+                                    for port in node.input_ports:
+                                        port._update(context=context)
+                                # MODIFIED 2/28/21 OLD:
+                                node.execute(context=context,
+                                             runtime_params=execution_runtime_params,
+                                             )
+                                # # MODIFIED 2/28/21 NEW:
+                                # kwargs = {'context':context, 'runtime_params':execution_runtime_params}
+                                # if isinstance(node, Composition):
+                                #     kwargs.update({'progress':progress, 'progress_report':progress_report,
+                                #                    'show_output':show_output})
+                                # node.execute(**kwargs)
+                                # MODIFIED 2/28/21 END
+                            # Reset runtim_params
+                            # Reset any specified for Mechanism
+                            if context.execution_id in node._runtime_params_reset:
+                                for key in node._runtime_params_reset[context.execution_id]:
+                                    node._set_parameter_value(key, node._runtime_params_reset[context.execution_id][key],
+                                                              context)
+                            node._runtime_params_reset[context.execution_id] = {}
+                            # Reset any specified for Mechanism's function
+                            if context.execution_id in node.function._runtime_params_reset:
+                                for key in node.function._runtime_params_reset[context.execution_id]:
+                                    node.function._set_parameter_value(
+                                            key,
+                                            node.function._runtime_params_reset[context.execution_id][key],
+                                            context)
+                            node.function._runtime_params_reset[context.execution_id] = {}
+
+                        # Set execution_phase for node's context back to IDLE
+                        if self._is_learning(context):
+                            context.replace_flag(ContextFlags.LEARNING, ContextFlags.PROCESSING)
+                        context.remove_flag(ContextFlags.PROCESSING)
+
+                    # EXECUTE A NESTED COMPOSITION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+                    elif isinstance(node, Composition):
+
+                        if execution_mode:
+                            # Invoking nested composition passes data via Python
+                            # structures. Make sure all sources get their latest values
+                            srcs = (proj.sender.owner for proj in node.input_CIM.afferents)
+                            for srnode in srcs:
+                                if srnode is self.input_CIM or srnode in self.nodes:
+                                    data_loc = srnode
+                                else:
+                                    # Consuming output from another nested composition
+                                    assert srnode.composition in self.nodes
+                                    assert srnode is srnode.composition.output_CIM
+                                    data_loc = srnode.composition
+
+                                # Set current Python values to LLVM results
+                                data = _comp_ex.extract_frozen_node_output(data_loc)
+                                for op, v in zip(srnode.output_ports, data):
+                                    op.parameters.value._set(
+                                      v, context, skip_history=True, skip_log=True)
+
+                            # Update afferent projections and input ports.
+                            node.input_CIM._update_input_ports(context=context)
+
+                        # Pass outer context to nested Composition
+                        context.composition = node
+                        if ContextFlags.SIMULATION_MODE in context.runmode:
+                            is_simulating = True
+                            context.remove_flag(ContextFlags.SIMULATION_MODE)
+                        else:
+                            is_simulating = False
+
+                        # Run node-level compiled nested composition
+                        # only if there are no control projections
+                        nested_execution_mode = execution_mode \
+                            if len(node.parameter_CIM.afferents) == 0 else False
+                        # MODIFIED 2/28/21 NEW:
+                        if isinstance(node, Composition):
+                            node_progress_report = None
+                        # MODIFIED 2/28/21 END
+                        ret = node.execute(context=context,
+                                           execution_mode=nested_execution_mode,
+                                           progress=progress,
+                                           progress_report=node_progress_report,
+                                           show_output=show_output)
+
+                        # Get output info from nested execution
+                        if execution_mode:
+                            # Update result in binary data structure
+                            _comp_ex.insert_node_output(node, ret)
+
+                        if is_simulating:
+                            context.add_flag(ContextFlags.SIMULATION_MODE)
+
+                        context.composition = self
+
+                    # ANIMATE node ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                    if self._animate is not False and self._animate_unit == COMPONENT:
+                        self._animate_execution(node, context)
+
+                    # Add report for node to time_step_report
+                    progress.report_output(self,
+                                           progress_report,
+                                           execution_scheduler,
+                                           show_output,
+                                           'node',
+                                           context,
+                                           node=node)
+
+                    # MANAGE INPUTS (for next execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+                    # FIX: 6/12/19 Deprecate?
+                    # Handle input clamping
+                    if node in input_nodes:
+                        if clamp_input:
+                            if node in pulse_clamp_inputs:
+                                for input_port in node.input_ports:
+                                    # clamp = None --> "turn off" input node
+                                    self.input_CIM_ports[input_port][1].parameters.value._set(0, context)
+
+                    # Store new value generated by node,
+                    #    then set back to frozen value for use by other nodes in execution_set
+                    new_values[node] = node.get_output_values(context)
+                    for i in range(len(node.output_ports)):
+                        node.output_ports[i].parameters.value._set(frozen_values[node][i], context,
+                                                                   skip_history=True, skip_log=True)
+
+
+                # Set all nodes to new values
+                for node in next_execution_set:
+                    for i in range(len(node.output_ports)):
+                        node.output_ports[i].parameters.value._set(new_values[node][i], context,
+                                                                   skip_history=True, skip_log=True)
+
+                if self.controller_time_scale == TimeScale.TIME_STEP:
+                    self._execute_controller(
+                        relative_order=AFTER,
+                        execution_mode=execution_mode,
+                        _comp_ex=_comp_ex,
+                        context=context
+                    )
+
+                if call_after_time_step:
+                    call_with_pruned_args(call_after_time_step, context=context)
+
+
+                # Add report for time_step to trial_report
+                progress.report_output(self, progress_report, execution_scheduler, show_output, 'time_step', context,
+                                       nodes_to_report= nodes_to_report)
+
+            context.remove_flag(ContextFlags.PROCESSING)
+
+            #Update matrix parameter of PathwayProjections being learned with learning_enabled==AFTER
+            from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+            if self._is_learning(context) and not isinstance(self, AutodiffComposition):
+                context.execution_phase = ContextFlags.LEARNING
+                for projection in [p for p in self.projections if
+                                   hasattr(p, 'has_learning_projection') and p.has_learning_projection]:
+                    matrix_parameter_port = projection.parameter_ports[MATRIX]
+                    if any([lp for lp in matrix_parameter_port.mod_afferents if lp.learning_enabled == AFTER]):
+                        matrix_parameter_port._update(context=context)
+                context.remove_flag(ContextFlags.LEARNING)
+
+            if call_after_pass:
+                call_with_pruned_args(call_after_pass, context=context)
+
+            if self.controller_time_scale == TimeScale.PASS:
                 self._execute_controller(
                     relative_order=AFTER,
                     execution_mode=execution_mode,
@@ -9304,76 +9369,48 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context=context
                 )
 
-            if call_after_time_step:
-                call_with_pruned_args(call_after_time_step, context=context)
+            # Animate output_CIM
+            # FIX: NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THIS -
+            #      COORDINATE WITH REFACTORING OF PROCESSING/CONTROL CONTEXT
+            if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
+                self._animate_execution(self.output_CIM, context)
+            # FIX: END
 
+            # EXECUTE CONTROLLER (if controller_mode == AFTER) ************************************************************
+            if self.controller_time_scale == TimeScale.TRIAL:
+                self._execute_controller(
+                    relative_order=AFTER,
+                    execution_mode=execution_mode,
+                    _comp_ex=_comp_ex,
+                    context=context
+                )
 
-            # Add report for time_step to trial_report
-            progress.report_output(self, progress_report, execution_scheduler, show_output, 'time_step', context,
-                                   nodes_to_report= nodes_to_report)
+            execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
-        context.remove_flag(ContextFlags.PROCESSING)
+            # REPORT RESULTS ***********************************************************************************************
 
-        #Update matrix parameter of PathwayProjections being learned with learning_enabled==AFTER
-        from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
-        if self._is_learning(context) and not isinstance(self, AutodiffComposition):
-            context.execution_phase = ContextFlags.LEARNING
-            for projection in [p for p in self.projections if
-                               hasattr(p, 'has_learning_projection') and p.has_learning_projection]:
-                matrix_parameter_port = projection.parameter_ports[MATRIX]
-                if any([lp for lp in matrix_parameter_port.mod_afferents if lp.learning_enabled == AFTER]):
-                    matrix_parameter_port._update(context=context)
-            context.remove_flag(ContextFlags.LEARNING)
+            # Extract result here
+            if execution_mode:
+                _comp_ex.freeze_values()
+                _comp_ex.execute_node(self.output_CIM)
+                return _comp_ex.extract_node_output(self.output_CIM)
 
-        if call_after_pass:
-            call_with_pruned_args(call_after_pass, context=context)
+            # Reset context flags
+            context.execution_phase = ContextFlags.PROCESSING
+            self.output_CIM.execute(context=context)
+            context.execution_phase = ContextFlags.IDLE
 
-        if self.controller_time_scale == TimeScale.PASS:
-            self._execute_controller(
-                relative_order=AFTER,
-                execution_mode=execution_mode,
-                _comp_ex=_comp_ex,
-                context=context
-            )
+            # Assign output_values
+            output_values = []
+            for port in self.output_CIM.output_ports:
+                output_values.append(port.parameters.value._get(context))
 
-        # Animate output_CIM
-        # FIX: NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THIS -
-        #      COORDINATE WITH REFACTORING OF PROCESSING/CONTROL CONTEXT
-        if self._animate is not False and SHOW_CIM in self._animate and self._animate[SHOW_CIM]:
-            self._animate_execution(self.output_CIM, context)
-        # FIX: END
+            # Report output for trial
+            progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial', context)
+            # MODIFIED 2/28/21 NEW:
+            progress.report_progress(self, progress_report, 0)
+            # # MODIFIED 2/28/21 END
 
-        # EXECUTE CONTROLLER (if controller_mode == AFTER) ************************************************************
-        if self.controller_time_scale == TimeScale.TRIAL:
-            self._execute_controller(
-                relative_order=AFTER,
-                execution_mode=execution_mode,
-                _comp_ex=_comp_ex,
-                context=context
-            )
-
-        execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
-
-        # REPORT RESULTS ***********************************************************************************************
-
-        # Extract result here
-        if execution_mode:
-            _comp_ex.freeze_values()
-            _comp_ex.execute_node(self.output_CIM)
-            return _comp_ex.extract_node_output(self.output_CIM)
-
-        # Reset context flags
-        context.execution_phase = ContextFlags.PROCESSING
-        self.output_CIM.execute(context=context)
-        context.execution_phase = ContextFlags.IDLE
-
-        # Assign output_values
-        output_values = []
-        for port in self.output_CIM.output_ports:
-            output_values.append(port.parameters.value._get(context))
-
-        # Report output for trial
-        progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial', context)
 
         return output_values
 

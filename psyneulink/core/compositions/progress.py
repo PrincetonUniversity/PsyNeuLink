@@ -24,10 +24,10 @@ class ProgressReport():
     Object used to package reporting for a call to Composition.run()
     """
 
-    def __init__(self, id, runmode, num_trials):
-        self.runmode = runmode  # indicates whether run is in DEFAULT_MODE or SIMULATION_MODE
+    def __init__(self, id, runmode_str, num_trials):
+        self.runmode_str = runmode_str  # indicates whether run is in DEFAULT_MODE or SIMULATION_MODE
         self.num_trials = num_trials
-        self.progress_report_id = id # used for task id in rich
+        self.rich_task_id = id # used for task id in rich
         self.trial_report = []
         self.time_step_report = []
 
@@ -46,8 +46,8 @@ class PNLProgress:
 
             show_progress = convert_to_list(show_progress)
 
-            cls._use_rich = False not in show_progress and (k in show_progress for k in {True, 'console'})
-            cls._use_pnl_view = False not in show_progress and (k in show_progress for k in {True, 'pnl_view'})
+            cls._use_rich = False not in show_progress and [k in show_progress for k in {True, 'console'}]
+            cls._use_pnl_view = False not in show_progress and 'pnl_view' in show_progress
             cls._show_simulations = False not in show_progress and 'simulations' in show_progress
 
             # Instantiate rich Progress object
@@ -148,31 +148,38 @@ class PNLProgress:
                                          start=start,
                                          visible=visible
                                          )
-            return ProgressReport(id, run_mode, num_trials)
+
+            self._progress_reports.append(ProgressReport(id, run_mode, num_trials))
+            report_num = len(self._progress_reports)-1
+
+            return report_num
 
             # FIX: ??KEEP:
 
-    def report_progress(self, caller, progress_report, trial_num):
+    def report_progress(self, caller, report_num, trial_num):
+        progress_report = self._progress_reports[report_num]
         if self._use_rich:
             if isinstance(trial_num, int):
                 if progress_report.num_trials:
                     num_trials_str = f' of {progress_report.num_trials}'
                 else:
                     num_trials_str = ''
-                self._rich_progress.update(progress_report.progress_report_id,
-                                      description=f'{caller.name}: '
-                                                  f'{progress_report.runmode}ed {trial_num+1}{num_trials_str} trials',
+                self._rich_progress.update(progress_report.rich_task_id,
+                                      description=f'{caller.name}: {progress_report.runmode_str}ed '
+                                                  f'{trial_num+1}{num_trials_str} trials',
                                       advance=1,
                                       refresh=True)
             else:
                 assert False, f"Invalid 'trial_num' arg to PNLProgress.report_progress from {caller.name}: " \
                               f"'{trial_num}'"
 
-    def report_output(self, caller, progress_report, scheduler, show_output, content, context, nodes_to_report=False,
+    def report_output(self, caller, report_num, scheduler, show_output, content, context, nodes_to_report=False,
                       node=None):
 
-        if not progress_report:
+        if report_num is None:
             return
+
+        progress_report = self._progress_reports[report_num]
 
         # if it is None, defer to Composition's # reportOutputPref
         if show_output is not False:  # if it is False, leave as is to suppress output
