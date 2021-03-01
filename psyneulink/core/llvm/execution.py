@@ -692,4 +692,4 @@ class CompExecution(CUDAExecution):
         bin_func.cuda_call(*cuda_args, threads=len(allocations))
         ct_results = self.download_ctype(cuda_args[3], out_ty, 'result')
 
-        return ct_allocations.contents, ct_results
+        return ct_results

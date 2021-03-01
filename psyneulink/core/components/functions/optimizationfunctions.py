@@ -1585,12 +1585,13 @@ class GridSearch(OptimizationFunction):
         assert ocm is ocm.agent_rep.controller
         # Compiled evaluate expects the same variable as mech function
         new_variable = [ip.parameters.value.get(context) for ip in ocm.input_ports]
+        num_evals = np.prod([d.num for d in self.search_space])
+
         # Map allocations to values
         comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
-        ct_alloc, ct_values = comp_exec.cuda_evaluate(new_variable,
-                                                      self.search_space)
+        ct_values = comp_exec.cuda_evaluate(new_variable, self.search_space)
 
-        assert len(ct_values) == len(ct_alloc)
+        assert len(ct_values) == num_evals
         # Reduce array of values to min/max
         # select_min params are:
         # params, state, min_sample_ptr, sample_ptr, min_value_ptr, value_ptr, opt_count_ptr, count
@@ -1598,6 +1599,8 @@ class GridSearch(OptimizationFunction):
         ct_param = bin_func.byref_arg_types[0](*self._get_param_initializer(context))
         ct_state = bin_func.byref_arg_types[1](*self._get_state_initializer(context))
         ct_opt_sample = bin_func.byref_arg_types[2](float("NaN"))
+        grid = itertools.product(*self.search_space)
+        ct_alloc = (bin_func.byref_arg_types[3] * num_evals)(*pnlvm.execution._tupleize(grid))
         ct_opt_value = bin_func.byref_arg_types[4]()
         ct_opt_count = bin_func.byref_arg_types[6](0)
         ct_start = bin_func.c_func.argtypes[7](0)
