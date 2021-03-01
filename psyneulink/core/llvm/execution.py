@@ -674,9 +674,9 @@ class CompExecution(CUDAExecution):
         ct_allocations = allocations.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[2] * len(allocations)))
 
         # Construct input variable
-        el_dty = _element_dtype(bin_func.byref_arg_types[4])
-        converted_variable = np.array(np.asfarray(x, dtype=el_dty) for x in variable)
-        ct_in = converted_variable.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[4]))
+        var_dty = _element_dtype(bin_func.byref_arg_types[4])
+        converted_variable = np.asfarray(np.concatenate(variable), dtype=var_dty)
+        self._uploaded_bytes['input'] += converted_variable.nbytes
 
         # Ouput is allocated on device, but we need the ctype.
         out_ty = bin_func.byref_arg_types[3] * len(allocations)
@@ -685,7 +685,7 @@ class CompExecution(CUDAExecution):
                      self.upload_ctype(ct_comp_state, 'state'),
                      self.upload_ctype(ct_allocations.contents, 'input'),
                      jit_engine.pycuda.driver.mem_alloc(ctypes.sizeof(out_ty)),
-                     self.upload_ctype(ct_in.contents, 'input'),
+                     jit_engine.pycuda.driver.In(converted_variable),
                      self.upload_ctype(ct_comp_data, 'data'),
                     )
 
