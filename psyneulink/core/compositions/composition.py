@@ -2335,50 +2335,47 @@ import enum
 import functools
 import itertools
 import logging
-import networkx
+import sys
 import typing
 import warnings
-import sys
-import re
-import types
-
-import numpy as np
-import typecheck as tc
-
-from PIL import Image
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction, currentframe
 
+import networkx
+import numpy as np
+import typecheck as tc
+from PIL import Image
+
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, EXECUTION_SET, SHOW_CIM, SHOW_CONTROLLER
-from psyneulink.core.compositions.progress import PNLProgress
 from psyneulink.core.components.component import Component, ComponentsMeta
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.transferfunctions import Identity
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
-from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
-from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
-from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
+from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
+from psyneulink.core.components.ports.inputport import InputPort, InputPortError
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.components.ports.parameterport import ParameterPort
+from psyneulink.core.components.ports.port import Port
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
+from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
+from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
-from psyneulink.core.components.ports.port import Port
-from psyneulink.core.components.ports.inputport import InputPort, InputPortError
-from psyneulink.core.components.ports.parameterport import ParameterPort
-from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
+from psyneulink.core.compositions.progress import PNLProgress
+from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, EXECUTION_SET, SHOW_CIM, SHOW_CONTROLLER
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROLLER, CONTROL_SIGNAL, DEFAULT, FEEDBACK, FULL, \
@@ -2392,21 +2389,21 @@ from psyneulink.core.globals.keywords import \
     SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, TARGET, TARGET_MECHANISM, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
+from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
+from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import Time, TimeScale
-from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
-from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
-from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
-    RecurrentTransferMechanism
+from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
+    AutoAssociativeLearningMechanism
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, MSE
 from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import \
     PredictionErrorMechanism
-from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
-    AutoAssociativeLearningMechanism
+from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
+    RecurrentTransferMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [
@@ -4123,7 +4120,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                is shorter than the longest one in the Composition).
 
        """
-        from psyneulink.core.compositions.pathway import PathwayRole
 
         # Clear old roles
         self.nodes_to_roles.update({k: set() for k in self.nodes_to_roles})
@@ -4313,7 +4309,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #     assert False, f"PROGRAM ERROR: unexpected problem in '_remove_node_role'."
 
     def _determine_pathway_roles(self, context=None):
-        from psyneulink.core.compositions.pathway import PathwayRole
         for pway in self.pathways:
             pway._assign_roles(self)
 
@@ -8780,11 +8775,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             execution_scheduler = scheduler or self.scheduler
 
-            # Report trial_num and Composition input
-            progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial_init', context)
-            # # MODIFIED 2/28/21 NEW:
-            # progress.report_progress(self, progress_report, 0)
-            # MODIFIED 2/28/21 END
+            # # MODIFIED 3/1/21 OLD: [MOVED TO AFTER INPUT ASSIGNMENT]
+            # # Report trial_num and Composition input
+            # progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial_init', context)
+            # # # MODIFIED 2/28/21 NEW:
+            # # progress.report_progress(self, progress_report, 0)
+            # # MODIFIED 2/28/21 END
+            # # MODIFIED 3/1/21 END
 
             # ASSIGNMENTS **************************************************************************************************
 
@@ -8911,6 +8908,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Reset any nodes that have satisfied 'reset_stateful_function_when' conditions.
             if not reset_stateful_functions_to:
                 reset_stateful_functions_to = {}
+
+            # MODIFIED 3/1/21 OLD: [MOVED TO AFTER INPUT ASSIGNMENT]
+            # Report trial_num and Composition input
+            progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial_init', context)
+            # # MODIFIED 2/28/21 NEW:
+            # progress.report_progress(self, progress_report, 0)
+            # MODIFIED 2/28/21 END
+            # MODIFIED 3/1/21 END
 
             for node in self.nodes:
                 node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TRIAL, 0)
