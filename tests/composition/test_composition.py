@@ -2792,7 +2792,7 @@ class TestRunInputSpecifications:
                             objective_mechanism=pnl.ObjectiveMechanism(
                                     monitor=ib.output_port,
                                     function=pnl.SimpleIntegrator,
-                                    name="oController Objective Mechanism"
+                                    name="iController Objective Mechanism"
                             ),
                             function=pnl.GridSearch(direction=pnl.MAXIMIZE),
                             control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
