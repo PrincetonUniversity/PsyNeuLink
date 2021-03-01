@@ -625,7 +625,7 @@ class CompExecution(CUDAExecution):
         data_out = jit_engine.pycuda.driver.mem_alloc(output_size)
 
         # number of trials argument
-        runs_np = np.array([runs] * len(self._execution_contexts), dtype=np.int32)
+        runs_np = np.full(len(self._execution_contexts), runs, dtype=np.int32)
         runs_count = jit_engine.pycuda.driver.InOut(runs_np)
         self._uploaded_bytes['input'] += runs_np.nbytes
         self._downloaded_bytes['input'] += runs_np.nbytes
