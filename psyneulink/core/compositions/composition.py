@@ -3354,7 +3354,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if nodes is not None:
             nodes = convert_to_list(nodes)
             for node in nodes:
-                self._add_node(node)
+                self.add_node(node)
 
         # FIX 4/8/20 [JDC]: TEST THIS
         if projections is not None:
@@ -3489,11 +3489,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @handle_external_context(source = ContextFlags.COMPOSITION)
     def add_node(self, node, required_roles=None, context=None):
-        """"""
-        return self._add_node(node=node, required_roles=required_roles, context=context)
-
-    @handle_external_context(source = ContextFlags.COMPOSITION)
-    def _add_node(self, node, required_roles=None, context=None):
         """
             Add a Composition Node (`Mechanism <Mechanism>` or `Composition`) to Composition, if it is not already added
 
@@ -3629,12 +3624,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             nodes = convert_to_list(nodes)
         for node in nodes:
             if isinstance(node, (Mechanism, Composition)):
-                self._add_node(node, required_roles, context)
+                self.add_node(node, required_roles, context)
             elif isinstance(node, tuple):
                 node_specific_roles = convert_to_list(node[1])
                 if required_roles:
                     node_specific_roles.append(required_roles)
-                self._add_node(node=node[0], required_roles=node_specific_roles, context=context)
+                self.add_node(node=node[0], required_roles=node_specific_roles, context=context)
             else:
                 raise CompositionError(f"Node specified in 'add_nodes' method of '{self.name}' {Composition.__name__} "
                                        f"({node}) must be a {Mechanism.__name__}, {Composition.__name__}, "
@@ -3947,7 +3942,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(component, (Mechanism, Composition)):
                     if isinstance(component, Composition):
                         component._analyze_graph()
-                    self._add_node(component)
+                    self.add_node(component)
                 elif isinstance(component, Projection):
                     projections.append((component, False))
                 elif isinstance(component, tuple):
@@ -3961,10 +3956,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    "specification (True or False).".format(component, node.name))
                     elif isinstance(component[0], (Mechanism, Composition)):
                         if isinstance(component[1], NodeRole):
-                            self._add_node(node=component[0], required_roles=component[1])
+                            self.add_node(node=component[0], required_roles=component[1])
                         elif isinstance(component[1], list):
                             if isinstance(component[1][0], NodeRole):
-                                self._add_node(node=component[0], required_roles=component[1])
+                                self.add_node(node=component[0], required_roles=component[1])
                             else:
                                 raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. "
                                                        "If a tuple is used to specify a Mechanism or Composition, then "
@@ -5502,7 +5497,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # add all nodes first
         for node in nodes:
-            self._add_node(node)
+            self.add_node(node)
 
         # then projections
         for p in projections:
@@ -6835,7 +6830,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                      receiver=learning_mechanism.error_signal_input_ports[i])
                 error_projections.append(error_projection)
 
-        self._add_node(learning_mechanism, required_roles=NodeRole.LEARNING)
+        self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING)
         try:
             act_in_projection = MappingProjection(sender=input_source.output_ports[0],
                                                 receiver=learning_mechanism.input_ports[0])
@@ -7076,7 +7071,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 
         if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
-            self._add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
+            self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
 
         self.node_ordering.append(controller)
 
