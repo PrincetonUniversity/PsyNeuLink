@@ -8761,27 +8761,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         with PNLProgress(show_progress=True) as progress:
 
-            # If execute method is called directly, need to create PNLProgress object if reporting
-            # if not progress:
-            #     progress = progress or PNLProgress(show_progress=True)
-            # # MODIFIED 2/28/21 OLD:
-            # # if progress_report is None:
-            # if not (context.source & ContextFlags.COMPOSITION):
-            # MODIFIED 2/28/21 NEW:
+            # If execute method is called directly, need to create PNLProgress object for reporting
             if not (context.source & ContextFlags.COMPOSITION) or progress_report is None:
-            # MODIFIED 2/28/21 END
                 progress_report = progress.start_progress_report(comp=self, num_trials=1, context=context)
                 show_output = True
 
             execution_scheduler = scheduler or self.scheduler
-
-            # # MODIFIED 3/1/21 OLD: [MOVED TO AFTER INPUT ASSIGNMENT]
-            # # Report trial_num and Composition input
-            # progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial_init', context)
-            # # # MODIFIED 2/28/21 NEW:
-            # # progress.report_progress(self, progress_report, 0)
-            # # MODIFIED 2/28/21 END
-            # # MODIFIED 3/1/21 END
 
             # ASSIGNMENTS **************************************************************************************************
 
@@ -8909,13 +8894,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not reset_stateful_functions_to:
                 reset_stateful_functions_to = {}
 
-            # MODIFIED 3/1/21 OLD: [MOVED TO AFTER INPUT ASSIGNMENT]
-            # Report trial_num and Composition input
+            # Report trial_num and Composition input (now that it has been assigned)
             progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial_init', context)
-            # # MODIFIED 2/28/21 NEW:
-            # progress.report_progress(self, progress_report, 0)
-            # MODIFIED 2/28/21 END
-            # MODIFIED 3/1/21 END
 
             for node in self.nodes:
                 node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TRIAL, 0)
