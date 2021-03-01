@@ -44,6 +44,8 @@ class PNLProgress:
         if cls._instance is None:
             cls._instance = super(PNLProgress, cls).__new__(cls)
 
+            cls.show_progress = bool(show_progress)
+
             show_progress = convert_to_list(show_progress)
 
             cls._use_rich = False not in show_progress and [k in show_progress for k in {True, 'console'}]
@@ -157,6 +159,8 @@ class PNLProgress:
             # FIX: ??KEEP:
 
     def report_progress(self, caller, report_num, trial_num):
+        if not self.show_progress:
+            return
         progress_report = self._progress_reports[report_num]
         if self._use_rich:
             if isinstance(trial_num, int):
