@@ -1,13 +1,15 @@
-import time, re, sys, warnings
-
-from psyneulink.core.globals.keywords import FULL
-from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.utilities import convert_to_list
+import re
+import sys
+import warnings
 
 from rich import print, box
 from rich.console import RenderGroup
-from rich.progress import Progress as RichProgress
 from rich.panel import Panel
+from rich.progress import Progress as RichProgress
+
+from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.keywords import FULL
+from psyneulink.core.globals.utilities import convert_to_list
 
 
 class PNLProgressError(Exception):
@@ -152,7 +154,7 @@ class PNLProgress:
                                          )
 
             self._progress_reports.append(ProgressReport(id, run_mode, num_trials))
-            report_num = len(self._progress_reports)-1
+            report_num = len(self._progress_reports) - 1
 
             return report_num
 
@@ -429,4 +431,3 @@ def _report_node_execution(node,
                      expand=expand,
                      title=f'[{node_panel_color}]{node.name}',
                      highlight=True)
-

@@ -26,7 +26,6 @@ import numpy as _numpy
 # starred imports to allow user imports from top level
 from . import core
 from . import library
-
 from ._version import get_versions
 from .core import *
 from .library import *
