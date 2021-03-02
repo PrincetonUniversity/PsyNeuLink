@@ -1542,7 +1542,9 @@ class TestFeedback:
 
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", ['Python',
-                                      # 'LLVM' mode is not supported, because synchronization of compiler and python values during execution is not implemented.
+                                      # 'LLVM' mode is not supported, because
+                                      # synchronization of compiler and python
+                                      # values during execution is not implemented.
                                       pytest.param('LLVMExec', marks=pytest.mark.llvm),
                                       pytest.param('LLVMRun', marks=pytest.mark.llvm),
                                       pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),

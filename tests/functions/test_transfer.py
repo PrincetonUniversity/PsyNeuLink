@@ -93,18 +93,14 @@ derivative_names = [
 @pytest.mark.transfer_function
 @pytest.mark.benchmark
 @pytest.mark.parametrize("func, variable, params, fail, expected", test_data, ids=names)
-@pytest.mark.parametrize("mode", [
-    'Python',
-    pytest.param('LLVM', marks=pytest.mark.llvm),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-def test_execute(func, variable, params, fail, expected, benchmark, mode):
+def test_execute(func, variable, params, fail, expected, benchmark, func_mode):
     f = func(default_variable=variable, **params)
     benchmark.group = "TransferFunction " + func.componentName
-    if mode == 'Python':
+    if func_mode == 'Python':
         ex = f
-    elif mode == 'LLVM':
+    elif func_mode == 'LLVM':
         ex = pnlvm.execution.FuncExecution(f).execute
-    elif mode == 'PTX':
+    elif func_mode == 'PTX':
         ex = pnlvm.execution.FuncExecution(f).cuda_execute
     res = ex(variable)
     assert np.allclose(res, expected)
@@ -116,18 +112,14 @@ def test_execute(func, variable, params, fail, expected, benchmark, mode):
 @pytest.mark.transfer_function
 @pytest.mark.benchmark
 @pytest.mark.parametrize("func, variable, params, expected", derivative_test_data, ids=derivative_names)
-@pytest.mark.parametrize("mode", [
-    'Python',
-    pytest.param('LLVM', marks=pytest.mark.llvm),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-def test_execute_derivative(func, variable, params, expected, benchmark, mode):
+def test_execute_derivative(func, variable, params, expected, benchmark, func_mode):
     f = func(default_variable=variable, **params)
     benchmark.group = "TransferFunction " + func.componentName + " Derivative"
-    if mode == 'Python':
+    if func_mode == 'Python':
         ex = f.derivative
-    elif mode == 'LLVM':
+    elif func_mode == 'LLVM':
         ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative"})).execute
-    elif mode == 'PTX':
+    elif func_mode == 'PTX':
         ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative"})).cuda_execute
     res = ex(variable)
     assert np.allclose(res, expected)

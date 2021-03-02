@@ -43,18 +43,14 @@ GROUP_PREFIX="SelectionFunction "
 @pytest.mark.integrator_function
 @pytest.mark.benchmark
 @pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
-@pytest.mark.parametrize("mode", ['Python',
-                                  pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])
-                                  ])
-def test_basic(func, variable, params, expected, benchmark, mode):
+def test_basic(func, variable, params, expected, benchmark, func_mode):
     f = func(default_variable=variable, **params)
     benchmark.group = GROUP_PREFIX + func.componentName + params['mode']
-    if mode == 'Python':
+    if func_mode == 'Python':
         EX = f
-    elif mode == 'LLVM':
+    elif func_mode == 'LLVM':
         EX = pnlvm.execution.FuncExecution(f).execute
-    elif mode == 'PTX':
+    elif func_mode == 'PTX':
         EX = pnlvm.execution.FuncExecution(f).cuda_execute
 
     EX(variable)
