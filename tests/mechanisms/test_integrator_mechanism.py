@@ -963,7 +963,7 @@ class TestIntegratorRate:
                 ))
 
         error_msg_a = "The parameters with len>1 specified for AccumulatorIntegrator Function-0 "
-        error_msg_b = "(['rate', 'increment']) don't all have the same length"
+        error_msg_b = "(['increment', 'rate']) don't all have the same length"
         assert error_msg_a in str(error_text.value)
         assert error_msg_b in str(error_text.value)
 
