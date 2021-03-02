@@ -390,6 +390,11 @@ class CompExecution(CUDAExecution):
                     self._copy_params_to_pnl(context=context,
                                              component=projection,
                                              params=projection_params)
+            elif attribute == 'function':
+                function_params = getattr(params, params._fields_[idx][0])
+                self._copy_params_to_pnl(context=context,
+                                         component=component.function,
+                                         params=function_params)
             elif attribute == 'matrix':
                 pnl_param = component.parameters.matrix
                 parameter_ctype = getattr(params, params._fields_[idx][0])
