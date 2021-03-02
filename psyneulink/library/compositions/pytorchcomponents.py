@@ -1,11 +1,71 @@
-from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU
-from psyneulink.library.compositions.pytorchllvmhelper import *
-from psyneulink.core.globals.log import LogCondition
-from psyneulink.core import llvm as pnlvm
-
 import torch
+import numpy as np
+
+from psyneulink.core import llvm as pnlvm
+from psyneulink.core.globals.log import LogCondition
+from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU, Conv2d
+from psyneulink.library.compositions.pytorchllvmhelper import *
 
 __all__ = ['PytorchMechanismWrapper', 'PytorchProjectionWrapper']
+
+class PytorchWrapper():
+    def _get_learnable_param_ids(self):
+        return []
+
+    def _get_learnable_param_struct_type(self, ctx):
+        structs = []
+        for param_id in self._get_learnable_param_ids():
+            param = getattr(self._object.parameters, param_id).get(None)
+            assert param is not None, f"Failed to get param {param_id} from {self}"
+            structs.append(ctx.convert_python_struct_to_llvm_ir(param))
+        return pnlvm.ir.LiteralStructType(structs)
+
+    @property
+    def _object(self):
+        raise Exception("Unimplemented method!")
+
+    def _extract_llvm_param_ptr(self, ctx, builder, params, param_id):
+        raise Exception("Unimplemented method!")
+
+    def _copy_params_to_psyneulink(self):
+        for param_id in self._get_learnable_param_ids():
+            pytorch_param = getattr(self, param_id)
+            param = getattr(self._object.parameters, param_id)
+
+            pytorch_value = pytorch_param.detach().cpu().numpy()
+            param._set(pytorch_value, self._context)
+
+    def _update_llvm_param_gradients(self, ctx, builder, state, params, node_delta_w, z_value, backpropagated_error):
+        pass
+
+    def _get_pytorch_params(self):
+        return []
+
+class PytorchFunctionWrapper(PytorchWrapper):
+    """
+    Wraps around a PsyNeuLink function; converts functionality to Pytorch
+    """
+    def __init__(self, function, device, learnable_params=None, learnable_param_ids=None, context=None):
+        if learnable_params is None:
+            learnable_params = []
+        self._learnable_params = learnable_params
+
+        if learnable_param_ids is None:
+            learnable_param_ids = []
+        self._learnable_param_ids = learnable_param_ids
+
+        self._context = context
+        self._function = function
+        self._device = device
+
+    def __call__(self, variable):
+        return self._function(variable)
+
+    def _get_learnable_param_ids(self):
+        return self._learnable_param_ids
+
+    def _get_pytorch_params(self):
+        return self._learnable_params
 
 def pytorch_function_creator(function, device, context=None):
     """
@@ -13,35 +73,55 @@ def pytorch_function_creator(function, device, context=None):
     NOTE: This is needed due to PyTorch limitations (see: https://github.com/PrincetonUniversity/PsyNeuLink/pull/1657#discussion_r437489990)
     """
     def get_fct_param_value(param_name):
-        val = function._get_current_parameter_value(
-            param_name, context=context)
+        val = getattr(function.parameters, param_name).get(context=context)
         if val is None:
             val = getattr(function.defaults, param_name)
 
-        return float(val)
+        return val
 
     if isinstance(function, Linear):
         slope = get_fct_param_value('slope')
         intercept = get_fct_param_value('intercept')
-        return lambda x: x * slope + intercept
+        func = lambda x:x * slope + intercept
+        wrapper = PytorchFunctionWrapper(func, device=device, context=context)
+        return wrapper
 
     elif isinstance(function, Logistic):
         gain = get_fct_param_value('gain')
         bias = get_fct_param_value('bias')
         offset = get_fct_param_value('offset')
-        return lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
+        func = lambda x: 1 / (1 + torch.exp(-gain * (x + bias) + offset))
+        wrapper = PytorchFunctionWrapper(func, device=device, context=context)
+        return wrapper
 
     elif isinstance(function, ReLU):
         gain = get_fct_param_value('gain')
         bias = get_fct_param_value('bias')
         leak = get_fct_param_value('leak')
-        return lambda x: (torch.max(input=(x - bias), other=torch.tensor([0], device=device).double()) * gain +
+        func = lambda x: (torch.max(input=(x - bias), other=torch.tensor([0], device=device).double()) * gain +
                             torch.min(input=(x - bias), other=torch.tensor([0], device=device).double()) * leak)
+        wrapper = PytorchFunctionWrapper(func, device=device, context=context)
+        return wrapper
 
+    elif isinstance(function, Conv2d):
+        kernel = get_fct_param_value('kernel')
+        kernel = torch.nn.Parameter(torch.tensor(np.reshape(kernel, (1, 1, *kernel.shape)), device=device, dtype=torch.double), requires_grad=True)
+
+        stride = get_fct_param_value('stride')
+        padding = get_fct_param_value('padding')
+        dilation = get_fct_param_value('dilation')
+
+        conv2d = torch.nn.functional.conv2d
+        def func(x):
+            x = torch.reshape(x, (1, 1, *x.shape))
+            return conv2d(x, weight=kernel, stride=stride, padding=padding, dilation=dilation)[0][0]
+
+        wrapper = PytorchFunctionWrapper(func, learnable_params = [kernel], device=device, context=context)
+        return wrapper
     else:
         raise Exception(f"Function {function} is not currently supported in AutodiffCompositions!")
 
-class PytorchMechanismWrapper():
+class PytorchMechanismWrapper(PytorchWrapper):
     """
     An interpretation of a mechanism as an equivalent pytorch object
     """
@@ -51,12 +131,13 @@ class PytorchMechanismWrapper():
         self._context = context
 
         self.function = pytorch_function_creator(mechanism.function, device, context)
-        self._context = context
-        self.value = None
+        self.value = torch.tensor(mechanism.defaults.value.copy(), device=device, requires_grad=True)
         self.afferents = []
         self.efferents = []
 
-        self._target_mechanism = None
+    @property
+    def _object(self):
+        return self._mechanism
 
     def add_efferent(self, efferent):
         assert efferent not in self.efferents
@@ -66,6 +147,11 @@ class PytorchMechanismWrapper():
         assert afferent not in self.afferents
         self.afferents.append(afferent)
 
+    def _get_learnable_param_ids(self):
+        return self.function._get_learnable_param_ids()
+
+    def _get_pytorch_params(self):
+        return self.function._get_pytorch_params()
 
     def collate_afferents(self):
         """
@@ -108,15 +194,16 @@ class PytorchMechanismWrapper():
             self._mechanism.output_port.parameters.value._set(detached_value, self._context)
             self._mechanism.parameters.value._set(detached_value, self._context)
 
-    def _gen_llvm_execute_derivative_func(self, ctx, builder, state, params, arg_in):
+    def _update_llvm_param_gradients(self, ctx, builder, state, params, node_delta_w, z_value, backpropagated_error):
         # psyneulink functions expect a 2d input, where index 0 is the vector
-        fun = ctx.import_llvm_function(self._mechanism.function, tags=frozenset({"derivative"}))
+        derivative_tags = frozenset({"derivative"})
+        fun = ctx.import_llvm_function(self._mechanism.function, tags=derivative_tags)
         fun_input_ty = fun.args[2].type.pointee
 
         mech_input = builder.alloca(fun_input_ty)
         mech_input_ptr = builder.gep(mech_input, [ctx.int32_ty(0),
                                                   ctx.int32_ty(0)])
-        builder.store(builder.load(arg_in), mech_input_ptr)
+        builder.store(builder.load(z_value), mech_input_ptr)
 
         mech_params = builder.gep(params, [ctx.int32_ty(0),
                                            ctx.int32_ty(0),
@@ -131,25 +218,36 @@ class PytorchMechanismWrapper():
                 self._mechanism.function, f_params_ptr, ctx, builder, mech_params, mech_state, mech_input)
         f_state = pnlvm.helpers.get_state_ptr(builder, self._mechanism, mech_state, "function")
 
-        output, _ = self._mechanism._gen_llvm_invoke_function(ctx, builder, self._mechanism.function, f_params, f_state, mech_input, tags=frozenset({"derivative"}))
-        return builder.gep(output, [ctx.int32_ty(0),
-                                    ctx.int32_ty(0)])
+        output, _ = self._mechanism._gen_llvm_invoke_function(ctx, builder, self._mechanism.function, f_params, f_state, mech_input, tags=derivative_tags)
+        activation_func_derivative = builder.gep(output, [ctx.int32_ty(0),
+                                                          ctx.int32_ty(0)])
+
+        error_val = gen_inject_vec_hadamard(ctx, builder, activation_func_derivative, backpropagated_error)
+        return error_val
+
+    def _extract_llvm_param_ptr(self, ctx, builder, params, param_id):
+        mechanism_params = builder.gep(params, [ctx.int32_ty(0),
+                                                ctx.int32_ty(0),
+                                                ctx.int32_ty(self._idx)])
+
+        param_ptr = pnlvm.helpers.get_param_ptr(builder, self._mechanism, mechanism_params, param_id)
+
+        return param_ptr
 
     def __repr__(self):
         return "PytorchWrapper for: " +self._mechanism.__repr__()
 
-class PytorchProjectionWrapper():
+class PytorchProjectionWrapper(PytorchWrapper):
     """
     An interpretation of a projection as an equivalent pytorch object
     """
-    def __init__(self, projection, component_idx, port_idx, device, sender=None, receiver=None, context=None):
+    def __init__(self, projection, component_idx, device, sender=None, receiver=None, context=None):
         self._projection = projection
         self._idx = component_idx
         self._context = context
 
         self.sender = sender
         self.receiver = receiver
-        self._port_idx = port_idx
 
         matrix = projection.parameters.matrix.get(
                             context=context)
@@ -164,6 +262,26 @@ class PytorchProjectionWrapper():
         if projection.learnable is False:
             self.matrix.requires_grad = False
 
+    @property
+    def _sender_port_idx(self):
+        port = self._projection.sender
+        return port.owner.output_ports.index(port)
+
+    @property
+    def _receiver_port_idx(self):
+        port = self._projection.receiver
+        return port.owner.input_ports.index(port)
+
+    @property
+    def _object(self):
+        return self._projection
+
+    def _get_learnable_param_ids(self):
+        return ["matrix"]
+
+    def _get_pytorch_params(self):
+        return [self.matrix]
+
     def execute(self, variable):
         return torch.matmul(variable, self.matrix)
 
@@ -173,25 +291,27 @@ class PytorchProjectionWrapper():
             self._projection.parameters.matrix._set(detached_matrix, context=self._context)
             self._projection.parameter_ports['matrix'].parameters.value._set(detached_matrix, context=self._context)
 
-    def _extract_llvm_matrix(self, ctx, builder, params):
+    def _extract_llvm_param_ptr(self, ctx, builder, params, param_id):
         proj_params = builder.gep(params, [ctx.int32_ty(0),
                                            ctx.int32_ty(1),
                                            ctx.int32_ty(self._idx)])
 
-        dim_x, dim_y = self.matrix.detach().numpy().shape
-        proj_matrix = pnlvm.helpers.get_param_ptr(builder, self._projection, proj_params, "matrix")
-        proj_matrix = builder.bitcast(proj_matrix, pnlvm.ir.types.ArrayType(
-            pnlvm.ir.types.ArrayType(ctx.float_ty, dim_y), dim_x).as_pointer())
+        param_ptr = pnlvm.helpers.get_param_ptr(builder, self._projection, proj_params, param_id)
 
-        return proj_matrix
+        if param_id == "matrix":
+            dim_x, dim_y = self.matrix.detach().numpy().shape
+            param_ptr = builder.bitcast(param_ptr, pnlvm.ir.types.ArrayType(
+                        pnlvm.ir.types.ArrayType(ctx.float_ty, dim_y), dim_x).as_pointer())
+
+        return param_ptr
 
     def _gen_llvm_execute(self, ctx, builder, state, params, data):
-        proj_matrix = self._extract_llvm_matrix(ctx, builder, params)
+        proj_matrix = self._extract_llvm_param_ptr(ctx, builder, params, "matrix")
 
         input_vec = builder.gep(data, [ctx.int32_ty(0),
                                        ctx.int32_ty(0),
                                        ctx.int32_ty(self.sender._idx),
-                                       ctx.int32_ty(self._port_idx)])
+                                       ctx.int32_ty(self._sender_port_idx)])
 
         output_vec = gen_inject_vxm(ctx, builder, input_vec, proj_matrix)
 
@@ -200,6 +320,27 @@ class PytorchProjectionWrapper():
         pnlvm.helpers.printf_float_array(builder, output_vec, prefix=f"{self.sender._mechanism} -> {self.receiver._mechanism} output:\n", override_debug=False)
 
         return output_vec
+
+    def _update_llvm_param_gradients(self, ctx, builder, state, params, node_delta_w, z_value, backpropagated_error):
+        if self._projection.learnable:
+            # Outer product
+            node_input_ptr = builder.gep(z_value, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            error_val_ptr = builder.gep(backpropagated_error, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            x = len(z_value.type.pointee)
+            y = len(backpropagated_error.type.pointee)
+            outer_product = builder.alloca(pnlvm.ir.types.ArrayType(pnlvm.ir.types.ArrayType(ctx.float_ty, y), x))
+            outer_product_ptr = builder.gep(outer_product, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            outer_product_builtin = ctx.import_llvm_function("__pnl_builtin_vec_outer_product")
+            builder.call(outer_product_builtin, [node_input_ptr,
+                                                 error_val_ptr,
+                                                 ctx.int32_ty(x),
+                                                 ctx.int32_ty(y),
+                                                 outer_product_ptr])
+
+            node_delta_w = builder.gep(node_delta_w, [ctx.int32_ty(0), ctx.int32_ty(self._get_learnable_param_ids().index('matrix'))])
+            gen_inject_mat_add(ctx, builder, outer_product, node_delta_w, node_delta_w)
 
     def __repr__(self):
         return "PytorchWrapper for: " +self._projection.__repr__()

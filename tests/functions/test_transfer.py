@@ -127,6 +127,36 @@ def test_execute_derivative(func, variable, params, expected, benchmark, func_mo
         benchmark(ex, variable)
 
 
+@pytest.mark.function
+@pytest.mark.transfer_function
+@pytest.mark.pytorch
+@pytest.mark.benchmark
+@pytest.mark.parametrize("variable, kernel, stride, padding, dilation, expected", [
+    (np.ones((2, 2)), np.ones((2, 2)), (1,1), (0,0), (1,1), np.array([[4.]])),
+    (np.array([[1,2],[3,4]]), np.array([[1]]), (1,1), (0,0), (1,1), np.array([[1., 2.], [3., 4.]])),
+    (np.ones((4, 3)), np.ones((1, 3)), (1,1), (0,0), (1,1), np.array([[3.], [3.], [3.], [3.]])),
+    (np.ones((4, 3)), np.ones((1, 3)), (1,1), (0,0), (2,1), np.array([[3.], [3.], [3.], [3.]])),
+    (np.ones((4, 3)), np.ones((1, 3)), (2,1), (0,0), (1,1), np.array([[3.], [3.]])),
+    (np.ones((4, 3)), np.ones((1, 3)), (1,1), (1,1), (1,1), np.array([[0., 0., 0.], [2., 3., 2.], [2., 3., 2.], [2., 3., 2.], [2., 3., 2.], [0., 0., 0.]])),
+])
+@pytest.mark.parametrize("mode", [
+    'Python',
+    pytest.param('LLVM', marks=pytest.mark.llvm),
+    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_conv2d(variable, kernel, stride, padding, dilation, benchmark, mode, expected):
+    f = Functions.Conv2d(default_variable=variable, kernel=kernel, stride=stride, padding=padding, dilation=dilation)
+    benchmark.group = "TransferFunction Conv2d"
+    if mode == 'Python':
+        ex = f
+    elif mode == 'LLVM':
+        ex = pnlvm.execution.FuncExecution(f).execute
+    elif mode == 'PTX':
+        ex = pnlvm.execution.FuncExecution(f).cuda_execute
+    res = ex(variable)
+    assert np.allclose(res, expected)
+    if benchmark.enabled:
+        benchmark(ex, variable)
+
 def test_transfer_with_costs_function():
     f = Functions.TransferWithCosts()
     result = f(1)

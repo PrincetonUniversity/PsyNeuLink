@@ -12,31 +12,17 @@ class Optimizer():
         self._DELTA_W_NUM = 0
 
     # gets the type of the delta_w struct
-    def _get_delta_w_struct_type(self, ctx):
-        delta_w = [None] * len(self._pytorch_model.projections)
-        for idx, proj in enumerate(self._pytorch_model.projections):
-            proj_matrix = proj.matrix
-            dim_x, dim_y = proj_matrix.shape
-
-            matrix = pnlvm.ir.ArrayType(
-                pnlvm.ir.ArrayType(
-                    ctx.float_ty,
-                    dim_y
-                ),
-                dim_x
-            )
-            delta_w[idx] = matrix
-
-        delta_w = pnlvm.ir.types.LiteralStructType(delta_w)
-        return delta_w
+    def _get_param_gradients_struct_type(self, ctx):
+        gradients_struct = pnlvm.ir.types.LiteralStructType((component._get_learnable_param_struct_type(ctx) for component in self._pytorch_model.components))
+        return gradients_struct
 
     def _get_optimizer_struct_type(self, ctx, extra_types=[]):
-        structs = (self._get_delta_w_struct_type(ctx), *extra_types)
+        structs = (self._get_param_gradients_struct_type(ctx), *extra_types)
         return pnlvm.ir.types.LiteralStructType(structs)
 
     # inserts logic that zeroes out a gradient struct
     def _gen_zero_gradient_struct(self, ctx, builder, grad_struct):
-        builder.store(grad_struct.type.pointee(None),grad_struct)
+        builder.store(grad_struct.type.pointee(None), grad_struct)
 
     def zero_grad(self, ctx):
         name = self._composition.name + "_ZERO_GRAD"
@@ -78,8 +64,8 @@ class AdamOptimizer(Optimizer):
         self._T_NUM = 3
 
     def _get_optimizer_struct_type(self, ctx):
-        m_t = self._get_delta_w_struct_type(ctx)  # current timestep first moment
-        v_t = self._get_delta_w_struct_type(ctx)  # current timestep second moment
+        m_t = self._get_param_gradients_struct_type(ctx)  # current timestep first moment
+        v_t = m_t  # current timestep second moment
         time_counter = ctx.float_ty  # keeps track of timestep
 
         extra_types = [m_t, v_t, time_counter]
@@ -128,40 +114,39 @@ class AdamOptimizer(Optimizer):
                 builder, f"%f b1_pow_sub %f\nb2 pow sub %f\n",t_val, one_minus_b1_pow, one_minus_b2_pow)
 
         # 2) update first moments
-        for idx, proj in enumerate(self._pytorch_model.projections):
-            proj_idx_ir = ctx.int32_ty(idx)
+        for idx, component in enumerate(self._pytorch_model.components):
+            for param_idx, param_id in enumerate(component._get_learnable_param_ids()):
+                gradient_ptr = builder.gep(delta_w, [zero, ctx.int32_ty(idx), ctx.int32_ty(param_idx)])
+                m_t_ptr = builder.gep(m_t, [zero, ctx.int32_ty(idx), ctx.int32_ty(param_idx)])
 
-            m_t_ptr = builder.gep(m_t, [zero, proj_idx_ir])
-            delta_w_ptr = builder.gep(delta_w, [zero, proj_idx_ir])
+                # m_t = m_t * b1
+                gen_inject_mat_scalar_mult(ctx, builder, m_t_ptr, b1, m_t_ptr)
 
-            # m_t = m_t * b1
-            gen_inject_mat_scalar_mult(ctx, builder, m_t_ptr, b1, m_t_ptr)
+                # (1 - b1)*g_t
+                tmp_val = gen_inject_mat_scalar_mult(ctx, builder, gradient_ptr, one_minus_b1)
 
-            # (1 - b1)*g_t
-            tmp_val = gen_inject_mat_scalar_mult(ctx, builder, delta_w_ptr, one_minus_b1)
+                # m_t = m_t + (1-b1)*g_t
+                gen_inject_mat_add(ctx, builder, m_t_ptr, tmp_val, m_t_ptr)
 
-            # m_t = m_t + (1-b1)*g_t
-            gen_inject_mat_add(ctx, builder, m_t_ptr, tmp_val, m_t_ptr)
+                pnlvm.helpers.printf_float_matrix(builder, m_t_ptr, prefix=f"mt val: {component}\n", override_debug=False)
 
-            pnlvm.helpers.printf_float_matrix(builder, m_t_ptr, prefix=f"mt val: {proj.sender._mechanism} -> {proj.receiver._mechanism}\n", override_debug=False)
         # 3) update second moments
-        for idx, proj in enumerate(self._pytorch_model.projections):
-            proj_idx_ir = ctx.int32_ty(idx)
+        for idx, component in enumerate(self._pytorch_model.components):
+            for param_idx, param_id in enumerate(component._get_learnable_param_ids()):
+                gradient_ptr = builder.gep(delta_w, [zero, ctx.int32_ty(idx), ctx.int32_ty(param_idx)])
+                v_t_ptr = builder.gep(v_t, [zero, ctx.int32_ty(idx), ctx.int32_ty(param_idx)])
 
-            v_t_ptr = builder.gep(v_t, [zero, proj_idx_ir])
-            delta_w_ptr = builder.gep(delta_w, [zero, proj_idx_ir])
+                # v_t = v_t * b2
+                gen_inject_mat_scalar_mult(ctx, builder, v_t_ptr, b2, v_t_ptr)
 
-            # v_t = v_t * b2
-            gen_inject_mat_scalar_mult(ctx, builder, v_t_ptr, b2, v_t_ptr)
+                # g_t * g_t
+                delta_w_sqrd = gen_inject_mat_hadamard(ctx, builder, gradient_ptr, gradient_ptr)
 
-            # g_t * g_t
-            delta_w_sqrd = gen_inject_mat_hadamard(ctx, builder, delta_w_ptr, delta_w_ptr)
+                # (1-b2)*(g_t)^2
+                gen_inject_mat_scalar_mult(ctx, builder, delta_w_sqrd, one_minus_b2, delta_w_sqrd)
 
-            # (1-b2)*(g_t)^2
-            gen_inject_mat_scalar_mult(ctx, builder, delta_w_sqrd, one_minus_b2, delta_w_sqrd)
-
-            # v_t = v_t + (1-b2)*(g_t)^2
-            gen_inject_mat_add(ctx, builder, v_t_ptr, delta_w_sqrd, v_t_ptr)
+                # v_t = v_t + (1-b2)*(g_t)^2
+                gen_inject_mat_add(ctx, builder, v_t_ptr, delta_w_sqrd, v_t_ptr)
 
         # 4) update weights
         # this is the new learning rate to use
@@ -169,50 +154,44 @@ class AdamOptimizer(Optimizer):
         step_size = builder.fdiv(lr, one_minus_b1_pow)
         step_size = pnlvm.helpers.fneg(builder, step_size)
 
-        for idx, proj in enumerate(self._pytorch_model.projections):
-            proj_idx_ir = ctx.int32_ty(idx)
+        for idx, component in enumerate(self._pytorch_model.components):
+            for param_idx, param_id in enumerate(component._get_learnable_param_ids()):
+                gradient_ptr = builder.gep(delta_w, [zero, ctx.int32_ty(idx), ctx.int32_ty(param_idx)])
+                m_t_ptr = builder.gep(m_t, [zero, ctx.int32_ty(idx), ctx.int32_ty(param_idx)])
+                v_t_ptr = builder.gep(v_t, [zero, ctx.int32_ty(idx), ctx.int32_ty(param_idx)])
 
-            m_t_ptr = builder.gep(
-                m_t, [zero, proj_idx_ir])
-            v_t_ptr = builder.gep(
-                v_t, [zero, proj_idx_ir])
-            delta_w_ptr = builder.gep(
-                delta_w, [zero, proj_idx_ir])
+                pnlvm.helpers.printf_float_matrix(builder, gradient_ptr, prefix=f"grad val: {component}\n", override_debug=False)
 
-            pnlvm.helpers.printf_float_matrix(builder, delta_w_ptr, prefix=f"grad val: {proj.sender._mechanism} -> {proj.receiver._mechanism}\n", override_debug=False)
+                # this is messy - #TODO - cleanup this
+                param_ptr = component._extract_llvm_param_ptr(ctx, builder, params, param_id)
 
-            # this is messy - #TODO - cleanup this
-            weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, params)
-            dim_x, dim_y = proj.matrix.shape
+                pnlvm.helpers.printf(builder, "biascorr2 %.20f\n", one_minus_b2_pow, override_debug=False)
+                with pnlvm.helpers.array_ptr_loop(builder, param_ptr, "optimizer_w_upd_outer") as (b1, row_idx):
+                    param_row = builder.gep(param_ptr, [ctx.int32_ty(0), row_idx])
+                    with pnlvm.helpers.array_ptr_loop(b1, param_row, "optimizer_w_upd_inner") as (b2, column_idx):
+                        # sqrt(v_t) + eps
+                        v_t_value = b2.load(b2.gep(v_t_ptr, [zero, row_idx, column_idx]))
+                        value = b2.call(sqrt, [v_t_value])
+                        denom = b2.call(sqrt, [one_minus_b2_pow])
+                        value = b2.fdiv(value, denom)
+                        value = b2.fadd(value, eps)
+                        pnlvm.helpers.printf(builder, "val %.20f\n", value, override_debug=False)
+                        # alpha_t * m_t
+                        m_t_value = b2.load(b2.gep(
+                            m_t_ptr, [zero, row_idx, column_idx]))
 
-            weight_row = None
-            pnlvm.helpers.printf(builder, "biascorr2 %.20f\n", one_minus_b2_pow, override_debug=False)
-            with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(dim_x), "optimizer_w_upd_outer") as (b1, weight_row):
-                weight_column = None
-                with pnlvm.helpers.for_loop_zero_inc(b1, ctx.int32_ty(dim_y), "optimizer_w_upd_inner") as (b2, weight_column):
-                    # sqrt(v_t) + eps
-                    v_t_value = b2.load(b2.gep(v_t_ptr, [zero, weight_row, weight_column]))
-                    value = b2.call(sqrt, [v_t_value])
-                    denom = b2.call(sqrt, [one_minus_b2_pow])
-                    value = b2.fdiv(value, denom)
-                    value = b2.fadd(value, eps)
-                    pnlvm.helpers.printf(builder, "val %.20f\n", value, override_debug=False)
-                    # alpha_t * m_t
-                    m_t_value = b2.load(b2.gep(
-                        m_t_ptr, [zero, weight_row, weight_column]))
+                        # value = alpha_t * m_t / (sqrt(v_t) + eps)
+                        value = b2.fdiv(m_t_value, value)
+                        value = b2.fmul(step_size, value)
 
-                    # value = alpha_t * m_t / (sqrt(v_t) + eps)
-                    value = b2.fdiv(m_t_value, value)
-                    value = b2.fmul(step_size, value)
+                        old_weight_ptr = b2.gep(
+                            param_ptr, [zero, row_idx, column_idx])
 
-                    old_weight_ptr = b2.gep(
-                        weights_llvmlite, [zero, weight_row, weight_column])
+                        # new_weight = old_weight - value
+                        value = b2.fadd(b2.load(old_weight_ptr), value)
+                        b2.store(value, old_weight_ptr)
 
-                    # new_weight = old_weight - value
-                    value = b2.fadd(b2.load(old_weight_ptr), value)
-                    b2.store(value, old_weight_ptr)
-
-                pnlvm.helpers.printf(b1, "\n", override_debug=False)
+                    pnlvm.helpers.printf(b1, "\n", override_debug=False)
 
         pnlvm.helpers.printf(builder, f"\t\t\tOPTIM DONE UPDATE\n",override_debug=False)
 
@@ -239,17 +218,18 @@ class SGDOptimizer(Optimizer):
         optim_struct, params = llvm_func.args
 
         zero = ctx.int32_ty(0)
-        delta_w = builder.gep(optim_struct, [zero, ctx.int32_ty(self._DELTA_W_NUM)])
+        component_gradients = builder.gep(optim_struct, [zero, ctx.int32_ty(self._DELTA_W_NUM)])
 
         lr = ctx.float_ty(self.lr)
 
         # update weights
-        for idx, proj in enumerate(self._pytorch_model.projections):
-            delta_w_ptr = builder.gep(delta_w, [zero, ctx.int32_ty(idx)])
-            weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, params)
+        for idx, component in enumerate(self._pytorch_model.components):
+            for param_idx, param_id in enumerate(component._get_learnable_param_ids()):
+                gradient_ptr = builder.gep(component_gradients, [zero, ctx.int32_ty(idx), ctx.int32_ty(param_idx)])
+                param_ptr = component._extract_llvm_param_ptr(ctx, builder, params, param_id)
 
-            multiplied_delta_w = gen_inject_mat_scalar_mult(ctx, builder, delta_w_ptr, lr)
-            gen_inject_mat_sub(ctx, builder, weights_llvmlite, multiplied_delta_w, weights_llvmlite)
+                multiplied_delta_w = gen_inject_mat_scalar_mult(ctx, builder, gradient_ptr, lr)
+                gen_inject_mat_sub(ctx, builder, param_ptr, multiplied_delta_w, param_ptr)
 
         builder.ret_void()
 

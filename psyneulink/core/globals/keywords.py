@@ -549,6 +549,7 @@ COMBINE_MEANS_FUNCTION = "CombineMeans Function"
 # TransferFunctions:
 IDENTITY_FUNCTION = 'Identity Function'
 LINEAR_FUNCTION = "Linear Function"
+CONV2D_FUNCTION = "Conv2d Function"
 LEABRA_FUNCTION = "Leabra Function"
 EXPONENTIAL_FUNCTION = "Exponential Function"
 LOGISTIC_FUNCTION = "Logistic Function"

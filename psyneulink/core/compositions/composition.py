@@ -7577,38 +7577,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             return net_outcome
 
+    def _infer_target_node(self, node):
+        if (NodeRole.TARGET not in self.get_roles_by_node(node) and NodeRole.LEARNING not in self.get_roles_by_node(node)):
+            node_efferent_mechanisms = [x.receiver.owner for x in node.efferents if x in self.projections]
+            comparators = [x for x in node_efferent_mechanisms
+                            if (isinstance(x, ComparatorMechanism)
+                                and NodeRole.LEARNING in self.get_roles_by_node(x))]
+            comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
+            target_nodes = [t for t in comparator_afferent_mechanisms
+                            if (NodeRole.TARGET in self.get_roles_by_node(t)
+                                and NodeRole.LEARNING in self.get_roles_by_node(t))]
 
-    def _infer_target_nodes(self, targets: dict):
-        """
-        Maps targets onto target mechanisms (as needed by learning)
-
-        Returns
-        ---------
-
-        `dict`:
-            Dict mapping TargetMechanisms -> target values
-        """
-        ret = {}
-        for node, values in targets.items():
-            if (NodeRole.TARGET not in self.get_roles_by_node(node)
-                    and NodeRole.LEARNING not in self.get_roles_by_node(node)):
-                node_efferent_mechanisms = [x.receiver.owner for x in node.efferents if x in self.projections]
-                comparators = [x for x in node_efferent_mechanisms
-                               if (isinstance(x, ComparatorMechanism)
-                                   and NodeRole.LEARNING in self.get_roles_by_node(x))]
-                comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
-                target_nodes = [t for t in comparator_afferent_mechanisms
-                                if (NodeRole.TARGET in self.get_roles_by_node(t)
-                                    and NodeRole.LEARNING in self.get_roles_by_node(t))]
-
-                if len(target_nodes) != 1:
-                    # Invalid specification: no valid target nodes or ambiguity in which target node to choose
-                    raise Exception(f"Unable to infer learning target node from output node {node} of {self.name}")
-
-                ret[target_nodes[0]] = values
-            else:
-                ret[node] = values
-        return ret
+            if len(target_nodes) != 1:
+                # Invalid specification: no valid target nodes or ambiguity in which target node to choose
+                raise Exception(f"Unable to infer learning target node from output node {node} of {self.name}")
 
     def _parse_learning_spec(self, inputs, targets):
         """
@@ -7648,7 +7630,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return d
 
         if targets is not None:
-            targets = self._infer_target_nodes(targets)
+            inferred_targets = {}
+            for node, values in targets.items():
+                target_node = self._infer_target_node(node)
+                if target_node is not None:
+                    inferred_targets[target_node] = values
+                else:
+                    inferred_targets[node] = values
+            targets = inferred_targets
             inputs = _recursive_update(inputs, targets)
 
         # 3) Resize inputs to be of the form [[[]]],
