@@ -1287,6 +1287,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         def _is_compilation_state(p):
             #FIXME: This should use defaults instead of 'p.get'
             return p.name not in blacklist and \
+                   not isinstance(p, (ParameterAlias, SharedParameter)) and \
                    (p.name in whitelist or isinstance(p.get(), Component))
 
         return filter(_is_compilation_state, self.parameters)
@@ -1346,7 +1347,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         if hasattr(self, 'ports'):
             blacklist.update(["matrix", "integration_rate"])
         def _is_compilation_param(p):
-            if p.name not in blacklist and not isinstance(p, ParameterAlias):
+            if p.name not in blacklist and not isinstance(p, (ParameterAlias, SharedParameter)):
                 #FIXME: this should use defaults
                 val = p.get()
                 # Check if the value type is valid for compilation
