@@ -14,8 +14,7 @@ decision = pnl.DDM(function=pnl.DriftDiffusionIntegrator(**ddm_params),
                    output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME],
                    name='DDM')
 
-comp = pnl.Composition()
-comp.add_node(decision)
+comp = pnl.Composition(pathways=decision)
 
 #%%
 

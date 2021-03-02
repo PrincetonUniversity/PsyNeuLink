@@ -15,5 +15,5 @@ typecheck-decorator<=1.2
 leabra-psyneulink<=0.3.2
 rich<=9.11.0
 pandas<=1.0.5
-psyneulink-fastkde
+fastkde>=1.0.18
 

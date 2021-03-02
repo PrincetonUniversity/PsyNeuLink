@@ -136,8 +136,8 @@ lca_params = dict(competition=0.1, self_excitation=0.1,
                   non_decistion_time=0.3, time_step_size=0.0001)
 
 
-#simulate_many_ddms(*list(ddm_params.values()))
-simulate_many_lcas(*list(lca_params.values()))
+simulate_many_ddms(*list(ddm_params.values()))
+#simulate_many_lcas(*list(lca_params.values()))
 rts = rt.to_numpy()
 choices = decision.to_numpy()
 
