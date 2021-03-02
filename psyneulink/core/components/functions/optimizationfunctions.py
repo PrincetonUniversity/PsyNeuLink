@@ -1589,7 +1589,7 @@ class GridSearch(OptimizationFunction):
 
         # Map allocations to values
         comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
-        ct_values = comp_exec.cuda_evaluate(new_variable, self.search_space)
+        ct_values = comp_exec.cuda_evaluate(new_variable, num_evals)
 
         assert len(ct_values) == num_evals
         # Reduce array of values to min/max

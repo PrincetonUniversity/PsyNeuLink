@@ -15,7 +15,6 @@ import copy
 import ctypes
 import numpy as np
 from inspect import isgenerator
-import itertools
 import sys
 
 
@@ -649,47 +648,40 @@ class CompExecution(CUDAExecution):
             assert runs_np[0] <= runs, "Composition ran more times than allowed!"
             return _convert_ctype_to_python(ct_out)[0:runs_np[0]]
 
-    def cuda_evaluate(self, variable, search_space):
+    def cuda_evaluate(self, variable, num_evaluations):
         ocm = self._composition.controller
         assert len(self._execution_contexts) == 1
         context = self._execution_contexts[0]
 
-        bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset({"evaluate"}))
+        bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset({"evaluate", "alloc_range"}))
         self.__bin_func = bin_func
-        assert len(bin_func.byref_arg_types) == 6
+        assert len(bin_func.byref_arg_types) == 7
 
-        # There are 6 arguments to evaluate:
-        # comp_param, comp_state, allocations, results, input, comp_data
-        # all but #2 and #3 are shared
+        # There are 7 arguments to evaluate_alloc_range:
+        # comp_param, comp_state, from, to, results, input, comp_data
+        # all but #4 are shared
 
         # Directly initialized structures
         ct_comp_param = bin_func.byref_arg_types[0](*ocm.agent_rep._get_param_initializer(context))
         ct_comp_state = bin_func.byref_arg_types[1](*ocm.agent_rep._get_state_initializer(context))
-        ct_comp_data = bin_func.byref_arg_types[5](*ocm.agent_rep._get_data_initializer(context))
-
-        # Construct the allocations array
-        alloc_vals = itertools.product(*search_space)
-        alloc_dty = _element_dtype(bin_func.byref_arg_types[2])
-        allocations = np.asfarray(np.atleast_2d([*alloc_vals]), dtype=alloc_dty)
-        ct_allocations = allocations.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[2] * len(allocations)))
+        ct_comp_data = bin_func.byref_arg_types[6](*ocm.agent_rep._get_data_initializer(context))
 
         # Construct input variable
-        var_dty = _element_dtype(bin_func.byref_arg_types[4])
+        var_dty = _element_dtype(bin_func.byref_arg_types[5])
         converted_variable = np.asfarray(np.concatenate(variable), dtype=var_dty)
         self._uploaded_bytes['input'] += converted_variable.nbytes
 
         # Ouput is allocated on device, but we need the ctype.
-        out_ty = bin_func.byref_arg_types[3] * len(allocations)
+        out_ty = bin_func.byref_arg_types[4] * num_evaluations
 
         cuda_args = (self.upload_ctype(ct_comp_param, 'params'),
                      self.upload_ctype(ct_comp_state, 'state'),
-                     self.upload_ctype(ct_allocations.contents, 'input'),
                      jit_engine.pycuda.driver.mem_alloc(ctypes.sizeof(out_ty)),
                      jit_engine.pycuda.driver.In(converted_variable),
                      self.upload_ctype(ct_comp_data, 'data'),
                     )
 
-        bin_func.cuda_call(*cuda_args, threads=len(allocations))
-        ct_results = self.download_ctype(cuda_args[3], out_ty, 'result')
+        bin_func.cuda_call(*cuda_args, threads=int(num_evaluations))
+        ct_results = self.download_ctype(cuda_args[2], out_ty, 'result')
 
         return ct_results
