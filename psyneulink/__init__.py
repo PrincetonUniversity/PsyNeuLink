@@ -19,6 +19,26 @@ If you have trouble installing PsyNeuLink, run into any bugs, or have suggestion
 please contact psyneulinkhelp@princeton.edu.
 """
 
+# Monkey patch rich._is_juptyer to work on Google colab
+import rich
+def _is_jupyter() -> bool:  # pragma: no cover
+    """Check if we're running in a Jupyter notebook."""
+    try:
+        get_ipython  # type: ignore
+    except NameError:
+        return False
+    shell = get_ipython().__class__.__name__  # type: ignore
+    full_class = str(get_ipython().__class__)  # type: ignore
+    if shell == "ZMQInteractiveShell":
+        return True  # Jupyter notebook or qtconsole
+    elif shell == "TerminalInteractiveShell":
+        return False  # Terminal running IPython
+    elif "google.colab" in full_class:  # IPython in Google Colab
+        return True
+    else:
+        return False  # Other type (?)
+rich.console._is_jupyter = _is_jupyter
+
 import logging as _logging
 
 import numpy as _numpy
