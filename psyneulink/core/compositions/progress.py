@@ -53,7 +53,7 @@ class PNLProgress:
             cls._use_rich = False not in show_progress and [k in show_progress for k in {True, 'console'}]
             cls._use_pnl_view = False not in show_progress and 'pnl_view' in show_progress
             cls._show_simulations = False not in show_progress and 'simulations' in show_progress
-            cls._simulation_depth = 0
+            cls._simulation = 0
 
 
             # Instantiate rich Progress object
@@ -136,16 +136,14 @@ class PNLProgress:
             # Simulation mode:
             if context.runmode & ContextFlags.SIMULATION_MODE:
                 run_mode = 'Simulat'
-                # MODIFIED 3/2/21 NEW:
-                # Increment flag for each simulation in a run
-                self._simulation_depth += 1
-                # MODIFIED 3/2/21 END
-
+                # Track depth of simulations (i.e. over all executions nested inside outermost simulation)
+                self._simulation += 1
             else:
                 run_mode = 'Execut'
                 visible = True
 
-            visible = not self._simulation_depth or self._show_simulations
+            # Show progress bar if it is *not* a simulation or it *is* a simulation and show_simulations is set  
+            visible = not self._simulation or self._show_simulations  
 
             # # TEST PRINT 3/2/21:
             # from pprint import pprint
@@ -178,16 +176,16 @@ class PNLProgress:
 
 
         # MODIFIED 3/2/21 NEW:
-        # # Decrement simulation flag for each simulated trial in a run
-        if context.runmode & ContextFlags.SIMULATION_MODE and trial_num == progress_report.num_trials-1:
-            self._simulation_depth -= 1
-            assert self._simulation_depth >= 0, f'PNLProgress._simulation_depth = {self._simulation_depth}'
-
         # # TEST PRINT 3/2/21
         # from pprint import pprint
         # pprint(f'{caller.name} {str(context.runmode)} REPORT')
 
-        if self._simulation_depth and not self._show_simulations:
+        # Decrement simulation count if it is a simulation and task is complete (num_trials have been executed)
+        if context.runmode & ContextFlags.SIMULATION_MODE and trial_num == progress_report.num_trials-1:
+            self._simulation -= 1
+            assert self._simulation >= 0, f'PNLProgress._simulation = {self._simulation}'
+        # Return if (nested within) a simulation and not reporting simulations
+        if self._simulation and not self._show_simulations:
             return
         # MODIFIED 3/2/21 END
 
