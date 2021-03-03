@@ -8763,6 +8763,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         with PNLProgress(show_progress=True) as progress:
 
+            # FIX: Call PNLProgress with context and progress_report handle this in there 3/3/21
             # If execute method is called directly, need to create PNLProgress object for reporting
             if not (context.source & ContextFlags.COMPOSITION) or progress_report is None:
                 progress_report = progress.start_progress_report(comp=self, num_trials=1, context=context)

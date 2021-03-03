@@ -54,6 +54,7 @@ class PNLProgress:
             cls._use_pnl_view = False not in show_progress and 'pnl_view' in show_progress
             cls._show_simulations = False not in show_progress and 'simulations' in show_progress
             cls._simulation = 0
+            cls._simulation = False
 
 
             # Instantiate rich Progress object
@@ -138,9 +139,13 @@ class PNLProgress:
                 run_mode = 'Simulat'
                 # Track depth of simulations (i.e. over all executions nested inside outermost simulation)
                 self._simulation += 1
+                # if self._prev_simulation:
+                #     return
+                # self._prev_simulation = True
             else:
                 run_mode = 'Execut'
                 visible = True
+                self._prev_simulation = False
 
             # Show progress bar if it is *not* a simulation or it *is* a simulation and show_simulations is set  
             visible = not self._simulation or self._show_simulations  
