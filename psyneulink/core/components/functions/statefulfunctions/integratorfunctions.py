@@ -2522,13 +2522,10 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         val = builder.fmul(val, time_step_size)
         val = builder.fadd(val, prev_val)
 
-        factor = time_step_size
         sqrt_f = ctx.get_builtin("sqrt", [ctx.float_ty])
         factor = builder.call(sqrt_f, [time_step_size])
-
         factor = builder.fmul(noise, factor)
         factor = builder.fmul(rand_val, factor)
-        factor = builder.fmul(factor, noise)
 
         val = builder.fadd(val, factor)
 
