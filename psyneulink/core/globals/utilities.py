@@ -1546,7 +1546,16 @@ def safe_equals(x, y):
             else:
                 raise ValueError
         except (ValueError, DeprecationWarning, FutureWarning):
-            return np.array_equal(x, y)
+            try:
+                return np.array_equal(x, y)
+            except DeprecationWarning:
+                len_x = len(x)
+                return (
+                    len_x == len(y)
+                    and all([
+                        safe_equals(x[i], y[i]) for i in range(len_x)
+                    ])
+                )
 
 
 @tc.typecheck
