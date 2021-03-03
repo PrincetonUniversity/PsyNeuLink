@@ -19,8 +19,26 @@ If you have trouble installing PsyNeuLink, run into any bugs, or have suggestion
 please contact psyneulinkhelp@princeton.edu.
 """
 
-# Monkey patch rich._is_juptyer to work on Google colab
+import logging as _logging
+
+import numpy as _numpy
+
+# We need to import rich here so we can monkey patch console._is_jupyter to work on
+# google colab. This fix to rich is up as a pull request. See:
+# https://github.com/willmcgugan/rich/pull/1085
+# If accepted then this import and the monkey patch below can be removed.
 import rich.console
+
+# starred imports to allow user imports from top level
+from . import core
+from . import library
+
+from ._version import get_versions
+from .core import *
+from .library import *
+
+
+# Monkey patch rich
 def _is_jupyter() -> bool:  # pragma: no cover
     """Check if we're running in a Jupyter notebook."""
     try:
@@ -39,20 +57,6 @@ def _is_jupyter() -> bool:  # pragma: no cover
         return False  # Other type (?)
 rich.console._is_jupyter = _is_jupyter
 
-import logging as _logging
-
-import numpy as _numpy
-
-# starred imports to allow user imports from top level
-from . import core
-from . import library
-
-from ._version import get_versions
-from .core import *
-from .library import *
-
-# from rich import print, box
-# print("Initializing...")
 
 _pnl_global_names = [
     'primary_registries', 'System', 'Process'
