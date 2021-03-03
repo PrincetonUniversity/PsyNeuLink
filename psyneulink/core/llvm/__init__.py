@@ -9,6 +9,7 @@
 # ********************************************* LLVM bindings **************************************************************
 
 import ctypes
+import enum
 import functools
 import numpy as np
 from typing import Set
@@ -24,7 +25,21 @@ from .execution import *
 from .execution import _tupleize
 from .jit_engine import *
 
-__all__ = ['LLVMBuilderContext']
+__all__ = ['LLVMBuilderContext', 'ExecutionMode']
+
+class ExecutionMode(enum.Flag):
+    Python   = 0
+    LLVM     = enum.auto()
+    PTX      = enum.auto()
+    _Run      = enum.auto()
+    _Exec     = enum.auto()
+    _Fallback = enum.auto()
+
+    Auto = _Fallback | _Run | _Exec | LLVM
+    LLVMRun = LLVM | _Run
+    LLVMExec = LLVM | _Exec
+    PTXRun = PTX | _Run
+    PTXExec = PTX | _Exec
 
 
 _compiled_modules: Set[ir.Module] = set()
@@ -128,16 +143,24 @@ if ptx_enabled:
 # Initialize builtins
 def init_builtins():
     with LLVMBuilderContext.get_global() as ctx:
+        # Numeric
         builtins.setup_pnl_intrinsics(ctx)
+        builtins.setup_csch(ctx)
+        builtins.setup_coth(ctx)
+        builtins.setup_tanh(ctx)
+        builtins.setup_is_close(ctx)
+
+        # PRNG
+        builtins.setup_mersenne_twister(ctx)
+
+        # Matrix/Vector
         builtins.setup_vxm(ctx)
         builtins.setup_vxm_transposed(ctx)
-        builtins.setup_mersenne_twister(ctx)
         builtins.setup_vec_add(ctx)
         builtins.setup_vec_sum(ctx)
         builtins.setup_mat_add(ctx)
         builtins.setup_vec_sub(ctx)
         builtins.setup_mat_sub(ctx)
-        builtins.setup_vec_copy(ctx)
         builtins.setup_vec_hadamard(ctx)
         builtins.setup_mat_hadamard(ctx)
         builtins.setup_vec_scalar_mult(ctx)

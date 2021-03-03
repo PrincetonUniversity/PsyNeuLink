@@ -124,12 +124,8 @@ GROUP_PREFIX="IntegratorFunction "
     (Functions.DriftDiffusionIntegrator, DriftIntFun),
     (Functions.LeakyCompetingIntegrator, LeakyFun),
     ], ids=lambda x: x[0])
-@pytest.mark.parametrize("mode", [
-    'Python',
-    pytest.param('LLVM', marks=pytest.mark.llvm),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
 @pytest.mark.benchmark
-def test_execute(func, mode, variable, noise, params, benchmark):
+def test_execute(func, func_mode, variable, noise, params, benchmark):
     benchmark.group = GROUP_PREFIX + func[0].componentName
     try:
         noise = noise()
@@ -148,11 +144,11 @@ def test_execute(func, mode, variable, noise, params, benchmark):
     else:
         f = func[0](default_variable=variable, noise=noise, **params)
 
-    if mode == 'Python':
+    if func_mode == 'Python':
         ex = f
-    elif mode == 'LLVM':
+    elif func_mode == 'LLVM':
         ex = pnlvm.execution.FuncExecution(f).execute
-    elif mode == 'PTX':
+    elif func_mode == 'PTX':
         ex = pnlvm.execution.FuncExecution(f).cuda_execute
     ex(variable)
     ex(variable)

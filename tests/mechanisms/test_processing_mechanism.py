@@ -40,17 +40,13 @@ class TestProcessingMechanismFunctions:
                              ids=["list.int", "list.float", "np.1d.i8", "np.1d.i16", "np.1d.i32", "np.1d.i64", "np.1d.f32", "np.1d.f64",
                                   "list2d.int", "list2d.float", "np.2d.i8", "np.2d.i16", "np.2d.i32", "np.2d.i64", "np.2d.f32", "np.2d.f64",
                              ])
-    @pytest.mark.parametrize("mode", ["Python",
-                                      pytest.param("LLVM", marks=[pytest.mark.llvm]),
-                                      pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                     ])
-    def test_processing_mechanism_default_function(self, mode, variable, benchmark):
+    def test_processing_mechanism_default_function(self, mech_mode, variable, benchmark):
         PM = ProcessingMechanism(default_variable=[0, 0, 0, 0])
-        if mode == "Python":
+        if mech_mode == "Python":
             ex = PM.execute
-        elif mode == "LLVM":
+        elif mech_mode == "LLVM":
             ex = pnlvm.MechExecution(PM).execute
-        elif mode == "PTX":
+        elif mech_mode == "PTX":
             ex = pnlvm.MechExecution(PM).cuda_execute
         res = benchmark(ex, variable)
         assert np.allclose(res, [[1., 2., 3., 4.]])
@@ -256,22 +252,18 @@ class TestProcessingMechanismStandardOutputPorts:
                                               (MAX_ABS_INDICATOR, [0, 0, 1]),
                                              ],
                              ids=lambda x: x if isinstance(x, str) else "")
-    @pytest.mark.parametrize("mode", ["Python",
-                                      pytest.param("LLVM", marks=[pytest.mark.llvm]),
-                                      pytest.param("PTX", marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                     ])
-    def test_output_ports(self, mode, op, expected, benchmark):
+    def test_output_ports(self, mech_mode, op, expected, benchmark):
         benchmark.group = "Output Port Op: {}".format(op)
         PM1 = ProcessingMechanism(default_variable=[0, 0, 0], output_ports=[op])
         var = [1, 2, 4] if op in {MEAN, MEDIAN, STANDARD_DEVIATION, VARIANCE} else [1, 2, -4]
-        if mode == "Python":
+        if mech_mode == "Python":
             ex = PM1.execute
-        elif mode == "LLVM":
+        elif mech_mode == "LLVM":
             ex = pnlvm.MechExecution(PM1).execute
-        elif mode == "PTX":
+        elif mech_mode == "PTX":
             ex = pnlvm.MechExecution(PM1).cuda_execute
         res = benchmark(ex, var)
-        res = PM1.output_ports[0].value if mode == "Python" else res
+        res = PM1.output_ports[0].value if mech_mode == "Python" else res
         assert np.allclose(res, expected)
 
     # FIXME: These variants don't compile (use UDFs)

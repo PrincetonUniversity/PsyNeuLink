@@ -1548,7 +1548,7 @@ Known failure conditions are listed `here <https://github.com/PrincetonUniversit
 
 .. _Composition_Compiled_Modes:
 
-The **bin_execute** argument of an `execution method <Composition_Execution_Methods>` specifies whether to use a
+The **execution_mode** argument of an `execution method <Composition_Execution_Methods>` specifies whether to use a
 compiled mode and, if so,  which.  If True is specified, an attempt is made to use the most powerful mode (LLVMRun)
 and, if that fails, to try progressively less powerful modes (issueing a warning indicating the unsupported feature
 that caused the failure), reverting to the Python interpreter if all compiled modes fail.  If a particular mode is
@@ -1579,7 +1579,7 @@ in order of their power, are:
 *GPU support.*  In addition to compilation for CPUs, support is being developed for `CUDA
 <https://developer.nvidia.com/about-cuda>`_ capable `Invidia GPUs
 <https://en.wikipedia.org/wiki/List_of_Nvidia_graphics_processing_units>`_.  This can be invoked by specifying one
-of the following modes in the **bin_execute** argument of a `Composition execution method
+of the following modes in the **execution_mode** argument of a `Composition execution method
 <Composition_Execution_Methods>`:
 
     * *PTXExec|PTXRun* -- equivalent to the LLVM counterparts but run in a single thread of a CUDA capable GPU.
@@ -3349,12 +3349,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
     class _CompilationData(ParametersBase):
-        ptx_execution = None
-        parameter_struct = None
-        state_struct = None
-        data_struct = None
-        scheduler_conditions = None
-
+        execution = None
 
     def __init__(
             self,
@@ -7491,7 +7486,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             runtime_params=None,
             base_context=Context(execution_id=None),
             context=None,
-            execution_mode=False,
+            execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             return_results=False,
             block_simulate=False
     ):
@@ -7552,7 +7547,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                  runtime_params=runtime_params,
                  num_trials=num_simulation_trials,
                  animate=animate,
-                 bin_execute=execution_mode,
+                 execution_mode=execution_mode,
                  skip_initialization=True,
                  )
         context.remove_flag(ContextFlags.SIMULATION_MODE)
@@ -8119,7 +8114,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             animate=False,
             log=False,
             scheduler=None,
-            bin_execute=False,
+            execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             context=None,
             base_context=Context(execution_id=None),
             ):
@@ -8264,7 +8259,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             the scheduler object that owns the conditions that will instruct the execution of the Composition.
             If not specified, the Composition will use its automatically generated scheduler.
 
-        bin_execute : bool or enum.Enum[LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun] : default Python
+        execution_mode : enum.Enum[Auto|LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun] : default Python
             specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
             False is the same as ``Python``;  True tries LLVM compilation modes, in order of power, progressively
             reverting to less powerful modes (in the order of the options listed), and to Python if no compilation
@@ -8449,19 +8444,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         is_simulation = (context is not None and
                          ContextFlags.SIMULATION_MODE in context.runmode)
 
-        if (bin_execute is True or str(bin_execute).endswith('Run')):
+        if execution_mode & pnlvm.ExecutionMode._Run:
             # There's no mode to run simulations.
             # Simulations are run as part of the controller node wrapper.
             assert not is_simulation
             try:
                 comp_ex_tags = frozenset({"learning"}) if self._is_learning(context) else frozenset()
-                if bin_execute is True or bin_execute.startswith('LLVM'):
-                    _comp_ex = pnlvm.CompExecution(self, [context.execution_id], additional_tags=comp_ex_tags)
+                _comp_ex = pnlvm.CompExecution.get(self, context, additional_tags=comp_ex_tags)
+                if execution_mode & pnlvm.ExecutionMode.LLVM:
                     results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
-                elif bin_execute.startswith('PTX'):
-                    self.__ptx_initialize(context, additional_tags=comp_ex_tags)
-                    EX = self._compilation_data.ptx_execution._get(context)
-                    results += EX.cuda_run(inputs, num_trials, num_inputs_sets)
+                elif execution_mode & pnlvm.ExecutionMode.PTX:
+                    results += _comp_ex.cuda_run(inputs, num_trials, num_inputs_sets)
+                else:
+                    assert False, "Unknown execution mode: {}".format(execution_mode)
 
                 # Update the parameter for results
                 self.parameters.results._set(results, context)
@@ -8476,7 +8471,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return results[-1]
 
             except Exception as e:
-                if bin_execute is not True:
+                if not execution_mode & pnlvm.ExecutionMode._Fallback:
                     raise e from None
 
                 warnings.warn("Failed to run `{}': {}".format(self.name, str(e)))
@@ -8520,7 +8515,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         clamp_input=clamp_input,
                                         runtime_params=runtime_params,
                                         skip_initialization=True,
-                                        bin_execute=bin_execute,
+                                        execution_mode=execution_mode,
                                         )
 
             # ---------------------------------------------------------------------------------
@@ -8562,7 +8557,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except NameError:
                 _comp_ex = None
             self._execute_controller(
-                bin_execute=bin_execute,
+                execution_mode=execution_mode,
                 _comp_ex=_comp_ex,
                 context=context
             )
@@ -8609,7 +8604,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             patience: tc.optional(int) = None,
             min_delta: int = 0,
             context: tc.optional(Context) = None,
-            bin_execute=False,
+            execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             randomize_minibatches=False,
             call_before_minibatch = None,
             call_after_minibatch = None,
@@ -8724,13 +8719,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_before_minibatch=call_before_minibatch,
             call_after_minibatch=call_after_minibatch,
             context=context,
-            bin_execute=bin_execute,
+            execution_mode=execution_mode,
             *args, **kwargs)
 
         context.remove_flag(ContextFlags.LEARNING_MODE)
         return learning_results
 
-    def _execute_controller(self, relative_order=AFTER, bin_execute=False, _comp_ex=False, context=None):
+    def _execute_controller(self, relative_order=AFTER, execution_mode=False, _comp_ex=False, context=None):
         execution_scheduler = context.composition.scheduler
         if (self.enable_controller and
             self.controller_mode == relative_order and
@@ -8744,13 +8739,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.initialization_status != ContextFlags.INITIALIZING
                     and ContextFlags.SIMULATION_MODE not in context.runmode
             ):
-                if self.controller and not bin_execute:
+                if self.controller and not execution_mode:
                     # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                     # FIX: END REMOVE
                     context.execution_phase = ContextFlags.PROCESSING
                     self.controller.execute(context=context)
 
-                if bin_execute:
+                if execution_mode:
                     _comp_ex.execute_node(self.controller)
 
                 context.remove_flag(ContextFlags.PROCESSING)
@@ -8777,7 +8772,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             clamp_input=SOFT_CLAMP,
             runtime_params=None,
             skip_initialization=False,
-            bin_execute=False,
+            execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             ):
         """
             Passes inputs to any `Nodes <Composition_Nodes>` receiving inputs directly from the user (via the "inputs"
@@ -8834,9 +8829,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 called after each `PASS` is executed
                 passed the current *context* (but it is not necessary for your callable to take).
 
-            bin_execute : bool or enum.Enum[LLVM|LLVMexec|Python|PTXExec] : default Python
+            execution_mode : enum.Enum[Auto|LLVM|LLVMexec|Python|PTXExec] : default Python
                 specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
-                see **bin_execute** argument of `run <Composition.run>` method for additional details.
+                see **execution_mode** argument of `run <Composition.run>` method for additional details.
 
             Returns
             ---------
@@ -8863,10 +8858,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 print(f"[bold {trial_panel_color}]{self.name} TRIAL {trial_num} ====================")
 
         # ASSIGNMENTS **************************************************************************************************
-
-        assert not str(bin_execute).endswith("Run")
-        if bin_execute == 'Python':
-            bin_execute = False
 
         if not hasattr(self, '_animate'):
             # These are meant to be assigned in run method;  needed here for direct call to execute method
@@ -8927,50 +8918,50 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Run compiled execution (if compiled execution was requested
         # NOTE: This should be as high up as possible,
         # but still after the context has been initialized
-        if bin_execute:
+        if execution_mode:
             is_simulation = (context is not None and
                              ContextFlags.SIMULATION_MODE in context.runmode)
             # Try running in Exec mode first
-            if (bin_execute is True or str(bin_execute).endswith('Exec')):
+            if (execution_mode & pnlvm.ExecutionMode._Exec):
                 # There's no mode to execute simulations.
                 # Simulations are run as part of the controller node wrapper.
                 assert not is_simulation
                 try:
-                    if bin_execute is True or bin_execute.startswith('LLVM'):
-                        llvm_inputs = self._validate_execution_inputs(inputs)
-                        _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
+                    llvm_inputs = self._validate_execution_inputs(inputs)
+                    _comp_ex = pnlvm.CompExecution.get(self, context)
+                    if execution_mode & pnlvm.ExecutionMode.LLVM:
                         _comp_ex.execute(llvm_inputs)
-                        return _comp_ex.extract_node_output(self.output_CIM)
-                    elif bin_execute.startswith('PTX'):
-                        llvm_inputs = self._validate_execution_inputs(inputs)
-                        self.__ptx_initialize(context)
-                        __execution = self._compilation_data.ptx_execution._get(context)
-                        __execution.cuda_execute(llvm_inputs)
-                        return __execution.extract_node_output(self.output_CIM)
+                    elif execution_mode & pnlvm.ExecutionMode.PTX:
+                        _comp_ex.cuda_execute(llvm_inputs)
+                    else:
+                        assert False, "Unknown execution mode: {}".format(execution_mode)
+
+                    return _comp_ex.extract_node_output(self.output_CIM)
                 except Exception as e:
-                    if bin_execute is not True:
+                    if not execution_mode & pnlvm.ExecutionMode._Fallback:
                         raise e from None
 
                     warnings.warn("Failed to execute `{}': {}".format(self.name, str(e)))
 
-            # Exec failed for some reason, we can still try node level bin_execute
+            # Exec failed for some reason, we can still try node level execution_mode
             # Filter out nested compositions. They are not executed in this mode
             # Filter out controller if running simulation.
             mechanisms = (n for n in self._all_nodes
                           if isinstance(n, Mechanism) and
                              (n is not self.controller or not is_simulation))
 
+            assert execution_mode & pnlvm.ExecutionMode.LLVM
             try:
-                _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
+                _comp_ex = pnlvm.CompExecution.get(self, context)
                 # Compile all mechanism wrappers
                 for m in mechanisms:
                     _comp_ex._set_bin_node(m)
             except Exception as e:
-                if bin_execute is not True:
+                if not execution_mode & pnlvm.ExecutionMode._Fallback:
                     raise e from None
 
                 warnings.warn("Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e)))
-                bin_execute = False
+                execution_mode = pnlvm.ExecutionMode.Python
 
 
         # Generate first frame of animation without any active_items
@@ -9033,7 +9024,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             inputs = self._validate_execution_inputs(inputs)
             build_CIM_input = self._build_variable_for_input_CIM(inputs)
 
-        if bin_execute:
+        if execution_mode:
             _comp_ex.execute_node(self.input_CIM, inputs)
             # FIXME: parameter_CIM should be executed here as well,
             #        but node execution of nested compositions with
@@ -9096,14 +9087,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             scheduler.clock.time.trial == 0):
                 self._execute_controller(
                     relative_order=BEFORE,
-                    bin_execute=bin_execute,
+                    execution_mode=execution_mode,
                     _comp_ex=_comp_ex,
                     context=context
                 )
         elif self.controller_time_scale == TimeScale.TRIAL:
             self._execute_controller(
                 relative_order=BEFORE,
-                bin_execute=bin_execute,
+                execution_mode=execution_mode,
                 _comp_ex=_comp_ex,
                 context=context
             )
@@ -9125,7 +9116,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.controller_time_scale == TimeScale.PASS:
             self._execute_controller(
                 relative_order=BEFORE,
-                bin_execute=bin_execute,
+                execution_mode=execution_mode,
                 _comp_ex=_comp_ex,
                 context=context
             )
@@ -9161,7 +9152,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if self.controller_time_scale == TimeScale.PASS:
                     self._execute_controller(
                         relative_order=AFTER,
-                        bin_execute=bin_execute,
+                        execution_mode=execution_mode,
                         _comp_ex=_comp_ex,
                         context=context
                     )
@@ -9173,7 +9164,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if self.controller_time_scale == TimeScale.PASS:
                     self._execute_controller(
                         relative_order=BEFORE,
-                        bin_execute=bin_execute,
+                        execution_mode=execution_mode,
                         _comp_ex=_comp_ex,
                         context=context
                     )
@@ -9185,7 +9176,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if self.controller_time_scale == TimeScale.TIME_STEP:
                 self._execute_controller(
                     relative_order=BEFORE,
-                    bin_execute=bin_execute,
+                    execution_mode=execution_mode,
                     _comp_ex=_comp_ex,
                     context=context
                 )
@@ -9197,7 +9188,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # This ensures that the order in which nodes execute does not affect the results of this timestep
             frozen_values = {}
             new_values = {}
-            if bin_execute:
+            if execution_mode:
                 _comp_ex.freeze_values()
 
             # PURGE LEARNING IF NOT ENABLED ----------------------------------------------------------------
@@ -9269,7 +9260,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             context.replace_flag(ContextFlags.PROCESSING, ContextFlags.LEARNING)
 
                     # Execute Mechanism
-                    if bin_execute:
+                    if execution_mode:
                         _comp_ex.execute_node(node)
                     else:
                         if node is not self.controller:
@@ -9304,7 +9295,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 elif isinstance(node, Composition):
 
-                    if bin_execute:
+                    if execution_mode:
                         # Invoking nested composition passes data via Python
                         # structures. Make sure all sources get their latest values
                         srcs = (proj.sender.owner for proj in node.input_CIM.afferents)
@@ -9336,13 +9327,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Run node-level compiled nested composition
                     # only if there are no control projections
-                    nested_bin_execute = bin_execute \
-                        if len(node.parameter_CIM.afferents) == 0 else False
+                    nested_execution_mode = execution_mode \
+                        if len(node.parameter_CIM.afferents) == 0 else \
+                        pnlvm.ExecutionMode.Python
                     ret = node.execute(context=context,
-                                       bin_execute=nested_bin_execute)
+                                       execution_mode=nested_execution_mode)
 
                     # Get output info from nested execution
-                    if bin_execute:
+                    if execution_mode:
                         # Update result in binary data structure
                         _comp_ex.insert_node_output(node, ret)
 
@@ -9395,7 +9387,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if self.controller_time_scale == TimeScale.TIME_STEP:
                 self._execute_controller(
                     relative_order=AFTER,
-                    bin_execute=bin_execute,
+                    execution_mode=execution_mode,
                     _comp_ex=_comp_ex,
                     context=context
                 )
@@ -9440,7 +9432,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.controller_time_scale == TimeScale.PASS:
             self._execute_controller(
                 relative_order=AFTER,
-                bin_execute=bin_execute,
+                execution_mode=execution_mode,
                 _comp_ex=_comp_ex,
                 context=context
             )
@@ -9456,7 +9448,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.controller_time_scale == TimeScale.TRIAL:
             self._execute_controller(
                 relative_order=AFTER,
-                bin_execute=bin_execute,
+                execution_mode=execution_mode,
                 _comp_ex=_comp_ex,
                 context=context
             )
@@ -9466,7 +9458,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # REPORT RESULTS ***********************************************************************************************
 
         # Extract result here
-        if bin_execute:
+        if execution_mode:
             _comp_ex.freeze_values()
             _comp_ex.execute_node(self.output_CIM)
             return _comp_ex.extract_node_output(self.output_CIM)
@@ -9854,13 +9846,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return pnlvm.codegen.gen_composition_run(ctx, self, tags=tags)
         else:
             return pnlvm.codegen.gen_composition_exec(ctx, self, tags=tags)
-
-    def __ptx_initialize(self, context=None, additional_tags=frozenset()):
-        if self._compilation_data.ptx_execution._get(context) is None:
-            self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self,
-                                                                          [context.execution_id],
-                                                                          additional_tags=additional_tags),
-                                                      context)
 
     def enable_logging(self):
         for item in self.nodes + self.projections:

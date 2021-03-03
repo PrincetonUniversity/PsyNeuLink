@@ -42,20 +42,16 @@ names = [
 @pytest.mark.transfer_function
 @pytest.mark.benchmark
 @pytest.mark.parametrize("func, variable, params, llvm_skip, expected", test_data, ids=names)
-@pytest.mark.parametrize("mode", [
-    'Python',
-    pytest.param('LLVM', marks=pytest.mark.llvm),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-def test_execute(func, variable, params, llvm_skip, expected, benchmark, mode):
+def test_execute(func, variable, params, llvm_skip, expected, benchmark, func_mode):
     benchmark.group = "TransferFunction " + func.componentName
-    if mode != 'Python' and llvm_skip:
+    if func_mode != 'Python' and llvm_skip:
         pytest.skip(llvm_skip)
     f = func(default_variable=variable, **params)
-    if mode == 'Python':
+    if func_mode == 'Python':
         ex = f
-    elif mode == 'LLVM':
+    elif func_mode == 'LLVM':
         ex = pnlvm.execution.FuncExecution(f).execute
-    elif mode == 'PTX':
+    elif func_mode == 'PTX':
         ex = pnlvm.execution.FuncExecution(f).cuda_execute
     res = ex(variable)
     assert np.allclose(res, expected)

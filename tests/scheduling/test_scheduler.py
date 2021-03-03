@@ -1500,15 +1500,15 @@ class TestFeedback:
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
-    @pytest.mark.parametrize('mode', ['Python',
+    @pytest.mark.parametrize('mode', [pnl.ExecutionMode.Python,
                                       # 'LLVM' mode is not supported
                                       # the comparison values and checks
                                       # are not synced between binary
                                       # and Python structures
-                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
     @pytest.mark.parametrize('timescale, expected',
                              [(TimeScale.TIME_STEP, [[0.5], [0.4375]]),
@@ -1535,20 +1535,22 @@ class TestFeedback:
         comp.scheduler.add_condition(response, pnl.WhenFinished(attention))
         comp.scheduler.add_condition(counter, pnl.Always())
         inputs = {attention: [[0.5]], counter: [[2.0]]}
-        result = comp.run(inputs=inputs, bin_execute=mode)
-        if mode == 'Python':
+        result = comp.run(inputs=inputs, execution_mode=mode)
+        if mode is pnl.ExecutionMode.Python:
             assert attention.execution_count == 3
             assert counter.execution_count == 1 if in_one_pass else 3
             assert response.execution_count == 1
         assert np.allclose(result, expected)
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python',
-                                      # 'LLVM' mode is not supported, because synchronization of compiler and python values during execution is not implemented.
-                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
+                                      # 'LLVM' mode is not supported, because
+                                      # synchronization of compiler and python
+                                      # values during execution is not implemented.
+                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
     @pytest.mark.parametrize("condition,scale,expected_result",
                              [(pnl.BeforeNCalls, TimeScale.TRIAL, [[.05, .05]]),
@@ -1621,17 +1623,17 @@ class TestFeedback:
         elif condition is pnl.AtTrial:
             comp.scheduler.add_condition(response, condition(0))
 
-        result = comp.run([0.05], bin_execute=mode)
+        result = comp.run([0.05], execution_mode=mode)
         #HACK: The result is an object dtype in Python mode for some reason?
-        if mode == 'Python':
+        if mode is pnl.ExecutionMode.Python:
             result = np.asfarray(result[0])
         assert np.allclose(result, expected_result)
 
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
+                                      pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
+                                      pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
     @pytest.mark.parametrize("condition,scale,expected_result",
                              [(pnl.AtTrial, None, [[[1.0]], [[2.0]]]),
@@ -1646,6 +1648,6 @@ class TestFeedback:
         comp.scheduler.termination_conds = {
             pnl.TimeScale.RUN: condition(2)
         }
-        r = comp.run(inputs=[1], num_trials=5, bin_execute=mode)
+        r = comp.run(inputs=[1], num_trials=5, execution_mode=mode)
         assert np.allclose(r, expected_result[-1])
         assert np.allclose(comp.results, expected_result)

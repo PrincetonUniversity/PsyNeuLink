@@ -116,20 +116,15 @@ class TestThreshold:
         (2., [2.0, 4.0, 5.0, 5.0, 5.0]),
         (-2., [-2.0, -4.0, -5.0, -5.0, -5.0]),
         ], ids=["POSITIVE", "NEGATIVE"])
-    @pytest.mark.parametrize("mode", [
-        'Python',
-        pytest.param('LLVM', marks=pytest.mark.llvm),
-        pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-    ])
-    def test_threshold_stops_accumulation(self, mode, variable, expected, benchmark):
+    def test_threshold_stops_accumulation(self, mech_mode, variable, expected, benchmark):
         D = DDM(name='DDM',
                 function=DriftDiffusionIntegrator(threshold=5.0, time_step_size=1.0),
                 execute_until_finished=False)
-        if mode == 'Python':
+        if mech_mode == 'Python':
             ex = D.execute
-        elif mode == 'LLVM':
+        elif mech_mode == 'LLVM':
             ex = pnlvm.execution.MechExecution(D).execute
-        elif mode == 'PTX':
+        elif mech_mode == 'PTX':
             ex = pnlvm.execution.MechExecution(D).cuda_execute
 
         decision_variables = []
@@ -250,22 +245,17 @@ class TestOutputPorts:
 @pytest.mark.ddm_mechanism
 @pytest.mark.mechanism
 @pytest.mark.benchmark
-@pytest.mark.parametrize("mode", [
-    'Python',
-    pytest.param('LLVM', marks=pytest.mark.llvm),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-])
-def test_DDM_Integrator_Bogacz(benchmark, mode):
+def test_DDM_Integrator_Bogacz(benchmark, mech_mode):
     stim = 10
     T = DDM(
         name='DDM',
         function=DriftDiffusionAnalytical()
     )
-    if mode == 'Python':
+    if mech_mode == 'Python':
         ex = T.execute
-    elif mode == 'LLVM':
+    elif mech_mode == 'LLVM':
         ex = pnlvm.execution.MechExecution(T).execute
-    elif mode == 'PTX':
+    elif mech_mode == 'PTX':
         ex = pnlvm.execution.MechExecution(T).cuda_execute
     val = ex(stim)[0]
     assert np.allclose(val, [1.0])
@@ -304,12 +294,7 @@ def test_DDM_Integrator_Bogacz(benchmark, mode):
     (np.sqrt(0.5), 8.194383551861414),
     (np.sqrt(2.0), 6.388767103722829),
     ], ids=["0", "0.5", "2.0"])
-@pytest.mark.parametrize("mode", [
-    'Python',
-    pytest.param('LLVM', marks=pytest.mark.llvm),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-])
-def test_DDM_noise(mode, benchmark, noise, expected):
+def test_DDM_noise(mech_mode, benchmark, noise, expected):
     T = DDM(
         name='DDM',
         function=DriftDiffusionIntegrator(
@@ -319,11 +304,11 @@ def test_DDM_noise(mode, benchmark, noise, expected):
         ),
         execute_until_finished=False
     )
-    if mode == 'Python':
+    if mech_mode == 'Python':
         ex = T.execute
-    elif mode == 'LLVM':
+    elif mech_mode == 'LLVM':
         ex = pnlvm.execution.MechExecution(T).execute
-    elif mode == 'PTX':
+    elif mech_mode == 'PTX':
         ex = pnlvm.execution.MechExecution(T).cuda_execute
 
     val = ex([10])
@@ -442,15 +427,10 @@ def test_DDM_input_fn():
 @pytest.mark.parametrize("rate, expected", [
     (5, 50), (5., 50), ([5], 50), (-5.0, -50),
     ], ids=["int", "float", "list", "negative"])
-@pytest.mark.parametrize("mode", [
-    'Python',
-    pytest.param('LLVM', marks=pytest.mark.llvm),
-    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-])
 # ******
 # Should negative pass?
 # ******
-def test_DDM_rate(benchmark, rate, expected, mode):
+def test_DDM_rate(benchmark, rate, expected, mech_mode):
     stim = [10]
     T = DDM(
         name='DDM',
@@ -461,11 +441,11 @@ def test_DDM_rate(benchmark, rate, expected, mode):
         ),
         execute_until_finished=False,
     )
-    if mode == 'Python':
+    if mech_mode == 'Python':
         ex = T.execute
-    elif mode == 'LLVM':
+    elif mech_mode == 'LLVM':
         ex = pnlvm.execution.MechExecution(T).execute
-    elif mode == 'PTX':
+    elif mech_mode == 'PTX':
         ex = pnlvm.execution.MechExecution(T).cuda_execute
     val = float(ex(stim)[0][0][0])
     assert val == expected
@@ -664,15 +644,7 @@ def test_WhenFinished_DDM_Analytical():
 @pytest.mark.ddm_mechanism
 @pytest.mark.mechanism
 @pytest.mark.benchmark(group="DDM-comp")
-@pytest.mark.parametrize("mode", [
-    'Python',
-    pytest.param('LLVM', marks=pytest.mark.llvm),
-    pytest.param('LLVMExec', marks=pytest.mark.llvm),
-    pytest.param('LLVMRun', marks=pytest.mark.llvm),
-    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-])
-def test_DDM_in_composition(benchmark, mode):
+def test_DDM_in_composition(benchmark, comp_mode):
     M = pnl.DDM(
         name='DDM',
         function=pnl.DriftDiffusionIntegrator(
@@ -688,26 +660,18 @@ def test_DDM_in_composition(benchmark, mode):
     C = pnl.Composition()
     C.add_linear_processing_pathway([M])
     inputs = {M: [10]}
-    val = C.run(inputs, num_trials=2, bin_execute=mode)
+    val = C.run(inputs, num_trials=2, execution_mode=comp_mode)
     # FIXME: Python version returns dtype=object
     val = np.asfarray(val)
     assert np.allclose(val[0], [2.0])
     assert np.allclose(val[1], [0.2])
     if benchmark.enabled:
-        benchmark(C.run, inputs, num_trials=2, bin_execute=mode)
+        benchmark(C.run, inputs, num_trials=2, execution_mode=comp_mode)
 
 
 @pytest.mark.ddm_mechanism
 @pytest.mark.mechanism
-@pytest.mark.parametrize("mode", [
-    'Python',
-    pytest.param('LLVM', marks=pytest.mark.llvm),
-    pytest.param('LLVMExec', marks=pytest.mark.llvm),
-    pytest.param('LLVMRun', marks=pytest.mark.llvm),
-    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-])
-def test_DDM_threshold_modulation(mode):
+def test_DDM_threshold_modulation(comp_mode):
     M = pnl.DDM(
         name='DDM',
         function=pnl.DriftDiffusionAnalytical(
@@ -729,34 +693,27 @@ def test_DDM_threshold_modulation(mode):
     C.add_node(monitor)
     C.add_node(control)
     inputs = {M:[1], monitor:[3]}
-    val = C.run(inputs, num_trials=1, bin_execute=mode)
+    val = C.run(inputs, num_trials=1, execution_mode=comp_mode)
     # FIXME: Python version returns dtype=object
     val = np.asfarray(val)
     assert np.allclose(val[0], [60.0])
     assert np.allclose(val[1], [60.2])
 
-@pytest.mark.parametrize("mode", ['Python',
-                                    pytest.param('LLVM', marks=pytest.mark.llvm),
-                                    pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
-                                    ])
 @pytest.mark.parametrize(["noise", "threshold", "expected_results"],[
                             (1.0, 0.0, (0.0, 1.0)),
                             (1.5, 2, (-2.0, 1.0)),
                             (10.0, 10.0, (10.0, 29.0)),
                             (100.0, 100.0, (100.0, 76.0)),
                         ])
-def test_ddm_is_finished(mode, noise, threshold, expected_results):
+def test_ddm_is_finished(comp_mode, noise, threshold, expected_results):
     comp = Composition()
     ddm = DDM(function=DriftDiffusionIntegrator(threshold=threshold, noise=np.sqrt(noise), time_step_size=1.0),
               execute_until_finished=True)
     comp.add_node(ddm)
 
-    results = comp.run([0], bin_execute=mode)
+    results = comp.run([0], execution_mode=comp_mode)
 
-    results = [x for x in np.array(results).flatten()] #HACK: The result is an object dtype in Python mode for some reason?
+    results = [x for x in np.array(results).flatten()] #HACK: The result is an object dtype in Python comp_mode for some reason?
     assert np.allclose(results, np.array(expected_results).flatten())
 
 
@@ -818,17 +775,11 @@ def test_sequence_of_DDM_mechs_in_Composition_Pathway():
 
 @pytest.mark.mechanism
 @pytest.mark.ddm_mechanism
-@pytest.mark.parametrize('mode', ['Python',
-                                  pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                  pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                  pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                  pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-def test_DDMMechanism_LCA_equivalent(mode):
+def test_DDMMechanism_LCA_equivalent(comp_mode):
     ddm = DDM(default_variable=[0], function=DriftDiffusionIntegrator(rate=1, time_step_size=0.1),
               execute_until_finished=False)
     comp2 = Composition()
     comp2.add_node(ddm)
-    result2 = comp2.run(inputs={ddm:[1]}, bin_execute=mode)
+    result2 = comp2.run(inputs={ddm:[1]}, execution_mode=comp_mode)
     assert np.allclose(np.asfarray(result2[0]), [0.1])
     assert np.allclose(np.asfarray(result2[1]), [0.1])
