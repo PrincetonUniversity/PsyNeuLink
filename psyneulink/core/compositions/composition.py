@@ -8461,6 +8461,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 progress.report_output(self, progress_report, scheduler, show_output, 'run', context)
                 # MODIFIED 3/2/21 OLD:
                 # progress.report_progress(self, progress_report, trial_num, context)
+                # # MODIFIED 3/2/21 NEW:
+                # progress.report_progress(self, progress_report, context)
                 # MODIFIED 3/2/21 END
 
 

@@ -54,7 +54,7 @@ class PNLProgress:
             cls._use_pnl_view = False not in show_progress and 'pnl_view' in show_progress
             cls._show_simulations = False not in show_progress and 'simulations' in show_progress
             cls._simulation = 0
-            cls._simulation = False
+            cls._prev_simulation = False
 
 
             # Instantiate rich Progress object
@@ -139,12 +139,12 @@ class PNLProgress:
                 run_mode = 'Simulat'
                 # Track depth of simulations (i.e. over all executions nested inside outermost simulation)
                 self._simulation += 1
-                # if self._prev_simulation:
-                #     return
-                # self._prev_simulation = True
+                if self._prev_simulation:
+                    # Return id for last progress_report created
+                    return len(self._progress_reports) - 1
+                self._prev_simulation = True
             else:
                 run_mode = 'Execut'
-                visible = True
                 self._prev_simulation = False
 
             # Show progress bar if it is *not* a simulation or it *is* a simulation and show_simulations is set  
@@ -186,7 +186,8 @@ class PNLProgress:
         # pprint(f'{caller.name} {str(context.runmode)} REPORT')
 
         # Decrement simulation count if it is a simulation and task is complete (num_trials have been executed)
-        if context.runmode & ContextFlags.SIMULATION_MODE and trial_num == progress_report.num_trials-1:
+        # if context.runmode & ContextFlags.SIMULATION_MODE and trial_num == progress_report.num_trials-1:
+        if context.runmode & ContextFlags.SIMULATION_MODE:
             self._simulation -= 1
             assert self._simulation >= 0, f'PNLProgress._simulation = {self._simulation}'
         # Return if (nested within) a simulation and not reporting simulations
