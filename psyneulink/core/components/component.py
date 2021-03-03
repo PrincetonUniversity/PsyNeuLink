@@ -507,6 +507,7 @@ import re
 import types
 import typing
 import warnings
+import weakref
 from abc import ABCMeta
 from collections.abc import Iterable
 from enum import Enum, IntEnum
@@ -1265,6 +1266,8 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
         self.initialization_status = ContextFlags.INITIALIZED
 
         self._update_parameter_components(context)
+
+        self.compositions = weakref.WeakSet()
 
     def __repr__(self):
         return '({0} {1})'.format(type(self).__name__, self.name)
@@ -4255,6 +4258,18 @@ class Component(MDFSerializable, metaclass=ComponentsMeta):
             pass
 
         model.args[arg] = value
+
+    def _add_to_composition(self, composition):
+        self.compositions.add(composition)
+
+        for obj in self._parameter_components:
+            obj._add_to_composition(composition)
+
+    def _remove_from_composition(self, composition):
+        self.compositions.discard(composition)
+
+        for obj in self._parameter_components:
+            obj._remove_from_composition(composition)
 
     @property
     def logged_items(self):
