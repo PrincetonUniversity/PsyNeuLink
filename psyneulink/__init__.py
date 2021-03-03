@@ -20,7 +20,7 @@ please contact psyneulinkhelp@princeton.edu.
 """
 
 # Monkey patch rich._is_juptyer to work on Google colab
-import rich
+import rich.console
 def _is_jupyter() -> bool:  # pragma: no cover
     """Check if we're running in a Jupyter notebook."""
     try:
