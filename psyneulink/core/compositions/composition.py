@@ -8459,7 +8459,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     call_with_pruned_args(call_after_trial, context=context)
 
                 progress.report_output(self, progress_report, scheduler, show_output, 'run', context)
-                progress.report_progress(self, progress_report, trial_num)
+                # MODIFIED 3/2/21 OLD:
+                # progress.report_progress(self, progress_report, trial_num, context)
+                # MODIFIED 3/2/21 END
 
 
             # IMPLEMENTATION NOTE:
@@ -9388,9 +9390,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Report output for trial
             progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial', context)
             # MODIFIED 2/28/21 NEW:
-            progress.report_progress(self, progress_report, 0)
+            progress.report_progress(self, progress_report, context)
+            assert True
             # # MODIFIED 2/28/21 END
-
 
         return output_values
 

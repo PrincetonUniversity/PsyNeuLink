@@ -53,6 +53,8 @@ class PNLProgress:
             cls._use_rich = False not in show_progress and [k in show_progress for k in {True, 'console'}]
             cls._use_pnl_view = False not in show_progress and 'pnl_view' in show_progress
             cls._show_simulations = False not in show_progress and 'simulations' in show_progress
+            cls._simulation_depth = 0
+
 
             # Instantiate rich Progress object
             if cls._use_rich:
@@ -128,25 +130,34 @@ class PNLProgress:
 
     def start_progress_report(self, comp, num_trials, context):
 
+
         if self._use_rich:
 
             # Simulation mode:
             if context.runmode & ContextFlags.SIMULATION_MODE:
                 run_mode = 'Simulat'
-                visible = self._show_simulations
+                # MODIFIED 3/2/21 NEW:
+                # Increment flag for each simulation in a run
+                self._simulation_depth += 1
+                # MODIFIED 3/2/21 END
+
             else:
                 run_mode = 'Execut'
                 visible = True
 
+            visible = not self._simulation_depth or self._show_simulations
+
+            # # TEST PRINT 3/2/21:
+            # from pprint import pprint
+            # pprint(f'{comp.name} {str(context.runmode)} START')
+
             # when num_trials is not known (e.g., a generator is for inputs)
-            # FIX: NEED TO ADD _start SOMEWHERE
             if num_trials == sys.maxsize:
                 start = False
                 num_trials = 0
             else:
                 start = True
 
-            # FIX: CONTEXTUALIZE FOR RICH
             id = self._rich_progress.add_task(f"[red]{run_mode}ing {comp.name}...",
                                          total=num_trials,
                                          start=start,
@@ -158,26 +169,38 @@ class PNLProgress:
 
             return report_num
 
-            # FIX: ??KEEP:
+    def report_progress(self, caller, report_num, context):
 
-    def report_progress(self, caller, report_num, trial_num):
         if not self.show_progress:
             return
         progress_report = self._progress_reports[report_num]
+        trial_num = self._rich_progress.tasks[progress_report.rich_task_id].completed
+
+
+        # MODIFIED 3/2/21 NEW:
+        # # Decrement simulation flag for each simulated trial in a run
+        if context.runmode & ContextFlags.SIMULATION_MODE and trial_num == progress_report.num_trials-1:
+            self._simulation_depth -= 1
+            assert self._simulation_depth >= 0, f'PNLProgress._simulation_depth = {self._simulation_depth}'
+
+        # # TEST PRINT 3/2/21
+        # from pprint import pprint
+        # pprint(f'{caller.name} {str(context.runmode)} REPORT')
+
+        if self._simulation_depth and not self._show_simulations:
+            return
+        # MODIFIED 3/2/21 END
+
         if self._use_rich:
-            if isinstance(trial_num, int):
-                if progress_report.num_trials:
-                    num_trials_str = f' of {progress_report.num_trials}'
-                else:
-                    num_trials_str = ''
-                self._rich_progress.update(progress_report.rich_task_id,
-                                      description=f'{caller.name}: {progress_report.runmode_str}ed '
-                                                  f'{trial_num+1}{num_trials_str} trials',
-                                      advance=1,
-                                      refresh=True)
+            if progress_report.num_trials:
+                num_trials_str = f' of {progress_report.num_trials}'
             else:
-                assert False, f"Invalid 'trial_num' arg to PNLProgress.report_progress from {caller.name}: " \
-                              f"'{trial_num}'"
+                num_trials_str = ''
+            self._rich_progress.update(progress_report.rich_task_id,
+                                  description=f'{caller.name}: {progress_report.runmode_str}ed '
+                                              f'{trial_num+1}{num_trials_str} trials',
+                                  advance=1,
+                                  refresh=True)
 
     def report_output(self, caller, report_num, scheduler, show_output, content, context, nodes_to_report=False,
                       node=None):
