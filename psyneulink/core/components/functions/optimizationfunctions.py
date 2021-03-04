@@ -1732,7 +1732,7 @@ class GridSearch(OptimizationFunction):
 
             ocm = self._get_optimized_composition()
             if ocm is not None and \
-               ocm.parameters.comp_execution_mode._get(context).startswith("PTX"):
+               (ocm.parameters.comp_execution_mode._get(context) == "PTX"):
                     opt_sample, opt_value, all_samples, all_values = self._run_cuda_grid(ocm, variable, context)
                     value_optimal = opt_value
                     sample_optimal = opt_sample
