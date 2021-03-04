@@ -2346,8 +2346,6 @@ import networkx
 import numpy as np
 import typecheck as tc
 from PIL import Image
-from copy import deepcopy, copy
-from inspect import isgenerator, isgeneratorfunction
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
@@ -8384,6 +8382,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             trial_output = None
 
+        # EXECUTE TRIALS -------------------------------------------------------------
 
         with PNLProgress(show_progress=show_progress) as progress:
 
@@ -8457,13 +8456,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if call_after_trial:
                     call_with_pruned_args(call_after_trial, context=context)
 
+                # Report results to output devices
                 progress.report_output(self, progress_report, scheduler, show_output, 'run', context)
-                # MODIFIED 3/2/21 OLD:
-                # progress.report_progress(self, progress_report, trial_num, context)
-                # # MODIFIED 3/2/21 NEW:
-                # progress.report_progress(self, progress_report, context)
-                # MODIFIED 3/2/21 END
-
 
             # IMPLEMENTATION NOTE:
             # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
@@ -8850,7 +8844,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         else:
                             assert False, "Unknown execution mode: {}".format(execution_mode)
 
+                        progress.report_progress(self, progress_report, context)
                         return _comp_ex.extract_node_output(self.output_CIM)
+
                     except Exception as e:
                         if not execution_mode & pnlvm.ExecutionMode._Fallback:
                             raise e from None
@@ -9372,6 +9368,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if execution_mode:
                 _comp_ex.freeze_values()
                 _comp_ex.execute_node(self.output_CIM)
+                progress.report_progress(self, progress_report, context)
                 return _comp_ex.extract_node_output(self.output_CIM)
 
             # Reset context flags
@@ -9384,12 +9381,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for port in self.output_CIM.output_ports:
                 output_values.append(port.parameters.value._get(context))
 
-            # Report output for trial
+            # Report results and progress to output devices
             progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial', context)
-            # MODIFIED 2/28/21 NEW:
             progress.report_progress(self, progress_report, context)
-            assert True
-            # # MODIFIED 2/28/21 END
 
             return output_values
 
