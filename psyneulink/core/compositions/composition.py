@@ -2389,7 +2389,7 @@ from psyneulink.core.globals.context import Context, ContextFlags, handle_extern
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
     COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, DEFAULT, \
-    FEEDBACK, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, INSET, \
+    FEEDBACK, FULL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, INSET, \
     LABELS, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
@@ -8779,9 +8779,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # ASSIGNMENTS **************************************************************************************************
 
-        if not hasattr(self, '_animate'):
-            # These are meant to be assigned in run method;  needed here for direct call to execute method
-            self._animate = False
+            if not hasattr(self, '_animate'):
+                # These are meant to be assigned in run method;  needed here for direct call to execute method
+                self._animate = False
 
             # KAM Note 4/29/19
             # The nested var is set to True if the Composition is nested in another Composition, otherwise False

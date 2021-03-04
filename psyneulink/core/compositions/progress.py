@@ -11,6 +11,8 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import FULL
 from psyneulink.core.globals.utilities import convert_to_list
 
+SIMULATION = 'Simulat'
+DEFAULT = 'Execut'
 
 class PNLProgressError(Exception):
 
@@ -26,8 +28,8 @@ class ProgressReport():
     Object used to package reporting for a call to Composition.run()
     """
 
-    def __init__(self, id, runmode_str, num_trials):
-        self.runmode_str = runmode_str  # indicates whether run is in DEFAULT_MODE or SIMULATION_MODE
+    def __init__(self, id, run_mode, num_trials):
+        self.run_mode = run_mode  # indicates whether run is in DEFAULT_MODE or SIMULATION_MODE
         self.num_trials = num_trials
         self.rich_task_id = id # used for task id in rich
         self.trial_report = []
@@ -54,7 +56,7 @@ class PNLProgress:
             cls._use_pnl_view = False not in show_progress and 'pnl_view' in show_progress
             cls._show_simulations = False not in show_progress and 'simulations' in show_progress
             cls._simulation = 0
-            cls._simulation = False
+            cls._prev_simulation = False
 
 
             # Instantiate rich Progress object
@@ -134,21 +136,50 @@ class PNLProgress:
 
         if self._use_rich:
 
+            # MODIFIED 3/3/21 OLD:
+            # # Simulation mode:
+            # if context.runmode & ContextFlags.SIMULATION_MODE:
+            #     run_mode = SIMULATION
+            #     # Track depth of simulations (i.e. over all executions nested inside outermost simulation)
+            #     self._simulation += 1
+            #     if self._prev_simulation:
+            #         # Return id for last progress_report created
+            #         return len(self._progress_reports) - 1
+            #     # else:
+            #     #     self._simulation_set += 1
+            #     self._prev_simulation = True
+            # else:
+            #     run_mode = DEFAULT
+            #     self._prev_simulation = False
+            # MODIFIED 3/3/21 NEW:
             # Simulation mode:
             if context.runmode & ContextFlags.SIMULATION_MODE:
-                run_mode = 'Simulat'
+                # run_mode = SIMULATION
+                # Track depth of simulations (i.e. over all executions nested inside outermost simulation)
                 # Track depth of simulations (i.e. over all executions nested inside outermost simulation)
                 self._simulation += 1
-                # if self._prev_simulation:
-                #     return
-                # self._prev_simulation = True
+                if self._prev_simulation:
+                    # Return id for last progress_report created
+                    return len(self._progress_reports) - 1
+                self._prev_simulation = True
             else:
-                run_mode = 'Execut'
-                visible = True
-                self._prev_simulation = False
+                # run_mode = DEFAULT
+                if self._prev_simulation:
+                    self._progress_reports.pop()
+                    self._prev_simulation = False
+            # MODIFIED 3/3/21 END
 
-            # Show progress bar if it is *not* a simulation or it *is* a simulation and show_simulations is set  
-            visible = not self._simulation or self._show_simulations  
+            if self._simulation:
+                run_mode = SIMULATION
+            else:
+                run_mode = DEFAULT
+
+            # Show progress bar if it is *not* a simulation or it *is* a simulation and show_simulations is set
+            # MODIFIED 3/3/21 OLD:
+            visible = not self._simulation or self._show_simulations
+            # MODIFIED 3/3/21 NEW:
+            # visible = not run_mode is SIMULATION or (self._show_simulations and not self._prev_simulation)
+            # MODIFIED 3/3/21 END
 
             # # TEST PRINT 3/2/21:
             # from pprint import pprint
@@ -178,29 +209,42 @@ class PNLProgress:
             return
         progress_report = self._progress_reports[report_num]
         trial_num = self._rich_progress.tasks[progress_report.rich_task_id].completed
+        simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
 
 
-        # MODIFIED 3/2/21 NEW:
+        # # MODIFIED 3/2/21 NEW:
+        # # # TEST PRINT 3/2/21
+        # # from pprint import pprint
+        # # pprint(f'{caller.name} {str(context.runmode)} REPORT')
+        #
+        # # Decrement simulation count if it is a simulation and task is complete (num_trials have been executed)
+        # # if context.runmode & ContextFlags.SIMULATION_MODE and trial_num == progress_report.num_trials-1:
+        if simulation_mode:
+            self._simulation -= 1
+            assert self._simulation >= 0, f'PNLProgress._simulation = {self._simulation}'
+        # # Return if (nested within) a simulation and not reporting simulations
+        # if self._simulation and not self._show_simulations:
+        #     return
+        # MODIFIED 3/3/21 NEWER:
         # # TEST PRINT 3/2/21
         # from pprint import pprint
         # pprint(f'{caller.name} {str(context.runmode)} REPORT')
 
-        # Decrement simulation count if it is a simulation and task is complete (num_trials have been executed)
-        if context.runmode & ContextFlags.SIMULATION_MODE and trial_num == progress_report.num_trials-1:
-            self._simulation -= 1
-            assert self._simulation >= 0, f'PNLProgress._simulation = {self._simulation}'
         # Return if (nested within) a simulation and not reporting simulations
-        if self._simulation and not self._show_simulations:
+        if progress_report.run_mode is SIMULATION and not self._show_simulations:
             return
         # MODIFIED 3/2/21 END
 
         if self._use_rich:
             if progress_report.num_trials:
-                num_trials_str = f' of {progress_report.num_trials}'
+                if simulation_mode:
+                    num_trials_str = ''
+                else:
+                    num_trials_str = f' of {progress_report.num_trials}'
             else:
                 num_trials_str = ''
             self._rich_progress.update(progress_report.rich_task_id,
-                                  description=f'{caller.name}: {progress_report.runmode_str}ed '
+                                  description=f'{caller.name}: {progress_report.run_mode}ed '
                                               f'{trial_num+1}{num_trials_str} trials',
                                   advance=1,
                                   refresh=True)
