@@ -449,6 +449,7 @@ def _control_allocation_search_space_getter(owning_component=None, context=None)
     else:
         return search_space
 
+
 class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(         \
         objective_mechanism=None,            \

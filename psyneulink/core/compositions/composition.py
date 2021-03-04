@@ -2346,7 +2346,8 @@ import networkx
 import numpy as np
 import typecheck as tc
 from PIL import Image
-from rich import print
+from copy import deepcopy, copy
+from inspect import isgenerator, isgeneratorfunction
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
@@ -8424,6 +8425,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             skip_initialization=True,
                                             execution_mode=execution_mode,
                                             show_output=show_output,
+                                            show_progress=show_progress,
                                             progress=progress,
                                             progress_report=progress_report
                                             )
@@ -8691,6 +8693,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             runtime_params=None,
             skip_initialization=False,
             execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
+            show_progress=False,
             progress=None,
             progress_report=None,
             show_output=None,
@@ -8760,7 +8763,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output value of the final Mechanism executed in the Composition : various
         """
 
-        with PNLProgress(show_progress=True) as progress:
+        with PNLProgress(show_progress=show_progress) as progress:
 
             # FIX: Call PNLProgress with context and progress_report handle this in there 3/3/21
             # If execute method is called directly, need to create PNLProgress object for reporting
@@ -9254,7 +9257,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if isinstance(node, Composition):
                             node_progress_report = None
                         # MODIFIED 2/28/21 END
-                        ret = node.execute(context=context,
+                        ret = node.execute(context=context, show_progress=show_progress,
                                            execution_mode=nested_execution_mode)
 
                         # Get output info from nested execution
