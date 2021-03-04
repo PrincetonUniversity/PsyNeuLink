@@ -136,40 +136,18 @@ class PNLProgress:
 
         if self._use_rich:
 
-            # MODIFIED 3/3/21 OLD:
-            # # Simulation mode:
-            # if context.runmode & ContextFlags.SIMULATION_MODE:
-            #     run_mode = SIMULATION
-            #     # Track depth of simulations (i.e. over all executions nested inside outermost simulation)
-            #     self._simulation += 1
-            #     if self._prev_simulation:
-            #         # Return id for last progress_report created
-            #         return len(self._progress_reports) - 1
-            #     # else:
-            #     #     self._simulation_set += 1
-            #     self._prev_simulation = True
-            # MODIFIED 3/3/1 NEW:
             # Simulation mode:
             if context.runmode & ContextFlags.SIMULATION_MODE:
-                # run_mode = SIMULATION
-                # Track depth of simulations (i.e. over all executions nested inside outermost simulation)
                 # Track depth of simulations (i.e. over all executions nested inside outermost simulation)
                 self._simulation += 1
+                # If still simulating, return id for last progress_report created (presumably for current simulation)
                 if self._prev_simulation:
-                    # Return id for last progress_report created
                     return len(self._progress_reports) - 1
                 self._prev_simulation = True
-            # MODIFIED 3/3/31 END
             else:
-                # # MODIFIED 3/4/21 OLD:
-                # run_mode = 'Execut'
-                # self._prev_simulation = False
-                # MODIFIED 3/4/21 NEW:
-                # run_mode = DEFAULT
                 if self._prev_simulation:
-                    # self._progress_reports.pop()
-                    self._prev_simulation = False
-                # MODIFIED 3/4/21 END
+                    self._progress_reports.pop() # FIX: LEAVES One "Simulating..." HANGING
+                self._prev_simulation = False
 
             if self._simulation:
                 run_mode = SIMULATION
