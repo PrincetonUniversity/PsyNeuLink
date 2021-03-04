@@ -2356,6 +2356,7 @@ from inspect import isgenerator, isgeneratorfunction
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET
+from psyneulink.core.compositions.progress import PNLProgress
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.learningfunctions import \
@@ -9394,7 +9395,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             assert True
             # # MODIFIED 2/28/21 END
 
-        return output_values
+            return output_values
 
     def __call__(self, *args, **kwargs):
         if not args and not kwargs:
