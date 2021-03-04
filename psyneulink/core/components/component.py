@@ -3475,6 +3475,22 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         """
         self.log.log_values(entries)
 
+    def _propagate_most_recent_context(self, context=None, visited=None):
+        if visited is None:
+            visited = set([self])
+
+        if context is None:
+            context = self.most_recent_context
+
+        self.most_recent_context = context
+
+        # TODO: avoid duplicating objects in _dependent_components
+        # throughout psyneulink or at least condense these methods
+        for obj in self._dependent_components:
+            if obj not in visited:
+                visited.add(obj)
+                obj._propagate_most_recent_context(context, visited)
+
     @property
     def _dict_summary(self):
         from psyneulink.core.compositions.composition import Composition
