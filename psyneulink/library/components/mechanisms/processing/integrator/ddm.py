@@ -765,17 +765,6 @@ class DDM(ProcessingMechanism):
                  prefs: tc.optional(is_pref_set) = None,
                  **kwargs):
 
-        # New (1/19/2021) default behavior of DDM mechanism is to reset stateful functions
-        # on each new trial.
-        self.reset_stateful_function_when = kwargs.get('reset_stateful_function_when', AtTrialStart())
-
-        # New (1/19/2021) default behaviour of DDM mechanism is to execute until finished. That
-        # is, it should execute until it reaches its threshold.
-        self.execute_until_finished = kwargs.get('execute_until_finished', True)
-
-        # FIXME: Set maximum executions absurdly large to avoid early termination
-        self.max_executions_before_finished = sys.maxsize
-
         # Override instantiation of StandardOutputPorts usually done in _instantiate_output_ports
         #    in order to use SEQUENTIAL indices
         self.standard_output_ports = StandardOutputPorts(self, self.standard_output_ports, indices=SEQUENTIAL)
@@ -859,7 +848,17 @@ class DDM(ProcessingMechanism):
         # # Conflict with above
         # self.size = size
 
-        self.parameters.execute_until_finished.default_value = False
+        # New (1/19/2021) default behaviour of DDM mechanism is to execute until finished. That
+        # is, it should execute until it reaches its threshold.
+        self.parameters.execute_until_finished.default_value = True
+
+        # New (1/19/2021) default behavior of DDM mechanism is to reset stateful functions
+        # on each new trial.
+        if 'reset_stateful_function_when' not in kwargs:
+            kwargs['reset_stateful_function_when'] = AtTrialStart()
+
+        # FIXME: Set maximum executions absurdly large to avoid early termination
+        self.max_executions_before_finished = sys.maxsize
 
         super(DDM, self).__init__(default_variable=default_variable,
                                   random_state=random_state,

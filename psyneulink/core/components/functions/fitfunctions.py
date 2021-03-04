@@ -6,6 +6,7 @@ from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.condition import AtTrialStart
 from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.llvm import ExecutionMode
 
 
 import typing
@@ -342,7 +343,7 @@ def make_likelihood_function(
         composition.run(
             inputs=inputs,
             num_trials=num_sims_per_trial * num_trials,
-            bin_execute=True,
+            execution_mode=ExecutionMode.LLVMRun,
             context=context,
         )
 

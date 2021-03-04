@@ -26,7 +26,7 @@ inputs_dict = {decision: input}
 # Run the composition to generate some data to fit
 comp.run(inputs=inputs_dict,
          num_trials=len(input),
-         bin_execute=True)
+         execution_mode=pnl.ExecutionMode.LLVMRun)
 
 # Store the results of this "experiment" as a numpy array. This should be a
 # 2D array of shape (len(input), 2). The first column being a discrete variable

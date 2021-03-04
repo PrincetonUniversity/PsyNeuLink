@@ -56,7 +56,7 @@ def ddm_pdf_simulate(drift_rate=0.75, threshold=1.0, noise=0.1, starting_point=0
 
         comp.run(inputs={decision: input},
                  num_trials=num_samples * len(input),
-                 bin_execute=True,
+                 execution_mode=pnl.ExecutionMode.LLVMRun,
                  context=context)
 
         results = np.squeeze(np.array(comp.results))

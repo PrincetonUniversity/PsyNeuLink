@@ -4,6 +4,9 @@
 # Log files created by SLURM jobs in this directory
 Scripts/Debug/predator_prey_opt/logs/
 
+# Any plots generated from testing DDMs
+Scripts/Debug/ddm/*.png
+
 ### OSX ###
 *.DS_Store
 .AppleDouble
