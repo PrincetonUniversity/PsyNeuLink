@@ -148,10 +148,7 @@ class PNLProgress:
             #     # else:
             #     #     self._simulation_set += 1
             #     self._prev_simulation = True
-            # else:
-            #     run_mode = DEFAULT
-            #     self._prev_simulation = False
-            # MODIFIED 3/3/21 NEW:
+            # MODIFIED 3/3/1 NEW:
             # Simulation mode:
             if context.runmode & ContextFlags.SIMULATION_MODE:
                 # run_mode = SIMULATION
@@ -162,12 +159,17 @@ class PNLProgress:
                     # Return id for last progress_report created
                     return len(self._progress_reports) - 1
                 self._prev_simulation = True
+            # MODIFIED 3/3/31 END
             else:
+                # # MODIFIED 3/4/21 OLD:
+                # run_mode = 'Execut'
+                # self._prev_simulation = False
+                # MODIFIED 3/4/21 NEW:
                 # run_mode = DEFAULT
                 if self._prev_simulation:
-                    self._progress_reports.pop()
+                    # self._progress_reports.pop()
                     self._prev_simulation = False
-            # MODIFIED 3/3/21 END
+                # MODIFIED 3/4/21 END
 
             if self._simulation:
                 run_mode = SIMULATION
@@ -212,29 +214,41 @@ class PNLProgress:
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
 
 
-        # # MODIFIED 3/2/21 NEW:
         # # # TEST PRINT 3/2/21
         # # from pprint import pprint
         # # pprint(f'{caller.name} {str(context.runmode)} REPORT')
-        #
+
+        # MODIFIED 3/4/21 OLD:
         # # Decrement simulation count if it is a simulation and task is complete (num_trials have been executed)
         # # if context.runmode & ContextFlags.SIMULATION_MODE and trial_num == progress_report.num_trials-1:
-        if simulation_mode:
-            self._simulation -= 1
-            assert self._simulation >= 0, f'PNLProgress._simulation = {self._simulation}'
+        # if context.runmode & ContextFlags.SIMULATION_MODE:
+        #     self._simulation -= 1
+        #     assert self._simulation >= 0, f'PNLProgress._simulation = {self._simulation}'
         # # Return if (nested within) a simulation and not reporting simulations
         # if self._simulation and not self._show_simulations:
         #     return
-        # MODIFIED 3/3/21 NEWER:
-        # # TEST PRINT 3/2/21
-        # from pprint import pprint
-        # pprint(f'{caller.name} {str(context.runmode)} REPORT')
+        # MODIFIED 3/4/21 NEW:
+        if simulation_mode:
+            self._simulation -= 1
+            assert self._simulation >= 0, f'PNLProgress._simulation = {self._simulation}'
 
         # Return if (nested within) a simulation and not reporting simulations
         if progress_report.run_mode is SIMULATION and not self._show_simulations:
             return
-        # MODIFIED 3/2/21 END
+        # MODIFIED 3/4/21 END
 
+        # MODIFIED 3//21 OLD:
+        # if self._use_rich:
+        #     if progress_report.num_trials:
+        #         num_trials_str = f' of {progress_report.num_trials}'
+        #     else:
+        #         num_trials_str = ''
+        #     self._rich_progress.update(progress_report.rich_task_id,
+        #                           description=f'{caller.name}: {progress_report.runmode_str}ed '
+        #                                       f'{trial_num+1}{num_trials_str} trials',
+        #                           advance=1,
+        #                           refresh=True)
+        # MODIFIED 3//21 NEW:
         if self._use_rich:
             if progress_report.num_trials:
                 if simulation_mode:
@@ -248,6 +262,7 @@ class PNLProgress:
                                               f'{trial_num+1}{num_trials_str} trials',
                                   advance=1,
                                   refresh=True)
+        # MODIFIED 3//21 END
 
     def report_output(self, caller, report_num, scheduler, show_output, content, context, nodes_to_report=False,
                       node=None):
