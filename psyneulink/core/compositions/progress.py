@@ -69,10 +69,10 @@ class PNLProgress:
             if cls._use_pnl_view:
                 warnings.warn("'pnl_view' not yet supported as an option for show_progress of Composition.run()")
 
-            # Dict with two entries:
-            # - one containing for ProgressReports for excutions in DEFAULT_MODE (key: DEFAULT)
-            # - one containing for ProgressReports for excutions in SIMULATION_MODE (key: SIMULATION)
-            cls._progress_reports = {DEFAULT:[],SIMULATION:[]}
+            # Dict with entries for each Composition (the key), the value of which is a dict with two entries:
+            # - one containing ProgressReports for executions in DEFAULT_MODE (key: DEFAULT)
+            # - one containing ProgressReports for executions in SIMULATION_MODE (key: SIMULATION)
+            cls._progress_reports = {}
 
             # This counter is incremented on each context __enter__ and decrements
             # on each __exit__. We need this to make sure we don't call progress
@@ -135,24 +135,29 @@ class PNLProgress:
 
     def start_progress_report(self, comp, num_trials, context):
 
+        if comp not in self._progress_reports:
+            self._progress_reports.update({comp:{DEFAULT:[], SIMULATION:[]}})
+
+        simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
 
         if self._use_rich:
 
             # Simulation mode:
-            if context.runmode & ContextFlags.SIMULATION_MODE:
+            if simulation_mode:
                 # If still simulating, return id for last progress_report created (presumably for current simulation)
                 if self._prev_simulation:
-                    return len(self._progress_reports[SIMULATION]) - 1
+                    return len(self._progress_reports[comp][SIMULATION]) - 1
                 # Track depth of simulations (i.e. over all executions nested inside outermost simulation)
                 self._simulation += 1
                 self._prev_simulation = True
             # Default mode:
             else:
                 # if self._prev_simulation:
-                #     self._progress_reports[SIMULATION].pop()
+                #     self._progress_reports[comp][SIMULATION].pop()
                 self._prev_simulation = False
 
             if self._simulation:
+            # if simulation_mode:
                 run_mode = SIMULATION
             else:
                 run_mode = DEFAULT
@@ -164,9 +169,9 @@ class PNLProgress:
             # visible = not run_mode is SIMULATION or (self._show_simulations and not self._prev_simulation)
             # MODIFIED 3/3/21 END
 
-            # TEST PRINT 3/2/21:
-            from pprint import pprint
-            pprint(f'{comp.name} {str(context.runmode)} START')
+            if comp.verbosePref:
+                from pprint import pprint
+                pprint(f'{comp.name} {str(context.runmode)} START')
 
             # when num_trials is not known (e.g., a generator is for inputs)
             if num_trials == sys.maxsize:
@@ -181,8 +186,8 @@ class PNLProgress:
                                          visible=visible
                                          )
 
-            self._progress_reports[run_mode].append(ProgressReport(id, num_trials))
-            report_num = len(self._progress_reports[run_mode]) - 1
+            self._progress_reports[comp][run_mode].append(ProgressReport(id, num_trials))
+            report_num = len(self._progress_reports[comp][run_mode]) - 1
 
             return report_num
 
@@ -197,13 +202,12 @@ class PNLProgress:
         else:
             run_mode = DEFAULT
 
-        progress_report = self._progress_reports[run_mode][report_num]
+        progress_report = self._progress_reports[caller][run_mode][report_num]
         trial_num = self._rich_progress.tasks[progress_report.rich_task_id].completed
 
-
-        # TEST PRINT 3/2/21
-        from pprint import pprint
-        pprint(f'{caller.name} {str(context.runmode)} REPORT')
+        if caller.verbosePref:
+            from pprint import pprint
+            pprint(f'{caller.name} {str(context.runmode)} REPORT')
 
         # MODIFIED 3/4/21 OLD:
         # # Decrement simulation count if it is a simulation and task is complete (num_trials have been executed)
@@ -250,6 +254,10 @@ class PNLProgress:
                                               f'{trial_num+1}{num_trials_str} trials',
                                   advance=1,
                                   refresh=True)
+        if (not simulation_mode
+                and progress_report.num_trials
+                and (trial_num == progress_report.num_trials)):
+            self._progress_reports[caller][run_mode].pop()
         # MODIFIED 3//21 END
 
     def report_output(self, caller, report_num, scheduler, show_output, content, context, nodes_to_report=False,
@@ -267,7 +275,7 @@ class PNLProgress:
             #     return
             run_mode = DEFAULT
 
-        progress_report = self._progress_reports[run_mode][report_num]
+        progress_report = self._progress_reports[caller][run_mode][report_num]
 
         # if it is None, defer to Composition's # reportOutputPref
         if show_output is not False:  # if it is False, leave as is to suppress output
