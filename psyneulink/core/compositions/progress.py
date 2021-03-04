@@ -13,6 +13,7 @@ from psyneulink.core.globals.utilities import convert_to_list
 
 SIMULATION = 'Simulat'
 DEFAULT = 'Execut'
+REPORT_REPORT = False # USED FOR DEBUGGING
 
 class PNLProgressError(Exception):
 
@@ -155,7 +156,7 @@ class PNLProgress:
 
             visible = not self._simulation or self._show_simulations
 
-            if comp.verbosePref:
+            if comp.verbosePref or REPORT_REPORT:
                 from pprint import pprint
                 pprint(f'{comp.name} {str(context.runmode)} START')
 
@@ -197,7 +198,7 @@ class PNLProgress:
         progress_report = self._progress_reports[caller][run_mode][report_num]
         trial_num = self._rich_progress.tasks[progress_report.rich_task_id].completed
 
-        if caller.verbosePref:
+        if caller.verbosePref or REPORT_REPORT:
             from pprint import pprint
             pprint(f'{caller.name} {str(context.runmode)} REPORT')
 

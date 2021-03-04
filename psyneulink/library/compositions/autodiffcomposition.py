@@ -476,6 +476,7 @@ class AutodiffComposition(Composition):
                 runtime_params=None,
                 execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
                 skip_initialization=False,
+                show_progress=False,
                 show_output=None,
                 progress=None,
                 progress_report=None
@@ -533,6 +534,7 @@ class AutodiffComposition(Composition):
                                                         clamp_input=clamp_input,
                                                         runtime_params=runtime_params,
                                                         execution_mode=execution_mode,
+                                                        show_progress=show_progress,
                                                         show_output=show_output
                                                         )
 
