@@ -14,5 +14,5 @@ torch<1.8.0; sys_platform != 'win32' and platform_machine == 'x86_64' and platfo
 typecheck-decorator<=1.2
 leabra-psyneulink<=0.3.2
 pandas<=1.0.5
-psyneulink-fastkde>=1.0.19
+fastkde==1.0.19
 rich>=9.11, <9.13
