@@ -1131,7 +1131,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             default_variable = self.defaults.variable
         else:
             default_variable = var
-            self.defaults.variable = default_variable
+            self.defaults.variable = copy.deepcopy(default_variable)
             self.parameters.variable._user_specified = True
 
         # ASSIGN PREFS
@@ -2922,15 +2922,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _instantiate_value(self, context=None):
         #  - call self.execute to get value, since the value of a Component is defined as what is returned by its
         #    execute method, not its function
+        default_variable = copy.deepcopy(self.defaults.variable)
         try:
-            value = self.execute(variable=self.defaults.variable, context=context)
+            value = self.execute(variable=default_variable, context=context)
         except TypeError as e:
             # don't hide other TypeErrors
             if "execute() got an unexpected keyword argument 'variable'" != str(e):
                 raise
 
             try:
-                value = self.execute(input=self.defaults.variable, context=context)
+                value = self.execute(input=default_variable, context=context)
             except TypeError as e:
                 if "execute() got an unexpected keyword argument 'input'" != str(e):
                     raise
@@ -3187,7 +3188,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
             return arr
 
-        var = convert_all_elements_to_np_array(var, cast_from=np.integer, cast_to=float)
+        var = convert_all_elements_to_np_array(copy.deepcopy(var), cast_from=int, cast_to=float)
 
         # handle simple wrapping of a Component (e.g. from ParameterPort in
         # case of set after Component instantiation)

@@ -1451,8 +1451,8 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
         -------
         a numpy array containing the converted **arr**
     """
-    if isinstance(arr, np.ndarray) and arr.ndim == 0:
-        if cast_from is not None and isinstance(arr.item(0), cast_from):
+    if isinstance(arr, np.ndarray) and arr.dtype != object:
+        if cast_from is not None and arr.dtype == cast_from:
             return np.asarray(arr, dtype=cast_to)
         else:
             return arr
