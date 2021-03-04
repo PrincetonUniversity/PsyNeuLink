@@ -164,9 +164,9 @@ class PNLProgress:
             # visible = not run_mode is SIMULATION or (self._show_simulations and not self._prev_simulation)
             # MODIFIED 3/3/21 END
 
-            # # TEST PRINT 3/2/21:
-            # from pprint import pprint
-            # pprint(f'{comp.name} {str(context.runmode)} START')
+            # TEST PRINT 3/2/21:
+            from pprint import pprint
+            pprint(f'{comp.name} {str(context.runmode)} START')
 
             # when num_trials is not known (e.g., a generator is for inputs)
             if num_trials == sys.maxsize:
@@ -201,9 +201,9 @@ class PNLProgress:
         trial_num = self._rich_progress.tasks[progress_report.rich_task_id].completed
 
 
-        # # # TEST PRINT 3/2/21
-        # # from pprint import pprint
-        # # pprint(f'{caller.name} {str(context.runmode)} REPORT')
+        # TEST PRINT 3/2/21
+        from pprint import pprint
+        pprint(f'{caller.name} {str(context.runmode)} REPORT')
 
         # MODIFIED 3/4/21 OLD:
         # # Decrement simulation count if it is a simulation and task is complete (num_trials have been executed)
@@ -262,6 +262,9 @@ class PNLProgress:
         if simulation_mode:
             run_mode = SIMULATION
         else:
+            # # Don't report outer execution of composition
+            # if self._simulation:
+            #     return
             run_mode = DEFAULT
 
         progress_report = self._progress_reports[run_mode][report_num]
