@@ -16,15 +16,12 @@ y = np.random.rand()
                          (lambda x: 1 / np.tanh(x), (x,), "__pnl_builtin_coth", 1 / np.tanh(x)),
                          (lambda x: 1 / np.sinh(x), (x,), "__pnl_builtin_csch", 1 / np.sinh(x)),
                          ], ids=["EXP", "LOG", "POW", "TANH", "COTH", "CSCH"])
-@pytest.mark.parametrize("mode", ['Python',
-                                  pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-def test_builtin_op(benchmark, op, args, builtin, result, mode):
-    if mode == 'Python':
+def test_builtin_op(benchmark, op, args, builtin, result, func_mode):
+    if func_mode == 'Python':
         f = op
-    elif mode == 'LLVM':
+    elif func_mode == 'LLVM':
         f = pnlvm.LLVMBinaryFunction.get(builtin)
-    elif mode == 'PTX':
+    elif func_mode == 'PTX':
         wrap_name = builtin + "_test_wrapper"
         with pnlvm.LLVMBuilderContext.get_global() as ctx:
             intrin = ctx.import_llvm_function(builtin)

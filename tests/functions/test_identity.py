@@ -8,18 +8,14 @@ import psyneulink.core.llvm as pnlvm
 @pytest.mark.identity_function
 @pytest.mark.benchmark(group="IdentityFunction")
 @pytest.mark.parametrize("size", [1, 2, 4, 8, 16])
-@pytest.mark.parametrize("mode", ['Python',
-                                  pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])
-                                  ])
-def test_basic(size, benchmark, mode):
+def test_basic(size, benchmark, func_mode):
     variable = np.random.rand(size)
     f = Functions.Identity(default_variable=variable)
-    if mode == 'Python':
+    if func_mode == 'Python':
         EX = f.function
-    elif mode == 'LLVM':
+    elif func_mode == 'LLVM':
         EX = pnlvm.execution.FuncExecution(f).execute
-    elif mode == 'PTX':
+    elif func_mode == 'PTX':
         EX = pnlvm.execution.FuncExecution(f).cuda_execute
 
     res = benchmark(EX, variable)

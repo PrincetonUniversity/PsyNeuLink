@@ -2333,82 +2333,93 @@ Class Reference
 import collections
 import enum
 import functools
+import inspect
 import itertools
 import logging
-import sys
+import networkx
 import typing
 import warnings
-from copy import deepcopy, copy
-from inspect import isgenerator, isgeneratorfunction, currentframe
+import sys
+import re
+import types
 
-import networkx
 import numpy as np
 import typecheck as tc
+
+from rich import print, box
+from rich.panel import Panel
+from rich.console import RenderGroup
+
 from PIL import Image
+from copy import deepcopy, copy
+from inspect import isgenerator, isgeneratorfunction
 
 from psyneulink.core import llvm as pnlvm
+from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET
+from psyneulink.core.compositions.progress import PNLProgress
 from psyneulink.core.components.component import Component, ComponentsMeta
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.transferfunctions import Identity
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
-from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
-    LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
-from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.core.components.ports.inputport import InputPort, InputPortError
-from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.components.ports.parameterport import ParameterPort
-from psyneulink.core.components.ports.port import Port
+from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
+    OptimizationControlMechanism, AGENT_REP
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
+    LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
+from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
+from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
-from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
-from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
-from psyneulink.core.compositions.progress import PNLProgress
-from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, EXECUTION_SET, SHOW_CIM, SHOW_CONTROLLER
+from psyneulink.core.components.ports.port import Port
+from psyneulink.core.components.ports.inputport import InputPort, InputPortError
+from psyneulink.core.components.ports.parameterport import ParameterPort
+from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROLLER, CONTROL_SIGNAL, DEFAULT, FEEDBACK, FULL, \
-    HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
-    LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
-    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
+    AFTER, ALL, ANY, BEFORE, BOLD, BOTH, \
+    COMPONENT, COMPOSITION, CONDITIONS, CONTROL, CONTROL_PATHWAY, CONTROLLER, CONTROL_SIGNAL, DEFAULT, \
+    FEEDBACK, FULL, FUNCTIONS, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, INSET, \
+    LABELS, LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MECHANISM, MECHANISMS, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
-    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PULSE_CLAMP, \
-    SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, TARGET, TARGET_MECHANISM, VARIABLE, WEIGHT, OWNER_MECH
+    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTIONS, PULSE_CLAMP, \
+    ROLES, SAMPLE, SHADOW_INPUTS, SIMULATIONS, SOFT_CLAMP, SSE, \
+    TARGET, TARGET_MECHANISM, VALUES, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
-from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
-from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import Time, TimeScale
-from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
-    AutoAssociativeLearningMechanism
+from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, PreferenceSet, _assign_prefs
+from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
+from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
+    RecurrentTransferMechanism
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism, MSE
 from psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism import \
     PredictionErrorMechanism
-from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
-    RecurrentTransferMechanism
+from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
+    AutoAssociativeLearningMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
 
 __all__ = [
     'Composition', 'CompositionError', 'CompositionRegistry', 'EdgeType', 'get_compositions', 'NodeRole'
-]
+    ]
 
 
 logger = logging.getLogger(__name__)
@@ -3187,6 +3198,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     _model_spec_generic_type_name = 'graph'
 
+
     class Parameters(ParametersBase):
         """
             Attributes
@@ -3223,12 +3235,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
     class _CompilationData(ParametersBase):
-        ptx_execution = None
-        parameter_struct = None
-        state_struct = None
-        data_struct = None
-        scheduler_conditions = None
-
+        execution = None
 
     def __init__(
             self,
@@ -3562,9 +3569,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._partially_added_nodes.append(node)
         except NameError:
             pass
-
-        if context.source & ContextFlags.COMMAND_LINE:
-            self._analyze_graph()
 
     def _instantiate_deferred_init_control(self, node, context=None):
         """
@@ -4120,6 +4124,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                is shorter than the longest one in the Composition).
 
        """
+        from psyneulink.core.compositions.pathway import PathwayRole
 
         # Clear old roles
         self.nodes_to_roles.update({k: set() for k in self.nodes_to_roles})
@@ -4309,6 +4314,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #     assert False, f"PROGRAM ERROR: unexpected problem in '_remove_node_role'."
 
     def _determine_pathway_roles(self, context=None):
+        from psyneulink.core.compositions.pathway import PathwayRole
         for pway in self.pathways:
             pway._assign_roles(self)
 
@@ -7367,7 +7373,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             runtime_params=None,
             base_context=Context(execution_id=None),
             context=None,
-            execution_mode=False,
+            execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             return_results=False,
             block_simulate=False
     ):
@@ -7997,7 +8003,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             animate=False,
             log=False,
             scheduler=None,
-            execution_mode=False,
+            execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             context=None,
             base_context=Context(execution_id=None),
             ):
@@ -8163,7 +8169,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             the scheduler object that owns the conditions that will instruct the execution of the Composition.
             If not specified, the Composition will use its automatically generated scheduler.
 
-        execution_mode : bool or enum.Enum[LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun] : default Python
+        execution_mode : enum.Enum[Auto|LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun] : default Python
             specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
             False is the same as ``Python``;  True tries LLVM compilation modes, in order of power, progressively
             reverting to less powerful modes (in the order of the options listed), and to Python if no compilation
@@ -8348,19 +8354,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         is_simulation = (context is not None and
                          ContextFlags.SIMULATION_MODE in context.runmode)
 
-        if (execution_mode is True or str(execution_mode).endswith('Run')):
+        if execution_mode & pnlvm.ExecutionMode._Run:
             # There's no mode to run simulations.
             # Simulations are run as part of the controller node wrapper.
             assert not is_simulation
             try:
                 comp_ex_tags = frozenset({"learning"}) if self._is_learning(context) else frozenset()
-                if execution_mode is True or execution_mode.startswith('LLVM'):
-                    _comp_ex = pnlvm.CompExecution(self, [context.execution_id], additional_tags=comp_ex_tags)
+                _comp_ex = pnlvm.CompExecution.get(self, context, additional_tags=comp_ex_tags)
+                if execution_mode & pnlvm.ExecutionMode.LLVM:
                     results += _comp_ex.run(inputs, num_trials, num_inputs_sets)
-                elif execution_mode.startswith('PTX'):
-                    self.__ptx_initialize(context, additional_tags=comp_ex_tags)
-                    EX = self._compilation_data.ptx_execution._get(context)
-                    results += EX.cuda_run(inputs, num_trials, num_inputs_sets)
+                elif execution_mode & pnlvm.ExecutionMode.PTX:
+                    results += _comp_ex.cuda_run(inputs, num_trials, num_inputs_sets)
+                else:
+                    assert False, "Unknown execution mode: {}".format(execution_mode)
 
                 # Update the parameter for results
                 self.parameters.results._set(results, context)
@@ -8375,7 +8381,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return results[-1]
 
             except Exception as e:
-                if execution_mode is not True:
+                if not execution_mode & pnlvm.ExecutionMode._Fallback:
                     raise e from None
 
                 warnings.warn("Failed to run `{}': {}".format(self.name, str(e)))
@@ -8525,7 +8531,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             patience: tc.optional(int) = None,
             min_delta: int = 0,
             context: tc.optional(Context) = None,
-            execution_mode=False,
+            execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             randomize_minibatches=False,
             call_before_minibatch = None,
             call_after_minibatch = None,
@@ -8693,7 +8699,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             clamp_input=SOFT_CLAMP,
             runtime_params=None,
             skip_initialization=False,
-            execution_mode=False,
+            execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             progress=None,
             progress_report=None,
             show_output=None,
@@ -8753,7 +8759,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 called after each `PASS` is executed
                 passed the current *context* (but it is not necessary for your callable to take).
 
-            execution_mode : bool or enum.Enum[LLVM|LLVMexec|Python|PTXExec] : default Python
+            execution_mode : enum.Enum[Auto|LLVM|LLVMexec|Python|PTXExec] : default Python
                 specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
                 see **execution_mode** argument of `run <Composition.run>` method for additional details.
 
@@ -8774,10 +8780,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             execution_scheduler = scheduler or self.scheduler
 
             # ASSIGNMENTS **************************************************************************************************
-
-            assert not str(execution_mode).endswith("Run")
-            if execution_mode == 'Python':
-                execution_mode = False
 
             if not hasattr(self, '_animate'):
                 # These are meant to be assigned in run method;  needed here for direct call to execute method
@@ -8840,24 +8842,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 is_simulation = (context is not None and
                                  ContextFlags.SIMULATION_MODE in context.runmode)
                 # Try running in Exec mode first
-                if (execution_mode is True or str(execution_mode).endswith('Exec')):
+                if (execution_mode & pnlvm.ExecutionMode._Exec):
                     # There's no mode to execute simulations.
                     # Simulations are run as part of the controller node wrapper.
                     assert not is_simulation
                     try:
-                        if execution_mode is True or execution_mode.startswith('LLVM'):
-                            llvm_inputs = self._validate_execution_inputs(inputs)
-                            _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
+                        llvm_inputs = self._validate_execution_inputs(inputs)
+                        _comp_ex = pnlvm.CompExecution.get(self, context)
+                        if execution_mode & pnlvm.ExecutionMode.LLVM:
                             _comp_ex.execute(llvm_inputs)
-                            return _comp_ex.extract_node_output(self.output_CIM)
-                        elif execution_mode.startswith('PTX'):
-                            llvm_inputs = self._validate_execution_inputs(inputs)
-                            self.__ptx_initialize(context)
-                            __execution = self._compilation_data.ptx_execution._get(context)
-                            __execution.cuda_execute(llvm_inputs)
-                            return __execution.extract_node_output(self.output_CIM)
+                        elif execution_mode & pnlvm.ExecutionMode.PTX:
+                            _comp_ex.cuda_execute(llvm_inputs)
+                        else:
+                            assert False, "Unknown execution mode: {}".format(execution_mode)
+
+                        return _comp_ex.extract_node_output(self.output_CIM)
                     except Exception as e:
-                        if execution_mode is not True:
+                        if not execution_mode & pnlvm.ExecutionMode._Fallback:
                             raise e from None
 
                         warnings.warn("Failed to execute `{}': {}".format(self.name, str(e)))
@@ -8869,17 +8870,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               if isinstance(n, Mechanism) and
                                  (n is not self.controller or not is_simulation))
 
+                assert execution_mode & pnlvm.ExecutionMode.LLVM
                 try:
-                    _comp_ex = pnlvm.CompExecution(self, [context.execution_id])
+                    _comp_ex = pnlvm.CompExecution.get(self, context)
                     # Compile all mechanism wrappers
                     for m in mechanisms:
                         _comp_ex._set_bin_node(m)
                 except Exception as e:
-                    if execution_mode is not True:
+                    if not execution_mode & pnlvm.ExecutionMode._Fallback:
                         raise e from None
 
                     warnings.warn("Failed to compile wrapper for `{}' in `{}': {}".format(m.name, self.name, str(e)))
-                    execution_mode = False
+                    execution_mode = pnlvm.ExecutionMode.Python
 
 
             # Generate first frame of animation without any active_items
@@ -9255,16 +9257,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # Run node-level compiled nested composition
                         # only if there are no control projections
                         nested_execution_mode = execution_mode \
-                            if len(node.parameter_CIM.afferents) == 0 else False
+                            if len(node.parameter_CIM.afferents) == 0 else \
+                            pnlvm.ExecutionMode.Python
                         # MODIFIED 2/28/21 NEW:
                         if isinstance(node, Composition):
                             node_progress_report = None
                         # MODIFIED 2/28/21 END
                         ret = node.execute(context=context,
-                                           execution_mode=nested_execution_mode,
-                                           progress=progress,
-                                           progress_report=node_progress_report,
-                                           show_output=show_output)
+                                           execution_mode=nested_execution_mode)
 
                         # Get output info from nested execution
                         if execution_mode:
@@ -9397,7 +9397,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             assert True
             # # MODIFIED 2/28/21 END
 
-        return output_values
+            return output_values
 
     def __call__(self, *args, **kwargs):
         if not args and not kwargs:
@@ -9753,13 +9753,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             return pnlvm.codegen.gen_composition_exec(ctx, self, tags=tags)
 
-    def __ptx_initialize(self, context=None, additional_tags=frozenset()):
-        if self._compilation_data.ptx_execution._get(context) is None:
-            self._compilation_data.ptx_execution._set(pnlvm.CompExecution(self,
-                                                                          [context.execution_id],
-                                                                          additional_tags=additional_tags),
-                                                      context)
-
     def enable_logging(self):
         for item in self.nodes + self.projections:
             if isinstance(item, Composition):
@@ -10059,5 +10052,5 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 def get_compositions():
     """Return list of Compositions in caller's namespace."""
-    frame = currentframe()
+    frame = inspect.currentframe()
     return [c for c in frame.f_back.f_locals.values() if isinstance(c, Composition)]

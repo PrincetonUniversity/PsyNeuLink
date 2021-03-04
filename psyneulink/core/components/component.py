@@ -1068,10 +1068,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         '_init_args',
     ])
 
-    class _CompilationData(ParametersBase):
-        parameter_struct = None
-        state_struct = None
-
     def __init__(self,
                  default_variable,
                  param_defaults,
@@ -1242,8 +1238,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self.initialization_status = ContextFlags.INITIALIZED
 
-        self._compilation_data = self._CompilationData(owner=self)
-
         self._update_parameter_components(context)
 
     def __repr__(self):
@@ -1269,7 +1263,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             # may be in DEFERRED INIT, so parameters/defaults belongs to class
             newone.parameters._owner = newone
             newone.defaults._owner = newone
-            newone._compilation_data._owner = newone
 
         # by copying, this instance is no longer "inherent" to a single
         # 'import psyneulink' call
@@ -1294,6 +1287,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         def _is_compilation_state(p):
             #FIXME: This should use defaults instead of 'p.get'
             return p.name not in blacklist and \
+                   not isinstance(p, (ParameterAlias, SharedParameter)) and \
                    (p.name in whitelist or isinstance(p.get(), Component))
 
         return filter(_is_compilation_state, self.parameters)
@@ -1353,7 +1347,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         if hasattr(self, 'ports'):
             blacklist.update(["matrix", "integration_rate"])
         def _is_compilation_param(p):
-            if p.name not in blacklist and not isinstance(p, ParameterAlias):
+            if p.name not in blacklist and not isinstance(p, (ParameterAlias, SharedParameter)):
                 #FIXME: this should use defaults
                 val = p.get()
                 # Check if the value type is valid for compilation
