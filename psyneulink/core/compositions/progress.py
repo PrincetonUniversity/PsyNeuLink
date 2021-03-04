@@ -140,33 +140,47 @@ class PNLProgress:
 
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
 
+        # Used for accessing progress report and reporting results
+        if simulation_mode:
+            run_mode = SIMULATION
+        else:
+            run_mode = DEFAULT
+
+        # Don't create a new report for simulations in a set
+        if simulation_mode and self._prev_simulation:
+            return len(self._progress_reports[comp][run_mode]) - 1
+
         if self._use_rich:
 
             # Simulation mode:
-            if simulation_mode:
-                # If still simulating, return id for last progress_report created (presumably for current simulation)
-                if self._prev_simulation:
-                    return len(self._progress_reports[comp][SIMULATION]) - 1
-                # Track depth of simulations (i.e. over all executions nested inside outermost simulation)
-                self._simulation += 1
-                self._prev_simulation = True
-            # Default mode:
-            else:
-                # if self._prev_simulation:
-                #     self._progress_reports[comp][SIMULATION].pop()
-                self._prev_simulation = False
-
-            if self._simulation:
             # if simulation_mode:
-                run_mode = SIMULATION
-            else:
-                run_mode = DEFAULT
+            #     # If still simulating, return id for last progress_report created (presumably for current simulation)
+            #     if self._prev_simulation:
+            #         return len(self._progress_reports[comp][SIMULATION]) - 1
+            #     # Track depth of simulations (i.e. over all executions nested inside outermost simulation)
+            #     self._simulation += 1
+            #     self._prev_simulation = True
+            # # Default mode:
+            # else:
+            #     # if self._prev_simulation:
+            #     #     self._progress_reports[comp][SIMULATION].pop()
+            #     self._prev_simulation = False
+
+            # if self._simulation:
+            # # if simulation_mode:
+            #     run_mode = SIMULATION
+            # else:
+            #     run_mode = DEFAULT
+
+
 
             # Show progress bar if it is *not* a simulation or it *is* a simulation and show_simulations is set
             # MODIFIED 3/3/21 OLD:
             visible = not self._simulation or self._show_simulations
             # MODIFIED 3/3/21 NEW:
             # visible = not run_mode is SIMULATION or (self._show_simulations and not self._prev_simulation)
+            # MODIFIED 3/4/21 NEWER:
+            visible = not self._simulation or self._show_simulations
             # MODIFIED 3/3/21 END
 
             if comp.verbosePref:
@@ -188,6 +202,8 @@ class PNLProgress:
 
             self._progress_reports[comp][run_mode].append(ProgressReport(id, num_trials))
             report_num = len(self._progress_reports[comp][run_mode]) - 1
+
+            self._prev_simulation = simulation_mode
 
             return report_num
 
@@ -218,11 +234,11 @@ class PNLProgress:
         # # Return if (nested within) a simulation and not reporting simulations
         # if self._simulation and not self._show_simulations:
         #     return
-        # MODIFIED 3/4/21 NEW:
-        # If exited simulation mode, decrement depth
-        if not simulation_mode and self._prev_simulation:
-            self._simulation -= 1
-            assert self._simulation >= 0, f'PNLProgress._simulation = {self._simulation}'
+        # # MODIFIED 3/4/21 NEW:
+        # # If exited simulation mode, decrement depth
+        # if not simulation_mode and self._prev_simulation:
+        #     self._simulation -= 1
+        #     assert self._simulation >= 0, f'PNLProgress._simulation = {self._simulation}'
 
         # Return if (nested within) a simulation and not reporting simulations
         if run_mode is SIMULATION and not self._show_simulations:
