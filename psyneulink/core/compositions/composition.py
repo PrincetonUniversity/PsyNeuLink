@@ -2389,7 +2389,7 @@ from psyneulink.core.globals.keywords import \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PULSE_CLAMP, \
     SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
-    TARGET, TARGET_MECHANISM, VARIABLE, WEIGHT, OWNER_MECH
+    TARGET, TARGET_MECHANISM, TERSE, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
@@ -7988,7 +7988,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_after_trial=None,
             termination_processing=None,
             skip_analyze_graph=False,
-            show_output=None,
+            show_output=True,
             show_progress=False,
             animate=False,
             log=False,
@@ -8087,26 +8087,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                BETTER DESCRIPTION NEEDED
             COMMENT
 
-        show_output : bool, ``terse``, ``all`` or None : default None
+        show_output : bool, *TERSE*, *FULL* : default True
             specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial as
-            it is generated.  If set to False no output is generated.  If set to None, the output is determined by
+            it is generated.  If set to False no output is generated.  If set to True, the output is determined by
             the `reportOutputPort <Preferences.reportOutputPref>` preference of individual Nodes.
-            If set to ``terse``, a single line is generated reporting the execution of each Node for which its
-            reportOutputPref is True.  If set to ``all``, the output of the Composition and all its Nodes is reported.
+            If set to *TERSE*, a single line is generated reporting the execution of each Node for which its
+            reportOutputPref is True.  If set to *FULL*, the output of the Composition and all its Nodes is reported.
 
-        show_progress : bool, 'console', 'pnl_view', 'simulations', or list : default True
-            specifies whether to show progress and/or output of execution in real time.  If the number trials to be
+        show_progress : bool, CONSOLE, PNL_VIEW, SIMULATIONS, or list : default False
+            specifies whether to show progress of execution in real time.  If the number trials to be
             executed is explicitly specified, the number of trials executed, a progress bar, and time remaining are
-            displayed; if the number of trials is not explicitly specified (e.g., it is specified using a generator),
-            then a "spinner" is displayed during execution and the the total number of trials executed is displayed
-            once complete.  The following optionsn can be used to specify what and where the information is displayed:
+            displayed; if the number of trials is not explicitly specified (e.g., if inputs are specified using a
+            generator), then a "spinner" is displayed during execution and the the total number of trials executed is
+            displayed once complete.  The following options can be used to specify what and where the information is
+            displayed, either individually or in a list:
 
-            * 'console' - directs output to the console
+            * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`.
 
-            .. _technical_note::
-            * 'pnl_view' - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT]
+            * *CONSOLE* - directs output to the console (default)
 
-            * 'simulations' - reports simulations executed by `OptimizationControlMechanism`.
+            * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT]
 
         animate : dict or bool : default False
             specifies use of the `show_graph <ShowGraph.show_graph>` method to generate a gif movie showing the
@@ -8384,7 +8384,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # EXECUTE TRIALS -------------------------------------------------------------
 
-        with PNLProgress(show_progress=show_progress) as progress:
+        with PNLProgress(show_output=show_output, show_progress=show_progress) as progress:
 
             progress_report = progress.start_progress_report(self, num_trials, context)
 
@@ -8687,10 +8687,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             runtime_params=None,
             skip_initialization=False,
             execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
+            show_output=True,
             show_progress=False,
             progress=None,
             progress_report=None,
-            show_output=None,
             ):
         """
             Passes inputs to any `Nodes <Composition_Nodes>` receiving inputs directly from the user (via the "inputs"
@@ -8751,19 +8751,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
                 see **execution_mode** argument of `run <Composition.run>` method for additional details.
 
+            show_output : bool, *TERSE*, *FULL* : default True
+                specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` for the
+                execution. If set to False no output is generated.  If set to True, the output is determined by
+                the `reportOutputPort <Preferences.reportOutputPref>` preference of individual Nodes.
+                If set to *TERSE*, a single line is generated reporting the execution of each Node for which its
+                reportOutputPref is True.  If set to *FULL*, the output of the Composition and all its Nodes is reported.
+
+            show_progress : bool, CONSOLE, PNL_VIEW, SIMULATIONS, or list : default False
+                specifies whether to show progress of execution.  In general, this will be for the single trial
+                executed by the call to the execute method;  however, if *SIMULATIONS* is specified (see below)
+                and the Composition has an `OptimizationControlMechanism`, then any simulations that it executes
+                will be reported.  The following options can be used to specify what and where the information is
+                displayed, either individually or in a list:
+                * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`.
+                * *CONSOLE* - directs output to the console (default)
+                * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT]
+
             Returns
             ---------
 
             output value of the final Mechanism executed in the Composition : various
         """
 
-        with PNLProgress(show_progress=show_progress) as progress:
+        with PNLProgress(show_output=show_output, show_progress=show_progress) as progress:
 
             # FIX: Call PNLProgress with context and progress_report handle this in there 3/3/21
             # If execute method is called directly, need to create PNLProgress object for reporting
             if not (context.source & ContextFlags.COMPOSITION) or progress_report is None:
                 progress_report = progress.start_progress_report(comp=self, num_trials=1, context=context)
-                show_output = True
 
             execution_scheduler = scheduler or self.scheduler
 
@@ -9178,17 +9194,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 if nested and node in self.get_nodes_by_role(NodeRole.INPUT):
                                     for port in node.input_ports:
                                         port._update(context=context)
-                                # MODIFIED 2/28/21 OLD:
                                 node.execute(context=context,
                                              runtime_params=execution_runtime_params,
                                              )
-                                # # MODIFIED 2/28/21 NEW:
-                                # kwargs = {'context':context, 'runtime_params':execution_runtime_params}
-                                # if isinstance(node, Composition):
-                                #     kwargs.update({'progress':progress, 'progress_report':progress_report,
-                                #                    'show_output':show_output})
-                                # node.execute(**kwargs)
-                                # MODIFIED 2/28/21 END
                             # Reset runtim_params
                             # Reset any specified for Mechanism
                             if context.execution_id in node._runtime_params_reset:

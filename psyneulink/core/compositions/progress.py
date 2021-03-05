@@ -8,7 +8,7 @@ from rich.panel import Panel
 from rich.progress import Progress as RichProgress
 
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import FULL
+from psyneulink.core.globals.keywords import CONSOLE, FULL, PNL_VIEW, SIMULATIONS, TERSE
 from psyneulink.core.globals.utilities import convert_to_list
 
 SIMULATION = 'Simulat'
@@ -41,43 +41,85 @@ class PNLProgress:
     A singleton context object that provides interface to output and progress reporting (e.g., rich and pnl_view)
     It returns the currently active progress context instance if one has been instantiated already in another scope.
     It deallocates the progress bar when the outermost context is released.
+
+    Arguments
+    ---------
+
+    show_progress : bool, CONSOLE, PNL_VIEW, SIMULATIONS, or list : default False
+        specifies whether to show progress of execution in real time.  If the number trials to be
+        executed is explicitly specified, the number of trials executed, a progress bar, and time remaining are
+        displayed; if the number of trials is not explicitly specified (e.g., if inputs are specified using a
+        generator), then a "spinner" is displayed during execution and the the total number of trials executed is
+        displayed once complete.  The following options can be used to specify what and where the information is
+        displayed, either individually or in a list:
+
+        * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`.
+
+        * *CONSOLE* - directs output to the console (default)
+
+        * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT]
+
+    Attributes
+    ----------
+
+    _instance : PNLProgress
+        singleton instance of class.
+
+    _show_progress : bool : default False
+        determines whether progress reporting is enabled.
+
+    _use_rich : bool : default True
+        determines whether reporting is sent to rich console.
+
+    _use_pnl_view : bool : default False
+        determines whether reporting is sent to PsyNeuLinkView - TBI.
+
+    _show_simulations : bool : default False
+        determines whether reporting generated for simulations.
+
+    _progress_reports : dict
+        contains entries for each Composition (the key) executed during progress reporting; the value of each
+        entry is itself a dict with two entries:
+        - one containing ProgressReports for executions in DEFAULT_MODE (key: DEFAULT)
+        - one containing ProgressReports for executions in SIMULATION_MODE (key: SIMULATION)
+
+    _ref_count : int : default 0
+        tracks how many times object has been referenced;  counter is incremented on each context __enter__
+        and decrements on each __exit__, to ensure stop progress is not called until all references have been released.
+
     """
+
     _instance = None
 
-    def __new__(cls, show_progress=True) -> 'PNLProgress':
+    def __new__(cls, show_progress=False, show_output=False) -> 'PNLProgress':
         if cls._instance is None:
             cls._instance = super(PNLProgress, cls).__new__(cls)
 
-            cls.show_progress = bool(show_progress)
+            cls._show_progress = bool(show_progress)
 
             show_progress = convert_to_list(show_progress)
+            # Use rich console output by default
+            cls._use_rich = (False not in show_progress and [k in show_progress for k in {True, CONSOLE}]
+                             or show_output)
+            # TBI: send output to PsyNeuLinkView
+            cls._use_pnl_view = False not in show_progress and PNL_VIEW in show_progress
+            # Show simulations if specified
+            cls._show_simulations = False not in show_progress and SIMULATIONS in show_progress
 
-            cls._use_rich = False not in show_progress and [k in show_progress for k in {True, 'console'}]
-            cls._use_pnl_view = False not in show_progress and 'pnl_view' in show_progress
-            cls._show_simulations = False not in show_progress and 'simulations' in show_progress
-            cls._simulation = 0
             cls._prev_simulation = False
 
-
-            # Instantiate rich Progress object
+            # Instantiate rich progress context object
+            # - it is not started until the self.start_progress_report() method is called
+            # - auto_refresh is disabled to accommodate IDEs (such as PyCharm and Jupyter Notebooks)
             if cls._use_rich:
-                # Instantiate a rich progress context\object
-                # - it is not started until the self.start_progress_report() method is called
-                # - auto_refresh is disabled to accommodate IDEs (such as PyCharm and Jupyter Notebooks)
                 cls._instance._rich_progress = RichProgress(auto_refresh=False)
 
             # Instantiate interface to PsyNeuLinkView
             if cls._use_pnl_view:
                 warnings.warn("'pnl_view' not yet supported as an option for show_progress of Composition.run()")
 
-            # Dict with entries for each Composition (the key), the value of which is a dict with two entries:
-            # - one containing ProgressReports for executions in DEFAULT_MODE (key: DEFAULT)
-            # - one containing ProgressReports for executions in SIMULATION_MODE (key: SIMULATION)
             cls._progress_reports = {}
 
-            # This counter is incremented on each context __enter__ and decrements
-            # on each __exit__. We need this to make sure we don't call progress
-            # stop until all references have been released.
             cls._ref_count = 0
 
         return cls._instance
@@ -154,7 +196,9 @@ class PNLProgress:
 
         if self._use_rich:
 
-            visible = not self._simulation or self._show_simulations
+            print()
+
+            visible = self._show_progress and (run_mode is not SIMULATION or self._show_simulations)
 
             if comp.verbosePref or REPORT_REPORT:
                 from pprint import pprint
@@ -182,7 +226,7 @@ class PNLProgress:
 
     def report_progress(self, caller, report_num, context):
 
-        if not self.show_progress:
+        if not self._show_progress:
             return
 
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
@@ -223,35 +267,29 @@ class PNLProgress:
     def report_output(self, caller, report_num, scheduler, show_output, content, context, nodes_to_report=False,
                       node=None):
 
-        if report_num is None:
+        if report_num is None or show_output is False:
             return
+        # if show_report show_output None, defer to Composition's reportOutputPref
+        if show_output is None:  # if it is False, leave as is to suppress output
+            show_output = caller.reportOutputPref
+        if show_output:
+            show_output = str(show_output)
+
+        try:
+            if TERSE in show_output:   # give precedence to argument in call to execute
+                rich_report = False
+            else:
+                rich_report = True
+        except TypeError:
+                rich_report = True
 
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
         if simulation_mode:
             run_mode = SIMULATION
         else:
-            # # Don't report outer execution of composition
-            # if self._simulation:
-            #     return
             run_mode = DEFAULT
 
         progress_report = self._progress_reports[caller][run_mode][report_num]
-
-        # if it is None, defer to Composition's # reportOutputPref
-        if show_output is not False:  # if it is False, leave as is to suppress output
-            show_output = show_output or caller.reportOutputPref
-        if show_output:
-            show_output = str(show_output)
-
-        try:
-            if 'terse' in show_output:   # give precedence to argument in call to execute
-                rich_report = False
-            # elif 'terse' in self.reportOutputPref:
-            #     rich_report = False
-            else:
-                rich_report = True
-        except TypeError:
-                rich_report = True
 
         trial_num = scheduler.clock.time.trial
 
@@ -280,13 +318,14 @@ class PNLProgress:
 
         elif content is 'node':
             if not node:
-                assert False  # FIX: NEED ERROR MESSAGE HERE
-            if show_output and (node.reportOutputPref or show_output is FULL):
+                assert False, 'Node not specified in call to PNLProgress report_output'
+            if show_output and (node.reportOutputPref or show_output is FULL or show_output is TERSE):
                 if rich_report:
                     progress_report.time_step_report.append(
-                        _report_node_execution(node,
+                        report_node_execution(node,
                                                input_val=node.get_input_values(context),
                                                output_val=node.output_port.parameters.value._get(context),
+                                               show_output=show_output,
                                                context=context
                                                ))
                 else:
@@ -322,60 +361,6 @@ class PNLProgress:
                 self._rich_progress.console.print('')
 
 
-# ####################################################
-# # An Example
-# ####################################################
-#
-#
-# def another_run(task_num):
-#     """A simple function to generate another task progress bar."""
-#     with PNLProgress() as progress:
-#         task = progress.add_task(f"[white]Another Task {task_num} ...", total=100)
-#
-#         for i in range(100):
-#             progress.update(task, advance=1)
-#             time.sleep(0.001)
-#
-#         # We can remove a task if we want to. I notice rich gets pretty slow and can even cause the terminal to hang
-#         # if a large number of tasks are created so you might need to do this. It seems to get bad around 100 or so
-#         # tasks on my machine.
-#         progress.remove_task(task)
-#
-#
-# def run(show_progress: bool = True):
-#
-#     with PNLProgress(disable=not show_progress) as progress:
-#
-#         task1 = progress.add_task("[red]Downloading...", total=100)
-#         task2 = progress.add_task("[green]Processing...", total=100)
-#         task3 = progress.add_task("[cyan]Cooking...", total=100)
-#
-#         i = 0
-#         sub_task_num = 0
-#
-#         while not progress.finished:
-#             progress.update(task1, advance=0.5)
-#             progress.update(task2, advance=0.3)
-#             progress.update(task3, advance=0.9)
-#             time.sleep(0.002)
-#
-#             # Run another whole task every 30 iterations
-#             if i % 30 == 0:
-#                 sub_task_num = sub_task_num + 1
-#                 another_run(sub_task_num)
-#
-#             i = i + 1
-#
-# run()
-#
-# print("Run Again ... Progress Disabled")
-# run(show_progress=False)
-#
-# print("Run Again")
-# run()
-
-
-
 # rich console report styles
 # node
 node_panel_color = 'orange1'
@@ -389,17 +374,20 @@ trial_panel_color = 'dodger_blue3'
 trial_input_color = 'green'
 trial_output_color = 'red'
 trial_panel_box = box.HEAVY
-# ---------------------------------------------------
 
-def _report_node_execution(node,
+def report_node_execution(node,
                            input_val=None,
                            params=None,
                            output_val=None,
+                           show_output=True,
                            context=None):
         from psyneulink.core.components.shellclasses import Function
         from psyneulink.core.globals.keywords import FUNCTION_PARAMS
 
         node_report = ''
+
+        if show_output is TERSE or node.reportOutputPref is TERSE and show_output is not FULL:
+            return f'[{node_panel_color}]{node.name} executed'
 
         if input_val is None:
             input_val = node.get_input_values(context)
