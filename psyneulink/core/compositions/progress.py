@@ -401,9 +401,8 @@ class PNLProgress:
                 # assert True
 
 
-    @classmethod
-    def node_execution_report(cls,
-                              node,
+    @staticmethod
+    def node_execution_report(node,
                               input_val=None,
                               params=None,
                               output_val=None,
