@@ -193,6 +193,10 @@ class PNLProgress:
 
     def start_progress_report(self, comp, num_trials, context):
 
+        # Generate space before beginning of output
+        if self._use_rich and not self._progress_reports:
+            print()
+
         if comp not in self._progress_reports:
             self._progress_reports.update({comp:{DEFAULT:[], SIMULATION:[]}})
 
@@ -210,8 +214,6 @@ class PNLProgress:
             return len(self._progress_reports[comp][run_mode]) - 1
 
         if self._use_rich:
-
-            # print()
 
             visible = self._show_progress and (run_mode is not SIMULATION or self._show_simulations)
 
@@ -376,97 +378,98 @@ class PNLProgress:
                 self._rich_progress.console.print('')
 
     @classmethod
-    def node_execution_report(node,
-                               input_val=None,
-                               params=None,
-                               output_val=None,
-                               show_output=True,
-                               context=None):
-            from psyneulink.core.components.shellclasses import Function
-            from psyneulink.core.globals.keywords import FUNCTION_PARAMS
+    def node_execution_report(cls,
+                              node,
+                              input_val=None,
+                              params=None,
+                              output_val=None,
+                              show_output=True,
+                              context=None):
+        from psyneulink.core.components.shellclasses import Function
+        from psyneulink.core.globals.keywords import FUNCTION_PARAMS
 
-            node_report = ''
+        node_report = ''
 
-            if show_output is TERSE or node.reportOutputPref is TERSE and show_output is not FULL:
-                return f'[{node_panel_color}]{node.name} executed'
+        if show_output is TERSE or node.reportOutputPref is TERSE and show_output is not FULL:
+            return f'[{node_panel_color}]{node.name} executed'
 
-            if input_val is None:
-                input_val = node.get_input_values(context)
-            if output_val is None:
-                output = node.output_port.parameters.value._get(context)
-            params = params or {p.name: p._get(context) for p in node.parameters}
+        if input_val is None:
+            input_val = node.get_input_values(context)
+        if output_val is None:
+            output = node.output_port.parameters.value._get(context)
+        params = params or {p.name: p._get(context) for p in node.parameters}
 
-            # print input
-            # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
-            #      if you want more specific output, you can add conditional tests here
-            try:
-                input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
-            except TypeError:
-                input_string = input_val
+        # print input
+        # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
+        #      if you want more specific output, you can add conditional tests here
+        try:
+            input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
+        except TypeError:
+            input_string = input_val
 
-            node_report += f"input: {input_string}"
+        node_report += f"input: {input_string}"
 
-            # print output
-            # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
-            #   if you want more specific output, you can add conditional tests here
-            try:
-                output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output_val]))
-            except TypeError:
-                output_string = output
+        # print output
+        # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
+        #   if you want more specific output, you can add conditional tests here
+        try:
+            output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output_val]))
+        except TypeError:
+            output_string = output
 
-            node_report += f"\noutput: {output_string}"
+        node_report += f"\noutput: {output_string}"
 
-            # print params
-            try:
-                include_params = re.match('param(eter)?s?', node.reportOutputPref, flags=re.IGNORECASE)
-            except TypeError:
-                include_params = False
+        # print params
+        try:
+            include_params = re.match('param(eter)?s?', node.reportOutputPref, flags=re.IGNORECASE)
+        except TypeError:
+            include_params = False
 
-            if include_params:
-                # print("- params:")
-                params_string = (f"\n- params:")
-                # Sort for consistency of output
-                params_keys_sorted = sorted(params.keys())
-                for param_name in params_keys_sorted:
-                    # No need to report:
-                    #    function_params here, as they will be reported for the function itself below;
-                    #    input_ports or output_ports, as these are inherent in the structure
-                    if param_name in {FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS}:
-                        continue
-                    param_is_function = False
-                    param_value = params[param_name]
-                    if isinstance(param_value, Function):
-                        param = param_value.name
-                        param_is_function = True
-                    elif isinstance(param_value, type(Function)):
-                        param = param_value.__name__
-                        param_is_function = True
-                    elif isinstance(param_value, (types.FunctionType, types.MethodType)):
-                        param = param_value.__node__.__class__.__name__
-                        param_is_function = True
-                    else:
-                        param = param_value
-                    params_string += f"\n\t{param_name}: {str(param).__str__().strip('[]')}"
-                    if param_is_function:
-                        # Sort for consistency of output
-                        func_params_keys_sorted = sorted(node.function.parameters.names())
-                        for fct_param_name in func_params_keys_sorted:
-                            params_string += ("\n\t\t{}: {}".
-                                  format(fct_param_name,
-                                         str(getattr(node.function.parameters, fct_param_name)._get(context)).__str__().strip("[]")))
+        if include_params:
+            # print("- params:")
+            params_string = (f"\n- params:")
+            # Sort for consistency of output
+            params_keys_sorted = sorted(params.keys())
+            for param_name in params_keys_sorted:
+                # No need to report:
+                #    function_params here, as they will be reported for the function itself below;
+                #    input_ports or output_ports, as these are inherent in the structure
+                if param_name in {FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS}:
+                    continue
+                param_is_function = False
+                param_value = params[param_name]
+                if isinstance(param_value, Function):
+                    param = param_value.name
+                    param_is_function = True
+                elif isinstance(param_value, type(Function)):
+                    param = param_value.__name__
+                    param_is_function = True
+                elif isinstance(param_value, (types.FunctionType, types.MethodType)):
+                    param = param_value.__node__.__class__.__name__
+                    param_is_function = True
+                else:
+                    param = param_value
+                params_string += f"\n\t{param_name}: {str(param).__str__().strip('[]')}"
+                if param_is_function:
+                    # Sort for consistency of output
+                    func_params_keys_sorted = sorted(node.function.parameters.names())
+                    for fct_param_name in func_params_keys_sorted:
+                        params_string += ("\n\t\t{}: {}".
+                                          format(fct_param_name,
+                                                 str(getattr(node.function.parameters, fct_param_name)._get(context)).__str__().strip("[]")))
 
-            if include_params:
-                width = 100
-                expand = True
-                node_report = RenderGroup(node_report,Panel(params_string))
-                params_string
-            else:
-                width = None
-                expand = False
-            return Panel(node_report,
-                         box=node_panel_box,
-                         border_style=node_panel_color,
-                         width=width,
-                         expand=expand,
-                         title=f'[{node_panel_color}]{node.name}',
-                         highlight=True)
+        if include_params:
+            width = 100
+            expand = True
+            node_report = RenderGroup(node_report,Panel(params_string))
+            params_string
+        else:
+            width = None
+            expand = False
+        return Panel(node_report,
+                     box=node_panel_box,
+                     border_style=node_panel_color,
+                     width=width,
+                     expand=expand,
+                     title=f'[{node_panel_color}]{node.name}',
+                     highlight=True)
