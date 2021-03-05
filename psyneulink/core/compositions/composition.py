@@ -8089,10 +8089,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         show_output : bool, *TERSE*, *FULL* : default True
             specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial as
-            it is generated.  If set to False no output is generated.  If set to True, the output is determined by
-            the `reportOutputPort <Preferences.reportOutputPref>` preference of individual Nodes.
-            If set to *TERSE*, a single line is generated reporting the execution of each Node for which its
-            reportOutputPref is True.  If set to *FULL*, the output of the Composition and all its Nodes is reported.
+            it is generated.  Any one the following options can be used:
+
+            * False - no output is generated;
+
+            * True - output is determined by the `reportOutputPort <Preferences.reportOutputPref>` preference of
+              individual Nodes.
+
+            * *TERSE* - a single line is generated reporting the execution of each Node of the Composition;
+
+            * *FULL* - input and output of the Composition and all its Nodes is reported.
 
         show_progress : bool, CONSOLE, PNL_VIEW, SIMULATIONS, or list : default False
             specifies whether to show progress of execution in real time.  If the number trials to be
