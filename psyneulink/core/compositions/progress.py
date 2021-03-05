@@ -308,7 +308,8 @@ class PNLProgress:
 
         progress_report = self._progress_reports[caller][run_mode][report_num]
 
-        trial_num = scheduler.clock.time.trial
+        # FIX:  THIS IS A HACK TO FIX THE FACT THAT trial_num SEEMS TO BE DIFFERENT FOR TERSE AND FULL
+        trial_num = scheduler.clock.time.trial - (show_output is not TERSE)
 
         if content is 'trial_init':
 
