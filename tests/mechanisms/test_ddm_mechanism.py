@@ -706,6 +706,15 @@ def test_DDM_threshold_modulation(comp_mode):
                             (100.0, 100.0, (100.0, 76.0)),
                         ])
 def test_ddm_is_finished(comp_mode, noise, threshold, expected_results):
+
+    # 3/5/2021 - DDM' default behaviour now requires resetting stateful
+    # functions after each trial. This is not supported in LLVM execution mode.
+    # See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935
+    if comp_mode == pnl.ExecutionMode.LLVM:
+        pytest.xfail(reason="DDM' default behaviour now requires resetting stateful functions after each trial. "
+                            "This is not supported in LLVM execution mode. "
+                            "See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935")
+
     comp = Composition()
     ddm = DDM(function=DriftDiffusionIntegrator(threshold=threshold, noise=np.sqrt(noise), time_step_size=1.0),
               execute_until_finished=True)
@@ -776,6 +785,16 @@ def test_sequence_of_DDM_mechs_in_Composition_Pathway():
 @pytest.mark.mechanism
 @pytest.mark.ddm_mechanism
 def test_DDMMechanism_LCA_equivalent(comp_mode):
+
+    # 3/5/2021 - DDM' default behaviour now requires resetting stateful
+    # functions after each trial. This is not supported in LLVM execution mode.
+    # See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935
+    if comp_mode == pnl.ExecutionMode.LLVM:
+        pytest.xfail(reason="DDM' default behaviour now requires resetting stateful functions after each trial. "
+                            "This is not supported in LLVM execution mode. "
+                            "See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935")
+
+
     ddm = DDM(default_variable=[0], function=DriftDiffusionIntegrator(rate=1, time_step_size=0.1),
               execute_until_finished=False)
     comp2 = Composition()
