@@ -8076,28 +8076,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         termination_processing : Condition  : default None
             specifies `Condition` under which execution of the run will occur.
 
-            COMMMENT:
+            COMMENT:
                BETTER DESCRIPTION NEEDED
             COMMENT
 
         skip_analyze_graph : bool : default False
             setting to True suppresses call to _analyze_graph()
 
-            COMMMENT:
+            COMMENT:
                BETTER DESCRIPTION NEEDED
             COMMENT
 
         show_output : bool, *TERSE*, *FULL* : default True
             specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial as
             it is generated.  Any one the following options can be used:
-
             * False - no output is generated;
-
-            * True - output is determined by the `reportOutputPort <Preferences.reportOutputPref>` preference of
-              individual Nodes.
-
+            * True - output is determined by the `reportOutputPref <Preferences>` preference of
+              individual Nodes;
             * *TERSE* - a single line is generated reporting the execution of each Node of the Composition;
-
             * *FULL* - input and output of the Composition and all its Nodes is reported.
 
         show_progress : bool, CONSOLE, PNL_VIEW, SIMULATIONS, or list : default False
@@ -8107,12 +8103,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             generator), then a "spinner" is displayed during execution and the the total number of trials executed is
             displayed once complete.  The following options can be used to specify what and where the information is
             displayed, either individually or in a list:
-
-            * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`.
-
-            * *CONSOLE* - directs output to the console (default)
-
-            * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT]
+            * False - suppress all progress reporting;
+            * True - report progress to designated devices (default: *CONSOLE*);
+            * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`;
+            * *CONSOLE* - directs output to the console (default);
+            * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
         animate : dict or bool : default False
             specifies use of the `show_graph <ShowGraph.show_graph>` method to generate a gif movie showing the
@@ -8760,9 +8755,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             show_output : bool, *TERSE*, *FULL* : default True
                 specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` for the
                 execution. If set to False no output is generated.  If set to True, the output is determined by
-                the `reportOutputPort <Preferences.reportOutputPref>` preference of individual Nodes.
+                the `reportOutputPref <Preferences>` preference of individual Nodes.
                 If set to *TERSE*, a single line is generated reporting the execution of each Node for which its
-                reportOutputPref is True.  If set to *FULL*, the output of the Composition and all its Nodes is reported.
+                reportOutputPref is True.  If set to *FULL*, the output of the Composition and all its Nodes is
+                reported.
 
             show_progress : bool, CONSOLE, PNL_VIEW, SIMULATIONS, or list : default False
                 specifies whether to show progress of execution.  In general, this will be for the single trial
@@ -8770,9 +8766,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and the Composition has an `OptimizationControlMechanism`, then any simulations that it executes
                 will be reported.  The following options can be used to specify what and where the information is
                 displayed, either individually or in a list:
-                * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`.
+                * False - suppress all progress reporting;
+                * True - report progress to designated devices (default: *CONSOLE*)
+                * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`;
                 * *CONSOLE* - directs output to the console (default)
-                * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT]
+                * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
             Returns
             ---------

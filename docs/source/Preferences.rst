@@ -3,19 +3,19 @@ Preferences
 
 Standard prefereces:
 
-- verbose (bool): enables/disables reporting of (non-exception) warnings and system function
+- verbosePref (bool): enables/disables reporting of (non-exception) warnings and system function
 
-- paramValidation (bool): enables/disables run-time validation of the execute method of a Function object
+- paramValidationPref (bool): enables/disables run-time validation of the execute method of a Function object
 
-- reportOutput ([bool, str]): enables/disables reporting execution of `Component`\'s `execute <Component_Execution>`
+- reportOutputPref ([bool, str]): enables/disables reporting execution of `Component`\'s `execute <Component_Execution>`
   method to console and/or PsyNeuLinkView:
     - ``True``: prints record of execution, including the input and output of the Component;
     - *TERSE*: restricts output to just a statement that the Component executed;
     - 'params' or 'parameters': includes report of the Component's `parameter <Parameters>` values.
 
-- log (bool): sets LogCondition for a given Component
+- logPref (bool): sets LogCondition for a given Component
 
-- functionRunTimeParams (Modulation): uses run-time params to modulate execute method params
+- functionRunTimeParamsPref (Modulation): uses run-time params to modulate execute method params
 
 [ADDITIONAL DOCUMENTATION COMING...]
 
