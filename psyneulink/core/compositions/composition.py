@@ -887,7 +887,7 @@ Compostion is executing, using the **show_output** and **show_progress** argumen
 **show_output** generates a report of the input and output the Composition and its `Nodes <Composition_Nodes>`, while
 **show_progress** shows a progress bar indicating how many `TRIALS <TimeScale.TRIAL>` have been executed and an
 estimate of the time remaining to completion (see the `execute <Composition.execute>`, `run <Composition.run>` and
-`learn <Composition.learn>` methods for additional details).
+`learn <Composition.learn>` methods for additional details).  These options are both False by default.
 
 *Inputs*. All methods of executing a Composition require specification of an **inputs** argument, which designates
 the values assigned to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for each `TRIAL <TimeScale.TRIAL>`.
@@ -2401,7 +2401,7 @@ from psyneulink.core.globals.keywords import \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PULSE_CLAMP, \
     SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
-    TARGET, TARGET_MECHANISM, TERSE, VARIABLE, WEIGHT, OWNER_MECH
+    TARGET, TARGET_MECHANISM, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
@@ -8000,7 +8000,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_after_trial=None,
             termination_processing=None,
             skip_analyze_graph=False,
-            show_output=True,
+            show_output=False,
             show_progress=False,
             animate=False,
             log=False,
@@ -8099,7 +8099,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                BETTER DESCRIPTION NEEDED
             COMMENT
 
-        show_output : bool, *TERSE*, *FULL* : default True
+        show_output : bool, *TERSE*, *FULL* : default False
             specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial as
             it is generated.  Any one the following options can be used:
 
@@ -8605,7 +8605,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_after_minibatch : callable
                 called after each minibatch is executed
 
-            show_output : bool, *TERSE*, *FULL* : default True
+            show_output : bool, *TERSE*, *FULL* : default False
                 specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial
                 as it is generated.  Any one the following options can be used:
 
@@ -8726,7 +8726,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             runtime_params=None,
             skip_initialization=False,
             execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
-            show_output=True,
+            show_output=False,
             show_progress=False,
             progress=None,
             progress_report=None,
@@ -8790,7 +8790,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
                 see **execution_mode** argument of `run <Composition.run>` method for additional details.
 
-            show_output : bool, *TERSE*, *FULL* : default True
+            show_output : bool, *TERSE*, *FULL* : default False
                 specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` for the
                 execution. Any one the following options can be used:
 
