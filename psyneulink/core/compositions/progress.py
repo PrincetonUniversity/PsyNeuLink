@@ -297,13 +297,26 @@ class PNLProgress:
         if show_output:
             show_output = str(show_output)
 
+        # # MODIFIED 3/5/21 OLD:
+        # try:
+        #     if TERSE in show_output:   # give precedence to argument in call to execute
+        #         report_type = False
+        #     else:
+        #         report_type = True
+        # except TypeError:
+        #         report_type = True
+        # MODIFIED 3/5/21 NEW:
         try:
-            if TERSE in show_output:   # give precedence to argument in call to execute
-                rich_report = False
+            if FULL in show_output:   # give precedence to argument in call to execute
+                report_type = FULL
+            elif TERSE in show_output:
+                report_type = TERSE
             else:
-                rich_report = True
+                report_type = None
         except TypeError:
-                rich_report = True
+                assert False, f'TypeError in report_output for {caller.name}'
+        # MODIFIED 3/5/21 END
+
 
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
         if simulation_mode:
@@ -325,7 +338,7 @@ class PNLProgress:
                 # reportOutputPref
 
                 #  if rich report, report trial number and Composition's input
-                if rich_report:
+                if report_type is FULL:
                     progress_report.trial_report = [f"\n[bold {trial_panel_color}]input:[/]"
                                                      f" {[i.tolist() for i in caller.get_input_values(context)]}"]
                 else:
@@ -335,7 +348,7 @@ class PNLProgress:
 
         elif content is 'time_step_init':
             if show_output:
-                if rich_report:
+                if report_type is FULL:
                     progress_report.time_step_report = [] # Contains rich.Panel for each node executed in time_step
                 elif nodes_to_report:
                     self._rich_progress.console.print(f'[{time_step_panel_color}]'
@@ -344,8 +357,8 @@ class PNLProgress:
         elif content is 'node':
             if not node:
                 assert False, 'Node not specified in call to PNLProgress report_output'
-            if show_output and (node.reportOutputPref or show_output is FULL or show_output is TERSE):
-                if rich_report:
+            if show_output and node.reportOutputPref:
+                if FULL in [report_type, node.reportOutputPref]:
                     progress_report.time_step_report.append(
                         self.node_execution_report(node,
                                                    input_val=node.get_input_values(context),
@@ -357,7 +370,7 @@ class PNLProgress:
                     self._rich_progress.console.print(f'[{node_panel_color}]{node.name} executed')
 
         elif content is 'time_step':
-            if (show_output and (nodes_to_report or show_output is FULL) and rich_report):
+            if (show_output and (nodes_to_report or show_output is FULL) and report_type is FULL):
                 progress_report.trial_report.append('')
                 progress_report.trial_report.append(Panel(RenderGroup(*progress_report.time_step_report),
                                                            # box=box.HEAVY,
@@ -368,7 +381,7 @@ class PNLProgress:
                                                            expand=False))
 
         elif content is 'trial':
-            if show_output and rich_report:
+            if report_type is FULL:
                 output_values = []
                 for port in caller.output_CIM.output_ports:
                     output_values.append(port.parameters.value._get(context))
@@ -384,8 +397,8 @@ class PNLProgress:
             if show_output and progress_report.trial_report:
                 self._rich_progress.console.print(progress_report.trial_report)
                 self._rich_progress.console.print('')
-                print(self._rich_progress.console.file.getvalue())
-                assert True
+                # print(self._rich_progress.console.file.getvalue())
+                # assert True
 
 
     @classmethod
