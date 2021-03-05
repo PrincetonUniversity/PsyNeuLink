@@ -86,8 +86,8 @@ class PNLProgress:
     _show_progress : bool : default False
         determines whether progress reporting is enabled.
 
-    _use_rich : bool : default True
-        determines whether reporting is sent to rich console.
+    _use_rich : bool, *CONSOLE* or *CAPTURE* : default *CONSOLE*
+        determines whether reporting is sent to rich console or captured in a string PNLProgress.captured_output
 
     _use_pnl_view : bool : default False
         determines whether reporting is sent to PsyNeuLinkView - TBI.
@@ -100,6 +100,9 @@ class PNLProgress:
         entry is itself a dict with two entries:
         - one containing ProgressReports for executions in DEFAULT_MODE (key: DEFAULT)
         - one containing ProgressReports for executions in SIMULATION_MODE (key: SIMULATION)
+
+    _captured_output : str :  default []
+        if _use_rich is *CAPTURE*, contains output otherwise sent to rich console.
 
     _ref_count : int : default 0
         tracks how many times object has been referenced;  counter is incremented on each context __enter__
@@ -116,7 +119,7 @@ class PNLProgress:
             cls._show_progress = bool(show_progress)
 
             show_progress = convert_to_list(show_progress)
-            # Use rich console output by default
+            # Use rich console output by default, or _captured_output if CPATURE is sp
             cls._use_rich = (False not in show_progress and [k in show_progress for k in {True, CONSOLE, CAPTURE}]
                              or show_output)
             # TBI: send output to PsyNeuLinkView
@@ -141,6 +144,7 @@ class PNLProgress:
                 warnings.warn("'pnl_view' not yet supported as an option for show_progress of Composition.run()")
 
             cls._progress_reports = {}
+            cls._captured_output = []
 
             cls._ref_count = 0
 
