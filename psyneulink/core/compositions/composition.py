@@ -497,8 +497,10 @@ Learning in a Composition
 
 Learning is used to modify the `Projections <Projection>` between Mechanisms in a Composition.  More specifically,
 it modifies the `matrix <MappingProjection.matrix>` parameter of the `MappingProjections <MappingProjection>` within a
-`learning Pathway <Composition_Learning_Pathway>`, which implement the conection weights (i.e., strengths of
-associations between representations in the Mechanisms) within a `Pathway`.
+`learning Pathway <Composition_Learning_Pathway>`, which implements the conection weights (i.e., strengths of
+associations between representations in the Mechanisms) within a `Pathway`.  If learning is implemented for a
+Composition, it can be executed calling the Composition's `learn <Composition.learn>` method (see
+`Composition_Learning_Execution` and `Composition_Execution` for additional details).
 
 
 .. _Composition_Learning_Configurations:
@@ -867,15 +869,25 @@ can execute multiple trials (specified in their **num_trials** argument), callin
 <Composition.execute>` method for each `TRIAL <TimeScale.TRIAL>`.  The `execute <Composition.execute>` method
 can also be called directly, but this is useful mostly for debugging.
 
-.. hint:
+.. hint::
    Once a Composition has been constructed, it can be called directly. If it is called with no arguments, and
-   has executed previously, the `result <Composition_Execution_Results> of the last `TRIAL <TimeScale.TRIAL>`
-   of execution is returned; otherwise it None is returned.  If it is called with arguments, then either `run
+   has executed previously, the `result <Composition_Execution_Results>` of the last `TRIAL <TimeScale.TRIAL>`
+   of execution is returned; otherwise None is returned.  If it is called with arguments, then either `run
    <Composition.run>` or `learn <Composition.learn>` is called, based on the arguments provided:  If the
    Composition has any `learning_pathways <Composition_Learning_Pathway>`, and the relevant `TARGET_MECHANISM
    <Composition_Learning_Components>`\\s are specified in the `inputs argument <Composition_Execution_Inputs>`,
    then `learn <Composition.learn>` is called;  otherwise, `run <Composition.run>` is called.  In either case,
    the return value of the corresponding method is returned.
+
+Executing a Composition returns the results of its last `TRIAL <TimeScale.TRIAL>` of execution.  If either `run
+<Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS <TimeScale.TRIAL>` are
+available in the Composition's `results <Composition.results>` attribute (see `Results <Composition_Execution_Results>`
+for additional details).  A report of the results of each `TRIAL <TimeScale.TRIAL>` can also be generated as the
+Compostion is executing, using the **show_output** and **show_progress** arguments of any of the execution methods.
+**show_output** generates a report of the input and output the Composition and its `Nodes <Composition_Nodes>`, while
+**show_progress** shows a progress bar indicating how many `TRIALS <TimeScale.TRIAL>` have been executed and an
+estimate of the time remaining to completion (see the `execute <Composition.execute>`, `run <Composition.run>` and
+`learn <Composition.learn>` methods for additional details).
 
 *Inputs*. All methods of executing a Composition require specification of an **inputs** argument, which designates
 the values assigned to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for each `TRIAL <TimeScale.TRIAL>`.
@@ -8090,6 +8102,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         show_output : bool, *TERSE*, *FULL* : default True
             specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial as
             it is generated.  Any one the following options can be used:
+
             * False - no output is generated;
             * True - output is determined by the `reportOutputPref <Preferences>` preference of
               individual Nodes;
@@ -8103,6 +8116,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             generator), then a "spinner" is displayed during execution and the the total number of trials executed is
             displayed once complete.  The following options can be used to specify what and where the information is
             displayed, either individually or in a list:
+
             * False - suppress all progress reporting;
             * True - report progress to designated devices (default: *CONSOLE*);
             * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`;
@@ -8591,6 +8605,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_after_minibatch : callable
                 called after each minibatch is executed
 
+            show_output : bool, *TERSE*, *FULL* : default True
+                specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial
+                as it is generated.  Any one the following options can be used:
+
+                * False - no output is generated;
+                * True - output is determined by the `reportOutputPref <Preferences>` preference of
+                  individual Nodes;
+                * *TERSE* - a single line is generated reporting the execution of each Node of the Composition;
+                * *FULL* - input and output of the Composition and all its Nodes is reported.
+
+            show_progress : bool, CONSOLE, PNL_VIEW, SIMULATIONS, or list : default False
+                specifies whether to show progress of execution in real time.  If the number trials to be
+                executed is explicitly specified, the number of trials executed, a progress bar, and time remaining are
+                displayed; if the number of trials is not explicitly specified (e.g., if inputs are specified using a
+                generator), then a "spinner" is displayed during execution and the the total number of trials executed
+                is displayed once complete.  The following options can be used to specify what and where the
+                information is displayed, either individually or in a list:
+
+                * False - suppress all progress reporting;
+                * True - report progress to designated devices (default: *CONSOLE*);
+                * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`;
+                * *CONSOLE* - directs output to the console (default);
+                * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
+
             Returns
             ---------
 
@@ -8754,11 +8792,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             show_output : bool, *TERSE*, *FULL* : default True
                 specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` for the
-                execution. If set to False no output is generated.  If set to True, the output is determined by
-                the `reportOutputPref <Preferences>` preference of individual Nodes.
-                If set to *TERSE*, a single line is generated reporting the execution of each Node for which its
-                reportOutputPref is True.  If set to *FULL*, the output of the Composition and all its Nodes is
-                reported.
+                execution. Any one the following options can be used:
+
+                * False - no output is generated;
+                * True - output is determined by the `reportOutputPref <Preferences>` preference of
+                  individual `Nodes <Composition_Nodes>`;
+                * *TERSE* - a single line is generated reporting the execution of each Node of the Composition;
+                * *FULL* - input and output of the Composition and all its Nodes is reported.
 
             show_progress : bool, CONSOLE, PNL_VIEW, SIMULATIONS, or list : default False
                 specifies whether to show progress of execution.  In general, this will be for the single trial
@@ -8766,6 +8806,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and the Composition has an `OptimizationControlMechanism`, then any simulations that it executes
                 will be reported.  The following options can be used to specify what and where the information is
                 displayed, either individually or in a list:
+
                 * False - suppress all progress reporting;
                 * True - report progress to designated devices (default: *CONSOLE*)
                 * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`;
