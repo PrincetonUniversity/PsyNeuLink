@@ -1,14 +1,15 @@
 import re
 import sys
 import warnings
+from io import StringIO
 
 from rich import print, box
-from rich.console import RenderGroup
+from rich.console import Console, RenderGroup
 from rich.panel import Panel
 from rich.progress import Progress as RichProgress
 
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONSOLE, FULL, PNL_VIEW, SIMULATIONS, TERSE
+from psyneulink.core.globals.keywords import CONSOLE, FILE, FULL, PNL_VIEW, SIMULATIONS, TERSE
 from psyneulink.core.globals.utilities import convert_to_list
 
 SIMULATION = 'Simulat'
@@ -114,7 +115,7 @@ class PNLProgress:
 
             show_progress = convert_to_list(show_progress)
             # Use rich console output by default
-            cls._use_rich = (False not in show_progress and [k in show_progress for k in {True, CONSOLE}]
+            cls._use_rich = (False not in show_progress and [k in show_progress for k in {True, CONSOLE, FILE}]
                              or show_output)
             # TBI: send output to PsyNeuLinkView
             cls._use_pnl_view = False not in show_progress and PNL_VIEW in show_progress
@@ -127,7 +128,11 @@ class PNLProgress:
             # - it is not started until the self.start_progress_report() method is called
             # - auto_refresh is disabled to accommodate IDEs (such as PyCharm and Jupyter Notebooks)
             if cls._use_rich:
-                cls._instance._rich_progress = RichProgress(auto_refresh=False)
+                file = False
+                if FILE in show_progress:
+                    file = StringIO()
+                # cls._instance._rich_progress = RichProgress(auto_refresh=False)
+                cls._instance._rich_progress = RichProgress(auto_refresh=False, console=Console(file=file))
 
             # Instantiate interface to PsyNeuLinkView
             if cls._use_pnl_view:
@@ -325,14 +330,16 @@ class PNLProgress:
                                                      f" {[i.tolist() for i in caller.get_input_values(context)]}"]
                 else:
                     # print trial separator and input array to Composition
-                    print(f"[bold {trial_panel_color}]{caller.name} TRIAL {trial_num} ====================")
+                    self._rich_progress.console.print(f"[bold {trial_panel_color}]{caller.name} "
+                                                      f"TRIAL {trial_num} ====================")
 
         elif content is 'time_step_init':
             if show_output:
                 if rich_report:
                     progress_report.time_step_report = [] # Contains rich.Panel for each node executed in time_step
                 elif nodes_to_report:
-                    print(f'[{time_step_panel_color}]Time Step {scheduler.clock.time.time_step} ---------')
+                    self._rich_progress.console.print(f'[{time_step_panel_color}]'
+                                                      f'Time Step {scheduler.clock.time.time_step} ---------')
 
         elif content is 'node':
             if not node:
@@ -347,7 +354,7 @@ class PNLProgress:
                                                    context=context
                                                    ))
                 else:
-                    print(f'[{node_panel_color}]{node.name} executed')
+                    self._rich_progress.console.print(f'[{node_panel_color}]{node.name} executed')
 
         elif content is 'time_step':
             if (show_output and (nodes_to_report or show_output is FULL) and rich_report):
@@ -377,6 +384,9 @@ class PNLProgress:
             if show_output and progress_report.trial_report:
                 self._rich_progress.console.print(progress_report.trial_report)
                 self._rich_progress.console.print('')
+                print(self._rich_progress.console.file.getvalue())
+                assert True
+
 
     @classmethod
     def node_execution_report(cls,
