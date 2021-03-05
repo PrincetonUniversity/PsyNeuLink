@@ -8952,8 +8952,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not reset_stateful_functions_to:
                 reset_stateful_functions_to = {}
 
-            # Report trial_num and Composition input (now that it has been assigned)
-            progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial_init', context)
+            # # Report trial_num and Composition input (now that it has been assigned)
+            # progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial_init', context)
 
             for node in self.nodes:
                 node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TRIAL, 0)
@@ -9104,6 +9104,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if context.runmode == ContextFlags.SIMULATION_MODE:
                 for i in range(scheduler.clock.time.time_step):
                     execution_sets.__next__()
+
+            # Report trial_num and Composition input (now that it has been assigned)
+            progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial_init', context)
 
             for next_execution_set in execution_sets:
 
@@ -9413,7 +9416,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context=context
                 )
 
-            execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
+            # execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
             # REPORT RESULTS ***********************************************************************************************
 
@@ -9437,6 +9440,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Report results and progress to output devices
             progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial', context)
             progress.report_progress(self, progress_report, context)
+
+            execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
             return output_values
 

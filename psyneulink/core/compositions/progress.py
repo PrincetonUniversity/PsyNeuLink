@@ -9,7 +9,7 @@ from rich.panel import Panel
 from rich.progress import Progress as RichProgress
 
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONSOLE, FILE, FULL, PNL_VIEW, SIMULATIONS, TERSE
+from psyneulink.core.globals.keywords import CONSOLE, CAPTURE, FULL, PNL_VIEW, SIMULATIONS, TERSE
 from psyneulink.core.globals.utilities import convert_to_list
 
 SIMULATION = 'Simulat'
@@ -73,6 +73,8 @@ class PNLProgress:
 
         * *CONSOLE* - directs output to the console (default)
 
+        * *CAPTURE* - directs output to string
+
         * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT]
 
     Attributes
@@ -115,7 +117,7 @@ class PNLProgress:
 
             show_progress = convert_to_list(show_progress)
             # Use rich console output by default
-            cls._use_rich = (False not in show_progress and [k in show_progress for k in {True, CONSOLE, FILE}]
+            cls._use_rich = (False not in show_progress and [k in show_progress for k in {True, CONSOLE, CAPTURE}]
                              or show_output)
             # TBI: send output to PsyNeuLinkView
             cls._use_pnl_view = False not in show_progress and PNL_VIEW in show_progress
@@ -129,7 +131,7 @@ class PNLProgress:
             # - auto_refresh is disabled to accommodate IDEs (such as PyCharm and Jupyter Notebooks)
             if cls._use_rich:
                 file = False
-                if FILE in show_progress:
+                if CAPTURE in show_progress:
                     file = StringIO()
                 # cls._instance._rich_progress = RichProgress(auto_refresh=False)
                 cls._instance._rich_progress = RichProgress(auto_refresh=False, console=Console(file=file))
@@ -291,11 +293,11 @@ class PNLProgress:
 
         if report_num is None or show_output is False:
             return
-        # if show_report show_output None, defer to Composition's reportOutputPref
+        # if show_output is None, defer to Composition's reportOutputPref
         if show_output is None:  # if it is False, leave as is to suppress output
             show_output = caller.reportOutputPref
-        if show_output:
-            show_output = str(show_output)
+        # if show_output:
+        #     show_output = str(show_output)
 
         # # MODIFIED 3/5/21 OLD:
         # try:
@@ -306,15 +308,15 @@ class PNLProgress:
         # except TypeError:
         #         report_type = True
         # MODIFIED 3/5/21 NEW:
-        try:
-            if FULL in show_output:   # give precedence to argument in call to execute
-                report_type = FULL
-            elif TERSE in show_output:
-                report_type = TERSE
-            else:
-                report_type = None
-        except TypeError:
-                assert False, f'TypeError in report_output for {caller.name}'
+        # try:
+        if show_output is FULL:   # give precedence to argument in call to execute
+            report_type = FULL
+        elif show_output is TERSE:
+            report_type = TERSE
+        else:
+            report_type = None
+        # except TypeError:
+        #         assert False, f'TypeError in report_output for {caller.name}'
         # MODIFIED 3/5/21 END
 
 
@@ -326,8 +328,7 @@ class PNLProgress:
 
         progress_report = self._progress_reports[caller][run_mode][report_num]
 
-        # FIX:  THIS IS A HACK TO FIX THE FACT THAT trial_num SEEMS TO BE DIFFERENT FOR TERSE AND FULL
-        trial_num = scheduler.clock.time.trial - (show_output is not TERSE)
+        trial_num = scheduler.clock.time.trial
 
         if content is 'trial_init':
 
@@ -357,17 +358,25 @@ class PNLProgress:
         elif content is 'node':
             if not node:
                 assert False, 'Node not specified in call to PNLProgress report_output'
-            if show_output and node.reportOutputPref:
-                if FULL in [report_type, node.reportOutputPref]:
-                    progress_report.time_step_report.append(
-                        self.node_execution_report(node,
-                                                   input_val=node.get_input_values(context),
-                                                   output_val=node.output_port.parameters.value._get(context),
-                                                   show_output=show_output,
-                                                   context=context
-                                                   ))
+            if show_output is False or show_output is True and node.reportOutputPref is False:
+                return
+            # Use FULL node report for Node:
+            if report_type is FULL or node.reportOutputPref in [True, FULL]:
+                node_report = self.node_execution_report(node,
+                                                         input_val=node.get_input_values(context),
+                                                         output_val=node.output_port.parameters.value._get(context),
+                                                         show_output=show_output,
+                                                         context=context
+                                                         )
+                # If trial is using FULL report, save Node's to progress_report
+                if report_type is FULL:
+                    progress_report.time_step_report.append(node_report)
+                # Otherwise, just print it to the console (as part of otherwise TERSE report)
                 else:
-                    self._rich_progress.console.print(f'[{node_panel_color}]{node.name} executed')
+                    self._rich_progress.console.print(node_report)
+            # Use TERSE report for Node
+            else:
+                self._rich_progress.console.print(f'[{node_panel_color}]{node.name} executed')
 
         elif content is 'time_step':
             if (show_output and (nodes_to_report or show_output is FULL) and report_type is FULL):
@@ -397,8 +406,12 @@ class PNLProgress:
             if show_output and progress_report.trial_report:
                 self._rich_progress.console.print(progress_report.trial_report)
                 self._rich_progress.console.print('')
-                # print(self._rich_progress.console.file.getvalue())
-                # assert True
+                # if CONSOLE in self._show_progress:
+                #     self._rich_progress.console.print(progress_report.trial_report)
+                #     self._rich_progress.console.print('')
+                # elif CAPTURE in self._show_progress:
+                #     print(self._rich_progress.console.file.getvalue())
+                #     assert True
 
 
     @staticmethod
