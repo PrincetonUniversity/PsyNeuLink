@@ -59,7 +59,12 @@ def pytest_generate_tests(metafunc):
     if "mech_mode" in metafunc.fixturenames:
         metafunc.parametrize("mech_mode", mech_and_func_modes)
 
-    if "comp_mode" in metafunc.fixturenames:
+    if "comp_mode_no_llvm" in metafunc.fixturenames:
+        modes = [m for m in get_comp_execution_modes()
+                 if m.values[0] is not pnlvm.ExecutionMode.LLVM]
+        metafunc.parametrize("comp_mode", modes)
+
+    elif "comp_mode" in metafunc.fixturenames:
         metafunc.parametrize("comp_mode", get_comp_execution_modes())
 
     if "autodiff_mode" in metafunc.fixturenames:
@@ -85,9 +90,14 @@ def pytest_runtest_teardown(item):
 
     pnlvm.cleanup()
 
+@pytest.fixture
+def comp_mode_no_llvm():
+    # dummy fixture to allow 'comp_mode' filtering
+    pass
+
 @pytest.helpers.register
 def get_comp_execution_modes():
-    return [pnlvm.ExecutionMode.Python,
+    return [pytest.param(pnlvm.ExecutionMode.Python),
             pytest.param(pnlvm.ExecutionMode.LLVM, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
             pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
