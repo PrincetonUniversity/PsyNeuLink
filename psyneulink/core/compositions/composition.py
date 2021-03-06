@@ -9436,23 +9436,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.run_output = progress._captured_output
                 return _comp_ex.extract_node_output(self.output_CIM)
 
-            # Report results and progress to output devices
-            progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial', context)
-            progress.report_progress(self, progress_report, context)
-            if context.source & ContextFlags.COMMAND_LINE and progress._captured_output:
-                self.run_output = progress._captured_output
+            # Reset context flags
+            context.execution_phase = ContextFlags.PROCESSING
+            self.output_CIM.execute(context=context)
+            context.execution_phase = ContextFlags.IDLE
 
             # Assign output_values
             output_values = []
             for port in self.output_CIM.output_ports:
                 output_values.append(port.parameters.value._get(context))
 
-            # UPDATE TIME and RETURN ***********************************************************************************
+            # Report results and progress to output devices
+            progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial', context)
+            progress.report_progress(self, progress_report, context)
+            if context.source & ContextFlags.COMMAND_LINE and progress._captured_output:
+                self.run_output = progress._captured_output
 
-            # Reset context flags
-            context.execution_phase = ContextFlags.PROCESSING
-            self.output_CIM.execute(context=context)
-            context.execution_phase = ContextFlags.IDLE
+            # UPDATE TIME and RETURN ***********************************************************************************
 
             execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
