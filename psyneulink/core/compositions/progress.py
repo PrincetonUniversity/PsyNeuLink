@@ -153,7 +153,7 @@ class PNLProgress:
                 warnings.warn("'pnl_view' not yet supported as an option for show_progress of Composition.run()")
 
             cls._progress_reports = {}
-            cls._captured_output = []
+            cls._captured_output = str()
 
             cls._ref_count = 0
 
@@ -301,7 +301,13 @@ class PNLProgress:
                 and (trial_num == progress_report.num_trials)):
             self._progress_reports[caller][run_mode].pop()
 
-    def report_output(self, caller, report_num, scheduler, show_output, content, context, nodes_to_report=False,
+    def report_output(self, caller,
+                      report_num,
+                      scheduler,
+                      show_output,
+                      content,
+                      context,
+                      nodes_to_report=False,
                       node=None):
 
         if report_num is None or show_output is False:
@@ -309,29 +315,13 @@ class PNLProgress:
         # if show_output is None, defer to Composition's reportOutputPref
         if show_output is None:  # if it is False, leave as is to suppress output
             show_output = caller.reportOutputPref
-        # if show_output:
-        #     show_output = str(show_output)
 
-        # # MODIFIED 3/5/21 OLD:
-        # try:
-        #     if TERSE in show_output:   # give precedence to argument in call to execute
-        #         report_type = False
-        #     else:
-        #         report_type = True
-        # except TypeError:
-        #         report_type = True
-        # MODIFIED 3/5/21 NEW:
-        # try:
         if show_output is FULL:   # give precedence to argument in call to execute
             report_type = FULL
         elif show_output is TERSE:
             report_type = TERSE
         else:
             report_type = None
-        # except TypeError:
-        #         assert False, f'TypeError in report_output for {caller.name}'
-        # MODIFIED 3/5/21 END
-
 
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
         if simulation_mode:
@@ -415,14 +405,18 @@ class PNLProgress:
                                            title=f'[bold{trial_panel_color}] {caller.name}: Trial {trial_num} [/]',
                                            expand=False)
 
-        if content is 'run':
+        elif content is 'run':
             if show_output:
-                if self._use_rich is CONSOLE and progress_report.trial_report:
+                if progress_report.trial_report:
                     self._rich_progress.console.print(progress_report.trial_report)
                     self._rich_progress.console.print('')
-                elif self._use_rich is CAPTURE:
-                    self._captured_output = self._rich_progress.console.file.getvalue()
-                    self._captured_output += '\n'.join([t.description for t in self._rich_progress.tasks])
+                    if self._use_rich is CAPTURE:
+                        # Get output captured by explicit prints
+                        self._captured_output += f'\n{self._rich_progress.console.file.getvalue()}'
+                        # Add output sent to console by task updates
+                        self._captured_output += '\n'.join([t.description for t in self._rich_progress.tasks])
+
+        return
 
     @staticmethod
     def node_execution_report(node,

@@ -3179,6 +3179,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if True, all `Parameter` values generated during `simulations <OptimizationControlMechanism_Execution>` are saved;
         if False, simulation values are deleted unless otherwise specified by individual Parameters.
 
+    run_output : str
+        contains output from execution(s) of Composition if *CAPTURE* is specified in the **show_progress** argument
+        of a `Composition execution method <Composition_Execution_Methods>`.
+
     input_specification : None or dict or list or generator or function
         stores the `inputs` for executions of the Composition when it is executed using its `run <Composition.run>`
         method.
@@ -3315,7 +3319,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.needs_update_scheduler = True  # Tracks i4f the scheduler needs to be regenerated
 
         self.nodes_to_roles = collections.OrderedDict()
-
         self.cycle_vertices = set()
 
         context = Context(source=ContextFlags.CONSTRUCTOR, execution_id=None)
@@ -3334,6 +3337,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.log = CompositionLog(owner=self)
         self._terminal_backprop_sequences = {}
+        self.run_output = None
 
         # Controller
         self.controller = None
@@ -8474,6 +8478,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Report results to output devices
                 progress.report_output(self, progress_report, scheduler, show_output, 'run', context)
 
+            if progress._captured_output:
+                self.run_output = progress._captured_output
+
             # IMPLEMENTATION NOTE:
             # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
             # method whether or not we are at the last trial of the run.
@@ -8906,6 +8913,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             assert False, "Unknown execution mode: {}".format(execution_mode)
 
                         progress.report_progress(self, progress_report, context)
+                        if context.source & ContextFlags.COMMAND_LINE and progress._captured_output:
+                            self.run_output = progress._captured_output
                         return _comp_ex.extract_node_output(self.output_CIM)
 
                     except Exception as e:
@@ -9416,8 +9425,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context=context
                 )
 
-            # execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
-
             # REPORT RESULTS ***********************************************************************************************
 
             # Extract result here
@@ -9425,21 +9432,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 _comp_ex.freeze_values()
                 _comp_ex.execute_node(self.output_CIM)
                 progress.report_progress(self, progress_report, context)
+                if context.source & ContextFlags.COMMAND_LINE and progress._captured_output:
+                    self.run_output = progress._captured_output
                 return _comp_ex.extract_node_output(self.output_CIM)
 
-            # Reset context flags
-            context.execution_phase = ContextFlags.PROCESSING
-            self.output_CIM.execute(context=context)
-            context.execution_phase = ContextFlags.IDLE
+            # Report results and progress to output devices
+            progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial', context)
+            progress.report_progress(self, progress_report, context)
+            if context.source & ContextFlags.COMMAND_LINE and progress._captured_output:
+                self.run_output = progress._captured_output
 
             # Assign output_values
             output_values = []
             for port in self.output_CIM.output_ports:
                 output_values.append(port.parameters.value._get(context))
 
-            # Report results and progress to output devices
-            progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial', context)
-            progress.report_progress(self, progress_report, context)
+            # UPDATE TIME and RETURN ***********************************************************************************
+
+            # Reset context flags
+            context.execution_phase = ContextFlags.PROCESSING
+            self.output_CIM.execute(context=context)
+            context.execution_phase = ContextFlags.IDLE
 
             execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
