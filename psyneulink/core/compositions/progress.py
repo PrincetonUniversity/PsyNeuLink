@@ -119,10 +119,19 @@ class PNLProgress:
             cls._show_progress = bool(show_progress)
 
             show_progress = convert_to_list(show_progress)
-            # Use rich console output by default, or _captured_output if CPATURE is sp
-            cls._use_rich = (False not in show_progress and [k in show_progress for k in {True, CONSOLE, CAPTURE}]
-                             or show_output)
+            # # Use rich console output by default, or _captured_output if CPATURE is sp
+            # cls._use_rich = (False not in show_progress and [k in show_progress for k in {True, CONSOLE, CAPTURE}]
+            #                  or show_output)
             # TBI: send output to PsyNeuLinkView
+
+            cls._use_rich = False
+            # Use rich console output by default or CONSOLE is specified, or _captured_output if CAPTURE is specified
+            if False not in show_progress or show_output:
+                if CAPTURE in show_progress:
+                    cls._use_rich = CAPTURE
+                else:
+                    cls._use_rich = CONSOLE
+
             cls._use_pnl_view = False not in show_progress and PNL_VIEW in show_progress
             # Show simulations if specified
             cls._show_simulations = False not in show_progress and SIMULATIONS in show_progress
@@ -134,7 +143,7 @@ class PNLProgress:
             # - auto_refresh is disabled to accommodate IDEs (such as PyCharm and Jupyter Notebooks)
             if cls._use_rich:
                 file = False
-                if CAPTURE in show_progress:
+                if cls._use_rich is CAPTURE:
                     file = StringIO()
                 # cls._instance._rich_progress = RichProgress(auto_refresh=False)
                 cls._instance._rich_progress = RichProgress(auto_refresh=False, console=Console(file=file))
@@ -407,16 +416,13 @@ class PNLProgress:
                                            expand=False)
 
         if content is 'run':
-            if show_output and progress_report.trial_report:
-                self._rich_progress.console.print(progress_report.trial_report)
-                self._rich_progress.console.print('')
-                # if CONSOLE in self._show_progress:
-                #     self._rich_progress.console.print(progress_report.trial_report)
-                #     self._rich_progress.console.print('')
-                # elif CAPTURE in self._show_progress:
-                #     print(self._rich_progress.console.file.getvalue())
-                #     assert True
-
+            if show_output:
+                if self._use_rich is CONSOLE and progress_report.trial_report:
+                    self._rich_progress.console.print(progress_report.trial_report)
+                    self._rich_progress.console.print('')
+                elif self._use_rich is CAPTURE:
+                    self._captured_output = self._rich_progress.console.file.getvalue()
+                    self._captured_output += '\n'.join([t.description for t in self._rich_progress.tasks])
 
     @staticmethod
     def node_execution_report(node,
