@@ -231,7 +231,6 @@ class BasePreferenceSet(PreferenceSet):
             LOG_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
             DELIVERY_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
             RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.COMPOSITION)
-
     }
 
     baseClass = None

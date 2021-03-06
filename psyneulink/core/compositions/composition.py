@@ -881,15 +881,18 @@ can also be called directly, but this is useful mostly for debugging.
 
 .. _Composition_Execution_Reporting:
 
-Executing a Composition returns the results of its last `TRIAL <TimeScale.TRIAL>` of execution.  If either `run
-<Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS <TimeScale.TRIAL>` are
-available in the Composition's `results <Composition.results>` attribute (see `Results <Composition_Execution_Results>`
-for additional details).  A report of the results of each `TRIAL <TimeScale.TRIAL>` can also be generated as the
-Compostion is executing, using the **show_output** and **show_progress** arguments of any of the execution methods.
-**show_output** generates a report of the input and output the Composition and its `Nodes <Composition_Nodes>`, while
-**show_progress** shows a progress bar indicating how many `TRIALS <TimeScale.TRIAL>` have been executed and an
-estimate of the time remaining to completion (see the `execute <Composition.execute>`, `run <Composition.run>` and
-`learn <Composition.learn>` methods for additional details).  These options are both False by default.
+*Reporting*. Executing a Composition returns the results of its last `TRIAL <TimeScale.TRIAL>` of execution.  If
+either `run <Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS <TimeScale.TRIAL>`
+executed are available in the Composition's `results <Composition.results>` attribute (see `Results
+<Composition_Execution_Results>` for additional details).  A report of the results of each
+`TRIAL <TimeScale.TRIAL>` can also be generated as the Compostion is executing, using the **show_output** and
+**show_progress** arguments of any of the execution methods. **show_output** generates a report of the input and
+output the Composition and its `Nodes <Composition_Nodes>`, while **show_progress** shows a progress bar indicating
+how many `TRIALS <TimeScale.TRIAL>` have been executed and an estimate of the time remaining to completion (see the
+`execute <Composition.execute>`, `run <Composition.run>` and `learn <Composition.learn>` methods for additional
+details).  These options are both False by default.  The values of individual Components (and their `parameters
+<Parameters>`) assigned during execution can also be recorded in their `log <Component_Log>` attribute using the
+`Log` facility.
 
 *Inputs*. All methods of executing a Composition require specification of an **inputs** argument, which designates
 the values assigned to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for each `TRIAL <TimeScale.TRIAL>`.
