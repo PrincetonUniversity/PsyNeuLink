@@ -879,6 +879,8 @@ can also be called directly, but this is useful mostly for debugging.
    then `learn <Composition.learn>` is called;  otherwise, `run <Composition.run>` is called.  In either case,
    the return value of the corresponding method is returned.
 
+.. _Composition_Execution_Reporting:
+
 Executing a Composition returns the results of its last `TRIAL <TimeScale.TRIAL>` of execution.  If either `run
 <Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS <TimeScale.TRIAL>` are
 available in the Composition's `results <Composition.results>` attribute (see `Results <Composition_Execution_Results>`
@@ -8108,7 +8110,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             it is generated.  Any one the following options can be used:
 
             * False - no output is generated;
-            * True - output is determined by the `reportOutputPref <Preferences>` preference of
+            * True - output is determined by the `reportoutputpref <PreferenceSet_reportOutputPref>` preference of
               individual Nodes;
             * *TERSE* - a single line is generated reporting the execution of each Node of the Composition;
             * *FULL* - input and output of the Composition and all its Nodes is reported.
@@ -8617,7 +8619,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 as it is generated.  Any one the following options can be used:
 
                 * False - no output is generated;
-                * True - output is determined by the `reportOutputPref <Preferences>` preference of
+                * True - output is determined by the `reportoutputpref <PreferenceSet_reportOutputPref>` preference of
                   individual Nodes;
                 * *TERSE* - a single line is generated reporting the execution of each Node of the Composition;
                 * *FULL* - input and output of the Composition and all its Nodes is reported.
@@ -8802,7 +8804,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 execution. Any one the following options can be used:
 
                 * False - no output is generated;
-                * True - output is determined by the `reportOutputPref <Preferences>` preference of
+                * True - output is determined by the `reportoutputpref <PreferenceSet_reportOutputPref>` preference of
                   individual `Nodes <Composition_Nodes>`;
                 * *TERSE* - a single line is generated reporting the execution of each Node of the Composition;
                 * *FULL* - input and output of the Composition and all its Nodes is reported.
