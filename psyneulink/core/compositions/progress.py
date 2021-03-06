@@ -54,14 +54,27 @@ class ProgressReport():
 
 class PNLProgress:
     """
-    A singleton context object that provides interface to output and progress reporting (e.g., rich and pnl_view)
+    A singleton context object that provides interface to output and progress reporting.
     It returns the currently active progress context instance if one has been instantiated already in another scope.
     It deallocates the progress bar when the outermost context is released.
 
     Arguments
     ---------
 
-    show_progress : bool, CONSOLE, PNL_VIEW, SIMULATIONS, or list : default False
+    show_output : bool, *TERSE*, or *FULL* : default False
+        specifies whether to show output of the execution on a trial-by-trial as it is generated.  Any one the
+        following options can be used:
+
+        * False - no output is generated;
+
+        * True - output is determined by the `reportoutputpref <PreferenceSet_reportOutputPref>` preference of
+          individual Components;
+
+        * *TERSE* - a single line is generated reporting the execution of each Component;
+
+        * *FULL* - input and output of all Components being executed is reported.
+
+    show_progress : bool, *CONSOLE*, *CAPTURE*, *SIMULATIONS*, or list : default False
         specifies whether to show progress of execution in real time.  If the number trials to be
         executed is explicitly specified, the number of trials executed, a progress bar, and time remaining are
         displayed; if the number of trials is not explicitly specified (e.g., if inputs are specified using a
@@ -69,13 +82,14 @@ class PNLProgress:
         displayed once complete.  The following options can be used to specify what and where the information is
         displayed, either individually or in a list:
 
-        * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`.
+        * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`;
 
-        * *CONSOLE* - directs output to the console (default)
+        * *CONSOLE* - directs output to the console (default);
 
-        * *CAPTURE* - directs output to string
+        * *CAPTURE* - directs output to string, that is stored in a Composition's `run_output <Composition.run_output>`
+          attribute.
 
-        * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT]
+        * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
     Attributes
     ----------
