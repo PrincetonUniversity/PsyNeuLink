@@ -1371,7 +1371,7 @@ class GridSearch(OptimizationFunction):
             s.reset()
         self.grid = itertools.product(*[s for s in self.search_space])
 
-    def _get_optimized_composition(self):
+    def _get_optimized_controller(self):
         # self.objective_function may be a bound method of
         # OptimizationControlMechanism
         return getattr(self.objective_function, '__self__', None)
@@ -1379,7 +1379,7 @@ class GridSearch(OptimizationFunction):
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "select_min" in tags:
             return self._gen_llvm_select_min_function(ctx=ctx, tags=tags)
-        ocm = self._get_optimized_composition()
+        ocm = self._get_optimized_controller()
         if ocm is not None:
             # self.objective_function may be a bound method of
             # OptimizationControlMechanism
@@ -1421,7 +1421,7 @@ class GridSearch(OptimizationFunction):
 
     def _gen_llvm_select_min_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         assert "select_min" in tags
-        ocm = self._get_optimized_composition()
+        ocm = self._get_optimized_controller()
         if ocm is not None:
             assert ocm.function is self
             sample_t = ocm._get_evaluate_alloc_struct_type(ctx)
@@ -1521,7 +1521,7 @@ class GridSearch(OptimizationFunction):
         return builder.function
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        ocm = self._get_optimized_composition()
+        ocm = self._get_optimized_controller()
         if ocm is not None:
             assert ocm.function is self
             obj_func = ctx.import_llvm_function(ocm, tags=tags.union({"evaluate"}))
@@ -1754,7 +1754,7 @@ class GridSearch(OptimizationFunction):
                     format(repr(DIRECTION), self.name, direction)
 
 
-            ocm = self._get_optimized_composition()
+            ocm = self._get_optimized_controller()
             if ocm is not None and \
                (ocm.parameters.comp_execution_mode._get(context) == "PTX"):
                     opt_sample, opt_value, all_values = self._run_cuda_grid(ocm, variable, context)
