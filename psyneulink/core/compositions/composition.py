@@ -39,6 +39,7 @@ Contents
      - `Composition_Learning_AutodiffComposition`
      - `Composition_Learning_UDF`
   * `Composition_Execution`
+     - `Composition_Execution_Reporting`
      - `Composition_Execution_Inputs`
         • `Composition_Input_Dictionary`
         • `Composition_Programmatic_Inputs`
@@ -8118,7 +8119,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             * *TERSE* - a single line is generated reporting the execution of each Node of the Composition;
             * *FULL* - input and output of the Composition and all its Nodes is reported.
 
-        show_progress : bool, CONSOLE, PNL_VIEW, SIMULATIONS, or list : default False
+        show_progress : bool, SIMULATIONS, CONSOLE, CAPTURE, PNL_VIEW, or list : default False
             specifies whether to show progress of execution in real time.  If the number trials to be
             executed is explicitly specified, the number of trials executed, a progress bar, and time remaining are
             displayed; if the number of trials is not explicitly specified (e.g., if inputs are specified using a
@@ -8130,6 +8131,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             * True - report progress to designated devices (default: *CONSOLE*);
             * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`;
             * *CONSOLE* - directs output to the console (default);
+            * *CAPTURE* - captures output in Composition's `run_output <Composition.run_output>` attribute;
+              (note: using this option also enables output to the console;  to suppress the latter, include
+              False in the specification -- e.g. ``show_progress = [False, CAPTURE]``);
             * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
         animate : dict or bool : default False
@@ -8627,7 +8631,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 * *TERSE* - a single line is generated reporting the execution of each Node of the Composition;
                 * *FULL* - input and output of the Composition and all its Nodes is reported.
 
-            show_progress : bool, CONSOLE, PNL_VIEW, SIMULATIONS, or list : default False
+            show_progress : bool, SIMULATIONS, CONSOLE, CAPTURE, PNL_VIEW, or list : default False
                 specifies whether to show progress of execution in real time.  If the number trials to be
                 executed is explicitly specified, the number of trials executed, a progress bar, and time remaining are
                 displayed; if the number of trials is not explicitly specified (e.g., if inputs are specified using a
@@ -8639,6 +8643,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 * True - report progress to designated devices (default: *CONSOLE*);
                 * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`;
                 * *CONSOLE* - directs output to the console (default);
+                * *CAPTURE* - captures output in Composition's `run_output <Composition.run_output>` attribute;
+                  (note: using this option also enables output to the console;  to suppress the latter, include
+                  False in the specification -- e.g. ``show_progress = [False, CAPTURE]``);
                 * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
             Returns
@@ -8812,7 +8819,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 * *TERSE* - a single line is generated reporting the execution of each Node of the Composition;
                 * *FULL* - input and output of the Composition and all its Nodes is reported.
 
-            show_progress : bool, CONSOLE, PNL_VIEW, SIMULATIONS, or list : default False
+            show_progress : bool, SIMULATIONS, CONSOLE, CAPTURE, PNL_VIEW, or list : default False
                 specifies whether to show progress of execution.  In general, this will be for the single trial
                 executed by the call to the execute method;  however, if *SIMULATIONS* is specified (see below)
                 and the Composition has an `OptimizationControlMechanism`, then any simulations that it executes
@@ -8823,6 +8830,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 * True - report progress to designated devices (default: *CONSOLE*)
                 * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`;
                 * *CONSOLE* - directs output to the console (default)
+                * *CAPTURE* - captures output in Composition's `run_output <Composition.run_output>` attribute;
+                  (note: using this option also enables output to the console;  to suppress the latter, include
+                  False in the specification -- e.g. ``show_progress = [False, CAPTURE]``);
                 * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
             Returns
@@ -9253,10 +9263,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             _comp_ex.execute_node(node)
                         else:
                             if node is not self.controller:
+                                mech_context = copy(context)
+                                mech_context.source = ContextFlags.COMPOSITION
                                 if nested and node in self.get_nodes_by_role(NodeRole.INPUT):
                                     for port in node.input_ports:
                                         port._update(context=context)
-                                node.execute(context=context,
+                                node.execute(context=mech_context,
                                              runtime_params=execution_runtime_params,
                                              )
                             # Reset runtim_params
@@ -9323,7 +9335,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if isinstance(node, Composition):
                             node_progress_report = None
                         # MODIFIED 2/28/21 END
-                        ret = node.execute(context=context, show_progress=show_progress,
+                        ret = node.execute(context=context, show_output=show_output, show_progress=show_progress,
                                            execution_mode=nested_execution_mode)
 
                         # Get output info from nested execution

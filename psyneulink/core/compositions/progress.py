@@ -97,8 +97,11 @@ class PNLProgress:
     _instance : PNLProgress
         singleton instance of class.
 
-    _show_progress : bool : default False
+    _enable_progress : bool : default False
         determines whether progress reporting is enabled.
+
+    _show_progress : bool : default False
+        determines whether progress is displayed and/or captured.
 
     _use_rich : bool, *CONSOLE* or *CAPTURE* : default *CONSOLE*
         determines whether reporting is sent to rich console or captured in a string PNLProgress.captured_output
@@ -130,13 +133,14 @@ class PNLProgress:
         if cls._instance is None:
             cls._instance = super(PNLProgress, cls).__new__(cls)
 
-            cls._show_progress = bool(show_progress)
+            cls._enable_progress = bool(show_progress)
 
             show_progress = convert_to_list(show_progress)
             # # Use rich console output by default, or _captured_output if CPATURE is sp
             # cls._use_rich = (False not in show_progress and [k in show_progress for k in {True, CONSOLE, CAPTURE}]
             #                  or show_output)
             # TBI: send output to PsyNeuLinkView
+            cls._show_progress = False not in show_progress
 
             cls._use_rich = False
             # Use rich console output by default or CONSOLE is specified, or _captured_output if CAPTURE is specified
@@ -277,7 +281,7 @@ class PNLProgress:
 
     def report_progress(self, caller, report_num, context):
 
-        if not self._show_progress:
+        if not self._enable_progress:
             return
 
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
@@ -418,16 +422,36 @@ class PNLProgress:
                                            border_style=trial_panel_color,
                                            title=f'[bold{trial_panel_color}] {caller.name}: Trial {trial_num} [/]',
                                            expand=False)
+            # elif self._use_rich is CAPTURE:
+            #     self._captured_output += f'\n{self._rich_progress.console.file.getvalue()}'
+            # elif report_type is TERSE:
+            #     progress_report.trial_report.append(f'\n{self._rich_progress.console.file.getvalue()}')
+
+            # MODIFIED 3/7/21 NEW:
+            if context.source & ContextFlags.COMMAND_LINE and show_output:
+                if progress_report.trial_report:
+                    self._rich_progress.console.print(progress_report.trial_report)
+                    self._rich_progress.console.print('')
+                if self._use_rich is CAPTURE:
+                    # Get output captured by explicit prints
+                    self._captured_output += f'\n{self._rich_progress.console.file.getvalue()}'
+                    # if show_progress
+                    # Add output sent to console by task updates
+                    if self._show_progress:
+                        self._captured_output += '\n'.join([t.description for t in self._rich_progress.tasks])
+            # MODIFIED 3/7/21 END
 
         elif content is 'run':
             if show_output:
                 if progress_report.trial_report:
                     self._rich_progress.console.print(progress_report.trial_report)
                     self._rich_progress.console.print('')
-                    if self._use_rich is CAPTURE:
-                        # Get output captured by explicit prints
-                        self._captured_output += f'\n{self._rich_progress.console.file.getvalue()}'
-                        # Add output sent to console by task updates
+                if self._use_rich is CAPTURE:
+                    # Get output captured by explicit prints
+                    self._captured_output += f'\n{self._rich_progress.console.file.getvalue()}'
+                    # if show_progress
+                    # Add output sent to console by task updates
+                    if self._show_progress:
                         self._captured_output += '\n'.join([t.description for t in self._rich_progress.tasks])
 
         return
