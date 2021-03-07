@@ -1445,7 +1445,10 @@ class GridSearch(OptimizationFunction):
         params, state, min_sample_ptr, samples_ptr, min_value_ptr, values_ptr, opt_count_ptr, start, stop = builder.function.args
         for p in builder.function.args[:-2]:
             p.attributes.add('noalias')
-            p.attributes.add('nonnull')
+
+        # The creation helper function sets all pointers to non-null
+        # remove the attribute for 'samples_ptr'.
+        samples_ptr.attributes.remove('nonnull')
 
         random_state = pnlvm.helpers.get_state_ptr(builder, self, state,
                                                    self.parameters.random_state.name)
@@ -1462,10 +1465,18 @@ class GridSearch(OptimizationFunction):
         direction = "<" if self.direction == MINIMIZE else ">"
         replace_ptr = builder.alloca(ctx.bool_ty)
 
+        search_space = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                   self.parameters.search_space.name)
+        gen_samples = builder.icmp_signed("==", samples_ptr, samples_ptr.type(None), name="POINTER_COMP")
+        local_sample = builder.alloca(samples_ptr.type.pointee)
         # Check the value against current min
         with pnlvm.helpers.for_loop(builder, start, stop, stop.type(1), "compare_loop") as (b, idx):
-            value_ptr = b.gep(values_ptr, [idx])
             sample_ptr = b.gep(samples_ptr, [idx])
+            sample_ptr = b.select(gen_samples, local_sample, sample_ptr)
+            with b.if_then(gen_samples):
+                pnlvm.helpers.create_allocation(b, local_sample, search_space, idx)
+
+            value_ptr = b.gep(values_ptr, [idx])
             value = b.load(value_ptr)
             min_value = b.load(min_value_ptr)
 
@@ -1599,17 +1610,16 @@ class GridSearch(OptimizationFunction):
         ct_param = bin_func.byref_arg_types[0](*self._get_param_initializer(context))
         ct_state = bin_func.byref_arg_types[1](*self._get_state_initializer(context))
         ct_opt_sample = bin_func.byref_arg_types[2](float("NaN"))
-        grid = itertools.product(*self.search_space)
-        ct_alloc = (bin_func.byref_arg_types[3] * num_evals)(*pnlvm.execution._tupleize(grid))
+        ct_alloc = None # NULL for samples
         ct_opt_value = bin_func.byref_arg_types[4]()
         ct_opt_count = bin_func.byref_arg_types[6](0)
         ct_start = bin_func.c_func.argtypes[7](0)
-        ct_stop = bin_func.c_func.argtypes[8](len(ct_alloc))
+        ct_stop = bin_func.c_func.argtypes[8](len(ct_values))
 
         bin_func(ct_param, ct_state, ct_opt_sample, ct_alloc, ct_opt_value,
                  ct_values, ct_opt_count, ct_start, ct_stop)
 
-        return ct_opt_sample, ct_opt_value, ct_alloc, ct_values
+        return ct_opt_sample, ct_opt_value, ct_values
 
     def _function(self,
                  variable=None,
@@ -1739,7 +1749,9 @@ class GridSearch(OptimizationFunction):
             ocm = self._get_optimized_composition()
             if ocm is not None and \
                (ocm.parameters.comp_execution_mode._get(context) == "PTX"):
-                    opt_sample, opt_value, all_samples, all_values = self._run_cuda_grid(ocm, variable, context)
+                    opt_sample, opt_value, all_values = self._run_cuda_grid(ocm, variable, context)
+                    # This should not be evaluated unless needed
+                    all_samples = [itertools.product(*self.search_space)]
                     value_optimal = opt_value
                     sample_optimal = opt_sample
             else:
