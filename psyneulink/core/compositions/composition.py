@@ -8114,27 +8114,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             it is generated.  Any one the following options can be used:
 
             * False - no output is generated;
-            * True - output is determined by the `reportoutputpref <PreferenceSet_reportOutputPref>` preference of
+            * True - output is determined by the `reportOutputPref <PreferenceSet_reportOutputPref>` preference of
               individual Nodes;
             * *TERSE* - a single line is generated reporting the execution of each Node of the Composition;
             * *FULL* - input and output of the Composition and all its Nodes is reported.
 
         report_progress : bool : default False
-            specifies whether to report progress of execution in real time.  If the number trials to be
-            executed is explicitly specified, the number of trials executed, a progress bar, and time remaining are
-            displayed; if the number of trials is not explicitly specified (e.g., if inputs are specified using a
-            generator), then a "spinner" is displayed during execution and the the total number of trials executed is
-            displayed once complete.  Progress is reported to the devices specified in **output_devices**.
-            The following options can be used to specify whether and what information is displayed:
-
-            * False - suppress all progress reporting;
-            * True - report progress to designated devices, excluding simulations;
+            specifies whether to report progress of execution in real time.  If the number trials to be executed
+            is explicitly specified, the number of trials executed, a progress bar, and time remaining are displayed;
+            if the number of trials is not explicitly specified (e.g., if inputs are specified using a generator),
+            then a "spinner" is displayed during execution and the the total number of trials executed is displayed
+            once complete.  Progress is reported to the devices specified in **report_to_devices**.
 
         report_simulations : bool : default False
-            specifies whether to show output and progress for simulations executed by an
-            `OptimizationControlMechanism`.
+            specifies whether to show output and progress for simulations executed by an `OptimizationControlMechanism`.
 
-        report_to : CONSOLE, CAPTURE, PNL_VIEW or list : default CONSOLE
+        report_to_devices : CONSOLE, CAPTURE, PNL_VIEW or list : default CONSOLE
             specifies where output and progress should be reported;  the following destinations are supported:
 
             * *CONSOLE* - directs reporting to the system console (default);
@@ -8627,30 +8622,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_after_minibatch : callable
                 called after each minibatch is executed
 
-            show_output : bool, *TERSE*, *FULL* : default False
+            report_output : bool, *TERSE*, *FULL* : default False
                 specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial
                 as it is generated.  Any one the following options can be used:
 
                 * False - no output is generated;
-                * True - output is determined by the `reportoutputpref <PreferenceSet_reportOutputPref>` preference of
+                * True - output is determined by the `reportOutputPref <PreferenceSet_reportOutputPref>` preference of
                   individual Nodes;
                 * *TERSE* - a single line is generated reporting the execution of each Node of the Composition;
                 * *FULL* - input and output of the Composition and all its Nodes is reported.
 
-            show_progress : bool, SIMULATIONS, CONSOLE, CAPTURE, PNL_VIEW, or list : default False
-                specifies whether to show progress of execution in real time.  If the number trials to be
-                executed is explicitly specified, the number of trials executed, a progress bar, and time remaining are
-                displayed; if the number of trials is not explicitly specified (e.g., if inputs are specified using a
+            report_progress : bool : default False
+                specifies whether to report progress of execution in real time.  If the number trials to be executed is
+                explicitly specified, the number of trials executed, a progress bar, and time remaining are displayed;
+                if the number of trials is not explicitly specified (e.g., if inputs or targets are specified using a
                 generator), then a "spinner" is displayed during execution and the the total number of trials executed
-                is displayed once complete.  The following options can be used to specify what and where the
-                information is displayed, either individually or in a list:
+                is displayed once complete.  Progress is reported to the devices specified in **report_to_devices**.
 
-                * False - suppress all progress reporting;
-                * True - report progress to designated devices (default: *CONSOLE*);
-                * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`;
-                * *CONSOLE* - directs output to the console (default);
-                * *CAPTURE* - captures output in Composition's `run_output <Composition.run_output>` attribute;
-                * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
+            report_simulations : bool : default False
+                specifies whether to show output and progress for simulations executed by an
+                `OptimizationControlMechanism`.
+
+            report_to_devices : CONSOLE, CAPTURE, PNL_VIEW or list : default CONSOLE
+                specifies where output and progress should be reported;  the following destinations are supported:
+
+                * *CONSOLE* - directs reporting to the system console (default);
+                * *CAPTURE* - captures reporting in a UDF-8 formatted string and stores it the Composition's
+                `run_output <Composition.run_output>` attribute;
+                * *PNL_VIEW* - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
             Returns
             ---------
@@ -8813,29 +8812,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
                 see **execution_mode** argument of `run <Composition.run>` method for additional details.
 
-            show_output : bool, *TERSE*, *FULL* : default False
+            report_output : bool, *TERSE*, *FULL* : default False
                 specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` for the
-                execution. Any one the following options can be used:
+                execution.  Any one the following options can be used:
 
                 * False - no output is generated;
-                * True - output is determined by the `reportoutputpref <PreferenceSet_reportOutputPref>` preference of
-                  individual `Nodes <Composition_Nodes>`;
+                * True - output is determined by the `reportOutputPref <PreferenceSet_reportOutputPref>` preference of
+                  individual Nodes;
                 * *TERSE* - a single line is generated reporting the execution of each Node of the Composition;
                 * *FULL* - input and output of the Composition and all its Nodes is reported.
 
-            show_progress : bool, SIMULATIONS, CONSOLE, CAPTURE, PNL_VIEW, or list : default False
-                specifies whether to show progress of execution.  In general, this will be for the single trial
-                executed by the call to the execute method;  however, if *SIMULATIONS* is specified (see below)
+            report_progress : bool : default False
+                specifies whether to report progress of the execution.  In general, this will be for the single trial
+                executed by the call to the execute method;  however, if **report_simulations** is specified (see below)
                 and the Composition has an `OptimizationControlMechanism`, then any simulations that it executes
-                will be reported.  The following options can be used to specify what and where the information is
-                displayed, either individually or in a list:
+                will also be reported.   Progress is reported to the devices specified in **report_to_devices**.
 
-                * False - suppress all progress reporting;
-                * True - report progress to designated devices (default: *CONSOLE*)
-                * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`;
-                * *CONSOLE* - directs output to the console (default)
-                * *CAPTURE* - captures output in Composition's `run_output <Composition.run_output>` attribute;
-                * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
+            report_simulations : bool : default False
+                specifies whether to show output and progress for simulations executed by an
+                `OptimizationControlMechanism`.
+
+            report_to_devices : CONSOLE, CAPTURE, PNL_VIEW or list : default CONSOLE
+                specifies where output and progress should be reported;  the following destinations are supported:
+
+                * *CONSOLE* - directs reporting to the system console (default);
+                * *CAPTURE* - captures reporting in a UDF-8 formatted string and stores it the Composition's
+                `run_output <Composition.run_output>` attribute;
+                * *PNL_VIEW* - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
             Returns
             ---------
