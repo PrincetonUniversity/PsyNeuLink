@@ -428,6 +428,7 @@ class PNLProgress:
             #     progress_report.trial_report.append(f'\n{self._rich_progress.console.file.getvalue()}')
 
             # MODIFIED 3/7/21 NEW:
+            # If execute() was called from COMMAND_LINE (rather than via run()), report
             if context.source & ContextFlags.COMMAND_LINE and show_output:
                 if progress_report.trial_report:
                     self._rich_progress.console.print(progress_report.trial_report)

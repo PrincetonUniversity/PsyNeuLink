@@ -8132,8 +8132,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`;
             * *CONSOLE* - directs output to the console (default);
             * *CAPTURE* - captures output in Composition's `run_output <Composition.run_output>` attribute;
-              (note: using this option also enables output to the console;  to suppress the latter, include
-              False in the specification -- e.g. ``show_progress = [False, CAPTURE]``);
             * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
         animate : dict or bool : default False
@@ -8644,8 +8642,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`;
                 * *CONSOLE* - directs output to the console (default);
                 * *CAPTURE* - captures output in Composition's `run_output <Composition.run_output>` attribute;
-                  (note: using this option also enables output to the console;  to suppress the latter, include
-                  False in the specification -- e.g. ``show_progress = [False, CAPTURE]``);
                 * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
             Returns
@@ -8831,8 +8827,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`;
                 * *CONSOLE* - directs output to the console (default)
                 * *CAPTURE* - captures output in Composition's `run_output <Composition.run_output>` attribute;
-                  (note: using this option also enables output to the console;  to suppress the latter, include
-                  False in the specification -- e.g. ``show_progress = [False, CAPTURE]``);
                 * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
             Returns

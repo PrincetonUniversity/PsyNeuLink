@@ -15,11 +15,6 @@ class TestProgress():
         b.reportOutputPref=False
         c.reportOutputPref=True
 
-        comp.execute(show_output=TERSE, show_progress=CAPTURE)
-        actual_output = comp.run_output
-        expected_output = '\'\\nCOMP TRIAL 0 ====================\\nTime Step 0 ---------\\na executed\\nTime Step 1 ---------\\nb executed\\nTime Step 2 ---------\\nc executed\\n\''
-        assert repr(actual_output) == expected_output
-
         comp.run(show_output=TERSE, show_progress=[False, CAPTURE])
         actual_output = comp.run_output
         expected_output = '\'\\nCOMP TRIAL 0 ====================\\nTime Step 0 ---------\\na executed\\nTime Step 1 ---------\\nb executed\\nTime Step 2 ---------\\nc executed\\n\''
@@ -48,6 +43,38 @@ class TestProgress():
         comp.run(show_output=FULL, show_progress=CAPTURE)
         actual_output = comp.run_output
         expected_output = '\n┏━━  COMP: Trial 0  ━━┓\n┃                     ┃\n┃ input: [[0.0]]      ┃\n┃                     ┃\n┃ ┌─  Time Step 0 ──┐ ┃\n┃ │ ╭───── a ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ ┌─  Time Step 1 ──┐ ┃\n┃ │ ╭───── b ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ ┌─  Time Step 2 ──┐ ┃\n┃ │ ╭───── c ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ result: [[0.0]]     ┃\n┃                     ┃\n┗━━━━━━━━━━━━━━━━━━━━━┛\n\nCOMP: Executed 1 of 1 trials'
+        assert actual_output == expected_output
+
+        # Run these tests after ones calling run() above to avoid having to reset trial counter,
+        # which increments after calls to execute()
+        comp.execute(show_output=TERSE, show_progress=[False, CAPTURE])
+        actual_output = comp.run_output
+        expected_output = '\'\\nCOMP TRIAL 0 ====================\\nTime Step 0 ---------\\na executed\\nTime Step 1 ---------\\nb executed\\nTime Step 2 ---------\\nc executed\\n\''
+        assert repr(actual_output) == expected_output
+
+        comp.execute(show_output=TERSE, show_progress=[CAPTURE])
+        actual_output = comp.run_output
+        expected_output = '\'\\nCOMP TRIAL 1 ====================\\nTime Step 0 ---------\\na executed\\nTime Step 1 ---------\\nb executed\\nTime Step 2 ---------\\nc executed\\n[red]Executing COMP...\''
+        assert repr(actual_output) == expected_output
+
+        comp.execute(show_output=True, show_progress=[False, CAPTURE])
+        actual_output = comp.run_output
+        expected_output = '\nCOMP TRIAL 2 ====================\nTime Step 0 ---------\n╭───── a ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\nTime Step 1 ---------\nTime Step 2 ---------\n╭───── c ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n'
+        assert actual_output == expected_output
+
+        comp.execute(show_output=True, show_progress=[CAPTURE])
+        actual_output = comp.run_output
+        expected_output = '\nCOMP TRIAL 3 ====================\nTime Step 0 ---------\n╭───── a ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\nTime Step 1 ---------\nTime Step 2 ---------\n╭───── c ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n[red]Executing COMP...'
+        assert actual_output == expected_output
+
+        comp.execute(show_output=FULL, show_progress=[False, CAPTURE])
+        actual_output = comp.run_output
+        expected_output = '\n┏━━  COMP: Trial 4  ━━┓\n┃                     ┃\n┃ input: [[0.0]]      ┃\n┃                     ┃\n┃ ┌─  Time Step 0 ──┐ ┃\n┃ │ ╭───── a ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ ┌─  Time Step 1 ──┐ ┃\n┃ │ ╭───── b ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ ┌─  Time Step 2 ──┐ ┃\n┃ │ ╭───── c ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ result: [[0.0]]     ┃\n┃                     ┃\n┗━━━━━━━━━━━━━━━━━━━━━┛\n\n'
+        assert actual_output == expected_output
+
+        comp.execute(show_output=FULL, show_progress=[CAPTURE])
+        actual_output = comp.run_output
+        expected_output = '\n┏━━  COMP: Trial 5  ━━┓\n┃                     ┃\n┃ input: [[0.0]]      ┃\n┃                     ┃\n┃ ┌─  Time Step 0 ──┐ ┃\n┃ │ ╭───── a ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ ┌─  Time Step 1 ──┐ ┃\n┃ │ ╭───── b ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ ┌─  Time Step 2 ──┐ ┃\n┃ │ ╭───── c ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ result: [[0.0]]     ┃\n┃                     ┃\n┗━━━━━━━━━━━━━━━━━━━━━┛\n\n[red]Executing COMP...'
         assert actual_output == expected_output
 
     # def test_two_mechs_in_a_time_step(self):
