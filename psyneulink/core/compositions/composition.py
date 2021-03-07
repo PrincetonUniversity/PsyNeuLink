@@ -7019,9 +7019,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         This gives the ControlMechanism access to the `Composition`'s `evaluate <Composition.evaluate>` method. This
         allows subclasses of ControlMechanism that can use this (such as `OptimizationControlMechanism`) to execute
-        "simulations" of the Composition (that is, executions in an `execution context <Composition_Execution_Context>`
-        separate from the one used by the `execution method <Composition_Execution_Methods>` called by the user) to
-        evaluate the influence of parameters on performance.
+        `simulations <OptimizationControlMechanism_Execution>` of the Composition (that is, executions in an
+        `execution context <Composition_Execution_Context>` separate from the one used by the `execution method
+        <Composition_Execution_Methods>` called by the user) to evaluate the influence of parameters on performance.
 
         It also assigns a `ControlSignal` for any `Parameter` of a `Mechanism` `specified for control
         <ParameterPort_Value_Specification>`, and a `ControlProjection` to its correponding `ParameterPort`.
@@ -8012,6 +8012,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             skip_analyze_graph=False,
             report_output=False,
             report_progress=False,
+            report_to_devices=None,
             animate=False,
             log=False,
             scheduler=None,
@@ -8127,7 +8128,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             once complete.  Progress is reported to the devices specified in **report_to_devices**.
 
         report_simulations : bool : default False
-            specifies whether to show output and progress for simulations executed by an `OptimizationControlMechanism`.
+            specifies whether to show output and/or progress for `simulations <OptimizationControlMechanism_Execution>`
+            executed by the Composition's `controller <Composition_Controller>`.
 
         report_to_devices : CONSOLE, CAPTURE, PNL_VIEW or list : default CONSOLE
             specifies where output and progress should be reported;  the following destinations are supported:
@@ -8413,7 +8415,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # EXECUTE TRIALS -------------------------------------------------------------
 
-        with Report(report_output=report_output, report_progress=report_progress) as progress:
+        with Report(report_output=report_output,
+                    report_progress=report_progress,
+                    report_to_devices=report_to_devices) as progress:
 
             progress_report = progress.start_progress_report(self, num_trials, context)
 
@@ -8640,8 +8644,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 is displayed once complete.  Progress is reported to the devices specified in **report_to_devices**.
 
             report_simulations : bool : default False
-                specifies whether to show output and progress for simulations executed by an
-                `OptimizationControlMechanism`.
+                specifies whether to show output and/or progress for `simulations
+                <OptimizationControlMechanism_Execution>` executed by the Composition's `controller
+                <Composition_Controller>`.
 
             report_to_devices : CONSOLE, CAPTURE, PNL_VIEW or list : default CONSOLE
                 specifies where output and progress should be reported;  the following destinations are supported:
@@ -8750,6 +8755,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             report_output=False,
             report_progress=False,
+            report_to_devices=None,
             progress=None,
             progress_report=None,
             ):
@@ -8829,8 +8835,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 will also be reported.   Progress is reported to the devices specified in **report_to_devices**.
 
             report_simulations : bool : default False
-                specifies whether to show output and progress for simulations executed by an
-                `OptimizationControlMechanism`.
+                specifies whether to show output and/or progress for `simulations
+                <OptimizationControlMechanism_Execution>` executed by the Composition's `controller
+                <Composition_Controller>`.
 
             report_to_devices : CONSOLE, CAPTURE, PNL_VIEW or list : default CONSOLE
                 specifies where output and progress should be reported;  the following destinations are supported:
@@ -8846,7 +8853,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output value of the final Mechanism executed in the Composition : various
         """
 
-        with Report(report_output=report_output, report_progress=report_progress) as progress:
+        with Report(report_output=report_output,
+                    report_progress=report_progress,
+                    report_to_devices=report_to_devices) as progress:
 
             # FIX: Call Report with context and progress_report handle this in there 3/3/21
             # If execute method is called directly, need to create Report object for reporting

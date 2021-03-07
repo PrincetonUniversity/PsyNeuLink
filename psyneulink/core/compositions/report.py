@@ -9,7 +9,7 @@ from rich.panel import Panel
 from rich.progress import Progress as RichProgress
 
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONSOLE, CAPTURE, FULL, PNL_VIEW, SIMULATIONS, TERSE
+from psyneulink.core.globals.keywords import CONSOLE, CAPTURE, FULL, PNL_VIEW, TERSE
 from psyneulink.core.globals.utilities import convert_to_list
 
 SIMULATION = 'Simulat'
@@ -84,32 +84,52 @@ class Report:
     report_to_devices : CONSOLE, CAPTURE, PNL_VIEW or list : default CONSOLE
         specifies where output and progress should be reported;  the following destinations are supported:
 
-        * *CONSOLE* - directs reporting to the system console (default);
-        * *CAPTURE* - captures reporting in a UDF-8 formatted string and stores it the Composition's
-        `run_output <Composition.run_output>` attribute;
+        * *CONSOLE* - directs reporting to the Console of the rich Progress object stored in `_instance._rich_progress 
+          <Report._rich_progress>` (default);
+        * *CAPTURE* - captures reporting otherwise directed to the rich Console in a UDF-8 formatted string and stores it in `_captured_output 
+          <Report._captured_output>`;
         * *PNL_VIEW* - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
     Attributes
     ----------
 
     _instance : Report
-        singleton instance of class.
+        singleton instance of class;  contains attributes for:
 
-    _enable_progress : bool : default False
-        determines whether progress reporting is enabled.
+        * a rich Progress object (`_rich_progress`)
+        * a PsyNeuLinkView interface object contained in `_PNL_View` - TBI.
 
-    # FIX: THIS SHOULD BE REPLACED WITH _use_capture OR MAKE ALL THE _use_x OPTIONS MUTUALLY EXCLUSIVE
+    _enable_reporting : bool : default False
+        determines whether reporting is enabled;  True if either the **_report_output** or **_report_progress**
+        progress arguments of the constructor were specified as not False.
+
+    _use_rich : False, *CONSOLE*, *CAPTURE* or list: default *CONSOLE*
+        identifies whether reporting to rich is enabled (i.e., if *CONSOLE* and/or *CAPTURE* were specified in
+        **report_to_devices** argument of constructor.
+
+    _rich_console : bool : default True
+        determines whether reporting is sent to _rich_progress console;  True if _enable_reporting is True and
+        **CONSOLE** was specified in the **report_to_devices** argument of constructor.
+
+    _rich_capture : bool : default True
+        determines whether reporting is sent to _captured_output;  True if _enable_reporting is True and
+        **CAPTURE** was specified in the **report_to_devices** argument of constructor.
+
+    _use_pnl_view : bool : default False
+        determines whether reporting is sent to PsyNeuLinkView if _enable_reporting is True - TBI.
+
+    report_to_devices : list
+        list of devices currently enabled for reporting.
+
+    _report_output : bool, *TERSE*, or *FULL* : default False
+        determines whether and, if so, what form of output is displayed and/or captured.
+
     _report_progress : bool : default False
         determines whether progress is displayed and/or captured.
 
-    _use_rich : bool, *CONSOLE* or *CAPTURE* : default *CONSOLE*
-        determines whether reporting is sent to rich console or captured in a string PNLProgress.captured_output
-
-    _use_pnl_view : bool : default False
-        determines whether reporting is sent to PsyNeuLinkView - TBI.
-
-    _show_simulations : bool : default False
-        determines whether reporting generated for simulations.
+    _report_simulations : bool : default False
+        determines whether reporting occurs for output and/or progress of simulations carried out by the `controller
+        <Composition_Controller>` of a `Composition`.
 
     _progress_reports : dict
         contains entries for each Composition (the key) executed during progress reporting; the value of each
@@ -118,7 +138,7 @@ class Report:
         - one containing ProgressReports for executions in SIMULATION_MODE (key: SIMULATION)
 
     _captured_output : str :  default []
-        if _use_rich is *CAPTURE*, contains output otherwise sent to rich console.
+        if _rich_capture is True, contains output sent to _rich_progress.console.
 
     _ref_count : int : default 0
         tracks how many times object has been referenced;  counter is incremented on each context __enter__
@@ -128,31 +148,28 @@ class Report:
 
     _instance = None
 
-    def __new__(cls, report_progress=False, report_output=False) -> 'Report':
+    def __new__(cls,
+                report_progress:bool=False,
+                report_output:bool=False,
+                report_simulations:bool=False,
+                report_to_devices:(CONSOLE, CAPTURE, PNL_VIEW, list)=CONSOLE
+                ) -> 'Report':
         if cls._instance is None:
             cls._instance = super(Report, cls).__new__(cls)
 
-            cls._enable_progress = bool(report_progress)
+            # cls._enable_progress = report_progress
+            cls._report_progress = report_progress
+            cls._report_output = report_output
+            cls._enable_reporting = report_output or report_progress
 
-            report_progress = convert_to_list(report_progress)
-            # # Use rich console output by default, or _captured_output if CPATURE is sp
-            # cls._use_rich = (False not in report_progress and [k in report_progress for k in {True, CONSOLE, CAPTURE}]
-            #                  or report_output)
-            # TBI: send output to PsyNeuLinkView
-            cls._report_progress = False not in report_progress
+            cls._report_to_devices = convert_to_list(report_to_devices or CONSOLE)
+            cls._rich_console = CONSOLE in cls._report_to_devices
+            cls._rich_capture = CAPTURE in cls._report_to_devices
+            cls._use_rich = ((report_output or report_progress) and (cls._rich_console or cls._rich_capture))
+            cls._use_pnl_view = PNL_VIEW in cls._report_to_devices
 
-            cls._use_rich = False
-            # Use rich console output by default or CONSOLE is specified, or _captured_output if CAPTURE is specified
-            if False not in report_progress or report_output:
-                if CAPTURE in report_progress:
-                    cls._use_rich = CAPTURE
-                else:
-                    cls._use_rich = CONSOLE
-
-            cls._use_pnl_view = False not in report_progress and PNL_VIEW in report_progress
             # Show simulations if specified
-            cls._show_simulations = False not in report_progress and SIMULATIONS in report_progress
-
+            cls._report_simulations = report_simulations
             cls._prev_simulation = False
 
             # Instantiate rich progress context object
@@ -243,7 +260,7 @@ class Report:
         else:
             run_mode = DEFAULT
 
-        if run_mode is SIMULATION and not self._show_simulations:
+        if run_mode is SIMULATION and not self._report_simulations:
             return
 
         # Don't create a new report for simulations in a set
@@ -252,7 +269,7 @@ class Report:
 
         if self._use_rich:
 
-            visible = self._report_progress and (run_mode is not SIMULATION or self._show_simulations)
+            visible = self._report_progress and (run_mode is not SIMULATION or self._report_simulations)
 
             if comp.verbosePref or REPORT_REPORT:
                 from pprint import pprint
@@ -280,7 +297,7 @@ class Report:
 
     def report_progress(self, caller, report_num, context):
 
-        if not self._enable_progress:
+        if not self._report_progress:
             return
 
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
@@ -290,7 +307,7 @@ class Report:
             run_mode = DEFAULT
 
         # Return if (nested within) a simulation and not reporting simulations
-        if run_mode is SIMULATION and not self._show_simulations:
+        if run_mode is SIMULATION and not self._report_simulations:
             return
 
         progress_report = self._progress_reports[caller][run_mode][report_num]
