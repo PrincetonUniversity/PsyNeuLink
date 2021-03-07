@@ -1465,17 +1465,11 @@ class GridSearch(OptimizationFunction):
         direction = "<" if self.direction == MINIMIZE else ">"
         replace_ptr = builder.alloca(ctx.bool_ty)
 
-        search_space = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                   self.parameters.search_space.name)
-        gen_samples = builder.icmp_signed("==", samples_ptr, samples_ptr.type(None), name="POINTER_COMP")
-        local_sample = builder.alloca(samples_ptr.type.pointee)
+        min_idx_ptr = builder.alloca(stop.type)
+        builder.store(stop.type(-1), min_idx_ptr)
+
         # Check the value against current min
         with pnlvm.helpers.for_loop(builder, start, stop, stop.type(1), "compare_loop") as (b, idx):
-            sample_ptr = b.gep(samples_ptr, [idx])
-            sample_ptr = b.select(gen_samples, local_sample, sample_ptr)
-            with b.if_then(gen_samples):
-                pnlvm.helpers.create_allocation(b, local_sample, search_space, idx)
-
             value_ptr = b.gep(values_ptr, [idx])
             value = b.load(value_ptr)
             min_value = b.load(min_value_ptr)
@@ -1506,8 +1500,22 @@ class GridSearch(OptimizationFunction):
                             b.store(opt_count_ptr.type.pointee(1), opt_count_ptr)
 
             with b.if_then(b.load(replace_ptr)):
+                b.store(idx, min_idx_ptr)
                 b.store(b.load(value_ptr), min_value_ptr)
-                b.store(b.load(sample_ptr), min_sample_ptr)
+
+        min_idx = builder.load(min_idx_ptr)
+        found_min = builder.icmp_signed("!=", min_idx, min_idx.type(-1))
+
+        with builder.if_then(found_min):
+            gen_samples = builder.icmp_signed("==", samples_ptr, samples_ptr.type(None))
+            with builder.if_else(gen_samples) as (b_true, b_false):
+                with b_true:
+                    search_space = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                               self.parameters.search_space.name)
+                    pnlvm.helpers.create_allocation(b, min_sample_ptr, search_space, min_idx)
+                with b_false:
+                    sample_ptr = builder.gep(samples_ptr, [min_idx])
+                    builder.store(b.load(sample_ptr), min_sample_ptr)
 
         builder.ret_void()
         return builder.function
