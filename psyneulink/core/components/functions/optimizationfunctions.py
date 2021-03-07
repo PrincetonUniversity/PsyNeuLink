@@ -1438,11 +1438,12 @@ class GridSearch(OptimizationFunction):
                 value_t.as_pointer(),
                 value_t.as_pointer(),
                 ctx.float_ty.as_pointer(),
+                ctx.int32_ty,
                 ctx.int32_ty]
         builder = ctx.create_llvm_function(args, self, tags=tags)
 
-        params, state, min_sample_ptr, samples_ptr, min_value_ptr, values_ptr, opt_count_ptr, count = builder.function.args
-        for p in builder.function.args[:-1]:
+        params, state, min_sample_ptr, samples_ptr, min_value_ptr, values_ptr, opt_count_ptr, start, stop = builder.function.args
+        for p in builder.function.args[:-2]:
             p.attributes.add('noalias')
             p.attributes.add('nonnull')
 
@@ -1462,7 +1463,7 @@ class GridSearch(OptimizationFunction):
         replace_ptr = builder.alloca(ctx.bool_ty)
 
         # Check the value against current min
-        with pnlvm.helpers.for_loop_zero_inc(builder, count, "compare_loop") as (b, idx):
+        with pnlvm.helpers.for_loop(builder, start, stop, stop.type(1), "compare_loop") as (b, idx):
             value_ptr = b.gep(values_ptr, [idx])
             sample_ptr = b.gep(samples_ptr, [idx])
             value = b.load(value_ptr)
@@ -1565,10 +1566,11 @@ class GridSearch(OptimizationFunction):
                               value_ptr] + extra_args)
 
             # Check if smaller than current best.
+            # the argument pointers are already offset, so use range <0,1)
             select_min_f = ctx.import_llvm_function(self, tags=tags.union({"select_min"}))
             b.call(select_min_f, [params, state, min_sample_ptr, sample_ptr,
                                   min_value_ptr, value_ptr, opt_count_ptr,
-                                  ctx.int32_ty(1)])
+                                  ctx.int32_ty(0), ctx.int32_ty(1)])
 
             builder = b
 
@@ -1598,10 +1600,11 @@ class GridSearch(OptimizationFunction):
         ct_opt_sample = bin_func.byref_arg_types[2](float("NaN"))
         ct_opt_value = bin_func.byref_arg_types[4]()
         ct_opt_count = bin_func.byref_arg_types[6](0)
-        ct_count = bin_func.c_func.argtypes[7](len(ct_alloc))
+        ct_start = bin_func.c_func.argtypes[7](0)
+        ct_stop = bin_func.c_func.argtypes[8](len(ct_alloc))
 
         bin_func(ct_param, ct_state, ct_opt_sample, ct_alloc, ct_opt_value,
-                 ct_values, ct_opt_count, ct_count)
+                 ct_values, ct_opt_count, ct_start, ct_stop)
 
         return ct_opt_sample, ct_opt_value, ct_alloc, ct_values
 
