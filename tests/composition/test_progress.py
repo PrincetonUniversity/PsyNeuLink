@@ -1,11 +1,12 @@
 import psyneulink as pnl
-from psyneulink.core.globals.keywords import TERSE, CAPTURE, FULL
+from psyneulink.core.globals.keywords import CAPTURE, FULL, SIMULATIONS, TERSE
 
 
 class TestProgress():
-    # FIX: NEED TO DEAL WITH INDETERMINACY OF a OR b FIRST IN TIME_STEP
 
     def test_simple_output_and_progress(self):
+        """Test simple sequence of three Mechanisms, using all show_output and show_progress options
+        """
         a = pnl.TransferMechanism(name='a')
         b = pnl.TransferMechanism(name='b')
         c = pnl.TransferMechanism(name='c')
@@ -78,6 +79,9 @@ class TestProgress():
         assert actual_output == expected_output
 
     # def test_two_mechs_in_a_time_step(self):
+    #     """Test that includes two (recurrently connected) Mechanisms executed within the same TIME_STEP
+    #        FIX: NEED TO RESOLVE INDETERMINACY OF ORDER OF EXECUTION FOR TESTING
+    #     """
     #     a = TransferMechanism(name='a')
     #     b = TransferMechanism(name='b')
     #     c = TransferMechanism(name='c')
@@ -108,6 +112,7 @@ class TestProgress():
     #     assert actual_output == expected_output
 
     def test_nested_comps_output(self):
+        """Test of nested Compositions with simulations executed by OCMs"""
 
         with_inner_controller = True
         with_outer_controller = True
@@ -195,6 +200,15 @@ class TestProgress():
         # ocomp.run(inputs=inputs_generator_instance, show_progress=['simulations'])
         # ocomp.run(inputs=inputs_dict, show_progress=True)
         # ocomp.run(inputs=inputs_dict, show_progress=['simulations'])
-        ocomp.run(inputs={icomp:-2}, show_output=FULL, show_progress=['simulations',CAPTURE])
-        print(ocomp.run_output)
+
+        ocomp.run(inputs={icomp:-2}, show_output=True, show_progress=[SIMULATIONS,CAPTURE])
+        actual_output = ocomp.run_output
+        expected_output = '\nocomp TRIAL 0 ====================\nTime Step 0 ---------\nicomp TRIAL 0 ====================\nTime Step 0 ---------\nTime Step 0 ---------\nTime Step 0 ---------\nTime Step 1 ---------\nocomp: Executed 1 of 1 trials\nocomp: Simulated 3 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials'
+        assert actual_output == expected_output
+
+        ocomp.run(inputs={icomp:-2}, show_output=FULL, show_progress=[SIMULATIONS,CAPTURE])
+        actual_output = ocomp.run_output
+        expected_output = '\n┏━━━━━━━━━━━━  ocomp: Trial 0  ━━━━━━━━━━━━━┓\n┃                                           ┃\n┃ input: [[-2]]                             ┃\n┃                                           ┃\n┃ ┌──  Time Step 0 ──┐                      ┃\n┃ │ ╭─── icomp ────╮ │                      ┃\n┃ │ │ input: -2.0  │ │                      ┃\n┃ │ │ output: -2.0 │ │                      ┃\n┃ │ ╰──────────────╯ │                      ┃\n┃ └──────────────────┘                      ┃\n┃                                           ┃\n┃ ┌────────────  Time Step 1 ─────────────┐ ┃\n┃ │ ╭─ oController Objective Mechanism ─╮ │ ┃\n┃ │ │ input: -2.0                       │ │ ┃\n┃ │ │ output: -2.0                      │ │ ┃\n┃ │ ╰───────────────────────────────────╯ │ ┃\n┃ └───────────────────────────────────────┘ ┃\n┃                                           ┃\n┃ result: [[-2.0]]                          ┃\n┃                                           ┃\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\nocomp: Executed 1 of 1 trials\nocomp: Simulated 3 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials'
+        assert actual_output == expected_output
+
         # ocomp.execute(inputs={icomp:-2}, context='0')
