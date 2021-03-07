@@ -31,7 +31,7 @@ trial_output_color = 'red'
 trial_panel_box = box.HEAVY
 
 
-class PNLProgressError(Exception):
+class ReportError(Exception):
 
     def __init__(self, error_value):
         self.error_value = error_value
@@ -52,7 +52,7 @@ class ProgressReport():
         self.time_step_report = []
 
 
-class PNLProgress:
+class Report:
     """
     A singleton context object that provides interface to output and progress reporting.
     It returns the currently active progress context instance if one has been instantiated already in another scope.
@@ -61,7 +61,7 @@ class PNLProgress:
     Arguments
     ---------
 
-    show_output : bool, *TERSE*, or *FULL* : default False
+    report_output : bool, *TERSE*, or *FULL* : default False
         specifies whether to show output of the execution on a trial-by-trial as it is generated.  Any one the
         following options can be used:
 
@@ -74,7 +74,7 @@ class PNLProgress:
 
         * *FULL* - input and output of all Components being executed is reported.
 
-    show_progress : bool, *CONSOLE*, *CAPTURE*, *SIMULATIONS*, or list : default False
+    report_progress : bool, *CONSOLE*, *CAPTURE*, *SIMULATIONS*, or list : default False
         specifies whether to show progress of execution in real time.  If the number trials to be
         executed is explicitly specified, the number of trials executed, a progress bar, and time remaining are
         displayed; if the number of trials is not explicitly specified (e.g., if inputs are specified using a
@@ -94,13 +94,13 @@ class PNLProgress:
     Attributes
     ----------
 
-    _instance : PNLProgress
+    _instance : Report
         singleton instance of class.
 
     _enable_progress : bool : default False
         determines whether progress reporting is enabled.
 
-    _show_progress : bool : default False
+    _report_progress : bool : default False
         determines whether progress is displayed and/or captured.
 
     _use_rich : bool, *CONSOLE* or *CAPTURE* : default *CONSOLE*
@@ -129,30 +129,30 @@ class PNLProgress:
 
     _instance = None
 
-    def __new__(cls, show_progress=False, show_output=False) -> 'PNLProgress':
+    def __new__(cls, report_progress=False, report_output=False) -> 'Report':
         if cls._instance is None:
-            cls._instance = super(PNLProgress, cls).__new__(cls)
+            cls._instance = super(Report, cls).__new__(cls)
 
-            cls._enable_progress = bool(show_progress)
+            cls._enable_progress = bool(report_progress)
 
-            show_progress = convert_to_list(show_progress)
+            report_progress = convert_to_list(report_progress)
             # # Use rich console output by default, or _captured_output if CPATURE is sp
-            # cls._use_rich = (False not in show_progress and [k in show_progress for k in {True, CONSOLE, CAPTURE}]
-            #                  or show_output)
+            # cls._use_rich = (False not in report_progress and [k in report_progress for k in {True, CONSOLE, CAPTURE}]
+            #                  or report_output)
             # TBI: send output to PsyNeuLinkView
-            cls._show_progress = False not in show_progress
+            cls._report_progress = False not in report_progress
 
             cls._use_rich = False
             # Use rich console output by default or CONSOLE is specified, or _captured_output if CAPTURE is specified
-            if False not in show_progress or show_output:
-                if CAPTURE in show_progress:
+            if False not in report_progress or report_output:
+                if CAPTURE in report_progress:
                     cls._use_rich = CAPTURE
                 else:
                     cls._use_rich = CONSOLE
 
-            cls._use_pnl_view = False not in show_progress and PNL_VIEW in show_progress
+            cls._use_pnl_view = False not in report_progress and PNL_VIEW in report_progress
             # Show simulations if specified
-            cls._show_simulations = False not in show_progress and SIMULATIONS in show_progress
+            cls._show_simulations = False not in report_progress and SIMULATIONS in report_progress
 
             cls._prev_simulation = False
 
@@ -168,7 +168,7 @@ class PNLProgress:
 
             # Instantiate interface to PsyNeuLinkView
             if cls._use_pnl_view:
-                warnings.warn("'pnl_view' not yet supported as an option for show_progress of Composition.run()")
+                warnings.warn("'pnl_view' not yet supported as an option for report_progress of Composition.run()")
 
             cls._progress_reports = {}
             cls._captured_output = str()
@@ -181,20 +181,20 @@ class PNLProgress:
     def _destroy(cls) -> None:
         """
         A simple helper method that deallocates the singleton instance. This is called when we want to fully destroy
-        the singleton instance and its member progress counters. This will cause the next call to PNLProgress() to
+        the singleton instance and its member progress counters. This will cause the next call to Report() to
         create a completely new singleton instance.
         """
         cls._instance = None
 
     def __enter__(self):
         """
-        This  returns a singleton of the PNLProgress class.
+        This  returns a singleton of the Report class.
         Returns:
             A new singleton PNL progress context if none is currently active, otherwise, it returns the currently
             active context.
         """
 
-        # If this is the top level call to with PNLProgress(), start progress reporting
+        # If this is the top level call to with Report(), start progress reporting
         if self._ref_count == 0:
             if self._use_rich:
                 self._rich_progress.start()
@@ -227,7 +227,7 @@ class PNLProgress:
 
             # Destroy the singleton, very important. If we don't do this, the rich progress
             # bar will grow and grow and never be deallocated until the end of program.
-            PNLProgress._destroy()
+            Report._destroy()
 
     def start_progress_report(self, comp, num_trials, context):
 
@@ -253,7 +253,7 @@ class PNLProgress:
 
         if self._use_rich:
 
-            visible = self._show_progress and (run_mode is not SIMULATION or self._show_simulations)
+            visible = self._report_progress and (run_mode is not SIMULATION or self._show_simulations)
 
             if comp.verbosePref or REPORT_REPORT:
                 from pprint import pprint
@@ -322,21 +322,21 @@ class PNLProgress:
     def report_output(self, caller,
                       report_num,
                       scheduler,
-                      show_output,
+                      report_output,
                       content,
                       context,
                       nodes_to_report=False,
                       node=None):
 
-        if report_num is None or show_output is False:
+        if report_num is None or report_output is False:
             return
-        # if show_output is None, defer to Composition's reportOutputPref
-        if show_output is None:  # if it is False, leave as is to suppress output
-            show_output = caller.reportOutputPref
+        # if report_output is None, defer to Composition's reportOutputPref
+        if report_output is None:  # if it is False, leave as is to suppress output
+            report_output = caller.reportOutputPref
 
-        if show_output is FULL:   # give precedence to argument in call to execute
+        if report_output is FULL:   # give precedence to argument in call to execute
             report_type = FULL
-        elif show_output is TERSE:
+        elif report_output is TERSE:
             report_type = TERSE
         else:
             report_type = None
@@ -355,8 +355,8 @@ class PNLProgress:
 
             progress_report.trial_report = []
 
-            if show_output is not False:  # if it is False, suppress output
-                show_output = show_output or caller.reportOutputPref # if it is None, defer to Composition's
+            if report_output is not False:  # if it is False, suppress output
+                report_output = report_output or caller.reportOutputPref # if it is None, defer to Composition's
                 # reportOutputPref
 
                 #  if rich report, report trial number and Composition's input
@@ -369,7 +369,7 @@ class PNLProgress:
                                                       f"TRIAL {trial_num} ====================")
 
         elif content is 'time_step_init':
-            if show_output:
+            if report_output:
                 if report_type is FULL:
                     progress_report.time_step_report = [] # Contains rich.Panel for each node executed in time_step
                 elif nodes_to_report:
@@ -378,15 +378,15 @@ class PNLProgress:
 
         elif content is 'node':
             if not node:
-                assert False, 'Node not specified in call to PNLProgress report_output'
-            if show_output is False or show_output is True and node.reportOutputPref is False:
+                assert False, 'Node not specified in call to Report report_output'
+            if report_output is False or report_output is True and node.reportOutputPref is False:
                 return
             # Use FULL node report for Node:
             if report_type is FULL or node.reportOutputPref in [True, FULL]:
                 node_report = self.node_execution_report(node,
                                                          input_val=node.get_input_values(context),
                                                          output_val=node.output_port.parameters.value._get(context),
-                                                         show_output=show_output,
+                                                         report_output=report_output,
                                                          context=context
                                                          )
                 # If trial is using FULL report, save Node's to progress_report
@@ -400,7 +400,7 @@ class PNLProgress:
                 self._rich_progress.console.print(f'[{node_panel_color}]{node.name} executed')
 
         elif content is 'time_step':
-            if (show_output and (nodes_to_report or show_output is FULL) and report_type is FULL):
+            if (report_output and (nodes_to_report or report_output is FULL) and report_type is FULL):
                 progress_report.trial_report.append('')
                 progress_report.trial_report.append(Panel(RenderGroup(*progress_report.time_step_report),
                                                            # box=box.HEAVY,
@@ -429,30 +429,30 @@ class PNLProgress:
 
             # MODIFIED 3/7/21 NEW:
             # If execute() was called from COMMAND_LINE (rather than via run()), report
-            if context.source & ContextFlags.COMMAND_LINE and show_output:
+            if context.source & ContextFlags.COMMAND_LINE and report_output:
                 if progress_report.trial_report:
                     self._rich_progress.console.print(progress_report.trial_report)
                     self._rich_progress.console.print('')
                 if self._use_rich is CAPTURE:
                     # Get output captured by explicit prints
                     self._captured_output += f'\n{self._rich_progress.console.file.getvalue()}'
-                    # if show_progress
+                    # if report_progress
                     # Add output sent to console by task updates
-                    if self._show_progress:
+                    if self._report_progress:
                         self._captured_output += '\n'.join([t.description for t in self._rich_progress.tasks])
             # MODIFIED 3/7/21 END
 
         elif content is 'run':
-            if show_output:
+            if report_output:
                 if progress_report.trial_report:
                     self._rich_progress.console.print(progress_report.trial_report)
                     self._rich_progress.console.print('')
                 if self._use_rich is CAPTURE:
                     # Get output captured by explicit prints
                     self._captured_output += f'\n{self._rich_progress.console.file.getvalue()}'
-                    # if show_progress
+                    # if report_progress
                     # Add output sent to console by task updates
-                    if self._show_progress:
+                    if self._report_progress:
                         self._captured_output += '\n'.join([t.description for t in self._rich_progress.tasks])
 
         return
@@ -462,14 +462,14 @@ class PNLProgress:
                               input_val=None,
                               params=None,
                               output_val=None,
-                              show_output=True,
+                              report_output=True,
                               context=None):
         from psyneulink.core.components.shellclasses import Function
         from psyneulink.core.globals.keywords import FUNCTION_PARAMS
 
         node_report = ''
 
-        if show_output is TERSE or node.reportOutputPref is TERSE and show_output is not FULL:
+        if report_output is TERSE or node.reportOutputPref is TERSE and report_output is not FULL:
             return f'[{node_panel_color}]{node.name} executed'
 
         if input_val is None:

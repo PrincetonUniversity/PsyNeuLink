@@ -36,7 +36,7 @@ THIS DOES NOT CURRENTLY SUPPORT STRINGS (TERSE or 'params')
     - 'params' or 'parameters': includes report of the Component's `parameter <Parameters>` values.
 COMMENT
 * **reportOutputPref** (bool, default: False) - enables/disables reporting execution of the `Component`;
-  if the Component is executed within a `Composition`, this preference may be overridden by the **show_output**
+  if the Component is executed within a `Composition`, this preference may be overridden by the **report_output**
   argument specified in any of the Composition's `execution methods <Composition_Execution_Methods>`
   (see `execution reporting <Composition_Execution_Reporting>` for additional details);
 

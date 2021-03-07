@@ -886,9 +886,9 @@ can also be called directly, but this is useful mostly for debugging.
 either `run <Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS <TimeScale.TRIAL>`
 executed are available in the Composition's `results <Composition.results>` attribute (see `Results
 <Composition_Execution_Results>` for additional details).  A report of the results of each
-`TRIAL <TimeScale.TRIAL>` can also be generated as the Compostion is executing, using the **show_output** and
-**show_progress** arguments of any of the execution methods. **show_output** generates a report of the input and
-output the Composition and its `Nodes <Composition_Nodes>`, while **show_progress** shows a progress bar indicating
+`TRIAL <TimeScale.TRIAL>` can also be generated as the Compostion is executing, using the **report_output** and
+**report_progress** arguments of any of the execution methods. **report_output** generates a report of the input and
+output the Composition and its `Nodes <Composition_Nodes>`, while **report_progress** shows a progress bar indicating
 how many `TRIALS <TimeScale.TRIAL>` have been executed and an estimate of the time remaining to completion (see the
 `execute <Composition.execute>`, `run <Composition.run>` and `learn <Composition.learn>` methods for additional
 details).  These options are both False by default.  The values of individual Components (and their `parameters
@@ -2394,7 +2394,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
-from psyneulink.core.compositions.progress import PNLProgress
+from psyneulink.core.compositions.report import Report
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -3186,7 +3186,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if False, simulation values are deleted unless otherwise specified by individual Parameters.
 
     run_output : str
-        contains output from execution(s) of Composition if *CAPTURE* is specified in the **show_progress** argument
+        contains output from execution(s) of Composition if *CAPTURE* is specified in the **report_progress** argument
         of a `Composition execution method <Composition_Execution_Methods>`.
 
     input_specification : None or dict or list or generator or function
@@ -8010,8 +8010,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_after_trial=None,
             termination_processing=None,
             skip_analyze_graph=False,
-            show_output=False,
-            show_progress=False,
+            report_output=False,
+            report_progress=False,
             animate=False,
             log=False,
             scheduler=None,
@@ -8413,7 +8413,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # EXECUTE TRIALS -------------------------------------------------------------
 
-        with PNLProgress(show_output=show_output, show_progress=show_progress) as progress:
+        with Report(report_output=report_output, report_progress=report_progress) as progress:
 
             progress_report = progress.start_progress_report(self, num_trials, context)
 
@@ -8452,8 +8452,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             runtime_params=runtime_params,
                                             skip_initialization=True,
                                             execution_mode=execution_mode,
-                                            show_output=show_output,
-                                            show_progress=show_progress,
+                                            report_output=report_output,
+                                            report_progress=report_progress,
                                             progress=progress,
                                             progress_report=progress_report
                                             )
@@ -8486,7 +8486,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     call_with_pruned_args(call_after_trial, context=context)
 
                 # Report results to output devices
-                progress.report_output(self, progress_report, scheduler, show_output, 'run', context)
+                progress.report_output(self, progress_report, scheduler, report_output, 'run', context)
 
             if progress._captured_output:
                 self.run_output = progress._captured_output
@@ -8748,8 +8748,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             runtime_params=None,
             skip_initialization=False,
             execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
-            show_output=False,
-            show_progress=False,
+            report_output=False,
+            report_progress=False,
             progress=None,
             progress_report=None,
             ):
@@ -8846,10 +8846,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output value of the final Mechanism executed in the Composition : various
         """
 
-        with PNLProgress(show_output=show_output, show_progress=show_progress) as progress:
+        with Report(report_output=report_output, report_progress=report_progress) as progress:
 
-            # FIX: Call PNLProgress with context and progress_report handle this in there 3/3/21
-            # If execute method is called directly, need to create PNLProgress object for reporting
+            # FIX: Call Report with context and progress_report handle this in there 3/3/21
+            # If execute method is called directly, need to create Report object for reporting
             if not (context.source & ContextFlags.COMPOSITION) or progress_report is None:
                 progress_report = progress.start_progress_report(comp=self, num_trials=1, context=context)
 
@@ -8982,7 +8982,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 reset_stateful_functions_to = {}
 
             # # Report trial_num and Composition input (now that it has been assigned)
-            # progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial_init', context)
+            # progress.report_output(self, progress_report, execution_scheduler, report_output, 'trial_init', context)
 
             for node in self.nodes:
                 node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TRIAL, 0)
@@ -9135,7 +9135,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_sets.__next__()
 
             # Report trial_num and Composition input (now that it has been assigned)
-            progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial_init', context)
+            progress.report_output(self, progress_report, execution_scheduler, report_output, 'trial_init', context)
 
             for next_execution_set in execution_sets:
 
@@ -9203,8 +9203,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
                 # INITIALIZE self._time_step_report AND SHOW TIME_STEP DIVIDER
-                nodes_to_report = any(node.reportOutputPref for node in next_execution_set) or show_output is FULL
-                progress.report_output(self, progress_report, execution_scheduler, show_output, 'time_step_init', context,
+                nodes_to_report = any(node.reportOutputPref for node in next_execution_set) or report_output is FULL
+                progress.report_output(self, progress_report, execution_scheduler, report_output, 'time_step_init', context,
                                        nodes_to_report=True)
 
                 # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -9340,7 +9340,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if isinstance(node, Composition):
                             node_progress_report = None
                         # MODIFIED 2/28/21 END
-                        ret = node.execute(context=context, show_output=show_output, show_progress=show_progress,
+                        ret = node.execute(context=context, report_output=report_output, report_progress=report_progress,
                                            execution_mode=nested_execution_mode)
 
                         # Get output info from nested execution
@@ -9361,7 +9361,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     progress.report_output(self,
                                            progress_report,
                                            execution_scheduler,
-                                           show_output,
+                                           report_output,
                                            'node',
                                            context,
                                            node=node)
@@ -9404,7 +9404,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
                 # Add report for time_step to trial_report
-                progress.report_output(self, progress_report, execution_scheduler, show_output, 'time_step', context,
+                progress.report_output(self, progress_report, execution_scheduler, report_output, 'time_step', context,
                                        nodes_to_report= nodes_to_report)
 
             context.remove_flag(ContextFlags.PROCESSING)
@@ -9469,7 +9469,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 output_values.append(port.parameters.value._get(context))
 
             # Report results and progress to output devices
-            progress.report_output(self, progress_report, execution_scheduler, show_output, 'trial', context)
+            progress.report_output(self, progress_report, execution_scheduler, report_output, 'trial', context)
             progress.report_progress(self, progress_report, context)
             if context.source & ContextFlags.COMMAND_LINE and progress._captured_output:
                 self.run_output = progress._captured_output

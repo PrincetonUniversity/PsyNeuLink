@@ -476,8 +476,8 @@ class AutodiffComposition(Composition):
                 runtime_params=None,
                 execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
                 skip_initialization=False,
-                show_progress=False,
-                show_output=None,
+                report_progress=False,
+                report_output=None,
                 progress=None,
                 progress_report=None
                 ):
@@ -515,7 +515,7 @@ class AutodiffComposition(Composition):
             scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
             # MODIFIED 3/2/21 NEW:  FIX: CAUSES CRASH... NEEDS TO BE FIXED
-            # progress.report_output(self, progress_report, scheduler, show_output, 'trial', context)
+            # progress.report_output(self, progress_report, scheduler, report_output, 'trial', context)
             # MODIFIED 3/2/21 END
             progress.report_progress(self, progress_report, context)
 
@@ -534,8 +534,8 @@ class AutodiffComposition(Composition):
                                                         clamp_input=clamp_input,
                                                         runtime_params=runtime_params,
                                                         execution_mode=execution_mode,
-                                                        show_progress=show_progress,
-                                                        show_output=show_output
+                                                        report_progress=report_progress,
+                                                        report_output=report_output
                                                         )
 
     def _get_state_struct_type(self, ctx):
