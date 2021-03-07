@@ -1677,11 +1677,12 @@ class TestModelBasedOptimizationControlMechanisms:
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Model Based OCM")
     @pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
-                                     [pytest.helpers.cuda_param('Python-PTX')])
+                                     [pytest.helpers.cuda_param('Python-PTX'),
+                                      pytest.param('Python-LLVM', marks=pytest.mark.llvm)])
     def test_model_based_ocm_after(self, benchmark, mode):
-        if mode == 'Python-PTX':
+        if str(mode).startswith('Python-'):
+            ocm_mode = mode.split('-')[1]
             mode = pnl.ExecutionMode.Python
-            ocm_mode = 'PTX'
         else:
             # OCM default mode is Python
             ocm_mode = 'Python'
@@ -1724,11 +1725,12 @@ class TestModelBasedOptimizationControlMechanisms:
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Model Based OCM")
     @pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
-                                     [pytest.helpers.cuda_param('Python-PTX')])
+                                     [pytest.helpers.cuda_param('Python-PTX'),
+                                      pytest.param('Python-LLVM', marks=pytest.mark.llvm)])
     def test_model_based_ocm_before(self, benchmark, mode):
-        if mode == 'Python-PTX':
+        if str(mode).startswith('Python-'):
+            ocm_mode = mode.split('-')[1]
             mode = pnl.ExecutionMode.Python
-            ocm_mode = 'PTX'
         else:
             # OCM default mode is Python
             ocm_mode = 'Python'

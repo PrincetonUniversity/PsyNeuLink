@@ -1600,7 +1600,7 @@ class GridSearch(OptimizationFunction):
         builder.store(builder.load(min_value_ptr), out_value_ptr)
         return builder
 
-    def _run_cuda_grid(self, ocm, variable, context):
+    def _run_grid(self, ocm, variable, context):
         assert ocm is ocm.agent_rep.controller
         # Compiled evaluate expects the same variable as mech function
         new_variable = [ip.parameters.value.get(context) for ip in ocm.input_ports]
@@ -1608,7 +1608,13 @@ class GridSearch(OptimizationFunction):
 
         # Map allocations to values
         comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
-        ct_values = comp_exec.cuda_evaluate(new_variable, num_evals)
+        variant = ocm.parameters.comp_execution_mode._get(context)
+        if variant == "PTX":
+            ct_values = comp_exec.cuda_evaluate(new_variable, num_evals)
+        elif variant == "LLVM":
+            ct_values = comp_exec.thread_evaluate(new_variable, num_evals)
+        else:
+            assert False, "Unknown OCM execution variant: {}".format(variant)
 
         assert len(ct_values) == num_evals
         # Reduce array of values to min/max
@@ -1756,8 +1762,9 @@ class GridSearch(OptimizationFunction):
 
             ocm = self._get_optimized_controller()
             if ocm is not None and \
-               (ocm.parameters.comp_execution_mode._get(context) == "PTX"):
-                    opt_sample, opt_value, all_values = self._run_cuda_grid(ocm, variable, context)
+               (ocm.parameters.comp_execution_mode._get(context) == "PTX" or
+                ocm.parameters.comp_execution_mode._get(context) == "LLVM"):
+                    opt_sample, opt_value, all_values = self._run_grid(ocm, variable, context)
                     # This should not be evaluated unless needed
                     all_samples = [itertools.product(*self.search_space)]
                     value_optimal = opt_value

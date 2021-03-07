@@ -11,10 +11,12 @@
 from psyneulink.core.globals.context import Context
 
 from collections import Counter
+import concurrent.futures
 import copy
 import ctypes
 import numpy as np
 from inspect import isgenerator
+import os
 import sys
 
 
@@ -648,7 +650,7 @@ class CompExecution(CUDAExecution):
             assert runs_np[0] <= runs, "Composition ran more times than allowed!"
             return _convert_ctype_to_python(ct_out)[0:runs_np[0]]
 
-    def cuda_evaluate(self, variable, num_evaluations):
+    def _prepare_evaluate(self, variable, num_evaluations):
         ocm = self._composition.controller
         assert len(self._execution_contexts) == 1
         context = self._execution_contexts[0]
@@ -669,10 +671,18 @@ class CompExecution(CUDAExecution):
         # Construct input variable
         var_dty = _element_dtype(bin_func.byref_arg_types[5])
         converted_variable = np.asfarray(np.concatenate(variable), dtype=var_dty)
+
+        # Output ctype
+        out_ty = bin_func.byref_arg_types[4] * num_evaluations
+
+        return ct_comp_param, ct_comp_state, ct_comp_data, converted_variable, out_ty
+
+    def cuda_evaluate(self, variable, num_evaluations):
+        ct_comp_param, ct_comp_state, ct_comp_data, converted_variable, out_ty = \
+            self._prepare_evaluate(variable, num_evaluations)
         self._uploaded_bytes['input'] += converted_variable.nbytes
 
         # Ouput is allocated on device, but we need the ctype.
-        out_ty = bin_func.byref_arg_types[4] * num_evaluations
 
         cuda_args = (self.upload_ctype(ct_comp_param, 'params'),
                      self.upload_ctype(ct_comp_state, 'state'),
@@ -681,7 +691,28 @@ class CompExecution(CUDAExecution):
                      self.upload_ctype(ct_comp_data, 'data'),
                     )
 
-        bin_func.cuda_call(*cuda_args, threads=int(num_evaluations))
+        self.__bin_func.cuda_call(*cuda_args, threads=int(num_evaluations))
         ct_results = self.download_ctype(cuda_args[2], out_ty, 'result')
+
+        return ct_results
+
+    def thread_evaluate(self, variable, num_evaluations):
+        ct_param, ct_state, ct_data, converted_variale, out_ty = \
+            self._prepare_evaluate(variable, num_evaluations)
+
+        ct_results = out_ty()
+        ct_variable = converted_variale.ctypes.data_as(self.__bin_func.c_func.argtypes[5])
+        # There are 7 arguments to evaluate_alloc_range:
+        # comp_param, comp_state, from, to, results, input, comp_data
+        jobs = min(os.cpu_count(), num_evaluations)
+        evals_per_job = (num_evaluations + jobs - 1) // jobs
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=jobs)
+        for i in range(jobs):
+            start = i * evals_per_job
+            stop = min((i + 1) * evals_per_job, num_evaluations)
+            executor.submit(self.__bin_func, ct_param, ct_state, int(start),
+                            int(stop), ct_results, ct_variable, ct_data)
+
+        executor.shutdown()
 
         return ct_results
