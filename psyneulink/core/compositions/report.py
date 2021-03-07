@@ -66,30 +66,28 @@ class Report:
         following options can be used:
 
         * False - no output is generated;
-
         * True - output is determined by the `reportoutputpref <PreferenceSet_reportOutputPref>` preference of
           individual Components;
-
         * *TERSE* - a single line is generated reporting the execution of each Component;
-
         * *FULL* - input and output of all Components being executed is reported.
 
-    report_progress : bool, *CONSOLE*, *CAPTURE*, *SIMULATIONS*, or list : default False
-        specifies whether to show progress of execution in real time.  If the number trials to be
-        executed is explicitly specified, the number of trials executed, a progress bar, and time remaining are
-        displayed; if the number of trials is not explicitly specified (e.g., if inputs are specified using a
-        generator), then a "spinner" is displayed during execution and the the total number of trials executed is
-        displayed once complete.  The following options can be used to specify what and where the information is
-        displayed, either individually or in a list:
+    report_progress : bool : default False
+        specifies whether to report progress of execution in real time.  If the number trials to be executed
+        is explicitly specified, the number of trials executed, a progress bar, and time remaining are displayed;
+        if the number of trials is not explicitly specified (e.g., if inputs are specified using a generator),
+        then a "spinner" is displayed during execution and the the total number of trials executed is displayed
+        once complete.  Progress is reported to the devices specified in **report_to_devices**.
 
-        * *SIMULATIONS* - reports simulations executed by an `OptimizationControlMechanism`;
+    report_simulations : bool : default False
+        specifies whether to show output and progress for simulations executed by an `OptimizationControlMechanism`.
 
-        * *CONSOLE* - directs output to the console (default);
+    report_to_devices : CONSOLE, CAPTURE, PNL_VIEW or list : default CONSOLE
+        specifies where output and progress should be reported;  the following destinations are supported:
 
-        * *CAPTURE* - directs output to string, that is stored in a Composition's `run_output <Composition.run_output>`
-          attribute.
-
-        * *PNL_VIEW* - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
+        * *CONSOLE* - directs reporting to the system console (default);
+        * *CAPTURE* - captures reporting in a UDF-8 formatted string and stores it the Composition's
+        `run_output <Composition.run_output>` attribute;
+        * *PNL_VIEW* - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
     Attributes
     ----------
@@ -100,6 +98,7 @@ class Report:
     _enable_progress : bool : default False
         determines whether progress reporting is enabled.
 
+    # FIX: THIS SHOULD BE REPLACED WITH _use_capture OR MAKE ALL THE _use_x OPTIONS MUTUALLY EXCLUSIVE
     _report_progress : bool : default False
         determines whether progress is displayed and/or captured.
 

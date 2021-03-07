@@ -9438,7 +9438,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._animate_execution(self.output_CIM, context)
             # FIX: END
 
-            # EXECUTE CONTROLLER (if controller_mode == AFTER) ************************************************************
+            # EXECUTE CONTROLLER (if controller_mode == AFTER) *********************************************************
             if self.controller_time_scale == TimeScale.TRIAL:
                 self._execute_controller(
                     relative_order=AFTER,
@@ -9447,7 +9447,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context=context
                 )
 
-            # REPORT RESULTS ***********************************************************************************************
+            # REPORT RESULTS *******************************************************************************************
 
             # Extract result here
             if execution_mode:
