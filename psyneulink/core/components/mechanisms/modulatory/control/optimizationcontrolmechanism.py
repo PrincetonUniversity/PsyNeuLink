@@ -1160,31 +1160,7 @@ class OptimizationControlMechanism(ControlMechanism):
         with pnlvm.helpers.for_loop(builder, start, stop, stop.type(1), "alloc_loop") as (b, idx):
 
             func_out = b.gep(arg_out, [idx])
-            # Construct allocation corresponding to this index
-            for i in reversed(range(len(search_space.type.pointee))):
-                slot_ptr = b.gep(allocation, [ctx.int32_ty(0), ctx.int32_ty(i)])
-
-                dim_ptr = b.gep(search_space, [ctx.int32_ty(0), ctx.int32_ty(i)])
-                # Iterators store {start, step, num}
-                if len(dim_ptr.type.pointee) == 3:
-                    iter_val = b.load(dim_ptr)
-                    dim_start = b.extract_value(iter_val, 0)
-                    dim_step = b.extract_value(iter_val, 1)
-                    dim_size = b.extract_value(iter_val, 2)
-                    dim_idx = b.urem(idx, dim_size)
-                    val = b.uitofp(dim_idx, dim_step.type)
-                    val = b.fmul(val, dim_step)
-                    val = b.fadd(val, dim_start)
-                else:
-                    # Otherwise it's just an array
-                    dim_size = ctx.int32_ty(len(dim_ptr.type.pointee))
-                    dim_idx = b.urem(idx, dim_size)
-                    val_ptr = b.gep(dim_ptr, [ctx.int32_ty(0), dim_idx])
-                    val = b.load(val_ptr)
-
-                idx = b.udiv(idx, dim_size)
-
-                b.store(val, slot_ptr)
+            pnlvm.helpers.create_allocation(b, allocation, search_space, idx)
 
             b.call(evaluate_f, [params, state, allocation, func_out, arg_in, data])
 
