@@ -215,7 +215,7 @@ class Report:
 
             cls._progress_reports = {}
             cls._recorded_reports = str()
-            cls._rich_diverted_output = str()
+            cls._rich_diverted_reports = str()
 
             cls._ref_count = 0
 
@@ -481,38 +481,16 @@ class Report:
                                                      expand=False)
             # FIX: THIS GENERATES A CUMULATIVE REPORT, BUT COMMENTING IT OUT ELIMINATES THE OUTPUT REPORT
             # elif self._rich_divert:
-            #     self._rich_diverted_output += f'\n{self._rich_progress.console.file.getvalue()}'
-            elif report_type is TERSE:
-                progress_report.trial_report.append(f'\n{self._rich_progress.console.file.getvalue()}')
+            #     self._rich_diverted_reports += f'\n{self._rich_progress.console.file.getvalue()}'
+            # elif report_type is TERSE:
+            #     progress_report.trial_report.append(f'\n{self._rich_progress.console.file.getvalue()}')
 
-            # MODIFIED 3/7/21 NEW:
             # If execute() was called from COMMAND_LINE (rather than via run()), report progress
             if context.source & ContextFlags.COMMAND_LINE and report_output:
                 self._print_output_report(progress_report)
-                # if progress_report.trial_report:
-                #     self._rich_progress.console.print(progress_report.trial_report)
-                #     self._rich_progress.console.print('')
-                # if self._rich_divert:
-                #     # Get output captured by explicit prints
-                #     self._captured_output +=
-                #     # if report_progress
-                #     # Add output sent to console by task updates
-                #     if self._report_progress:
-                #         self._captured_output += '\n'.join([t.description for t in self._rich_progress.tasks])
-            # MODIFIED 3/7/21 END
 
         elif content is 'run':
             if report_output:
-                # if progress_report.trial_report:
-                #     self._rich_progress.console.print(progress_report.trial_report)
-                #     self._rich_progress.console.print('')
-                # if self._rich_divert:
-                #     # Get output captured by explicit prints
-                #     self._captured_output += f'\n{self._rich_progress.console.file.getvalue()}'
-                #     # if report_progress
-                #     # Add output sent to console by task updates
-                #     if self._report_progress:
-                #         self._captured_output += '\n'.join([t.description for t in self._rich_progress.tasks])
                 self._print_output_report(progress_report)
 
         return
@@ -522,14 +500,18 @@ class Report:
             self._rich_progress.console.print(progress_report.trial_report)
             self._rich_progress.console.print('')
         update = '\n'.join([t.description for t in self._rich_progress.tasks])
-        if self._rich_divert:
-            self._rich_diverted_output += (f'\n{self._rich_progress.console.file.getvalue()}')
-            self._rich_diverted_output += update + '\n'
-        if self._record_reports:
-            with self._recording_console.capture() as capture:
-                self._recording_console.print(progress_report.trial_report)
-            self._recorded_reports += capture.get()
-            self._recorded_reports += update
+        if self._report_output:
+            if self._rich_divert:
+                self._rich_diverted_reports += (f'\n{self._rich_progress.console.file.getvalue()}')
+            if self._record_reports:
+                with self._recording_console.capture() as capture:
+                    self._recording_console.print(progress_report.trial_report)
+                self._recorded_reports += capture.get()
+        if self._report_progress:
+            if self._rich_divert:
+                self._rich_diverted_reports += update + '\n'
+            if self._record_reports:
+                self._recorded_reports += update
 
     @staticmethod
     def node_execution_report(node,

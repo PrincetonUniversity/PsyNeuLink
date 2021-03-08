@@ -3344,6 +3344,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.log = CompositionLog(owner=self)
         self._terminal_backprop_sequences = {}
         self.recorded_reports = None
+        self.rich_diverted_reports = None
 
         # Controller
         self.controller = None
@@ -8494,8 +8495,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             if progress._recorded_reports:
                 self.recorded_reports = progress._recorded_reports
-            if progress._rich_diverted_output:
-                self._rich_diverted_output = progress._rich_diverted_output
+            if progress._rich_diverted_reports:
+                self.rich_diverted_reports = progress._rich_diverted_reports
 
             # IMPLEMENTATION NOTE:
             # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
@@ -8944,8 +8945,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             assert False, "Unknown execution mode: {}".format(execution_mode)
 
                         progress.report_progress(self, progress_report, context)
-                        if context.source & ContextFlags.COMMAND_LINE and progress._captured_output:
-                            self.recorded_reports = progress._captured_output
+                        # If called from the command line, get report as only this trial is run
+                        if context.source & ContextFlags.COMMAND_LINE:
+                            if progress._recorded_reports:
+                                self.recorded_reports = progress._recorded_reports
+                            if progress._rich_diverted_reports:
+                                self.rich_diverted_reports = progress._rich_diverted_reports
+
                         return _comp_ex.extract_node_output(self.output_CIM)
 
                     except Exception as e:
@@ -9465,8 +9471,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 _comp_ex.freeze_values()
                 _comp_ex.execute_node(self.output_CIM)
                 progress.report_progress(self, progress_report, context)
-                if context.source & ContextFlags.COMMAND_LINE and progress._captured_output:
-                    self.recorded_reports = progress._captured_output
+                if context.source & ContextFlags.COMMAND_LINE:
+                    if progress._recorded_reports:
+                        self.recorded_reports = progress._recorded_reports
+                    if progress._rich_diverted_reports:
+                        self.rich_diverted_reports = progress._rich_diverted_reports
+
                 return _comp_ex.extract_node_output(self.output_CIM)
 
             # Reset context flags
@@ -9482,8 +9492,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Report results and progress to output devices
             progress.report_output(self, progress_report, execution_scheduler, report_output, 'trial', context)
             progress.report_progress(self, progress_report, context)
-            if context.source & ContextFlags.COMMAND_LINE and progress._captured_output:
-                self.recorded_reports = progress._captured_output
+            if context.source & ContextFlags.COMMAND_LINE:
+                if progress._recorded_reports:
+                    self.recorded_reports = progress._recorded_reports
+                if progress._rich_diverted_reports:
+                    self.rich_diverted_reports = progress._rich_diverted_reports
 
             # UPDATE TIME and RETURN ***********************************************************************************
 
