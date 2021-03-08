@@ -8,13 +8,15 @@
 
 # ********************************************* PNL LLVM helpers **************************************************************
 
-from llvmlite import ir
 from contextlib import contextmanager
 from ctypes import util
 
-from ..scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, AtNCalls, AfterNCalls, EveryNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
-from ..scheduling.time import TimeScale
+from llvmlite import ir
+
 from .debug import debug_env
+from ..scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, AtNCalls, AfterNCalls, \
+    EveryNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
+from ..scheduling.time import TimeScale
 
 
 @contextmanager
@@ -173,6 +175,37 @@ def all_close(ctx, builder, arr1, arr2, rtol=1e-05, atol=1e-08):
         b1.store(all_val, all_ptr)
 
     return builder.load(all_ptr)
+
+
+def create_allocation(builder, allocation, search_space, idx):
+    # Construct allocation corresponding to this index
+    for i in reversed(range(len(search_space.type.pointee))):
+        slot_ptr = builder.gep(allocation, [idx.type(0), idx.type(i)])
+
+        dim_ptr = builder.gep(search_space, [idx.type(0), idx.type(i)])
+        # Iterators store {start, step, num}
+        if isinstance(dim_ptr.type.pointee,  ir.LiteralStructType):
+            iter_val = builder.load(dim_ptr)
+            dim_start = builder.extract_value(iter_val, 0)
+            dim_step = builder.extract_value(iter_val, 1)
+            dim_size = builder.extract_value(iter_val, 2)
+            dim_idx = builder.urem(idx, dim_size)
+            val = builder.uitofp(dim_idx, dim_step.type)
+            val = builder.fmul(val, dim_step)
+            val = builder.fadd(val, dim_start)
+        elif isinstance(dim_ptr.type.pointee,  ir.ArrayType):
+            # Otherwise it's just an array
+            dim_size = idx.type(len(dim_ptr.type.pointee))
+            dim_idx = builder.urem(idx, dim_size)
+            val_ptr = builder.gep(dim_ptr, [idx.type(0), dim_idx])
+            val = builder.load(val_ptr)
+        else:
+            assert False, "Unknown dimension type: {}".format(dim_ptr.type)
+
+        idx = builder.udiv(idx, dim_size)
+
+        builder.store(val, slot_ptr)
+
 
 def is_pointer(x):
     type_t = getattr(x, "type", x)
