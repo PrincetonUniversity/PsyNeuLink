@@ -49,8 +49,8 @@ THIS DOES NOT APPEAR CURRENTLY TO BE USED
 COMMENT
 
 .. _technical_note::
-* **deliverPref** (LogCondition, default: LogCondition.OFF) - sets whether attribute data are added to context rpc
-  pipeline for delivery to external applications.
+   * **deliverPref** (LogCondition, default: LogCondition.OFF) - sets whether attribute data are added to context rpc
+     pipeline for delivery to external applications.
 
 """
 
