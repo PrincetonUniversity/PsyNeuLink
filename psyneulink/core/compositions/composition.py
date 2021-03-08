@@ -3185,9 +3185,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if True, all `Parameter` values generated during `simulations <OptimizationControlMechanism_Execution>` are saved;
         if False, simulation values are deleted unless otherwise specified by individual Parameters.
 
-    run_output : str
-        contains output from execution(s) of Composition if *CAPTURE* is specified in the **report_progress** argument
-        of a `Composition execution method <Composition_Execution_Methods>`.
+    recorded_reports : str
+        contains output and/or progress reports from execution(s) of Composition if *RECORD* is specified in the
+        **report_to_devices** argument of a `Composition execution method <Composition_Execution_Methods>`.
 
     input_specification : None or dict or list or generator or function
         stores the `inputs` for executions of the Composition when it is executed using its `run <Composition.run>`
@@ -3343,7 +3343,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.log = CompositionLog(owner=self)
         self._terminal_backprop_sequences = {}
-        self.run_output = None
+        self.recorded_reports = None
 
         # Controller
         self.controller = None
@@ -8131,12 +8131,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies whether to show output and/or progress for `simulations <OptimizationControlMechanism_Execution>`
             executed by the Composition's `controller <Composition_Controller>`.
 
-        report_to_devices : CONSOLE, CAPTURE, PNL_VIEW or list : default CONSOLE
+        report_to_devices : CONSOLE, DIVERT, PNL_VIEW or list : default CONSOLE
             specifies where output and progress should be reported;  the following destinations are supported:
 
             * *CONSOLE* - directs reporting to the system console (default);
-            * *CAPTURE* - captures reporting in a UDF-8 formatted string and stores it the Composition's
-            `run_output <Composition.run_output>` attribute;
+            * *DIVERT* - captures reporting in a UDF-8 formatted string and stores it the Composition's
+            `recorded_reports <Composition.recorded_reports>` attribute;
             * *PNL_VIEW* - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
         animate : dict or bool : default False
@@ -8492,8 +8492,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Report results to output devices
                 progress.report_output(self, progress_report, scheduler, report_output, 'run', context)
 
-            if progress._captured_output:
-                self.run_output = progress._captured_output
+            if progress._recorded_reports:
+                self.recorded_reports = progress._recorded_reports
+            if progress._rich_diverted_output:
+                self._rich_diverted_output = progress._rich_diverted_output
 
             # IMPLEMENTATION NOTE:
             # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
@@ -8648,12 +8650,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 <OptimizationControlMechanism_Execution>` executed by the Composition's `controller
                 <Composition_Controller>`.
 
-            report_to_devices : CONSOLE, CAPTURE, PNL_VIEW or list : default CONSOLE
+            report_to_devices : CONSOLE, DIVERT, PNL_VIEW or list : default CONSOLE
                 specifies where output and progress should be reported;  the following destinations are supported:
 
                 * *CONSOLE* - directs reporting to the system console (default);
-                * *CAPTURE* - captures reporting in a UDF-8 formatted string and stores it the Composition's
-                `run_output <Composition.run_output>` attribute;
+                * *DIVERT* - captures reporting in a UDF-8 formatted string and stores it the Composition's
+                `recorded_reports <Composition.recorded_reports>` attribute;
                 * *PNL_VIEW* - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
             Returns
@@ -8839,12 +8841,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 <OptimizationControlMechanism_Execution>` executed by the Composition's `controller
                 <Composition_Controller>`.
 
-            report_to_devices : CONSOLE, CAPTURE, PNL_VIEW or list : default CONSOLE
+            report_to_devices : CONSOLE, DIVERT, PNL_VIEW or list : default CONSOLE
                 specifies where output and progress should be reported;  the following destinations are supported:
 
                 * *CONSOLE* - directs reporting to the system console (default);
-                * *CAPTURE* - captures reporting in a UDF-8 formatted string and stores it the Composition's
-                `run_output <Composition.run_output>` attribute;
+                * *DIVERT* - captures reporting in a UDF-8 formatted string and stores it the Composition's
+                `recorded_reports <Composition.recorded_reports>` attribute;
                 * *PNL_VIEW* - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
             Returns
@@ -8943,7 +8945,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         progress.report_progress(self, progress_report, context)
                         if context.source & ContextFlags.COMMAND_LINE and progress._captured_output:
-                            self.run_output = progress._captured_output
+                            self.recorded_reports = progress._captured_output
                         return _comp_ex.extract_node_output(self.output_CIM)
 
                     except Exception as e:
@@ -9464,7 +9466,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 _comp_ex.execute_node(self.output_CIM)
                 progress.report_progress(self, progress_report, context)
                 if context.source & ContextFlags.COMMAND_LINE and progress._captured_output:
-                    self.run_output = progress._captured_output
+                    self.recorded_reports = progress._captured_output
                 return _comp_ex.extract_node_output(self.output_CIM)
 
             # Reset context flags
@@ -9481,7 +9483,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             progress.report_output(self, progress_report, execution_scheduler, report_output, 'trial', context)
             progress.report_progress(self, progress_report, context)
             if context.source & ContextFlags.COMMAND_LINE and progress._captured_output:
-                self.run_output = progress._captured_output
+                self.recorded_reports = progress._captured_output
 
             # UPDATE TIME and RETURN ***********************************************************************************
 
