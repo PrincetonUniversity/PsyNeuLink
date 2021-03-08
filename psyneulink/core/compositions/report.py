@@ -177,7 +177,7 @@ class Report:
             # - auto_refresh is disabled to accommodate IDEs (such as PyCharm and Jupyter Notebooks)
             if cls._use_rich:
                 file = False
-                if cls._use_rich is CAPTURE:
+                if cls._rich_capture:
                     file = StringIO()
                 # cls._instance._rich_progress = RichProgress(auto_refresh=False)
                 cls._instance._rich_progress = RichProgress(auto_refresh=False, console=Console(file=file))
@@ -381,16 +381,22 @@ class Report:
                                                      f" {[i.tolist() for i in caller.get_input_values(context)]}"]
                 else:
                     # print trial separator and input array to Composition
-                    self._rich_progress.console.print(f"[bold {trial_panel_color}]{caller.name} "
-                                                      f"TRIAL {trial_num} ====================")
+                    trial_header = f"[bold {trial_panel_color}]{caller.name} TRIAL {trial_num} ===================="
+                    self._rich_progress.console.print(trial_header)
+                    # If reporting to both console and capture, need this, as capture usurps printing to rich console
+                    if  self._rich_capture and self._rich_console:
+                        print(trial_header)
 
         elif content is 'time_step_init':
             if report_output:
                 if report_type is FULL:
                     progress_report.time_step_report = [] # Contains rich.Panel for each node executed in time_step
                 elif nodes_to_report:
-                    self._rich_progress.console.print(f'[{time_step_panel_color}]'
-                                                      f'Time Step {scheduler.clock.time.time_step} ---------')
+                    time_step_header = f'[{time_step_panel_color}] Time Step {scheduler.clock.time.time_step} ---------'
+                    self._rich_progress.console.print(time_step_header)
+                    # If reporting to both console and capture, need this, as capture usurps printing to rich console
+                    if  self._rich_capture and self._rich_console:
+                        print(time_step_header)
 
         elif content is 'node':
             if not node:
@@ -411,6 +417,9 @@ class Report:
                 # Otherwise, just print it to the console (as part of otherwise TERSE report)
                 else:
                     self._rich_progress.console.print(node_report)
+                    # If reporting to both console and capture, need this, as capture usurps printing to rich console
+                    if  self._rich_capture and self._rich_console:
+                        print(node_report)
             # Use TERSE report for Node
             else:
                 self._rich_progress.console.print(f'[{node_panel_color}]{node.name} executed')
@@ -449,7 +458,7 @@ class Report:
                 if progress_report.trial_report:
                     self._rich_progress.console.print(progress_report.trial_report)
                     self._rich_progress.console.print('')
-                if self._use_rich is CAPTURE:
+                if self._rich_capture:
                     # Get output captured by explicit prints
                     self._captured_output += f'\n{self._rich_progress.console.file.getvalue()}'
                     # if report_progress
@@ -463,7 +472,7 @@ class Report:
                 if progress_report.trial_report:
                     self._rich_progress.console.print(progress_report.trial_report)
                     self._rich_progress.console.print('')
-                if self._use_rich is CAPTURE:
+                if self._rich_capture:
                     # Get output captured by explicit prints
                     self._captured_output += f'\n{self._rich_progress.console.file.getvalue()}'
                     # if report_progress
