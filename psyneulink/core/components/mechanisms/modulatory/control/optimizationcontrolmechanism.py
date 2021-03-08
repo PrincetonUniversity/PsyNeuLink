@@ -1127,6 +1127,46 @@ class OptimizationControlMechanism(ControlMechanism):
         builder.ret_void()
         return llvm_func
 
+    def _gen_llvm_evaluate_alloc_range_function(self, *, ctx:pnlvm.LLVMBuilderContext,
+                                                   tags=frozenset()):
+        assert "evaluate" in tags
+        assert "alloc_range" in tags
+        evaluate_f = ctx.import_llvm_function(self,
+                                              tags=tags - {"alloc_range"})
+
+
+        args = [*evaluate_f.type.pointee.args[:2],
+                ctx.int32_ty, ctx.int32_ty,
+                *evaluate_f.type.pointee.args[3:]]
+        builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate_range")
+        llvm_func = builder.function
+
+        params, state, start, stop, arg_out, arg_in, data = llvm_func.args
+        for p in llvm_func.args:
+            if isinstance(p.type, (pnlvm.ir.PointerType)):
+                p.attributes.add('nonnull')
+
+        nodes_params = pnlvm.helpers.get_param_ptr(builder, self.composition,
+                                                   params, "nodes")
+        my_idx = self.composition._get_node_index(self)
+        my_params = builder.gep(nodes_params, [ctx.int32_ty(0),
+                                               ctx.int32_ty(my_idx)])
+        func_params = pnlvm.helpers.get_param_ptr(builder, self,
+                                                  my_params, "function")
+        search_space = pnlvm.helpers.get_param_ptr(builder, self.function,
+                                                   func_params, "search_space")
+
+        allocation = builder.alloca(evaluate_f.args[2].type.pointee)
+        with pnlvm.helpers.for_loop(builder, start, stop, stop.type(1), "alloc_loop") as (b, idx):
+
+            func_out = b.gep(arg_out, [idx])
+            pnlvm.helpers.create_allocation(b, allocation, search_space, idx)
+
+            b.call(evaluate_f, [params, state, allocation, func_out, arg_in, data])
+
+        builder.ret_void()
+        return llvm_func
+
     def _gen_llvm_evaluate_function(self, *, ctx:pnlvm.LLVMBuilderContext,
                                              tags=frozenset()):
         assert "evaluate" in tags
@@ -1250,6 +1290,8 @@ class OptimizationControlMechanism(ControlMechanism):
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "net_outcome" in tags:
             return self._gen_llvm_net_outcome_function(ctx=ctx, tags=tags)
+        if "evaluate" in tags and "alloc_range" in tags:
+            return self._gen_llvm_evaluate_alloc_range_function(ctx=ctx, tags=tags)
         if "evaluate" in tags:
             return self._gen_llvm_evaluate_function(ctx=ctx, tags=tags)
 
