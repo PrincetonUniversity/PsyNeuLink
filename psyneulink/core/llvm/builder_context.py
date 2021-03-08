@@ -13,18 +13,16 @@ import ctypes
 import enum
 import functools
 import inspect
+from llvmlite import ir
+import numpy as np
 import os
 import re
-import weakref
 from typing import Set
-
-import numpy as np
-from llvmlite import ir
-
-from psyneulink.core import llvm as pnlvm
+import weakref
+from psyneulink.core.scheduling.time import Time
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import ContentAddressableList
-from psyneulink.core.scheduling.time import Time
+from psyneulink.core import llvm as pnlvm
 from . import codegen
 from .debug import debug_env
 

@@ -8,18 +8,19 @@
 
 # ********************************************* Binary Execution Wrappers **************************************************************
 
+from psyneulink.core.globals.context import Context
+
+from collections import Counter
 import concurrent.futures
 import copy
 import ctypes
+import numpy as np
+from inspect import isgenerator
 import os
 import sys
-from collections import Counter
-from inspect import isgenerator
 
-import numpy as np
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.globals.context import Context
 from . import helpers, jit_engine, builder_context
 from .debug import debug_env
 
