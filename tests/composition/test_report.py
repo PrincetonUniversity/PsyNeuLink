@@ -205,4 +205,3 @@ class TestReport():
     #     actual_output = ocomp.rich_diverted_reports
     #     expected_output = '\nocomp TRIAL 0 ====================\n Time Step 0 ---------\nicomp TRIAL 0 ====================\n Time Step 0 ---------\n Time Step 0 ---------\n Time Step 0 ---------\n Time Step 1 ---------\nocomp: Executed 1 of 1 trials\nocomp: Simulated 3 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials'
     #     assert actual_output == expected_output
-
