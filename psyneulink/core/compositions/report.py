@@ -424,7 +424,7 @@ class Report:
                     # print trial separator and input array to Composition
                     trial_header = f"[bold {trial_panel_color}]{caller.name} TRIAL {trial_num} ===================="
                     self._rich_progress.console.print(trial_header)
-                    if  self._record_reports:
+                    if self._record_reports:
                         self._recorded_reports += trial_header
 
         elif content is 'time_step_init':
@@ -434,7 +434,7 @@ class Report:
                 elif nodes_to_report:
                     time_step_header = f'[{time_step_panel_color}] Time Step {scheduler.clock.time.time_step} ---------'
                     self._rich_progress.console.print(time_step_header)
-                    if  self._record_reports:
+                    if self._record_reports:
                         self._recorded_reports += time_step_header
 
         elif content is 'node':
