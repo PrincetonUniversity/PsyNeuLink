@@ -8,6 +8,52 @@
 #
 # **********************************************  PreferenceSet **********************************************************
 #
+"""
+.. _Preferences:
+
+Preferences specify the behavior of Components when they are executed.  They can be specified by their value, or
+by a PreferenceSet, which specifies the
+
+Standard Preferences
+-------------------
+
+The following preferences are available for all Components (see `Component prefs <Component_Prefs>` for
+additional details):
+
+* **verbosePref** (bool, default: False) - enables/disables reporting of (non-exception) warnings and system function;
+
+* **paramValidationPref** (bool, default: False) - enables/disables run-time validation of the execute method of a
+  Function object;
+
+.. _PreferenceSet_reportOutputPref:
+COMMENT:
+THIS DOES NOT CURRENTLY SUPPORT STRINGS (TERSE or 'params')
+- reportOutputPref ([bool, str]): enables/disables reporting execution of `Component`\'s `execute <Component_Execution>`
+  method to console and/or PsyNeuLinkView:
+
+    - ``True``: prints record of execution, including the input and output of the Component;
+    - *TERSE*: restricts output to just a statement that the Component executed;
+    - 'params' or 'parameters': includes report of the Component's `parameter <Parameters>` values.
+COMMENT
+* **reportOutputPref** (bool, default: False) - enables/disables reporting execution of the `Component`;
+  if the Component is executed within a `Composition`, this preference may be overridden by the **report_output**
+  argument specified in any of the Composition's `execution methods <Composition_Execution_Methods>`
+  (see `execution reporting <Composition_Execution_Reporting>` for additional details);
+
+* **logPref** (LogCondition, default: LogCondition.OFF) - sets `LogCondition` for a given Component;
+
+COMMENT:
+THIS DOES NOT APPEAR CURRENTLY TO BE USED
+* **runtimeParamModulationPref** (Modulation, default: Modulation.MULTIPLY) -  sets type of `Modulation`
+  used for modulating parameters by runtime specification (in pathway);
+COMMENT
+
+.. _technical_note::
+* **deliverPref** (LogCondition, default: LogCondition.OFF) - sets whether attribute data are added to context rpc
+  pipeline for delivery to external applications.
+
+"""
+
 import abc
 import inspect
 
@@ -51,6 +97,7 @@ class PreferenceSetError(Exception):
 class PreferenceSet(object):
     """Abstract class for PreferenceSets that stores preferences and provides access to level-specific settings
 
+    COMMENT:
     Description:
         Each PreferenceSet object stores a set of preferences in its corresponding attributes
         Every class in the Component hierarchy is assigned a PreferenceLevel:
@@ -149,6 +196,7 @@ class PreferenceSet(object):
 
     Instance methods:
         None
+    COMMENT
     """
 
     def __init__(self,
@@ -582,7 +630,10 @@ class PreferenceSet(object):
         # if pref_ivar_name is LOG_PREF:
         #     self.validate_log(candidate_setting, self)
 
-        setting_OK = iscompatible(candidate_setting, reference_setting, **{kwCompatibilityType:Enum})
+        setting_OK = (
+            iscompatible(candidate_setting, reference_setting, **{kwCompatibilityType:Enum})
+            or isinstance(candidate_setting, bool)
+        )
         # setting_OK = iscompatible(candidate_setting, reference_setting)
 
         # if not setting_OK and (isinstance(candidate_setting, Enum) or isinstance(reference_setting, Enum)):
