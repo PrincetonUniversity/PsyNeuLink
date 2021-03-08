@@ -201,14 +201,8 @@ class TestReport():
     #     # ocomp.run(inputs=inputs_dict, report_progress=True)
     #     # ocomp.run(inputs=inputs_dict, report_progress=['simulations'])
     #
-    #     ocomp.run(inputs={icomp:-2}, report_output=True, report_progress=[SIMULATIONS, DIVERT])
+    #     ocomp.run(inputs={icomp:-2}, report_output=FULL, report_simulations=True, report_to_devices=DIVERT)
     #     actual_output = ocomp.rich_diverted_reports
     #     expected_output = '\nocomp TRIAL 0 ====================\n Time Step 0 ---------\nicomp TRIAL 0 ====================\n Time Step 0 ---------\n Time Step 0 ---------\n Time Step 0 ---------\n Time Step 1 ---------\nocomp: Executed 1 of 1 trials\nocomp: Simulated 3 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials'
     #     assert actual_output == expected_output
-    #
-    #     ocomp.run(inputs={icomp:-2}, report_output=FULL, report_progress=[SIMULATIONS, DIVERT])
-    #     actual_output = ocomp.rich_diverted_reports
-    #     expected_output = '\n┏━━━━━━━━━━━━  ocomp: Trial 0  ━━━━━━━━━━━━━┓\n┃                                           ┃\n┃ input: [[-2]]                             ┃\n┃                                           ┃\n┃ ┌──  Time Step 0 ──┐                      ┃\n┃ │ ╭─── icomp ────╮ │                      ┃\n┃ │ │ input: -2.0  │ │                      ┃\n┃ │ │ output: -2.0 │ │                      ┃\n┃ │ ╰──────────────╯ │                      ┃\n┃ └──────────────────┘                      ┃\n┃                                           ┃\n┃ ┌────────────  Time Step 1 ─────────────┐ ┃\n┃ │ ╭─ oController Objective Mechanism ─╮ │ ┃\n┃ │ │ input: -2.0                       │ │ ┃\n┃ │ │ output: -2.0                      │ │ ┃\n┃ │ ╰───────────────────────────────────╯ │ ┃\n┃ └───────────────────────────────────────┘ ┃\n┃                                           ┃\n┃ result: [[-2.0]]                          ┃\n┃                                           ┃\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n\nocomp: Executed 1 of 1 trials\nocomp: Simulated 3 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials'
-    #     assert actual_output == expected_output
-    #
-    #     # ocomp.execute(inputs={icomp:-2}, context='0')
+

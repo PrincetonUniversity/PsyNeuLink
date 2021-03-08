@@ -8017,6 +8017,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             skip_analyze_graph=False,
             report_output=False,
             report_progress=False,
+            report_simulations=False,
             report_to_devices=None,
             animate=False,
             log=False,
@@ -8429,9 +8430,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         with Report(report_output=report_output,
                     report_progress=report_progress,
-                    report_to_devices=report_to_devices) as progress:
+                    report_simulations=report_simulations,
+                    report_to_devices=report_to_devices) as report:
 
-            progress_report = progress.start_progress_report(self, num_trials, context)
+            progress_report = report.start_progress_report(self, num_trials, context)
 
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
@@ -8470,7 +8472,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             execution_mode=execution_mode,
                                             report_output=report_output,
                                             report_progress=report_progress,
-                                            progress=progress,
+                                            report_simulations=report_simulations,
+                                            report=report,
                                             progress_report=progress_report
                                             )
 
@@ -8502,12 +8505,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     call_with_pruned_args(call_after_trial, context=context)
 
                 # Report results to output devices
-                progress.report_output(self, progress_report, scheduler, report_output, 'run', context)
+                report.report_output(self, progress_report, scheduler, report_output, 'run', context)
 
-            if progress._recorded_reports:
-                self.recorded_reports = progress._recorded_reports
-            if progress._rich_diverted_reports:
-                self.rich_diverted_reports = progress._rich_diverted_reports
+            if report._recorded_reports:
+                self.recorded_reports = report._recorded_reports
+            if report._rich_diverted_reports:
+                self.rich_diverted_reports = report._rich_diverted_reports
 
             # IMPLEMENTATION NOTE:
             # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
@@ -8776,8 +8779,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             report_output=False,
             report_progress=False,
+            report_simulations=False,
             report_to_devices=None,
-            progress=None,
+            report=None,
             progress_report=None,
             ):
         """
@@ -8853,7 +8857,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 specifies whether to report progress of the execution.  In general, this will be for the single trial
                 executed by the call to the execute method;  however, if **report_simulations** is specified (see below)
                 and the Composition has an `OptimizationControlMechanism`, then any simulations that it executes
-                will also be reported.   Progress is reported to the devices specified in **report_to_devices**.
+                will also be reported.  Progress is reported to the devices specified in **report_to_devices**.
 
             report_simulations : bool : default False
                 specifies whether to show output and/or progress for `simulations
@@ -8883,12 +8887,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         with Report(report_output=report_output,
                     report_progress=report_progress,
-                    report_to_devices=report_to_devices) as progress:
+                    report_simulations=report_simulations,
+                    report_to_devices=report_to_devices) as report:
 
             # FIX: Call Report with context and progress_report handle this in there 3/3/21
             # If execute method is called directly, need to create Report object for reporting
             if not (context.source & ContextFlags.COMPOSITION) or progress_report is None:
-                progress_report = progress.start_progress_report(comp=self, num_trials=1, context=context)
+                progress_report = report.start_progress_report(comp=self, num_trials=1, context=context)
 
             execution_scheduler = scheduler or self.scheduler
 
@@ -8969,13 +8974,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         else:
                             assert False, "Unknown execution mode: {}".format(execution_mode)
 
-                        progress.report_progress(self, progress_report, context)
+                        report.report_progress(self, progress_report, context)
                         # If called from the command line, get report as only this trial is run
                         if context.source & ContextFlags.COMMAND_LINE:
-                            if progress._recorded_reports:
-                                self.recorded_reports = progress._recorded_reports
-                            if progress._rich_diverted_reports:
-                                self.rich_diverted_reports = progress._rich_diverted_reports
+                            if report._recorded_reports:
+                                self.recorded_reports = report._recorded_reports
+                            if report._rich_diverted_reports:
+                                self.rich_diverted_reports = report._rich_diverted_reports
 
                         return _comp_ex.extract_node_output(self.output_CIM)
 
@@ -9177,7 +9182,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_sets.__next__()
 
             # Report trial_num and Composition input (now that it has been assigned)
-            progress.report_output(self, progress_report, execution_scheduler, report_output, 'trial_init', context)
+            report.report_output(self, progress_report, execution_scheduler, report_output, 'trial_init', context)
 
             for next_execution_set in execution_sets:
 
@@ -9246,7 +9251,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # INITIALIZE self._time_step_report AND SHOW TIME_STEP DIVIDER
                 nodes_to_report = any(node.reportOutputPref for node in next_execution_set) or report_output is FULL
-                progress.report_output(self, progress_report, execution_scheduler, report_output, 'time_step_init', context,
+                report.report_output(self, progress_report, execution_scheduler, report_output, 'time_step_init', context,
                                        nodes_to_report=True)
 
                 # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -9400,7 +9405,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         self._animate_execution(node, context)
 
                     # Add report for node to time_step_report
-                    progress.report_output(self,
+                    report.report_output(self,
                                            progress_report,
                                            execution_scheduler,
                                            report_output,
@@ -9446,7 +9451,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
                 # Add report for time_step to trial_report
-                progress.report_output(self, progress_report, execution_scheduler, report_output, 'time_step', context,
+                report.report_output(self, progress_report, execution_scheduler, report_output, 'time_step', context,
                                        nodes_to_report= nodes_to_report)
 
             context.remove_flag(ContextFlags.PROCESSING)
@@ -9495,12 +9500,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if execution_mode:
                 _comp_ex.freeze_values()
                 _comp_ex.execute_node(self.output_CIM)
-                progress.report_progress(self, progress_report, context)
+                report.report_progress(self, progress_report, context)
                 if context.source & ContextFlags.COMMAND_LINE:
-                    if progress._recorded_reports:
-                        self.recorded_reports = progress._recorded_reports
-                    if progress._rich_diverted_reports:
-                        self.rich_diverted_reports = progress._rich_diverted_reports
+                    if report._recorded_reports:
+                        self.recorded_reports = report._recorded_reports
+                    if report._rich_diverted_reports:
+                        self.rich_diverted_reports = report._rich_diverted_reports
 
                 return _comp_ex.extract_node_output(self.output_CIM)
 
@@ -9515,13 +9520,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 output_values.append(port.parameters.value._get(context))
 
             # Report results and progress to output devices
-            progress.report_output(self, progress_report, execution_scheduler, report_output, 'trial', context)
-            progress.report_progress(self, progress_report, context)
+            report.report_output(self, progress_report, execution_scheduler, report_output, 'trial', context)
+            report.report_progress(self, progress_report, context)
             if context.source & ContextFlags.COMMAND_LINE:
-                if progress._recorded_reports:
-                    self.recorded_reports = progress._recorded_reports
-                if progress._rich_diverted_reports:
-                    self.rich_diverted_reports = progress._rich_diverted_reports
+                if report._recorded_reports:
+                    self.recorded_reports = report._recorded_reports
+                if report._rich_diverted_reports:
+                    self.rich_diverted_reports = report._rich_diverted_reports
 
             # UPDATE TIME and RETURN ***********************************************************************************
 
