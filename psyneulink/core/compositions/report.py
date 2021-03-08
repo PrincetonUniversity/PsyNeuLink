@@ -95,15 +95,15 @@ class Report:
 
         * *CONSOLE* - directs reporting to the Console of the rich Progress object stored in `_instance._rich_progress 
           <Report._rich_progress>` (default);
-        * *RECORD* - captures reporting `_recorded_reports <Report._recorded_reports>`;
+        * *RECORD* - captures reporting `_recorded_reports <Report._recorded_reports>`; specifying this option on its
+          own replaces and suppresses reporting to the console; to continue to generate console output, explicitly
+          include the *CONSOLE* together with *RECORD* in the argument specification;
         * *DIVERT* - captures reporting otherwise directed to the rich Console in a UDF-8 formatted string and stores
-          it in `_captured_output <Report._captured_output>`;
+          it in `_captured_output <Report._captured_output>`; this option suppresses console output and is cumulative
+          (that is, it records the sequences of updates sent to the console after each TRIAL); it is intended primarily
+          for unit testing;  the *RECORD* option should be used for recording output, as it does not interfere with
+          console output and reflects the final state of the display after execution is complete.
         * *PNL_VIEW* - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
-
-        .. _note::
-            The *DIVERT* option suppresses console output, and is intended primarily for unit testing;  the *RECORD*
-            option should be used for recording output, as it does not interfere with console output.  This option
-            cannot be used with, and supercedes use of the *RECORD* option.
 
     Attributes
     ----------
@@ -359,9 +359,6 @@ class Report:
                                   description=update,
                                   advance=1,
                                   refresh=True)
-            # FIX:  CHECK IF THIS WORKS:
-            if self._record_reports:
-                self._recorded_reports += update
 
         if (not simulation_mode
                 and progress_report.num_trials
@@ -487,15 +484,15 @@ class Report:
 
             # If execute() was called from COMMAND_LINE (rather than via run()), report progress
             if context.source & ContextFlags.COMMAND_LINE and report_output:
-                self._print_output_report(progress_report)
+                self._print_reports(progress_report)
 
         elif content is 'run':
             if report_output:
-                self._print_output_report(progress_report)
+                self._print_reports(progress_report)
 
         return
 
-    def _print_output_report(self, progress_report):
+    def _print_reports(self, progress_report):
         if progress_report.trial_report:
             self._rich_progress.console.print(progress_report.trial_report)
             self._rich_progress.console.print('')
@@ -511,7 +508,9 @@ class Report:
             if self._rich_divert:
                 self._rich_diverted_reports += update + '\n'
             if self._record_reports:
-                self._recorded_reports += update
+                self._recorded_reports += update + '\n'
+
+        assert True
 
     @staticmethod
     def node_execution_report(node,

@@ -3189,6 +3189,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         contains output and/or progress reports from execution(s) of Composition if *RECORD* is specified in the
         **report_to_devices** argument of a `Composition execution method <Composition_Execution_Methods>`.
 
+    rich_diverted_reports : str
+        contains output and/or progress reports from execution(s) of Composition if *DIVERT* is specified in the
+        **report_to_devices** argument of a `Composition execution method <Composition_Execution_Methods>`.
+
     input_specification : None or dict or list or generator or function
         stores the `inputs` for executions of the Composition when it is executed using its `run <Composition.run>`
         method.
@@ -8132,12 +8136,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies whether to show output and/or progress for `simulations <OptimizationControlMechanism_Execution>`
             executed by the Composition's `controller <Composition_Controller>`.
 
-        report_to_devices : CONSOLE, DIVERT, PNL_VIEW or list : default CONSOLE
+        report_to_devices : CONSOLE, RECORD, DIVERT, PNL_VIEW or list : default CONSOLE
             specifies where output and progress should be reported;  the following destinations are supported:
 
-            * *CONSOLE* - directs reporting to the system console (default);
-            * *DIVERT* - captures reporting in a UDF-8 formatted string and stores it the Composition's
-            `recorded_reports <Composition.recorded_reports>` attribute;
+            * *CONSOLE* - directs reporting to the console (default).
+            * *RECORD* - captures reporting in `recorded_reports <Composition.recorded_reports>`; specifying this
+              option on its own replaces and suppresses reporting to the console; to continue to generate console
+              output, explicitly include *CONSOLE* with *RECORD* in the argument specification.
+            * *DIVERT* - captures reporting otherwise directed to the rich Console in a UDF-8 formatted string and
+              stores it in `rich_diverted_reports <Composition.rich_diverted_reports>`. This option suppresses
+              console output and is cumulative (that is, it records the sequences of updates sent to the console
+              after each TRIAL) and is intended primarily for unit testing. The *RECORD* option should be used for
+              recording output, as it can be used with console output if desired, and reflects the final state of
+              the display after execution is complete.
             * *PNL_VIEW* - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
         animate : dict or bool : default False
@@ -8651,12 +8662,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 <OptimizationControlMechanism_Execution>` executed by the Composition's `controller
                 <Composition_Controller>`.
 
-            report_to_devices : CONSOLE, DIVERT, PNL_VIEW or list : default CONSOLE
+            report_to_devices : CONSOLE, RECORD, DIVERT, PNL_VIEW or list : default CONSOLE
                 specifies where output and progress should be reported;  the following destinations are supported:
 
-                * *CONSOLE* - directs reporting to the system console (default);
-                * *DIVERT* - captures reporting in a UDF-8 formatted string and stores it the Composition's
-                `recorded_reports <Composition.recorded_reports>` attribute;
+                * *CONSOLE* - directs reporting to the console (default).
+                * *RECORD* - captures reporting in `recorded_reports <Composition.recorded_reports>`; specifying this
+                  option on its own replaces and suppresses reporting to the console; to continue to generate console
+                  output, explicitly include *CONSOLE* with *RECORD* in the argument specification.
+                * *DIVERT* - captures reporting otherwise directed to the rich Console in a UDF-8 formatted string and
+                  stores it in `rich_diverted_reports <Composition.rich_diverted_reports>`. This option suppresses
+                  console output and is cumulative (that is, it records the sequences of updates sent to the console
+                  after each TRIAL) and is intended primarily for unit testing. The *RECORD* option should be used for
+                  recording output, as it can be used with console output if desired, and reflects the final state of
+                  the display after execution is complete.
                 * *PNL_VIEW* - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
             Returns
@@ -8842,12 +8860,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 <OptimizationControlMechanism_Execution>` executed by the Composition's `controller
                 <Composition_Controller>`.
 
-            report_to_devices : CONSOLE, DIVERT, PNL_VIEW or list : default CONSOLE
+            report_to_devices : CONSOLE, RECORD, DIVERT, PNL_VIEW or list : default CONSOLE
                 specifies where output and progress should be reported;  the following destinations are supported:
 
-                * *CONSOLE* - directs reporting to the system console (default);
-                * *DIVERT* - captures reporting in a UDF-8 formatted string and stores it the Composition's
-                `recorded_reports <Composition.recorded_reports>` attribute;
+                * *CONSOLE* - directs reporting to the console (default).
+                * *RECORD* - captures reporting in `recorded_reports <Composition.recorded_reports>`; specifying this
+                  option on its own replaces and suppresses reporting to the console; to continue to generate console
+                  output, explicitly include *CONSOLE* with *RECORD* in the argument specification.
+                * *DIVERT* - captures reporting otherwise directed to the rich Console in a UDF-8 formatted string and
+                  stores it in `rich_diverted_reports <Composition.rich_diverted_reports>`. This option suppresses
+                  console output and is cumulative (that is, it records the sequences of updates sent to the console
+                  after each TRIAL) and is intended primarily for unit testing. The *RECORD* option should be used for
+                  recording output, as it can be used with console output if desired, and reflects the final state of
+                  the display after execution is complete.
                 * *PNL_VIEW* - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
             Returns
