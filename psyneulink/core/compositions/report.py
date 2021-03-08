@@ -504,7 +504,8 @@ class Report:
         return
 
     def _print_reports(self, progress_report):
-        if self._rich_console and progress_report.trial_report:
+        # if self._rich_console and progress_report.trial_report:
+        if (self._rich_console or self._rich_divert) and progress_report.trial_report:
             self._rich_progress.console.print(progress_report.trial_report)
             self._rich_progress.console.print('')
         update = '\n'.join([t.description for t in self._rich_progress.tasks])
