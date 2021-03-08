@@ -16,6 +16,8 @@ SIMULATION = 'Simulat'
 DEFAULT = 'Execut'
 REPORT_REPORT = False # USED FOR DEBUGGING
 
+DEVICE_KEYWORDS = (CONSOLE, DIVERT, RECORD, PNL_VIEW)
+
 # rich console report styles
 # node
 node_panel_color = 'orange1'
@@ -93,16 +95,17 @@ class Report:
     report_to_devices : CONSOLE, RECORD, DIVERT, PNL_VIEW or list : default CONSOLE
         specifies where output and progress should be reported;  the following destinations are supported:
 
-        * *CONSOLE* - directs reporting to the Console of the rich Progress object stored in `_instance._rich_progress 
+        * *CONSOLE* - directs reporting to the Console of the rich Progress object stored in `_instance._rich_progress
           <Report._rich_progress>` (default);
-        * *RECORD* - captures reporting `_recorded_reports <Report._recorded_reports>`; specifying this option on its
-          own replaces and suppresses reporting to the console; to continue to generate console output, explicitly
-          include the *CONSOLE* together with *RECORD* in the argument specification;
-        * *DIVERT* - captures reporting otherwise directed to the rich Console in a UDF-8 formatted string and stores
-          it in `_captured_output <Report._captured_output>`; this option suppresses console output and is cumulative
-          (that is, it records the sequences of updates sent to the console after each TRIAL); it is intended primarily
-          for unit testing;  the *RECORD* option should be used for recording output, as it does not interfere with
-          console output and reflects the final state of the display after execution is complete.
+        * *RECORD* - captures reporting in `_recorded_reports <Report._recorded_reports>`; specifying this
+          option on its own replaces and suppresses reporting to the console; to continue to generate console
+          output, explicitly include *CONSOLE* with *RECORD* in the argument specification.
+        * *DIVERT* - captures reporting otherwise directed to the rich Console in a UDF-8 formatted string and
+          stores it in `_rich_diverted_reports <Report._rich_diverted_reports>`. This option suppresses
+          console output and is cumulative (that is, it records the sequences of updates sent to the console
+          after each TRIAL) and is intended primarily for unit testing. The *RECORD* option should be used for
+          recording output, as it can be used with console output if desired, and reflects the final state of
+          the display after execution is complete.
         * *PNL_VIEW* - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
 
     Attributes
@@ -169,11 +172,12 @@ class Report:
 
     _instance = None
 
+
     def __new__(cls,
                 report_progress:bool=False,
                 report_output:bool=False,
                 report_simulations:bool=False,
-                report_to_devices:(CONSOLE, DIVERT, RECORD, PNL_VIEW, list)=CONSOLE
+                report_to_devices:(*DEVICE_KEYWORDS, list)=CONSOLE
                 ) -> 'Report':
         if cls._instance is None:
             cls._instance = super(Report, cls).__new__(cls)
@@ -184,6 +188,9 @@ class Report:
             cls._enable_reporting = report_output or report_progress
 
             cls._report_to_devices = convert_to_list(report_to_devices or CONSOLE)
+            if not any(a in [CONSOLE, DIVERT, RECORD, PNL_VIEW] for a in cls._report_to_devices):
+                raise ReportError(f"Unrecognized keyword in argument for 'report_to_devices'; "
+                                  f"must be one of: {DEVICE_KEYWORDS}")
             cls._rich_console = CONSOLE in cls._report_to_devices
             cls._rich_divert = DIVERT in cls._report_to_devices
             cls._record_reports = RECORD in cls._report_to_devices
@@ -297,7 +304,11 @@ class Report:
 
         if self._use_rich:
 
-            visible = self._report_progress and (run_mode is not SIMULATION or self._report_simulations)
+            # visible = self._report_progress and (run_mode is not SIMULATION or self._report_simulations)
+            visible = (self._rich_console
+                       and self._report_progress
+                       and (run_mode is not SIMULATION or self._report_simulations)
+                       )
 
             if comp.verbosePref or REPORT_REPORT:
                 from pprint import pprint
@@ -493,7 +504,7 @@ class Report:
         return
 
     def _print_reports(self, progress_report):
-        if progress_report.trial_report:
+        if self._rich_console and progress_report.trial_report:
             self._rich_progress.console.print(progress_report.trial_report)
             self._rich_progress.console.print('')
         update = '\n'.join([t.description for t in self._rich_progress.tasks])
