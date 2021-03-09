@@ -1,5 +1,6 @@
 import re
 import sys
+import types
 import warnings
 from io import StringIO
 
@@ -9,7 +10,7 @@ from rich.panel import Panel
 from rich.progress import Progress as RichProgress
 
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONSOLE, DIVERT, FULL, PNL_VIEW, RECORD, TERSE
+from psyneulink.core.globals.keywords import CONSOLE, DIVERT, FULL, PNL_VIEW, RECORD, TERSE, FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS
 from psyneulink.core.globals.utilities import convert_to_list
 
 SIMULATION = 'Simulat'
@@ -532,7 +533,6 @@ class Report:
                               report_output=True,
                               context=None):
         from psyneulink.core.components.shellclasses import Function
-        from psyneulink.core.globals.keywords import FUNCTION_PARAMS
 
         node_report = ''
 
