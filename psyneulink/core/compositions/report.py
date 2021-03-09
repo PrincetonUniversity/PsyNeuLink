@@ -401,8 +401,10 @@ class Report:
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
         if simulation_mode:
             run_mode = SIMULATION
+            sim_str = ' SIMULATION'
         else:
             run_mode = DEFAULT
+            sim_str = ''
 
         progress_report = self._progress_reports[caller][run_mode][report_num]
 
@@ -422,7 +424,8 @@ class Report:
                                                      f" {[i.tolist() for i in caller.get_input_values(context)]}"]
                 else:
                     # print trial separator and input array to Composition
-                    trial_header = f"[bold {trial_panel_color}]{caller.name} TRIAL {trial_num} ===================="
+                    trial_header = f"[bold {trial_panel_color}]{caller.name}{sim_str} TRIAL {trial_num} " \
+                                   f"===================="
                     self._rich_progress.console.print(trial_header)
                     if self._record_reports:
                         self._recorded_reports += trial_header
@@ -485,7 +488,8 @@ class Report:
                 progress_report.trial_report = Panel(RenderGroup(*progress_report.trial_report),
                                                      box=trial_panel_box,
                                                      border_style=trial_panel_color,
-                                                     title=f'[bold{trial_panel_color}] {caller.name}: Trial {trial_num} [/]',
+                                                     title=f'[bold{trial_panel_color}] {caller.name}{sim_str}: '
+                                                           f'Trial {trial_num} [/]',
                                                      expand=False)
             # FIX: THIS GENERATES A CUMULATIVE REPORT, BUT COMMENTING IT OUT ELIMINATES THE OUTPUT REPORT
             # elif self._rich_divert:
