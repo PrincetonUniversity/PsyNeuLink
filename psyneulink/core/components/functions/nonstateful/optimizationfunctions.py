@@ -1633,7 +1633,7 @@ class GridSearch(OptimizationFunction):
         bin_func(ct_param, ct_state, ct_opt_sample, ct_alloc, ct_opt_value,
                  ct_values, ct_opt_count, ct_start, ct_stop)
 
-        return ct_opt_sample, ct_opt_value, ct_values
+        return np.ctypeslib.as_array(ct_opt_sample), ct_opt_value.value, np.ctypeslib.as_array(ct_values)
 
     def _function(self,
                  variable=None,
