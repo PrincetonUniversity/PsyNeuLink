@@ -388,38 +388,33 @@ Class Reference
 
 """
 import copy
+from collections.abc import Iterable
+
 import numpy as np
 import typecheck as tc
 
-from collections.abc import Iterable
-
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
-from psyneulink.core.components.functions.function import is_function_type, FunctionError
+from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.optimizationfunctions import \
     GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.transferfunctions import CostFunctions
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
-    ObjectiveMechanism, ObjectiveMechanismError
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.ports.inputport import InputPort, _parse_shadow_inputs
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import _parse_port_spec
+from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.globals.context import Context, ContextFlags
+from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, \
-    OPTIMIZATION_CONTROL_MECHANISM, OBJECTIVE_MECHANISM, OUTCOME, PRODUCT, PARAMS, \
-    CONTROL, AUTO_ASSIGN_MATRIX
-from psyneulink.core.globals.utilities import convert_to_np_array
-from psyneulink.core.globals.parameters import Parameter, ParameterAlias
+    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMS
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
-
-from psyneulink.core import llvm as pnlvm
+from psyneulink.core.globals.utilities import convert_to_np_array
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',

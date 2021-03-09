@@ -28,28 +28,26 @@ Functions that return the sample of a variable yielding the optimized value of a
 
 """
 
-import warnings
-import sys
+import contextlib
 # from fractions import Fraction
 import itertools
-import numpy as np
-import typecheck as tc
+import sys
+import warnings
 from numbers import Number
 
-from typing import Iterator
+import numpy as np
+import typecheck as tc
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
-from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core.globals.keywords import \
     BOUNDS, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
     OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.utilities import call_with_pruned_args, get_global_seed
 from psyneulink.core.globals.sampleiterator import SampleIterator
-
-from psyneulink.core import llvm as pnlvm
-import contextlib
+from psyneulink.core.globals.utilities import call_with_pruned_args, get_global_seed
 
 __all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess',
            'ParamEstimationFunction',

@@ -1,14 +1,13 @@
-import functools
-import numpy as np
-import psyneulink as pnl
-import psyneulink.core.components.functions.distributionfunctions
-import pytest
 import re
 
-from psyneulink.core.components.functions.optimizationfunctions import OptimizationFunctionError
-from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
+import numpy as np
+import pytest
+
+import psyneulink as pnl
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
 from psyneulink.core.globals.log import LogCondition
+from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
+
 
 class TestControlSpecification:
     # These test the coordination of adding a node with a control specification to a Composition

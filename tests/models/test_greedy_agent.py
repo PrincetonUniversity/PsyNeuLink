@@ -1,19 +1,20 @@
-import pytest
 import numpy as np
+import pytest
 
 import psyneulink as pnl
+from psyneulink.core.components.functions.objectivefunctions import Distance
+from psyneulink.core.components.functions.optimizationfunctions import GridSearch, MINIMIZE
+from psyneulink.core.components.functions.transferfunctions import GaussianDistort
+from psyneulink.core.components.mechanisms.modulatory.control import OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.mechanisms.modulatory.control import OptimizationControlMechanism
-from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
-from psyneulink.core.components.functions.objectivefunctions import Distance
-from psyneulink.core.components.functions.optimizationfunctions import GridSearch, MINIMIZE
-from psyneulink.core.components.functions.transferfunctions import GaussianDistort, Exponential
-from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.inputport import SHADOW_INPUTS
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.globals.keywords import VARIANCE, NORMED_L0_SIMILARITY
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Greedy Agent")

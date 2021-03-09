@@ -8,13 +8,15 @@
 
 # ********************************************* PNL LLVM helpers **************************************************************
 
-from llvmlite import ir
 from contextlib import contextmanager
 from ctypes import util
 
-from ..scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, AtNCalls, AfterNCalls, EveryNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
-from ..scheduling.time import TimeScale
+from llvmlite import ir
+
 from .debug import debug_env
+from ..scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, AtNCalls, AfterNCalls, \
+    EveryNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
+from ..scheduling.time import TimeScale
 
 
 @contextmanager

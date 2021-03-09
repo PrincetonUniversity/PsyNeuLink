@@ -2533,16 +2533,16 @@ class Mechanism_Base(Mechanism):
         #  If called by a Composition, it handles reporting.
         if context.source == ContextFlags.COMMAND_LINE:
             if self.prefs.reportOutputPref and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING):
-                from psyneulink.core.compositions.progress import PNLProgress
+                from psyneulink.core.compositions.report import Report
                 from rich import print
                 if self.prefs.reportOutputPref is 'terse':
                     print(f'{self.name} executed')
                 else:
-                    print(PNLProgress.node_execution_report(self,
-                                                            input_val=self.get_input_values(context),
-                                                            output_val=self.output_port.parameters.value._get(context),
-                                                            show_output=True,
-                                                            context=context))
+                    print(Report.node_execution_report(self,
+                                                       input_val=self.get_input_values(context),
+                                                       output_val=self.output_port.parameters.value._get(context),
+                                                       report_output=True,
+                                                       context=context))
         return value
 
     def _get_variable_from_input(self, input, context=None):
