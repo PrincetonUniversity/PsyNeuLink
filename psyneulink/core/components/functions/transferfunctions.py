@@ -130,7 +130,40 @@ class TransferFunction(Function_Base):
 
         return builder
 
+    @handle_external_context()
+    def function(self,
+                 variable=None,
+                 context=None,
+                 params=None,
+                 target_set=None,
+                 derivative=False,
+                 **kwargs):
+        # Validate variable and assign to variable, and validate params
+        variable = self._check_args(variable=variable,
+                                    context=context,
+                                    params=params,
+                                    target_set=target_set,
+                                    )
+        def _get_param(p):
+            try:
+                return self._get_current_parameter_value(p.name, context)
+            except:
+                print(e)
+        modulable_params = {p.name: _get_param(p) for p in self.parameters}
+        if params is None:
+            params = {}
+        parameters = {**modulable_params, **params}
+        parameters["variable"] = variable
+        if derivative:
+            return self._derivative(**kwargs, **parameters)
+        else:
+            value = self._function(**kwargs, **parameters)
+            self.most_recent_context = context
+            self.parameters.value._set(value, context=context)
+            return self.convert_output_type(value)
 
+    def derivative(self, *args, **kwargs):
+        return self.function(derivative=True, *args, **kwargs)
 # **********************************************************************************************************************
 #                                                 Identity
 # **********************************************************************************************************************
@@ -401,11 +434,11 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         builder.store(val, ptro)
 
-    def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+    @staticmethod
+    def _function(variable=None,
+                  slope=None,
+                  intercept=None,
+                  **_):
         """
 
         Arguments
@@ -425,55 +458,13 @@ class Linear(TransferFunction):  # ---------------------------------------------
         linear transformation of variable : number or array
 
         """
-        slope = self._get_current_parameter_value(SLOPE, context)
-        intercept = self._get_current_parameter_value(INTERCEPT, context)
+        return variable * slope + intercept
 
-        # MODIFIED 11/9/17 NEW:
-        try:
-            # By default, result should be returned as np.ndarray with same dimensionality as input
-            result = variable * slope + intercept
-        except TypeError:
-            if hasattr(variable, "dtype"):
-                # If variable is an array with mixed sizes or types, try item-by-item operation
-                if variable.dtype == object:
-                    result = np.zeros_like(variable)
-                    for i, item in enumerate(variable):
-                        result[i] = variable[i] * slope + intercept
-                else:
-                    raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
-            # KAM 6/28/18: If the variable does not have a "dtype" attr but made it to this line, then it must be of a
-            # type that even np does not recognize -- typically a custom OutputPort variable with items of different
-            # shapes (e.g. variable = [[0.0], [0.0], array([[0.0, 0.0]])] )
-            elif isinstance(variable, list):
-                result = []
-                for variable_item in variable:
-                    result.append(np.multiply(variable_item, slope) + intercept)
-            else:
-                raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
-
-        return self.convert_output_type(result)
-
-    @handle_external_context()
-    def derivative(self, input=None, output=None, context=None):
-        """
-        derivative(input)
-
-        Derivative of `function <Linear.function>` at **input**.
-
-        Arguments
-        ---------
-
-        input : number
-            value of the input to the Linear transform at which derivative is to be taken.
-
-        Returns
-        -------
-
-        Slope of function :  number or array
-
-        """
-
-        return self._get_current_parameter_value(SLOPE, context)
+    @staticmethod
+    def _derivative(variable=None,
+                    slope=None,
+                    **_):
+        return np.reshape(slope, variable.shape)
 
     def _is_identity(self, context=None):
         return (
@@ -695,28 +686,25 @@ class Exponential(TransferFunction):  # ----------------------------------------
         Exponential transformation of variable : number or array
 
         """
-        rate = self._get_current_parameter_value(RATE, context)
-        bias = self._get_current_parameter_value(BIAS, context)
-        scale = self._get_current_parameter_value(SCALE, context)
-        offset = self._get_current_parameter_value(OFFSET, context)
-
-        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
-        # result = scale * np.exp(rate * variable + bias) + offset
-        result = scale * e**(rate * variable + bias) + offset
-        return self.convert_output_type(result)
-
-    @handle_external_context()
-    def derivative(self, input, output=None, context=None):
+        result = scale * np.exp(rate * variable + bias) + offset
+        return result
+    
+    @staticmethod
+    def _derivative(variable=None,
+                    rate=None,
+                    bias=None,
+                    scale=None,
+                    **_,):
         """
-        derivative(input)
+        derivative(variable)
 
         Arguments
         ---------
 
-        input : number
+        variable : number
             value of the input to the Exponential transform at which derivative is to be taken.
 
-        Derivative of `function <Exponential.function>` at **input**.
+        Derivative of `function <Exponential.function>` at **variable**.
 
         Returns
         -------
@@ -725,11 +713,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
 
         """
-        rate = self._get_current_parameter_value(RATE, context)
-        scale = self._get_current_parameter_value(SCALE, context)
-        bias = self._get_current_parameter_value(BIAS, context)
-
-        return rate * scale * e**(rate * input + bias)
+        return rate * scale * np.exp(rate * variable + bias)
 
 # **********************************************************************************************************************
 #                                                   Logistic
@@ -955,11 +939,14 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         builder.store(val, ptro)
 
-    def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+    @staticmethod
+    def _function(variable=None,
+                  gain=None,
+                  bias=None,
+                  x_0=None,
+                  offset=None,
+                  scale=None,
+                  **_):
         """
 
         Arguments
@@ -979,20 +966,19 @@ class Logistic(TransferFunction):  # -------------------------------------------
         Logistic transformation of variable : number or array
 
         """
-        gain = self._get_current_parameter_value(GAIN, context)
-        bias = self._get_current_parameter_value(BIAS, context)
-        x_0 = self._get_current_parameter_value(X_0, context)
-        offset = self._get_current_parameter_value(OFFSET, context)
-        scale = self._get_current_parameter_value(SCALE, context)
 
-        # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
-        # result = 1. / (1 + np.exp(-gain * (variable - bias) + offset))
-        result = scale * (1. / (1 + e**(-gain * (variable + bias - x_0) + offset)))
+        result = scale * (1. / (1 + np.exp(-gain * (variable + bias - x_0) + offset)))
+        return result
 
-        return self.convert_output_type(result)
-
-    @handle_external_context()
-    def derivative(self, input=None, output=None, context=None):
+    @staticmethod
+    def _derivative(variable=None,
+                    output=None,
+                    gain=None,
+                    bias=None,
+                    x_0=None,
+                    offset=None,
+                    scale=None,
+                    **_):
         """
         derivative(input=None, output=None)
 
@@ -1273,11 +1259,14 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
         builder.store(val, ptro)
 
-    def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+    @staticmethod
+    def _function(variable=None,
+                  gain=None,
+                  bias=None,
+                  x_0=None,
+                  offset=None,
+                  scale=None,
+                  **_):
         """
 
         Arguments
@@ -1297,23 +1286,22 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         hyperbolic tangent of variable : number or array
 
         """
-        gain = self._get_current_parameter_value(GAIN, context)
-        bias = self._get_current_parameter_value(BIAS, context)
-        x_0 = self._get_current_parameter_value(X_0, context)
-        offset = self._get_current_parameter_value(OFFSET, context)
-        scale = self._get_current_parameter_value(SCALE, context)
-
-        # The following probably doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         #   (since np.exp doesn't work)
         # result = 1. / (1 + np.tanh(-gain * (variable - bias) + offset))
         exponent = -2 * (gain * (variable + bias - x_0) + offset)
         result = scale * (1 - e**exponent)/ (1 + e**exponent)
 
-        return self.convert_output_type(result)
+        return result
 
 
-    @handle_external_context()
-    def derivative(self, input, output=None, context=None):
+    @staticmethod
+    def _derivative(variable=None,
+                    gain=None,
+                    bias=None,
+                    x_0=None,
+                    offset=None,
+                    scale=None,
+                    **_):
         """
         derivative(input)
 
@@ -1330,12 +1318,6 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         derivative :  number or array
 
         """
-        gain = self._get_current_parameter_value(GAIN, context)
-        bias = self._get_current_parameter_value(BIAS, context)
-        x_0 = self._get_current_parameter_value(X_0, context)
-        offset = self._get_current_parameter_value(OFFSET, context)
-        scale = self._get_current_parameter_value(SCALE, context)
-
         exponent = -2 * (gain * (input + bias - x_0) + offset)
         mult = -2 * gain * scale
         numerator = -2 * e**(exponent)
@@ -1480,11 +1462,12 @@ class ReLU(TransferFunction):  # -----------------------------------------------
             prefs=prefs,
         )
 
-    def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+    @staticmethod
+    def _function(variable=None,
+                  gain=None,
+                  bias=None,
+                  leak=None,
+                  **_):
         """
 
         Arguments
@@ -1502,15 +1485,12 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         ReLU transformation of variable : number or array
         """
-        gain = self._get_current_parameter_value(GAIN, context)
-        bias = self._get_current_parameter_value(BIAS, context)
-        leak = self._get_current_parameter_value(LEAK, context)
 
         # KAM modified 2/15/19 to match https://en.wikipedia.org/wiki/Rectifier_(neural_networks)#Leaky_ReLUs
         x = gain * (variable - bias)
         result = np.maximum(x, leak * x)
 
-        return self.convert_output_type(result)
+        return result
 
     def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
         ptri = builder.gep(vi, [ctx.int32_ty(0), index])
@@ -1540,8 +1520,12 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 
         builder.store(val, ptro)
 
-    @handle_external_context()
-    def derivative(self, input, output=None, context=None):
+    @staticmethod
+    def _derivative(variable=None,
+                    gain=None,
+                    bias=None,
+                    leak=None,
+                    **_):
         """
         derivative(input)
 
@@ -1559,9 +1543,6 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         derivative :  number or array
 
         """
-        gain = self._get_current_parameter_value(GAIN, context)
-        leak = self._get_current_parameter_value(LEAK, context)
-
         input = np.asarray(input).copy()
         input[input>0] = gain
         input[input<=0] = gain * leak
@@ -1764,11 +1745,13 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
         builder.store(val, ptro)
 
-    def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+    @staticmethod
+    def _function(variable=None,
+                    standard_deviation=None,
+                    bias=None,
+                    scale=None,
+                    offset=None,
+                    **_):
         """
 
         Arguments
@@ -1789,18 +1772,19 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Gaussian transformation of variable : number or array
 
         """
-        standard_deviation = self._get_current_parameter_value(STANDARD_DEVIATION, context)
-        bias = self._get_current_parameter_value(BIAS, context)
-        scale = self._get_current_parameter_value(SCALE, context)
-        offset = self._get_current_parameter_value(OFFSET, context)
-
         gaussian = e**(-(variable - bias)**2 / (2 * standard_deviation**2)) / sqrt(2 * pi * standard_deviation)
         result = scale * gaussian + offset
 
-        return self.convert_output_type(result)
+        return result
 
-    @handle_external_context()
-    def derivative(self, input, output=None, context=None):
+    @staticmethod
+    def _derivative(variable=None,
+                    standard_deviation=None,
+                    bias=None,
+                    scale=None,
+                    offset=None,
+                    sigma=None,
+                    **_):
         """
         derivative(input)
 
@@ -1820,13 +1804,10 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         Derivative of Guassian of variable :  number or array
 
         """
-        sigma = self._get_current_parameter_value(STANDARD_DEVIATION, context)
-        bias = self._get_current_parameter_value(BIAS, context)
-
         adjusted_input = input - bias
         result = (-adjusted_input * e**(-(adjusted_input**2 / (2 * sigma**2)))) / sqrt(2 * pi * sigma**3)
 
-        return self.convert_output_type(result)
+        return result
 
 
 # **********************************************************************************************************************
@@ -2037,11 +2018,14 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
 
         builder.store(val, ptro)
 
-    def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+    @staticmethod
+    def _function(variable=None,
+                  variance=None,
+                  bias=None,
+                  scale=None,
+                  offset=None,
+                  random_state=None,
+                  **_):
         """
 
         Arguments
@@ -2062,16 +2046,11 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         Sample from Gaussian distribution for each element of variable : number or array
 
         """
-        variance = self._get_current_parameter_value(VARIANCE, context)
-        bias = self._get_current_parameter_value(BIAS, context)
-        scale = self._get_current_parameter_value(SCALE, context)
-        offset = self._get_current_parameter_value(OFFSET, context)
-        random_state = self._get_current_parameter_value('random_state', context)
 
         # The following doesn't work with autograd (https://github.com/HIPS/autograd/issues/416)
         result = scale * random_state.normal(variable + bias, variance) + offset
 
-        return self.convert_output_type(result)
+        return result
 
     # def derivative(self, output, input=None, context=None):
     #     """
@@ -2412,7 +2391,8 @@ class SoftMax(TransferFunction):
         else:
             return self.__gen_llvm_apply(ctx, builder, params, _, arg_in, arg_out)
 
-    def apply_softmax(self, input_value, gain, output_type):
+    @staticmethod
+    def apply_softmax(input_value, gain, output_type, one_hot_function):
         # Modulate input_value by gain
         v = gain * input_value
         # Shift by max to avoid extreme values:
@@ -2425,17 +2405,19 @@ class SoftMax(TransferFunction):
         # Generate one-hot encoding based on selected output_type
 
         if output_type in {MAX_VAL, MAX_INDICATOR}:
-            return self.one_hot_function(sm)
+            return one_hot_function(sm)
         elif output_type in {PROB, PROB_INDICATOR}:
-            return self.one_hot_function([input_value, sm])
+            return one_hot_function([input_value, sm])
         else:
             return sm
 
-    def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+    @staticmethod
+    def _function(variable=None,
+                  output=None,
+                  gain=None,
+                  per_item=None,
+                  one_hot_function=None,
+                  **_):
         """
 
         Arguments
@@ -2456,22 +2438,23 @@ class SoftMax(TransferFunction):
 
         """
         # Assign the params and return the result
-        output_type = self._get_current_parameter_value(OUTPUT_TYPE, context)
-        gain = self._get_current_parameter_value(GAIN, context)
-        per_item = self._get_current_parameter_value(PER_ITEM, context)
         # Compute softmax and assign to sm
-
         if per_item and len(np.shape(variable)) > 1:
-            output = []
+            result = []
             for item in variable:
-                output.append(self.apply_softmax(item, gain, output_type))
+                result.append(SoftMax.apply_softmax(item, gain, output, one_hot_function))
         else:
-            output = self.apply_softmax(variable, gain, output_type)
+            result = SoftMax.apply_softmax(variable, gain, output, one_hot_function)
 
-        return self.convert_output_type(output)
+        return result
 
-    @handle_external_context()
-    def derivative(self, output, input=None, context=None):
+    @staticmethod
+    def _derivative(variable=None,
+                    output=None,
+                    gain=None,
+                    per_item=None,
+                    one_hot_function=None,
+                    **_):
         """
         derivative(output)
 
@@ -2482,7 +2465,7 @@ class SoftMax(TransferFunction):
         """
 
         output_type = self.output_type
-        size = len(output)
+        size = len(variable)
         sm = self.function(output, params={OUTPUT_TYPE: ALL}, context=context)
 
         if output_type == ALL:
@@ -2995,11 +2978,10 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         builder.call(builtin, [vec_in, matrix, input_length, output_length, vec_out])
         return builder
 
-    def _function(self,
-                 variable=None,
-                 context=None,
-                 params=None,
-                 ):
+    @staticmethod
+    def _function(variable=None,
+                  matrix=None,
+                  **_):
         """
 
         Arguments
@@ -3019,9 +3001,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
             length of the array returned equals the number of columns of `matrix <LinearMatrix.matrix>`.
 
         """
-        matrix = self._get_current_parameter_value(MATRIX, context)
         result = np.dot(variable, matrix)
-        return self.convert_output_type(result)
+        return result
 
     @staticmethod
     def keyword(obj, keyword):
