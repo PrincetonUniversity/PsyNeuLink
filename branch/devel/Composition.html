@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.8.6.0+87.gbb499c6ee0 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.8.6.0+88.g11ccd547ef documentation</title>
   
 
   
@@ -96,7 +96,7 @@
               
               
                 <div class="version">
-                  0.8.6.0+87
+                  0.8.6.0+88
                 </div>
               
             
@@ -287,6 +287,7 @@
 </li>
 <li><dl class="simple">
 <dt><a class="reference internal" href="#composition-execution"><span class="std std-ref">Executing a Composition</span></a></dt><dd><ul>
+<li><p><code class="xref any docutils literal notranslate"><span class="pre">Composition_Execution_Reporting</span></code></p></li>
 <li><dl class="simple">
 <dt><a class="reference internal" href="#composition-execution-inputs"><span class="std std-ref">Input formats (including targets for learning)</span></a></dt><dd><ul>
 <li><p><a class="reference internal" href="#composition-input-dictionary"><span class="std std-ref">Input Dictionary</span></a></p></li>
@@ -946,9 +947,9 @@ the return value of the corresponding method is returned.</p>
 <p id="composition-execution-reporting"><em>Reporting</em>. Executing a Composition returns the results of its last <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> of execution.  If
 either <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> or <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> is called, the results of all <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIALS</span></code></a>
 executed are available in the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.results" title="psyneulink.core.compositions.composition.Composition.results"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">results</span></code></a> attribute (see <a class="reference internal" href="#composition-execution-results"><span class="std std-ref">Results</span></a> for additional details).  A report of the results of each
-<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> can also be generated as the Compostion is executing, using the <strong>show_output</strong> and
-<strong>show_progress</strong> arguments of any of the execution methods. <strong>show_output</strong> generates a report of the input and
-output the Composition and its <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a>, while <strong>show_progress</strong> shows a progress bar indicating
+<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> can also be generated as the Compostion is executing, using the <strong>report_output</strong> and
+<strong>report_progress</strong> arguments of any of the execution methods. <strong>report_output</strong> generates a report of the input and
+output the Composition and its <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a>, while <strong>report_progress</strong> shows a progress bar indicating
 how many <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIALS</span></code></a> have been executed and an estimate of the time remaining to completion (see the
 <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.execute" title="psyneulink.core.compositions.composition.Composition.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a>, <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> and <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> methods for additional
 details).  These options are both False by default.  The values of individual Components (and their <a class="reference internal" href="Parameters.html"><span class="doc">parameters</span></a>) assigned during execution can also be recorded in their <a class="reference internal" href="Component.html#component-log"><span class="std std-ref">log</span></a> attribute using the
@@ -2724,10 +2725,22 @@ if False, simulation values are deleted unless otherwise specified by individual
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.composition.Composition.run_output">
-<code class="sig-name descname">run_output</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.run_output" title="Permalink to this definition">¶</a></dt>
-<dd><p>contains output from execution(s) of Composition if <em>CAPTURE</em> is specified in the <strong>show_progress</strong> argument
-of a <a class="reference internal" href="#composition-execution-methods"><span class="std std-ref">Composition execution method</span></a>.</p>
+<dt id="psyneulink.core.compositions.composition.Composition.recorded_reports">
+<code class="sig-name descname">recorded_reports</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.recorded_reports" title="Permalink to this definition">¶</a></dt>
+<dd><p>contains output and/or progress reports from execution(s) of Composition if <em>RECORD</em> is specified in the
+<strong>report_to_devices</strong> argument of a <a class="reference internal" href="#composition-execution-methods"><span class="std std-ref">Composition execution method</span></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="psyneulink.core.compositions.composition.Composition.rich_diverted_reports">
+<code class="sig-name descname">rich_diverted_reports</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.rich_diverted_reports" title="Permalink to this definition">¶</a></dt>
+<dd><p>contains output and/or progress reports from execution(s) of Composition if <em>DIVERT</em> is specified in the
+<strong>report_to_devices</strong> argument of a <a class="reference internal" href="#composition-execution-methods"><span class="std std-ref">Composition execution method</span></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>str</p>
@@ -3573,9 +3586,8 @@ Input Node –&gt; Output Node pathway</p>
 <dd><p>Add an <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> as the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> of the Composition.</p>
 <p>This gives the ControlMechanism access to the <a class="reference internal" href="#"><span class="doc">Composition</span></a>’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.evaluate" title="psyneulink.core.compositions.composition.Composition.evaluate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">evaluate</span></code></a> method. This
 allows subclasses of ControlMechanism that can use this (such as <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>) to execute
-“simulations” of the Composition (that is, executions in an <a class="reference internal" href="#composition-execution-context"><span class="std std-ref">execution context</span></a>
-separate from the one used by the <a class="reference internal" href="#composition-execution-methods"><span class="std std-ref">execution method</span></a> called by the user) to
-evaluate the influence of parameters on performance.</p>
+<a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulations</span></a> of the Composition (that is, executions in an
+<a class="reference internal" href="#composition-execution-context"><span class="std std-ref">execution context</span></a> separate from the one used by the <a class="reference internal" href="#composition-execution-methods"><span class="std std-ref">execution method</span></a> called by the user) to evaluate the influence of parameters on performance.</p>
 <p>It also assigns a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> for any <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> <a class="reference internal" href="ParameterPort.html#parameterport-value-specification"><span class="std std-ref">specified for control</span></a>, and a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to its correponding <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a>.</p>
 <p>The ControlMechanism is assigned the <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRole</span></code></a> <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.CONTROLLER" title="psyneulink.core.compositions.composition.NodeRole.CONTROLLER"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">CONTROLLER</span></code></a>.</p>
 </dd></dl>
@@ -3884,7 +3896,7 @@ to the input</p>
 
 <dl class="py method">
 <dt id="psyneulink.core.compositions.composition.Composition.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">inputs=None</em>, <em class="sig-param">num_trials=None</em>, <em class="sig-param">initialize_cycle_values=None</em>, <em class="sig-param">reset_stateful_functions_to=None</em>, <em class="sig-param">reset_stateful_functions_when=&lt;psyneulink.core.scheduling.condition.Never object&gt;</em>, <em class="sig-param">skip_initialization=False</em>, <em class="sig-param">clamp_input='soft_clamp'</em>, <em class="sig-param">runtime_params=None</em>, <em class="sig-param">call_before_time_step=None</em>, <em class="sig-param">call_after_time_step=None</em>, <em class="sig-param">call_before_pass=None</em>, <em class="sig-param">call_after_pass=None</em>, <em class="sig-param">call_before_trial=None</em>, <em class="sig-param">call_after_trial=None</em>, <em class="sig-param">termination_processing=None</em>, <em class="sig-param">skip_analyze_graph=False</em>, <em class="sig-param">show_output=False</em>, <em class="sig-param">show_progress=False</em>, <em class="sig-param">animate=False</em>, <em class="sig-param">log=False</em>, <em class="sig-param">scheduler=None</em>, <em class="sig-param">execution_mode=&lt;ExecutionMode.Python: 0&gt;</em>, <em class="sig-param">context=None</em>, <em class="sig-param">base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">inputs=None</em>, <em class="sig-param">num_trials=None</em>, <em class="sig-param">initialize_cycle_values=None</em>, <em class="sig-param">reset_stateful_functions_to=None</em>, <em class="sig-param">reset_stateful_functions_when=&lt;psyneulink.core.scheduling.condition.Never object&gt;</em>, <em class="sig-param">skip_initialization=False</em>, <em class="sig-param">clamp_input='soft_clamp'</em>, <em class="sig-param">runtime_params=None</em>, <em class="sig-param">call_before_time_step=None</em>, <em class="sig-param">call_after_time_step=None</em>, <em class="sig-param">call_before_pass=None</em>, <em class="sig-param">call_after_pass=None</em>, <em class="sig-param">call_before_trial=None</em>, <em class="sig-param">call_after_trial=None</em>, <em class="sig-param">termination_processing=None</em>, <em class="sig-param">skip_analyze_graph=False</em>, <em class="sig-param">report_output=False</em>, <em class="sig-param">report_progress=False</em>, <em class="sig-param">report_simulations=False</em>, <em class="sig-param">report_to_devices=None</em>, <em class="sig-param">animate=False</em>, <em class="sig-param">log=False</em>, <em class="sig-param">scheduler=None</em>, <em class="sig-param">execution_mode=&lt;ExecutionMode.Python: 0&gt;</em>, <em class="sig-param">context=None</em>, <em class="sig-param">base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
 conditions are met.</p>
 <p>See <a class="reference internal" href="#composition-execution"><span class="std std-ref">Executing a Composition</span></a> for details of formatting input specifications.
@@ -3927,28 +3939,36 @@ additional informaton).</p></li>
 <li><p><strong>call_after_trial</strong> (<em>callable  : default None</em>) – specifies fuction to call after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> is executed.</p></li>
 <li><p><strong>termination_processing</strong> (<em>Condition  : default None</em>) – specifies <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> under which execution of the run will occur.</p></li>
 <li><p><strong>skip_analyze_graph</strong> (<em>bool : default False</em>) – setting to True suppresses call to _analyze_graph()</p></li>
-<li><p><strong>show_output</strong> (bool, <em>TERSE</em>, <em>FULL</em> : default False) – <p>specifies whether to show output of the Composition and its <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> trial-by-trial as
+<li><p><strong>report_output</strong> (bool, <em>TERSE</em>, <em>FULL</em> : default False) – <p>specifies whether to show output of the Composition and its <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> trial-by-trial as
 it is generated.  Any one the following options can be used:</p>
 <ul>
 <li><p>False - no output is generated;</p></li>
-<li><p>True - output is determined by the <a class="reference internal" href="Preferences.html#preferenceset-reportoutputpref"><span class="std std-ref">reportoutputpref</span></a> preference of
+<li><p>True - output is determined by the <a class="reference internal" href="Preferences.html#preferenceset-reportoutputpref"><span class="std std-ref">reportOutputPref</span></a> preference of
 individual Nodes;</p></li>
 <li><p><em>TERSE</em> - a single line is generated reporting the execution of each Node of the Composition;</p></li>
 <li><p><em>FULL</em> - input and output of the Composition and all its Nodes is reported.</p></li>
 </ul>
 </p></li>
-<li><p><strong>show_progress</strong> (<em>bool</em><em>, </em><em>CONSOLE</em><em>, </em><em>PNL_VIEW</em><em>, </em><em>SIMULATIONS</em><em>, or </em><em>list : default False</em>) – <p>specifies whether to show progress of execution in real time.  If the number trials to be
-executed is explicitly specified, the number of trials executed, a progress bar, and time remaining are
-displayed; if the number of trials is not explicitly specified (e.g., if inputs are specified using a
-generator), then a “spinner” is displayed during execution and the the total number of trials executed is
-displayed once complete.  The following options can be used to specify what and where the information is
-displayed, either individually or in a list:</p>
+<li><p><strong>report_progress</strong> (<em>bool : default False</em>) – specifies whether to report progress of execution in real time.  If the number trials to be executed
+is explicitly specified, the number of trials executed, a progress bar, and time remaining are displayed;
+if the number of trials is not explicitly specified (e.g., if inputs are specified using a generator),
+then a “spinner” is displayed during execution and the the total number of trials executed is displayed
+once complete.  Progress is reported to the devices specified in <strong>report_to_devices</strong>.</p></li>
+<li><p><strong>report_simulations</strong> (<em>bool : default False</em>) – specifies whether to show output and/or progress for <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulations</span></a>
+executed by the Composition’s <a class="reference internal" href="#composition-controller"><span class="std std-ref">controller</span></a>.</p></li>
+<li><p><strong>report_to_devices</strong> (<em>CONSOLE</em><em>, </em><em>RECORD</em><em>, </em><em>DIVERT</em><em>, </em><em>PNL_VIEW</em><em> or </em><em>list : default CONSOLE</em>) – <p>specifies where output and progress should be reported;  the following destinations are supported:</p>
 <ul>
-<li><p>False - suppress all progress reporting;</p></li>
-<li><p>True - report progress to designated devices (default: <em>CONSOLE</em>);</p></li>
-<li><p><em>SIMULATIONS</em> - reports simulations executed by an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>;</p></li>
-<li><p><em>CONSOLE</em> - directs output to the console (default);</p></li>
-<li><p><em>PNL_VIEW</em> - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].</p></li>
+<li><p><em>CONSOLE</em> - directs reporting to the console (default).</p></li>
+<li><p><em>RECORD</em> - captures reporting in <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.recorded_reports" title="psyneulink.core.compositions.composition.Composition.recorded_reports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">recorded_reports</span></code></a>; specifying this
+option on its own replaces and suppresses reporting to the console; to continue to generate console
+output, explicitly include <em>CONSOLE</em> with <em>RECORD</em> in the argument specification.</p></li>
+<li><p><em>DIVERT</em> - captures reporting otherwise directed to the rich Console in a UDF-8 formatted string and
+stores it in <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.rich_diverted_reports" title="psyneulink.core.compositions.composition.Composition.rich_diverted_reports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rich_diverted_reports</span></code></a>. This option suppresses
+console output and is cumulative (that is, it records the sequences of updates sent to the console
+after each TRIAL) and is intended primarily for unit testing. The <em>RECORD</em> option should be used for
+recording output, as it can be used with console output if desired, and reflects the final state of
+the display after execution is complete.</p></li>
+<li><p><em>PNL_VIEW</em> - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].</p></li>
 </ul>
 </p></li>
 <li><p><strong>animate</strong> (<em>dict</em><em> or </em><em>bool : default False</em>) – <p>specifies use of the <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method to generate a gif movie showing the
@@ -4056,28 +4076,35 @@ If not specified, the Composition will use its automatically generated scheduler
 <li><p><strong>context</strong> (<code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">optional</span></code>]) – context will be set to self.default_execution_id if unspecified</p></li>
 <li><p><strong>call_before_minibatch</strong> (<em>callable</em>) – called before each minibatch is executed</p></li>
 <li><p><strong>call_after_minibatch</strong> (<em>callable</em>) – called after each minibatch is executed</p></li>
-<li><p><strong>show_output</strong> (bool, <em>TERSE</em>, <em>FULL</em> : default False) – <p>specifies whether to show output of the Composition and its <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> trial-by-trial
+<li><p><strong>report_output</strong> (bool, <em>TERSE</em>, <em>FULL</em> : default False) – <p>specifies whether to show output of the Composition and its <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> trial-by-trial
 as it is generated.  Any one the following options can be used:</p>
 <ul>
 <li><p>False - no output is generated;</p></li>
-<li><p>True - output is determined by the <a class="reference internal" href="Preferences.html#preferenceset-reportoutputpref"><span class="std std-ref">reportoutputpref</span></a> preference of
+<li><p>True - output is determined by the <a class="reference internal" href="Preferences.html#preferenceset-reportoutputpref"><span class="std std-ref">reportOutputPref</span></a> preference of
 individual Nodes;</p></li>
 <li><p><em>TERSE</em> - a single line is generated reporting the execution of each Node of the Composition;</p></li>
 <li><p><em>FULL</em> - input and output of the Composition and all its Nodes is reported.</p></li>
 </ul>
 </p></li>
-<li><p><strong>show_progress</strong> (<em>bool</em><em>, </em><em>CONSOLE</em><em>, </em><em>PNL_VIEW</em><em>, </em><em>SIMULATIONS</em><em>, or </em><em>list : default False</em>) – <p>specifies whether to show progress of execution in real time.  If the number trials to be
-executed is explicitly specified, the number of trials executed, a progress bar, and time remaining are
-displayed; if the number of trials is not explicitly specified (e.g., if inputs are specified using a
+<li><p><strong>report_progress</strong> (<em>bool : default False</em>) – specifies whether to report progress of execution in real time.  If the number trials to be executed is
+explicitly specified, the number of trials executed, a progress bar, and time remaining are displayed;
+if the number of trials is not explicitly specified (e.g., if inputs or targets are specified using a
 generator), then a “spinner” is displayed during execution and the the total number of trials executed
-is displayed once complete.  The following options can be used to specify what and where the
-information is displayed, either individually or in a list:</p>
+is displayed once complete.  Progress is reported to the devices specified in <strong>report_to_devices</strong>.</p></li>
+<li><p><strong>report_simulations</strong> (<em>bool : default False</em>) – specifies whether to show output and/or progress for <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulations</span></a> executed by the Composition’s <a class="reference internal" href="#composition-controller"><span class="std std-ref">controller</span></a>.</p></li>
+<li><p><strong>report_to_devices</strong> (<em>CONSOLE</em><em>, </em><em>RECORD</em><em>, </em><em>DIVERT</em><em>, </em><em>PNL_VIEW</em><em> or </em><em>list : default CONSOLE</em>) – <p>specifies where output and progress should be reported;  the following destinations are supported:</p>
 <ul>
-<li><p>False - suppress all progress reporting;</p></li>
-<li><p>True - report progress to designated devices (default: <em>CONSOLE</em>);</p></li>
-<li><p><em>SIMULATIONS</em> - reports simulations executed by an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>;</p></li>
-<li><p><em>CONSOLE</em> - directs output to the console (default);</p></li>
-<li><p><em>PNL_VIEW</em> - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].</p></li>
+<li><p><em>CONSOLE</em> - directs reporting to the console (default).</p></li>
+<li><p><em>RECORD</em> - captures reporting in <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.recorded_reports" title="psyneulink.core.compositions.composition.Composition.recorded_reports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">recorded_reports</span></code></a>; specifying this
+option on its own replaces and suppresses reporting to the console; to continue to generate console
+output, explicitly include <em>CONSOLE</em> with <em>RECORD</em> in the argument specification.</p></li>
+<li><p><em>DIVERT</em> - captures reporting otherwise directed to the rich Console in a UDF-8 formatted string and
+stores it in <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.rich_diverted_reports" title="psyneulink.core.compositions.composition.Composition.rich_diverted_reports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rich_diverted_reports</span></code></a>. This option suppresses
+console output and is cumulative (that is, it records the sequences of updates sent to the console
+after each TRIAL) and is intended primarily for unit testing. The <em>RECORD</em> option should be used for
+recording output, as it can be used with console output if desired, and reflects the final state of
+the display after execution is complete.</p></li>
+<li><p><em>PNL_VIEW</em> - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].</p></li>
 </ul>
 </p></li>
 </ul>
@@ -4093,7 +4120,7 @@ information is displayed, either individually or in a list:</p>
 
 <dl class="py method">
 <dt id="psyneulink.core.compositions.composition.Composition.execute">
-<code class="sig-name descname">execute</code><span class="sig-paren">(</span><em class="sig-param">inputs=None</em>, <em class="sig-param">scheduler=None</em>, <em class="sig-param">termination_processing=None</em>, <em class="sig-param">call_before_time_step=None</em>, <em class="sig-param">call_before_pass=None</em>, <em class="sig-param">call_after_time_step=None</em>, <em class="sig-param">call_after_pass=None</em>, <em class="sig-param">reset_stateful_functions_to=None</em>, <em class="sig-param">context=None</em>, <em class="sig-param">base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em>, <em class="sig-param">clamp_input='soft_clamp'</em>, <em class="sig-param">runtime_params=None</em>, <em class="sig-param">skip_initialization=False</em>, <em class="sig-param">execution_mode=&lt;ExecutionMode.Python: 0&gt;</em>, <em class="sig-param">show_output=False</em>, <em class="sig-param">show_progress=False</em>, <em class="sig-param">progress=None</em>, <em class="sig-param">progress_report=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.execute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">execute</code><span class="sig-paren">(</span><em class="sig-param">inputs=None</em>, <em class="sig-param">scheduler=None</em>, <em class="sig-param">termination_processing=None</em>, <em class="sig-param">call_before_time_step=None</em>, <em class="sig-param">call_before_pass=None</em>, <em class="sig-param">call_after_time_step=None</em>, <em class="sig-param">call_after_pass=None</em>, <em class="sig-param">reset_stateful_functions_to=None</em>, <em class="sig-param">context=None</em>, <em class="sig-param">base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em>, <em class="sig-param">clamp_input='soft_clamp'</em>, <em class="sig-param">runtime_params=None</em>, <em class="sig-param">skip_initialization=False</em>, <em class="sig-param">execution_mode=&lt;ExecutionMode.Python: 0&gt;</em>, <em class="sig-param">report_output=False</em>, <em class="sig-param">report_progress=False</em>, <em class="sig-param">report_simulations=False</em>, <em class="sig-param">report_to_devices=None</em>, <em class="sig-param">report=None</em>, <em class="sig-param">progress_report=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Passes inputs to any <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> receiving inputs directly from the user (via the “inputs”
 argument) then coordinates with the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> to execute sets of Nodes that are eligible to execute until
 <a class="reference internal" href="Scheduler.html#scheduler-termination-conditions"><span class="std std-ref">termination conditions</span></a> are met.</p>
@@ -4125,27 +4152,34 @@ passed the current <em>context</em> (but it is not necessary for your callable t
 passed the current <em>context</em> (but it is not necessary for your callable to take).</p></li>
 <li><p><strong>execution_mode</strong> (<em>enum.Enum</em><em>[</em><em>Auto|LLVM|LLVMexec|Python|PTXExec</em><em>] </em><em>: default Python</em>) – specifies whether to run using the Python interpreter or a <a class="reference internal" href="#composition-compilation"><span class="std std-ref">compiled mode</span></a>.
 see <strong>execution_mode</strong> argument of <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method for additional details.</p></li>
-<li><p><strong>show_output</strong> (bool, <em>TERSE</em>, <em>FULL</em> : default False) – <p>specifies whether to show output of the Composition and its <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> for the
-execution. Any one the following options can be used:</p>
+<li><p><strong>report_output</strong> (bool, <em>TERSE</em>, <em>FULL</em> : default False) – <p>specifies whether to show output of the Composition and its <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> for the
+execution.  Any one the following options can be used:</p>
 <ul>
 <li><p>False - no output is generated;</p></li>
-<li><p>True - output is determined by the <a class="reference internal" href="Preferences.html#preferenceset-reportoutputpref"><span class="std std-ref">reportoutputpref</span></a> preference of
-individual <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a>;</p></li>
+<li><p>True - output is determined by the <a class="reference internal" href="Preferences.html#preferenceset-reportoutputpref"><span class="std std-ref">reportOutputPref</span></a> preference of
+individual Nodes;</p></li>
 <li><p><em>TERSE</em> - a single line is generated reporting the execution of each Node of the Composition;</p></li>
 <li><p><em>FULL</em> - input and output of the Composition and all its Nodes is reported.</p></li>
 </ul>
 </p></li>
-<li><p><strong>show_progress</strong> (<em>bool</em><em>, </em><em>CONSOLE</em><em>, </em><em>PNL_VIEW</em><em>, </em><em>SIMULATIONS</em><em>, or </em><em>list : default False</em>) – <p>specifies whether to show progress of execution.  In general, this will be for the single trial
-executed by the call to the execute method;  however, if <em>SIMULATIONS</em> is specified (see below)
+<li><p><strong>report_progress</strong> (<em>bool : default False</em>) – specifies whether to report progress of the execution.  In general, this will be for the single trial
+executed by the call to the execute method;  however, if <strong>report_simulations</strong> is specified (see below)
 and the Composition has an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>, then any simulations that it executes
-will be reported.  The following options can be used to specify what and where the information is
-displayed, either individually or in a list:</p>
+will also be reported.  Progress is reported to the devices specified in <strong>report_to_devices</strong>.</p></li>
+<li><p><strong>report_simulations</strong> (<em>bool : default False</em>) – specifies whether to show output and/or progress for <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulations</span></a> executed by the Composition’s <a class="reference internal" href="#composition-controller"><span class="std std-ref">controller</span></a>.</p></li>
+<li><p><strong>report_to_devices</strong> (<em>CONSOLE</em><em>, </em><em>RECORD</em><em>, </em><em>DIVERT</em><em>, </em><em>PNL_VIEW</em><em> or </em><em>list : default CONSOLE</em>) – <p>specifies where output and progress should be reported;  the following destinations are supported:</p>
 <ul>
-<li><p>False - suppress all progress reporting;</p></li>
-<li><p>True - report progress to designated devices (default: <em>CONSOLE</em>)</p></li>
-<li><p><em>SIMULATIONS</em> - reports simulations executed by an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>;</p></li>
-<li><p><em>CONSOLE</em> - directs output to the console (default)</p></li>
-<li><p><em>PNL_VIEW</em> - directs output to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].</p></li>
+<li><p><em>CONSOLE</em> - directs reporting to the console (default).</p></li>
+<li><p><em>RECORD</em> - captures reporting in <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.recorded_reports" title="psyneulink.core.compositions.composition.Composition.recorded_reports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">recorded_reports</span></code></a>; specifying this
+option on its own replaces and suppresses reporting to the console; to continue to generate console
+output, explicitly include <em>CONSOLE</em> with <em>RECORD</em> in the argument specification.</p></li>
+<li><p><em>DIVERT</em> - captures reporting otherwise directed to the rich Console in a UDF-8 formatted string and
+stores it in <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.rich_diverted_reports" title="psyneulink.core.compositions.composition.Composition.rich_diverted_reports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rich_diverted_reports</span></code></a>. This option suppresses
+console output and is cumulative (that is, it records the sequences of updates sent to the console
+after each TRIAL) and is intended primarily for unit testing. The <em>RECORD</em> option should be used for
+recording output, as it can be used with console output if desired, and reflects the final state of
+the display after execution is complete.</p></li>
+<li><p><em>PNL_VIEW</em> - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].</p></li>
 </ul>
 </p></li>
 </ul>
