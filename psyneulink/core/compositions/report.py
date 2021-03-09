@@ -24,7 +24,7 @@ node_panel_color = 'orange1'
 # node_panel_box = box.SIMPLE
 node_panel_box = box.ROUNDED
 # time_step
-time_step_panel_color = 'dodger_blue2'
+time_step_panel_color = 'dodger_blue1'
 time_step_panel_box = box.SQUARE
 # trial
 trial_panel_color = 'dodger_blue3'
@@ -352,10 +352,12 @@ class Report:
         progress_report = self._progress_reports[caller][run_mode][report_num]
         trial_num = self._rich_progress.tasks[progress_report.rich_task_id].completed
 
+        # Useful for debugging:
         if caller.verbosePref or REPORT_REPORT:
             from pprint import pprint
             pprint(f'{caller.name} {str(context.runmode)} REPORT')
 
+        # Update progress report
         if self._use_rich:
             if progress_report.num_trials:
                 if simulation_mode:
@@ -371,6 +373,7 @@ class Report:
                                   advance=1,
                                   refresh=True)
 
+        # track number of outer (non-simulation) trials
         if (not simulation_mode
                 and progress_report.num_trials
                 and (trial_num == progress_report.num_trials)):
@@ -418,12 +421,13 @@ class Report:
                 report_output = report_output or caller.reportOutputPref # if it is None, defer to Composition's
                 # reportOutputPref
 
-                #  if rich report, report trial number and Composition's input
+                #  if FULL output, report trial number and Composition's input
+                #  note:  header for Trial Panel is constructed under 'content is Trial' case below
                 if report_type is FULL:
                     progress_report.trial_report = [f"\n[bold {trial_panel_color}]input:[/]"
                                                      f" {[i.tolist() for i in caller.get_input_values(context)]}"]
-                else:
-                    # print trial separator and input array to Composition
+                else: # TERSE output
+                    # print trial title and separator + input array to Composition
                     trial_header = f"[bold {trial_panel_color}]{caller.name}{sim_str} TRIAL {trial_num} " \
                                    f"===================="
                     self._rich_progress.console.print(trial_header)
@@ -466,7 +470,7 @@ class Report:
                         self._recorded_reports += capture.get()
             # Use TERSE report for Node
             else:
-                self._rich_progress.console.print(f'[{node_panel_color}]{node.name} executed')
+                self._rich_progress.console.print(f'[{node_panel_color}]  {node.name} executed')
 
         elif content is 'time_step':
             if (report_output and (nodes_to_report or report_output is FULL) and report_type is FULL):
