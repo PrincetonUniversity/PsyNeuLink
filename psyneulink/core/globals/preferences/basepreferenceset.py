@@ -373,7 +373,9 @@ class BasePreferenceSet(PreferenceSet):
         :param setting:
         :return:
         """
-        self.set_preference(candidate_info=setting, pref_ivar_name=REPORT_OUTPUT_PREF)
+        # skip setting validation because default is bool but 'params'
+        # string should be accepted
+        self.set_preference(candidate_info=setting, pref_ivar_name=REPORT_OUTPUT_PREF, skip_validation=True)
 
     @property
     def logPref(self):

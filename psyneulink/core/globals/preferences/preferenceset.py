@@ -504,7 +504,7 @@ class PreferenceSet(object):
 #                                          " must be a {2} or PreferenceLevel".
 #                                          format(pref_spec, pref_attrib_name, type(pref_spec).__name__))
 
-    def set_preference(self, candidate_info, pref_ivar_name, default_entry=None):
+    def set_preference(self, candidate_info, pref_ivar_name, default_entry=None, skip_validation=False):
         """Validate and assign PreferenceSet, setting, or level to a PreferenceSet preference attribute
 
         Validate candidate candidate_info and, if OK, assign to pref_ivar_name attribute; candidate_info can be a:
@@ -575,7 +575,7 @@ class PreferenceSet(object):
                 candidate_info = PreferenceEntry(candidate_info[0], candidate_info[1])
             setting_OK = self.validate_setting(candidate_info.setting, default_setting, pref_ivar_name)
             level_OK = isinstance(candidate_info.level, PreferenceLevel)
-            if level_OK and setting_OK:
+            if (level_OK and setting_OK) or skip_validation:
                 setattr(self, pref_ivar_name, candidate_info)
                 return_val = candidate_info
             else:
@@ -589,12 +589,12 @@ class PreferenceSet(object):
         # candidate_info is a presumed setting
         else:
             setting_OK = self.validate_setting(candidate_info, default_setting, pref_ivar_name)
-            if setting_OK:
+            if setting_OK or skip_validation:
                 setattr(self, pref_ivar_name, PreferenceEntry(candidate_info, default_level))
                 return_val = PreferenceEntry(setting=candidate_info, level=None)
 
         # All is OK, so return
-        if level_OK and setting_OK:
+        if (level_OK and setting_OK) or skip_validation:
             return return_val
 
         # Something's amiss, so raise exception
