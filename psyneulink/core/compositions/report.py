@@ -707,7 +707,9 @@ class Report:
                 self._rich_progress.console.print(f'[{node_panel_color}]  {node.name} executed')
 
         elif content is 'time_step':
-            if (report_output and (nodes_to_report or report_output is FULL) and report_type is FULL):
+            if (report_output is not ReportOutput.OFF
+                    and (nodes_to_report or report_output is ReportOutput.FULL)
+                    and report_type is FULL):
                 progress_report.trial_report.append('')
                 progress_report.trial_report.append(Panel(RenderGroup(*progress_report.time_step_report),
                                                            # box=box.HEAVY,
