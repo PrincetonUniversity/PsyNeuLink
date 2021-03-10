@@ -7447,8 +7447,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Run Composition in "SIMULATION" context
         context.add_flag(ContextFlags.SIMULATION_MODE)
         context.remove_flag(ContextFlags.CONTROL)
-        # Get reporting options from Report context object created in initial call to run
-        with Report() as report:
+        # Use reporting options from Report context created in initial (outer) call to run()
+        with Report(context) as report:
             results = self.run(inputs=inputs,
                                context=context,
                                runtime_params=runtime_params,
@@ -8438,7 +8438,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         with Report(report_output=report_output,
                     report_progress=report_progress,
                     report_simulations=report_simulations,
-                    report_to_devices=report_to_devices) as report:
+                    report_to_devices=report_to_devices,
+                    context=context) as report:
 
             progress_report = report.start_progress_report(self, num_trials, context)
 
@@ -8895,7 +8896,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         with Report(report_output=report_output,
                     report_progress=report_progress,
                     report_simulations=report_simulations,
-                    report_to_devices=report_to_devices) as report:
+                    report_to_devices=report_to_devices,
+                    context=context) as report:
 
             # FIX: Call Report with context and progress_report handle this in there 3/3/21
             # If execute method is called directly, need to create Report object for reporting

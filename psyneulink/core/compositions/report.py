@@ -11,6 +11,7 @@ from rich.progress import Progress as RichProgress
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import CONSOLE, DIVERT, FULL, PNL_VIEW, RECORD, TERSE
 from psyneulink.core.globals.utilities import convert_to_list
+from psyneulink.core.globals.context import Context
 
 SIMULATION = 'Simulat'
 DEFAULT = 'Execut'
@@ -176,20 +177,36 @@ class Report:
                 report_progress:bool=False,
                 report_output:bool=False,
                 report_simulations:bool=False,
-                report_to_devices:(*DEVICE_KEYWORDS, list)=CONSOLE
+                report_to_devices:(*DEVICE_KEYWORDS, list)=CONSOLE,
+                context:Context=None
                 ) -> 'Report':
         if cls._instance is None:
+
+            # Validate arguments
+            assert context, "PROGRAM ERROR: Call to Report() without 'context' argument."
+            source = f'call to execution method for {context.composition.name or ""}'
+            if not report_output in [True, False, TERSE, FULL]:
+                raise ReportError(f"Bad 'report_simulations' arg in {source}: '{report_simulations}'; "
+                                  f"must be bool.")
+            if not isinstance(report_progress, bool):
+                raise ReportError(f"Bad 'report_progress' arg in {source}: '{report_progress}'; "
+                                  f"must be bool.")
+            if not isinstance(report_simulations, bool):
+                raise ReportError(f"Bad 'report_simulations' arg in {source}: '{report_simulations}'; "
+                                  f"must be bool.")
+            cls._report_to_devices = convert_to_list(report_to_devices or CONSOLE)
+            if not any(a in [CONSOLE, DIVERT, RECORD, PNL_VIEW] for a in cls._report_to_devices):
+                raise ReportError(f"Bad 'report_to_devices' arg in {source}: '{report_to_devices}'; "
+                                  f"must be one of: {DEVICE_KEYWORDS}")
+
+            # Instantiate instance
             cls._instance = super(Report, cls).__new__(cls)
 
-            # cls._enable_progress = report_progress
+            # Assign option properties
             cls._report_progress = report_progress
             cls._report_output = report_output
             cls._enable_reporting = report_output or report_progress
-
-            cls._report_to_devices = convert_to_list(report_to_devices or CONSOLE)
-            if not any(a in [CONSOLE, DIVERT, RECORD, PNL_VIEW] for a in cls._report_to_devices):
-                raise ReportError(f"Unrecognized keyword in argument for 'report_to_devices'; "
-                                  f"must be one of: {DEVICE_KEYWORDS}")
+            cls._report_simulations = report_simulations
             cls._rich_console = CONSOLE in cls._report_to_devices
             cls._rich_divert = DIVERT in cls._report_to_devices
             cls._record_reports = RECORD in cls._report_to_devices
@@ -198,8 +215,6 @@ class Report:
                              and (cls._rich_console or cls._rich_divert or cls._record_reports))
             cls._use_pnl_view = PNL_VIEW in cls._report_to_devices
 
-            # Show simulations if specified
-            cls._report_simulations = report_simulations
             cls._prev_simulation = False
 
             # Instantiate rich progress context object
