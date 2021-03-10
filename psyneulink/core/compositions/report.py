@@ -172,7 +172,6 @@ class Report:
 
     _instance = None
 
-
     def __new__(cls,
                 report_progress:bool=False,
                 report_output:bool=False,
@@ -390,7 +389,7 @@ class Report:
 
         if report_num is None or (not report_output and not self._report_simulations):
             return
-        # if report_output is None, defer to Composition's reportOutputPref
+        # if report_output is None, defer to caller's reportOutputPref
         if report_output is None:  # if it is False, leave as is to suppress output
             report_output = caller.reportOutputPref
 
@@ -418,8 +417,6 @@ class Report:
             progress_report.trial_report = []
 
             if report_output is not False or self._report_simulations is not False:  # if it is False, suppress output
-                report_output = report_output or caller.reportOutputPref # if it is None, defer to Composition's
-                # reportOutputPref
 
                 #  if FULL output, report trial number and Composition's input
                 #  note:  header for Trial Panel is constructed under 'content is Trial' case below

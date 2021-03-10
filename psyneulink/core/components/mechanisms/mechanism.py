@@ -2307,6 +2307,7 @@ class Mechanism_Base(Mechanism):
                 input=None,
                 context=None,
                 runtime_params=None,
+                report_output=False
                 ):
         """Carry out a single `execution <Mechanism_Execution>` of the Mechanism.
 

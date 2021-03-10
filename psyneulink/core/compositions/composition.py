@@ -7429,14 +7429,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                           f"supplied input spec is a generator. Generators can not be used as inputs for block "
                           f"simulation. This evaluation will not use block simulation.")
 
+
+        # Set up aniimation for simulation
         # HACK: _animate attribute is set in execute method, but Evaluate can be called on a Composition that has not
         # yet called the execute method, so we need to do a check here too.
         # -DTS
         if not hasattr(self, '_animate'):
             # These are meant to be assigned in run method;  needed here for direct call to execute method
             self._animate = False
-
-        # Run Composition in "SIMULATION" context
         if self._animate is not False and self._animate_simulations is not False:
             animate = self._animate
             buffer_animate_state = None
@@ -7444,16 +7444,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             animate = False
             buffer_animate_state = self._animate
 
+        # Run Composition in "SIMULATION" context
         context.add_flag(ContextFlags.SIMULATION_MODE)
         context.remove_flag(ContextFlags.CONTROL)
-        results = self.run(inputs=inputs,
-                 context=context,
-                 runtime_params=runtime_params,
-                 num_trials=num_simulation_trials,
-                 animate=animate,
-                 execution_mode=execution_mode,
-                 skip_initialization=True,
-                 )
+        # Get reporting options from Report context object created in initial call to run
+        with Report() as report:
+            results = self.run(inputs=inputs,
+                               context=context,
+                               runtime_params=runtime_params,
+                               num_trials=num_simulation_trials,
+                               animate=animate,
+                               execution_mode=execution_mode,
+                               skip_initialization=True,
+                               report_output=report._report_output,
+                               report_progress=report._report_progress,
+                               report_simulations=report._report_simulations,
+                               report_to_devices=report._report_to_devices
+                               )
         context.remove_flag(ContextFlags.SIMULATION_MODE)
         context.execution_phase = ContextFlags.CONTROL
         if buffer_animate_state:
@@ -9261,7 +9268,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
 
-
                 # execute each node with EXECUTING in context
                 for (node_idx, node) in enumerate(next_execution_set):
 
@@ -9383,10 +9389,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         nested_execution_mode = execution_mode \
                             if len(node.parameter_CIM.afferents) == 0 else \
                             pnlvm.ExecutionMode.Python
-                        # MODIFIED 2/28/21 NEW:
-                        if isinstance(node, Composition):
-                            node_progress_report = None
-                        # MODIFIED 2/28/21 END
                         ret = node.execute(context=context, report_output=report_output, report_progress=report_progress,
                                            execution_mode=nested_execution_mode)
 
