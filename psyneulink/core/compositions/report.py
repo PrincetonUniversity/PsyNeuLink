@@ -707,9 +707,13 @@ class Report:
                 self._rich_progress.console.print(f'[{node_panel_color}]  {node.name} executed')
 
         elif content is 'time_step':
-            if (report_output is not ReportOutput.OFF
-                    and (nodes_to_report or report_output is ReportOutput.FULL)
-                    and report_type is FULL):
+            # # MODIFIED 3/10/21 OLD:
+            # if (report_output is not ReportOutput.OFF
+            #         and (nodes_to_report or report_output is ReportOutput.FULL)
+            #         and report_type is FULL):
+            # MODIFIED 3/10/21 NEW:
+            if nodes_to_report and report_type is FULL:
+            # MODIFIED 3/10/21 END
                 progress_report.trial_report.append('')
                 progress_report.trial_report.append(Panel(RenderGroup(*progress_report.time_step_report),
                                                            # box=box.HEAVY,
@@ -739,11 +743,11 @@ class Report:
             #     progress_report.trial_report.append(f'\n{self._rich_progress.console.file.getvalue()}')
 
             # If execute() was called from COMMAND_LINE (rather than via run()), report progress
-            if context.source & ContextFlags.COMMAND_LINE and report_output:
+            if context.source & ContextFlags.COMMAND_LINE and report_output is not ReportOutput.OFF:
                 self._print_reports(progress_report)
 
         elif content is 'run':
-            if report_output:
+            if report_output is not ReportOutput.OFF:
                 self._print_reports(progress_report)
 
         else:
@@ -786,7 +790,7 @@ class Report:
                               input_val=None,
                               params=None,
                               output_val=None,
-                              report_output=True,
+                              report_output=ReportOutput.USE_PREFS,
                               context=None):
         """
         Generates formatted output report for the `node <Composition_Nodes>` of a `Composition` or a `Mechanism`.

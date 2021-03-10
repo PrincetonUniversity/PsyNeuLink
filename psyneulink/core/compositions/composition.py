@@ -2394,7 +2394,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
-from psyneulink.core.compositions.report import Report
+from psyneulink.core.compositions.report import Report, ReportOutput
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -8022,7 +8022,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_after_trial=None,
             termination_processing=None,
             skip_analyze_graph=False,
-            report_output=False,
+            report_output:ReportOutput=ReportOutput.OFF,
             report_progress=False,
             report_simulations=False,
             report_to_devices=None,
@@ -8746,7 +8746,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             runtime_params=None,
             skip_initialization=False,
             execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
-            report_output=False,
+            report_output:ReportOutput=ReportOutput.OFF,
             report_progress=False,
             report_simulations=False,
             report_to_devices=None,
@@ -9200,9 +9200,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
                 # INITIALIZE self._time_step_report AND SHOW TIME_STEP DIVIDER
-                nodes_to_report = any(node.reportOutputPref for node in next_execution_set) or report_output is FULL
-                report.report_output(self, progress_report, execution_scheduler, report_output, 'time_step_init', context,
-                                       nodes_to_report=True)
+                nodes_to_report = any(node.reportOutputPref for node in next_execution_set)
+                report.report_output(self, progress_report,
+                                     execution_scheduler,
+                                     report_output,
+                                     'time_step_init',
+                                     context,
+                                     nodes_to_report=True)
 
                 # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 if self._animate is not False and self._animate_unit == EXECUTION_SET:
@@ -9332,7 +9336,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         nested_execution_mode = execution_mode \
                             if len(node.parameter_CIM.afferents) == 0 else \
                             pnlvm.ExecutionMode.Python
-                        ret = node.execute(context=context, report_output=report_output, report_progress=report_progress,
+                        ret = node.execute(context=context,
+                                           report_output=report_output,
+                                           report_progress=report_progress,
                                            execution_mode=nested_execution_mode)
 
                         # Get output info from nested execution
