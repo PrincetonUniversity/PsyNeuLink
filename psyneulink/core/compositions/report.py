@@ -387,7 +387,7 @@ class Report:
                       nodes_to_report=False,
                       node=None):
 
-        if report_num is None or (not report_output and not self._report_simulations):
+        if report_num is None or not report_output:
             return
         # if report_output is None, defer to caller's reportOutputPref
         if report_output is None:  # if it is False, leave as is to suppress output
@@ -416,7 +416,7 @@ class Report:
 
             progress_report.trial_report = []
 
-            if report_output is not False or self._report_simulations is not False:  # if it is False, suppress output
+            if report_output:  # if it is False, suppress output
 
                 #  if FULL output, report trial number and Composition's input
                 #  note:  header for Trial Panel is constructed under 'content is Trial' case below
@@ -432,7 +432,7 @@ class Report:
                         self._recorded_reports += trial_header
 
         elif content is 'time_step_init':
-            if report_output or self._report_simulations:
+            if report_output:
                 if report_type is FULL:
                     progress_report.time_step_report = [] # Contains rich.Panel for each node executed in time_step
                 elif nodes_to_report:
@@ -444,8 +444,7 @@ class Report:
         elif content is 'node':
             if not node:
                 assert False, 'Node not specified in call to Report report_output'
-            if ((report_output is False and self._report_simulations is False)
-                    or report_output is True and node.reportOutputPref is False):
+            if not report_output or (report_output is True and node.reportOutputPref is False):
                 return
             # Use FULL node report for Node:
             if report_type is FULL or node.reportOutputPref in [True, FULL]:
@@ -500,11 +499,11 @@ class Report:
             #     progress_report.trial_report.append(f'\n{self._rich_progress.console.file.getvalue()}')
 
             # If execute() was called from COMMAND_LINE (rather than via run()), report progress
-            if context.source & ContextFlags.COMMAND_LINE and (report_output or self._report_simulations):
+            if context.source & ContextFlags.COMMAND_LINE and report_output:
                 self._print_reports(progress_report)
 
         elif content is 'run':
-            if report_output or self._report_simulations:
+            if report_output:
                 self._print_reports(progress_report)
 
         return
