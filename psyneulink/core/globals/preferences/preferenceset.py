@@ -26,19 +26,12 @@ additional details):
   Function object;
 
 .. _PreferenceSet_reportOutputPref:
-COMMENT:
-THIS DOES NOT CURRENTLY SUPPORT STRINGS (TERSE or 'params')
-- reportOutputPref ([bool, str]): enables/disables reporting execution of `Component`\'s `execute <Component_Execution>`
-  method to console and/or PsyNeuLinkView:
 
-    - ``True``: prints record of execution, including the input and output of the Component;
-    - *TERSE*: restricts output to just a statement that the Component executed;
-    - 'params' or 'parameters': includes report of the Component's `parameter <Parameters>` values.
-COMMENT
-* **reportOutputPref** (bool, default: False) - enables/disables reporting execution of the `Component`;
-  if the Component is executed within a `Composition`, this preference may be overridden by the **report_output**
-  argument specified in any of the Composition's `execution methods <Composition_Execution_Methods>`
-  (see `execution reporting <Composition_Execution_Reporting>` for additional details);
+* **reportOutputPref** (bool, 'params', ReportOutput, list), default: ReportOutput.OFF) - enables/disables reporting
+  execution of the `Component` (`ReportOutput` for options), and whether to include the values of its `Parameters`
+  in addition to its input and output; if the Component is executed within a `Composition`, this preference may be
+  overridden by the **report_output** argument specified in any of the Composition's `execution methods
+  <Composition_Execution_Methods>` (see `execution reporting <Composition_Execution_Reporting>` for additional details).
 
 * **logPref** (LogCondition, default: LogCondition.OFF) - sets `LogCondition` for a given Component;
 
@@ -51,16 +44,13 @@ COMMENT
 .. _technical_note::
    * **deliverPref** (LogCondition, default: LogCondition.OFF) - sets whether attribute data are added to context rpc
      pipeline for delivery to external applications.
-
 """
 
 import abc
 import inspect
-
 from collections import namedtuple
 from enum import Enum, IntEnum
 
-from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import DEFAULT_PREFERENCE_SET_OWNER, PREFERENCE_SET_NAME
 from psyneulink.core.globals.utilities import iscompatible, kwCompatibilityType
 
