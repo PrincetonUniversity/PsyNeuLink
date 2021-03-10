@@ -186,8 +186,8 @@ class Report:
             assert context, "PROGRAM ERROR: Call to Report() without 'context' argument."
             source = f'call to execution method for {context.composition.name or ""}'
             if not report_output in [True, False, TERSE, FULL]:
-                raise ReportError(f"Bad 'report_simulations' arg in {source}: '{report_simulations}'; "
-                                  f"must be bool.")
+                raise ReportError(f"Bad 'report_output' arg in {source}: '{report_simulations}'; "
+                                  f"must be a bool or 'terse' or 'full'.")
             if not isinstance(report_progress, bool):
                 raise ReportError(f"Bad 'report_progress' arg in {source}: '{report_progress}'; "
                                   f"must be bool.")
