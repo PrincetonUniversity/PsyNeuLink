@@ -1621,10 +1621,10 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
         -------
         a numpy array containing the converted **arr**
     """
-    if isinstance(arr, np.ndarray) and arr.dtype != object:
+    if isinstance(arr, np.ndarray):
         if cast_from is not None and arr.dtype == cast_from:
             return np.asarray(arr, dtype=cast_to)
-        else:
+        elif arr.ndim == 0 or arr.dtype != object:
             return arr
 
     if cast_from is not None and isinstance(arr, cast_from):
