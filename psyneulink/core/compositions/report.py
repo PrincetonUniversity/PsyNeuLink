@@ -318,7 +318,7 @@ class Report:
             # Validate arguments
             # assert context, "PROGRAM ERROR: Call to Report() without 'context' argument."
             # source = f'call to execution method for {context.composition.name or ""}'
-            if not report_output in [True, False, TERSE, FULL]:
+            if report_output not in [True, False, TERSE, FULL]:
                 raise ReportError(f"Bad 'report_output' arg in {source}: '{report_simulations}'; "
                                   f"must be a bool or 'terse' or 'full'.")
             if not isinstance(report_progress, bool):
@@ -453,8 +453,8 @@ class Report:
 
         if not comp:
             assert False, "Report.start_progress() called without a Composition specified in 'comp'."
-        if not num_trials:
-            assert False, "Report.start_progress() called with num_trials unspecified or 0."
+        if num_trials is None:
+            assert False, "Report.start_progress() called with num_trials unspecified."
 
 
         # Generate space before beginning of output
