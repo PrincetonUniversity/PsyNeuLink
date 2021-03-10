@@ -43,7 +43,7 @@ Simulations
 -----------
 
 Output and progress reporting can include execution in `simulations <OptimizationControlMechanism_Execution>`
-by a Composition's `controller <Composition_Controller>`), by specifying the **report_simulations** argument of
+of a Composition's `controller <Composition_Controller>`), by specifying the **report_simulations** argument of
 a Composition's `run <Composition.run>` or `learn <Composition.run>` methods.
 
 .. _Report_To_Device:
@@ -236,7 +236,7 @@ class Report:
         specifies whether to report output and progress for `simulations <OptimizationControlMechanism_Execution>`
         executed by an a Composition's `controller <Composition_Controller>`.
 
-    report_to_devices : list(ReportDevices) : default CONSOLE
+    report_to_devices : list(ReportDevices) : default ReportDevices.CONSOLE
         specifies devices to which output and progress reporting is sent;  see `ReportDevices` for options.
 
     Attributes
