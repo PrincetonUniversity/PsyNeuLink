@@ -68,18 +68,18 @@ Reporting Options
 import re
 import sys
 import warnings
-from io import StringIO
 from enum import Enum, Flag, auto
+from io import StringIO
 
 from rich import print, box
 from rich.console import Console, RenderGroup
 from rich.panel import Panel
 from rich.progress import Progress as RichProgress
 
-from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONSOLE, DIVERT, FULL, PNL_VIEW, RECORD, TERSE
-from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.context import Context
+from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.keywords import CONSOLE, DIVERT, FULL, INPUT_PORTS, OUTPUT_PORTS, PNL_VIEW, RECORD, TERSE
+from psyneulink.core.globals.utilities import convert_to_list
 
 SIMULATION = 'Simulat'
 DEFAULT = 'Execut'
@@ -775,21 +775,32 @@ class Report:
                               context=None):
         """
         Generates formatted output report for the `node <Composition_Nodes>` of a `Composition` or a `Mechanism`.
+        Called by `report_output <Report.report_output>` for execution of a Composition, and directly by the `execute
+        <Mechanism_Base>` method of a `Mechanism` when executed on its own.
 
         Arguments
         ---------
 
-        input_val : default None
-            `input_value
+        input_val : 2d array : default None
+            the `input_value <Mechanism_Base.input_value>` of the `Mechanism` or `external_input_values
+            <Composition.external_input_values>` of the `Composition` for which execution is being reported;
+            if it is not specified, it is resolved by calling the node's get_input_values() method.
 
-        params=None,
+        params : 'params' or 'parameters' : default None
+            specifies whether to report the values of the `Parameters` of the `node <Composition_Nodes>` being executed
+            together with its input and output.
 
-        output_val=None,
+        output_val : 2d array : default None
+            the `output_values <Mechanism_Base.output_value>` of the `Mechanism` or `external_output_values
+            <Composition.external_output_values>` of the `Composition` for which execution is being reported.
 
-        report_output=True,
+        report_output : ReportOutput
+            conveys `ReportOutput` option specified in the **report_output** argument of the call to a Composition's
+            `execution method <Composition_Execution_Method>` or a Mechanism's `execute <Mechanism_Base.execute>`
+            method.
 
-        context=None):
-
+        context : Context
+            context of current execution.
         """
 
 
@@ -805,6 +816,7 @@ class Report:
             input_val = node.get_input_values(context)
         if output_val is None:
             output = node.output_port.parameters.value._get(context)
+
         params = params or {p.name: p._get(context) for p in node.parameters}
 
         # print input
@@ -864,8 +876,10 @@ class Report:
                     for fct_param_name in func_params_keys_sorted:
                         params_string += ("\n\t\t{}: {}".
                                           format(fct_param_name,
-                                                 str(getattr(node.function.parameters, fct_param_name)._get(context)).__str__().strip("[]")))
-
+                                                 str(getattr(node.function.parameters,
+                                                             fct_param_name)._get(context)).__str__().strip("[]")
+                                                 )
+                                          )
         if include_params:
             width = 100
             expand = True
