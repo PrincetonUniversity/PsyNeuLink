@@ -1,5 +1,6 @@
+import contextlib
+import io
 import sys
-
 import pytest
 
 import psyneulink as pnl
@@ -210,3 +211,38 @@ class TestReport():
     #     actual_output = ocomp.rich_diverted_reports
     #     expected_output = '\nocomp TRIAL 0 ====================\n Time Step 0 ---------\nicomp TRIAL 0 ====================\n Time Step 0 ---------\n Time Step 0 ---------\n Time Step 0 ---------\n Time Step 1 ---------\nocomp: Executed 1 of 1 trials\nocomp: Simulated 3 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials'
     #     assert actual_output == expected_output
+
+    def test_reportOutputPref_true(self):
+        t = pnl.TransferMechanism()
+        t.reportOutputPref = True
+
+        f = io.StringIO()
+        with contextlib.redirect_stdout(f):
+            t.execute(1)
+        output = f.getvalue()
+
+        assert 'input: 1.0' in output
+        assert 'output: 1.0' in output
+        assert 'params' not in output
+
+    def test_reportOutputPref_params(self):
+        t = pnl.TransferMechanism()
+        t.reportOutputPref = 'params'
+
+        f = io.StringIO()
+        with contextlib.redirect_stdout(f):
+            t.execute(1)
+        output = f.getvalue()
+
+        assert 'input: 1.0' in output
+        assert 'output: 1.0' in output
+        assert 'params' in output
+
+        # NOTE: parameters are not consistent in printed form with
+        # their underlying values (e.g. dimension brackets are removed)
+        # So, don't check output for all parameters and correct values
+        assert 'noise:' in output
+        assert 'integration_rate:' in output
+
+        assert 'Parameter(' not in output
+        assert 'pnl_internal=' not in output

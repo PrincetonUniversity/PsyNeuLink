@@ -67,6 +67,7 @@ Reporting Options
 
 import re
 import sys
+import types
 import warnings
 from enum import Enum, Flag, auto
 from io import StringIO
@@ -78,7 +79,8 @@ from rich.progress import Progress as RichProgress
 
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONSOLE, DIVERT, FULL, INPUT_PORTS, OUTPUT_PORTS, PNL_VIEW, RECORD, TERSE
+from psyneulink.core.globals.keywords import CONSOLE, DIVERT, FUNCTION_PARAMS, FULL, INPUT_PORTS, OUTPUT_PORTS, \
+    PNL_VIEW, RECORD, TERSE
 from psyneulink.core.globals.utilities import convert_to_list
 
 SIMULATION = 'Simulat'
@@ -805,7 +807,6 @@ class Report:
 
 
         from psyneulink.core.components.shellclasses import Function
-        from psyneulink.core.globals.keywords import FUNCTION_PARAMS
 
         node_report = ''
 
