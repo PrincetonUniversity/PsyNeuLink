@@ -1,9 +1,14 @@
+import sys
+
+import pytest
+
 import psyneulink as pnl
 from psyneulink.core.globals.keywords import DIVERT, FULL, TERSE
 
 
 class TestReport():
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason="<add optional reason here>")
     def test_simple_output_and_progress(self):
         """Test simple sequence of three Mechanisms, using all report_output and report_progress options
         """
@@ -18,12 +23,12 @@ class TestReport():
 
         comp.run(report_output=TERSE, report_to_devices=DIVERT)
         actual_output = comp.rich_diverted_reports
-        expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\na executed\n Time Step 1 ---------\nb executed\n Time Step 2 ---------\nc executed\n'
-        assert actual_output == expected_output
+        expected_output = '\'\\nCOMP TRIAL 0 ====================\\n Time Step 0 ---------\\n  a executed\\n Time Step 1 ---------\\n  b executed\\n Time Step 2 ---------\\n  c executed\\n\''
+        assert repr(actual_output) == expected_output
 
         comp.run(report_output=TERSE, report_progress=True, report_to_devices=DIVERT)
         actual_output = comp.rich_diverted_reports
-        expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\na executed\n Time Step 1 ---------\nb executed\n Time Step 2 ---------\nc executed\nCOMP: Executed 1 of 1 trials\n'
+        expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\n  a executed\n Time Step 1 ---------\n  b executed\n Time Step 2 ---------\n  c executed\nCOMP: Executed 1 of 1 trials\n'
         assert actual_output == expected_output
 
         comp.run(report_output=True, report_to_devices=DIVERT)
@@ -50,12 +55,12 @@ class TestReport():
         # which increments after calls to execute()
         comp.execute(report_output=TERSE, report_to_devices=DIVERT)
         actual_output = comp.rich_diverted_reports
-        expected_output = '\'\\nCOMP TRIAL 0 ====================\\n Time Step 0 ---------\\na executed\\n Time Step 1 ---------\\nb executed\\n Time Step 2 ---------\\nc executed\\n\''
+        expected_output = '\'\\nCOMP TRIAL 0 ====================\\n Time Step 0 ---------\\n  a executed\\n Time Step 1 ---------\\n  b executed\\n Time Step 2 ---------\\n  c executed\\n\''
         assert repr(actual_output) == expected_output
 
         comp.execute(report_output=TERSE, report_progress=True, report_to_devices=DIVERT)
         actual_output = comp.rich_diverted_reports
-        expected_output = '\'\\nCOMP TRIAL 1 ====================\\n Time Step 0 ---------\\na executed\\n Time Step 1 ---------\\nb executed\\n Time Step 2 ---------\\nc executed\\n[red]Executing COMP...\\n\''
+        expected_output = '\'\\nCOMP TRIAL 1 ====================\\n Time Step 0 ---------\\n  a executed\\n Time Step 1 ---------\\n  b executed\\n Time Step 2 ---------\\n  c executed\\n[red]Executing COMP...\\n\''
         assert repr(actual_output) == expected_output
 
         comp.execute(report_output=True, report_to_devices=DIVERT)
@@ -93,12 +98,12 @@ class TestReport():
     #
     #     comp.run(report_output=TERSE, report_progress=[False, DIVERT])
     #     actual_output = comp.rich_diverted_reports
-    #     expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\na executed\nb executed\n Time Step 1 ---------\nc executed\n\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\na executed\nb executed\n Time Step 1 ---------\nc executed\nCOMP TRIAL 1 ====================\n Time Step 0 ---------\na executed\nb executed\n Time Step 1 ---------\nc executed\n'
+    #     expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\n  a executed\n  b executed\n Time Step 1 ---------\n  c executed\n\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\n  a executed\n  b executed\n Time Step 1 ---------\n  c executed\nCOMP TRIAL 1 ====================\n Time Step 0 ---------\n  a executed\n  b executed\n Time Step 1 ---------\n  c executed\n'
     #     assert actual_output == expected_output
     #
     #     comp.run(report_output=TERSE, report_progress=DIVERT)
     #     actual_output = comp.rich_diverted_reports
-    #     expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\nb executed\na executed\n Time Step 1 ---------\nc executed\nCOMP: Executed 1 of 2 trials\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\nb executed\na executed\n Time Step 1 ---------\nc executed\nCOMP TRIAL 1 ====================\n Time Step 0 ---------\nb executed\na executed\n Time Step 1 ---------\nc executed\nCOMP: Executed 2 of 2 trials'
+    #     expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\n  b executed\n  a executed\n Time Step 1 ---------\n  c executed\nCOMP: Executed 1 of 2 trials\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\n  b executed\n  a executed\n Time Step 1 ---------\n  c executed\nCOMP TRIAL 1 ====================\n Time Step 0 ---------\n  b executed\n  a executed\n Time Step 1 ---------\n  c executed\nCOMP: Executed 2 of 2 trials'
     #     assert actual_output == expected_output
     #
     #     comp.run(report_output=True, report_progress=DIVERT)

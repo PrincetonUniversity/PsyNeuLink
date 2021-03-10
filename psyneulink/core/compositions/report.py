@@ -314,8 +314,8 @@ class Report:
         if cls._instance is None:
 
             # Validate arguments
-            assert context, "PROGRAM ERROR: Call to Report() without 'context' argument."
-            source = f'call to execution method for {context.composition.name or ""}'
+            # assert context, "PROGRAM ERROR: Call to Report() without 'context' argument."
+            # source = f'call to execution method for {context.composition.name or ""}'
             if not report_output in [True, False, TERSE, FULL]:
                 raise ReportError(f"Bad 'report_output' arg in {source}: '{report_simulations}'; "
                                   f"must be a bool or 'terse' or 'full'.")
@@ -810,7 +810,7 @@ class Report:
         node_report = ''
 
         if report_output is TERSE or node.reportOutputPref is TERSE and report_output is not FULL:
-            return f'[{node_panel_color}]{node.name} executed'
+            return f'[{node_panel_color}]  {node.name} executed'
 
         if input_val is None:
             input_val = node.get_input_values(context)
