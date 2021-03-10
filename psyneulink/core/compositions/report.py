@@ -317,8 +317,8 @@ class Report:
 
             # Validate arguments
             # assert context, "PROGRAM ERROR: Call to Report() without 'context' argument."
-            # source = f'call to execution method for {context.composition.name or ""}'
-            if report_output not in [True, False, TERSE, FULL]:
+            source = f'call to execution method for {context.composition.name or ""}'
+            if not isinstance(report_output, ReportOutput):
                 raise ReportError(f"Bad 'report_output' arg in {source}: '{report_simulations}'; "
                                   f"must be a bool or 'terse' or 'full'.")
             if not isinstance(report_progress, bool):
@@ -338,13 +338,13 @@ class Report:
             # Assign option properties
             cls._report_progress = report_progress
             cls._report_output = report_output
-            cls._reporting_enabled = report_output or report_progress
+            cls._reporting_enabled = report_output is not ReportOutput.OFF or report_progress
             cls._report_simulations = report_simulations
             cls._rich_console = CONSOLE in cls._report_to_devices
             cls._rich_divert = DIVERT in cls._report_to_devices
             cls._record_reports = RECORD in cls._report_to_devices
             # Enable rich if reporting output or progress and using console or recording
-            cls._use_rich = ((report_output or report_progress)
+            cls._use_rich = (cls._reporting_enabled
                              and (cls._rich_console or cls._rich_divert or cls._record_reports))
             cls._use_pnl_view = PNL_VIEW in cls._report_to_devices
 
@@ -614,15 +614,19 @@ class Report:
             specifies `node <Composition_Nodes>` for which output is being reported.
         """
 
-        if report_num is None or not report_output:
+        if report_num is None or report_output is ReportOutput.OFF:
             return
-        # if report_output is None, defer to caller's reportOutputPref
-        if report_output is None:  # if it is False, leave as is to suppress output
-            report_output = caller.reportOutputPref
+        # if report_output is USE_PREFS, defer to caller's reportOutputPref
+        if report_output is ReportOutput.USE_PREFS:
+            if isinstance(caller.reportOutputPref, ReportOutput):
+                report_output = caller.reportOutputPref
+            else:
+                report_output = ReportOutput.FULL
 
-        if report_output is FULL:   # give precedence to argument in call to execute
+
+        if report_output is ReportOutput.FULL:   # give precedence to argument in call to execute
             report_type = FULL
-        elif report_output is TERSE:
+        elif report_output is ReportOutput.TERSE:
             report_type = TERSE
         else:
             report_type = None
@@ -643,7 +647,7 @@ class Report:
 
             progress_report.trial_report = []
 
-            if report_output:  # if it is False, suppress output
+            if report_output is not ReportOutput.OFF:
 
                 #  if FULL output, report trial number and Composition's input
                 #  note:  header for Trial Panel is constructed under 'content is Trial' case below
@@ -659,7 +663,7 @@ class Report:
                         self._recorded_reports += trial_header
 
         elif content is 'time_step_init':
-            if report_output:
+            if report_output is not ReportOutput.OFF:
                 if report_type is FULL:
                     progress_report.time_step_report = [] # Contains rich.Panel for each node executed in time_step
                 elif nodes_to_report:
@@ -671,10 +675,17 @@ class Report:
         elif content is 'node':
             if not node:
                 assert False, 'Node not specified in call to Report report_output'
-            if not report_output or (report_output is True and node.reportOutputPref is False):
+            # MODIFIED 3/10/21 OLD:
+            # if (report_output is ReportOutput.OFF
+            #         or (report_output is ReportOutput.USE_PREFS and node.reportOutputPref is False)):
+            # MODIFIED 3/10/21 END
+            if report_output is ReportOutput.OFF:
                 return
             # Use FULL node report for Node:
-            if report_type is FULL or node.reportOutputPref in [True, FULL]:
+            # MODIFIED 3/10/21 OLD:
+            # if report_type is FULL or node.reportOutputPref in [True, FULL]:
+            # MODIFIED 3/10/21 END
+            if report_type is FULL:
                 node_report = self.node_execution_report(node,
                                                          input_val=node.get_input_values(context),
                                                          output_val=node.output_port.parameters.value._get(context),
@@ -810,7 +821,8 @@ class Report:
 
         node_report = ''
 
-        if report_output is TERSE or node.reportOutputPref is TERSE and report_output is not FULL:
+        if (report_output is ReportOutput.TERSE
+                or (node.reportOutputPref is ReportOutput.TERSE and report_output is not ReportOutput.FULL)):
             return f'[{node_panel_color}]  {node.name} executed'
 
         if input_val is None:
