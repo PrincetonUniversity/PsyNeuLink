@@ -680,8 +680,12 @@ class Report:
         if report_num is None or report_output is ReportOutput.OFF:
             return
 
-        trial_report_type = node_report_type = report_output
+        if node:
+            node_pref = next((pref for pref in convert_to_list(node.reportOutputPref)
+                                         if isinstance(pref, ReportOutput)), None)
 
+        # Assign trial_report_type and node_report_type
+        trial_report_type = node_report_type = report_output
         from psyneulink.core.compositions.composition import Composition
         from psyneulink.core.components.mechanisms.mechanism import Mechanism
         # Report is called for by a Mechanism
@@ -690,29 +694,17 @@ class Report:
             trial_report_type = ReportOutput.TERSE
             # If USE_PREFS is specified by user, then assign output format to Mechanism's reportOutputPref
             if report_output is ReportOutput.USE_PREFS:
-                node_report_type = node.reportOutputPref
-            # Otherwise, use option specified by user or default
-            else:
-                node_report_type = report_output
+                node_report_type = node_pref
         # USE_PREFS is specified for report called by a Composition:
         elif isinstance(caller, Composition) and report_output is ReportOutput.USE_PREFS:
             # First, if report is for execution of a node, assign its report type using its reportOutputPref:
             if node:
                 # Get ReportOutput spec from reportOutputPref if there is one
-                node_report_type = next((pref for pref in convert_to_list(node.reportOutputPref)
-                                           if isinstance(pref, ReportOutput)), None)
                 # If None was found, assign ReportOutput.FULL as default
-                node_report_type = node_report_type or ReportOutput.FULL
+                node_report_type = node_pref or ReportOutput.FULL
                 # Return if it is OFF
                 if node_report_type is ReportOutput.OFF:
                     return
-            # # Then, get report type for trial
-            # # If Composition's reportOutputPref is also USE_PREF, assign TERSE as default
-            # if caller.reportOutputPref is ReportOutput.USE_PREFS:
-            #     trial_report_type = ReportOutput.TERSE
-            # # Otherwise, use Compositions' reportOutputPref
-            # else:
-            #     trial_report_type = report_output
 
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
         if simulation_mode:
@@ -874,8 +866,10 @@ class Report:
 
         # Use TERSE format if that has been specified by report_output (i.e., in the arg of an execution method),
         #   or as the reportOutputPref for a node when USE_PREFS is in effect
+        node_pref = convert_to_list(node.reportOutputPref)
         if (report_output is ReportOutput.TERSE
-                or (node.reportOutputPref is ReportOutput.TERSE and report_output is not ReportOutput.FULL)):
+                or (ReportOutput.TERSE in node_pref
+                    and report_output is not ReportOutput.FULL)):
             return f'[{node_panel_color}]  {node.name} executed'
 
 
@@ -909,7 +903,6 @@ class Report:
 
         # Render params if specified -------------------------------------------------------------------------------
         params = {p.name: p._get(context) for p in node.parameters}
-        node_pref = convert_to_list(node.reportOutputPref)
         try:
             # FIX 3/11/21 ALLOW SPECIFYING INDIVIDUAL PARAMS BY NAME IN LIST
             include_params = any(re.match('param(eter)?s?', pref, flags=re.IGNORECASE) for pref in node_pref)
