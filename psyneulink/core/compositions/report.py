@@ -1,7 +1,90 @@
+# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and limitations under the License.
+
+# ************************************************ Report **************************************************************
+
+"""
+Reporting is enabled by specifying the reporting arguments of a `Composition`\\'s `execution methods
+<Composition_ExecutionMethods>` or the `execute <Mechanism_Base.exeucte>` method of a `Mechanism`.  There are
+two types of reporting that can be generated: output reporting and progress reporting.  These can be directed to the
+python console or other devices, as described below.
+
+.. _Report_Output:
+
+Output reporting
+----------------
+
+Output reporting provides information about the input and output to a `Mechanism` or to a `Composition` and
+its `Nodes <Composition_Nodes>` as they execute.  Options can be specified using a value of `ReportOutput` in
+the `reportOutputPref <PreferenceSet_reportOutputPref>` of a Component, or the **report_output** argument of a
+Mechanism's `execute <Mechanism_Base.execute>` method or any of a Composition's `execution methods
+<Composition_Execution_Methods>`.  If `USE_PREFS <ReportOutput.USE_PREFS>` or `TERSE <ReportOutput.TERSE>` is used,
+reporting is generated as execution of each Component occurs;  if `FULL <ReportOutput.FULL>` is used, then the
+information is reported at the end of each `TRIAL <TimeScale.TRIAL>` executed. Whether `simulations
+<OptimizationControlMechanism_Execution>` executed by a Composition's `controller <Composition_Controller>` are
+included is determined by the **report_simulations** argument using a `ReportSimulations` option. Output is reported
+to the devices specified in the **report_to_devices** argument using the `ReportDevices` options
+
+
+.. _Report_Progress:
+
+Progress reporting
+------------------
+
+Progress reporting provides information about the status of execution of a Composition's `run <Composition.run>`
+or `learn <Composition.run>` methods.  It can be enabled/disabled by specifying a `ReportProgress` option in the
+**report_progress** argument of either of those methods. If enabled, progress is reported at the end of each `TRIAL
+<TimeScale.TRIAL>` of a `Composition`\\'s execution, showing the number of `TRIALS <TimeScale.TRIAL>` that have been
+executed and a progress bar. If the number `TRIALS <TimeScale.TRIAL>` to be executed is determinable (e.g.,
+the **num_trials** of a Composition's `run <Composition.run>` or `learn <Composition.learn>` method is specified),
+estimated time remaining is displayed; if the number of trials is not determinable (e.g., if **inputs** argument is
+specified using a generator), then a "spinner" is displayed during execution and the the total number of `TRIALS
+<TimeScale.TRIAL>` executed is displayed once complete.  Whether `simulations
+<OptimizationControlMechanism_Execution>` executed by an a Composition's `controller <Composition_Controller>` are
+included is determined by the **report_simulations** argument using a `ReportSimulations` option.  Progress is
+reported to the devices specified in the **report_to_devices** argument using the `ReportDevices` options.
+
+.. _technical_note::
+    Progress reporting is generated and displayed using a `rich Progress Display
+    <https://rich.readthedocs.io/en/stable/progress.html#>`_ object.
+
+.. _Report_Simulations:
+
+Simulations
+-----------
+
+Output and progress reporting can include execution in `simulations <OptimizationControlMechanism_Execution>`
+of a Composition's `controller <Composition_Controller>`), by specifying a `ReportSimulation` option in the
+**report_simulations** argument of a Composition's `run <Composition.run>` or `learn <Composition.run>` methods.
+
+.. _Report_To_Device:
+
+Devices
+-------
+
+The device(s) to which reporting is sent can be specified using the **report_to_device** argument of a Mechanism's
+`execute <Mechanism_Base.execute>` method or any of a Composition's `execution methods <Composition_Execution_Methods>`;
+this can be used to store reports in a Composition's `recorded_reports <Composition.recorded_reports>` attribute;
+see `ReportDevices` for options.
+
+.. _Report_Options:
+
+Reporting Options
+-----------------
+
+
+"""
+
+
 import re
 import sys
 import types
 import warnings
+from enum import Enum, Flag, auto
 from io import StringIO
 
 from rich import print, box
@@ -9,15 +92,17 @@ from rich.console import Console, RenderGroup
 from rich.panel import Panel
 from rich.progress import Progress as RichProgress
 
+from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONSOLE, DIVERT, FULL, PNL_VIEW, RECORD, TERSE, FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS
+from psyneulink.core.globals.keywords import FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS
 from psyneulink.core.globals.utilities import convert_to_list
+
+__all__ = ['Report', 'ReportOutput', 'ReportProgress', 'ReportDevices', 'CONSOLE', 'RECORD', 'DIVERT', 'PNL_VIEW']
 
 SIMULATION = 'Simulat'
 DEFAULT = 'Execut'
+SIMULATIONS = 'simulations'
 REPORT_REPORT = False # USED FOR DEBUGGING
-
-DEVICE_KEYWORDS = (CONSOLE, DIVERT, RECORD, PNL_VIEW)
 
 # rich console report styles
 # node
@@ -25,13 +110,150 @@ node_panel_color = 'orange1'
 # node_panel_box = box.SIMPLE
 node_panel_box = box.ROUNDED
 # time_step
-time_step_panel_color = 'dodger_blue2'
+time_step_panel_color = 'dodger_blue1'
 time_step_panel_box = box.SQUARE
 # trial
 trial_panel_color = 'dodger_blue3'
 trial_input_color = 'green'
 trial_output_color = 'red'
 trial_panel_box = box.HEAVY
+
+
+class ReportOutput(Enum):
+    """
+    Options used in the **report_output** argument of a `Composition`\'s `execution methods
+    <Composition_Execution_Methods>` or the `execute <Mechanism_Base.execute>` method of a `Mechanism`, to enable and
+    determine the type of output generated by reporting; see `Report_Output` for additional details.
+
+    .. _technical_note::
+        Use of these options is expected in the **report_output** constructor for the `Report` object,
+        and are used as the values of its `report_output <Report.report_output>` attribute.
+
+    Attributes
+    ----------
+
+    OFF
+        suppress output reporting.
+
+    USE_PREFS
+        use the `reportOutputPref <PreferenceSet_reportOutputPref>` of each `Composition` and/or `Mechanism` executed
+        to determine whether and in what format to report its execution.
+
+    TERSE
+        enforce reporting execution of *all* Compositions and/or Mechanisms as they are executed, irrespective of their
+        `reportOutputPref <PreferenceSet_reportOutputPref>` settings, using a simple line-by-line format to report each.
+
+    FULL
+        enforce formatted reporting execution of *all* Compositions and/or Mechanisms at the end of each
+        `TRIAL <TimeScale.TRIAL>` of execution, including the input and output of each, irrespective of their
+        `reportOutputPref <PreferenceSet_reportOutputPref>` settings.
+
+        .. _technical_note::
+            Output is formatted using `rich Panel objects <https://rich.readthedocs.io/en/stable/panel.html>`_.
+    """
+
+    OFF = 0
+    USE_PREFS = 1
+    TERSE = 2
+    FULL = 3
+
+
+class ReportProgress(Enum):
+    """
+    Options used in the **report_progress** argument of a `Composition`\'s `run <Composition.run>` and `learn
+    <Composition.learn>` methods, to enable/disable progress reporting during execution of a Composition; see
+    `Report_Progress` for additional details.
+
+    .. _technical_note::
+        Use of these options is expected in the **report_progress** constructor for the `Report` object,
+        and are used as the values of its `report_progress <Report.report_output>` attribute.
+
+    Attributes
+    ----------
+
+    OFF
+        suppress progress reporting.
+
+    ON
+        enable progress reporting for executions of a Composition.
+    """
+
+    OFF = 0
+    ON = 1
+
+
+class ReportSimulations(Enum):
+    """
+    Options used in the **report_simulations** argument of a `Composition`\'s `run <Composition.run>` and `learn
+    <Composition.learn>` methods, to specify whether `simulations <OptimizationControlMechanism_Execution>`
+    executed by an a Composition's `controller <Composition_Controller>` are included in output and progress reporting.
+
+    .. _technical_note::
+        Use of these options is expected in the **report_progress** constructor for the `Report` object,
+        and are used as the values of its `report_progress <Report.report_output>` attribute.
+
+    Attributes
+    ----------
+
+    OFF
+        suppress output and progress of simulations.
+
+    ON
+        enable output and progress reporting of simulations.
+    """
+
+    OFF = 0
+    ON = 1
+
+
+class ReportDevices(Flag):
+    """
+    Options used in the **report_to_devices** argument of a `Composition`\'s `execution methods
+    <Composition_Execution_Methods>` or the `execute <Mechanism_Base.execute>` method of a `Mechanism`,
+    to determine the devices to which reporting is directed.
+
+    .. _technical_note::
+        Use of these options is expected in the **report_to_devices** constructor for the `Report` object,
+        and are used as the values of its `_report_to_devices <Report._report_to_devices>` attribute.
+
+    Attributes
+    ----------
+
+    CONSOLE
+        direct reporting to the console in which PsyNeuLink is running
+
+        .. _technical_note::
+            output is rendered using the `Console markup <https://rich.readthedocs.io/en/stable/markup.html#>`_
+            by a `rich Progress <https://rich.readthedocs.io/en/stable/progress.html>`_ object stored in
+            `_instance._rich_progress <Report._rich_progress>`.
+
+    RECORD
+        capture reporting in `_recorded_reports <Report._recorded_reports>`; specifying this
+        option on its own replaces and suppresses reporting to the console; to continue to generate console
+        output, explicitly include `CONSOLE` along with `RECORD` in the argument specification.
+
+    .. _technical_note::
+        DIVERT
+            capture reporting otherwise directed to the rich Console in a UDF-8 formatted string and
+            stores it in `_rich_diverted_reports <Report._rich_diverted_reports>`. This option suppresses
+            console output and is cumulative (that is, it records the sequences of updates sent to the console
+            after each TRIAL) and is intended primarily for unit testing. The `RECORD` option should be used for
+            recording output, as it can be used with console output if desired, and reflects the final state of
+            the display after execution is complete.
+
+    PNL_VIEW
+        direct reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
+    """
+
+    CONSOLE = auto()
+    RECORD = auto()
+    DIVERT = auto()
+    PNL_VIEW = auto()
+
+CONSOLE = ReportDevices.CONSOLE
+RECORD = ReportDevices.RECORD
+DIVERT = ReportDevices.DIVERT
+PNL_VIEW = ReportDevices.DIVERT
 
 
 class ReportError(Exception):
@@ -45,7 +267,8 @@ class ReportError(Exception):
 
 class ProgressReport():
     """
-    Object used to package reporting for a call to Composition.run()
+    Object used to package Progress reporting for a call to the `run <Composition.run>` or `learn
+    <Composition.learn>` methods of a `Composition`.
     """
 
     def __init__(self, id, num_trials):
@@ -57,57 +280,28 @@ class ProgressReport():
 
 class Report:
     """
-    A singleton context object that provides interface to output and progress reporting.
-    It returns the currently active progress context instance if one has been instantiated already in another scope.
-    It deallocates the progress bar when the outermost context is released.
-
-    Output reports contain information about the input and output to a `Composition` and its `Nodes <Composition_Nodes>`
-    during execution; they are constructed as the Components execute.  If **report_output** is specified as True or
-    *TERSE*, the information is reported to the the devices specified in `report_to_devices <Report.report_to_devices>`
-    as it is generated;  if *FULL* is specified, then the information is reported at the end of each `TRIAL
-    <TimeScale.TRIAL>` of execution.
-
-    Progress reports provide information about the status of execution, and are updated at the end of each `TRIAL
-    <TimeScale.TRIAL>` of execution.
+    Provides interface to output and progress reporting.  This is a singleton context object, that returns the
+    currently active progress context instance if one has been instantiated already in another scope. It deallocates
+    the progress bar when the outermost context is released.
 
     Arguments
     ---------
 
-    report_output : bool, *TERSE*, or *FULL* : default False
-        specifies whether to show output of the execution on a trial-by-trial as it is generated.  Any one the
-        following options can be used:
+    report_output : ReportOutput : default ReportOutput.OFF
+        specifies whether to report output of the execution on a trial-by-trial as it is generated;
+        see `ReportOutput` for options.
 
-        * False - no output is generated;
-        * True - output is determined by the `reportoutputpref <PreferenceSet_reportOutputPref>` preference of
-          individual Components;
-        * *TERSE* - a single line is generated reporting the execution of each Component;
-        * *FULL* - input and output of all Components being executed is reported.
+    report_progress : ReportProgress : default ReportProgress.OFF
+        specifies whether to report progress of each `TRIAL <TimeScale.TRIAL>` of a `Composition`\\'s execution,
+        showing the number of `TRIALS <TimeScale.TRIAL>` that have been executed and a progress bar;  see
+        `ReportProgress` for additional details and options.
 
-    report_progress : bool : default False
-        specifies whether to report progress of execution in real time.  If the number trials to be executed
-        is explicitly specified, the number of trials executed, a progress bar, and time remaining are displayed;
-        if the number of trials is not explicitly specified (e.g., if inputs are specified using a generator), then
-        a "spinner" is displayed during execution and the the total number of trials executed is displayed once
-        complete.  Progress is reported to the devices specified in `report_to_devices <Report.report_to_devices>`.
+    report_simulations : ReportSimulations : default ReportSimulations.OFF
+        specifies whether to report output and progress for `simulations <OptimizationControlMechanism_Execution>`
+        executed by an a Composition's `controller <Composition_Controller>`; see `ReportSimulations` for options.
 
-    report_simulations : bool : default False
-        specifies whether to show output and progress for simulations executed by an `OptimizationControlMechanism`.
-
-    report_to_devices : CONSOLE, RECORD, DIVERT, PNL_VIEW or list : default CONSOLE
-        specifies where output and progress should be reported;  the following destinations are supported:
-
-        * *CONSOLE* - directs reporting to the Console of the rich Progress object stored in `_instance._rich_progress
-          <Report._rich_progress>` (default);
-        * *RECORD* - captures reporting in `_recorded_reports <Report._recorded_reports>`; specifying this
-          option on its own replaces and suppresses reporting to the console; to continue to generate console
-          output, explicitly include *CONSOLE* with *RECORD* in the argument specification.
-        * *DIVERT* - captures reporting otherwise directed to the rich Console in a UDF-8 formatted string and
-          stores it in `_rich_diverted_reports <Report._rich_diverted_reports>`. This option suppresses
-          console output and is cumulative (that is, it records the sequences of updates sent to the console
-          after each TRIAL) and is intended primarily for unit testing. The *RECORD* option should be used for
-          recording output, as it can be used with console output if desired, and reflects the final state of
-          the display after execution is complete.
-        * *PNL_VIEW* - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
+    report_to_devices : list(ReportDevices) : default ReportDevices.CONSOLE
+        specifies devices to which output and progress reporting is sent;  see `ReportDevices` for options.
 
     Attributes
     ----------
@@ -118,27 +312,9 @@ class Report:
         * a rich Progress object (`_rich_progress`)
         * a PsyNeuLinkView interface object contained in `_PNL_View` - TBI.
 
-    _enable_reporting : bool : default False
-        determines whether reporting is enabled;  True if either the **_report_output** or **_report_progress**
+    _reporting_enabled : bool : default False
+        identifies whether reporting is enabled;  True if either the **_report_output** or **_report_progress**
         progress arguments of the constructor were specified as not False.
-
-    _use_rich : False, *CONSOLE*, *DIVERT* or list: default *CONSOLE*
-        identifies whether reporting to rich is enabled (i.e., if *CONSOLE* and/or *DIVERT* were specified in
-        **report_to_devices** argument of constructor.
-
-    _rich_console : bool : default True
-        determines whether reporting is sent to _rich_progress console;  True if _enable_reporting is True and
-        **CONSOLE** was specified in the **report_to_devices** argument of constructor.
-
-    __rich_console_capture : bool : default True
-        determines whether reporting is sent to `_rich_console_capture <Report._rich_console_capture>;  True if
-        _enable_reporting is True and **DIVERT** was specified in the **report_to_devices** argument of constructor.
-
-    _use_pnl_view : bool : default False
-        determines whether reporting is sent to PsyNeuLinkView if _enable_reporting is True - TBI.
-
-    report_to_devices : list
-        list of devices currently enabled for reporting.
 
     _report_output : bool, *TERSE*, or *FULL* : default False
         determines whether and, if so, what form of output is displayed and/or captured.
@@ -147,23 +323,42 @@ class Report:
         determines whether progress is displayed and/or captured.
 
     _report_simulations : bool : default False
-        determines whether reporting occurs for output and/or progress of simulations carried out by the `controller
-        <Composition_Controller>` of a `Composition`.
+        determines whether reporting occurs for output and/or progress of `simulations
+        <OptimizationControlMechanism_Execution>`  carried out by the `controller <Composition_Controller>` of a
+        `Composition`.
+
+    _report_to_devices : list
+        list of devices currently enabled for reporting.
+
+    _use_rich : False, *CONSOLE*, *DIVERT* or list: default *CONSOLE*
+        identifies whether reporting to rich is enabled (i.e., if *CONSOLE* and/or *DIVERT* were specified in
+        **report_to_devices** argument of constructor.
+
+    _rich_console : bool : default True
+        determines whether reporting is sent to _rich_progress console;  True if **CONSOLE** is specified in the
+        **report_to_devices** argument of constructor.
+
+    _rich_divert : bool : default True
+        determines whether reporting is sent to `_rich_diverted_reports <Report._rich_diverted_reports>;
+        True if **DIVERT** is specified in the **report_to_devices** argument of constructor.
+
+    _rich_diverted_reports : str :  default []
+        if __rich_divert is True, contains output sent to _rich_progress.console.
+
+    _use_pnl_view : bool : default False
+        determines whether reporting is sent to PsyNeuLinkView - TBI.
 
     _record_reports : bool : default False
         determines whether reporting is recorded in `recorded_reports <Report.recorded_reports>`.
+
+    _recorded_reports : str :  default []
+        if _record_reports is True, contains a record of reports generated during execution.
 
     _progress_reports : dict
         contains entries for each Composition (the key) executed during progress reporting; the value of each
         entry is itself a dict with two entries:
         - one containing ProgressReports for executions in DEFAULT_MODE (key: DEFAULT)
         - one containing ProgressReports for executions in SIMULATION_MODE (key: SIMULATION)
-
-    _recorded_reports : str :  default []
-        if _record_reports is True, contains a record of reports generated during execution.
-
-    _rich_console_capture : str :  default []
-        if __rich_divert is True, contains output sent to _rich_progress.console.
 
     _ref_count : int : default 0
         tracks how many times object has been referenced;  counter is incremented on each context __enter__
@@ -173,35 +368,49 @@ class Report:
 
     _instance = None
 
-
     def __new__(cls,
-                report_progress:bool=False,
-                report_output:bool=False,
-                report_simulations:bool=False,
-                report_to_devices:(*DEVICE_KEYWORDS, list)=CONSOLE
+                caller,
+                report_output:ReportOutput=False,
+                report_progress:ReportProgress=ReportProgress.OFF,
+                report_simulations:ReportSimulations=ReportSimulations.OFF,
+                report_to_devices:(list(ReportDevices.__members__), list)=ReportDevices,
+                context:Context=None
                 ) -> 'Report':
         if cls._instance is None:
+
+            # Validate arguments
+            # assert context, "PROGRAM ERROR: Call to Report() without 'context' argument."
+            source = f'call to execution method for {caller.name or ""}'
+            if not isinstance(report_output, ReportOutput):
+                raise ReportError(f"Bad 'report_output' arg in {source}: '{report_output}'; "
+                                  f"must be a {ReportOutput} option.")
+            if not isinstance(report_progress, ReportProgress):
+                raise ReportError(f"Bad 'report_progress' arg in {source}: '{report_progress}'; "
+                                  f"must be {ReportProgress} option.")
+            if not isinstance(report_simulations, ReportSimulations):
+                raise ReportError(f"Bad 'report_simulations' arg in {source}: '{report_simulations}'; "
+                                  f"must be {ReportSimulations} option.")
+            cls._report_to_devices = convert_to_list(report_to_devices or ReportDevices.CONSOLE)
+            if not all(isinstance(a, ReportDevices) for a in cls._report_to_devices):
+                raise ReportError(f"Bad 'report_to_devices' arg in {source}: '{report_to_devices}'; "
+                                  f"must be a one or a list of {ReportDevices} option(s).")
+
+            # Instantiate instance
             cls._instance = super(Report, cls).__new__(cls)
 
-            # cls._enable_progress = report_progress
+            # Assign option properties
             cls._report_progress = report_progress
             cls._report_output = report_output
-            cls._enable_reporting = report_output or report_progress
-
-            cls._report_to_devices = convert_to_list(report_to_devices or CONSOLE)
-            if not any(a in [CONSOLE, DIVERT, RECORD, PNL_VIEW] for a in cls._report_to_devices):
-                raise ReportError(f"Unrecognized keyword in argument for 'report_to_devices'; "
-                                  f"must be one of: {DEVICE_KEYWORDS}")
-            cls._rich_console = CONSOLE in cls._report_to_devices
-            cls._rich_divert = DIVERT in cls._report_to_devices
-            cls._record_reports = RECORD in cls._report_to_devices
-            # Enable rich if reporting output or progress and using console or recording
-            cls._use_rich = ((report_output or report_progress)
-                             and (cls._rich_console or cls._rich_divert or cls._record_reports))
-            cls._use_pnl_view = PNL_VIEW in cls._report_to_devices
-
-            # Show simulations if specified
+            cls._reporting_enabled = report_output is not ReportOutput.OFF or cls._report_progress
             cls._report_simulations = report_simulations
+            cls._rich_console = ReportDevices.CONSOLE in cls._report_to_devices
+            cls._rich_divert = ReportDevices.DIVERT in cls._report_to_devices
+            cls._record_reports = ReportDevices.RECORD in cls._report_to_devices
+            # Enable rich if reporting output or progress and using console or recording
+            cls._use_rich = (cls._reporting_enabled
+                             and (cls._rich_console or cls._rich_divert or cls._record_reports))
+            cls._use_pnl_view = ReportDevices.PNL_VIEW in cls._report_to_devices
+
             cls._prev_simulation = False
 
             # Instantiate rich progress context object
@@ -282,6 +491,34 @@ class Report:
             Report._destroy()
 
     def start_progress_report(self, comp, num_trials, context) -> int:
+        """
+        Initialize a ProgressReport for Composition
+
+        Arguments
+        ---------
+
+        comp : Composition
+
+        num_trials : int
+            number of trials expected to be executed;  if it is sys.max_size, rich Progress Display is run with an
+            `indeterminate progress bar <https://rich.readthedocs.io/en/stable/progress.html#indeterminate-progress>'_.
+
+        context : Context
+            context providing information about run_mode (DEFAULT or SIMULATION)
+
+        Returns
+        -------
+
+        ProgressReport id : int
+            id is stored in `progress_reports <Report.progress_reports>`.
+
+        """
+
+        if not comp:
+            assert False, "Report.start_progress() called without a Composition specified in 'comp'."
+        if num_trials is None:
+            assert False, "Report.start_progress() called with num_trials unspecified."
+
 
         # Generate space before beginning of output
         if self._use_rich and not self._progress_reports:
@@ -296,7 +533,7 @@ class Report:
         else:
             run_mode = DEFAULT
 
-        if run_mode is SIMULATION and not self._report_simulations:
+        if run_mode is SIMULATION and self._report_simulations is not ReportSimulations.ON:
             return
 
         # Don't create a new report for simulations in a set
@@ -307,8 +544,8 @@ class Report:
 
             # visible = self._report_progress and (run_mode is not SIMULATION or self._report_simulations)
             visible = (self._rich_console
-                       and self._report_progress
-                       and (run_mode is not SIMULATION or self._report_simulations)
+                       and self._report_progress is ReportProgress.ON
+                       and (run_mode is not SIMULATION or self._report_simulations is not ReportSimulations.ON)
                        )
 
             if comp.verbosePref or REPORT_REPORT:
@@ -336,8 +573,23 @@ class Report:
             return report_num
 
     def report_progress(self, caller, report_num, context):
+        """
+        Report progress of executions in call to `run <Composition.run>` or `learn <Composition.learn>` method of
+        a `Composition`.
 
-        if not self._report_progress:
+        Arguments
+        ---------
+
+        caller : Composition or Mechanism
+
+        report_num : int
+            id of ProgressReport for caller[run_mode] in self._progress_reports to use for reporting.
+
+        context : Context
+            context providing information about run_mode (DEFAULT or SIMULATION).
+        """
+
+        if self._report_progress is ReportProgress.OFF:
             return
 
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
@@ -347,16 +599,18 @@ class Report:
             run_mode = DEFAULT
 
         # Return if (nested within) a simulation and not reporting simulations
-        if run_mode is SIMULATION and not self._report_simulations:
+        if run_mode is SIMULATION and self._report_simulations is not ReportSimulations.ON:
             return
 
         progress_report = self._progress_reports[caller][run_mode][report_num]
         trial_num = self._rich_progress.tasks[progress_report.rich_task_id].completed
 
+        # Useful for debugging:
         if caller.verbosePref or REPORT_REPORT:
             from pprint import pprint
             pprint(f'{caller.name} {str(context.runmode)} REPORT')
 
+        # Update progress report
         if self._use_rich:
             if progress_report.num_trials:
                 if simulation_mode:
@@ -372,38 +626,93 @@ class Report:
                                   advance=1,
                                   refresh=True)
 
+        # track number of outer (non-simulation) trials
         if (not simulation_mode
                 and progress_report.num_trials
                 and (trial_num == progress_report.num_trials)):
             self._progress_reports[caller][run_mode].pop()
 
     def report_output(self, caller,
-                      report_num,
+                      report_num:int,
                       scheduler,
-                      report_output,
-                      content,
-                      context,
-                      nodes_to_report=False,
+                      report_output:ReportOutput,
+                      content:str,
+                      context:Context,
+                      nodes_to_report:bool=False,
                       node=None):
+        """
+        Report output of execution in call to `execute <Composition.execute>` method of a `Composition` or a
+        Mechanism <Mechanism_Base.execute>`.
 
-        if report_num is None or report_output is False:
+        Arguments
+        ---------
+
+        report_num : int
+            specifies id of `ProgressReport`, stored in `_progress_reports <Report._progress_reports>` for each
+            Composition executed and mode of execution (DEFAULT or SIMULATION).
+
+        scheduler : Scheduler
+            specifies Composition `Scheduler` used to determine the `TIME_STEP <TimeScale.TIME_STEP>` of the current
+            execution.
+
+        report_output : ReportOutput
+            conveys `ReportOutput` option specified in the **report_output** argument of the call to a Composition's
+            `execution method <Composition_Execution_Method>` or a Mechanism's `execute <Mechanism_Base.execute>`
+            method.
+
+        content : str
+            specifies content of current element of report;  must be: 'trial_init', 'time_step_init', 'node',
+            'time_step', 'trial' or 'run'.
+
+        context : Context
+            context of current execution.
+
+        nodes_to_report : bool : default False
+            specifies whether there are any nodes to report in current execution;  used to determine
+            whether to generate a heading (if report_output = ReportOutput.TERSE mode) or `rich Panel
+            <https://rich.readthedocs.io/en/stable/panel.html>`_ (if report_output = ReportOutput.TERSE mode)
+            in the output report.
+
+        node : Composition or Mechanism : default None
+            specifies `node <Composition_Nodes>` for which output is being reported.
+        """
+
+        if report_num is None or report_output is ReportOutput.OFF:
             return
-        # if report_output is None, defer to Composition's reportOutputPref
-        if report_output is None:  # if it is False, leave as is to suppress output
-            report_output = caller.reportOutputPref
 
-        if report_output is FULL:   # give precedence to argument in call to execute
-            report_type = FULL
-        elif report_output is TERSE:
-            report_type = TERSE
-        else:
-            report_type = None
+        if node:
+            node_pref = next((pref for pref in convert_to_list(node.reportOutputPref)
+                                         if isinstance(pref, ReportOutput)), None)
+
+        # Assign trial_report_type and node_report_type
+        trial_report_type = node_report_type = report_output
+        from psyneulink.core.compositions.composition import Composition
+        from psyneulink.core.components.mechanisms.mechanism import Mechanism
+        # Report is called for by a Mechanism
+        if isinstance(caller, Mechanism):
+            # FULL output reporting doesn't make sense for a Mechanism, since it includes trial info, so enforce TERSE
+            trial_report_type = ReportOutput.TERSE
+            # If USE_PREFS is specified by user, then assign output format to Mechanism's reportOutputPref
+            if report_output is ReportOutput.USE_PREFS:
+                node_report_type = node_pref
+        # USE_PREFS is specified for report called by a Composition:
+        elif isinstance(caller, Composition) and report_output is ReportOutput.USE_PREFS:
+            # First, if report is for execution of a node, assign its report type using its reportOutputPref:
+            if node:
+                # Get ReportOutput spec from reportOutputPref if there is one
+                # If None was found, assign ReportOutput.FULL as default
+                node_report_type = node_pref or ReportOutput.FULL
+                # Return if it is OFF
+                if node_report_type is ReportOutput.OFF:
+                    return
 
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
         if simulation_mode:
             run_mode = SIMULATION
+            sim_str = ' SIMULATION'
         else:
             run_mode = DEFAULT
+            sim_str = ''
 
         progress_report = self._progress_reports[caller][run_mode][report_num]
 
@@ -412,61 +721,50 @@ class Report:
         if content is 'trial_init':
 
             progress_report.trial_report = []
-
-            if report_output is not False:  # if it is False, suppress output
-                report_output = report_output or caller.reportOutputPref # if it is None, defer to Composition's
-                # reportOutputPref
-
-                #  if rich report, report trial number and Composition's input
-                if report_type is FULL:
-                    progress_report.trial_report = [f"\n[bold {trial_panel_color}]input:[/]"
-                                                     f" {[i.tolist() for i in caller.get_input_values(context)]}"]
-                else:
-                    # print trial separator and input array to Composition
-                    trial_header = f"[bold {trial_panel_color}]{caller.name} TRIAL {trial_num} ===================="
-                    self._rich_progress.console.print(trial_header)
-                    if self._record_reports:
-                        self._recorded_reports += trial_header
+            #  if FULL output, report trial number and Composition's input
+            #  note:  header for Trial Panel is constructed under 'content is Trial' case below
+            if trial_report_type is ReportOutput.FULL:
+                progress_report.trial_report = [f"\n[bold {trial_panel_color}]input:[/]"
+                                                 f" {[i.tolist() for i in caller.get_input_values(context)]}"]
+            else: # TERSE output
+                # print trial title and separator + input array to Composition
+                trial_header = f"[bold {trial_panel_color}]{caller.name}{sim_str} TRIAL {trial_num} " \
+                               f"===================="
+                self._rich_progress.console.print(trial_header)
+                if self._record_reports:
+                    self._recorded_reports += trial_header
 
         elif content is 'time_step_init':
-            if report_output:
-                if report_type is FULL:
-                    progress_report.time_step_report = [] # Contains rich.Panel for each node executed in time_step
-                elif nodes_to_report:
-                    time_step_header = f'[{time_step_panel_color}] Time Step {scheduler.clock.time.time_step} ---------'
-                    self._rich_progress.console.print(time_step_header)
-                    if self._record_reports:
-                        self._recorded_reports += time_step_header
+            if trial_report_type is ReportOutput.FULL:
+                progress_report.time_step_report = [] # Contains rich.Panel for each node executed in time_step
+            elif nodes_to_report: # TERSE output
+                time_step_header = f'[{time_step_panel_color}] Time Step {scheduler.clock.time.time_step} ---------'
+                self._rich_progress.console.print(time_step_header)
+                if self._record_reports:
+                    self._recorded_reports += time_step_header
 
         elif content is 'node':
             if not node:
                 assert False, 'Node not specified in call to Report report_output'
-            if report_output is False or report_output is True and node.reportOutputPref is False:
-                return
-            # Use FULL node report for Node:
-            if report_type is FULL or node.reportOutputPref in [True, FULL]:
-                node_report = self.node_execution_report(node,
-                                                         input_val=node.get_input_values(context),
-                                                         output_val=node.output_port.parameters.value._get(context),
-                                                         report_output=report_output,
-                                                         context=context
-                                                         )
-                # If trial is using FULL report, save Node's to progress_report
-                if report_type is FULL:
-                    progress_report.time_step_report.append(node_report)
-                # Otherwise, just print it to the console (as part of otherwise TERSE report)
-                else:
-                    self._rich_progress.console.print(node_report)
-                    if self._record_reports:
-                        with self._recording_console.capture() as capture:
-                            self._recording_console.print(node_report)
-                        self._recorded_reports += capture.get()
-            # Use TERSE report for Node
-            else:
-                self._rich_progress.console.print(f'[{node_panel_color}]{node.name} executed')
+            node_report = self.node_execution_report(node,
+                                                     input_val=node.get_input_values(context),
+                                                     output_val=node.output_port.parameters.value._get(context),
+                                                     report_output=node_report_type,
+                                                     context=context
+                                                     )
+            # If trial is using FULL report, save Node's to progress_report
+            if trial_report_type is ReportOutput.FULL:
+                progress_report.time_step_report.append(node_report)
+            # Otherwise, just print it to the console (as part of otherwise TERSE report)
+            else: # TERSE output
+                self._rich_progress.console.print(node_report)
+                if self._record_reports:
+                    with self._recording_console.capture() as capture:
+                        self._recording_console.print(node_report)
+                    self._recorded_reports += capture.get()
 
         elif content is 'time_step':
-            if (report_output and (nodes_to_report or report_output is FULL) and report_type is FULL):
+            if nodes_to_report and trial_report_type is ReportOutput.FULL:
                 progress_report.trial_report.append('')
                 progress_report.trial_report.append(Panel(RenderGroup(*progress_report.time_step_report),
                                                            # box=box.HEAVY,
@@ -477,7 +775,7 @@ class Report:
                                                            expand=False))
 
         elif content is 'trial':
-            if report_type is FULL:
+            if trial_report_type is ReportOutput.FULL:
                 output_values = []
                 for port in caller.output_CIM.output_ports:
                     output_values.append(port.parameters.value._get(context))
@@ -486,25 +784,32 @@ class Report:
                 progress_report.trial_report = Panel(RenderGroup(*progress_report.trial_report),
                                                      box=trial_panel_box,
                                                      border_style=trial_panel_color,
-                                                     title=f'[bold{trial_panel_color}] {caller.name}: Trial {trial_num} [/]',
+                                                     title=f'[bold{trial_panel_color}] {caller.name}{sim_str}: '
+                                                           f'Trial {trial_num} [/]',
                                                      expand=False)
-            # FIX: THIS GENERATES A CUMULATIVE REPORT, BUT COMMENTING IT OUT ELIMINATES THE OUTPUT REPORT
-            # elif self._rich_divert:
-            #     self._rich_diverted_reports += f'\n{self._rich_progress.console.file.getvalue()}'
-            # elif report_type is TERSE:
-            #     progress_report.trial_report.append(f'\n{self._rich_progress.console.file.getvalue()}')
-
-            # If execute() was called from COMMAND_LINE (rather than via run()), report progress
-            if context.source & ContextFlags.COMMAND_LINE and report_output:
+            if context.source & ContextFlags.COMMAND_LINE and trial_report_type is not ReportOutput.OFF:
                 self._print_reports(progress_report)
 
         elif content is 'run':
-            if report_output:
-                self._print_reports(progress_report)
+            self._print_reports(progress_report)
+
+        else:
+            assert False, f"Bad 'content' argument in call to Report.report_output() for {caller.name}: {content}."
 
         return
 
     def _print_reports(self, progress_report):
+        """
+        Conveys output reporting to device specified in `_report_to_devices <Report._report_to_devices>`.
+        Called by `report_output <Report.report_output>`
+
+        Arguments
+        ---------
+
+        progress_report : int
+            id of ProgressReport for caller[run_mode] in self._progress_reports to use for reporting.
+        """
+
         # if self._rich_console and progress_report.trial_report:
         if (self._rich_console or self._rich_divert) and progress_report.trial_report:
             self._rich_progress.console.print(progress_report.trial_report)
@@ -517,35 +822,64 @@ class Report:
                 with self._recording_console.capture() as capture:
                     self._recording_console.print(progress_report.trial_report)
                 self._recorded_reports += capture.get()
-        if self._report_progress:
+        if self._report_progress is ReportProgress.ON:
             if self._rich_divert:
                 self._rich_diverted_reports += update + '\n'
             if self._record_reports:
                 self._recorded_reports += update + '\n'
 
-        assert True
-
     @staticmethod
     def node_execution_report(node,
                               input_val=None,
-                              params=None,
                               output_val=None,
-                              report_output=True,
+                              report_output=ReportOutput.USE_PREFS,
                               context=None):
+        """
+        Generates formatted output report for the `node <Composition_Nodes>` of a `Composition` or a `Mechanism`.
+        Called by `report_output <Report.report_output>` for execution of a Composition, and directly by the `execute
+        <Mechanism_Base>` method of a `Mechanism` when executed on its own.
+
+        Arguments
+        ---------
+
+        input_val : 2d array : default None
+            the `input_value <Mechanism_Base.input_value>` of the `Mechanism` or `external_input_values
+            <Composition.external_input_values>` of the `Composition` for which execution is being reported;
+            if it is not specified, it is resolved by calling the node's get_input_values() method.
+
+        params : 'params' or 'parameters' : default None
+            specifies whether to report the values of the `Parameters` of the `node <Composition_Nodes>` being executed
+            together with its input and output.
+
+        output_val : 2d array : default None
+            the `output_values <Mechanism_Base.output_value>` of the `Mechanism` or `external_output_values
+            <Composition.external_output_values>` of the `Composition` for which execution is being reported.
+
+        report_output : ReportOutput
+            conveys `ReportOutput` option specified in the **report_output** argument of the call to a Composition's
+            `execution method <Composition_Execution_Method>` or a Mechanism's `execute <Mechanism_Base.execute>`
+            method.
+
+        context : Context
+            context of current execution.
+        """
+
+        # Use TERSE format if that has been specified by report_output (i.e., in the arg of an execution method),
+        #   or as the reportOutputPref for a node when USE_PREFS is in effect
+        node_pref = convert_to_list(node.reportOutputPref)
+        if (report_output is ReportOutput.TERSE
+                or (ReportOutput.TERSE in node_pref
+                    and report_output is not ReportOutput.FULL)):
+            return f'[{node_panel_color}]  {node.name} executed'
+
+
         from psyneulink.core.components.shellclasses import Function
 
         node_report = ''
 
-        if report_output is TERSE or node.reportOutputPref is TERSE and report_output is not FULL:
-            return f'[{node_panel_color}]{node.name} executed'
-
+        # Render input --------------------------------------------------------------------------------------------
         if input_val is None:
             input_val = node.get_input_values(context)
-        if output_val is None:
-            output = node.output_port.parameters.value._get(context)
-        params = params or {p.name: p._get(context) for p in node.parameters}
-
-        # print input
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #      if you want more specific output, you can add conditional tests here
         try:
@@ -555,7 +889,9 @@ class Report:
 
         node_report += f"input: {input_string}"
 
-        # print output
+        # Render output --------------------------------------------------------------------------------------------
+        if output_val is None:
+            output = node.output_port.parameters.value._get(context)
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #   if you want more specific output, you can add conditional tests here
         try:
@@ -565,9 +901,11 @@ class Report:
 
         node_report += f"\noutput: {output_string}"
 
-        # print params
+        # Render params if specified -------------------------------------------------------------------------------
+        params = {p.name: p._get(context) for p in node.parameters}
         try:
-            include_params = re.match('param(eter)?s?', node.reportOutputPref, flags=re.IGNORECASE)
+            # FIX 3/11/21 ALLOW SPECIFYING INDIVIDUAL PARAMS BY NAME IN LIST
+            include_params = any(re.match('param(eter)?s?', pref, flags=re.IGNORECASE) for pref in node_pref)
         except TypeError:
             include_params = False
 
@@ -602,7 +940,12 @@ class Report:
                     for fct_param_name in func_params_keys_sorted:
                         params_string += ("\n\t\t{}: {}".
                                           format(fct_param_name,
-                                                 str(getattr(node.function.parameters, fct_param_name)._get(context)).__str__().strip("[]")))
+                                                 str(getattr(node.function.parameters,
+                                                             fct_param_name)._get(context)
+                                                     ).__str__().strip("[]")
+                                                 )
+                                          )
+        # Generate report -------------------------------------------------------------------------------
 
         if include_params:
             width = 100

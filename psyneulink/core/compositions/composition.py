@@ -1012,7 +1012,7 @@ the corresonding Node in every `TRIAL <TimeScale.TRIAL>`.
 Each input value must be compatible with the number of `InputPorts <InputPort>` that receive external input for
 that Node.  These are listed in its ``external_input_ports`` attribute (`here <Mechanism_Base.external_input_ports>`
 if it is Mechanism, or `here <Composition.external_input_ports>` if it is a Composition).  More specifically, the
-shape of the input value must be compatible with the shape of the Node's `extrernal_input_values` attribute (`here
+shape of the input value must be compatible with the shape of the Node's `external_input_values` attribute (`here
 <Mechanism_Base.external_input_values>` if it is Mechanism, or `here <Composition.external_input_values>` if it is
 a Composition).  While these are always 2d arrays, the number and size of the items (corresponding to each InputPort)
 may vary;  in some case shorthand notations are allowed, as illustrated in the `examples
@@ -2394,7 +2394,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
-from psyneulink.core.compositions.report import Report
+from psyneulink.core.compositions.report import Report, ReportOutput, ReportProgress, ReportSimulations
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -7429,14 +7429,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                           f"supplied input spec is a generator. Generators can not be used as inputs for block "
                           f"simulation. This evaluation will not use block simulation.")
 
+
+        # Set up aniimation for simulation
         # HACK: _animate attribute is set in execute method, but Evaluate can be called on a Composition that has not
         # yet called the execute method, so we need to do a check here too.
         # -DTS
         if not hasattr(self, '_animate'):
             # These are meant to be assigned in run method;  needed here for direct call to execute method
             self._animate = False
-
-        # Run Composition in "SIMULATION" context
         if self._animate is not False and self._animate_simulations is not False:
             animate = self._animate
             buffer_animate_state = None
@@ -7444,16 +7444,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             animate = False
             buffer_animate_state = self._animate
 
+        # Run Composition in "SIMULATION" context
         context.add_flag(ContextFlags.SIMULATION_MODE)
         context.remove_flag(ContextFlags.CONTROL)
-        results = self.run(inputs=inputs,
-                 context=context,
-                 runtime_params=runtime_params,
-                 num_trials=num_simulation_trials,
-                 animate=animate,
-                 execution_mode=execution_mode,
-                 skip_initialization=True,
-                 )
+        # Use reporting options from Report context created in initial (outer) call to run()
+        with Report(self, context) as report:
+            results = self.run(inputs=inputs,
+                               context=context,
+                               runtime_params=runtime_params,
+                               num_trials=num_simulation_trials,
+                               animate=animate,
+                               execution_mode=execution_mode,
+                               skip_initialization=True,
+                               report_output=report._report_output,
+                               report_progress=report._report_progress,
+                               report_simulations=report._report_simulations,
+                               report_to_devices=report._report_to_devices
+                               )
         context.remove_flag(ContextFlags.SIMULATION_MODE)
         context.execution_phase = ContextFlags.CONTROL
         if buffer_animate_state:
@@ -8015,9 +8022,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_after_trial=None,
             termination_processing=None,
             skip_analyze_graph=False,
-            report_output=False,
-            report_progress=False,
-            report_simulations=False,
+            report_output:ReportOutput=ReportOutput.OFF,
+            report_progress=ReportProgress.OFF,
+            report_simulations=ReportSimulations.OFF,
             report_to_devices=None,
             animate=False,
             log=False,
@@ -8116,41 +8123,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                BETTER DESCRIPTION NEEDED
             COMMENT
 
-        report_output : bool, *TERSE*, *FULL* : default False
+        report_output : ReportOutput : default ReportOutput.OFF
             specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial as
-            it is generated.  Any one the following options can be used:
+            it is generated; see `Report_Output` for additional details and `ReportOutput` for options.
 
-            * False - no output is generated;
-            * True - output is determined by the `reportOutputPref <PreferenceSet_reportOutputPref>` preference of
-              individual Nodes;
-            * *TERSE* - a single line is generated reporting the execution of each Node of the Composition;
-            * *FULL* - input and output of the Composition and all its Nodes is reported.
+        report_progress : ReportProgress : default ReportProgress.OFF
+            specifies whether to report progress of execution in real time; see `Report_Progress` for additional
+            details.
 
-        report_progress : bool : default False
-            specifies whether to report progress of execution in real time.  If the number trials to be executed
-            is explicitly specified, the number of trials executed, a progress bar, and time remaining are displayed;
-            if the number of trials is not explicitly specified (e.g., if inputs are specified using a generator),
-            then a "spinner" is displayed during execution and the the total number of trials executed is displayed
-            once complete.  Progress is reported to the devices specified in **report_to_devices**.
-
-        report_simulations : bool : default False
+        report_simulations : ReportSimulations : default ReportSimulatons.OFF
             specifies whether to show output and/or progress for `simulations <OptimizationControlMechanism_Execution>`
-            executed by the Composition's `controller <Composition_Controller>`.
+            executed by the Composition's `controller <Composition_Controller>`; see `Report_Simulations` for
+            additional details.
 
-        report_to_devices : CONSOLE, RECORD, DIVERT, PNL_VIEW or list : default CONSOLE
-            specifies where output and progress should be reported;  the following destinations are supported:
-
-            * *CONSOLE* - directs reporting to the console (default).
-            * *RECORD* - captures reporting in `recorded_reports <Composition.recorded_reports>`; specifying this
-              option on its own replaces and suppresses reporting to the console; to continue to generate console
-              output, explicitly include *CONSOLE* with *RECORD* in the argument specification.
-            * *DIVERT* - captures reporting otherwise directed to the rich Console in a UDF-8 formatted string and
-              stores it in `rich_diverted_reports <Composition.rich_diverted_reports>`. This option suppresses
-              console output and is cumulative (that is, it records the sequences of updates sent to the console
-              after each TRIAL) and is intended primarily for unit testing. The *RECORD* option should be used for
-              recording output, as it can be used with console output if desired, and reflects the final state of
-              the display after execution is complete.
-            * *PNL_VIEW* - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
+        report_to_devices : list(ReportDevices) : default ReportDevices.CONSOLE
+            specifies where output and progress should be reported; see `Report_To_Devices` for additional
+            details and `ReportDevices` for options.
 
         animate : dict or bool : default False
             specifies use of the `show_graph <ShowGraph.show_graph>` method to generate a gif movie showing the
@@ -8428,10 +8416,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # EXECUTE TRIALS -------------------------------------------------------------
 
-        with Report(report_output=report_output,
+        with Report(self,
+                    report_output=report_output,
                     report_progress=report_progress,
                     report_simulations=report_simulations,
-                    report_to_devices=report_to_devices) as report:
+                    report_to_devices=report_to_devices,
+                    context=context) as report:
 
             progress_report = report.start_progress_report(self, num_trials, context)
 
@@ -8643,42 +8633,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             call_after_minibatch : callable
                 called after each minibatch is executed
 
-            report_output : bool, *TERSE*, *FULL* : default False
-                specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial
-                as it is generated.  Any one the following options can be used:
+            report_output : ReportOutput : default ReportOutput.OFF
+                specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial as
+                it is generated; see `Report_Output` for additional details and `ReportOutput` for options.
 
-                * False - no output is generated;
-                * True - output is determined by the `reportOutputPref <PreferenceSet_reportOutputPref>` preference of
-                  individual Nodes;
-                * *TERSE* - a single line is generated reporting the execution of each Node of the Composition;
-                * *FULL* - input and output of the Composition and all its Nodes is reported.
+            report_progress : ReportProgress : default ReportProgress.OFF
+                specifies whether to report progress of execution in real time; see `Report_Progress` for additional
+                details.
 
-            report_progress : bool : default False
-                specifies whether to report progress of execution in real time.  If the number trials to be executed is
-                explicitly specified, the number of trials executed, a progress bar, and time remaining are displayed;
-                if the number of trials is not explicitly specified (e.g., if inputs or targets are specified using a
-                generator), then a "spinner" is displayed during execution and the the total number of trials executed
-                is displayed once complete.  Progress is reported to the devices specified in **report_to_devices**.
+            report_simulations : ReportSimulatons : default ReportSimulations.OFF
+                specifies whether to show output and/or progress for `simulations <OptimizationControlMechanism_Execution>`
+                executed by the Composition's `controller <Composition_Controller>`; see `Report_Simulations` for
+                additional details.
 
-            report_simulations : bool : default False
-                specifies whether to show output and/or progress for `simulations
-                <OptimizationControlMechanism_Execution>` executed by the Composition's `controller
-                <Composition_Controller>`.
-
-            report_to_devices : CONSOLE, RECORD, DIVERT, PNL_VIEW or list : default CONSOLE
-                specifies where output and progress should be reported;  the following destinations are supported:
-
-                * *CONSOLE* - directs reporting to the console (default).
-                * *RECORD* - captures reporting in `recorded_reports <Composition.recorded_reports>`; specifying this
-                  option on its own replaces and suppresses reporting to the console; to continue to generate console
-                  output, explicitly include *CONSOLE* with *RECORD* in the argument specification.
-                * *DIVERT* - captures reporting otherwise directed to the rich Console in a UDF-8 formatted string and
-                  stores it in `rich_diverted_reports <Composition.rich_diverted_reports>`. This option suppresses
-                  console output and is cumulative (that is, it records the sequences of updates sent to the console
-                  after each TRIAL) and is intended primarily for unit testing. The *RECORD* option should be used for
-                  recording output, as it can be used with console output if desired, and reflects the final state of
-                  the display after execution is complete.
-                * *PNL_VIEW* - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
+            report_to_devices : list(ReportDevices) : default ReportDevices.CONSOLE
+                specifies where output and progress should be reported; see `Report_To_Devices` for additional
+                details and `ReportDevices` for options.
 
             Returns
             ---------
@@ -8777,9 +8747,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             runtime_params=None,
             skip_initialization=False,
             execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
-            report_output=False,
-            report_progress=False,
-            report_simulations=False,
+            report_output:ReportOutput=ReportOutput.OFF,
+            report_progress=ReportProgress.OFF,
+            report_simulations=ReportSimulations.OFF,
             report_to_devices=None,
             report=None,
             progress_report=None,
@@ -8843,41 +8813,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
                 see **execution_mode** argument of `run <Composition.run>` method for additional details.
 
-            report_output : bool, *TERSE*, *FULL* : default False
+            report_output : ReportOutput : default ReportOutput.OFF
                 specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` for the
-                execution.  Any one the following options can be used:
+                execution; see `Report_Output` for additional details and `ReportOutput` for options.
 
-                * False - no output is generated;
-                * True - output is determined by the `reportOutputPref <PreferenceSet_reportOutputPref>` preference of
-                  individual Nodes;
-                * *TERSE* - a single line is generated reporting the execution of each Node of the Composition;
-                * *FULL* - input and output of the Composition and all its Nodes is reported.
+            report_progress : ReportProgress : default ReportProgress.OFF
+                specifies whether to report progress of the execution; see `Report_Progress` for additional details.
 
-            report_progress : bool : default False
-                specifies whether to report progress of the execution.  In general, this will be for the single trial
-                executed by the call to the execute method;  however, if **report_simulations** is specified (see below)
-                and the Composition has an `OptimizationControlMechanism`, then any simulations that it executes
-                will also be reported.  Progress is reported to the devices specified in **report_to_devices**.
-
-            report_simulations : bool : default False
+            report_simulations : ReportSimulations : default ReportSimulations.OFF
                 specifies whether to show output and/or progress for `simulations
                 <OptimizationControlMechanism_Execution>` executed by the Composition's `controller
-                <Composition_Controller>`.
+                <Composition_Controller>`; see `Report_Simulations` for additional details.
 
-            report_to_devices : CONSOLE, RECORD, DIVERT, PNL_VIEW or list : default CONSOLE
-                specifies where output and progress should be reported;  the following destinations are supported:
-
-                * *CONSOLE* - directs reporting to the console (default).
-                * *RECORD* - captures reporting in `recorded_reports <Composition.recorded_reports>`; specifying this
-                  option on its own replaces and suppresses reporting to the console; to continue to generate console
-                  output, explicitly include *CONSOLE* with *RECORD* in the argument specification.
-                * *DIVERT* - captures reporting otherwise directed to the rich Console in a UDF-8 formatted string and
-                  stores it in `rich_diverted_reports <Composition.rich_diverted_reports>`. This option suppresses
-                  console output and is cumulative (that is, it records the sequences of updates sent to the console
-                  after each TRIAL) and is intended primarily for unit testing. The *RECORD* option should be used for
-                  recording output, as it can be used with console output if desired, and reflects the final state of
-                  the display after execution is complete.
-                * *PNL_VIEW* - directs reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].
+            report_to_devices : list(ReportDevices) : default ReportDevices.CONSOLE
+                specifies where output and progress should be reported; see `Report_To_Devices` for additional
+                details and `ReportDevices` for options.
 
             Returns
             ---------
@@ -8885,10 +8835,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output value of the final Mechanism executed in the Composition : various
         """
 
-        with Report(report_output=report_output,
+        with Report(self,
+                    report_output=report_output,
                     report_progress=report_progress,
                     report_simulations=report_simulations,
-                    report_to_devices=report_to_devices) as report:
+                    report_to_devices=report_to_devices,
+                    context=context) as report:
 
             # FIX: Call Report with context and progress_report handle this in there 3/3/21
             # If execute method is called directly, need to create Report object for reporting
@@ -9250,9 +9202,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
                 # INITIALIZE self._time_step_report AND SHOW TIME_STEP DIVIDER
-                nodes_to_report = any(node.reportOutputPref for node in next_execution_set) or report_output is FULL
-                report.report_output(self, progress_report, execution_scheduler, report_output, 'time_step_init', context,
-                                       nodes_to_report=True)
+                nodes_to_report = any(node.reportOutputPref for node in next_execution_set)
+                report.report_output(self, progress_report,
+                                     execution_scheduler,
+                                     report_output,
+                                     'time_step_init',
+                                     context,
+                                     nodes_to_report=True)
 
                 # ANIMATE execution_set ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 if self._animate is not False and self._animate_unit == EXECUTION_SET:
@@ -9260,7 +9216,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._animate_execution(next_execution_set, context)
 
                 # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
-
 
                 # execute each node with EXECUTING in context
                 for (node_idx, node) in enumerate(next_execution_set):
@@ -9383,11 +9338,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         nested_execution_mode = execution_mode \
                             if len(node.parameter_CIM.afferents) == 0 else \
                             pnlvm.ExecutionMode.Python
-                        # MODIFIED 2/28/21 NEW:
-                        if isinstance(node, Composition):
-                            node_progress_report = None
-                        # MODIFIED 2/28/21 END
-                        ret = node.execute(context=context, report_output=report_output, report_progress=report_progress,
+                        ret = node.execute(context=context,
+                                           report_output=report_output,
+                                           report_progress=report_progress,
                                            execution_mode=nested_execution_mode)
 
                         # Get output info from nested execution
@@ -9406,12 +9359,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Add report for node to time_step_report
                     report.report_output(self,
-                                           progress_report,
-                                           execution_scheduler,
-                                           report_output,
-                                           'node',
-                                           context,
-                                           node=node)
+                                         progress_report,
+                                         execution_scheduler,
+                                         report_output,
+                                         'node',
+                                         context,
+                                         node=node)
 
                     # MANAGE INPUTS (for next execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

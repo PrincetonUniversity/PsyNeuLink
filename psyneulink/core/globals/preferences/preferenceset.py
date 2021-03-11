@@ -20,30 +20,25 @@ Standard Preferences
 The following preferences are available for all Components (see `Component prefs <Component_Prefs>` for
 additional details):
 
-* **verbosePref** (bool, default: False) - enables/disables reporting of (non-exception) warnings and system function;
+* **verbosePref** (bool : default False) - enables/disables reporting of (non-exception) warnings and system function;
 
-* **paramValidationPref** (bool, default: False) - enables/disables run-time validation of the execute method of a
+* **paramValidationPref** (bool : default False) - enables/disables run-time validation of the execute method of a
   Function object;
 
 .. _PreferenceSet_reportOutputPref:
-COMMENT:
-THIS DOES NOT CURRENTLY SUPPORT STRINGS (TERSE or 'params')
-- reportOutputPref ([bool, str]): enables/disables reporting execution of `Component`\'s `execute <Component_Execution>`
-  method to console and/or PsyNeuLinkView:
 
-    - ``True``: prints record of execution, including the input and output of the Component;
-    - *TERSE*: restricts output to just a statement that the Component executed;
-    - 'params' or 'parameters': includes report of the Component's `parameter <Parameters>` values.
-COMMENT
-* **reportOutputPref** (bool, default: False) - enables/disables reporting execution of the `Component`;
-  if the Component is executed within a `Composition`, this preference may be overridden by the **report_output**
-  argument specified in any of the Composition's `execution methods <Composition_Execution_Methods>`
-  (see `execution reporting <Composition_Execution_Reporting>` for additional details);
+* **reportOutputPref** (list['params', `ReportOutput`]: default ReportOutput.OFF) - enables/disables
+  and determines format and content for reporting execution of the `Component` (see `ReportOutput` for options).
+  If 'params' (or 'parameters') is specified, then the Component's `Parameters are included along with its input and
+  output when `ReportOutput.FULL` is also specified. If the Component is a `Mechanism` executed within a `Composition`,
+  this preference may be overridden by the **report_output** argument specified in any of the Composition's
+  `execution methods <Composition_Execution_Methods>` (see `execution reporting <Composition_Execution_Reporting>`
+  for additional details).
 
-* **logPref** (LogCondition, default: LogCondition.OFF) - sets `LogCondition` for a given Component;
+* **logPref** (`LogCondition` : default LogCondition.OFF) - sets `LogCondition` for a given Component;
 
 COMMENT:
-THIS DOES NOT APPEAR CURRENTLY TO BE USED
+THIS DOES NOT APPEAR CURRENTLY TO BE USED:
 * **runtimeParamModulationPref** (Modulation, default: Modulation.MULTIPLY) -  sets type of `Modulation`
   used for modulating parameters by runtime specification (in pathway);
 COMMENT
@@ -51,16 +46,13 @@ COMMENT
 .. _technical_note::
    * **deliverPref** (LogCondition, default: LogCondition.OFF) - sets whether attribute data are added to context rpc
      pipeline for delivery to external applications.
-
 """
 
 import abc
 import inspect
-
 from collections import namedtuple
 from enum import Enum, IntEnum
 
-from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import DEFAULT_PREFERENCE_SET_OWNER, PREFERENCE_SET_NAME
 from psyneulink.core.globals.utilities import iscompatible, kwCompatibilityType
 

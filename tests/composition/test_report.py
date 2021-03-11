@@ -1,11 +1,16 @@
 import contextlib
 import io
+import sys
+
+import pytest
+
 import psyneulink as pnl
-from psyneulink.core.globals.keywords import DIVERT, FULL, TERSE
+from psyneulink.core.compositions.report import ReportOutput, ReportProgress, ReportDevices
 
 
 class TestReport():
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason="<Incompatible UDF-8 formatting of rich Console output>")
     def test_simple_output_and_progress(self):
         """Test simple sequence of three Mechanisms, using all report_output and report_progress options
         """
@@ -14,68 +19,80 @@ class TestReport():
         c = pnl.TransferMechanism(name='c')
         comp = pnl.Composition(pathways=[a,b,c], name='COMP')
 
-        a.reportOutputPref=True
-        b.reportOutputPref=False
-        c.reportOutputPref=True
+        a.reportOutputPref=ReportOutput.FULL
+        b.reportOutputPref=ReportOutput.OFF
+        c.reportOutputPref=ReportOutput.FULL
 
-        comp.run(report_output=TERSE, report_to_devices=DIVERT)
+        comp.run(report_output=ReportOutput.TERSE, report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
-        expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\na executed\n Time Step 1 ---------\nb executed\n Time Step 2 ---------\nc executed\n'
+        expected_output = '\'\\nCOMP TRIAL 0 ====================\\n Time Step 0 ---------\\n  a executed\\n Time Step 1 ---------\\n  b executed\\n Time Step 2 ---------\\n  c executed\\n\''
+        assert repr(actual_output) == expected_output
+
+        comp.run(report_output=ReportOutput.TERSE,
+                 report_progress=ReportProgress.ON,
+                 report_to_devices=ReportDevices.DIVERT)
+        actual_output = comp.rich_diverted_reports
+        expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\n  a executed\n Time Step 1 ---------\n  b executed\n Time Step 2 ---------\n  c executed\nCOMP: Executed 1 of 1 trials\n'
         assert actual_output == expected_output
 
-        comp.run(report_output=TERSE, report_progress=True, report_to_devices=DIVERT)
-        actual_output = comp.rich_diverted_reports
-        expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\na executed\n Time Step 1 ---------\nb executed\n Time Step 2 ---------\nc executed\nCOMP: Executed 1 of 1 trials\n'
-        assert actual_output == expected_output
-
-        comp.run(report_output=True, report_to_devices=DIVERT)
+        comp.run(report_output=ReportOutput.USE_PREFS, report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
         expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\n╭───── a ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n Time Step 1 ---------\n Time Step 2 ---------\n╭───── c ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n'
         assert actual_output == expected_output
 
-        comp.run(report_output=True, report_progress=True, report_to_devices=DIVERT)
+        comp.run(report_output=ReportOutput.USE_PREFS,
+                 report_progress=ReportProgress.ON,
+                 report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
         expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\n╭───── a ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n Time Step 1 ---------\n Time Step 2 ---------\n╭───── c ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\nCOMP: Executed 1 of 1 trials\n'
         assert actual_output == expected_output
 
-        comp.run(report_output=FULL, report_to_devices=DIVERT)
+        comp.run(report_output=ReportOutput.FULL, report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
         expected_output = '\n┏━━  COMP: Trial 0  ━━┓\n┃                     ┃\n┃ input: [[0.0]]      ┃\n┃                     ┃\n┃ ┌─  Time Step 0 ──┐ ┃\n┃ │ ╭───── a ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ ┌─  Time Step 1 ──┐ ┃\n┃ │ ╭───── b ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ ┌─  Time Step 2 ──┐ ┃\n┃ │ ╭───── c ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ result: [[0.0]]     ┃\n┃                     ┃\n┗━━━━━━━━━━━━━━━━━━━━━┛\n\n'
         assert actual_output == expected_output
 
-        comp.run(report_output=FULL, report_progress=True, report_to_devices=DIVERT)
+        comp.run(report_output=ReportOutput.FULL,
+                 report_progress=ReportProgress.ON,
+                 report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
         expected_output = '\n┏━━  COMP: Trial 0  ━━┓\n┃                     ┃\n┃ input: [[0.0]]      ┃\n┃                     ┃\n┃ ┌─  Time Step 0 ──┐ ┃\n┃ │ ╭───── a ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ ┌─  Time Step 1 ──┐ ┃\n┃ │ ╭───── b ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ ┌─  Time Step 2 ──┐ ┃\n┃ │ ╭───── c ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ result: [[0.0]]     ┃\n┃                     ┃\n┗━━━━━━━━━━━━━━━━━━━━━┛\n\nCOMP: Executed 1 of 1 trials\n'
         assert actual_output == expected_output
 
         # Run these tests after ones calling run() above to avoid having to reset trial counter,
         # which increments after calls to execute()
-        comp.execute(report_output=TERSE, report_to_devices=DIVERT)
+        comp.execute(report_output=ReportOutput.TERSE, report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
-        expected_output = '\'\\nCOMP TRIAL 0 ====================\\n Time Step 0 ---------\\na executed\\n Time Step 1 ---------\\nb executed\\n Time Step 2 ---------\\nc executed\\n\''
+        expected_output = '\'\\nCOMP TRIAL 0 ====================\\n Time Step 0 ---------\\n  a executed\\n Time Step 1 ---------\\n  b executed\\n Time Step 2 ---------\\n  c executed\\n\''
         assert repr(actual_output) == expected_output
 
-        comp.execute(report_output=TERSE, report_progress=True, report_to_devices=DIVERT)
+        comp.execute(report_output=ReportOutput.TERSE,
+                     report_progress=ReportProgress.ON,
+                     report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
-        expected_output = '\'\\nCOMP TRIAL 1 ====================\\n Time Step 0 ---------\\na executed\\n Time Step 1 ---------\\nb executed\\n Time Step 2 ---------\\nc executed\\n[red]Executing COMP...\\n\''
+        expected_output = '\'\\nCOMP TRIAL 1 ====================\\n Time Step 0 ---------\\n  a executed\\n Time Step 1 ---------\\n  b executed\\n Time Step 2 ---------\\n  c executed\\n[red]Executing COMP...\\n\''
         assert repr(actual_output) == expected_output
 
-        comp.execute(report_output=True, report_to_devices=DIVERT)
+        comp.execute(report_output=ReportOutput.USE_PREFS, report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
         expected_output = '\nCOMP TRIAL 2 ====================\n Time Step 0 ---------\n╭───── a ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n Time Step 1 ---------\n Time Step 2 ---------\n╭───── c ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n'
         assert actual_output == expected_output
 
-        comp.execute(report_output=True, report_progress=True, report_to_devices=DIVERT)
+        comp.execute(report_output=ReportOutput.USE_PREFS,
+                     report_progress=ReportProgress.ON,
+                     report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
         expected_output = '\nCOMP TRIAL 3 ====================\n Time Step 0 ---------\n╭───── a ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n Time Step 1 ---------\n Time Step 2 ---------\n╭───── c ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n[red]Executing COMP...\n'
         assert actual_output == expected_output
 
-        comp.execute(report_output=FULL, report_to_devices=DIVERT)
+        comp.execute(report_output=ReportOutput.FULL, report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
         expected_output = '\n┏━━  COMP: Trial 4  ━━┓\n┃                     ┃\n┃ input: [[0.0]]      ┃\n┃                     ┃\n┃ ┌─  Time Step 0 ──┐ ┃\n┃ │ ╭───── a ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ ┌─  Time Step 1 ──┐ ┃\n┃ │ ╭───── b ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ ┌─  Time Step 2 ──┐ ┃\n┃ │ ╭───── c ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ result: [[0.0]]     ┃\n┃                     ┃\n┗━━━━━━━━━━━━━━━━━━━━━┛\n\n'
         assert actual_output == expected_output
 
-        comp.execute(report_output=FULL, report_progress=True, report_to_devices=DIVERT)
+        comp.execute(report_output=ReportOutput.FULL,
+                     report_progress=ReportProgress.ON,
+                     report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
         expected_output = '\n┏━━  COMP: Trial 5  ━━┓\n┃                     ┃\n┃ input: [[0.0]]      ┃\n┃                     ┃\n┃ ┌─  Time Step 0 ──┐ ┃\n┃ │ ╭───── a ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ ┌─  Time Step 1 ──┐ ┃\n┃ │ ╭───── b ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ ┌─  Time Step 2 ──┐ ┃\n┃ │ ╭───── c ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ result: [[0.0]]     ┃\n┃                     ┃\n┗━━━━━━━━━━━━━━━━━━━━━┛\n\n[red]Executing COMP...\n'
         assert actual_output == expected_output
@@ -93,22 +110,22 @@ class TestReport():
     #     b.reportOutputPref=False
     #     c.reportOutputPref=True
     #
-    #     comp.run(report_output=TERSE, report_progress=[False, DIVERT])
+    #     comp.run(report_output=TERSE, report_progress=[False, ReportDevices.DIVERT])
     #     actual_output = comp.rich_diverted_reports
-    #     expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\na executed\nb executed\n Time Step 1 ---------\nc executed\n\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\na executed\nb executed\n Time Step 1 ---------\nc executed\nCOMP TRIAL 1 ====================\n Time Step 0 ---------\na executed\nb executed\n Time Step 1 ---------\nc executed\n'
+    #     expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\n  a executed\n  b executed\n Time Step 1 ---------\n  c executed\n\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\n  a executed\n  b executed\n Time Step 1 ---------\n  c executed\nCOMP TRIAL 1 ====================\n Time Step 0 ---------\n  a executed\n  b executed\n Time Step 1 ---------\n  c executed\n'
     #     assert actual_output == expected_output
     #
-    #     comp.run(report_output=TERSE, report_progress=DIVERT)
+    #     comp.run(report_output=TERSE, report_progress=ReportDevices.DIVERT)
     #     actual_output = comp.rich_diverted_reports
-    #     expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\nb executed\na executed\n Time Step 1 ---------\nc executed\nCOMP: Executed 1 of 2 trials\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\nb executed\na executed\n Time Step 1 ---------\nc executed\nCOMP TRIAL 1 ====================\n Time Step 0 ---------\nb executed\na executed\n Time Step 1 ---------\nc executed\nCOMP: Executed 2 of 2 trials'
+    #     expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\n  b executed\n  a executed\n Time Step 1 ---------\n  c executed\nCOMP: Executed 1 of 2 trials\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\n  b executed\n  a executed\n Time Step 1 ---------\n  c executed\nCOMP TRIAL 1 ====================\n Time Step 0 ---------\n  b executed\n  a executed\n Time Step 1 ---------\n  c executed\nCOMP: Executed 2 of 2 trials'
     #     assert actual_output == expected_output
     #
-    #     comp.run(report_output=True, report_progress=DIVERT)
+    #     comp.run(report_output=True, report_progress=ReportDevices.DIVERT)
     #     actual_output = comp.rich_diverted_reports
     #     expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\n╭───── a ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n Time Step 1 ---------\n╭───── c ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\nCOMP: Executed 1 of 2 trials\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\n╭───── a ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n Time Step 1 ---------\n╭───── c ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\nCOMP TRIAL 1 ====================\n Time Step 0 ---------\n╭───── a ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n Time Step 1 ---------\n╭───── c ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\nCOMP: Executed 2 of 2 trials'
     #     assert actual_output == expected_output
     #
-    #     comp.run(num_trials=2, report_output=FULL, report_progress=DIVERT)
+    #     comp.run(num_trials=2, report_output=FULL, report_progress=ReportDevices.DIVERT)
     #     actual_output = comp.rich_diverted_reports
     #     expected_output = '\n┏━━━  COMP: Trial 0  ━━━┓\n┃                       ┃\n┃ input: [[0.0], [0.0]] ┃\n┃                       ┃\n┃ ┌─  Time Step 0 ──┐   ┃\n┃ │ ╭───── b ─────╮ │   ┃\n┃ │ │ input: 0.0  │ │   ┃\n┃ │ │ output: 0.0 │ │   ┃\n┃ │ ╰─────────────╯ │   ┃\n┃ │ ╭───── a ─────╮ │   ┃\n┃ │ │ input: 0.0  │ │   ┃\n┃ │ │ output: 0.0 │ │   ┃\n┃ │ ╰─────────────╯ │   ┃\n┃ └─────────────────┘   ┃\n┃                       ┃\n┃ ┌─  Time Step 1 ──┐   ┃\n┃ │ ╭───── c ─────╮ │   ┃\n┃ │ │ input: 0.0  │ │   ┃\n┃ │ │ output: 0.0 │ │   ┃\n┃ │ ╰─────────────╯ │   ┃\n┃ └─────────────────┘   ┃\n┃                       ┃\n┃ result: [[0.0]]       ┃\n┃                       ┃\n┗━━━━━━━━━━━━━━━━━━━━━━━┛\n\nCOMP: Executed 1 of 2 trials\n┏━━━  COMP: Trial 0  ━━━┓\n┃                       ┃\n┃ input: [[0.0], [0.0]] ┃\n┃                       ┃\n┃ ┌─  Time Step 0 ──┐   ┃\n┃ │ ╭───── b ─────╮ │   ┃\n┃ │ │ input: 0.0  │ │   ┃\n┃ │ │ output: 0.0 │ │   ┃\n┃ │ ╰─────────────╯ │   ┃\n┃ │ ╭───── a ─────╮ │   ┃\n┃ │ │ input: 0.0  │ │   ┃\n┃ │ │ output: 0.0 │ │   ┃\n┃ │ ╰─────────────╯ │   ┃\n┃ └─────────────────┘   ┃\n┃                       ┃\n┃ ┌─  Time Step 1 ──┐   ┃\n┃ │ ╭───── c ─────╮ │   ┃\n┃ │ │ input: 0.0  │ │   ┃\n┃ │ │ output: 0.0 │ │   ┃\n┃ │ ╰─────────────╯ │   ┃\n┃ └─────────────────┘   ┃\n┃                       ┃\n┃ result: [[0.0]]       ┃\n┃                       ┃\n┗━━━━━━━━━━━━━━━━━━━━━━━┛\n\n┏━━━  COMP: Trial 1  ━━━┓\n┃                       ┃\n┃ input: [[0.0], [0.0]] ┃\n┃                       ┃\n┃ ┌─  Time Step 0 ──┐   ┃\n┃ │ ╭───── b ─────╮ │   ┃\n┃ │ │ input: 0.0  │ │   ┃\n┃ │ │ output: 0.0 │ │   ┃\n┃ │ ╰─────────────╯ │   ┃\n┃ │ ╭───── a ─────╮ │   ┃\n┃ │ │ input: 0.0  │ │   ┃\n┃ │ │ output: 0.0 │ │   ┃\n┃ │ ╰─────────────╯ │   ┃\n┃ └─────────────────┘   ┃\n┃                       ┃\n┃ ┌─  Time Step 1 ──┐   ┃\n┃ │ ╭───── c ─────╮ │   ┃\n┃ │ │ input: 0.0  │ │   ┃\n┃ │ │ output: 0.0 │ │   ┃\n┃ │ ╰─────────────╯ │   ┃\n┃ └─────────────────┘   ┃\n┃                       ┃\n┃ result: [[0.0]]       ┃\n┃                       ┃\n┗━━━━━━━━━━━━━━━━━━━━━━━┛\n\nCOMP: Executed 2 of 2 trials'
     #     assert actual_output == expected_output
@@ -203,14 +220,15 @@ class TestReport():
     #     # ocomp.run(inputs=inputs_dict, report_progress=True)
     #     # ocomp.run(inputs=inputs_dict, report_progress=['simulations'])
     #
-    #     ocomp.run(inputs={icomp:-2}, report_output=FULL, report_simulations=True, report_to_devices=DIVERT)
+    #     ocomp.run(inputs={icomp:-2}, report_output=FULL, report_simulations=True, report_to_devices=ReportDevices.DIVERT)
     #     actual_output = ocomp.rich_diverted_reports
     #     expected_output = '\nocomp TRIAL 0 ====================\n Time Step 0 ---------\nicomp TRIAL 0 ====================\n Time Step 0 ---------\n Time Step 0 ---------\n Time Step 0 ---------\n Time Step 1 ---------\nocomp: Executed 1 of 1 trials\nocomp: Simulated 3 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials'
     #     assert actual_output == expected_output
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason="<Incompatible formatting of output>")
     def test_reportOutputPref_true(self):
         t = pnl.TransferMechanism()
-        t.reportOutputPref = True
+        t.reportOutputPref = ReportOutput.FULL
 
         f = io.StringIO()
         with contextlib.redirect_stdout(f):
@@ -221,6 +239,7 @@ class TestReport():
         assert 'output: 1.0' in output
         assert 'params' not in output
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason="<Incompatible formatting of output>")
     def test_reportOutputPref_params(self):
         t = pnl.TransferMechanism()
         t.reportOutputPref = 'params'

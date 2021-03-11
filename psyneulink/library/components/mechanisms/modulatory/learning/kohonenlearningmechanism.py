@@ -399,7 +399,8 @@ class KohonenLearningMechanism(LearningMechanism):
 
         )
 
-        if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+        from psyneulink.core.compositions.report import ReportOutput
+        if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref is not ReportOutput.OFF:
             print("\n{} weight change matrix: \n{}\n".format(self.name, learning_signal))
 
         return [learning_signal]

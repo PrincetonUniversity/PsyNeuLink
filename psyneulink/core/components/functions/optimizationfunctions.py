@@ -522,7 +522,8 @@ class OptimizationFunction(Function_Base):
 
         # Set up progress bar
         _show_progress = False
-        if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref:
+        from psyneulink.core.compositions.report import ReportOutput
+        if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is not ReportOutput.OFF:
             _show_progress = True
             _progress_bar_char = '.'
             _progress_bar_rate_str = ""
@@ -1689,7 +1690,8 @@ class GridSearch(OptimizationFunction):
 
             # Set up progress bar
             _show_progress = False
-            if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref:
+            from psyneulink.core.compositions.report import ReportOutput
+            if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is not ReportOutput.OFF:
                 _show_progress = True
                 _progress_bar_char = '.'
                 _progress_bar_rate_str = ""
