@@ -7448,7 +7448,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context.add_flag(ContextFlags.SIMULATION_MODE)
         context.remove_flag(ContextFlags.CONTROL)
         # Use reporting options from Report context created in initial (outer) call to run()
-        with Report(context) as report:
+        with Report(self, context) as report:
             results = self.run(inputs=inputs,
                                context=context,
                                runtime_params=runtime_params,
@@ -8416,7 +8416,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # EXECUTE TRIALS -------------------------------------------------------------
 
-        with Report(report_output=report_output,
+        with Report(self,
+                    report_output=report_output,
                     report_progress=report_progress,
                     report_simulations=report_simulations,
                     report_to_devices=report_to_devices,
@@ -8834,7 +8835,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output value of the final Mechanism executed in the Composition : various
         """
 
-        with Report(report_output=report_output,
+        with Report(self,
+                    report_output=report_output,
                     report_progress=report_progress,
                     report_simulations=report_simulations,
                     report_to_devices=report_to_devices,
@@ -9357,12 +9359,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Add report for node to time_step_report
                     report.report_output(self,
-                                           progress_report,
-                                           execution_scheduler,
-                                           report_output,
-                                           'node',
-                                           context,
-                                           node=node)
+                                         progress_report,
+                                         execution_scheduler,
+                                         report_output,
+                                         'node',
+                                         context,
+                                         node=node)
 
                     # MANAGE INPUTS (for next execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

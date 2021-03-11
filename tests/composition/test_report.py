@@ -19,9 +19,9 @@ class TestReport():
         c = pnl.TransferMechanism(name='c')
         comp = pnl.Composition(pathways=[a,b,c], name='COMP')
 
-        a.reportOutputPref=True
-        b.reportOutputPref=False
-        c.reportOutputPref=True
+        a.reportOutputPref=ReportOutput.FULL
+        b.reportOutputPref=ReportOutput.OFF
+        c.reportOutputPref=ReportOutput.FULL
 
         comp.run(report_output=ReportOutput.TERSE, report_to_devices=DIVERT)
         actual_output = comp.rich_diverted_reports
@@ -215,7 +215,7 @@ class TestReport():
 
     def test_reportOutputPref_true(self):
         t = pnl.TransferMechanism()
-        t.reportOutputPref = True
+        t.reportOutputPref = ReportOutput.FULL
 
         f = io.StringIO()
         with contextlib.redirect_stdout(f):
