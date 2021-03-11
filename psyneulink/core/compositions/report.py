@@ -79,16 +79,15 @@ from rich.progress import Progress as RichProgress
 
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONSOLE, DIVERT, FUNCTION_PARAMS, FULL, INPUT_PORTS, OUTPUT_PORTS, \
-    PNL_VIEW, RECORD, TERSE
+from psyneulink.core.globals.keywords import FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS
 from psyneulink.core.globals.utilities import convert_to_list
 
-__all__ = ['Report', 'ReportOutput', 'ReportDevices']
+__all__ = ['Report', 'ReportOutput', 'ReportDevices', 'CONSOLE', 'RECORD', 'DIVERT', 'PNL_VIEW']
 
 SIMULATION = 'Simulat'
 DEFAULT = 'Execut'
+SIMULATIONS = 'simulations'
 REPORT_REPORT = False # USED FOR DEBUGGING
-
 
 # rich console report styles
 # node
@@ -146,7 +145,6 @@ class ReportOutput(Enum):
     TERSE = 2
     FULL = 3
 
-
 class ReportDevices(Flag):
     """
     Options used in the **report_to_devices** argument of a `Composition`\'s `execution methods
@@ -190,6 +188,11 @@ class ReportDevices(Flag):
     RECORD = auto()
     DIVERT = auto()
     PNL_VIEW = auto()
+
+CONSOLE = ReportDevices.CONSOLE
+RECORD = ReportDevices.RECORD
+DIVERT = ReportDevices.DIVERT
+PNL_VIEW = ReportDevices.DIVERT
 
 
 class ReportError(Exception):
@@ -313,7 +316,7 @@ class Report:
                 report_output:ReportOutput=False,
                 report_progress:bool=False,
                 report_simulations:bool=False,
-                report_to_devices:(list(ReportDevices.__members__), list)=CONSOLE,
+                report_to_devices:(list(ReportDevices.__members__), list)=ReportDevices,
                 context:Context=None
                 ) -> 'Report':
         if cls._instance is None:
@@ -330,10 +333,10 @@ class Report:
             if not isinstance(report_simulations, bool):
                 raise ReportError(f"Bad 'report_simulations' arg in {source}: '{report_simulations}'; "
                                   f"must be bool.")
-            cls._report_to_devices = convert_to_list(report_to_devices or CONSOLE)
-            if not any(a in [CONSOLE, DIVERT, RECORD, PNL_VIEW] for a in cls._report_to_devices):
+            cls._report_to_devices = convert_to_list(report_to_devices or ReportDevices.CONSOLE)
+            if not all(isinstance(a, ReportDevices) for a in cls._report_to_devices):
                 raise ReportError(f"Bad 'report_to_devices' arg in {source}: '{report_to_devices}'; "
-                                  f"must be one of: {list(ReportDevices.__members__)}")
+                                  f"must be one or more of: {list(ReportDevices.__members__)}")
 
             # Instantiate instance
             cls._instance = super(Report, cls).__new__(cls)
@@ -343,13 +346,13 @@ class Report:
             cls._report_output = report_output
             cls._reporting_enabled = report_output is not ReportOutput.OFF or report_progress
             cls._report_simulations = report_simulations
-            cls._rich_console = CONSOLE in cls._report_to_devices
-            cls._rich_divert = DIVERT in cls._report_to_devices
-            cls._record_reports = RECORD in cls._report_to_devices
+            cls._rich_console = ReportDevices.CONSOLE in cls._report_to_devices
+            cls._rich_divert = ReportDevices.DIVERT in cls._report_to_devices
+            cls._record_reports = ReportDevices.RECORD in cls._report_to_devices
             # Enable rich if reporting output or progress and using console or recording
             cls._use_rich = (cls._reporting_enabled
                              and (cls._rich_console or cls._rich_divert or cls._record_reports))
-            cls._use_pnl_view = PNL_VIEW in cls._report_to_devices
+            cls._use_pnl_view = ReportDevices.PNL_VIEW in cls._report_to_devices
 
             cls._prev_simulation = False
 
@@ -620,39 +623,31 @@ class Report:
         if report_num is None or report_output is ReportOutput.OFF:
             return
 
-        # if report_output is ReportOutput.FULL:   # give precedence to argument in call to execute
-        #     report_type = FULL
-        # elif report_output is ReportOutput.TERSE:
-        #     report_type = TERSE
-        # else:
-        #     report_type = None
-
-        # Assign defaults for trial and node report types
-        trial_report_output = node_report_output = report_output
+        trial_report_type = node_report_type = report_output
 
         from psyneulink.core.compositions.composition import Composition
         from psyneulink.core.components.mechanisms.mechanism import Mechanism
         # Report is called for by a Mechanism
         if isinstance(caller, Mechanism):
             # FULL output reporting doesn't make sense for a Mechanism, since it includes trial info, so enforce TERSE
-            trial_report_output = ReportOutput.TERSE
+            trial_report_type = ReportOutput.TERSE
             # If USE_PREFS is specified by user, then assign output format to Mechanism's reportOutputPref
             if report_output is ReportOutput.USE_PREFS:
-                node_report_output = node.reportOutputPref
+                node_report_type = node.reportOutputPref
             # Otherwise, use option specified by user or default
             else:
-                node_report_output = report_output
+                node_report_type = report_output
         # USE_PREFS is specified for report called by a Composition:
         elif isinstance(caller, Composition) and report_output is ReportOutput.USE_PREFS:
             # First, if report is for execution of a node, assign its report type using its reportOutputPref:
             if node:
                 # Get ReportOutput spec from reportOutputPref if there is one
-                node_report_output = next((pref for pref in convert_to_list(node.reportOutputPref)
+                node_report_type = next((pref for pref in convert_to_list(node.reportOutputPref)
                                            if isinstance(pref, ReportOutput)), None)
                 # If None was found, assign ReportOutput.FULL as default
-                node_report_output = node_report_output or ReportOutput.FULL
+                node_report_type = node_report_type or ReportOutput.FULL
                 # Return if it is OFF
-                if node_report_output is ReportOutput.OFF:
+                if node_report_type is ReportOutput.OFF:
                     return
             # Then, get report type for trial
             # If Composition's reportOutputPref is also USE_PREF, assign TERSE as default
@@ -660,7 +655,7 @@ class Report:
                 trial_report = ReportOutput.TERSE
             # Otherwise, use Compositions' reportOutputPref
             else:
-                trial_report_output = caller.reportOutputPref
+                trial_report_type = caller.reportOutputPref
 
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
         if simulation_mode:
@@ -677,10 +672,9 @@ class Report:
         if content is 'trial_init':
 
             progress_report.trial_report = []
-
             #  if FULL output, report trial number and Composition's input
             #  note:  header for Trial Panel is constructed under 'content is Trial' case below
-            if trial_report_output is ReportOutput.FULL:
+            if trial_report_type is ReportOutput.FULL:
                 progress_report.trial_report = [f"\n[bold {trial_panel_color}]input:[/]"
                                                  f" {[i.tolist() for i in caller.get_input_values(context)]}"]
             else: # TERSE output
@@ -692,7 +686,7 @@ class Report:
                     self._recorded_reports += trial_header
 
         elif content is 'time_step_init':
-            if trial_report_output is ReportOutput.FULL:
+            if trial_report_type is ReportOutput.FULL:
                 progress_report.time_step_report = [] # Contains rich.Panel for each node executed in time_step
             elif nodes_to_report: # TERSE output
                 time_step_header = f'[{time_step_panel_color}] Time Step {scheduler.clock.time.time_step} ---------'
@@ -703,33 +697,14 @@ class Report:
         elif content is 'node':
             if not node:
                 assert False, 'Node not specified in call to Report report_output'
-            # MODIFIED 3/10/21 OLD:
-            # if (report_output is ReportOutput.OFF
-            #         or (report_output is ReportOutput.USE_PREFS and node.reportOutputPref is False)):
-            # MODIFIED 3/10/21 END
-            # if report_output is USE_PREFS, defer to caller's reportOutputPref
-            # if report_output is ReportOutput.USE_PREFS:
-            #     if node.reportOutputPref is ReportOutput.OFF:
-            #         return
-            #     if isinstance(node.reportOutputPref, ReportOutput):
-            #         node_report_output = node.reportOutputPref
-            #     else:
-            #         node_report_output = ReportOutput.FULL
-            # else:
-            #     node_report_output = report_output
-            # Use FULL node report for Node:
-            # MODIFIED 3/10/21 OLD:
-            # if report_type is FULL or node.reportOutputPref in [True, FULL]:
-            # MODIFIED 3/10/21 END
-            # if report_output is ReportOutput.FULL:
             node_report = self.node_execution_report(node,
                                                      input_val=node.get_input_values(context),
                                                      output_val=node.output_port.parameters.value._get(context),
-                                                     report_output=node_report_output,
+                                                     report_output=node_report_type,
                                                      context=context
                                                      )
             # If trial is using FULL report, save Node's to progress_report
-            if trial_report_output is ReportOutput.FULL:
+            if trial_report_type is ReportOutput.FULL:
                 progress_report.time_step_report.append(node_report)
             # Otherwise, just print it to the console (as part of otherwise TERSE report)
             else: # TERSE output
@@ -738,17 +713,9 @@ class Report:
                     with self._recording_console.capture() as capture:
                         self._recording_console.print(node_report)
                     self._recorded_reports += capture.get()
-            # Use TERSE report for Node
-            # else:
-            #     self._rich_progress.console.print(f'[{node_panel_color}]  {node.name} executed')
 
         elif content is 'time_step':
-            # MODIFIED 3/10/21 OLD:
-            # if ((nodes_to_report or report_output is ReportOutput.FULL)
-            #         and report_output is ReportOutput.FULL):
-            # MODIFIED 3/10/21 NEW:
-            if nodes_to_report and trial_report_output is ReportOutput.FULL:
-            # MODIFIED 3/10/21 END
+            if nodes_to_report and trial_report_type is ReportOutput.FULL:
                 progress_report.trial_report.append('')
                 progress_report.trial_report.append(Panel(RenderGroup(*progress_report.time_step_report),
                                                            # box=box.HEAVY,
@@ -759,7 +726,7 @@ class Report:
                                                            expand=False))
 
         elif content is 'trial':
-            if trial_report_output is ReportOutput.FULL:
+            if trial_report_type is ReportOutput.FULL:
                 output_values = []
                 for port in caller.output_CIM.output_ports:
                     output_values.append(port.parameters.value._get(context))
@@ -771,14 +738,7 @@ class Report:
                                                      title=f'[bold{trial_panel_color}] {caller.name}{sim_str}: '
                                                            f'Trial {trial_num} [/]',
                                                      expand=False)
-            # FIX: THIS GENERATES A CUMULATIVE REPORT, BUT COMMENTING IT OUT ELIMINATES THE OUTPUT REPORT
-            # elif self._rich_divert:
-            #     self._rich_diverted_reports += f'\n{self._rich_progress.console.file.getvalue()}'
-            # elif report_type is TERSE:
-            #     progress_report.trial_report.append(f'\n{self._rich_progress.console.file.getvalue()}')
-
-            # If execute() was called from COMMAND_LINE (rather than via run()), report progress
-            if context.source & ContextFlags.COMMAND_LINE and trial_report_output is not ReportOutput.OFF:
+            if context.source & ContextFlags.COMMAND_LINE and trial_report_type is not ReportOutput.OFF:
                 self._print_reports(progress_report)
 
         elif content is 'run':
