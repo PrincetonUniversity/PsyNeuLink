@@ -275,7 +275,7 @@ post_settlement_multiplier = int(prior120 / 5)
 for cond in range(conditions):
 # ---------------------------------------------------------------------------------------------------------------------
     # Run congruent trial with word presented 1200 trials prior ------------------------------------------------------------
-    for run in range(1,runs+1):  # use 1 as starting point to insure Composition is called with non-zero num_trials)
+    for run in range(runs):  # use 1 as starting point to insure Composition is called with non-zero num_trials)
         response_color_weights = pnl.MappingProjection(matrix=np.array([[0.0, 0.0, 0.0],
                                                                         [0.0, 0.0, 0.0]]))
 
@@ -316,7 +316,7 @@ for cond in range(conditions):
     print('response_all: ', response_all)
 
     # Run trials after congruent color was presented ----------------------------------------------------------------------
-    for run2 in range(1,runs2+1):
+    for run2 in range(runs2):
         response_color_weights = pnl.MappingProjection(matrix=np.array([[0.0, 0.0, 0.0],
                                                                         [0.0, 0.0, 0.0]]))
         response_word_weights = pnl.MappingProjection(matrix=np.array([[0.0, 0.0, 0.0],
