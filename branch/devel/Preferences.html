@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Preferences &mdash; PsyNeuLink 0.8.6.0+93.ge3447ca219 documentation</title>
+  <title>Preferences &mdash; PsyNeuLink 0.8.6.0+94.gf129f001f4 documentation</title>
   
 
   
@@ -96,7 +96,7 @@
               
               
                 <div class="version">
-                  0.8.6.0+93
+                  0.8.6.0+94
                 </div>
               
             
@@ -203,16 +203,19 @@ by a PreferenceSet, which specifies the</p>
 <p>The following preferences are available for all Components (see <a class="reference internal" href="Component.html#component-prefs"><span class="std std-ref">Component prefs</span></a> for
 additional details):</p>
 <ul class="simple">
-<li><p><strong>verbosePref</strong> (bool, default: False) - enables/disables reporting of (non-exception) warnings and system function;</p></li>
-<li><p><strong>paramValidationPref</strong> (bool, default: False) - enables/disables run-time validation of the execute method of a
+<li><p><strong>verbosePref</strong> (bool : default False) - enables/disables reporting of (non-exception) warnings and system function;</p></li>
+<li><p><strong>paramValidationPref</strong> (bool : default False) - enables/disables run-time validation of the execute method of a
 Function object;</p></li>
 </ul>
-<ul class="simple">
-<li><p><strong>reportOutputPref</strong> (bool, default: False) - enables/disables reporting execution of the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>;
-if the Component is executed within a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, this preference may be overridden by the <strong>report_output</strong>
-argument specified in any of the Composition’s <a class="reference internal" href="Composition.html#composition-execution-methods"><span class="std std-ref">execution methods</span></a>
-(see <a class="reference internal" href="Composition.html#composition-execution-reporting"><span class="std std-ref">execution reporting</span></a> for additional details);</p></li>
-<li><p><strong>logPref</strong> (LogCondition, default: LogCondition.OFF) - sets <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogCondition</span></code></a> for a given Component;</p></li>
+<ul class="simple" id="preferenceset-reportoutputpref">
+<li><p><strong>reportOutputPref</strong> (list[‘params’, <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput" title="psyneulink.core.compositions.report.ReportOutput"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportOutput</span></code></a>]: default ReportOutput.OFF) - enables/disables
+and determines format and content for reporting execution of the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> (see <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput" title="psyneulink.core.compositions.report.ReportOutput"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportOutput</span></code></a> for options).
+If ‘params’ (or ‘parameters’) is specified, then the Component’s <code class="xref any docutils literal notranslate"><span class="pre">Parameters</span> <span class="pre">are</span> <span class="pre">included</span> <span class="pre">along</span> <span class="pre">with</span> <span class="pre">its</span> <span class="pre">input</span> <span class="pre">and</span>
+<span class="pre">output</span> <span class="pre">when</span> <span class="pre">`ReportOutput.FULL</span></code> is also specified. If the Component is a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> executed within a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>,
+this preference may be overridden by the <strong>report_output</strong> argument specified in any of the Composition’s
+<a class="reference internal" href="Composition.html#composition-execution-methods"><span class="std std-ref">execution methods</span></a> (see <a class="reference internal" href="Composition.html#composition-execution-reporting"><span class="std std-ref">execution reporting</span></a>
+for additional details).</p></li>
+<li><p><strong>logPref</strong> (<a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogCondition</span></code></a> : default LogCondition.OFF) - sets <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogCondition</span></code></a> for a given Component;</p></li>
 </ul>
 </div>
 </div>
