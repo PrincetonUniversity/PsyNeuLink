@@ -708,13 +708,13 @@ class Report:
                 # Return if it is OFF
                 if node_report_type is ReportOutput.OFF:
                     return
-            # Then, get report type for trial
-            # If Composition's reportOutputPref is also USE_PREF, assign TERSE as default
-            if caller.reportOutputPref is ReportOutput.USE_PREFS:
-                trial_report = ReportOutput.TERSE
-            # Otherwise, use Compositions' reportOutputPref
-            else:
-                trial_report_type = caller.reportOutputPref
+            # # Then, get report type for trial
+            # # If Composition's reportOutputPref is also USE_PREF, assign TERSE as default
+            # if caller.reportOutputPref is ReportOutput.USE_PREFS:
+            #     trial_report_type = ReportOutput.TERSE
+            # # Otherwise, use Compositions' reportOutputPref
+            # else:
+            #     trial_report_type = report_output
 
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
         if simulation_mode:
