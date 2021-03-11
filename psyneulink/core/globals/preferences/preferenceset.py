@@ -20,23 +20,23 @@ Standard Preferences
 The following preferences are available for all Components (see `Component prefs <Component_Prefs>` for
 additional details):
 
-* **verbosePref** (bool, default: False) - enables/disables reporting of (non-exception) warnings and system function;
+* **verbosePref** (bool : default False) - enables/disables reporting of (non-exception) warnings and system function;
 
-* **paramValidationPref** (bool, default: False) - enables/disables run-time validation of the execute method of a
+* **paramValidationPref** (bool : default False) - enables/disables run-time validation of the execute method of a
   Function object;
 
 .. _PreferenceSet_reportOutputPref:
 
-* **reportOutputPref** (bool, 'params', ReportOutput, list), default: ReportOutput.OFF) - enables/disables reporting
-  execution of the `Component` (`ReportOutput` for options), and whether to include the values of its `Parameters`
-  in addition to its input and output; if the Component is executed within a `Composition`, this preference may be
-  overridden by the **report_output** argument specified in any of the Composition's `execution methods
+* **reportOutputPref** (bool, 'params', `ReportOutput`, or list : default ReportOutput.OFF) - enables/disables
+  reporting execution of the `Component` (`ReportOutput` for options), and whether to include the values of its
+  `Parameters` in addition to its input and output; if the Component is executed within a `Composition`, this preference
+  may be overridden by the **report_output** argument specified in any of the Composition's `execution methods
   <Composition_Execution_Methods>` (see `execution reporting <Composition_Execution_Reporting>` for additional details).
 
-* **logPref** (LogCondition, default: LogCondition.OFF) - sets `LogCondition` for a given Component;
+* **logPref** (`LogCondition` : default LogCondition.OFF) - sets `LogCondition` for a given Component;
 
 COMMENT:
-THIS DOES NOT APPEAR CURRENTLY TO BE USED
+THIS DOES NOT APPEAR CURRENTLY TO BE USED:
 * **runtimeParamModulationPref** (Modulation, default: Modulation.MULTIPLY) -  sets type of `Modulation`
   used for modulating parameters by runtime specification (in pathway);
 COMMENT

@@ -1107,6 +1107,7 @@ from psyneulink.core.globals.utilities import \
     ContentAddressableList, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, \
     iscompatible, kwCompatibilityNumeric
 from psyneulink.core.scheduling.condition import Condition, TimeScale
+from psyneulink.core.compositions.report import ReportOutput
 
 __all__ = [
     'Mechanism_Base', 'MechanismError', 'MechanismRegistry'
@@ -2533,10 +2534,11 @@ class Mechanism_Base(Mechanism):
         # REPORT EXECUTION if called from command line
         #  If called by a Composition, it handles reporting.
         if context.source == ContextFlags.COMMAND_LINE:
-            if self.prefs.reportOutputPref and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING):
+            if (self.prefs.reportOutputPref is not ReportOutput.OFF
+                    and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING)):
                 from psyneulink.core.compositions.report import Report
                 from rich import print
-                if self.prefs.reportOutputPref is 'terse':
+                if self.prefs.reportOutputPref is ReportOutput.TERSE:
                     print(f'{self.name} executed')
                 else:
                     print(Report.node_execution_report(self,

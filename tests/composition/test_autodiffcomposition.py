@@ -15,6 +15,7 @@ from psyneulink.core.globals.keywords import TRAINING_SET
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+from psyneulink.core.compositions.report import ReportOutput
 
 logger = logging.getLogger(__name__)
 
@@ -82,8 +83,8 @@ class TestACConstructor:
 
     def test_report_prefs(self):
         comp = AutodiffComposition()
-        assert comp.input_CIM.reportOutputPref == False
-        assert comp.output_CIM.reportOutputPref == False
+        assert comp.input_CIM.reportOutputPref == ReportOutput.OFF
+        assert comp.output_CIM.reportOutputPref == ReportOutput.OFF
         # assert comp.target_CIM.reportOutputPref == False
 
     # FIXME: This test for patience doesn't actually test for correctness

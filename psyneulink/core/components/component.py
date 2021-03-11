@@ -3348,10 +3348,20 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     @property
     def reportOutputPref(self):
+        from psyneulink.core.compositions.report import ReportOutput
+        if self.prefs.reportOutputPref is False:
+            return ReportOutput.OFF
+        elif self.prefs.reportOutputPref is True:
+            return ReportOutput.TERSE
         return self.prefs.reportOutputPref
 
     @reportOutputPref.setter
     def reportOutputPref(self, setting):
+        from psyneulink.core.compositions.report import ReportOutput
+        if setting is False:
+            setting = ReportOutput.OFF
+        elif setting is True:
+            setting = ReportOutput.TERSE
         self.prefs.reportOutputPref = setting
 
     @property

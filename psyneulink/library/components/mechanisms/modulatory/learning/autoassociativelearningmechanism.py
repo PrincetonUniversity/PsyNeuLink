@@ -102,6 +102,7 @@ from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.projections.projection import Projection_Base, projection_keywords
 from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.compositions.report import ReportOutput
 from psyneulink.core.globals.keywords import \
     ADDITIVE, AUTOASSOCIATIVE_LEARNING_MECHANISM, CONTROL_PROJECTIONS, INPUT_PORTS, \
     LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, NAME, OUTPUT_PORTS, OWNER_VALUE, VARIABLE
@@ -401,7 +402,7 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
         )
 
-        if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+        if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref is not ReportOutput.OFF:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.parameters.learning_signal._get(context)))
 
         value = np.array([learning_signal])

@@ -9202,7 +9202,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
                 # INITIALIZE self._time_step_report AND SHOW TIME_STEP DIVIDER
-                nodes_to_report = any(node.reportOutputPref for node in next_execution_set)
+                nodes_to_report = any(node.reportOutputPref is not ReportOutput.OFF for node in next_execution_set)
                 report.report_output(self, progress_report,
                                      execution_scheduler,
                                      report_output,

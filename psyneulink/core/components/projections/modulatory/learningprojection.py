@@ -198,6 +198,7 @@ from psyneulink.core.components.shellclasses import ShellClass
 from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
+from psyneulink.core.compositions.report import ReportOutput
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTEXT, FUNCTION, FUNCTION_PARAMS, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
@@ -660,7 +661,7 @@ class LearningProjection(ModulatoryProjection_Base):
 
         )
 
-        if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+        if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref is not ReportOutput.OFF:
             print("\n{} weight change matrix: \n{}\n".format(self.name, np.diag(value)))
 
         return value
