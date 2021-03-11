@@ -3724,7 +3724,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 except AttributeError:
                     pass
 
-                if isinstance(param_value, Component):
+                if isinstance(param_value, Component) and param_value is not self:
                     self._parameter_components.add(param_value)
             # ControlMechanism and GatingMechanism have Parameters that only
             # throw these errors
