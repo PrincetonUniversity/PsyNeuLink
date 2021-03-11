@@ -1,6 +1,7 @@
 import contextlib
 import io
 import sys
+
 import pytest
 
 import psyneulink as pnl
@@ -224,6 +225,7 @@ class TestReport():
     #     expected_output = '\nocomp TRIAL 0 ====================\n Time Step 0 ---------\nicomp TRIAL 0 ====================\n Time Step 0 ---------\n Time Step 0 ---------\n Time Step 0 ---------\n Time Step 1 ---------\nocomp: Executed 1 of 1 trials\nocomp: Simulated 3 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials\nicomp: Executed 1 of 1 trials\nicomp: Simulated 4 trials'
     #     assert actual_output == expected_output
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason="<Incompatible formatting of output>")
     def test_reportOutputPref_true(self):
         t = pnl.TransferMechanism()
         t.reportOutputPref = ReportOutput.FULL
@@ -237,6 +239,7 @@ class TestReport():
         assert 'output: 1.0' in output
         assert 'params' not in output
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason="<Incompatible formatting of output>")
     def test_reportOutputPref_params(self):
         t = pnl.TransferMechanism()
         t.reportOutputPref = 'params'
