@@ -2533,6 +2533,7 @@ class Mechanism_Base(Mechanism):
         # REPORT EXECUTION if called from command line
         #  If called by a Composition, it handles reporting.
         if context.source == ContextFlags.COMMAND_LINE:
+            # FIX: 3/11/21 THIS SHOULD BE REFACTORED TO USE Report.report_output rather than printing directly
             from psyneulink.core.compositions.report import ReportOutput
             if (self.prefs.reportOutputPref is not ReportOutput.OFF
                     and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING)):

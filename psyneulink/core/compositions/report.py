@@ -839,7 +839,6 @@ class Report:
     @staticmethod
     def node_execution_report(node,
                               input_val=None,
-                              params=None,
                               output_val=None,
                               report_output=ReportOutput.USE_PREFS,
                               context=None):
@@ -873,23 +872,20 @@ class Report:
             context of current execution.
         """
 
+        # Use TERSE format if that has been specified by report_output (i.e., in the arg of an execution method),
+        #   or as the reportOutputPref for a node when USE_PREFS is in effect
+        if (report_output is ReportOutput.TERSE
+                or (node.reportOutputPref is ReportOutput.TERSE and report_output is not ReportOutput.FULL)):
+            return f'[{node_panel_color}]  {node.name} executed'
+
 
         from psyneulink.core.components.shellclasses import Function
 
         node_report = ''
 
-        if (report_output is ReportOutput.TERSE
-                or (node.reportOutputPref is ReportOutput.TERSE and report_output is not ReportOutput.FULL)):
-            return f'[{node_panel_color}]  {node.name} executed'
-
+        # Render input --------------------------------------------------------------------------------------------
         if input_val is None:
             input_val = node.get_input_values(context)
-        if output_val is None:
-            output = node.output_port.parameters.value._get(context)
-
-        params = params or {p.name: p._get(context) for p in node.parameters}
-
-        # print input
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #      if you want more specific output, you can add conditional tests here
         try:
@@ -899,7 +895,9 @@ class Report:
 
         node_report += f"input: {input_string}"
 
-        # print output
+        # Render output --------------------------------------------------------------------------------------------
+        if output_val is None:
+            output = node.output_port.parameters.value._get(context)
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #   if you want more specific output, you can add conditional tests here
         try:
@@ -909,9 +907,12 @@ class Report:
 
         node_report += f"\noutput: {output_string}"
 
-        # print params
+        # Render params if specified -------------------------------------------------------------------------------
+        params = {p.name: p._get(context) for p in node.parameters}
+        node_pref = convert_to_list(node.reportOutputPref)
         try:
-            include_params = re.match('param(eter)?s?', node.reportOutputPref, flags=re.IGNORECASE)
+            # FIX 3/11/21 ALLOW SPECIFYING INDIVIDUAL PARAMS BY NAME IN LIST
+            include_params = any(re.match('param(eter)?s?', pref, flags=re.IGNORECASE) for pref in node_pref)
         except TypeError:
             include_params = False
 
@@ -947,9 +948,12 @@ class Report:
                         params_string += ("\n\t\t{}: {}".
                                           format(fct_param_name,
                                                  str(getattr(node.function.parameters,
-                                                             fct_param_name)._get(context)).__str__().strip("[]")
+                                                             fct_param_name)._get(context)
+                                                     ).__str__().strip("[]")
                                                  )
                                           )
+        # Generate report -------------------------------------------------------------------------------
+
         if include_params:
             width = 100
             expand = True
