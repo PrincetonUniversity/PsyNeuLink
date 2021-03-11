@@ -27,11 +27,13 @@ additional details):
 
 .. _PreferenceSet_reportOutputPref:
 
-* **reportOutputPref** (bool, 'params', `ReportOutput`, or list : default ReportOutput.OFF) - enables/disables
-  reporting execution of the `Component` (`ReportOutput` for options), and whether to include the values of its
-  `Parameters` in addition to its input and output; if the Component is executed within a `Composition`, this preference
-  may be overridden by the **report_output** argument specified in any of the Composition's `execution methods
-  <Composition_Execution_Methods>` (see `execution reporting <Composition_Execution_Reporting>` for additional details).
+* **reportOutputPref** (list['params', `ReportOutput`]: default ReportOutput.OFF) - enables/disables
+  and determines format and content for reporting execution of the `Component` (see `ReportOutput` for options).
+  If 'params' (or 'parameters') is specified, then the Component's `Parameters are included along with its input and
+  output when `ReportOutput.FULL` is also specified. If the Component is a `Mechanism` executed within a `Composition`,
+  this preference may be overridden by the **report_output** argument specified in any of the Composition's
+  `execution methods <Composition_Execution_Methods>` (see `execution reporting <Composition_Execution_Reporting>`
+  for additional details).
 
 * **logPref** (`LogCondition` : default LogCondition.OFF) - sets `LogCondition` for a given Component;
 
