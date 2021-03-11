@@ -2394,7 +2394,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
-from psyneulink.core.compositions.report import Report, ReportOutput
+from psyneulink.core.compositions.report import Report, ReportOutput, ReportProgress, ReportSimulations
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -8023,8 +8023,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             termination_processing=None,
             skip_analyze_graph=False,
             report_output:ReportOutput=ReportOutput.OFF,
-            report_progress=False,
-            report_simulations=False,
+            report_progress=ReportProgress.OFF,
+            report_simulations=ReportSimulations.OFF,
             report_to_devices=None,
             animate=False,
             log=False,
@@ -8127,11 +8127,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial as
             it is generated; see `Report_Output` for additional details and `ReportOutput` for options.
 
-        report_progress : bool : default False
+        report_progress : ReportProgress : default ReportProgress.OFF
             specifies whether to report progress of execution in real time; see `Report_Progress` for additional
             details.
 
-        report_simulations : bool : default False
+        report_simulations : ReportSimulations : default ReportSimulatons.OFF
             specifies whether to show output and/or progress for `simulations <OptimizationControlMechanism_Execution>`
             executed by the Composition's `controller <Composition_Controller>`; see `Report_Simulations` for
             additional details.
@@ -8637,11 +8637,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial as
                 it is generated; see `Report_Output` for additional details and `ReportOutput` for options.
 
-            report_progress : bool : default False
+            report_progress : ReportProgress : default ReportProgress.OFF
                 specifies whether to report progress of execution in real time; see `Report_Progress` for additional
                 details.
 
-            report_simulations : bool : default False
+            report_simulations : ReportSimulatons : default ReportSimulations.OFF
                 specifies whether to show output and/or progress for `simulations <OptimizationControlMechanism_Execution>`
                 executed by the Composition's `controller <Composition_Controller>`; see `Report_Simulations` for
                 additional details.
@@ -8748,8 +8748,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             skip_initialization=False,
             execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             report_output:ReportOutput=ReportOutput.OFF,
-            report_progress=False,
-            report_simulations=False,
+            report_progress=ReportProgress.OFF,
+            report_simulations=ReportSimulations.OFF,
             report_to_devices=None,
             report=None,
             progress_report=None,
@@ -8817,10 +8817,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` for the
                 execution; see `Report_Output` for additional details and `ReportOutput` for options.
 
-            report_progress : bool : default False
+            report_progress : ReportProgress : default ReportProgress.OFF
                 specifies whether to report progress of the execution; see `Report_Progress` for additional details.
 
-            report_simulations : bool : default False
+            report_simulations : ReportSimulations : default ReportSimulations.OFF
                 specifies whether to show output and/or progress for `simulations
                 <OptimizationControlMechanism_Execution>` executed by the Composition's `controller
                 <Composition_Controller>`; see `Report_Simulations` for additional details.
@@ -9202,7 +9202,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
                 # INITIALIZE self._time_step_report AND SHOW TIME_STEP DIVIDER
-                nodes_to_report = any(node.reportOutputPref is not ReportOutput.OFF for node in next_execution_set)
+                nodes_to_report = any(node.reportOutputPref for node in next_execution_set)
                 report.report_output(self, progress_report,
                                      execution_scheduler,
                                      report_output,

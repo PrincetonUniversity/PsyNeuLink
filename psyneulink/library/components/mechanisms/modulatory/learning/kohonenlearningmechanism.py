@@ -104,7 +104,6 @@ from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism, LearningTiming, LearningType
 from psyneulink.core.components.projections.projection import Projection_Base, projection_keywords
 from psyneulink.core.components.ports.parameterport import ParameterPort
-from psyneulink.core.compositions.report import ReportOutput
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     ADDITIVE, CONTROL_PROJECTIONS, INPUT_PORTS, KOHONEN_LEARNING_MECHANISM, \
@@ -400,6 +399,7 @@ class KohonenLearningMechanism(LearningMechanism):
 
         )
 
+        from psyneulink.core.compositions.report import ReportOutput
         if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref is not ReportOutput.OFF:
             print("\n{} weight change matrix: \n{}\n".format(self.name, learning_signal))
 

@@ -40,7 +40,6 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
-from psyneulink.core.compositions.report import ReportOutput
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core.globals.keywords import \
@@ -523,6 +522,7 @@ class OptimizationFunction(Function_Base):
 
         # Set up progress bar
         _show_progress = False
+        from psyneulink.core.compositions.report import ReportOutput
         if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is not ReportOutput.OFF:
             _show_progress = True
             _progress_bar_char = '.'
@@ -1690,6 +1690,7 @@ class GridSearch(OptimizationFunction):
 
             # Set up progress bar
             _show_progress = False
+            from psyneulink.core.compositions.report import ReportOutput
             if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is not ReportOutput.OFF:
                 _show_progress = True
                 _progress_bar_char = '.'
