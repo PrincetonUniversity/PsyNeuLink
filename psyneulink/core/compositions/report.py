@@ -414,7 +414,7 @@ class Report:
                              and (cls._rich_console or cls._rich_divert or cls._record_reports))
             cls._use_pnl_view = ReportDevices.PNL_VIEW in cls._report_to_devices
 
-            cls._outer_simulation = False
+            cls._simulation_depth = 0
 
             # Instantiate rich progress context object
             # - it is not started until the self.start_run_report() method is called
@@ -573,6 +573,8 @@ class Report:
 
             self._run_reports[comp][SIMULATING] = run_mode is SIMULATION
 
+            self._simulation_depth += 1
+
             return report_num
 
     def report_progress(self, caller, report_num, context):
@@ -624,6 +626,8 @@ class Report:
                 num_trials_str = ''
 
             update = f'{caller.name}: {run_mode}ed {trial_num+1}{num_trials_str} trials'
+            update += f' SIMULATION DEPTH: {self._simulation_depth}'
+
             self._rich_progress.update(run_report.rich_task_id,
                                   description=update,
                                   advance=1,
@@ -634,6 +638,7 @@ class Report:
                 and run_report.num_trials
                 and (trial_num == run_report.num_trials)):
             self._run_reports[caller][run_mode].pop()
+        self._simulation_depth -= 1
 
     def report_output(self, caller,
                       report_num:int,
