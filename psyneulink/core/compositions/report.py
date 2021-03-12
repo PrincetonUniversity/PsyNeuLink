@@ -103,6 +103,7 @@ __all__ = ['Report', 'ReportOutput', 'ReportProgress', 'ReportDevices', 'ReportS
 SIMULATION = 'Simulat'
 DEFAULT = 'Execut'
 SIMULATIONS = 'simulations'
+SIMULATING = 'simulating'
 REPORT_REPORT = False # USED FOR DEBUGGING
 
 # rich console report styles
@@ -140,7 +141,7 @@ class ReportOutput(Enum):
         use the `reportOutputPref <PreferenceSet_reportOutputPref>` of each `Composition` and/or `Mechanism` executed
         to determine whether and in what format to report its execution.
 
-    TERSE
+    TERSE (aka ON)
         enforce reporting execution of *all* Compositions and/or Mechanisms as they are executed, irrespective of their
         `reportOutputPref <PreferenceSet_reportOutputPref>` settings, using a simple line-by-line format to report each.
 
@@ -155,6 +156,7 @@ class ReportOutput(Enum):
 
     OFF = 0
     USE_PREFS = 1
+    ON = 2
     TERSE = 2
     FULL = 3
 
@@ -412,8 +414,6 @@ class Report:
                              and (cls._rich_console or cls._rich_divert or cls._record_reports))
             cls._use_pnl_view = ReportDevices.PNL_VIEW in cls._report_to_devices
 
-            cls._prev_simulation = False
-
             # Instantiate rich progress context object
             # - it is not started until the self.start_run_report() method is called
             # - auto_refresh is disabled to accommodate IDEs (such as PyCharm and Jupyter Notebooks)
@@ -526,7 +526,7 @@ class Report:
             print()
 
         if comp not in self._run_reports:
-            self._run_reports.update({comp:{DEFAULT:[], SIMULATION:[]}})
+            self._run_reports.update({comp:{DEFAULT:[], SIMULATION:[], SIMULATING:False}})
 
         # Used for accessing progress report and reporting results
         if context.runmode & ContextFlags.SIMULATION_MODE:
@@ -538,7 +538,7 @@ class Report:
             return
 
         # Don't create a new report for simulations in a set
-        if run_mode is SIMULATION and self._prev_simulation:
+        if run_mode is SIMULATION and self._run_reports[comp][SIMULATING]:
             return len(self._run_reports[comp][run_mode]) - 1
 
         if self._use_rich:
@@ -546,7 +546,7 @@ class Report:
             # visible = self._report_progress and (run_mode is not SIMULATION or self._report_simulations)
             visible = (self._rich_console
                        and self._report_progress is ReportProgress.ON
-                       and (run_mode is not SIMULATION or self._report_simulations is not ReportSimulations.ON)
+                       and (run_mode is not SIMULATION or self._report_simulations is ReportSimulations.ON)
                        )
 
             if comp.verbosePref or REPORT_REPORT:
@@ -569,7 +569,7 @@ class Report:
             self._run_reports[comp][run_mode].append(RunReport(id, num_trials))
             report_num = len(self._run_reports[comp][run_mode]) - 1
 
-            self._prev_simulation = run_mode is SIMULATION
+            self._run_reports[comp][SIMULATING] = run_mode is SIMULATION
 
             return report_num
 
