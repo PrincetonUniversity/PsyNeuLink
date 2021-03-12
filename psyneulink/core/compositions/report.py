@@ -358,8 +358,8 @@ class Report:
     _run_reports : dict
         contains entries for each Composition (the key) executed during progress reporting; the value of each
         entry is itself a dict with two entries:
-        - one containing ProgressReports for executions in DEFAULT_MODE (key: DEFAULT)
-        - one containing ProgressReports for executions in SIMULATION_MODE (key: SIMULATION)
+        - one containing RunReports for executions in DEFAULT_MODE (key: DEFAULT)
+        - one containing RunReports for executions in SIMULATION_MODE (key: SIMULATION)
 
     _ref_count : int : default 0
         tracks how many times object has been referenced;  counter is incremented on each context __enter__
@@ -493,7 +493,7 @@ class Report:
 
     def start_run_report(self, comp, num_trials, context) -> int:
         """
-        Initialize a ProgressReport for Composition
+        Initialize a RunReport for Composition
 
         Arguments
         ---------
@@ -510,7 +510,7 @@ class Report:
         Returns
         -------
 
-        ProgressReport id : int
+        RunReport id : int
             id is stored in `_run_reports <Report._run_reports>`.
 
         """
