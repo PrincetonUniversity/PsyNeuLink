@@ -8423,7 +8423,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     report_to_devices=report_to_devices,
                     context=context) as report:
 
-            progress_report = report.start_progress_report(self, num_trials, context)
+            run_report = report.start_run_report(self, num_trials, context)
 
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
@@ -8464,7 +8464,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             report_progress=report_progress,
                                             report_simulations=report_simulations,
                                             report=report,
-                                            progress_report=progress_report
+                                            run_report=run_report
                                             )
 
                 # ---------------------------------------------------------------------------------
@@ -8495,7 +8495,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     call_with_pruned_args(call_after_trial, context=context)
 
                 # Report results to output devices
-                report.report_output(self, progress_report, scheduler, report_output, 'run', context)
+                report.report_output(self, run_report, scheduler, report_output, 'run', context)
 
             if report._recorded_reports:
                 self.recorded_reports = report._recorded_reports
@@ -8752,7 +8752,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             report_simulations=ReportSimulations.OFF,
             report_to_devices=None,
             report=None,
-            progress_report=None,
+            run_report=None,
             ):
         """
             Passes inputs to any `Nodes <Composition_Nodes>` receiving inputs directly from the user (via the "inputs"
@@ -8842,10 +8842,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     report_to_devices=report_to_devices,
                     context=context) as report:
 
-            # FIX: Call Report with context and progress_report handle this in there 3/3/21
+            # FIX: Call Report with context and run_report handle this in there 3/3/21
             # If execute method is called directly, need to create Report object for reporting
-            if not (context.source & ContextFlags.COMPOSITION) or progress_report is None:
-                progress_report = report.start_progress_report(comp=self, num_trials=1, context=context)
+            if not (context.source & ContextFlags.COMPOSITION) or run_report is None:
+                run_report = report.start_run_report(comp=self, num_trials=1, context=context)
 
             execution_scheduler = scheduler or self.scheduler
 
@@ -8926,7 +8926,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         else:
                             assert False, "Unknown execution mode: {}".format(execution_mode)
 
-                        report.report_progress(self, progress_report, context)
+                        report.report_progress(self, run_report, context)
                         # If called from the command line, get report as only this trial is run
                         if context.source & ContextFlags.COMMAND_LINE:
                             if report._recorded_reports:
@@ -8981,7 +8981,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 reset_stateful_functions_to = {}
 
             # # Report trial_num and Composition input (now that it has been assigned)
-            # progress.report_output(self, progress_report, execution_scheduler, report_output, 'trial_init', context)
+            # progress.report_output(self, run_report, execution_scheduler, report_output, 'trial_init', context)
 
             for node in self.nodes:
                 node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TRIAL, 0)
@@ -9134,7 +9134,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_sets.__next__()
 
             # Report trial_num and Composition input (now that it has been assigned)
-            report.report_output(self, progress_report, execution_scheduler, report_output, 'trial_init', context)
+            report.report_output(self, run_report, execution_scheduler, report_output, 'trial_init', context)
 
             for next_execution_set in execution_sets:
 
@@ -9203,7 +9203,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # INITIALIZE self._time_step_report AND SHOW TIME_STEP DIVIDER
                 nodes_to_report = any(node.reportOutputPref for node in next_execution_set)
-                report.report_output(self, progress_report,
+                report.report_output(self, run_report,
                                      execution_scheduler,
                                      report_output,
                                      'time_step_init',
@@ -9359,7 +9359,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Add report for node to time_step_report
                     report.report_output(self,
-                                         progress_report,
+                                         run_report,
                                          execution_scheduler,
                                          report_output,
                                          'node',
@@ -9404,7 +9404,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
                 # Add report for time_step to trial_report
-                report.report_output(self, progress_report, execution_scheduler, report_output, 'time_step', context,
+                report.report_output(self, run_report, execution_scheduler, report_output, 'time_step', context,
                                        nodes_to_report= nodes_to_report)
 
             context.remove_flag(ContextFlags.PROCESSING)
@@ -9453,7 +9453,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if execution_mode:
                 _comp_ex.freeze_values()
                 _comp_ex.execute_node(self.output_CIM)
-                report.report_progress(self, progress_report, context)
+                report.report_progress(self, run_report, context)
                 if context.source & ContextFlags.COMMAND_LINE:
                     if report._recorded_reports:
                         self.recorded_reports = report._recorded_reports
@@ -9473,8 +9473,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 output_values.append(port.parameters.value._get(context))
 
             # Report results and progress to output devices
-            report.report_output(self, progress_report, execution_scheduler, report_output, 'trial', context)
-            report.report_progress(self, progress_report, context)
+            report.report_output(self, run_report, execution_scheduler, report_output, 'trial', context)
+            report.report_progress(self, run_report, context)
             if context.source & ContextFlags.COMMAND_LINE:
                 if report._recorded_reports:
                     self.recorded_reports = report._recorded_reports
