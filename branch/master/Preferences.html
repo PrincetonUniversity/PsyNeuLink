@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Preferences &mdash; PsyNeuLink 0.8.5.1+47.gaabefefdce documentation</title>
+  <title>Preferences &mdash; PsyNeuLink 0.8.6.0+1.ga2d06bf documentation</title>
   
 
   
@@ -27,7 +27,6 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -96,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.5.1+47
+                  0.8.6.0+1
                 </div>
               
             
@@ -194,26 +193,30 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="preferences">
-<h1>Preferences<a class="headerlink" href="#preferences" title="Permalink to this headline">¶</a></h1>
-<p>Standard prefereces:</p>
-<ul>
-<li><p>verbose (bool): enables/disables reporting of (non-exception) warnings and system function</p></li>
-<li><p>paramValidation (bool): enables/disables run-time validation of the execute method of a Function object</p></li>
-<li><p>reportOutput ([bool, str]): enables/disables reporting execution of <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>'s <a class="reference internal" href="Component.html#component-execution"><span class="std std-ref">execute</span></a>
-method to console:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code>: prints record of execution, including the input and output of the Component;</p></li>
-<li><p>‘params’ or ‘parameters’: includes report of the Component’s <a class="reference internal" href="Parameters.html"><span class="doc">parameter</span></a> values.</p></li>
-<li><p>‘terse’: (Composition only) restricts output to just a listing of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trials</span></code></a>, <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">time_steps</span></code></a> and <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">nodes</span></a> executed.</p></li>
+  <div class="section" id="module-psyneulink.core.globals.preferences.preferenceset">
+<span id="preferences"></span><h1>Preferences<a class="headerlink" href="#module-psyneulink.core.globals.preferences.preferenceset" title="Permalink to this headline">¶</a></h1>
+<p id="id1">Preferences specify the behavior of Components when they are executed.  They can be specified by their value, or
+by a PreferenceSet, which specifies the</p>
+<div class="section" id="standard-preferences">
+<h2>Standard Preferences<a class="headerlink" href="#standard-preferences" title="Permalink to this headline">¶</a></h2>
+<p>The following preferences are available for all Components (see <a class="reference internal" href="Component.html#component-prefs"><span class="std std-ref">Component prefs</span></a> for
+additional details):</p>
+<ul class="simple">
+<li><strong>verbosePref</strong> (bool : default False) - enables/disables reporting of (non-exception) warnings and system function;</li>
+<li><strong>paramValidationPref</strong> (bool : default False) - enables/disables run-time validation of the execute method of a
+Function object;</li>
 </ul>
-</div></blockquote>
-</li>
-<li><p>log (bool): sets LogCondition for a given Component</p></li>
-<li><p>functionRunTimeParams (Modulation): uses run-time params to modulate execute method params</p></li>
+<ul class="simple" id="preferenceset-reportoutputpref">
+<li><strong>reportOutputPref</strong> (list[‘params’, <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput" title="psyneulink.core.compositions.report.ReportOutput"><code class="xref any py py-class docutils literal"><span class="pre">ReportOutput</span></code></a>]: default ReportOutput.OFF) - enables/disables
+and determines format and content for reporting execution of the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> (see <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput" title="psyneulink.core.compositions.report.ReportOutput"><code class="xref any py py-class docutils literal"><span class="pre">ReportOutput</span></code></a> for options).
+If ‘params’ (or ‘parameters’) is specified, then the Component’s <code class="xref any docutils literal"><span class="pre">Parameters</span> <span class="pre">are</span> <span class="pre">included</span> <span class="pre">along</span> <span class="pre">with</span> <span class="pre">its</span> <span class="pre">input</span> <span class="pre">and</span>
+<span class="pre">output</span> <span class="pre">when</span> <span class="pre">`ReportOutput.FULL</span></code> is also specified. If the Component is a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> executed within a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>,
+this preference may be overridden by the <strong>report_output</strong> argument specified in any of the Composition’s
+<a class="reference internal" href="Composition.html#composition-execution-methods"><span class="std std-ref">execution methods</span></a> (see <a class="reference internal" href="Composition.html#composition-execution-reporting"><span class="std std-ref">execution reporting</span></a>
+for additional details).</li>
+<li><strong>logPref</strong> (<a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal"><span class="pre">LogCondition</span></code></a> : default LogCondition.OFF) - sets <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal"><span class="pre">LogCondition</span></code></a> for a given Component;</li>
 </ul>
-<p>[ADDITIONAL DOCUMENTATION COMING…]</p>
+</div>
 </div>
 
 
@@ -250,7 +253,10 @@ method to console:</p>
           <div class="psyneulink-right-menu" id="psyneulink-right-menu">
             <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
               <ul>
-<li><a class="reference internal" href="#">Preferences</a></li>
+<li><a class="reference internal" href="#">Preferences</a><ul>
+<li><a class="reference internal" href="#standard-preferences">Standard Preferences</a></li>
+</ul>
+</li>
 </ul>
 
             </div>
@@ -265,12 +271,21 @@ method to console:</p>
   
 
      
-       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript">
+           var DOCUMENTATION_OPTIONS = {
+               URL_ROOT:'./',
+               VERSION:'0.8.6.0+1.ga2d06bf',
+               LANGUAGE:'None',
+               COLLAPSE_INDEX:false,
+               FILE_SUFFIX:'.html',
+               HAS_SOURCE:  true,
+               SOURCELINK_SUFFIX: '.txt'
+           };
+       </script>
+         <script type="text/javascript" src="_static/jquery.js"></script>
+         <script type="text/javascript" src="_static/underscore.js"></script>
+         <script type="text/javascript" src="_static/doctools.js"></script>
+         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   
