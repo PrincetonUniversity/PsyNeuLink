@@ -1621,30 +1621,41 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
         -------
         a numpy array containing the converted **arr**
     """
-    if isinstance(arr, np.ndarray):
-        if cast_from is not None and arr.dtype == cast_from:
-            return np.asarray(arr, dtype=cast_to)
-        elif arr.ndim == 0 or arr.dtype != object:
+    def recurse(arr):
+        if isinstance(arr, np.ndarray):
+            if cast_from is not None and arr.dtype == cast_from:
+                return np.asarray(arr, dtype=cast_to)
+            elif arr.ndim == 0 or arr.dtype != object:
+                return arr
+
+        if isinstance(arr, np.number):
+            return np.asarray(arr)
+
+        if cast_from is not None and isinstance(arr, cast_from):
+            return cast_to(arr)
+
+        if not isinstance(arr, collections.abc.Iterable) or isinstance(arr, str):
             return arr
 
-    if cast_from is not None and isinstance(arr, cast_from):
-        return np.asarray(arr, dtype=cast_to)
+        if isinstance(arr, np.matrix):
+            if arr.dtype == object:
+                return np.asarray([recurse(arr.item(i)) for i in range(arr.size)])
+            else:
+                return arr
 
-    if not isinstance(arr, collections.abc.Iterable) or isinstance(arr, str):
-        return np.array(arr)
+        subarr = [recurse(x) for x in arr]
 
-    if isinstance(arr, np.matrix):
-        if arr.dtype == object:
-            return np.asarray([convert_all_elements_to_np_array(arr.item(i), cast_from, cast_to) for i in range(arr.size)])
-        else:
-            return arr
+        with warnings.catch_warnings():
+            warnings.filterwarnings('error', message='.*ragged.*', category=np.VisibleDeprecationWarning)
+            try:
+                # the elements are all uniform in shape, so we can use numpy's standard behavior
+                return np.asarray(subarr)
+            except np.VisibleDeprecationWarning:
+                pass
+            except ValueError as e:
+                if 'The requested array has an inhomogeneous shape' not in str(e):
+                    raise
 
-    subarr = [convert_all_elements_to_np_array(x, cast_from, cast_to) for x in arr]
-
-    if all([subarr[i].shape == subarr[0].shape for i in range(1, len(subarr))]):
-        # the elements are all uniform in shape, so we can use numpy's standard behavior
-        return np.asarray(subarr)
-    else:
         # the elements are nonuniform, so create an array that just wraps them individually
         # numpy cannot easily create arrays with subarrays of certain dimensions, workaround here
         # https://stackoverflow.com/q/26885508/3131666
@@ -1654,6 +1665,12 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
             elementwise_subarr[i] = subarr[i]
 
         return elementwise_subarr
+
+    if not isinstance(arr, collections.abc.Iterable) or isinstance(arr, str):
+        # only wrap a noniterable if it's the outermost value
+        return np.asarray(arr)
+    else:
+        return recurse(arr)
 
 # Seeds and randomness
 
