@@ -414,6 +414,8 @@ class Report:
                              and (cls._rich_console or cls._rich_divert or cls._record_reports))
             cls._use_pnl_view = ReportDevices.PNL_VIEW in cls._report_to_devices
 
+            cls._outer_simulation = False
+
             # Instantiate rich progress context object
             # - it is not started until the self.start_run_report() method is called
             # - auto_refresh is disabled to accommodate IDEs (such as PyCharm and Jupyter Notebooks)
