@@ -382,6 +382,7 @@ the `intensity <ControlSignal.intensity>` of which is also ``3``, the value of t
 as shown below::
 
     >>> comp.run(inputs={mech:[3]}, num_trials=2)
+    <BLANKLINE>
     [array([3.])]
     >>> ctl_mech_A.control_signals[0].intensity_cost
     array([8103.08392758])
@@ -407,23 +408,22 @@ from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import Exponential, Linear, CostFunctions, TransferWithCosts
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
-from psyneulink.core.components.ports.outputport import SEQUENTIAL, _output_port_variable_getter
-from psyneulink.core.components.ports.port import Port_Base
+from psyneulink.core.components.ports.outputport import _output_port_variable_getter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
-    ALLOCATION_SAMPLES, CONTROLLED_PARAMS, CONTROL_PROJECTION, CONTROL_SIGNAL, \
+    ALLOCATION_SAMPLES, CONTROL_PROJECTION, CONTROL_SIGNAL, \
     INPUT_PORT, INPUT_PORTS, \
     OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
     PARAMETER_PORT, PARAMETER_PORTS, \
-    PROJECTION_TYPE, RECEIVER, SUM, FUNCTION
+    RECEIVER, FUNCTION
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, get_validator_by_function
-from psyneulink.core.globals.sampleiterator import is_sample_spec
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import \
-    is_numeric, iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType, convert_all_elements_to_np_array
 from psyneulink.core.globals.sampleiterator import SampleSpec, SampleIterator
+from psyneulink.core.globals.sampleiterator import is_sample_spec
+from psyneulink.core.globals.utilities import \
+    iscompatible, kwCompatibilityLength, kwCompatibilityNumeric, kwCompatibilityType, convert_all_elements_to_np_array
 
 __all__ = ['ControlSignal', 'ControlSignalError', 'COST_OPTIONS']
 
@@ -919,7 +919,6 @@ class ControlSignal(ModulatorySignal):
         # - however, for convenience and compatibility, allow lists:
         #    check if it is a list of numbers, and if so convert to np.array
         if ALLOCATION_SAMPLES in request_set:
-            from psyneulink.core.globals.sampleiterator import allowable_specs
             allocation_samples = request_set[ALLOCATION_SAMPLES]
             if isinstance(allocation_samples, list):
                 if iscompatible(allocation_samples, **{kwCompatibilityType: list,

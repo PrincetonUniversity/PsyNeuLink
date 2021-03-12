@@ -11,7 +11,6 @@ SEED = 0
 @pytest.mark.parametrize('mode', ['Python', 'numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.param('PTX', marks=pytest.mark.cuda)])
-# Python uses different algorithm so skip it in this test
 def test_random_int(benchmark, mode):
     res = []
     if mode == 'Python':

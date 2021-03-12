@@ -472,10 +472,10 @@ class BayesGLM(LearningFunction):
                 # if both are specified, make sure they are the same size
                 if (isinstance(self.mu_0, (list, np.ndarray))
                         and isinstance(self.sigma_0, (list, np.ndarray))
-                        and len(self.mu_0) != len(self.self.sigma_0)):
+                        and len(self.mu_0) != len(self.sigma_0)):
                     raise FunctionError("Length of {} ({}) does not match length of {} ({}) for {}".
                                         format(repr('mu_0'), len(self.mu_0),
-                                                    repr('sigma_0'), len(self.self.sigma_0),
+                                                    repr('sigma_0'), len(self.sigma_0),
                                                          self.__class.__.__name__))
                 # allow their size to determine the size of variable
                 if isinstance(self.mu_0, (list, np.ndarray)):

@@ -24,16 +24,8 @@ class TestCompositionMethods:
 
     # test whether xor model created as autodiff composition learns properly
     @pytest.mark.pytorch
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                     ])
-    @pytest.mark.parametrize("minibatch_size", [
-        1,
-        2,
-        3,
-        4
-    ])
-    def test_learning_output_shape(self, mode, minibatch_size):
+    @pytest.mark.parametrize("minibatch_size", [1, 2, 3, 4])
+    def test_learning_output_shape(self, autodiff_mode, minibatch_size):
         '''
         Tests for correct output from composition.learn
         Expected: All results from last epoch
@@ -72,7 +64,7 @@ class TestCompositionMethods:
                                     "epochs": 10
                                     },
                                     minibatch_size=minibatch_size,
-                                    bin_execute=mode)
+                                    execution_mode=autodiff_mode)
 
 
         assert len(results) == 4 // minibatch_size
