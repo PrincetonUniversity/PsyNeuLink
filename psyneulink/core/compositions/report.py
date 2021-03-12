@@ -414,7 +414,7 @@ class Report:
                              and (cls._rich_console or cls._rich_divert or cls._record_reports))
             cls._use_pnl_view = ReportDevices.PNL_VIEW in cls._report_to_devices
 
-            cls._simulation_depth = 0
+            cls._nesting_depth = 0  # Depth of nested executions (inclusive of simulations)
 
             # Instantiate rich progress context object
             # - it is not started until the self.start_run_report() method is called
@@ -539,9 +539,14 @@ class Report:
         if run_mode is SIMULATION and self._report_simulations is not ReportSimulations.ON:
             return
 
-        # Don't create a new report for simulations in a set
-        if run_mode is SIMULATION and self._run_reports[comp][SIMULATING]:
-            return len(self._run_reports[comp][run_mode]) - 1
+        if run_mode is SIMULATION:
+            # If already simulating, return existing report for those simulations
+            if self._run_reports[comp][SIMULATING]:
+                return len(self._run_reports[comp][run_mode]) - 1
+            # Otherwise, update the simulation depth for the new one
+            else:
+                # Add nesting depth for simulation
+                self._nesting_depth += 1
 
         if self._use_rich:
 
@@ -562,7 +567,13 @@ class Report:
             else:
                 start = True
 
-            id = self._rich_progress.add_task(f"[red]{run_mode}ing {comp.name}...",
+            indent_factor = 2
+            depth_indent = depth_str = ''
+            if run_mode is SIMULATION or self._nesting_depth:
+                depth_indent = indent_factor * self._nesting_depth * ' '
+                depth_str = f' (depth: {self._nesting_depth})'
+
+            id = self._rich_progress.add_task(f"[red]{depth_indent}{run_mode}ing {comp.name}{depth_str}...",
                                          total=num_trials,
                                          start=start,
                                          visible=visible
@@ -572,8 +583,6 @@ class Report:
             report_num = len(self._run_reports[comp][run_mode]) - 1
 
             self._run_reports[comp][SIMULATING] = run_mode is SIMULATION
-
-            self._simulation_depth += 1
 
             return report_num
 
@@ -600,12 +609,11 @@ class Report:
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
         if simulation_mode:
             run_mode = SIMULATION
+            # Return if (nested within) a simulation and not reporting simulations
+            if self._report_simulations is ReportSimulations.OFF:
+                return
         else:
             run_mode = DEFAULT
-
-        # Return if (nested within) a simulation and not reporting simulations
-        if run_mode is SIMULATION and self._report_simulations is not ReportSimulations.ON:
-            return
 
         run_report = self._run_reports[caller][run_mode][report_num]
         trial_num = self._rich_progress.tasks[run_report.rich_task_id].completed
@@ -614,6 +622,22 @@ class Report:
         if caller.verbosePref or REPORT_REPORT:
             from pprint import pprint
             pprint(f'{caller.name} {str(context.runmode)} REPORT')
+
+        # Track depth at exit of simulation and manage simulation reports accordingly
+        # Note:  need to use transition and not explicit count of simulations, since those are generally not known.
+        # FIX: MAKE THIS CONDITIONAL ON PREVIOUSLY SIMULATING
+        if (not simulation_mode
+                and run_report.num_trials
+                and (trial_num == run_report.num_trials-1)):
+            # If was simulating previously, then have just exited, so decrement depth counter
+            if self._run_reports[caller][SIMULATING]:
+                self._run_reports[caller][SIMULATING] = False
+                # Pop report for DEFAULT mode that was running the simulation
+                self._run_reports[caller][run_mode].pop()
+                # Decrement depth as exiting simulation
+            self._nesting_depth -= 1
+        # FIX: DECREMENT DEPTH HERE IF trial_num == run_report.num_trials-1 AND WAS *NOT* PREVIOUSLY SIMULATION
+        #      FOR EXITING NESTED COMPOSITION (UNLESS THERE IS AN EXPLICIT NESTED FLAG)
 
         # Update progress report
         if self._use_rich:
@@ -625,20 +649,36 @@ class Report:
             else:
                 num_trials_str = ''
 
-            update = f'{caller.name}: {run_mode}ed {trial_num+1}{num_trials_str} trials'
-            update += f' SIMULATION DEPTH: {self._simulation_depth}'
+            # Construct update text
+            indent_factor = 2
+            depth_indent = depth_str = ''
+            # if simulation_mode and self._run_reports[caller][SIMULATING]:
+            if simulation_mode or self._nesting_depth:
+            # if simulation_mode and self._run_reports[caller][SIMULATING] or self._nesting_depth:
+                depth_indent = indent_factor * self._nesting_depth * ' '
+                depth_str = f' (depth: {self._nesting_depth})'
+                # if self._nesting_depth:
+                #     depth_indent = indent_factor * self._nesting_depth * ' '
+                #     depth_str = f' (depth: {self._nesting_depth})'
+            update = f'{depth_indent}{caller.name}: {run_mode}ed {trial_num+1}{num_trials_str} trials{depth_str}'
 
+            # Do update
             self._rich_progress.update(run_report.rich_task_id,
                                   description=update,
                                   advance=1,
                                   refresh=True)
+            assert True
 
-        # track number of outer (non-simulation) trials
-        if (not simulation_mode
-                and run_report.num_trials
-                and (trial_num == run_report.num_trials)):
-            self._run_reports[caller][run_mode].pop()
-        self._simulation_depth -= 1
+        # # Track depth of simulation at exit and manage simulation reports accordingly
+        # if (not simulation_mode
+        #         and run_report.num_trials
+        #         and (trial_num == run_report.num_trials-1)):
+        #     # If was simulating previously, then have just exited, so decrement depth counter
+        #     if self._run_reports[caller][SIMULATING]:
+        #         self._run_reports[caller][SIMULATING] = False
+        #         # Pop report for DEFAULT mode that was running the simulation
+        #         self._run_reports[caller][run_mode].pop()
+        #         self._nesting_depth -= 1
 
     def report_output(self, caller,
                       report_num:int,
