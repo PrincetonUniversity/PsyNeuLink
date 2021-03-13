@@ -2394,7 +2394,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
-from psyneulink.core.compositions.report import Report, ReportOutput, ReportProgress, ReportSimulations
+from psyneulink.core.compositions.report import Report, ReportOutput, ReportProgress, ReportSimulations, ReportDevices
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET, SHOW_CONTROLLER
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -8767,9 +8767,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             skip_initialization=False,
             execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             report_output:ReportOutput=ReportOutput.OFF,
-            report_progress=ReportProgress.OFF,
-            report_simulations=ReportSimulations.OFF,
-            report_to_devices=None,
+            report_progress:ReportProgress=ReportProgress.OFF,
+            report_simulations:ReportSimulations=ReportSimulations.OFF,
+            report_to_devices:ReportDevices=None,
             report=None,
             run_report=None,
             ):

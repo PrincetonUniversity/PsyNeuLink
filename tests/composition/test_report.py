@@ -70,7 +70,7 @@ class TestReport():
                      report_progress=ReportProgress.ON,
                      report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
-        expected_output = '\'\\nCOMP TRIAL 1 ====================\\n Time Step 0 ---------\\n  a executed\\n Time Step 1 ---------\\n  b executed\\n Time Step 2 ---------\\n  c executed\\n[red]Executing COMP...\\n\''
+        expected_output = '\'\\nCOMP TRIAL 1 ====================\\n Time Step 0 ---------\\n  a executed\\n Time Step 1 ---------\\n  b executed\\n Time Step 2 ---------\\n  c executed\\nCOMP: Executed 1 of 1 trials\\n\''
         assert repr(actual_output) == expected_output
 
         comp.execute(report_output=ReportOutput.USE_PREFS, report_to_devices=ReportDevices.DIVERT)
@@ -82,7 +82,7 @@ class TestReport():
                      report_progress=ReportProgress.ON,
                      report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
-        expected_output = '\nCOMP TRIAL 3 ====================\n Time Step 0 ---------\n╭───── a ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n Time Step 1 ---------\n Time Step 2 ---------\n╭───── c ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n[red]Executing COMP...\n'
+        expected_output = '\nCOMP TRIAL 3 ====================\n Time Step 0 ---------\n╭───── a ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n Time Step 1 ---------\n Time Step 2 ---------\n╭───── c ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\nCOMP: Executed 1 of 1 trials\n'
         assert actual_output == expected_output
 
         comp.execute(report_output=ReportOutput.FULL, report_to_devices=ReportDevices.DIVERT)
@@ -94,7 +94,7 @@ class TestReport():
                      report_progress=ReportProgress.ON,
                      report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
-        expected_output = '\n┏━━  COMP: Trial 5  ━━┓\n┃                     ┃\n┃ input: [[0.0]]      ┃\n┃                     ┃\n┃ ┌─  Time Step 0 ──┐ ┃\n┃ │ ╭───── a ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ ┌─  Time Step 1 ──┐ ┃\n┃ │ ╭───── b ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ ┌─  Time Step 2 ──┐ ┃\n┃ │ ╭───── c ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ result: [[0.0]]     ┃\n┃                     ┃\n┗━━━━━━━━━━━━━━━━━━━━━┛\n\n[red]Executing COMP...\n'
+        expected_output = '\n┏━━  COMP: Trial 5  ━━┓\n┃                     ┃\n┃ input: [[0.0]]      ┃\n┃                     ┃\n┃ ┌─  Time Step 0 ──┐ ┃\n┃ │ ╭───── a ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ ┌─  Time Step 1 ──┐ ┃\n┃ │ ╭───── b ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ ┌─  Time Step 2 ──┐ ┃\n┃ │ ╭───── c ─────╮ │ ┃\n┃ │ │ input: 0.0  │ │ ┃\n┃ │ │ output: 0.0 │ │ ┃\n┃ │ ╰─────────────╯ │ ┃\n┃ └─────────────────┘ ┃\n┃                     ┃\n┃ result: [[0.0]]     ┃\n┃                     ┃\n┗━━━━━━━━━━━━━━━━━━━━━┛\n\nCOMP: Executed 1 of 1 trials\n'
         assert actual_output == expected_output
 
     # def test_two_mechs_in_a_time_step(self):

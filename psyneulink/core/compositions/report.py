@@ -158,8 +158,8 @@ class ReportOutput(Enum):
 
     OFF = 0
     USE_PREFS = 1
-    ON = 2
     TERSE = 2
+    ON = 2
     FULL = 3
 
 
@@ -359,6 +359,9 @@ class Report:
     _recorded_reports : str :  default []
         if _record_reports is True, contains a record of reports generated during execution.
 
+    _recording_enabled : bool : default False
+        True if any device is specified other than `CONSOLE <ReportDevices.CONSOLE>`.
+
     _run_reports : dict
         contains entries for each Composition (the key) executed during progress reporting; the value of each
         entry is itself a dict with two entries:
@@ -426,12 +429,13 @@ class Report:
             cls._rich_console = ReportDevices.CONSOLE in cls._report_to_devices
             cls._rich_divert = ReportDevices.DIVERT in cls._report_to_devices
             cls._record_reports = ReportDevices.RECORD in cls._report_to_devices
+            cls._recording_enabled = any(i is not ReportDevices.CONSOLE for i in cls._report_to_devices)
             # Enable rich if reporting output or progress and using console or recording
             cls._use_rich = (cls._reporting_enabled
                              and (cls._rich_console or cls._rich_divert or cls._record_reports))
             cls._use_pnl_view = ReportDevices.PNL_VIEW in cls._report_to_devices
 
-            cls._execution_stack = []
+            cls._execution_stack = [caller]
 
             # Instantiate rich progress context object
             # - it is not started until the self.start_run_report() method is called
@@ -630,9 +634,12 @@ class Report:
         # if self._report_progress is ReportProgress.OFF:
         #     record_reports(caller, context)
         #     return
-        # MODIFIED 3/13/21 NEW:
+        # # MODIFIED 3/13/21 NEW:
+        # if self._report_progress is ReportProgress.OFF and self._recording_enabled:
+        #     self._print_and_record_reports(PROGRESS_REPORT)
+        #     return
+        # MODIFIED 3/13/21 NEWER:
         if self._report_progress is ReportProgress.OFF:
-            self._print_and_record_reports(PROGRESS_REPORT)
             return
         # MODIFIED 3/13/21 END
 
@@ -685,7 +692,8 @@ class Report:
                                   advance=1,
                                   refresh=True)
 
-        self._print_and_record_reports(PROGRESS_REPORT)
+        if self._report_progress is not ReportProgress.OFF:
+            self._print_and_record_reports(PROGRESS_REPORT, context)
 
 
     def report_output(self, caller,
@@ -863,18 +871,26 @@ class Report:
                                                      title=f'[bold{trial_panel_color}] {caller.name}{sim_str}: '
                                                            f'Trial {trial_num} [/]',
                                                      expand=False)
-            if context.source & ContextFlags.COMMAND_LINE and trial_report_type is not ReportOutput.OFF:
-                self._print_and_record_reports(OUTPUT_REPORT, run_report)
+            # # MODIFIED 3/13/21 OLD:
+            # if context.source & ContextFlags.COMMAND_LINE and trial_report_type is not ReportOutput.OFF:
+            # MODIFIED 3/13/21 NEW:
+            if trial_report_type is not ReportOutput.OFF:
+            # MODIFIED 3/13/21 END
+                self._print_and_record_reports(OUTPUT_REPORT, context, run_report)
 
         elif content is 'run':
-            self._print_and_record_reports(OUTPUT_REPORT, run_report)
+            # MODIFIED 3/13/21 OLD:
+            # self._print_and_record_reports(OUTPUT_REPORT, run_report)
+            # MODIFIED 3/13/21 NEW:
+            pass
+            # MODIFIED 3/13/21 END
 
         else:
             assert False, f"Bad 'content' argument in call to Report.report_output() for {caller.name}: {content}."
 
         return
 
-    def _print_and_record_reports(self, report_type:str, run_report:RunReport=None):
+    def _print_and_record_reports(self, report_type:str, context:Context, run_report:RunReport=None):
         """
         Conveys output reporting to device specified in `_report_to_devices <Report._report_to_devices>`.
         Called by `report_output <Report.report_output>`
@@ -886,44 +902,65 @@ class Report:
             id of RunReport for caller[run_mode] in self._run_reports to use for reporting.
         """
 
+        # # MODIFIED 3/13/21 OLD:
+        # if report_type is OUTPUT_REPORT:
+        #     # print and record output report
+        #     if (self._rich_console or self._rich_divert) and run_report.trial_report:
+        #         self._rich_progress.console.print(run_report.trial_report)
+        #         self._rich_progress.console.print('')
+        #     # MODIFIED 3/13/21 END
+        #     if self._report_output is not ReportOutput.OFF:
+        #         if self._rich_divert:
+        #             self._rich_diverted_reports += (f'\n{self._rich_progress.console.file.getvalue()}')
+        #         if self._record_reports:
+        #             with self._recording_console.capture() as capture:
+        #                 self._recording_console.print(run_report.trial_report)
+        #             self._recorded_reports += capture.get()
+        #
+        # # Print and
+        # if report_type is PROGRESS_REPORT and len(self._execution_stack)==1:
+        #     # record progress report (it is printed by rich console)
+        #     update = '\n'.join([t.description for t in self._rich_progress.tasks])
+        #     comp = self._execution_stack[0]
+        #     if self._rich_divert:
+        #         self._rich_diverted_reports += update + '\n'
+        #         comp.rich_diverted_reports = self._rich_diverted_reports
+        #     if self._record_reports:
+        #         self._recorded_reports += update + '\n'
+        #         comp.recorded_reports = self._recorded_reports
+        # MODIFIED 3/13/21 NEW:
         if report_type is OUTPUT_REPORT:
             # print and record output report
             if (self._rich_console or self._rich_divert) and run_report.trial_report:
                 self._rich_progress.console.print(run_report.trial_report)
                 self._rich_progress.console.print('')
-            # MODIFIED 3/13/21 END
-            if self._report_output is not ReportOutput.OFF:
-                if self._rich_divert:
-                    self._rich_diverted_reports += (f'\n{self._rich_progress.console.file.getvalue()}')
-                if self._record_reports:
-                    with self._recording_console.capture() as capture:
-                        self._recording_console.print(run_report.trial_report)
-                    self._recorded_reports += capture.get()
+            if len(self._execution_stack)==1 and self._report_output is not ReportOutput.OFF:
+                    if self._rich_divert:
+                        self._rich_diverted_reports += (f'\n{self._rich_progress.console.file.getvalue()}')
+                    if self._record_reports:
+                        with self._recording_console.capture() as capture:
+                            self._recording_console.print(run_report.trial_report)
+                        self._recorded_reports += capture.get()
 
-            # record progress report (it is printed by rich console)
-            update = '\n'.join([t.description for t in self._rich_progress.tasks])
-            if self._report_progress is not ReportProgress.OFF:
+        if len(self._execution_stack)==1:
+            if report_type is PROGRESS_REPORT:
+                # record progress report (it is printed by rich console)
+                progress_reports = '\n'.join([t.description for t in self._rich_progress.tasks])
                 if self._rich_divert:
-                    self._rich_diverted_reports += update + '\n'
+                    self._rich_diverted_reports += progress_reports + '\n'
                 if self._record_reports:
-                    self._recorded_reports += update + '\n'
-
-        # FIX: FROM report_progress:
-        # call for progress_report is always at the end of a run;
-        # if stack is empty stack => outmost run, so time to record
-        if report_type is PROGRESS_REPORT and not self._execution_stack:
-            # outermost Composition should be only one left with a report
-            # assert len(self._run_reports) == 1
-            comp = list(self._run_reports.keys())[0]
-            if self._recorded_reports:
-                comp.recorded_reports = self._recorded_reports
-            if self._rich_diverted_reports:
+                    self._recorded_reports += progress_reports + '\n'
+            comp = self._execution_stack[0]
+            if self._rich_divert:
+                # self._rich_diverted_reports += progress_reports + '\n'
                 comp.rich_diverted_reports = self._rich_diverted_reports
+            if self._record_reports:
+                # self._recorded_reports += progress_reports + '\n'
+                comp.recorded_reports = self._recorded_reports
+        # MODIFIED 3/13/21 END
 
-
-
-    @staticmethod
-    def node_execution_report(node,
+    def node_execution_report(self,
+                              node,
                               input_val=None,
                               output_val=None,
                               report_output=ReportOutput.USE_PREFS,
@@ -1059,7 +1096,7 @@ class Report:
 
     @property
     def _execution_stack_depth(self):
-        return len(self._execution_stack)
+        return len(self._execution_stack) - 1
 
     @property
     def _nested(self):
