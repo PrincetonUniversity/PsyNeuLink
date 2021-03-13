@@ -856,11 +856,6 @@ class Report:
             if trial_report_type is not ReportOutput.OFF:
                 self._print_and_record_reports(OUTPUT_REPORT, context, run_report)
 
-        # # MODIFIED 3/13/21 OLD:
-        # elif content is 'run':
-        #     pass
-        # MODIFIED 3/13/21 END
-
         else:
             assert False, f"Bad 'content' argument in call to Report.report_output() for {caller.name}: {content}."
 

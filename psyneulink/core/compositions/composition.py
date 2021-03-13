@@ -8494,11 +8494,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if call_after_trial:
                     call_with_pruned_args(call_after_trial, context=context)
 
-                # MODIFIED 3/13/21 OLD:
-                # # Report results to output devices
-                # report.report_output(self, run_report, scheduler, report_output, 'run', context)
-                # MODIFIED 3/13/21 END
-
             if report._recorded_reports:
                 self.recorded_reports = report._recorded_reports
             if report._rich_diverted_reports:
