@@ -2533,25 +2533,6 @@ class Mechanism_Base(Mechanism):
 
         # REPORT EXECUTION
 
-        # # MODIFIED 3/13/21 OLD:
-        # # REPORT EXECUTION if called from command line
-        # #  If called by a Composition, it handles reporting.
-        # if context.source == ContextFlags.COMMAND_LINE:
-        #     # FIX: 3/11/21 THIS SHOULD BE REFACTORED TO USE Report.report_output rather than printing directly
-        #     from psyneulink.core.compositions.report import ReportOutput
-        #     if (self.prefs.reportOutputPref is not ReportOutput.OFF
-        #             and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING)):
-        #         from psyneulink.core.compositions.report import Report
-        #         from rich import print
-        #         if self.prefs.reportOutputPref is ReportOutput.TERSE:
-        #             print(f'{self.name} executed')
-        #         else:
-        #             print(Report.node_execution_report(self,
-        #                                                input_val=self.get_input_values(context),
-        #                                                output_val=self.output_port.parameters.value._get(context),
-        #                                                report_output=True,
-        #                                                context=context))
-        # MODIFIED 3/13/21 NEW:
         if (context.source == ContextFlags.COMMAND_LINE or
                 context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING)):
             from psyneulink.core.compositions.report import Report, ReportOutput
@@ -2569,7 +2550,6 @@ class Mechanism_Base(Mechanism):
                                          context=context,
                                          node=self)
 
-        # MODIFIED 3/13/21 END
         return value
 
     def _get_variable_from_input(self, input, context=None):

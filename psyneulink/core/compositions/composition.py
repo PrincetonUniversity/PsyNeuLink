@@ -8928,13 +8928,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         report.report_progress(self, run_report, context)
                         # If called from the command line, get report as only this trial is run
-                        # MODIFIED 3/13/21 NEW: [NOT IN MECH_REPORT]
                         if context.source & ContextFlags.COMMAND_LINE:
                             if report._recorded_reports:
                                 self.recorded_reports = report._recorded_reports
                             if report._rich_diverted_reports:
                                 self.rich_diverted_reports = report._rich_diverted_reports
-                        # MODIFIED 3/13/21 END
 
                         return _comp_ex.extract_node_output(self.output_CIM)
 
@@ -9357,7 +9355,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         context.composition = self
 
-                        # MODIFIED 3/13/21 NEW: MOVED HERE FROM BELOW IN MECH_REPORT
                         # Add Node info for TIME_STEP to output report
                         report.report_output(self,
                                              run_report,
@@ -9366,23 +9363,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              'node',
                                              context,
                                              node=node)
-                        # MODIFIED 3/13/21 END
 
                     # ANIMATE node ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     if self._animate is not False and self._animate_unit == COMPONENT:
                         self._animate_execution(node, context)
 
-
-                    # # MODIFIED 3/13/21 OLD: MOVED ABOVE IN MECH_REPORT
-                    # # Add Node info for TIME_STEP to output report
-                    # report.report_output(self,
-                    #                      run_report,
-                    #                      execution_scheduler,
-                    #                      report_output,
-                    #                      'node',
-                    #                      context,
-                    #                      node=node)
-                    # MODIFIED 3/13/21 END
 
                     # MANAGE INPUTS (for next execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -9471,13 +9456,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 _comp_ex.freeze_values()
                 _comp_ex.execute_node(self.output_CIM)
                 report.report_progress(self, run_report, context)
-                # MODIFIED 3/13/21 NEW: [FROM MECH_REPORT]
                 if context.source & ContextFlags.COMMAND_LINE:
                     if report._recorded_reports:
                         self.recorded_reports = report._recorded_reports
                     if report._rich_diverted_reports:
                         self.rich_diverted_reports = report._rich_diverted_reports
-                # MODIFIED 3/13/21 END
 
                 return _comp_ex.extract_node_output(self.output_CIM)
 
@@ -9494,13 +9477,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Complete TRIAL entry for output report, and report progress
             report.report_output(self, run_report, execution_scheduler, report_output, 'trial', context)
             report.report_progress(self, run_report, context)
-            # # MODIFIED 3/13/21 OLD: REMOVED IN MECH_REPORT
-            # if context.source & ContextFlags.COMMAND_LINE:
-            #     if report._recorded_reports:
-            #         self.recorded_reports = report._recorded_reports
-            #     if report._rich_diverted_reports:
-            #         self.rich_diverted_reports = report._rich_diverted_reports
-            # # MODIFIED 3/13/21 END
 
             # UPDATE TIME and RETURN ***********************************************************************************
 
