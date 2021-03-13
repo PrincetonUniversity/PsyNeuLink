@@ -796,9 +796,11 @@ class Report:
                 sim_str = ''
             run_report = self._run_reports[run_report_owner][run_mode][report_num]
 
-        run_report = self._run_reports[caller][run_mode][report_num]
-
-        trial_num = scheduler.clock.time.trial
+        # MODIFIED 3/13/21 OLD: REMOVED IN MECH_REPORT
+        # run_report = self._run_reports[caller][run_mode][report_num]
+        #
+        # trial_num = scheduler.clock.time.trial
+        # MODIFIED 3/13/21 END
 
         # Construct output report -----------------------------------------------------------------------------
 
