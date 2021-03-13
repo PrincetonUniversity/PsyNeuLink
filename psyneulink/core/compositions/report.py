@@ -621,27 +621,8 @@ class Report:
             context providing information about run_mode (DEFAULT or SIMULATION).
         """
 
-        # FIX: MOVE TO _print_and_record_reports 3/13/21
-        # # MODIFIED 3/13/21 OLD:
-        # def record_reports(caller, context):
-        #     """Assign recorded reports to caller's report attributes at end of execution or run"""
-        #     if context.source & ContextFlags.COMMAND_LINE: # context is COMMAND_LINE only for outermost call
-        #         if self._recorded_reports:
-        #             caller.recorded_reports = self._recorded_reports
-        #         if self._rich_diverted_reports:
-        #             caller.rich_diverted_reports = self._rich_diverted_reports
-        #
-        # if self._report_progress is ReportProgress.OFF:
-        #     record_reports(caller, context)
-        #     return
-        # # MODIFIED 3/13/21 NEW:
-        # if self._report_progress is ReportProgress.OFF and self._recording_enabled:
-        #     self._print_and_record_reports(PROGRESS_REPORT)
-        #     return
-        # MODIFIED 3/13/21 NEWER:
         if self._report_progress is ReportProgress.OFF:
             return
-        # MODIFIED 3/13/21 END
 
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
         if simulation_mode:
@@ -871,19 +852,14 @@ class Report:
                                                      title=f'[bold{trial_panel_color}] {caller.name}{sim_str}: '
                                                            f'Trial {trial_num} [/]',
                                                      expand=False)
-            # # MODIFIED 3/13/21 OLD:
-            # if context.source & ContextFlags.COMMAND_LINE and trial_report_type is not ReportOutput.OFF:
-            # MODIFIED 3/13/21 NEW:
+
             if trial_report_type is not ReportOutput.OFF:
-            # MODIFIED 3/13/21 END
                 self._print_and_record_reports(OUTPUT_REPORT, context, run_report)
 
-        elif content is 'run':
-            # MODIFIED 3/13/21 OLD:
-            # self._print_and_record_reports(OUTPUT_REPORT, run_report)
-            # MODIFIED 3/13/21 NEW:
-            pass
-            # MODIFIED 3/13/21 END
+        # # MODIFIED 3/13/21 OLD:
+        # elif content is 'run':
+        #     pass
+        # MODIFIED 3/13/21 END
 
         else:
             assert False, f"Bad 'content' argument in call to Report.report_output() for {caller.name}: {content}."
@@ -902,33 +878,6 @@ class Report:
             id of RunReport for caller[run_mode] in self._run_reports to use for reporting.
         """
 
-        # # MODIFIED 3/13/21 OLD:
-        # if report_type is OUTPUT_REPORT:
-        #     # print and record output report
-        #     if (self._rich_console or self._rich_divert) and run_report.trial_report:
-        #         self._rich_progress.console.print(run_report.trial_report)
-        #         self._rich_progress.console.print('')
-        #     # MODIFIED 3/13/21 END
-        #     if self._report_output is not ReportOutput.OFF:
-        #         if self._rich_divert:
-        #             self._rich_diverted_reports += (f'\n{self._rich_progress.console.file.getvalue()}')
-        #         if self._record_reports:
-        #             with self._recording_console.capture() as capture:
-        #                 self._recording_console.print(run_report.trial_report)
-        #             self._recorded_reports += capture.get()
-        #
-        # # Print and
-        # if report_type is PROGRESS_REPORT and len(self._execution_stack)==1:
-        #     # record progress report (it is printed by rich console)
-        #     update = '\n'.join([t.description for t in self._rich_progress.tasks])
-        #     comp = self._execution_stack[0]
-        #     if self._rich_divert:
-        #         self._rich_diverted_reports += update + '\n'
-        #         comp.rich_diverted_reports = self._rich_diverted_reports
-        #     if self._record_reports:
-        #         self._recorded_reports += update + '\n'
-        #         comp.recorded_reports = self._recorded_reports
-        # MODIFIED 3/13/21 NEW:
         if report_type is OUTPUT_REPORT:
             # print and record output report
             if (self._rich_console or self._rich_divert) and run_report.trial_report:
@@ -957,7 +906,6 @@ class Report:
             if self._record_reports:
                 # self._recorded_reports += progress_reports + '\n'
                 comp.recorded_reports = self._recorded_reports
-        # MODIFIED 3/13/21 END
 
     def node_execution_report(self,
                               node,
