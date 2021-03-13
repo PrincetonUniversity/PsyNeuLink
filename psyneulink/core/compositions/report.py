@@ -105,6 +105,8 @@ DEFAULT = 'Execut'
 SIMULATIONS = 'simulations'
 SIMULATING = 'simulating'
 REPORT_REPORT = False # USED FOR DEBUGGING
+OUTPUT_REPORT = 'output_report'
+PROGRESS_REPORT = 'progress_report'
 
 # rich console report styles
 # node
@@ -616,17 +618,23 @@ class Report:
         """
 
         # FIX: MOVE TO _print_and_record_reports 3/13/21
-        def record_reports(caller, context):
-            """Assign recorded reports to caller's report attributes at end of execution or run"""
-            if context.source & ContextFlags.COMMAND_LINE: # context is COMMAND_LINE only for outermost call
-                if self._recorded_reports:
-                    caller.recorded_reports = self._recorded_reports
-                if self._rich_diverted_reports:
-                    caller.rich_diverted_reports = self._rich_diverted_reports
-
+        # # MODIFIED 3/13/21 OLD:
+        # def record_reports(caller, context):
+        #     """Assign recorded reports to caller's report attributes at end of execution or run"""
+        #     if context.source & ContextFlags.COMMAND_LINE: # context is COMMAND_LINE only for outermost call
+        #         if self._recorded_reports:
+        #             caller.recorded_reports = self._recorded_reports
+        #         if self._rich_diverted_reports:
+        #             caller.rich_diverted_reports = self._rich_diverted_reports
+        #
+        # if self._report_progress is ReportProgress.OFF:
+        #     record_reports(caller, context)
+        #     return
+        # MODIFIED 3/13/21 NEW:
         if self._report_progress is ReportProgress.OFF:
-            record_reports(caller, context)
+            self._print_and_record_reports(PROGRESS_REPORT)
             return
+        # MODIFIED 3/13/21 END
 
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
         if simulation_mode:
@@ -677,7 +685,7 @@ class Report:
                                   advance=1,
                                   refresh=True)
 
-        record_reports(caller, context)
+        self._print_and_record_reports(PROGRESS_REPORT)
 
 
     def report_output(self, caller,
@@ -856,17 +864,17 @@ class Report:
                                                            f'Trial {trial_num} [/]',
                                                      expand=False)
             if context.source & ContextFlags.COMMAND_LINE and trial_report_type is not ReportOutput.OFF:
-                self._print_and_record_reports(run_report)
+                self._print_and_record_reports(OUTPUT_REPORT, run_report)
 
         elif content is 'run':
-            self._print_and_record_reports(run_report)
+            self._print_and_record_reports(OUTPUT_REPORT, run_report)
 
         else:
             assert False, f"Bad 'content' argument in call to Report.report_output() for {caller.name}: {content}."
 
         return
 
-    def _print_and_record_reports(self, run_report):
+    def _print_and_record_reports(self, report_type:str, run_report:RunReport=None):
         """
         Conveys output reporting to device specified in `_report_to_devices <Report._report_to_devices>`.
         Called by `report_output <Report.report_output>`
@@ -898,6 +906,20 @@ class Report:
                 self._rich_diverted_reports += update + '\n'
             if self._record_reports:
                 self._recorded_reports += update + '\n'
+
+        # FIX: FROM report_progress:
+        # call for progress_report is always at the end of a run;
+        # if stack is empty stack => outmost run, so time to record
+        if report_type is PROGRESS_REPORT and not self._execution_stack:
+            # outermost Composition should be only one left with a report
+            assert len(self._run_reports) == 1
+            comp = list(self._run_reports.keys())[0]
+            if self._recorded_reports:
+                comp.recorded_reports = self._recorded_reports
+            if self._rich_diverted_reports:
+                comp.rich_diverted_reports = self._rich_diverted_reports
+
+
 
     @staticmethod
     def node_execution_report(node,
