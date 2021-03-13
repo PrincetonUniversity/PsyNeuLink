@@ -430,8 +430,8 @@ class Report:
             cls._use_rich = (cls._reporting_enabled
                              and (cls._rich_console or cls._rich_divert or cls._record_reports))
             cls._use_pnl_view = ReportDevices.PNL_VIEW in cls._report_to_devices
-            cls._nesting_depth = 0
-            cls._control_depth = 0
+            cls._nesting_stack = []
+            cls._control_stack = []
 
             # Instantiate rich progress context object
             # - it is not started until the self.start_run_report() method is called
@@ -617,9 +617,10 @@ class Report:
             context providing information about run_mode (DEFAULT or SIMULATION).
         """
 
+        # FIX: MOVE TO _print_and_record_reports 3/13/21
         def record_reports(caller, context):
             """Assign recorded reports to caller's report attributes at end of execution or run"""
-            if context.source & ContextFlags.COMMAND_LINE:
+            if context.source & ContextFlags.COMMAND_LINE: # context is COMMAND_LINE only for outermost call
                 if self._recorded_reports:
                     caller.recorded_reports = self._recorded_reports
                 if self._rich_diverted_reports:
@@ -857,17 +858,17 @@ class Report:
                                                            f'Trial {trial_num} [/]',
                                                      expand=False)
             if context.source & ContextFlags.COMMAND_LINE and trial_report_type is not ReportOutput.OFF:
-                self._print_reports(run_report)
+                self._print_and_record_reports(run_report)
 
         elif content is 'run':
-            self._print_reports(run_report)
+            self._print_and_record_reports(run_report)
 
         else:
             assert False, f"Bad 'content' argument in call to Report.report_output() for {caller.name}: {content}."
 
         return
 
-    def _print_reports(self, run_report):
+    def _print_and_record_reports(self, run_report):
         """
         Conveys output reporting to device specified in `_report_to_devices <Report._report_to_devices>`.
         Called by `report_output <Report.report_output>`
@@ -879,19 +880,22 @@ class Report:
             id of RunReport for caller[run_mode] in self._run_reports to use for reporting.
         """
 
-        # if self._rich_console and run_report.trial_report:
+        # print and record output report
         if (self._rich_console or self._rich_divert) and run_report.trial_report:
             self._rich_progress.console.print(run_report.trial_report)
             self._rich_progress.console.print('')
-        update = '\n'.join([t.description for t in self._rich_progress.tasks])
-        if self._report_output:
+        # MODIFIED 3/13/21 END
+        if self._report_output is not ReportOutput.OFF:
             if self._rich_divert:
                 self._rich_diverted_reports += (f'\n{self._rich_progress.console.file.getvalue()}')
             if self._record_reports:
                 with self._recording_console.capture() as capture:
                     self._recording_console.print(run_report.trial_report)
                 self._recorded_reports += capture.get()
-        if self._report_progress is ReportProgress.ON:
+
+        # record progress report (it is printed by rich console)
+        update = '\n'.join([t.description for t in self._rich_progress.tasks])
+        if self._report_progress is not ReportProgress.OFF:
             if self._rich_divert:
                 self._rich_diverted_reports += update + '\n'
             if self._record_reports:
@@ -1033,6 +1037,13 @@ class Report:
                      highlight=True)
 
     @property
+    def _nesting_depth(self):
+        return len(self._nesting_stack)
+
+    @property
+    def _control_depth(self):
+        return len(self._control_stack)
+
+    @property
     def _total_depth(self):
         return self._nesting_depth + self._control_depth
-

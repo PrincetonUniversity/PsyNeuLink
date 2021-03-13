@@ -8720,7 +8720,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.initialization_status != ContextFlags.INITIALIZING
                     and ContextFlags.SIMULATION_MODE not in context.runmode
             ):
-                report._control_depth += 1
+                report._control_stack.append(self.controller)
                 if self.controller and not execution_mode:
                     # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                     # FIX: END REMOVE
@@ -8737,7 +8737,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self._animate_execution(self.controller, context)
                 context.remove_flag(ContextFlags.CONTROL)
-                report._control_depth -= 1
+                report._control_stack.pop()
 
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
     def execute(
@@ -9320,7 +9320,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     elif isinstance(node, Composition):
 
-                        report._nesting_depth += 1
+                        report._nesting_stack.append(node)
 
                         if execution_mode:
                             # Invoking nested composition passes data via Python
@@ -9372,7 +9372,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         context.composition = self
 
-                        report._nesting_depth -= 1
+                        report._nesting_stack.pop()
 
                         # Add Node info for TIME_STEP to output report
                         report.report_output(self,
