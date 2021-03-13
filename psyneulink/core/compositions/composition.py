@@ -8423,8 +8423,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     report_to_devices=report_to_devices,
                     context=context) as report:
 
-            # MODIFIED 3/13/21 NEW:
-            report._execution_stack.append(self)
+            # # MODIFIED 3/13/21 NEW:
+            # report._execution_stack.append((self,context.runmode & ContextFlags.SIMULATION_MODE))
             # MODIFIED 3/13/21 END
             run_report = report.start_run_report(self, num_trials, context)
 
@@ -8504,8 +8504,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.recorded_reports = report._recorded_reports
             if report._rich_diverted_reports:
                 self.rich_diverted_reports = report._rich_diverted_reports
-            # MODIFIED 3/13/21 NEW:
-            report._execution_stack.pop()
+            # # MODIFIED 3/13/21 NEW:
+            # report._execution_stack.pop()
             # MODIFIED 3/13/21 END
 
             # IMPLEMENTATION NOTE:
@@ -8726,8 +8726,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.initialization_status != ContextFlags.INITIALIZING
                     and ContextFlags.SIMULATION_MODE not in context.runmode
             ):
-                # # MODIFIED 3/13/21 OLD:
-                # report._execution_stack.append(self.controller)
+                # MODIFIED 3/13/21 OLD:
+                report._execution_stack.append(self.controller)
                 # MODIFIED 3/13/21 END
                 if self.controller and not execution_mode:
                     # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
@@ -8745,8 +8745,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self._animate_execution(self.controller, context)
                 context.remove_flag(ContextFlags.CONTROL)
-                # # MODIFIED 3/13/21 OLD:
-                # report._execution_stack.pop()
+                # MODIFIED 3/13/21 OLD:
+                report._execution_stack.pop()
                 # MODIFIED 3/13/21 END
 
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
@@ -9331,7 +9331,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     elif isinstance(node, Composition):
 
                         # MODIFIED 3/13/21 OLD:
-                        # report._execution_stack.append(node)
+                        report._execution_stack.append(node)
                         # MODIFIED 3/13/21 END
 
                         if execution_mode:
@@ -9384,8 +9384,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         context.composition = self
 
-                        # # MODIFIED 3/13/21 OLD:
-                        # report._execution_stack.pop()
+                        # MODIFIED 3/13/21 OLD:
+                        report._execution_stack.pop()
                         # MODIFIED 3/13/21 END
 
                         # Add Node info for TIME_STEP to output report
