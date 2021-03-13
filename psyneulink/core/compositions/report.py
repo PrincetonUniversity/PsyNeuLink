@@ -373,15 +373,16 @@ class Report:
         (i.e., being used to `simulate <OptimizationControlMechanism_Execution>` a `Composition`).
 
     _execution_stack_depth : int : default 0
-        depth of nesting of executions, including `nested compositions <Composition_Nested>` and their
-        `controllers <Composition_Controller>`.
+        depth of nesting of executions, including `nested compositions <Composition_Nested>` and any `controllers
+        <Composition_Controller>` currently executing `simulations <OptimizationControlMechanism_Execution>`.
 
     _nested_comps : bool : default False
-        True if there are any `nested compositions <Composition_Nested>` in the
-        `_execution_stack <Report._execution_stack>`.
+        True if there are any `nested compositions <Composition_Nested>`
+        in `_execution_stack <Report._execution_stack>`.
 
     _simulating : bool : default False
-        True if there are any controllers in the `_execution_stack <Report._execution_stack>`.
+        True if there are any `controllers <Composition_Controller>`
+        in `_execution_stack <Report._execution_stack>`.
 
     _ref_count : int : default 0
         tracks how many times object has been referenced;  counter is incremented on each context __enter__
