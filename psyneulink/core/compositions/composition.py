@@ -8720,7 +8720,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.initialization_status != ContextFlags.INITIALIZING
                     and ContextFlags.SIMULATION_MODE not in context.runmode
             ):
-                report._nesting_depth += 1
+                report._control_depth += 1
                 if self.controller and not execution_mode:
                     # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                     # FIX: END REMOVE
@@ -8737,7 +8737,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self._animate_execution(self.controller, context)
                 context.remove_flag(ContextFlags.CONTROL)
-                report._nesting_depth -= 1
+                report._control_depth -= 1
 
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
     def execute(
