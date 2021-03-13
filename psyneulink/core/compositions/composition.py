@@ -7461,10 +7461,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                report_simulations=report._report_simulations,
                                report_to_devices=report._report_to_devices
                                )
-        context.remove_flag(ContextFlags.SIMULATION_MODE)
-        context.execution_phase = ContextFlags.CONTROL
-        if buffer_animate_state:
-            self._animate = buffer_animate_state
+            context.remove_flag(ContextFlags.SIMULATION_MODE)
+            context.execution_phase = ContextFlags.CONTROL
+            if buffer_animate_state:
+                self._animate = buffer_animate_state
+
+            # # MODIFIED 3/13/21 NEW:
+            # report_num = len(report._run_reports[self]['Execut'])-1
+            # report.report_progress(self, report_num, context)
+            # # MODIFIED 3/13/21 END
 
         # Store simulation results on "base" composition
         if self.initialization_status != ContextFlags.INITIALIZING:
@@ -8505,8 +8510,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # IMPLEMENTATION NOTE:
             # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
             # method whether or not we are at the last trial of the run.
-            # The BEFORE Run controller execution takes place in the execute method,, because we can't execute the controller until after
-            # setup has occurred for the Input CIM.
+            # The BEFORE Run controller execution takes place in the execute method,
+            # because we can't execute the controller until after setup has occurred for the Input CIM.
             if (self.controller_mode == AFTER and
                 self.controller_time_scale == TimeScale.RUN):
                 try:
@@ -8516,6 +8521,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._execute_controller(
                     execution_mode=execution_mode,
                     _comp_ex=_comp_ex,
+                    report=report,
                     context=context
                 )
 
@@ -8699,7 +8705,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context.remove_flag(ContextFlags.LEARNING_MODE)
         return learning_results
 
-    def _execute_controller(self, relative_order=AFTER, execution_mode=False, _comp_ex=False, context=None):
+    def _execute_controller(self,
+                            relative_order=AFTER,
+                            execution_mode=False,
+                            _comp_ex=False,
+                            report=None,
+                            context=None
+                            ):
         execution_scheduler = context.composition.scheduler
         if (self.enable_controller and
             self.controller_mode == relative_order and
@@ -8713,6 +8725,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.initialization_status != ContextFlags.INITIALIZING
                     and ContextFlags.SIMULATION_MODE not in context.runmode
             ):
+                report._nesting_depth += 1
                 if self.controller and not execution_mode:
                     # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                     # FIX: END REMOVE
@@ -8729,6 +8742,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self._animate_execution(self.controller, context)
                 context.remove_flag(ContextFlags.CONTROL)
+                report._nesting_depth -= 1
 
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
     def execute(
@@ -9091,6 +9105,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         relative_order=BEFORE,
                         execution_mode=execution_mode,
                         _comp_ex=_comp_ex,
+                        report=report,
                         context=context
                     )
             elif self.controller_time_scale == TimeScale.TRIAL:
@@ -9098,6 +9113,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     relative_order=BEFORE,
                     execution_mode=execution_mode,
                     _comp_ex=_comp_ex,
+                    report=report,
                     context=context
                 )
 
@@ -9120,6 +9136,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     relative_order=BEFORE,
                     execution_mode=execution_mode,
                     _comp_ex=_comp_ex,
+                    report=report,
                     context=context
                 )
 
@@ -9159,6 +9176,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             relative_order=AFTER,
                             execution_mode=execution_mode,
                             _comp_ex=_comp_ex,
+                            report=report,
                             context=context
                         )
                     next_pass_after += 1
@@ -9171,6 +9189,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             relative_order=BEFORE,
                             execution_mode=execution_mode,
                             _comp_ex=_comp_ex,
+                            report=report,
                             context=context
                         )
                     next_pass_before += 1
@@ -9183,6 +9202,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         relative_order=BEFORE,
                         execution_mode=execution_mode,
                         _comp_ex=_comp_ex,
+                        report=report,
                         context=context
                     )
 
@@ -9305,6 +9325,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     elif isinstance(node, Composition):
 
+                        report._nesting_depth += 1
+
                         if execution_mode:
                             # Invoking nested composition passes data via Python
                             # structures. Make sure all sources get their latest values
@@ -9355,6 +9377,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         context.composition = self
 
+                        report._nesting_depth -= 1
+
                         # Add Node info for TIME_STEP to output report
                         report.report_output(self,
                                              run_report,
@@ -9399,6 +9423,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         relative_order=AFTER,
                         execution_mode=execution_mode,
                         _comp_ex=_comp_ex,
+                        report=report,
                         context=context
                     )
 
@@ -9431,6 +9456,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     relative_order=AFTER,
                     execution_mode=execution_mode,
                     _comp_ex=_comp_ex,
+                    report=report,
                     context=context
                 )
 
@@ -9448,6 +9474,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     relative_order=AFTER,
                     execution_mode=execution_mode,
                     _comp_ex=_comp_ex,
+                    report=report,
                     context=context
                 )
 

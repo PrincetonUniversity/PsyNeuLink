@@ -414,7 +414,11 @@ class Report:
                              and (cls._rich_console or cls._rich_divert or cls._record_reports))
             cls._use_pnl_view = ReportDevices.PNL_VIEW in cls._report_to_devices
 
-            cls._nesting_depth = None # Depth of nested executions (inclusive of simulations)
+            # # MODIFIED 3/13/21 OLD:
+            # cls._nesting_depth = None # Depth of nested executions (inclusive of simulations)
+            # MODIFIED 3/13/21 NEW:
+            cls._nesting_depth = 0
+            # MODIFIED 3/13/21 END
 
             # Instantiate rich progress context object
             # - it is not started until the self.start_run_report() method is called
@@ -529,10 +533,12 @@ class Report:
 
         if comp not in self._run_reports:
             self._run_reports.update({comp:{DEFAULT:[], SIMULATION:[], SIMULATING:False}})
-            if self._nesting_depth is None:
-                self._nesting_depth = 0
-            else:
-                self._nesting_depth += 1
+            # # MODIFIED 3/13/31 OLD:
+            # if self._nesting_depth is None:
+            #     self._nesting_depth = 0
+            # else:
+            #     self._nesting_depth += 1
+            # MODIFIED 3/13/31 END
 
 
         # Used for accessing progress report and reporting results
@@ -549,9 +555,11 @@ class Report:
             if self._run_reports[comp][SIMULATING]:
                 return len(self._run_reports[comp][run_mode]) - 1
             # Otherwise, update the simulation depth for the new one
-            else:
-                # Add nesting depth for simulation
-                self._nesting_depth += 1
+            # # MODIFIED 3/13/21 OLD:
+            # else:
+            #    # Add nesting depth for simulation
+            #     self._nesting_depth += 1
+            # MODIFIED 3/13/21 END
 
         if self._use_rich:
 
@@ -591,7 +599,7 @@ class Report:
 
             return report_num
 
-    def report_progress(self, caller, report_num, context):
+    def report_progress(self, caller, report_num:int, context:Context):
         """
         Report progress of executions in call to `run <Composition.run>` or `learn <Composition.learn>` method of
         a `Composition`, and record reports if specified.
@@ -650,7 +658,9 @@ class Report:
             self._run_reports[caller][DEFAULT].pop()
             self._run_reports[caller][SIMULATION].pop()
             # Decrement depth as exiting simulation
-            self._nesting_depth -= 1
+            # # MODIFIED 3/13/21 OLD:
+            # self._nesting_depth -= 1
+            # # MODIFIED 3/13/21 END
             if not self._run_reports[caller][DEFAULT]:
                 _end_of_run = True
 
@@ -687,7 +697,9 @@ class Report:
             # If this is the end of a Composition's
             # if not simulation_mode and not self._run_reports[caller][DEFAULT]:
             if _end_of_run:
-                self._nesting_depth -= 1
+                # # MODIFIED 3/13/21 OLD:
+                # self._nesting_depth -= 1
+                # MODIFIED 3/13/21 END
                 self._run_reports.pop(caller)
 
         record_reports(caller, context)
