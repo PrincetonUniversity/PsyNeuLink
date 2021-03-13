@@ -363,22 +363,20 @@ class Report:
         - one containing RunReports for executions in DEFAULT_MODE (key: DEFAULT)
         - one containing RunReports for executions in SIMULATION_MODE (key: SIMULATION)
 
-    _total_depth : int : default 0
-        tracks depth of `nested compositions <Composition_Nested>` inclusive of any `simulations
-        <OptimizationControlMechanism_Execution>` executed by Composition `controllers <Composition_Controller>`
-        at any level of nesting.
+    _execution_stack : list : default []
+        tracks `nested compositions <Composition_Nested>` and `controllers <Composition_Controller>`
+        (i.e., being used to `simulate <OptimizationControlMechanism_Execution>` a `Composition`).
 
-    _nesting_depth : int : default 0
-        tracks depth of nested compositions *and* control (i.e., inclusive of `simulations
-        <OptimizationControlMechanism_Execution>` executed by a Composition's `controller <Composition_Controller>`.
+    _execution_stack_depth : int : default 0
+        depth of nesting of executions, including `nested compositions <Composition_Nested>` and their
+        `controllers <Composition_Controller>`.
 
-    _comp_depth : int : default 0
-        tracks depth of `nested compositions <Composition_Nested>`.
+    _nested_comps : bool : default False
+        True if there are any `nested compositions <Composition_Nested>` in the
+        `_execution_stack <Report._execution_stack>`.
 
-    _control_depth : int : default 0
-        tracks depth of control (i.e., of `simulations <OptimizationControlMechanism_Execution>` executed by a
-        the `controller <Composition_Controller>` of a `Composition`, including any being executed by ones `nested
-        <Composition_Nested>` within it.
+    _simulating : bool : default False
+        True if there are any controllers in the `_execution_stack <Report._execution_stack>`.
 
     _ref_count : int : default 0
         tracks how many times object has been referenced;  counter is incremented on each context __enter__
@@ -430,8 +428,8 @@ class Report:
             cls._use_rich = (cls._reporting_enabled
                              and (cls._rich_console or cls._rich_divert or cls._record_reports))
             cls._use_pnl_view = ReportDevices.PNL_VIEW in cls._report_to_devices
-            cls._nesting_stack = []
-            cls._control_stack = []
+
+            cls._execution_stack = []
 
             # Instantiate rich progress context object
             # - it is not started until the self.start_run_report() method is called
@@ -567,7 +565,7 @@ class Report:
                        # progress reporting is ON
                        and self._report_progress is ReportProgress.ON
                        # current run is not a simulation (being run by a controller), or simulation reporting is ON
-                       and (not self._control_depth or self._report_simulations is ReportSimulations.ON)
+                       and (not self._simulating or self._report_simulations is ReportSimulations.ON)
                        )
 
             if comp.verbosePref or REPORT_REPORT:
@@ -583,9 +581,9 @@ class Report:
 
             indent_factor = 2
             depth_indent = depth_str = ''
-            if run_mode is SIMULATION or self._total_depth:
-                depth_indent = indent_factor * self._total_depth * ' '
-                depth_str = f' (depth: {self._total_depth})'
+            if run_mode is SIMULATION or self._execution_stack_depth:
+                depth_indent = indent_factor * self._execution_stack_depth * ' '
+                depth_str = f' (depth: {self._execution_stack_depth})'
 
             id = self._rich_progress.add_task(f"[red]{depth_indent}{run_mode}ing {comp.name}{depth_str}...",
                                          total=num_trials,
@@ -668,9 +666,9 @@ class Report:
             # Construct update text
             indent_factor = 2
             depth_indent = depth_str = ''
-            if simulation_mode or self._total_depth:
-                depth_indent = indent_factor * self._total_depth * ' '
-                depth_str = f' (depth: {self._total_depth})'
+            if simulation_mode or self._execution_stack_depth:
+                depth_indent = indent_factor * self._execution_stack_depth * ' '
+                depth_str = f' (depth: {self._execution_stack_depth})'
             update = f'{depth_indent}{caller.name}: {run_mode}ed {trial_num+1}{num_trials_str} trials{depth_str}'
 
             # Do update
@@ -1037,13 +1035,16 @@ class Report:
                      highlight=True)
 
     @property
-    def _nesting_depth(self):
-        return len(self._nesting_stack)
+    def _execution_stack_depth(self):
+        return len(self._execution_stack)
 
     @property
-    def _control_depth(self):
-        return len(self._control_stack)
+    def _nested(self):
+        from psyneulink.core.compositions.composition import Composition
+        return any(isinstance(c, Composition) for c in self._execution_stack)
 
     @property
-    def _total_depth(self):
-        return self._nesting_depth + self._control_depth
+    def _simulating(self):
+        from psyneulink.core.components.mechanisms.mechanism import Mechanism
+        return any(isinstance(c, Mechanism) for c in self._execution_stack)
+
