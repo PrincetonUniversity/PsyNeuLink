@@ -363,6 +363,10 @@ class Report:
         - one containing RunReports for executions in DEFAULT_MODE (key: DEFAULT)
         - one containing RunReports for executions in SIMULATION_MODE (key: SIMULATION)
 
+    _nesting_depth : int : default 0
+        tracks depth nested compositions and `simulations <OptimizationControlMechanism_Execution>` executed by a
+        Composition's `controller <Composition_Controller>`.
+
     _ref_count : int : default 0
         tracks how many times object has been referenced;  counter is incremented on each context __enter__
         and decrements on each __exit__, to ensure stop progress is not called until all references have been released.
@@ -413,12 +417,7 @@ class Report:
             cls._use_rich = (cls._reporting_enabled
                              and (cls._rich_console or cls._rich_divert or cls._record_reports))
             cls._use_pnl_view = ReportDevices.PNL_VIEW in cls._report_to_devices
-
-            # # MODIFIED 3/13/21 OLD:
-            # cls._nesting_depth = None # Depth of nested executions (inclusive of simulations)
-            # MODIFIED 3/13/21 NEW:
             cls._nesting_depth = 0
-            # MODIFIED 3/13/21 END
 
             # Instantiate rich progress context object
             # - it is not started until the self.start_run_report() method is called
@@ -533,13 +532,6 @@ class Report:
 
         if comp not in self._run_reports:
             self._run_reports.update({comp:{DEFAULT:[], SIMULATION:[], SIMULATING:False}})
-            # # MODIFIED 3/13/31 OLD:
-            # if self._nesting_depth is None:
-            #     self._nesting_depth = 0
-            # else:
-            #     self._nesting_depth += 1
-            # MODIFIED 3/13/31 END
-
 
         # Used for accessing progress report and reporting results
         if context.runmode & ContextFlags.SIMULATION_MODE:
@@ -554,12 +546,6 @@ class Report:
             # If already simulating, return existing report for those simulations
             if self._run_reports[comp][SIMULATING]:
                 return len(self._run_reports[comp][run_mode]) - 1
-            # Otherwise, update the simulation depth for the new one
-            # # MODIFIED 3/13/21 OLD:
-            # else:
-            #    # Add nesting depth for simulation
-            #     self._nesting_depth += 1
-            # MODIFIED 3/13/21 END
 
         if self._use_rich:
 
@@ -637,8 +623,6 @@ class Report:
         else:
             run_mode = DEFAULT
 
-        _end_of_run = False
-
         run_report = self._run_reports[caller][run_mode][report_num]
         trial_num = self._rich_progress.tasks[run_report.rich_task_id].completed
 
@@ -654,15 +638,6 @@ class Report:
             #    since number of simulation trials being run is generally not known)
                 # - turn it off
             self._run_reports[caller][SIMULATING] = False
-            # remove report for DEFAULT mode that was running the simulation
-            self._run_reports[caller][DEFAULT].pop()
-            self._run_reports[caller][SIMULATION].pop()
-            # Decrement depth as exiting simulation
-            # # MODIFIED 3/13/21 OLD:
-            # self._nesting_depth -= 1
-            # # MODIFIED 3/13/21 END
-            if not self._run_reports[caller][DEFAULT]:
-                _end_of_run = True
 
         # Update progress report
         if self._use_rich:
@@ -682,25 +657,13 @@ class Report:
             # if simulation_mode and self._run_reports[caller][SIMULATING] or self._nesting_depth:
                 depth_indent = indent_factor * self._nesting_depth * ' '
                 depth_str = f' (depth: {self._nesting_depth})'
-                # if self._nesting_depth:
-                #     depth_indent = indent_factor * self._nesting_depth * ' '
-                #     depth_str = f' (depth: {self._nesting_depth})'
             update = f'{depth_indent}{caller.name}: {run_mode}ed {trial_num+1}{num_trials_str} trials{depth_str}'
-            # update = f'{caller.name}: {run_mode}ed {trial_num+1}{num_trials_str} trials'
 
             # Do update
             self._rich_progress.update(run_report.rich_task_id,
                                   description=update,
                                   advance=1,
                                   refresh=True)
-
-            # If this is the end of a Composition's
-            # if not simulation_mode and not self._run_reports[caller][DEFAULT]:
-            if _end_of_run:
-                # # MODIFIED 3/13/21 OLD:
-                # self._nesting_depth -= 1
-                # MODIFIED 3/13/21 END
-                self._run_reports.pop(caller)
 
         record_reports(caller, context)
 

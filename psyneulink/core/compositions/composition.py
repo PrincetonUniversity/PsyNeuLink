@@ -7466,11 +7466,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if buffer_animate_state:
                 self._animate = buffer_animate_state
 
-            # # MODIFIED 3/13/21 NEW:
-            # report_num = len(report._run_reports[self]['Execut'])-1
-            # report.report_progress(self, report_num, context)
-            # # MODIFIED 3/13/21 END
-
         # Store simulation results on "base" composition
         if self.initialization_status != ContextFlags.INITIALIZING:
             try:
