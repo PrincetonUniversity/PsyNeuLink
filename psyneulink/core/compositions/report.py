@@ -886,33 +886,34 @@ class Report:
             id of RunReport for caller[run_mode] in self._run_reports to use for reporting.
         """
 
-        # print and record output report
-        if (self._rich_console or self._rich_divert) and run_report.trial_report:
-            self._rich_progress.console.print(run_report.trial_report)
-            self._rich_progress.console.print('')
-        # MODIFIED 3/13/21 END
-        if self._report_output is not ReportOutput.OFF:
-            if self._rich_divert:
-                self._rich_diverted_reports += (f'\n{self._rich_progress.console.file.getvalue()}')
-            if self._record_reports:
-                with self._recording_console.capture() as capture:
-                    self._recording_console.print(run_report.trial_report)
-                self._recorded_reports += capture.get()
+        if report_type is OUTPUT_REPORT:
+            # print and record output report
+            if (self._rich_console or self._rich_divert) and run_report.trial_report:
+                self._rich_progress.console.print(run_report.trial_report)
+                self._rich_progress.console.print('')
+            # MODIFIED 3/13/21 END
+            if self._report_output is not ReportOutput.OFF:
+                if self._rich_divert:
+                    self._rich_diverted_reports += (f'\n{self._rich_progress.console.file.getvalue()}')
+                if self._record_reports:
+                    with self._recording_console.capture() as capture:
+                        self._recording_console.print(run_report.trial_report)
+                    self._recorded_reports += capture.get()
 
-        # record progress report (it is printed by rich console)
-        update = '\n'.join([t.description for t in self._rich_progress.tasks])
-        if self._report_progress is not ReportProgress.OFF:
-            if self._rich_divert:
-                self._rich_diverted_reports += update + '\n'
-            if self._record_reports:
-                self._recorded_reports += update + '\n'
+            # record progress report (it is printed by rich console)
+            update = '\n'.join([t.description for t in self._rich_progress.tasks])
+            if self._report_progress is not ReportProgress.OFF:
+                if self._rich_divert:
+                    self._rich_diverted_reports += update + '\n'
+                if self._record_reports:
+                    self._recorded_reports += update + '\n'
 
         # FIX: FROM report_progress:
         # call for progress_report is always at the end of a run;
         # if stack is empty stack => outmost run, so time to record
         if report_type is PROGRESS_REPORT and not self._execution_stack:
             # outermost Composition should be only one left with a report
-            assert len(self._run_reports) == 1
+            # assert len(self._run_reports) == 1
             comp = list(self._run_reports.keys())[0]
             if self._recorded_reports:
                 comp.recorded_reports = self._recorded_reports
