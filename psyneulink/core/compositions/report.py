@@ -373,10 +373,10 @@ class Report:
 
     def __new__(cls,
                 caller,
-                report_output:ReportOutput=False,
+                report_output:ReportOutput=ReportOutput.OFF,
                 report_progress:ReportProgress=ReportProgress.OFF,
                 report_simulations:ReportSimulations=ReportSimulations.OFF,
-                report_to_devices:(list(ReportDevices.__members__), list)=ReportDevices,
+                report_to_devices:(list(ReportDevices.__members__), list)=ReportDevices.CONSOLE,
                 context:Context=None
                 ) -> 'Report':
         if cls._instance is None:
@@ -594,7 +594,7 @@ class Report:
     def report_progress(self, caller, report_num, context):
         """
         Report progress of executions in call to `run <Composition.run>` or `learn <Composition.learn>` method of
-        a `Composition`.
+        a `Composition`, and record reports if specified.
 
         Arguments
         ---------
@@ -608,7 +608,16 @@ class Report:
             context providing information about run_mode (DEFAULT or SIMULATION).
         """
 
+        def record_reports(caller, context):
+            """Assign recorded reports to caller's report attributes at end of execution or run"""
+            if context.source & ContextFlags.COMMAND_LINE:
+                if self._recorded_reports:
+                    caller.recorded_reports = self._recorded_reports
+                if self._rich_diverted_reports:
+                    caller.rich_diverted_reports = self._rich_diverted_reports
+
         if self._report_progress is ReportProgress.OFF:
+            record_reports(caller, context)
             return
 
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
@@ -681,6 +690,9 @@ class Report:
                 self._nesting_depth -= 1
                 self._run_reports.pop(caller)
 
+        record_reports(caller, context)
+
+
     def report_output(self, caller,
                       report_num:int,
                       scheduler,
@@ -695,6 +707,9 @@ class Report:
 
         Arguments
         ---------
+
+        caller : Composition or Mechanism
+            Component requesting report;  used to identify relevant run_report.
 
         report_num : int
             specifies id of `RunReport`, stored in `_run_reports <Report._run_reports>` for each
@@ -726,49 +741,68 @@ class Report:
             specifies `node <Composition_Nodes>` for which output is being reported.
         """
 
-        if report_num is None or report_output is ReportOutput.OFF:
+        # if report_num is None or report_output is ReportOutput.OFF:
+        if report_output is ReportOutput.OFF:
             return
 
+        # Determine report type and relevant parameters ----------------------------------------------------------------
+
+        # Get ReportOutputPref for node
         if node:
             node_pref = next((pref for pref in convert_to_list(node.reportOutputPref)
                                          if isinstance(pref, ReportOutput)), None)
 
-        # Assign trial_report_type and node_report_type
+        # Assign report_output as default for trial_report_type and node_report_type...
         trial_report_type = node_report_type = report_output
+
+        # then try to get them from caller, based on whether it is a Mechanism or Composition
         from psyneulink.core.compositions.composition import Composition
         from psyneulink.core.components.mechanisms.mechanism import Mechanism
         # Report is called for by a Mechanism
         if isinstance(caller, Mechanism):
+            if context.source & ContextFlags.COMPOSITION:
+                run_report_owner = context.composition
+                trial_report_type=report_output
             # FULL output reporting doesn't make sense for a Mechanism, since it includes trial info, so enforce TERSE
-            trial_report_type = ReportOutput.TERSE
+            else:
+                trial_report_type = None
             # If USE_PREFS is specified by user, then assign output format to Mechanism's reportOutputPref
             if report_output is ReportOutput.USE_PREFS:
                 node_report_type = node_pref
-        # USE_PREFS is specified for report called by a Composition:
-        elif isinstance(caller, Composition) and report_output is ReportOutput.USE_PREFS:
-            # First, if report is for execution of a node, assign its report type using its reportOutputPref:
-            if node:
-                # Get ReportOutput spec from reportOutputPref if there is one
-                # If None was found, assign ReportOutput.FULL as default
-                node_report_type = node_pref or ReportOutput.FULL
-                # Return if it is OFF
-                if node_report_type is ReportOutput.OFF:
+                if node_pref is ReportOutput.OFF:
                     return
+        elif isinstance(caller, Composition):
+            # USE_PREFS is specified for report called by a Composition:
+            if report_output is ReportOutput.USE_PREFS:
+                # First, if report is for execution of a node, assign its report type using its reportOutputPref:
+                if node:
+                    # Get ReportOutput spec from reportOutputPref if there is one
+                    # If None was found, assign ReportOutput.FULL as default
+                    node_report_type = node_pref or ReportOutput.FULL
+                    # Return if it is OFF
+                    if node_report_type is ReportOutput.OFF:
+                        return
+            trial_num = scheduler.clock.time.trial
+            run_report_owner = caller
 
-        simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
-        if simulation_mode:
-            run_mode = SIMULATION
-            sim_str = ' SIMULATION'
-        else:
-            run_mode = DEFAULT
-            sim_str = ''
+        # Determine run_mode and get run_report if call is from a Composition or a Mechanism being executed by one
+        if isinstance(caller, Composition) or context.source == ContextFlags.COMPOSITION:
+            simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
+            if simulation_mode:
+                run_mode = SIMULATION
+                sim_str = ' SIMULATION'
+            else:
+                run_mode = DEFAULT
+                sim_str = ''
+            run_report = self._run_reports[run_report_owner][run_mode][report_num]
 
         run_report = self._run_reports[caller][run_mode][report_num]
 
         trial_num = scheduler.clock.time.trial
 
-        if content is 'trial_init':
+        # Construct output report -----------------------------------------------------------------------------
 
+        if content is 'trial_init':
             run_report.trial_report = []
             #  if FULL output, report trial number and Composition's input
             #  note:  header for Trial Panel is constructed under 'content is Trial' case below

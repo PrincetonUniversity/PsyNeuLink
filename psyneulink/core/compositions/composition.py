@@ -2399,7 +2399,7 @@ from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHO
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROLLER, CONTROL_SIGNAL, DEFAULT, \
-    FEEDBACK, FULL, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LEARNED_PROJECTIONS, \
+    FEEDBACK, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LEARNED_PROJECTIONS, \
     LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, \
     MODEL_SPEC_ID_PSYNEULINK, \
@@ -8928,11 +8928,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         report.report_progress(self, run_report, context)
                         # If called from the command line, get report as only this trial is run
+                        # MODIFIED 3/13/21 NEW: [NOT IN MECH_REPORT]
                         if context.source & ContextFlags.COMMAND_LINE:
                             if report._recorded_reports:
                                 self.recorded_reports = report._recorded_reports
                             if report._rich_diverted_reports:
                                 self.rich_diverted_reports = report._rich_diverted_reports
+                        # MODIFIED 3/13/21 END
 
                         return _comp_ex.extract_node_output(self.output_CIM)
 
@@ -9133,7 +9135,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for i in range(scheduler.clock.time.time_step):
                     execution_sets.__next__()
 
-            # Report trial_num and Composition input (now that it has been assigned)
+            # Add TRIAL header and Composition's input to output report (now that they are known)
             report.report_output(self, run_report, execution_scheduler, report_output, 'trial_init', context)
 
             for next_execution_set in execution_sets:
@@ -9201,7 +9203,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if not self._is_learning(context):
                     next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
-                # INITIALIZE self._time_step_report AND SHOW TIME_STEP DIVIDER
+                # Add TIME_STEP header to output report
                 nodes_to_report = any(node.reportOutputPref for node in next_execution_set)
                 report.report_output(self, run_report,
                                      execution_scheduler,
@@ -9276,6 +9278,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     for port in node.input_ports:
                                         port._update(context=context)
                                 node.execute(context=mech_context,
+                                             report_output=report_output,
+                                             run_report=run_report,
                                              runtime_params=execution_runtime_params,
                                              )
                             # Reset runtim_params
@@ -9353,18 +9357,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         context.composition = self
 
+                        # MODIFIED 3/13/21 NEW: MOVED HERE FROM BELOW IN MECH_REPORT
+                        # Add Node info for TIME_STEP to output report
+                        report.report_output(self,
+                                             run_report,
+                                             execution_scheduler,
+                                             report_output,
+                                             'node',
+                                             context,
+                                             node=node)
+                        # MODIFIED 3/13/21 END
+
                     # ANIMATE node ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     if self._animate is not False and self._animate_unit == COMPONENT:
                         self._animate_execution(node, context)
 
-                    # Add report for node to time_step_report
-                    report.report_output(self,
-                                         run_report,
-                                         execution_scheduler,
-                                         report_output,
-                                         'node',
-                                         context,
-                                         node=node)
+
+                    # # MODIFIED 3/13/21 OLD: MOVED ABOVE IN MECH_REPORT
+                    # # Add Node info for TIME_STEP to output report
+                    # report.report_output(self,
+                    #                      run_report,
+                    #                      execution_scheduler,
+                    #                      report_output,
+                    #                      'node',
+                    #                      context,
+                    #                      node=node)
+                    # MODIFIED 3/13/21 END
 
                     # MANAGE INPUTS (for next execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -9403,7 +9421,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     call_with_pruned_args(call_after_time_step, context=context)
 
 
-                # Add report for time_step to trial_report
+                # Complete TIME_STEP entry for output report
                 report.report_output(self, run_report, execution_scheduler, report_output, 'time_step', context,
                                        nodes_to_report= nodes_to_report)
 
@@ -9448,18 +9466,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context=context
                 )
 
-            # REPORT RESULTS *******************************************************************************************
-
             # Extract result here
             if execution_mode:
                 _comp_ex.freeze_values()
                 _comp_ex.execute_node(self.output_CIM)
                 report.report_progress(self, run_report, context)
+                # MODIFIED 3/13/21 NEW: [FROM MECH_REPORT]
                 if context.source & ContextFlags.COMMAND_LINE:
                     if report._recorded_reports:
                         self.recorded_reports = report._recorded_reports
                     if report._rich_diverted_reports:
                         self.rich_diverted_reports = report._rich_diverted_reports
+                # MODIFIED 3/13/21 END
 
                 return _comp_ex.extract_node_output(self.output_CIM)
 
@@ -9473,14 +9491,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for port in self.output_CIM.output_ports:
                 output_values.append(port.parameters.value._get(context))
 
-            # Report results and progress to output devices
+            # Complete TRIAL entry for output report, and report progress
             report.report_output(self, run_report, execution_scheduler, report_output, 'trial', context)
             report.report_progress(self, run_report, context)
-            if context.source & ContextFlags.COMMAND_LINE:
-                if report._recorded_reports:
-                    self.recorded_reports = report._recorded_reports
-                if report._rich_diverted_reports:
-                    self.rich_diverted_reports = report._rich_diverted_reports
+            # # MODIFIED 3/13/21 OLD: REMOVED IN MECH_REPORT
+            # if context.source & ContextFlags.COMMAND_LINE:
+            #     if report._recorded_reports:
+            #         self.recorded_reports = report._recorded_reports
+            #     if report._rich_diverted_reports:
+            #         self.rich_diverted_reports = report._rich_diverted_reports
+            # # MODIFIED 3/13/21 END
 
             # UPDATE TIME and RETURN ***********************************************************************************
 
