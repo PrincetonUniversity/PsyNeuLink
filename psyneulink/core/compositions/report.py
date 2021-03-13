@@ -776,6 +776,8 @@ class Report:
         # Determine run_mode and get run_report if call is from a Composition or a Mechanism being executed by one
         if isinstance(caller, Composition) or context.source == ContextFlags.COMPOSITION:
             simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
+            if simulation_mode and self._report_simulations is ReportSimulations.OFF:
+                return
             if simulation_mode:
                 run_mode = SIMULATION
                 sim_str = ' SIMULATION'
