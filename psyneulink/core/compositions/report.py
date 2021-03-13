@@ -864,7 +864,7 @@ class Report:
     def _print_and_record_reports(self, report_type:str, context:Context, run_report:RunReport=None):
         """
         Conveys output reporting to device specified in `_report_to_devices <Report._report_to_devices>`.
-        Called by `report_output <Report.report_output>`
+        Called by `report_output <Report.report_output>` and `report_progress <Report.report_progress>`
 
         Arguments
         ---------
@@ -873,11 +873,13 @@ class Report:
             id of RunReport for caller[run_mode] in self._run_reports to use for reporting.
         """
 
+        # Print and record output report as they are created (progress reports are printed by _rich_progress.console)
         if report_type is OUTPUT_REPORT:
-            # print and record output report
+            # Print output reports as they are created
             if (self._rich_console or self._rich_divert) and run_report.trial_report:
                 self._rich_progress.console.print(run_report.trial_report)
                 self._rich_progress.console.print('')
+            # Record output reports as they are created
             if len(self._execution_stack)==1 and self._report_output is not ReportOutput.OFF:
                     if self._rich_divert:
                         self._rich_diverted_reports += (f'\n{self._rich_progress.console.file.getvalue()}')
@@ -886,21 +888,21 @@ class Report:
                             self._recording_console.print(run_report.trial_report)
                         self._recorded_reports += capture.get()
 
+        # Record progress after execution of outer-most Composition
         if len(self._execution_stack)==1:
             if report_type is PROGRESS_REPORT:
-                # record progress report (it is printed by rich console)
+                # add progress report to any already recorded for output
                 progress_reports = '\n'.join([t.description for t in self._rich_progress.tasks])
                 if self._rich_divert:
                     self._rich_diverted_reports += progress_reports + '\n'
                 if self._record_reports:
                     self._recorded_reports += progress_reports + '\n'
-            comp = self._execution_stack[0]
+            outer_comp = self._execution_stack[0]
+            # store recorded reports on outer-most Composition
             if self._rich_divert:
-                # self._rich_diverted_reports += progress_reports + '\n'
-                comp.rich_diverted_reports = self._rich_diverted_reports
+                outer_comp.rich_diverted_reports = self._rich_diverted_reports
             if self._record_reports:
-                # self._recorded_reports += progress_reports + '\n'
-                comp.recorded_reports = self._recorded_reports
+                outer_comp.recorded_reports = self._recorded_reports
 
     def node_execution_report(self,
                               node,
