@@ -1053,12 +1053,9 @@ class Report:
                             if not header_printed:
                                 function_params_string += f"\n\t{param_name}: {param_value.name.__str__().strip('[]')}"
                                 header_printed = True
-                            function_params_string += ("\n\t\t{}: {}".
-                                                       format(fct_param_name,
-                                                              str(getattr(getattr(node, param_name).parameters,
-                                                                          fct_param_name)._get(context)).__str__().strip("[]")
-                                                              )
-                                                       )
+                            param_value_str = str(getattr(getattr(node,param_name).parameters,fct_param_name)._get(context)).__str__().strip('[]')
+                            function_params_string += f"\n\t\t{fct_param_name}: {param_value_str}"
+
             params_string += function_params_string
 
     # Generate report -------------------------------------------------------------------------------
