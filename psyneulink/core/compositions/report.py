@@ -1051,7 +1051,7 @@ class Report:
                         # (appended to params_string below to keep functions at bottom of report)
                         if fct_param_name in function_params or include_params is params_keyword:
                             if not header_printed:
-                                function_params_string += f"\n\t{param_name}: {str(param_value).__str__().strip('[]')}"
+                                function_params_string += f"\n\t{param_name}: {param_value.name.__str__().strip('[]')}"
                                 header_printed = True
                             function_params_string += ("\n\t\t{}: {}".
                                                        format(fct_param_name,
