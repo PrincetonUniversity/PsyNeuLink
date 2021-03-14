@@ -943,10 +943,20 @@ class Report:
         # Use TERSE format if that has been specified by report_output (i.e., in the arg of an execution method),
         #   or as the reportOutputPref for a node when USE_PREFS is in effect
         node_pref = convert_to_list(node.reportOutputPref)
+        # MODIFIED 3/14/21 OLD:
+        # if (report_output is ReportOutput.TERSE
+        #         or (ReportOutput.TERSE in node_pref
+        #             and report_output is not ReportOutput.FULL)):
+        #     return f'[{node_panel_color}]  {node.name} executed'
+        # MODIFIED 3/14/21 NEW:
+        # Get reportOutputPref if specified, and remove from node_pref (for param processing below)
+        report_output_pref = [node_pref.pop(node_pref.index(pref))
+                              for pref in node_pref if isinstance(pref, ReportOutput)]
         if (report_output is ReportOutput.TERSE
-                or (ReportOutput.TERSE in node_pref
-                    and report_output is not ReportOutput.FULL)):
+                or (report_output is not ReportOutput.FULL and ReportOutput.TERSE in report_output_pref)):
             return f'[{node_panel_color}]  {node.name} executed'
+        # MODIFIED 3/14/21 END
+
 
 
         from psyneulink.core.components.shellclasses import Function
@@ -978,13 +988,26 @@ class Report:
 
         # Render params if specified -------------------------------------------------------------------------------
         params = {p.name: p._get(context) for p in node.parameters}
+        def params_keyword(kw):
+            return re.match('param(eter)?s?', kw, flags=re.IGNORECASE)
         try:
-            # Check for list of specific params in reportOoutputPref
-            include_params = next((pref for pref in node_pref
-                                   if isinstance(pref, list) and all(p in params for p in pref)), None)
-            # Check for 'params' or 'parameters' in reportOoutputPref
-            include_params = include_params or any(re.match('param(eter)?s?', pref, flags=re.IGNORECASE)
-                                                   for pref in node_pref)
+            # Need to standardize around a double-embedded list ([[node_prefs]])
+            #   to deal with either stand-alone param specs (not in a list)
+            #   or singletons in a list with a ReportOutput pref)
+            if not isinstance(node_pref[0], list):
+                node_pref = [node_pref]
+            # Check for params keyword and remove from node_prefs if there
+            params_keyword = [node_pref[0].pop(node_pref[0].index(p)) for p in node_pref[0] if params_keyword(p)]
+            # Get list of params if specified in node_pref
+            param_list = next((pref for pref in node_pref if isinstance(pref, list)), [])
+            # Get any params that are on the node
+            include_params = [param_list.pop(param_list.index(p))
+                              for p in param_list if p in params]
+            # If any are left, assume they are function params and add in an embedded list w/in include_params
+            if param_list:
+                include_params.append(param_list)
+            # If no specific params specified, check for 'params' or 'parameters' in reportOoutputPref
+            include_params = include_params or len(params_keyword)
         except TypeError:
             # FIX: PUT ERROR MESSAGE HERE REGARDING BAD reportOutputPref SPEC?
             include_params = False
@@ -997,6 +1020,7 @@ class Report:
             # Get subset if listed in include_params
             if isinstance(include_params, list):
                 params_keys_sorted = [p for p in params_keys_sorted if p in include_params]
+                # function_params = [l for l in include_params if isinstance(l, list)][0]
             for param_name in params_keys_sorted:
                 # No need to report:
                 #    function_params here, as they will be reported for the function itself below;
