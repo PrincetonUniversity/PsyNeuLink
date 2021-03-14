@@ -87,6 +87,8 @@ import warnings
 from enum import Enum, Flag, auto
 from io import StringIO
 
+import numpy as np
+
 from rich import print, box
 from rich.console import Console, RenderGroup
 from rich.panel import Panel
@@ -1053,7 +1055,11 @@ class Report:
                             if not header_printed:
                                 function_params_string += f"\n\t{param_name}: {param_value.name.__str__().strip('[]')}"
                                 header_printed = True
-                            param_value_str = str(getattr(getattr(node,param_name).parameters,fct_param_name)._get(context)).__str__().strip('[]')
+                            param_value = getattr(getattr(node,param_name).parameters,fct_param_name)._get(context)
+                            param_value = np.squeeze(param_value)
+                            # if isinstance(param_value, np.ndarray):
+                            #     param_value.squeeze()
+                            param_value_str = str(param_value).__str__().strip('[]')
                             function_params_string += f"\n\t\t{fct_param_name}: {param_value_str}"
 
             params_string += function_params_string
