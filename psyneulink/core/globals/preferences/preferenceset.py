@@ -46,7 +46,7 @@ THIS DOES NOT APPEAR CURRENTLY TO BE USED:
   used for modulating parameters by runtime specification (in pathway);
 COMMENT
 
-.. _technical_note::
+.. technical_note::
    * **deliverPref** (LogCondition, default: LogCondition.OFF) - sets whether attribute data are added to context rpc
      pipeline for delivery to external applications.
 
