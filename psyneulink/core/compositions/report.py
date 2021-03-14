@@ -1014,22 +1014,16 @@ class Report:
         if include_params:
             # print("- params:")
             params_string = (f"params:")
+            function_params_string = ""
             # Sort for consistency of output
             params_keys_sorted = sorted(params.keys())
-            # # Get subset if listed in include_params
-
-            for param_name in params_keys_sorted:
-                if param_name in node_params or include_params is params_keyword:
-                    param_value = params[param_name]
-                    params_string += f"\n\t{param_name}: {str(param_value).__str__().strip('[]')}"
+            param_is_function = False
             for param_name in params_keys_sorted:
                 # No need to report:
                 #    function_params here, as they will be reported for the function itself below;
                 #    input_ports or output_ports, as these are inherent in the structure
                 if param_name in {FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS}:
                     continue
-                # Sequentially manage node_params and function_params to place latter at end of the report
-                param_is_function = False
                 param_value = params[param_name]
                 if isinstance(param_value, Function):
                     param = param_value.name
@@ -1040,25 +1034,33 @@ class Report:
                 elif isinstance(param_value, (types.FunctionType, types.MethodType)):
                     param = param_value.__node__.__class__.__name__
                     param_is_function = True
-                else:
-                    param = param_value
+                # Node_param
+                elif param_name in node_params or include_params is params_keyword:
+                    # Put in params_string if param is specified or 'params' is specified
+                    param_value = params[param_name]
+                    params_string += f"\n\t{param_name}: {str(param_value).__str__().strip('[]')}"
+                    # Don't include functions in params_string yet (to keep at bottom of report)
+                    continue
                 if param_is_function:
                     # Sort for consistency of output
                     func_params_keys_sorted = sorted(node.function.parameters.names())
+                    header_printed = False
                     for fct_param_name in func_params_keys_sorted:
-                        header_printed = False
-                        if fct_param_name in function_params:
+                        # Put in function_params_string if function param is specified or 'params' is specified
+                        # (appended to params_string below to keep functions at bottom of report)
+                        if fct_param_name in function_params or include_params is params_keyword:
                             if not header_printed:
-                                params_string += f"\n\t{param_name}: {str(param).__str__().strip('[]')}"
+                                function_params_string += f"\n\t{param_name}: {str(param_value).__str__().strip('[]')}"
                                 header_printed = True
-                            params_string += ("\n\t\t{}: {}".
-                                              format(fct_param_name,
-                                                     str(getattr(node.function.parameters,
-                                                                 fct_param_name)._get(context)
-                                                         ).__str__().strip("[]")
-                                                     )
-                                              )
-        # Generate report -------------------------------------------------------------------------------
+                            function_params_string += ("\n\t\t{}: {}".
+                                                       format(fct_param_name,
+                                                              str(getattr(node.function.parameters,
+                                                                          fct_param_name)._get(context)
+                                                                  ).__str__().strip("[]")
+                                                              )
+                                                       )
+            params_string += function_params_string
+    # Generate report -------------------------------------------------------------------------------
 
         if include_params:
             width = 100
