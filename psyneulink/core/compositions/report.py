@@ -387,7 +387,6 @@ class Report:
     _ref_count : int : default 0
         tracks how many times object has been referenced;  counter is incremented on each context __enter__
         and decrements on each __exit__, to ensure stop progress is not called until all references have been released.
-
     """
 
     _instance = None
@@ -1053,4 +1052,3 @@ class Report:
     def _simulating(self):
         from psyneulink.core.components.mechanisms.mechanism import Mechanism
         return any(isinstance(c, Mechanism) for c in self._execution_stack)
-
