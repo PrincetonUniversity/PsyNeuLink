@@ -952,13 +952,9 @@ class Report:
         if (report_output is ReportOutput.TERSE
                 or (report_output is not ReportOutput.FULL and ReportOutput.TERSE in report_output_pref)):
             return f'[{node_panel_color}]  {node.name} executed'
-        # MODIFIED 3/14/21 END
-
-
-
-        from psyneulink.core.components.shellclasses import Function
 
         # Render input --------------------------------------------------------------------------------------------
+
         if input_val is None:
             input_val = node.get_input_values(context)
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
@@ -971,6 +967,7 @@ class Report:
         input_report = f"input: {input_string}"
 
         # Render output --------------------------------------------------------------------------------------------
+
         if output_val is None:
             output = node.output_port.parameters.value._get(context)
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
@@ -984,6 +981,8 @@ class Report:
         output_report = f"output: {output_string}"
 
         # Render params if specified -------------------------------------------------------------------------------
+
+        from psyneulink.core.components.shellclasses import Function
         params = {p.name: p._get(context) for p in node.parameters}
         def params_keyword(kw):
             return re.match('param(eter)?s?', kw, flags=re.IGNORECASE)
@@ -994,7 +993,8 @@ class Report:
             if not isinstance(node_params_prefs[0], list):
                 node_params_prefs = [node_params_prefs]
             # Check for params keyword and remove from node_prefs if there
-            params_keyword = [node_params_prefs[0].pop(node_params_prefs[0].index(p)) for p in node_params_prefs[0] if params_keyword(p)]
+            params_keyword = [node_params_prefs[0].pop(node_params_prefs[0].index(p))
+                              for p in node_params_prefs[0] if params_keyword(p)]
             # Get list of params if specified in node_params_prefs
             param_list = next((pref for pref in node_params_prefs if isinstance(pref, list)), [])
             # Get any params that are on the node
