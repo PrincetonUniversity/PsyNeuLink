@@ -1006,7 +1006,7 @@ class Report:
             # If any are left, assume they are function params and add in an embedded list w/in include_params
             function_params = param_list
             # If no specific params specified, check for 'params' or 'parameters' in reportOoutputPref
-            include_params = node_params or function_params or len(params_keyword)
+            include_params = node_params or function_params or params_keyword
         except TypeError:
             # FIX: PUT ERROR MESSAGE HERE REGARDING BAD reportOutputPref SPEC?
             include_params = False
@@ -1017,15 +1017,18 @@ class Report:
             # Sort for consistency of output
             params_keys_sorted = sorted(params.keys())
             # # Get subset if listed in include_params
-            # if isinstance(include_params, list):
-            #     params_keys_sorted = [p for p in params_keys_sorted if p in include_params]
-            #     # function_params = [l for l in include_params if isinstance(l, list)][0]
+
+            for param_name in params_keys_sorted:
+                if param_name in node_params or include_params is params_keyword:
+                    param_value = params[param_name]
+                    params_string += f"\n\t{param_name}: {str(param_value).__str__().strip('[]')}"
             for param_name in params_keys_sorted:
                 # No need to report:
                 #    function_params here, as they will be reported for the function itself below;
                 #    input_ports or output_ports, as these are inherent in the structure
                 if param_name in {FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS}:
                     continue
+                # Sequentially manage node_params and function_params to place latter at end of the report
                 param_is_function = False
                 param_value = params[param_name]
                 if isinstance(param_value, Function):
@@ -1039,10 +1042,7 @@ class Report:
                     param_is_function = True
                 else:
                     param = param_value
-                if param_name in node_params:
-                    params_string += f"\n\t{param_name}: {str(param).__str__().strip('[]')}"
-                    continue
-                elif param_is_function:
+                if param_is_function:
                     # Sort for consistency of output
                     func_params_keys_sorted = sorted(node.function.parameters.names())
                     for fct_param_name in func_params_keys_sorted:
