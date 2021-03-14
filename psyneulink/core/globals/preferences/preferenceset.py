@@ -15,7 +15,7 @@ Preferences specify the behavior of Components when they are executed.  They can
 by a PreferenceSet, which specifies the
 
 Standard Preferences
--------------------
+--------------------
 
 The following preferences are available for all Components (see `Component prefs <Component_Prefs>` for
 additional details):
@@ -37,6 +37,20 @@ additional details):
   <Composition_Execution_Methods>` unless ReportOutput.USE_PREFS is specified in the argument; see below for
   examples and `execution reporting <Composition_Execution_Reporting>` for additional details.
 
+
+* **logPref** (`LogCondition` : default LogCondition.OFF) - sets `LogCondition` for a given Component;
+
+COMMENT:
+THIS DOES NOT APPEAR CURRENTLY TO BE USED:
+* **runtimeParamModulationPref** (Modulation, default: Modulation.MULTIPLY) -  sets type of `Modulation`
+  used for modulating parameters by runtime specification (in pathway);
+COMMENT
+
+.. _technical_note::
+   * **deliverPref** (LogCondition, default: LogCondition.OFF) - sets whether attribute data are added to context rpc
+     pipeline for delivery to external applications.
+
+
 Examples
 --------
 
@@ -44,6 +58,7 @@ reportOutputPref
 ~~~~~~~~~~~~~~~~
 
 By default, executing a Component, such as the Mechanism below, does not produce any output:
+
   >>> import psyneulink as pnl
   >>> my_mech = pnl.TransferMechanism()
   >>> my_mech.execute()
@@ -51,26 +66,30 @@ By default, executing a Component, such as the Mechanism below, does not produce
 
 Output can be specified by specifying a value of `ReportOutput` as the Mechanism's `reportOutputPref` preference.
 Assigning ReportOutput.FULL generates a report of its input and output values when it was executed:
-  >>> my_mech.reportOutputPrefs = pnl.ReportOutput.FULL
+
+  >>> my_mech.reportOutputPref = pnl.ReportOutput.FULL
   >>> my_mech.execute()
-  ╭─ TransferMechanism-0 ─╮
-  │ input: 0.0            │
-  │ output: 0.0           │
-  ╰───────────────────────╯
+  ╭─ My Mechanism ─╮
+  │ input: 0.0     │
+  │ output: 0.0    │
+  ╰────────────────╯
 
 Assigning ReportOutput.TERSE generates a simpler report:
-  >>> my_mech.reportOutputPrefs = pnl.ReportOutput.TERSE
+
+  >>> my_mech.reportOutputPref = pnl.ReportOutput.TERSE
   >>> my_mech.execute()
-  TransferMechanism-0 executed
+   My Mechanism executed
 
 This can be useful when there are many Components executed (e.g., as part of the `execution <Composition_Execution>`
 of a complex `Composition`.
 
 Assigning the *PARAMS* keyword produces a display of the Mechanism's input and output as well as the value of
 all of its `Parameters` (for brevity, not all are shown below):
-  >>> my_mech.reportOutputPrefs = pnl.PARAMS
+
+  >>> my_mech.reportOutputPref = pnl.PARAMS
   >>> my_mech.execute()
-  ╭────────────────────────────────────── TransferMechanism-0 ───────────────────────────────────────╮
+
+  ╭────────────────────────────────────────── My Mechanism ──────────────────────────────────────────╮
   │ input: 0.0                                                                                       │
   │ ╭──────────────────────────────────────────────────────────────────────────────────────────────╮ │
   │ │ params:                                                                                      │ │
@@ -104,11 +123,11 @@ all of its `Parameters` (for brevity, not all are shown below):
 Note that specifying *PARAMS* forces a full output (i.e., equivalent to also specifying ReportOutput.FULL).
 
 Generally, not all of a Component's `Parameters` are of interest.  The display can be restricted to
-just those of interest by including them in a list:
+just those of interest by including them in a list specified for reportOutputPref:
 
-  >>> my_mech.reportOutputPrefs = ['integration_rate', 'slope', 'rate']
+  >>> my_mech.reportOutputPref = ['integration_rate', 'slope', 'rate']
   >>> my_mech.execute()
-  ╭────────────────────────────────────── TransferMechanism-0 ───────────────────────────────────────╮
+  ╭────────────────────────────────────────── My Mechanism ──────────────────────────────────────────╮
   │ input: 0.0                                                                                       │
   │ ╭──────────────────────────────────────────────────────────────────────────────────────────────╮ │
   │ │ params:                                                                                      │ │
@@ -121,16 +140,18 @@ just those of interest by including them in a list:
   │ output: 0.0                                                                                      │
   ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 
+
 This can be overridden by specifying ReportOutput.TERSE (i.e., without having to delete all of the parameter
 specifications, which can be useful when testing):
-  >>> my_mech.reportOutputPrefs = ['integration_rate', 'slope', 'rate', pnl.ReportOutput.TERSE]
+
+  >>> my_mech.reportOutputPref = ['integration_rate', 'slope', 'rate', pnl.ReportOutput.TERSE]
   >>> my_mech.execute()
-  TransferMechanism-0 executed
+   My Mechanism executed
 
 When a Mechanism is executed as part of a Composition, the Composition's reportOutputPref takes precedence:
 
   >>> my_comp = pnl.Composition(pathways=[my_mech])
-  >>> my_mech.reportOutputPrefs = ['integration_rate', 'slope', 'rate']
+  >>> my_mech.reportOutputPref = ['integration_rate', 'slope', 'rate']
   >>> my_comp.run()
   <BLANKLINE>
 
@@ -138,28 +159,29 @@ Note that the Composition's setting, which is ReportOutput.OFF by default, overr
 reportOutputPref settings.  The **report_output** argument of a Composition's `execution method
 <Composition_Execution_Methods>` can also be used to specify report contents;  this too overrides
 the Mechanism's reportOutputPref setting:
-  >>> my_mech.reportOutputPrefs = ['integration_rate', 'slope', 'rate', pnl.ReportOutput.FULL]
+
+  >>> my_mech.reportOutputPref = ['integration_rate', 'slope', 'rate', pnl.ReportOutput.FULL]
   >>> my_comp.run(report_output=pnl.ReportOutput.TERSE)
   Composition-0 TRIAL 0 ====================
    Time Step 0 ---------
-    TransferMechanism-0 executed
+     My Mechanism executed
 
 Note that the report for the execution of a Composition contains information about the `TRIAL <TimeScale.TRIAL>`
-and `TIME_STEP <TimeScale.TIME_STEP>` in which each Mechanism executed.
+and `TIME_STEP <TimeScale.TIME_STEP>` in which the Mechanism executed.
 
 A more complete report of the execution can be generated using the Report.FULL and Report.USE_PREFS options in the
 **report_output** argument of a Composition's `execution methods <Composition_Execution_Methods>`, that also includes
-the input and output for the Composition itself.
+the input and output for the Composition:
 
   >>> my_comp = pnl.Composition(pathways=[my_mech])
-  >>> my_mech.reportOutputPrefs = ['integration_rate', 'slope', 'rate']
+  >>> my_mech.reportOutputPref = ['integration_rate', 'slope', 'rate']
   >>> my_comp.run(report_output=pnl.ReportOutput.FULL)
   ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  Composition-0: Trial 0  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
   ┃                                                                                                          ┃
   ┃ input: [[0.0]]                                                                                           ┃
   ┃                                                                                                          ┃
   ┃ ┌────────────────────────────────────────────  Time Step 0 ────────────────────────────────────────────┐ ┃
-  ┃ │ ╭────────────────────────────────────── TransferMechanism-0 ───────────────────────────────────────╮ │ ┃
+  ┃ │ ╭────────────────────────────────────────── My Mechanism ──────────────────────────────────────────╮ │ ┃
   ┃ │ │ input: 0.0                                                                                       │ │ ┃
   ┃ │ │ ╭──────────────────────────────────────────────────────────────────────────────────────────────╮ │ │ ┃
   ┃ │ │ │ params:                                                                                      │ │ │ ┃
@@ -177,22 +199,6 @@ the input and output for the Composition itself.
   ┃                                                                                                          ┃
   ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
-
-
-
-
-
-* **logPref** (`LogCondition` : default LogCondition.OFF) - sets `LogCondition` for a given Component;
-
-COMMENT:
-THIS DOES NOT APPEAR CURRENTLY TO BE USED:
-* **runtimeParamModulationPref** (Modulation, default: Modulation.MULTIPLY) -  sets type of `Modulation`
-  used for modulating parameters by runtime specification (in pathway);
-COMMENT
-
-.. _technical_note::
-   * **deliverPref** (LogCondition, default: LogCondition.OFF) - sets whether attribute data are added to context rpc
-     pipeline for delivery to external applications.
 """
 
 import abc
