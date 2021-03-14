@@ -88,7 +88,6 @@ all of its `Parameters` (for brevity, not all are shown below):
 
   >>> my_mech.reportOutputPref = pnl.PARAMS
   >>> my_mech.execute()
-
   ╭────────────────────────────────────────── My Mechanism ──────────────────────────────────────────╮
   │ input: 0.0                                                                                       │
   │ ╭──────────────────────────────────────────────────────────────────────────────────────────────╮ │
