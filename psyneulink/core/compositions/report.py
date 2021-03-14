@@ -951,8 +951,6 @@ class Report:
 
         from psyneulink.core.components.shellclasses import Function
 
-        node_report = ''
-
         # Render input --------------------------------------------------------------------------------------------
         if input_val is None:
             input_val = node.get_input_values(context)
@@ -963,7 +961,7 @@ class Report:
         except TypeError:
             input_string = input_val
 
-        node_report += f"input: {input_string}"
+        input_report = f"input: {input_string}"
 
         # Render output --------------------------------------------------------------------------------------------
         if output_val is None:
@@ -971,25 +969,34 @@ class Report:
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #   if you want more specific output, you can add conditional tests here
         try:
+            # output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output_val]))
             output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output_val]))
         except TypeError:
             output_string = output
 
-        node_report += f"\noutput: {output_string}"
+        output_report = f"output: {output_string}"
 
         # Render params if specified -------------------------------------------------------------------------------
         params = {p.name: p._get(context) for p in node.parameters}
         try:
-            # FIX 3/11/21 ALLOW SPECIFYING INDIVIDUAL PARAMS BY NAME IN LIST
-            include_params = any(re.match('param(eter)?s?', pref, flags=re.IGNORECASE) for pref in node_pref)
+            # Check for list of specific params in reportOoutputPref
+            include_params = next((pref for pref in node_pref
+                                   if isinstance(pref, list) and all(p in params for p in pref)), None)
+            # Check for 'params' or 'parameters' in reportOoutputPref
+            include_params = include_params or any(re.match('param(eter)?s?', pref, flags=re.IGNORECASE)
+                                                   for pref in node_pref)
         except TypeError:
+            # FIX: PUT ERROR MESSAGE HERE REGARDING BAD reportOutputPref SPEC?
             include_params = False
 
         if include_params:
             # print("- params:")
-            params_string = (f"\n- params:")
+            params_string = (f"params:")
             # Sort for consistency of output
             params_keys_sorted = sorted(params.keys())
+            # Get subset if listed in include_params
+            if isinstance(include_params, list):
+                params_keys_sorted = [p for p in params_keys_sorted if p in include_params]
             for param_name in params_keys_sorted:
                 # No need to report:
                 #    function_params here, as they will be reported for the function itself below;
@@ -1026,11 +1033,13 @@ class Report:
         if include_params:
             width = 100
             expand = True
-            node_report = RenderGroup(node_report,Panel(params_string))
+            node_report = RenderGroup(input_report,Panel(params_string), output_report)
             params_string
         else:
             width = None
             expand = False
+            node_report = f'{input_report}\n{output_report}'
+
         return Panel(node_report,
                      box=node_panel_box,
                      border_style=node_panel_color,
