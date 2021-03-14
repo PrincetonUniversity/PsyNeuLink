@@ -27,13 +27,25 @@ additional details):
 
 .. _PreferenceSet_reportOutputPref:
 
-* **reportOutputPref** (list['params', `ReportOutput`]: default ReportOutput.OFF) - enables/disables
+* **reportOutputPref** (`ReportOutput`, *PARAMS*, str, list): default ReportOutput.OFF) - enables/disables
   and determines format and content for reporting execution of the `Component` (see `ReportOutput` for options).
-  If 'params' (or 'parameters') is specified, then the Component's `Parameters are included along with its input and
-  output when `ReportOutput.FULL` is also specified. If the Component is a `Mechanism` executed within a `Composition`,
-  this preference may be overridden by the **report_output** argument specified in any of the Composition's
-  `execution methods <Composition_Execution_Methods>` (see `execution reporting <Composition_Execution_Reporting>`
-  for additional details).
+  If *PARAMS* is specified, then the Component's `Parameters` are included along with its input and
+  output.  A list of specific Parameters of the Component and/or its `function <Component_Function>` can also be
+  specified, in which case only those are included.  Those or the *PARAMS* keyword can be included in a list with
+  a `ReportOutput` option.  If the Component is a `Mechanism` executed within a `Composition`,
+  then: a) `ReportOutput.FULL` must be included to show parameters;  this preference may be overridden by the
+  **report_output** argument specified in any of the Composition's `execution methods
+  <Composition_Execution_Methods>` (see `execution reporting <Composition_Execution_Reporting>` for additional details).
+
+  Examples
+  --------
+  >>> import psyneulink as pnl
+  >>> my_mech = pnl.TransferMechanism()
+  >>> my_mech.reportOutputPrefs = PARAMS
+  >>> my_mech.execute()
+
+
+
 
 * **logPref** (`LogCondition` : default LogCondition.OFF) - sets `LogCondition` for a given Component;
 

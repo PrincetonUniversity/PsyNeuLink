@@ -1056,11 +1056,11 @@ class Report:
                             function_params_string += ("\n\t\t{}: {}".
                                                        format(fct_param_name,
                                                               str(getattr(getattr(node, param_name).parameters,
-                                                                          fct_param_name)._get(context)
-                                                                  ).__str__().strip("[]")
+                                                                          fct_param_name)._get(context)).__str__().strip("[]")
                                                               )
                                                        )
             params_string += function_params_string
+
     # Generate report -------------------------------------------------------------------------------
 
         if include_params:
