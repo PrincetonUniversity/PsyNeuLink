@@ -1017,8 +1017,8 @@ class Report:
             function_params_string = ""
             # Sort for consistency of output
             params_keys_sorted = sorted(params.keys())
-            param_is_function = False
             for param_name in params_keys_sorted:
+                param_is_function = False
                 # No need to report:
                 #    function_params here, as they will be reported for the function itself below;
                 #    input_ports or output_ports, as these are inherent in the structure
@@ -1043,7 +1043,8 @@ class Report:
                     continue
                 if param_is_function:
                     # Sort for consistency of output
-                    func_params_keys_sorted = sorted(node.function.parameters.names())
+                    # func_params_keys_sorted = sorted(node.function.parameters.names())
+                    func_params_keys_sorted = sorted(getattr(node, param_name).parameters.names())
                     header_printed = False
                     for fct_param_name in func_params_keys_sorted:
                         # Put in function_params_string if function param is specified or 'params' is specified
@@ -1054,7 +1055,7 @@ class Report:
                                 header_printed = True
                             function_params_string += ("\n\t\t{}: {}".
                                                        format(fct_param_name,
-                                                              str(getattr(node.function.parameters,
+                                                              str(getattr(getattr(node, param_name).parameters,
                                                                           fct_param_name)._get(context)
                                                                   ).__str__().strip("[]")
                                                               )
