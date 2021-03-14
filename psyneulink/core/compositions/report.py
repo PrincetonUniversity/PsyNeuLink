@@ -591,7 +591,7 @@ class Report:
                 depth_indent = indent_factor * self._execution_stack_depth * ' '
                 depth_str = f' (depth: {self._execution_stack_depth})'
 
-            id = self._rich_progress.add_task(f"[red]{depth_indent}{run_mode}ing {comp.name}{depth_str}...",
+            id = self._rich_progress.add_task(f"[red]{depth_indent}{comp.name}: {run_mode}ing {depth_str}...",
                                          total=num_trials,
                                          start=start,
                                          visible=visible
