@@ -945,15 +945,10 @@ class Report:
         # Use TERSE format if that has been specified by report_output (i.e., in the arg of an execution method),
         #   or as the reportOutputPref for a node when USE_PREFS is in effect
         node_pref = convert_to_list(node.reportOutputPref)
-        # MODIFIED 3/14/21 OLD:
-        # if (report_output is ReportOutput.TERSE
-        #         or (ReportOutput.TERSE in node_pref
-        #             and report_output is not ReportOutput.FULL)):
-        #     return f'[{node_panel_color}]  {node.name} executed'
-        # MODIFIED 3/14/21 NEW:
         # Get reportOutputPref if specified, and remove from node_pref (for param processing below)
         report_output_pref = [node_pref.pop(node_pref.index(pref))
                               for pref in node_pref if isinstance(pref, ReportOutput)]
+        node_params_prefs = node_pref
         if (report_output is ReportOutput.TERSE
                 or (report_output is not ReportOutput.FULL and ReportOutput.TERSE in report_output_pref)):
             return f'[{node_panel_color}]  {node.name} executed'
@@ -996,12 +991,12 @@ class Report:
             # Need to standardize around a double-embedded list ([[node_prefs]])
             #   to deal with either stand-alone param specs (not in a list)
             #   or singletons in a list with a ReportOutput pref)
-            if not isinstance(node_pref[0], list):
-                node_pref = [node_pref]
+            if not isinstance(node_params_prefs[0], list):
+                node_params_prefs = [node_params_prefs]
             # Check for params keyword and remove from node_prefs if there
-            params_keyword = [node_pref[0].pop(node_pref[0].index(p)) for p in node_pref[0] if params_keyword(p)]
-            # Get list of params if specified in node_pref
-            param_list = next((pref for pref in node_pref if isinstance(pref, list)), [])
+            params_keyword = [node_params_prefs[0].pop(node_params_prefs[0].index(p)) for p in node_params_prefs[0] if params_keyword(p)]
+            # Get list of params if specified in node_params_prefs
+            param_list = next((pref for pref in node_params_prefs if isinstance(pref, list)), [])
             # Get any params that are on the node
             node_params = [param_list.pop(param_list.index(p))
                               for p in param_list if p in params]
@@ -1009,7 +1004,7 @@ class Report:
             function_params = param_list
             # If no specific params specified, check for 'params' or 'parameters' in reportOoutputPref
             include_params = node_params or function_params or params_keyword
-        except TypeError:
+        except (TypeError, IndexError):
             # FIX: PUT ERROR MESSAGE HERE REGARDING BAD reportOutputPref SPEC?
             include_params = False
 
@@ -1057,8 +1052,6 @@ class Report:
                                 header_printed = True
                             param_value = getattr(getattr(node,param_name).parameters,fct_param_name)._get(context)
                             param_value = np.squeeze(param_value)
-                            # if isinstance(param_value, np.ndarray):
-                            #     param_value.squeeze()
                             param_value_str = str(param_value).__str__().strip('[]')
                             function_params_string += f"\n\t\t{fct_param_name}: {param_value_str}"
 
