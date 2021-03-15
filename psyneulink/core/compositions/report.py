@@ -990,7 +990,7 @@ class Report:
         params = {p.name: p._get(context) for p in node.parameters}
         try:
             # Check for PARAMS keyword (or 'parameters') and remove from node_prefs if there
-            if isinstance(node_params_prefs[0],list):
+            if node_params_prefs and isinstance(node_params_prefs[0],list):
                 node_params_prefs = node_params_prefs[0]
             params_keyword = [node_params_prefs.pop(node_params_prefs.index(p))
                               for p in node_params_prefs if re.match('param(eter)?s?', p, flags=re.IGNORECASE)]
@@ -1003,7 +1003,7 @@ class Report:
             include_params = node_params or function_params or params_keyword
         except (TypeError, IndexError):
             # FIX: SHOULD PUT ERROR MESSAGE HERE REGARDING BAD reportOutputPref SPEC?
-            # assert False, 'BAD reportOutputPref args'
+            assert False, 'PROGRAM ERROR: bad reportOutputPref args'
             include_params = False
 
         if include_params:
@@ -1034,6 +1034,8 @@ class Report:
                     # Put in params_string if param is specified or 'params' is specified
                     param_value = params[param_name]
                     params_string += f"\n\t{param_name}: {str(param_value).__str__().strip('[]')}"
+                    if node_params:
+                        node_params.pop(node_params.index(param_name))
                     # Don't include functions in params_string yet (to keep at bottom of report)
                     continue
                 if param_is_function:
@@ -1052,6 +1054,14 @@ class Report:
                             param_value = np.squeeze(param_value)
                             param_value_str = str(param_value).__str__().strip('[]')
                             function_params_string += f"\n\t\t{fct_param_name}: {param_value_str}"
+                            if function_params:
+                                function_params.pop(function_params.index(param_name))
+
+            assert not node_params, f"PROGRAM ERROR in exectuion of Report.node_execution_report() for '{node.name}': "\
+                                    f"{node_params} remaiing in node_params."
+            if function_params:
+                raise ReportError(f"Unrecognized param(s) specified in "
+                                  f"reportOutputPref for '{node.name}': '{', '.join(function_params)}'.")
 
             params_string += function_params_string
 
