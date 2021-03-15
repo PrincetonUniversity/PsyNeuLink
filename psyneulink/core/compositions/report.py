@@ -15,7 +15,7 @@ python console or other devices, as described below.
 
 .. _Report_Output:
 
-Output reporting
+Output Reporting
 ----------------
 
 Output reporting provides information about the input and output to a `Mechanism` or to a `Composition` and
@@ -24,15 +24,18 @@ the `reportOutputPref <PreferenceSet_reportOutputPref>` of a Component, or the *
 Mechanism's `execute <Mechanism_Base.execute>` method or any of a Composition's `execution methods
 <Composition_Execution_Methods>`.  If `USE_PREFS <ReportOutput.USE_PREFS>` or `TERSE <ReportOutput.TERSE>` is used,
 reporting is generated as execution of each Component occurs;  if `FULL <ReportOutput.FULL>` is used, then the
-information is reported at the end of each `TRIAL <TimeScale.TRIAL>` executed. Whether `simulations
+information is reported at the end of each `TRIAL <TimeScale.TRIAL>` executed.  This always includes the input and
+output to a `Mechanism` or a `Composition` and its `Nodes <Composition_Nodes>`, and can also include the values
+of their `Parameters`, depending on the specification of the **report_params** argument (using `ReportParams` options`
+and/or the `reportOutputPref <PreferenceSet_reportOutputPref>` settings of individual Mechanisms. Whether `simulations
 <OptimizationControlMechanism_Execution>` executed by a Composition's `controller <Composition_Controller>` are
 included is determined by the **report_simulations** argument using a `ReportSimulations` option. Output is reported
-to the devices specified in the **report_to_devices** argument using the `ReportDevices` options
+to the devices specified in the **report_to_devices** argument using the `ReportDevices` options.
 
 
 .. _Report_Progress:
 
-Progress reporting
+Progress Reporting
 ------------------
 
 Progress reporting provides information about the status of execution of a Composition's `run <Composition.run>`
@@ -100,8 +103,8 @@ from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS
 from psyneulink.core.globals.utilities import convert_to_list
 
-__all__ = ['Report', 'ReportOutput', 'ReportProgress', 'ReportDevices', 'ReportSimulations',
-           'CONSOLE', 'RECORD', 'DIVERT', 'PNL_VIEW']
+__all__ = ['Report', 'ReportOutput', 'ReportParams', 'ReportProgress', 'ReportDevices', 'ReportSimulations',
+           'CONSOLE', 'CONTROLLED', 'LOGGED', 'MODULATED', 'RECORD', 'DIVERT', 'PNL_VIEW', ]
 
 SIMULATION = 'Simulat'
 DEFAULT = 'Execut'
@@ -164,6 +167,54 @@ class ReportOutput(Enum):
     TERSE = 2
     ON = 2
     FULL = 3
+
+
+class ReportParams(Enum):
+    """
+    Options used in the **report_params** argument of a `Composition`\'s `execution methods
+    <Composition_Execution_Methods>`, to specify the scope of reporting for its `Parameters` and those of its
+    `Nodes <Composition_Nodes>`; see `Reporting Parameter values <Report_Params>` under `Report_Output` for
+    additional details.
+
+    .. technical_note::
+        Use of these options is expected in the **report_output** constructor for the `Report` object,
+        and are used as the values of its `report_params <Report.report_params>` attribute.
+
+    Attributes
+    ----------
+
+    OFF
+        suppress reporting of parameter values.
+
+    MODULATED (aka CONTROLLED)
+        report all `Parameters` that are being `modulated <ModulatorySignal.modulation>` (i.e., controlled) by a
+        `ControlMechanism` within the `Composition` (that is, those for which the corresponding `ParameterPort`
+        receives a `ControlProjection` from a `ControlSignal`.
+
+    CONTROLLED (aka MODULATED)
+        report all `Parameters` that are being controlled (i.e., `modulated <ModulatorySignal.modulation>`) by a
+        `ControlMechanism` within the `Composition` (that is, those for which the corresponding `ParameterPort`
+        receives a `ControlProjection` from a `ControlSignal`.
+
+    LOGGED
+        report all `Parameters` that are specified to be logged with `LogCondition.EXECUTION`;  see `Log` for
+        additional details.
+
+    PARAMS
+        enforce reporting of all `Parameters` of a `Composition` and its `Nodes <Composition_Nodes>`.
+
+    """
+
+    OFF = 0
+    MODULATED = auto()
+    CONTROLLED = MODULATED
+    LOGGED = auto()
+    ALL = auto()
+
+MODULATED = ReportParams.MODULATED
+CONTROLLED = ReportParams.CONTROLLED
+LOGGED = ReportParams.LOGGED
+ALL = ReportParams.ALL
 
 
 class ReportProgress(Enum):
@@ -397,6 +448,7 @@ class Report:
     def __new__(cls,
                 caller,
                 report_output:ReportOutput=ReportOutput.OFF,
+                report_params:ReportParams=ReportParams.OFF,
                 report_progress:ReportProgress=ReportProgress.OFF,
                 report_simulations:ReportSimulations=ReportSimulations.OFF,
                 report_to_devices:(list(ReportDevices.__members__), list)=ReportDevices.CONSOLE,
@@ -427,6 +479,7 @@ class Report:
             # Assign option properties
             cls._report_progress = report_progress
             cls._report_output = report_output
+            cls._report_params = report_params
             cls._reporting_enabled = report_output is not ReportOutput.OFF or cls._report_progress
             cls._report_simulations = report_simulations
             cls._rich_console = ReportDevices.CONSOLE in cls._report_to_devices
@@ -684,6 +737,7 @@ class Report:
                       report_num:int,
                       scheduler,
                       report_output:ReportOutput,
+                      report_params:ReportParams,
                       content:str,
                       context:Context,
                       nodes_to_report:bool=False,
@@ -818,6 +872,7 @@ class Report:
                                                      input_val=node.get_input_values(context),
                                                      output_val=node.output_port.parameters.value._get(context),
                                                      report_output=node_report_type,
+                                                     report_params=report_params,
                                                      context=context
                                                      )
             # If trial is using FULL report, save Node's to run_report
@@ -912,6 +967,7 @@ class Report:
                               input_val=None,
                               output_val=None,
                               report_output=ReportOutput.USE_PREFS,
+                              report_params=ReportParams.OFF,
                               context=None):
         """
         Generates formatted output report for the `node <Composition_Nodes>` of a `Composition` or a `Mechanism`.
@@ -1002,7 +1058,6 @@ class Report:
             # Display parameters if any are specified
             include_params = node_params or function_params or params_keyword
         except (TypeError, IndexError):
-            # FIX: SHOULD PUT ERROR MESSAGE HERE REGARDING BAD reportOutputPref SPEC?
             assert False, f'PROGRAM ERROR: Problem processing reportOutputPref args for {node.name}.'
             # include_params = False
 

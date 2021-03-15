@@ -882,18 +882,18 @@ can also be called directly, but this is useful mostly for debugging.
 
 .. _Composition_Execution_Reporting:
 
-*Reporting*. Executing a Composition returns the results of its last `TRIAL <TimeScale.TRIAL>` of execution.  If
-either `run <Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS <TimeScale.TRIAL>`
-executed are available in the Composition's `results <Composition.results>` attribute (see `Results
-<Composition_Execution_Results>` for additional details).  A report of the results of each
-`TRIAL <TimeScale.TRIAL>` can also be generated as the Compostion is executing, using the **report_output** and
-**report_progress** arguments of any of the execution methods. **report_output** generates a report of the input and
-output the Composition and its `Nodes <Composition_Nodes>`, while **report_progress** shows a progress bar indicating
-how many `TRIALS <TimeScale.TRIAL>` have been executed and an estimate of the time remaining to completion (see the
-`execute <Composition.execute>`, `run <Composition.run>` and `learn <Composition.learn>` methods for additional
-details).  These options are both False by default.  The values of individual Components (and their `parameters
-<Parameters>`) assigned during execution can also be recorded in their `log <Component_Log>` attribute using the
-`Log` facility.
+*Results, Reporting and Logging*. Executing a Composition returns the results of its last `TRIAL <TimeScale.TRIAL>` of
+execution. If either `run <Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS
+<TimeScale.TRIAL>` executed are available in the Composition's `results <Composition.results>` attribute (see `Results
+<Composition_Execution_Results>` for additional details).  A report of the results of each `TRIAL <TimeScale.TRIAL>`
+can also be generated as the Compostion is executing, using the **report_output** and **report_progress** arguments
+of any of the execution methods. **report_output** (specified using `ReportOutput` options) generates a report of the
+input and output of the Composition and its `Nodes <Composition_Nodes>`, and optionally their `Parameters` (specified
+in the **report_params** arg using `ReportParams` options);  **report_progress** (specified using `ReportProgress`
+options) shows a progress bar  indicating how many `TRIALS <TimeScale.TRIAL>` have been executed and an estimate of
+the time remaining to completion.  These options are all OFF by default (see `Report` for additional details).
+The values of individual Components (and their `parameters <Parameters>`) assigned during execution can also be
+recorded in their `log <Component_Log>` attribute using the `Log` facility.
 
 *Inputs*. All methods of executing a Composition require specification of an **inputs** argument, which designates
 the values assigned to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for each `TRIAL <TimeScale.TRIAL>`.
@@ -2394,7 +2394,8 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
-from psyneulink.core.compositions.report import Report, ReportOutput, ReportProgress, ReportSimulations, ReportDevices
+from psyneulink.core.compositions.report import Report,\
+    ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET, SHOW_CONTROLLER
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -7457,6 +7458,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                execution_mode=execution_mode,
                                skip_initialization=True,
                                report_output=report._report_output,
+                               report_params=report._report_params,
                                report_progress=report._report_progress,
                                report_simulations=report._report_simulations,
                                report_to_devices=report._report_to_devices
@@ -8127,6 +8129,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial as
             it is generated; see `Report_Output` for additional details and `ReportOutput` for options.
 
+        report_params : ReportParams : default ReportParams.OFF
+            specifies whether to show values the `Parameters` of the Composition and its `Nodes <Composition_Nodes>`
+            as part of the output report; see `Report_Output` for additional details and `ReportParams` for options.
+
         report_progress : ReportProgress : default ReportProgress.OFF
             specifies whether to report progress of execution in real time; see `Report_Progress` for additional
             details.
@@ -8418,6 +8424,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         with Report(self,
                     report_output=report_output,
+                    report_params=report_params,
                     report_progress=report_progress,
                     report_simulations=report_simulations,
                     report_to_devices=report_to_devices,
@@ -8461,6 +8468,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             skip_initialization=True,
                                             execution_mode=execution_mode,
                                             report_output=report_output,
+                                            report_params=report_params,
                                             report_progress=report_progress,
                                             report_simulations=report_simulations,
                                             report=report,
@@ -8632,17 +8640,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 called after each minibatch is executed
 
             report_output : ReportOutput : default ReportOutput.OFF
-                specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial as
-                it is generated; see `Report_Output` for additional details and `ReportOutput` for options.
+                specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial
+                as it is generated; see `Report_Output` for additional details and `ReportOutput` for options.
+
+            report_params : ReportParams : default ReportParams.OFF
+                specifies whether to show values the `Parameters` of the Composition and its `Nodes <Composition_Nodes>`
+                as part of the output report; see `Report_Output` for additional details and `ReportParams` for options.
 
             report_progress : ReportProgress : default ReportProgress.OFF
                 specifies whether to report progress of execution in real time; see `Report_Progress` for additional
                 details.
 
             report_simulations : ReportSimulatons : default ReportSimulations.OFF
-                specifies whether to show output and/or progress for `simulations <OptimizationControlMechanism_Execution>`
-                executed by the Composition's `controller <Composition_Controller>`; see `Report_Simulations` for
-                additional details.
+                specifies whether to show output and/or progress for `simulations
+                <OptimizationControlMechanism_Execution>` executed by the Composition's `controller
+                <Composition_Controller>`; see `Report_Simulations` for additional details.
 
             report_to_devices : list(ReportDevices) : default ReportDevices.CONSOLE
                 specifies where output and progress should be reported; see `Report_To_Devices` for additional
@@ -8757,6 +8769,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             skip_initialization=False,
             execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             report_output:ReportOutput=ReportOutput.OFF,
+            report_params:ReportOutput=ReportParams.OFF,
             report_progress:ReportProgress=ReportProgress.OFF,
             report_simulations:ReportSimulations=ReportSimulations.OFF,
             report_to_devices:ReportDevices=None,
@@ -8826,6 +8839,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` for the
                 execution; see `Report_Output` for additional details and `ReportOutput` for options.
 
+            report_params : ReportParams : default ReportParams.OFF
+                specifies whether to show values the `Parameters` of the Composition and its `Nodes <Composition_Nodes>`
+                for the execution; see `Report_Output` for additional details and `ReportParams` for options.
+
             report_progress : ReportProgress : default ReportProgress.OFF
                 specifies whether to report progress of the execution; see `Report_Progress` for additional details.
 
@@ -8846,6 +8863,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         with Report(self,
                     report_output=report_output,
+                    report_params=report_params,
                     report_progress=report_progress,
                     report_simulations=report_simulations,
                     report_to_devices=report_to_devices,
@@ -9292,6 +9310,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         port._update(context=context)
                                 node.execute(context=mech_context,
                                              report_output=report_output,
+                                             report_params=report_params,
                                              run_report=run_report,
                                              runtime_params=execution_runtime_params,
                                              )
@@ -9359,6 +9378,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             pnlvm.ExecutionMode.Python
                         ret = node.execute(context=context,
                                            report_output=report_output,
+                                           report_params=report_params,
                                            report_progress=report_progress,
                                            execution_mode=nested_execution_mode)
 
