@@ -1122,11 +1122,10 @@ class Report:
 
     # Generate report -------------------------------------------------------------------------------
 
-        if include_params:
+        if params_string:
             width = 100
             expand = True
             node_report = RenderGroup(input_report,Panel(params_string), output_report)
-            params_string
         else:
             width = None
             expand = False
