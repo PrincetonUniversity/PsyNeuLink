@@ -1003,8 +1003,8 @@ class Report:
             include_params = node_params or function_params or params_keyword
         except (TypeError, IndexError):
             # FIX: SHOULD PUT ERROR MESSAGE HERE REGARDING BAD reportOutputPref SPEC?
-            assert False, 'PROGRAM ERROR: bad reportOutputPref args'
-            include_params = False
+            assert False, f'PROGRAM ERROR: Problem processing reportOutputPref args for {node.name}.'
+            # include_params = False
 
         if include_params:
             # print("- params:")
@@ -1057,8 +1057,8 @@ class Report:
                             if function_params:
                                 function_params.pop(function_params.index(param_name))
 
-            assert not node_params, f"PROGRAM ERROR in exectuion of Report.node_execution_report() for '{node.name}': "\
-                                    f"{node_params} remaiing in node_params."
+            assert not node_params, f"PROGRAM ERROR in execution of Report.node_execution_report() " \
+                                    f"for '{node.name}': {node_params} remaining in node_params."
             if function_params:
                 raise ReportError(f"Unrecognized param(s) specified in "
                                   f"reportOutputPref for '{node.name}': '{', '.join(function_params)}'.")
