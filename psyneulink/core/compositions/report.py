@@ -991,7 +991,7 @@ class Report:
         try:
             # Check for PARAMS keyword (or 'parameters') and remove from node_prefs if there
             if isinstance(node_params_prefs[0],list):
-                node_params_prefs =  node_params_prefs[0]
+                node_params_prefs = node_params_prefs[0]
             params_keyword = [node_params_prefs.pop(node_params_prefs.index(p))
                               for p in node_params_prefs if re.match('param(eter)?s?', p, flags=re.IGNORECASE)]
             # Get any parameters for the node itself
