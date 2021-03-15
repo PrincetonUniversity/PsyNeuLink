@@ -198,7 +198,7 @@ class ReportParams(Enum):
         report all `Parameters` that are specified to be logged with `LogCondition.EXECUTION`;  see `Log` for
         additional details.
 
-    PARAMS
+    ALL
         enforce reporting of all `Parameters` of a `Composition` and its `Nodes <Composition_Nodes>`.
 
     """
@@ -1055,20 +1055,47 @@ class Report:
             # If any are left, assume they are for the node's function
             function_params = node_params_prefs
             # Display parameters if any are specified
-            include_params = node_params or function_params or params_keyword
+            include_params = node_params or function_params or params_keyword or report_params
         except (TypeError, IndexError):
             assert False, f'PROGRAM ERROR: Problem processing reportOutputPref args for {node.name}.'
             # include_params = False
 
+        params_string = ''
+        function_params_string = ''
+
         if include_params:
 
             def param_is_specified(name, specified_set):
-                if name in specified_set or include_params is params_keyword:
+                """Check whether param has been specified based on options"""
+
+                # Include if MODULATED (CONTROLLED) params are specified
+                # and ParameterPort receives a ControlProjection:
+                if report_params in (ReportParams.MODULATED, ReportParams.CONTROLLED):
+                    try:
+                        # # FIX: COULD JUST LOOK FOR PARAMETER PORT
+                        # param = getattr(node.parameters, name)
+                        # if param.modulable:
+                        #     param_port = node.parameter_ports.parameter_mapping[param]
+                        #     if param_port.mod_afferents:
+                        #         return True
+                        # FIX: COULD JUST LOOK FOR PARAMETER PORT
+                        if name in node.parameter_ports.names:
+                            param_port = node.parameter_ports[name]
+                            if param_port.mod_afferents:
+                                return f' (modulated by {param_port.mod_afferents[0].sender.owner.name})'
+                                # return f' (modulated)'
+                    except:
+                        pass
+                        # print(f'Failed to find {param_name} on {node.name}')
+
+                # Include if explicitly specified or ALL params are specified
+                if (name in specified_set
+                        # FIX: ADD SUPPORT FOR ReportParams.ALL
+                        # PARAMS specified as keyword to display all params
+                        or include_params is params_keyword):
                     return True
                 return False
 
-            params_string = (f"params:")
-            function_params_string = ""
             # Sort for consistency of output
             params_keys_sorted = sorted(params.keys())
             for param_name in params_keys_sorted:
@@ -1095,6 +1122,9 @@ class Report:
                 elif param_is_specified(param_name, node_params):
                     # Put in params_string if param is specified or 'params' is specified
                     param_value = params[param_name]
+                    if not params_string:
+                        # Add header
+                        params_string = (f"params:")
                     params_string += f"\n\t{param_name}: {str(param_value).__str__().strip('[]')}"
                     if node_params:
                         node_params.pop(node_params.index(param_name))
@@ -1110,14 +1140,22 @@ class Report:
                     for fct_param_name in func_params_keys_sorted:
                         # Put in function_params_string if function param is specified or 'params' is specified
                         # (appended to params_string below to keep functions at bottom of report)
-                        if param_is_specified(fct_param_name, function_params):
+                        modulated = False
+                        qualification = param_is_specified(fct_param_name, function_params)
+                        if qualification:
                             if not header_printed:
                                 function_params_string += f"\n\t{param_name}: {param_value.name.__str__().strip('[]')}"
                                 header_printed = True
                             param_value = getattr(getattr(node,param_name).parameters,fct_param_name)._get(context)
                             param_value = np.squeeze(param_value)
                             param_value_str = str(param_value).__str__().strip('[]')
-                            function_params_string += f"\n\t\t{fct_param_name}: {param_value_str}"
+                            if not params_string:
+                                params_string = (f"params:")
+                            if isinstance(qualification, str):
+                                qualification = qualification
+                            else:
+                                qualification = ''
+                            function_params_string += f"\n\t\t{fct_param_name}: {param_value_str}{qualification}"
                             if function_params:
                                 function_params.pop(function_params.index(fct_param_name))
 
