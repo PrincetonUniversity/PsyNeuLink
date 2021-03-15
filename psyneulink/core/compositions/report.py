@@ -89,10 +89,8 @@ import types
 import warnings
 from enum import Enum, Flag, auto
 from io import StringIO
-from functools import reduce
 
 import numpy as np
-
 from rich import print, box
 from rich.console import Console, RenderGroup
 from rich.panel import Panel
@@ -1063,12 +1061,19 @@ class Report:
             # include_params = False
 
         if include_params:
-            # print("- params:")
+
+            def param_is_specified(name, specified_set):
+                if name in specified_set or include_params is params_keyword:
+                    return True
+                return False
+
             params_string = (f"params:")
             function_params_string = ""
             # Sort for consistency of output
             params_keys_sorted = sorted(params.keys())
             for param_name in params_keys_sorted:
+
+                # Check for function
                 param_is_function = False
                 # No need to report:
                 #    function_params here, as they will be reported for the function itself below;
@@ -1085,8 +1090,9 @@ class Report:
                 elif isinstance(param_value, (types.FunctionType, types.MethodType)):
                     param = param_value.__node__.__class__.__name__
                     param_is_function = True
-                # Node_param
-                elif param_name in node_params or include_params is params_keyword:
+
+                # Node param(s)
+                elif param_is_specified(param_name, node_params):
                     # Put in params_string if param is specified or 'params' is specified
                     param_value = params[param_name]
                     params_string += f"\n\t{param_name}: {str(param_value).__str__().strip('[]')}"
@@ -1094,6 +1100,8 @@ class Report:
                         node_params.pop(node_params.index(param_name))
                     # Don't include functions in params_string yet (to keep at bottom of report)
                     continue
+
+                # Function param(s)
                 if param_is_function:
                     # Sort for consistency of output
                     # func_params_keys_sorted = sorted(node.function.parameters.names())
@@ -1102,7 +1110,7 @@ class Report:
                     for fct_param_name in func_params_keys_sorted:
                         # Put in function_params_string if function param is specified or 'params' is specified
                         # (appended to params_string below to keep functions at bottom of report)
-                        if fct_param_name in function_params or include_params is params_keyword:
+                        if param_is_specified(fct_param_name, function_params):
                             if not header_printed:
                                 function_params_string += f"\n\t{param_name}: {param_value.name.__str__().strip('[]')}"
                                 header_printed = True
@@ -1121,7 +1129,7 @@ class Report:
 
             params_string += function_params_string
 
-    # Generate report -------------------------------------------------------------------------------
+        # Generate report -------------------------------------------------------------------------------
 
         if params_string:
             width = 100
