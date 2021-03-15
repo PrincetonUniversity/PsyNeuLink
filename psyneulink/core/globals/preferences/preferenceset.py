@@ -37,7 +37,6 @@ additional details):
   <Composition_Execution_Methods>` unless ReportOutput.USE_PREFS is specified in the argument; see below for
   examples and `execution reporting <Composition_Execution_Reporting>` for additional details.
 
-
 * **logPref** (`LogCondition` : default LogCondition.OFF) - sets `LogCondition` for a given Component;
 
 COMMENT:
