@@ -1085,9 +1085,10 @@ class Report:
                     # Recursively call to get ModulatoryMechanism in outer Composition
                     return get_controller(proj.sender.owner.afferents[0])
 
-                # Include if MODULATED (CONTROLLED) params are specified
-                # and ParameterPort receives a ControlProjection:
-                if report_params in (ReportParams.MODULATED, ReportParams.CONTROLLED):
+                def is_modulated():
+                    """Determine whether parameter is being modulated
+                    by checking whether ParameterPort receives aControlProjection
+                    """
                     try:
                         from psyneulink.core.components.mechanisms.mechanism import Mechanism
                         if isinstance(node, Mechanism):
@@ -1100,12 +1101,19 @@ class Report:
                     except:
                         print(f'Failed to find {param_name} on {node.name}')
 
+                mod_str = is_modulated()
+
                 # Include if explicitly specified or ALL params are specified
                 if (name in specified_set
                         # FIX: ADD SUPPORT FOR ReportParams.ALL
                         # PARAMS specified as keyword to display all params
                         or include_params is params_keyword):
-                    return True
+                    return mod_str or True
+
+                # Include based on whether it is modulated and MODULATED (CONTROLLED) params are specified
+                if report_params in (ReportParams.MODULATED, ReportParams.CONTROLLED):
+                    return mod_str
+
                 return False
 
             # Sort for consistency of output
