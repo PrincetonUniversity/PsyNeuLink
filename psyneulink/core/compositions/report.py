@@ -1079,13 +1079,6 @@ class Report:
                 # and ParameterPort receives a ControlProjection:
                 if report_params in (ReportParams.MODULATED, ReportParams.CONTROLLED):
                     try:
-                        # # FIX: COULD JUST LOOK FOR PARAMETER PORT
-                        # param = getattr(node.parameters, name)
-                        # if param.modulable:
-                        #     param_port = node.parameter_ports.parameter_mapping[param]
-                        #     if param_port.mod_afferents:
-                        #         return True
-                        # FIX: COULD JUST LOOK FOR PARAMETER PORT
                         if name in node.parameter_ports.names:
                             param_port = node.parameter_ports[name]
                             if param_port.mod_afferents:
