@@ -1069,7 +1069,7 @@ class Report:
                 """Check whether param has been specified based on options"""
 
                 def get_controller(proj):
-                    """Get moduatory (controller) of modulated params"""
+                    """Get modulatory (controller) of modulated params"""
                     from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism \
                         import CompositionInterfaceMechanism
                     from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism \
@@ -1089,15 +1089,16 @@ class Report:
                 # and ParameterPort receives a ControlProjection:
                 if report_params in (ReportParams.MODULATED, ReportParams.CONTROLLED):
                     try:
-                        if name in node.parameter_ports.names:
-                            param_port = node.parameter_ports[name]
-                            if param_port.mod_afferents:
-                                controller_names = [get_controller(c) for c in param_port.mod_afferents]
-                                controllers_str = ' and '.join(controller_names)
-                                return f' (modulated by {controllers_str})'
+                        from psyneulink.core.components.mechanisms.mechanism import Mechanism
+                        if isinstance(node, Mechanism):
+                            if name in node.parameter_ports.names:
+                                param_port = node.parameter_ports[name]
+                                if param_port.mod_afferents:
+                                    controller_names = [get_controller(c) for c in param_port.mod_afferents]
+                                    controllers_str = ' and '.join(controller_names)
+                                    return f' (modulated by {controllers_str})'
                     except:
-                        pass
-                        # print(f'Failed to find {param_name} on {node.name}')
+                        print(f'Failed to find {param_name} on {node.name}')
 
                 # Include if explicitly specified or ALL params are specified
                 if (name in specified_set
