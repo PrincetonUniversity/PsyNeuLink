@@ -733,7 +733,8 @@ class Report:
             self._print_and_record_reports(PROGRESS_REPORT, context)
 
 
-    def report_output(self, caller,
+    def report_output(self,
+                      caller,
                       report_num:int,
                       scheduler,
                       report_output:ReportOutput,

@@ -8025,6 +8025,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             termination_processing=None,
             skip_analyze_graph=False,
             report_output:ReportOutput=ReportOutput.OFF,
+            report_params:ReportParams=ReportParams.OFF,
             report_progress=ReportProgress.OFF,
             report_simulations=ReportSimulations.OFF,
             report_to_devices=None,
@@ -9164,7 +9165,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_sets.__next__()
 
             # Add TRIAL header and Composition's input to output report (now that they are known)
-            report.report_output(self, run_report, execution_scheduler, report_output, 'trial_init', context)
+            report.report_output(caller=self,
+                                 report_num=run_report,
+                                 scheduler=execution_scheduler,
+                                 report_output=report_output,
+                                 report_params=report_params,
+                                 content='trial_init',
+                                 context=context
+                                 )
 
             for next_execution_set in execution_sets:
 
@@ -9239,6 +9247,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 report.report_output(self, run_report,
                                      execution_scheduler,
                                      report_output,
+                                     report_params,
                                      'time_step_init',
                                      context,
                                      nodes_to_report=True)
@@ -9399,6 +9408,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              run_report,
                                              execution_scheduler,
                                              report_output,
+                                             report_params,
                                              'node',
                                              context,
                                              node=node)
@@ -9447,8 +9457,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
                 # Complete TIME_STEP entry for output report
-                report.report_output(self, run_report, execution_scheduler, report_output, 'time_step', context,
-                                       nodes_to_report= nodes_to_report)
+                report.report_output(self, run_report, execution_scheduler,
+                                     report_output, report_params, 'time_step', context,
+                                     nodes_to_report= nodes_to_report)
 
             context.remove_flag(ContextFlags.PROCESSING)
 
@@ -9517,7 +9528,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 output_values.append(port.parameters.value._get(context))
 
             # Complete TRIAL entry for output report, and report progress
-            report.report_output(self, run_report, execution_scheduler, report_output, 'trial', context)
+            report.report_output(self, run_report, execution_scheduler, report_output,
+                                 report_params, 'trial', context)
             report.report_progress(self, run_report, context)
 
             # UPDATE TIME and RETURN ***********************************************************************************
