@@ -29,7 +29,7 @@ additional details):
 
 * **reportOutputPref** (`ReportOutput`, *PARAMS*, str, list): default ReportOutput.OFF) - enables/disables and
   determines format and content for reporting execution of the `Component` (see `ReportOutput` for options). If
-  *PARAMS* is specified, then `ReportOuput.FULL` is used automatically (rather than the default, `ReportOoutpu.OFF`),
+  *PARAMS* is specified, then `ReportOutput.FULL` is used automatically (rather than the default, `ReportOutput.OFF`),
   and the Component's `Parameters` are included along with its input and output.  A list of specific Parameters of
   the Component and/or its `function <Component_Function>` can also be specified, in which case only those are
   included. If the Component is a `Mechanism` executed within a `Composition`, its preference is overridden
