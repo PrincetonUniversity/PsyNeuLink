@@ -1110,7 +1110,7 @@ class Report:
                             param_value_str = str(param_value).__str__().strip('[]')
                             function_params_string += f"\n\t\t{fct_param_name}: {param_value_str}"
                             if function_params:
-                                function_params.pop(function_params.index(param_name))
+                                function_params.pop(function_params.index(fct_param_name))
 
             assert not node_params, f"PROGRAM ERROR in execution of Report.node_execution_report() " \
                                     f"for '{node.name}': {node_params} remaining in node_params."
