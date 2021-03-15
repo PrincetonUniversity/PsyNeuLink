@@ -86,6 +86,7 @@ import types
 import warnings
 from enum import Enum, Flag, auto
 from io import StringIO
+from functools import reduce
 
 import numpy as np
 
@@ -917,6 +918,9 @@ class Report:
         Called by `report_output <Report.report_output>` for execution of a Composition, and directly by the `execute
         <Mechanism_Base>` method of a `Mechanism` when executed on its own.
 
+        Allows user to specify *PARAMS* or 'parameters' to induce reporting of all parameters, and a listing of
+        individual parameters to list just those.
+
         Arguments
         ---------
 
@@ -984,28 +988,22 @@ class Report:
 
         from psyneulink.core.components.shellclasses import Function
         params = {p.name: p._get(context) for p in node.parameters}
-        def params_keyword(kw):
-            return re.match('param(eter)?s?', kw, flags=re.IGNORECASE)
         try:
-            # Need to standardize around a double-embedded list ([[node_prefs]])
-            #   to deal with either stand-alone param specs (not in a list)
-            #   or singletons in a list with a ReportOutput pref)
-            if not isinstance(node_params_prefs[0], list):
-                node_params_prefs = [node_params_prefs]
-            # Check for params keyword and remove from node_prefs if there
-            params_keyword = [node_params_prefs[0].pop(node_params_prefs[0].index(p))
-                              for p in node_params_prefs[0] if params_keyword(p)]
-            # Get list of params if specified in node_params_prefs
-            param_list = next((pref for pref in node_params_prefs if isinstance(pref, list)), [])
-            # Get any params that are on the node
-            node_params = [param_list.pop(param_list.index(p))
-                              for p in param_list if p in params]
-            # If any are left, assume they are function params and add in an embedded list w/in include_params
-            function_params = param_list
-            # If no specific params specified, check for 'params' or 'parameters' in reportOoutputPref
+            # Check for PARAMS keyword (or 'parameters') and remove from node_prefs if there
+            if isinstance(node_params_prefs[0],list):
+                node_params_prefs =  node_params_prefs[0]
+            params_keyword = [node_params_prefs.pop(node_params_prefs.index(p))
+                              for p in node_params_prefs if re.match('param(eter)?s?', p, flags=re.IGNORECASE)]
+            # Get any parameters for the node itself
+            node_params = [node_params_prefs.pop(node_params_prefs.index(p))
+                              for p in node_params_prefs if p in params]
+            # If any are left, assume they are for the node's function
+            function_params = node_params_prefs
+            # Display parameters if any are specified
             include_params = node_params or function_params or params_keyword
         except (TypeError, IndexError):
-            # FIX: PUT ERROR MESSAGE HERE REGARDING BAD reportOutputPref SPEC?
+            # FIX: SHOULD PUT ERROR MESSAGE HERE REGARDING BAD reportOutputPref SPEC?
+            # assert False, 'BAD reportOutputPref args'
             include_params = False
 
         if include_params:
