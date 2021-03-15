@@ -27,9 +27,9 @@ additional details):
 
 .. _PreferenceSet_reportOutputPref:
 
-* **reportOutputPref** (`ReportOutput`, *PARAMS*, str, list): default ReportOutput.OFF) - enables/disables
-  and determines format and content for reporting execution of the `Component` (see `ReportOutput` for options).
-  If *PARAMS* is specified, then ReportOuput is assumed to be ReportOuput.FULL (rather than OFF as it is by default),
+* **reportOutputPref** (`ReportOutput`, *PARAMS*, str, list): default ReportOutput.OFF) - enables/disables and
+  determines format and content for reporting execution of the `Component` (see `ReportOutput` for options). If
+  *PARAMS* is specified, then `ReportOuput.FULL` is used automatically (rather than the default, `ReportOoutpu.OFF`),
   and the Component's `Parameters` are included along with its input and output.  A list of specific Parameters of
   the Component and/or its `function <Component_Function>` can also be specified, in which case only those are
   included. If the Component is a `Mechanism` executed within a `Composition`, its preference is overridden
@@ -65,7 +65,7 @@ By default, executing a Component, such as the Mechanism below, does not produce
   <BLANKLINE>
 
 Output can be specified by specifying a value of `ReportOutput` as the Mechanism's `reportOutputPref` preference.
-Assigning ReportOutput.FULL generates a report of its input and output values when it was executed:
+Assigning `ReportOutput.FULL` generates a report of its input and output values when it was executed:
 
   >>> my_mech.reportOutputPref = pnl.ReportOutput.FULL
   >>> my_mech.execute()
@@ -74,7 +74,7 @@ Assigning ReportOutput.FULL generates a report of its input and output values wh
   │ output: 0.0    │
   ╰────────────────╯
 
-Assigning ReportOutput.TERSE generates a simpler report:
+Assigning `ReportOutput.TERSE` generates a simpler report:
 
   >>> my_mech.reportOutputPref = pnl.ReportOutput.TERSE
   >>> my_mech.execute()
@@ -119,7 +119,7 @@ all of its `Parameters` (for brevity, not all are shown below):
   │ output: 0.0                                                                                      │
   ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 
-Note that specifying *PARAMS* forces a full output (i.e., equivalent to also specifying ReportOutput.FULL).
+Note that specifying *PARAMS* forces a full output (i.e., equivalent to also specifying `ReportOutput.FULL`).
 
 Generally, not all of a Component's `Parameters` are of interest.  The display can be restricted to
 just those of interest by including them in a list specified for reportOutputPref:
@@ -140,7 +140,7 @@ just those of interest by including them in a list specified for reportOutputPre
   ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 
 
-This can be overridden by specifying ReportOutput.TERSE (i.e., without having to delete all of the parameter
+This can be overridden by specifying `ReportOutput.TERSE` (i.e., without having to delete all of the parameter
 specifications, which can be useful when testing):
 
   >>> my_mech.reportOutputPref = ['integration_rate', 'slope', 'rate', pnl.ReportOutput.TERSE]
@@ -168,7 +168,7 @@ the Mechanism's reportOutputPref setting:
 Note that the report for the execution of a Composition contains information about the `TRIAL <TimeScale.TRIAL>`
 and `TIME_STEP <TimeScale.TIME_STEP>` in which the Mechanism executed.
 
-A more complete report of the execution can be generated using the Report.FULL and Report.USE_PREFS options in the
+A more complete report of the execution can be generated using the `Report.FULL` and `Report.USE_PREFS` options in the
 **report_output** argument of a Composition's `execution methods <Composition_Execution_Methods>`, that also includes
 the input and output for the Composition:
 
