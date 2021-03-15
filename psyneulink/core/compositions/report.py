@@ -1065,6 +1065,13 @@ class Report:
 
         if include_params:
 
+            def get_outermost_controller(proj):
+                from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism \
+                    import CompositionInterfaceMechanism
+                if not isinstance(proj.sender.owner, CompositionInterfaceMechanism):
+                    return proj.sender.owner.name
+                return get_outermost_controller(proj.sender.owner.afferents[0])
+
             def param_is_specified(name, specified_set):
                 """Check whether param has been specified based on options"""
 
@@ -1082,8 +1089,9 @@ class Report:
                         if name in node.parameter_ports.names:
                             param_port = node.parameter_ports[name]
                             if param_port.mod_afferents:
-                                return f' (modulated by {param_port.mod_afferents[0].sender.owner.name})'
-                                # return f' (modulated)'
+                                controller_names = [get_outermost_controller(c) for c in param_port.mod_afferents]
+                                controllers_str = ' and '.join(controller_names)
+                                return f' (modulated by {controllers_str})'
                     except:
                         pass
                         # print(f'Failed to find {param_name} on {node.name}')
