@@ -1066,10 +1066,12 @@ class Report:
         if include_params:
 
             def param_is_specified(name, specified_set):
-                """Check whether param has been specified based on options"""
+                """Helper method: check whether param has been specified based on options"""
+
+                # Helper methods for testing whether param satisfies specifications -----------------------------
 
                 def get_controller(proj):
-                    """Get modulatory (controller) of modulated params"""
+                    """Helper method: get modulator (controller) of modulated params"""
                     from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism \
                         import CompositionInterfaceMechanism
                     from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism \
@@ -1086,8 +1088,8 @@ class Report:
                     return get_controller(proj.sender.owner.afferents[0])
 
                 def is_modulated():
-                    """Determine whether parameter is being modulated
-                    by checking whether ParameterPort receives aControlProjection
+                    """Helper method: determine whether parameter is being modulated
+                       by checking whether ParameterPort receives aControlProjection
                     """
                     try:
                         from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -1103,18 +1105,41 @@ class Report:
 
                 mod_str = is_modulated()
 
-                # Include if explicitly specified or ALL params are specified
+                def is_monitored():
+                    """Helper method: determine whether parameter is being modulated
+                       by checking whether ParameterPort receives aControlProjection
+                    """
+                    pass
+
+                def is_logged():
+                    pass
+
+                # Evaluate tests: -----------------------------------------------------------------------
+
+                # Include if param is explicitly specified or ReportParams.ALL (or 'params') is specified
                 if (name in specified_set
                         # FIX: ADD SUPPORT FOR ReportParams.ALL
                         # PARAMS specified as keyword to display all params
                         or include_params is params_keyword):
                     return mod_str or True
 
-                # Include based on whether it is modulated and MODULATED (CONTROLLED) params are specified
+                # Include if param is modulated and ReportParams.MODULATED (CONTROLLED) is specified
                 if report_params in (ReportParams.MODULATED, ReportParams.CONTROLLED):
                     return mod_str
 
+                # Include if param is monitored and ReportParams.MONITORED is specified
+                if report_params in ReportParams.MONITORED:
+                    # return monitor_str
+                    pass
+
+                # Include if param is being logged and ReportParams.LOGGED is specified
+                if report_params in ReportParams.LOGGED:
+                    # return monitor_str
+                    pass
+
                 return False
+
+            # Test whether param matches specifications: -----------------------------------------
 
             # Sort for consistency of output
             params_keys_sorted = sorted(params.keys())
