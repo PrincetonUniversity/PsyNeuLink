@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.8.6.0+95.gdffbd84af0 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.8.6.0+96.g5641c3d30d documentation</title>
   
 
   
@@ -96,7 +96,7 @@
               
               
                 <div class="version">
-                  0.8.6.0+95
+                  0.8.6.0+96
                 </div>
               
             
@@ -258,6 +258,11 @@ different execution contexts and can be modified by modulated <a class="referenc
 <p>The “dot notation” version - <code class="docutils literal notranslate"><span class="pre">t.value</span></code> - refers to the most recent execution context in which <em>t</em> was executed. In
 many cases, you can use this to get or set using the execution context you’d expect. However, in complex situations,
 or  if there is any doubt, it is best to explicitly specify the execution context using the parameter’s <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.set" title="psyneulink.core.globals.parameters.Parameter.set"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">set</span></code></a> method (for a more complete descritpion of the differences between dot notation and the <a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter.set" title="psyneulink.core.globals.parameters.Parameter.set"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">set</span></code></a> method, see <a class="reference internal" href="BasicsAndPrimer.html#basicsandprimer-parameters"><span class="std std-ref">Parameters</span></a>.</p>
+</div>
+<div class="technical-note docutils container">
+<p>Developers must keep in mind state when writing new Components for PsyNeuLink. Any parameters or values that may
+change during a <code class="xref any docutils literal notranslate"><span class="pre">run</span></code> must become stateful Parameters, or they are at risk of computational
+errors like those encountered in parallel programming.</p>
 </div>
 <div class="section" id="creating-parameters">
 <h3>Creating Parameters<a class="headerlink" href="#creating-parameters" title="Permalink to this headline">¶</a></h3>

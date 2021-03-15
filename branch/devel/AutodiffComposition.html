@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.8.6.0+95.gdffbd84af0 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.8.6.0+96.g5641c3d30d documentation</title>
   
 
   
@@ -98,7 +98,7 @@
               
               
                 <div class="version">
-                  0.8.6.0+95
+                  0.8.6.0+96
                 </div>
               
             
@@ -422,7 +422,7 @@ details and <a class="reference internal" href="Report.html#psyneulink.core.comp
 
 <dl class="py method">
 <dt id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.execute">
-<code class="sig-name descname">execute</code><span class="sig-paren">(</span><em class="sig-param">inputs=None</em>, <em class="sig-param">num_trials=None</em>, <em class="sig-param">minibatch_size=1</em>, <em class="sig-param">do_logging=False</em>, <em class="sig-param">scheduler=None</em>, <em class="sig-param">termination_processing=None</em>, <em class="sig-param">call_before_minibatch=None</em>, <em class="sig-param">call_after_minibatch=None</em>, <em class="sig-param">call_before_time_step=None</em>, <em class="sig-param">call_before_pass=None</em>, <em class="sig-param">call_after_time_step=None</em>, <em class="sig-param">call_after_pass=None</em>, <em class="sig-param">reset_stateful_functions_to=None</em>, <em class="sig-param">context=None</em>, <em class="sig-param">base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em>, <em class="sig-param">clamp_input='soft_clamp'</em>, <em class="sig-param">targets=None</em>, <em class="sig-param">runtime_params=None</em>, <em class="sig-param">execution_mode=&lt;ExecutionMode.Python: 0&gt;</em>, <em class="sig-param">skip_initialization=False</em>, <em class="sig-param">report_output=False</em>, <em class="sig-param">report_progress=False</em>, <em class="sig-param">report_simulations=False</em>, <em class="sig-param">report_to_devices=None</em>, <em class="sig-param">report=None</em>, <em class="sig-param">progress_report=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.execute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">execute</code><span class="sig-paren">(</span><em class="sig-param">inputs=None</em>, <em class="sig-param">num_trials=None</em>, <em class="sig-param">minibatch_size=1</em>, <em class="sig-param">do_logging=False</em>, <em class="sig-param">scheduler=None</em>, <em class="sig-param">termination_processing=None</em>, <em class="sig-param">call_before_minibatch=None</em>, <em class="sig-param">call_after_minibatch=None</em>, <em class="sig-param">call_before_time_step=None</em>, <em class="sig-param">call_before_pass=None</em>, <em class="sig-param">call_after_time_step=None</em>, <em class="sig-param">call_after_pass=None</em>, <em class="sig-param">reset_stateful_functions_to=None</em>, <em class="sig-param">context=None</em>, <em class="sig-param">base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em>, <em class="sig-param">clamp_input='soft_clamp'</em>, <em class="sig-param">targets=None</em>, <em class="sig-param">runtime_params=None</em>, <em class="sig-param">execution_mode=&lt;ExecutionMode.Python: 0&gt;</em>, <em class="sig-param">skip_initialization=False</em>, <em class="sig-param">report_output=False</em>, <em class="sig-param">report_progress=False</em>, <em class="sig-param">report_simulations=False</em>, <em class="sig-param">report_to_devices=None</em>, <em class="sig-param">report=None</em>, <em class="sig-param">run_report=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Passes inputs to any <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> receiving inputs directly from the user (via the “inputs”
 argument) then coordinates with the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> to execute sets of Nodes that are eligible to execute until
 <a class="reference internal" href="Scheduler.html#scheduler-termination-conditions"><span class="std std-ref">termination conditions</span></a> are met.</p>

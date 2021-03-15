@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Reporting &mdash; PsyNeuLink 0.8.6.0+95.gdffbd84af0 documentation</title>
+  <title>Reporting &mdash; PsyNeuLink 0.8.6.0+96.g5641c3d30d documentation</title>
   
 
   
@@ -96,7 +96,7 @@
               
               
                 <div class="version">
-                  0.8.6.0+95
+                  0.8.6.0+96
                 </div>
               
             
@@ -207,7 +207,7 @@ the <a class="reference internal" href="Preferences.html#preferenceset-reportout
 Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method or any of a Composition’s <a class="reference internal" href="Composition.html#composition-execution-methods"><span class="std std-ref">execution methods</span></a>.  If <a class="reference internal" href="#psyneulink.core.compositions.report.ReportOutput.USE_PREFS" title="psyneulink.core.compositions.report.ReportOutput.USE_PREFS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">USE_PREFS</span></code></a> or <a class="reference internal" href="#psyneulink.core.compositions.report.ReportOutput.TERSE" title="psyneulink.core.compositions.report.ReportOutput.TERSE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TERSE</span></code></a> is used,
 reporting is generated as execution of each Component occurs;  if <a class="reference internal" href="#psyneulink.core.compositions.report.ReportOutput.FULL" title="psyneulink.core.compositions.report.ReportOutput.FULL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">FULL</span></code></a> is used, then the
 information is reported at the end of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> executed. Whether <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulations</span></a> executed by a Composition’s <a class="reference internal" href="Composition.html#composition-controller"><span class="std std-ref">controller</span></a> are
-included is determined by the <strong>report_simulations</strong> argument using a <code class="xref any docutils literal notranslate"><span class="pre">ReportSimulations</span></code> option. Output is reported
+included is determined by the <strong>report_simulations</strong> argument using a <a class="reference internal" href="#psyneulink.core.compositions.report.ReportSimulations" title="psyneulink.core.compositions.report.ReportSimulations"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportSimulations</span></code></a> option. Output is reported
 to the devices specified in the <strong>report_to_devices</strong> argument using the <a class="reference internal" href="#psyneulink.core.compositions.report.ReportDevices" title="psyneulink.core.compositions.report.ReportDevices"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportDevices</span></code></a> options</p>
 </div>
 <div class="section" id="progress-reporting">
@@ -219,8 +219,11 @@ executed and a progress bar. If the number <a class="reference internal" href="T
 the <strong>num_trials</strong> of a Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> or <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method is specified),
 estimated time remaining is displayed; if the number of trials is not determinable (e.g., if <strong>inputs</strong> argument is
 specified using a generator), then a “spinner” is displayed during execution and the the total number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIALS</span></code></a> executed is displayed once complete.  Whether <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulations</span></a> executed by an a Composition’s <a class="reference internal" href="Composition.html#composition-controller"><span class="std std-ref">controller</span></a> are
-included is determined by the <strong>report_simulations</strong> argument using a <code class="xref any docutils literal notranslate"><span class="pre">ReportSimulations</span></code> option.  Progress is
+included is determined by the <strong>report_simulations</strong> argument using a <a class="reference internal" href="#psyneulink.core.compositions.report.ReportSimulations" title="psyneulink.core.compositions.report.ReportSimulations"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportSimulations</span></code></a> option.  Progress is
 reported to the devices specified in the <strong>report_to_devices</strong> argument using the <a class="reference internal" href="#psyneulink.core.compositions.report.ReportDevices" title="psyneulink.core.compositions.report.ReportDevices"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportDevices</span></code></a> options.</p>
+<div class="technical-note docutils container">
+<p>Progress reporting is generated and displayed using a <a class="reference external" href="https://rich.readthedocs.io/en/stable/progress.html#">rich Progress Display</a> object.</p>
+</div>
 </div>
 <div class="section" id="simulations">
 <span id="report-simulations"></span><h2>Simulations<a class="headerlink" href="#simulations" title="Permalink to this headline">¶</a></h2>
@@ -242,6 +245,10 @@ see <a class="reference internal" href="#psyneulink.core.compositions.report.Rep
 <em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.compositions.report.</code><code class="sig-name descname">ReportOutput</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.report.ReportOutput" title="Permalink to this definition">¶</a></dt>
 <dd><p>Options used in the <strong>report_output</strong> argument of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>’s <a class="reference internal" href="Composition.html#composition-execution-methods"><span class="std std-ref">execution methods</span></a> or the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, to enable and
 determine the type of output generated by reporting; see <a class="reference internal" href="#report-output"><span class="std std-ref">Output reporting</span></a> for additional details.</p>
+<div class="technical-note docutils container">
+<p>Use of these options is expected in the <strong>report_output</strong> constructor for the <a class="reference internal" href="#"><span class="doc">Reporting</span></a> object,
+and are used as the values of its <code class="xref any docutils literal notranslate"><span class="pre">report_output</span></code> attribute.</p>
+</div>
 <dl class="py attribute">
 <dt id="psyneulink.core.compositions.report.ReportOutput.OFF">
 <code class="sig-name descname">OFF</code><a class="headerlink" href="#psyneulink.core.compositions.report.ReportOutput.OFF" title="Permalink to this definition">¶</a></dt>
@@ -257,7 +264,7 @@ to determine whether and in what format to report its execution.</p>
 
 <dl class="py attribute">
 <dt id="psyneulink.core.compositions.report.ReportOutput.TERSE">
-<code class="sig-name descname">TERSE</code><a class="headerlink" href="#psyneulink.core.compositions.report.ReportOutput.TERSE" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">TERSE</code><span class="sig-paren">(</span><em class="sig-param">aka ON</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.report.ReportOutput.TERSE" title="Permalink to this definition">¶</a></dt>
 <dd><p>enforce reporting execution of <em>all</em> Compositions and/or Mechanisms as they are executed, irrespective of their
 <a class="reference internal" href="Preferences.html#preferenceset-reportoutputpref"><span class="std std-ref">reportOutputPref</span></a> settings, using a simple line-by-line format to report each.</p>
 </dd></dl>
@@ -268,6 +275,9 @@ to determine whether and in what format to report its execution.</p>
 <dd><p>enforce formatted reporting execution of <em>all</em> Compositions and/or Mechanisms at the end of each
 <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> of execution, including the input and output of each, irrespective of their
 <a class="reference internal" href="Preferences.html#preferenceset-reportoutputpref"><span class="std std-ref">reportOutputPref</span></a> settings.</p>
+<div class="technical-note docutils container">
+<p>Output is formatted using <a class="reference external" href="https://rich.readthedocs.io/en/stable/panel.html">rich Panel objects</a>.</p>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -277,6 +287,10 @@ to determine whether and in what format to report its execution.</p>
 <em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.compositions.report.</code><code class="sig-name descname">ReportProgress</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.report.ReportProgress" title="Permalink to this definition">¶</a></dt>
 <dd><p>Options used in the <strong>report_progress</strong> argument of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> methods, to enable/disable progress reporting during execution of a Composition; see
 <a class="reference internal" href="#report-progress"><span class="std std-ref">Progress reporting</span></a> for additional details.</p>
+<div class="technical-note docutils container">
+<p>Use of these options is expected in the <strong>report_progress</strong> constructor for the <a class="reference internal" href="#"><span class="doc">Reporting</span></a> object,
+and are used as the values of its <code class="xref any docutils literal notranslate"><span class="pre">report_progress</span></code> attribute.</p>
+</div>
 <dl class="py attribute">
 <dt id="psyneulink.core.compositions.report.ReportProgress.OFF">
 <code class="sig-name descname">OFF</code><a class="headerlink" href="#psyneulink.core.compositions.report.ReportProgress.OFF" title="Permalink to this definition">¶</a></dt>
@@ -296,10 +310,19 @@ to determine whether and in what format to report its execution.</p>
 <em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.compositions.report.</code><code class="sig-name descname">ReportDevices</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.report.ReportDevices" title="Permalink to this definition">¶</a></dt>
 <dd><p>Options used in the <strong>report_to_devices</strong> argument of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>’s <a class="reference internal" href="Composition.html#composition-execution-methods"><span class="std std-ref">execution methods</span></a> or the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>,
 to determine the devices to which reporting is directed.</p>
+<div class="technical-note docutils container">
+<p>Use of these options is expected in the <strong>report_to_devices</strong> constructor for the <a class="reference internal" href="#"><span class="doc">Reporting</span></a> object,
+and are used as the values of its <code class="xref any docutils literal notranslate"><span class="pre">_report_to_devices</span></code> attribute.</p>
+</div>
 <dl class="py attribute">
 <dt id="psyneulink.core.compositions.report.ReportDevices.CONSOLE">
 <code class="sig-name descname">CONSOLE</code><a class="headerlink" href="#psyneulink.core.compositions.report.ReportDevices.CONSOLE" title="Permalink to this definition">¶</a></dt>
 <dd><p>direct reporting to the console in which PsyNeuLink is running</p>
+<div class="technical-note docutils container">
+<p>output is rendered using the <a class="reference external" href="https://rich.readthedocs.io/en/stable/markup.html#">Console markup</a>
+by a <a class="reference external" href="https://rich.readthedocs.io/en/stable/progress.html">rich Progress</a> object stored in
+<code class="xref any docutils literal notranslate"><span class="pre">_instance._rich_progress</span></code>.</p>
+</div>
 </dd></dl>
 
 <dl class="py attribute">
@@ -312,7 +335,7 @@ output, explicitly include <a class="reference internal" href="#psyneulink.core.
 
 <dl class="py attribute">
 <dt>
-<code class="sig-name descname">.. _technical_note::</code></dt>
+<code class="sig-name descname">.. technical_note::</code></dt>
 <dd><dl class="simple">
 <dt>DIVERT</dt><dd><p>capture reporting otherwise directed to the rich Console in a UDF-8 formatted string and
 stores it in <code class="xref any docutils literal notranslate"><span class="pre">_rich_diverted_reports</span></code>. This option suppresses
@@ -328,6 +351,29 @@ the display after execution is complete.</p>
 <dt id="psyneulink.core.compositions.report.ReportDevices.PNL_VIEW">
 <code class="sig-name descname">PNL_VIEW</code><a class="headerlink" href="#psyneulink.core.compositions.report.ReportDevices.PNL_VIEW" title="Permalink to this definition">¶</a></dt>
 <dd><p>direct reporting to the PsyNeuLinkView graphical interface [UNDER DEVELOPMENT].</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="psyneulink.core.compositions.report.ReportSimulations">
+<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.compositions.report.</code><code class="sig-name descname">ReportSimulations</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.report.ReportSimulations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Options used in the <strong>report_simulations</strong> argument of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> methods, to specify whether <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulations</span></a>
+executed by an a Composition’s <a class="reference internal" href="Composition.html#composition-controller"><span class="std std-ref">controller</span></a> are included in output and progress reporting.</p>
+<div class="technical-note docutils container">
+<p>Use of these options is expected in the <strong>report_progress</strong> constructor for the <a class="reference internal" href="#"><span class="doc">Reporting</span></a> object,
+and are used as the values of its <code class="xref any docutils literal notranslate"><span class="pre">report_progress</span></code> attribute.</p>
+</div>
+<dl class="py attribute">
+<dt id="psyneulink.core.compositions.report.ReportSimulations.OFF">
+<code class="sig-name descname">OFF</code><a class="headerlink" href="#psyneulink.core.compositions.report.ReportSimulations.OFF" title="Permalink to this definition">¶</a></dt>
+<dd><p>suppress output and progress of simulations.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="psyneulink.core.compositions.report.ReportSimulations.ON">
+<code class="sig-name descname">ON</code><a class="headerlink" href="#psyneulink.core.compositions.report.ReportSimulations.ON" title="Permalink to this definition">¶</a></dt>
+<dd><p>enable output and progress reporting of simulations.</p>
 </dd></dl>
 
 </dd></dl>
