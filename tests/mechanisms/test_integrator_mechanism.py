@@ -543,7 +543,7 @@ class TestIntegratorFunctions:
         # P = Process(pathway=[I])
         # 10 + 10*0.5 + 0 + 10 = 25
         val = I.execute(1)
-        assert np.allclose([[[25.]], [[0.5]]], val)
+        assert np.allclose([[25.], [0.5]], val)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
@@ -776,7 +776,7 @@ class TestIntegratorRate:
         )
         # P = Process(pathway=[I])
         val = I.execute(10.0)
-        assert np.allclose([[[50.0]], [[1.0]]], val)
+        assert np.allclose([[50.0], [1.0]], val)
 
     # rate = list, integration_type = simple
 
@@ -1157,7 +1157,7 @@ class TestIntegratorNoise:
         )
 
         val = I.execute(10.0)
-        assert np.allclose(val, [[[4.29013944]], [[ 1.        ]]])
+        assert np.allclose(val, [[4.29013944], [ 1.        ]])
 
 # COMMENTED OUT UNTIL OU INTEGRATOR IS VALIDATED
     @pytest.mark.mechanism

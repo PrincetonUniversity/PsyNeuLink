@@ -159,7 +159,7 @@ class TestResetValues:
 
         # Execute A twice
         #  [0] saves decision variable only (not time)
-        original_output = [A.execute(1.0)[0], A.execute(1.0)[0]]
+        original_output = [A.execute(1.0), A.execute(1.0)]
 
         # SAVING STATE  - - - - - - - - - - - - - - - - - - - - - - - - -
         reset_stateful_functions_to = {}
@@ -169,13 +169,13 @@ class TestResetValues:
         print(reset_stateful_functions_to)
         # Execute A twice AFTER saving the state so that it continues accumulating.
         # We expect the next two outputs to repeat once we reset the state b/c we will return it to the current state
-        output_after_saving_state = [A.execute(1.0)[0], A.execute(1.0)[0]]
+        output_after_saving_state = [A.execute(1.0), A.execute(1.0)]
 
         # RESETTING STATE - - - - - - - - - - - - - - - - - - - - - - - -
         A.reset(**reset_stateful_functions_to)
 
         # We expect these results to match the results from immediately after saving the state
-        output_after_reinitialization = [A.execute(1.0)[0], A.execute(1.0)[0]]
+        output_after_reinitialization = [A.execute(1.0), A.execute(1.0)]
 
         assert np.allclose(output_after_saving_state, output_after_reinitialization)
         assert np.allclose(original_output, [np.array([[1.0]]), np.array([[2.0]])])
