@@ -15,6 +15,7 @@ from psyneulink.core.globals.keywords import TRAINING_SET
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.library.compositions.autodiffcomposition import AutodiffComposition
+from psyneulink.core.compositions.report import ReportOutput
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +27,7 @@ logger = logging.getLogger(__name__)
 # or override functions in Composition
 
 @pytest.mark.pytorch
-@pytest.mark.parametrize("mode", ['Python',
-                                  pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                 ])
-def test_autodiff_forward(mode):
+def test_autodiff_forward(autodiff_mode):
     # create xor model mechanisms and projections
     xor_in = TransferMechanism(name='xor_in',
                                default_variable=np.zeros(2))
@@ -55,7 +53,7 @@ def test_autodiff_forward(mode):
     xor.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
     xor.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
 
-    outputs = xor.run(inputs=[0,0], bin_execute=mode)
+    outputs = xor.run(inputs=[0,0], execution_mode=autodiff_mode)
     assert np.allclose(outputs, [[0.9479085241082691]])
 
 @pytest.mark.pytorch
@@ -85,8 +83,8 @@ class TestACConstructor:
 
     def test_report_prefs(self):
         comp = AutodiffComposition()
-        assert comp.input_CIM.reportOutputPref == False
-        assert comp.output_CIM.reportOutputPref == False
+        assert comp.input_CIM.reportOutputPref == ReportOutput.OFF
+        assert comp.output_CIM.reportOutputPref == ReportOutput.OFF
         # assert comp.target_CIM.reportOutputPref == False
 
     # FIXME: This test for patience doesn't actually test for correctness
@@ -136,10 +134,7 @@ class TestMiscTrainingFunctionality:
                            xor.parameters.pytorch_representation.get(xor).params[1].detach().numpy())
 
     # test whether processing doesn't interfere with pytorch parameters after training
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                     ])
-    def test_training_then_processing(self, mode):
+    def test_training_then_processing(self, autodiff_mode):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -180,8 +175,9 @@ class TestMiscTrainingFunctionality:
         #                               targets={xor_out:xor_targets},
         #                               epochs=10)
         results_before_proc = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
-                                              "targets": {xor_out:xor_targets},
-                                              "epochs": 10}, bin_execute=mode)
+                                                "targets": {xor_out:xor_targets},
+                                                "epochs": 10},
+                                        execution_mode=autodiff_mode)
 
         # get weight parameters from pytorch
         pt_weights_hid_bp = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
@@ -203,10 +199,10 @@ class TestMiscTrainingFunctionality:
     @pytest.mark.parametrize(
         'loss', ['l1', 'poissonnll']
     )
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVMRun', marks=[pytest.mark.llvm,pytest.mark.skip]), # these loss specs remain unimplemented at the moment
-                                     ])
-    def test_various_loss_specs(self, loss, mode):
+    def test_various_loss_specs(self, loss, autodiff_mode):
+        if autodiff_mode is not pnl.ExecutionMode.Python:
+            pytest.skip("Loss spec not yet implemented!")
+
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -243,13 +239,13 @@ class TestMiscTrainingFunctionality:
              [0]])
 
         xor.learn(inputs = {"inputs": {xor_in:xor_inputs},
-                          "targets": {xor_out:xor_targets},
-                          "epochs": 10}, bin_execute=mode)
+                            "targets": {xor_out:xor_targets},
+                            "epochs": 10}, execution_mode=autodiff_mode)
 
-    @pytest.mark.parametrize("mode", ['Python',
-                                    #   pytest.param('LLVMRun', marks=[pytest.mark.llvm, pytest.mark.skip]), # Not implemented?
-                                     ])
-    def test_pytorch_loss_spec(self, mode):
+    def test_pytorch_loss_spec(self, autodiff_mode):
+        if autodiff_mode is not pnl.ExecutionMode.Python:
+            pytest.skip("Loss spec not yet implemented!")
+
         import torch
         ls = torch.nn.SoftMarginLoss(reduction='sum')
 
@@ -282,25 +278,22 @@ class TestMiscTrainingFunctionality:
             [[0], [1], [1], [0]])
 
         xor.learn(inputs={"inputs": {xor_in:xor_inputs},
-                        "targets": {xor_out:xor_targets},
-                        "epochs": 10}, bin_execute=mode)
+                          "targets": {xor_out:xor_targets},
+                          "epochs": 10}, execution_mode=autodiff_mode)
         xor.learn(inputs={"inputs": {xor_in: xor_inputs},
-                        "targets": {xor_out: xor_targets},
-                        "epochs": 10}, bin_execute=mode)
+                          "targets": {xor_out: xor_targets},
+                          "epochs": 10}, execution_mode=autodiff_mode)
 
 
     @pytest.mark.benchmark(group="Optimizer specs")
     @pytest.mark.parametrize(
         'learning_rate, weight_decay, optimizer_type, expected', [
             (10, 0, 'sgd', [[[0.9863038667851067]], [[0.9944287263151904]], [[0.9934801466163382]], [[0.9979153035411085]]]),
-            (1.5, 1, 'sgd', None),
-            (1.5, 1, 'adam', None),
+            (1.5, 1, 'sgd', [[[0.33226742]], [[0.4492334]], [[0.75459534]], [[0.44477028]]]),
+            (1.5, 1, 'adam', [[[0.43109927]], [[0.33088828]], [[0.40094236]], [[0.57104689]]]),
         ]
     )
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                     ])
-    def test_optimizer_specs(self, learning_rate, weight_decay, optimizer_type, expected, mode, benchmark):
+    def test_optimizer_specs(self, learning_rate, weight_decay, optimizer_type, expected, autodiff_mode, benchmark):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -338,23 +331,23 @@ class TestMiscTrainingFunctionality:
         #                               epochs=10)
         results_before_proc = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
                                                 "targets": {xor_out:xor_targets},
-                                                "epochs": 10}, bin_execute=mode)
+                                                "epochs": 10}, execution_mode=autodiff_mode)
 
-        if expected is not None:
+        # FIXME: LLVM version is broken with learning rate == 1.5
+        if learning_rate != 1.5 or autodiff_mode is pnl.ExecutionMode.Python:
             assert np.allclose(results_before_proc, expected)
 
         if benchmark.enabled:
             benchmark(xor.learn, inputs={"inputs": {xor_in:xor_inputs},
                                          "targets": {xor_out:xor_targets},
-                                         "epochs": 10}, bin_execute=mode)
+                                         "epochs": 10}, execution_mode=autodiff_mode)
 
 
     # test whether pytorch parameters and projections are kept separate (at diff. places in memory)
-    @pytest.mark.parametrize("mode", ['Python',
-                                    #   pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    #   LLVM test is disabled since weights are always copied back
-                                     ])
-    def test_params_stay_separate(self,mode):
+    def test_params_stay_separate(self, autodiff_mode):
+        if autodiff_mode is not pnl.ExecutionMode.Python:
+            pytest.skip("Compiled weights are always copied back!")
+
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -397,8 +390,8 @@ class TestMiscTrainingFunctionality:
 
         # train the model for a few epochs
         result = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
-                                 "targets": {xor_out:xor_targets},
-                                 "epochs": 10}, bin_execute=mode)
+                                   "targets": {xor_out:xor_targets},
+                                   "epochs": 10}, execution_mode=autodiff_mode)
 
         # get weight parameters from pytorch
         pt_weights_hid = xor.parameters.pytorch_representation.get(xor).params[0].detach().numpy().copy()
@@ -425,10 +418,7 @@ class TestTrainingCorrectness:
             (50, 'multiple', 'adam', [[[0.31200036]], [[0.59406178]], [[0.60417587]], [[0.52347365]]]),
         ]
     )
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                     ])
-    def test_xor_training_correctness(self, eps, calls, opt, mode, benchmark, expected):
+    def test_xor_training_correctness(self, eps, calls, opt, autodiff_mode, benchmark, expected):
         xor_in = TransferMechanism(name='xor_in',
                                    default_variable=np.zeros(2))
 
@@ -462,14 +452,14 @@ class TestTrainingCorrectness:
         if calls == 'single':
             results = xor.learn(inputs={"inputs": {xor_in:xor_inputs},
                                         "targets": {xor_out:xor_targets},
-                                        "epochs": eps}, bin_execute=mode)
+                                        "epochs": eps}, execution_mode=autodiff_mode)
 
         else:
             input_dict = {"inputs": {xor_in: xor_inputs},
                           "targets": {xor_out: xor_targets},
                           "epochs": 1}
             for i in range(eps):
-                results = xor.learn(inputs=input_dict, bin_execute=mode)
+                results = xor.learn(inputs=input_dict, execution_mode=autodiff_mode)
 
         assert len(results) == len(expected)
         for r, t in zip(results, expected):
@@ -478,7 +468,7 @@ class TestTrainingCorrectness:
         if benchmark.enabled:
             benchmark(xor.learn, inputs={"inputs": {xor_in: xor_inputs},
                                          "targets": {xor_out: xor_targets},
-                                         "epochs": eps}, bin_execute=mode)
+                                         "epochs": eps}, execution_mode=autodiff_mode)
 
 
     # tests whether semantic network created as autodiff composition learns properly
@@ -488,10 +478,7 @@ class TestTrainingCorrectness:
             (50, 'adam'),
         ]
     )
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                     ])
-    def test_semantic_net_training_correctness(self, eps, opt, mode, benchmark):
+    def test_semantic_net_training_correctness(self, eps, opt, autodiff_mode, benchmark):
 
         # MECHANISMS FOR SEMANTIC NET:
 
@@ -654,7 +641,7 @@ class TestTrainingCorrectness:
         # TRAIN THE MODEL
         results = sem_net.learn(inputs={'inputs': inputs_dict,
                                         'targets': targets_dict,
-                                        'epochs': eps}, bin_execute=mode)
+                                        'epochs': eps}, execution_mode=autodiff_mode)
 
         # CHECK CORRECTNESS
         expected = [[[0.13455769, 0.12924714, 0.13288172, 0.1404659 , 0.14305814,
@@ -785,12 +772,9 @@ class TestTrainingCorrectness:
         if benchmark.enabled:
             benchmark(sem_net.learn, inputs={'inputs': inputs_dict,
                                              'targets': targets_dict,
-                                             'epochs': eps}, bin_execute=mode)
+                                             'epochs': eps}, execution_mode=autodiff_mode)
 
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                     ])
-    def test_pytorch_equivalence_with_autodiff_composition(self, mode):
+    def test_pytorch_equivalence_with_autodiff_composition(self, autodiff_mode):
         iSs = np.array(
             [np.array([0.47360805, 0.8009108, 0.5204775, 0.53737324, 0.7586156,
                     0.1059076, 0.9025985, 0.44994998, 0.61306345, 0.75068617,
@@ -946,11 +930,11 @@ class TestTrainingCorrectness:
             minibatch_size=1,
             patience=patience,
             min_delta=min_delt,
-            bin_execute=mode
+            execution_mode=autodiff_mode
         )
         mnet.run(
             inputs=input_set['inputs'],
-            bin_execute=mode
+            execution_mode=autodiff_mode
         )
         output = np.array(mnet.parameters.results.get(mnet)[-15:]).reshape(225)
 
@@ -1231,10 +1215,7 @@ class TestTrainingTime:
             (100, 'sgd')
         ]
     )
-    @pytest.mark.parametrize("mode", ['Python',
-                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    ])
-    def test_and_training_time(self, eps, opt,mode):
+    def test_and_training_time(self, eps, opt,autodiff_mode):
 
         # SET UP MECHANISMS FOR COMPOSITION
 
@@ -1299,7 +1280,7 @@ class TestTrainingTime:
                              epochs=eps,
                              learning_rate=0.1,
                              controller=opt,
-                             bin_execute=mode)
+                             execution_mode=autodiff_mode)
         end = timeit.default_timer()
         comp_time = end - start
 
@@ -1316,10 +1297,7 @@ class TestTrainingTime:
             (100, 'sgd')
         ]
     )
-    @pytest.mark.parametrize("mode", ['Python',
-                                    pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                    ])
-    def test_xor_training_time(self, eps, opt,mode):
+    def test_xor_training_time(self, eps, opt, autodiff_mode):
 
         # SET UP MECHANISMS FOR COMPOSITION
 
@@ -1373,7 +1351,7 @@ class TestTrainingTime:
 
         # SET UP COMPOSITION
 
-        xor = AutodiffComposition(bin_execute=mode)
+        xor = AutodiffComposition(execution_mode=autodiff_mode)
 
         xor.add_node(xor_in)
         xor.add_node(xor_hid)
@@ -1404,7 +1382,7 @@ class TestTrainingTime:
                          epochs=eps,
                          learning_rate=0.1,
                          controller=opt,
-                         bin_execute=mode)
+                         execution_mode=autodiff_mode)
         end = timeit.default_timer()
         comp_time = end - start
 
@@ -2408,11 +2386,8 @@ class TestNested:
             (400, 4, 10, .00001),
         ]
     )
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-                                     ])
     def test_xor_nested_train_then_no_train(self, num_epochs, learning_rate,
-                                            patience, min_delta, mode):
+                                            patience, min_delta, autodiff_mode):
         # the inputs we will provide to the model
         xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
 
@@ -2467,10 +2442,10 @@ class TestNested:
         no_training_input = {xor_autodiff: no_training_input_dict}
 
         learning_context = Context()
-        result1 = xor_autodiff.learn(inputs=input_dict, bin_execute=mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
+        result1 = xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, epochs=num_epochs, context=learning_context, patience=patience, min_delta=min_delta)
         result1 = np.array(result1).flatten()
         assert np.allclose(result1, np.array(xor_targets).flatten(), atol=0.1)
-        result2 = parentComposition.run(inputs=no_training_input, bin_execute=mode, context=learning_context)
+        result2 = parentComposition.run(inputs=no_training_input, execution_mode=autodiff_mode, context=learning_context)
 
         assert np.allclose(result2, [[0]], atol=0.1)
 
@@ -2479,11 +2454,10 @@ class TestNested:
             (400, 4, 10, .00001),
         ]
     )
-    @pytest.mark.parametrize("mode", ['Python',
-                                    #   pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-                                     ])
     def test_xor_nested_no_train_then_train(self, num_epochs, learning_rate,
-                                            patience, min_delta, mode):
+                                            patience, min_delta, autodiff_mode):
+        if autodiff_mode is not pnl.ExecutionMode.Python:
+            pytest.skip("")
         # the inputs we will provide to the model
         xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
 
@@ -2536,9 +2510,9 @@ class TestNested:
         input = {xor_autodiff: input_dict}
         no_training_input = {xor_autodiff: no_training_input_dict}
         learning_context = Context()
-        result1 = xor_autodiff.run(inputs=input[xor_autodiff]['inputs'], bin_execute=mode, context=learning_context)
-        xor_autodiff.learn(inputs=input_dict, bin_execute=mode, context=learning_context, patience=patience, min_delta=min_delta)
-        result2 = parentComposition.run(inputs=no_training_input, bin_execute=mode, context=learning_context)
+        result1 = xor_autodiff.run(inputs=input[xor_autodiff]['inputs'], execution_mode=autodiff_mode, context=learning_context)
+        xor_autodiff.learn(inputs=input_dict, execution_mode=autodiff_mode, context=learning_context, patience=patience, min_delta=min_delta)
+        result2 = parentComposition.run(inputs=no_training_input, execution_mode=autodiff_mode, context=learning_context)
 
         assert np.allclose(result2, [[0]], atol=0.1)
 
@@ -2627,10 +2601,7 @@ class TestNested:
             (1, 'sgd'),
         ]
     )
-    @pytest.mark.parametrize("mode", ['Python',
-                                      pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
-                                     ])
-    def test_semantic_net_nested(self, eps, opt, mode):
+    def test_semantic_net_nested(self, eps, opt, autodiff_mode):
 
         # SET UP MECHANISMS FOR SEMANTIC NET:
 
@@ -2872,9 +2843,9 @@ class TestNested:
         input = {sem_net: input_dict}
         no_training_input = {sem_net: inputs_dict.copy()}
 
-        sem_net.learn(inputs=input_dict, bin_execute=mode)
+        sem_net.learn(inputs=input_dict, execution_mode=autodiff_mode)
 
-        if mode != 'Python':
+        if autodiff_mode is not pnl.ExecutionMode.Python:
             #FIXME: Enable the rest of the test when recompilation is supported
             return
 

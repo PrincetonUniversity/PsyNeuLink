@@ -28,28 +28,26 @@ Functions that return the sample of a variable yielding the optimized value of a
 
 """
 
-import warnings
-import sys
+import contextlib
 # from fractions import Fraction
 import itertools
-import numpy as np
-import typecheck as tc
+import sys
+import warnings
 from numbers import Number
 
-from typing import Iterator
+import numpy as np
+import typecheck as tc
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
-from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core.globals.keywords import \
     BOUNDS, GRADIENT_OPTIMIZATION_FUNCTION, GRID_SEARCH_FUNCTION, GAUSSIAN_PROCESS_FUNCTION, \
     OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.utilities import call_with_pruned_args, get_global_seed
 from psyneulink.core.globals.sampleiterator import SampleIterator
-
-from psyneulink.core import llvm as pnlvm
-import contextlib
+from psyneulink.core.globals.utilities import call_with_pruned_args, get_global_seed
 
 __all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess',
            'ParamEstimationFunction',
@@ -524,7 +522,8 @@ class OptimizationFunction(Function_Base):
 
         # Set up progress bar
         _show_progress = False
-        if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref:
+        from psyneulink.core.compositions.report import ReportOutput
+        if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is not ReportOutput.OFF:
             _show_progress = True
             _progress_bar_char = '.'
             _progress_bar_rate_str = ""
@@ -1371,7 +1370,7 @@ class GridSearch(OptimizationFunction):
             s.reset()
         self.grid = itertools.product(*[s for s in self.search_space])
 
-    def _get_optimized_composition(self):
+    def _get_optimized_controller(self):
         # self.objective_function may be a bound method of
         # OptimizationControlMechanism
         return getattr(self.objective_function, '__self__', None)
@@ -1379,7 +1378,7 @@ class GridSearch(OptimizationFunction):
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "select_min" in tags:
             return self._gen_llvm_select_min_function(ctx=ctx, tags=tags)
-        ocm = self._get_optimized_composition()
+        ocm = self._get_optimized_controller()
         if ocm is not None:
             # self.objective_function may be a bound method of
             # OptimizationControlMechanism
@@ -1421,7 +1420,7 @@ class GridSearch(OptimizationFunction):
 
     def _gen_llvm_select_min_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         assert "select_min" in tags
-        ocm = self._get_optimized_composition()
+        ocm = self._get_optimized_controller()
         if ocm is not None:
             assert ocm.function is self
             sample_t = ocm._get_evaluate_alloc_struct_type(ctx)
@@ -1438,13 +1437,17 @@ class GridSearch(OptimizationFunction):
                 value_t.as_pointer(),
                 value_t.as_pointer(),
                 ctx.float_ty.as_pointer(),
+                ctx.int32_ty,
                 ctx.int32_ty]
         builder = ctx.create_llvm_function(args, self, tags=tags)
 
-        params, state, min_sample_ptr, samples_ptr, min_value_ptr, values_ptr, opt_count_ptr, count = builder.function.args
-        for p in builder.function.args[:-1]:
+        params, state, min_sample_ptr, samples_ptr, min_value_ptr, values_ptr, opt_count_ptr, start, stop = builder.function.args
+        for p in builder.function.args[:-2]:
             p.attributes.add('noalias')
-            p.attributes.add('nonnull')
+
+        # The creation helper function sets all pointers to non-null
+        # remove the attribute for 'samples_ptr'.
+        samples_ptr.attributes.remove('nonnull')
 
         random_state = pnlvm.helpers.get_state_ptr(builder, self, state,
                                                    self.parameters.random_state.name)
@@ -1461,10 +1464,12 @@ class GridSearch(OptimizationFunction):
         direction = "<" if self.direction == MINIMIZE else ">"
         replace_ptr = builder.alloca(ctx.bool_ty)
 
+        min_idx_ptr = builder.alloca(stop.type)
+        builder.store(stop.type(-1), min_idx_ptr)
+
         # Check the value against current min
-        with pnlvm.helpers.for_loop_zero_inc(builder, count, "compare_loop") as (b, idx):
+        with pnlvm.helpers.for_loop(builder, start, stop, stop.type(1), "compare_loop") as (b, idx):
             value_ptr = b.gep(values_ptr, [idx])
-            sample_ptr = b.gep(samples_ptr, [idx])
             value = b.load(value_ptr)
             min_value = b.load(min_value_ptr)
 
@@ -1474,7 +1479,7 @@ class GridSearch(OptimizationFunction):
             # Python does "is_close" check first.
             # This implements reservoir sampling
             with b.if_then(select_random):
-                close = pnlvm.helpers.is_close(b, value, min_value)
+                close = pnlvm.helpers.is_close(ctx, b, value, min_value)
                 with b.if_else(close) as (tb, eb):
                     with tb:
                         opt_count = b.load(opt_count_ptr)
@@ -1494,14 +1499,28 @@ class GridSearch(OptimizationFunction):
                             b.store(opt_count_ptr.type.pointee(1), opt_count_ptr)
 
             with b.if_then(b.load(replace_ptr)):
+                b.store(idx, min_idx_ptr)
                 b.store(b.load(value_ptr), min_value_ptr)
-                b.store(b.load(sample_ptr), min_sample_ptr)
+
+        min_idx = builder.load(min_idx_ptr)
+        found_min = builder.icmp_signed("!=", min_idx, min_idx.type(-1))
+
+        with builder.if_then(found_min):
+            gen_samples = builder.icmp_signed("==", samples_ptr, samples_ptr.type(None))
+            with builder.if_else(gen_samples) as (b_true, b_false):
+                with b_true:
+                    search_space = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                               self.parameters.search_space.name)
+                    pnlvm.helpers.create_allocation(b, min_sample_ptr, search_space, min_idx)
+                with b_false:
+                    sample_ptr = builder.gep(samples_ptr, [min_idx])
+                    builder.store(b.load(sample_ptr), min_sample_ptr)
 
         builder.ret_void()
         return builder.function
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        ocm = self._get_optimized_composition()
+        ocm = self._get_optimized_controller()
         if ocm is not None:
             assert ocm.function is self
             obj_func = ctx.import_llvm_function(ocm, tags=tags.union({"evaluate"}))
@@ -1565,10 +1584,11 @@ class GridSearch(OptimizationFunction):
                               value_ptr] + extra_args)
 
             # Check if smaller than current best.
+            # the argument pointers are already offset, so use range <0,1)
             select_min_f = ctx.import_llvm_function(self, tags=tags.union({"select_min"}))
             b.call(select_min_f, [params, state, min_sample_ptr, sample_ptr,
                                   min_value_ptr, value_ptr, opt_count_ptr,
-                                  ctx.int32_ty(1)])
+                                  ctx.int32_ty(0), ctx.int32_ty(1)])
 
             builder = b
 
@@ -1579,16 +1599,23 @@ class GridSearch(OptimizationFunction):
         builder.store(builder.load(min_value_ptr), out_value_ptr)
         return builder
 
-    def _run_cuda_grid(self, ocm, variable, context):
+    def _run_grid(self, ocm, variable, context):
         assert ocm is ocm.agent_rep.controller
         # Compiled evaluate expects the same variable as mech function
         new_variable = [ip.parameters.value.get(context) for ip in ocm.input_ports]
+        num_evals = np.prod([d.num for d in self.search_space])
+
         # Map allocations to values
         comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
-        ct_alloc, ct_values = comp_exec.cuda_evaluate(new_variable,
-                                                      self.search_space)
+        variant = ocm.parameters.comp_execution_mode._get(context)
+        if variant == "PTX":
+            ct_values = comp_exec.cuda_evaluate(new_variable, num_evals)
+        elif variant == "LLVM":
+            ct_values = comp_exec.thread_evaluate(new_variable, num_evals)
+        else:
+            assert False, "Unknown OCM execution variant: {}".format(variant)
 
-        assert len(ct_values) == len(ct_alloc)
+        assert len(ct_values) == num_evals
         # Reduce array of values to min/max
         # select_min params are:
         # params, state, min_sample_ptr, sample_ptr, min_value_ptr, value_ptr, opt_count_ptr, count
@@ -1596,14 +1623,16 @@ class GridSearch(OptimizationFunction):
         ct_param = bin_func.byref_arg_types[0](*self._get_param_initializer(context))
         ct_state = bin_func.byref_arg_types[1](*self._get_state_initializer(context))
         ct_opt_sample = bin_func.byref_arg_types[2](float("NaN"))
+        ct_alloc = None # NULL for samples
         ct_opt_value = bin_func.byref_arg_types[4]()
         ct_opt_count = bin_func.byref_arg_types[6](0)
-        ct_count = bin_func.c_func.argtypes[7](len(ct_alloc))
+        ct_start = bin_func.c_func.argtypes[7](0)
+        ct_stop = bin_func.c_func.argtypes[8](len(ct_values))
 
         bin_func(ct_param, ct_state, ct_opt_sample, ct_alloc, ct_opt_value,
-                 ct_values, ct_opt_count, ct_count)
+                 ct_values, ct_opt_count, ct_start, ct_stop)
 
-        return ct_opt_sample, ct_opt_value, ct_alloc, ct_values
+        return ct_opt_sample, ct_opt_value, ct_values
 
     def _function(self,
                  variable=None,
@@ -1661,7 +1690,8 @@ class GridSearch(OptimizationFunction):
 
             # Set up progress bar
             _show_progress = False
-            if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref:
+            from psyneulink.core.compositions.report import ReportOutput
+            if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is not ReportOutput.OFF:
                 _show_progress = True
                 _progress_bar_char = '.'
                 _progress_bar_rate_str = ""
@@ -1730,10 +1760,13 @@ class GridSearch(OptimizationFunction):
                     format(repr(DIRECTION), self.name, direction)
 
 
-            ocm = self._get_optimized_composition()
+            ocm = self._get_optimized_controller()
             if ocm is not None and \
-               ocm.parameters.comp_execution_mode._get(context).startswith("PTX"):
-                    opt_sample, opt_value, all_samples, all_values = self._run_cuda_grid(ocm, variable, context)
+               (ocm.parameters.comp_execution_mode._get(context) == "PTX" or
+                ocm.parameters.comp_execution_mode._get(context) == "LLVM"):
+                    opt_sample, opt_value, all_values = self._run_grid(ocm, variable, context)
+                    # This should not be evaluated unless needed
+                    all_samples = [itertools.product(*self.search_space)]
                     value_optimal = opt_value
                     sample_optimal = opt_sample
             else:

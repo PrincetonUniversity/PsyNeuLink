@@ -70,10 +70,7 @@ results = {
 @pytest.mark.parametrize("normalize", [True, False])
 @pytest.mark.parametrize("metric", [kw.ENERGY, kw.ENTROPY])
 @pytest.mark.parametrize("obj_func", [Functions.Stability])
-@pytest.mark.parametrize('mode', ['Python',
-                                  pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-def test_grid_search(obj_func, metric, normalize, direction, selection, benchmark, mode):
+def test_grid_search(obj_func, metric, normalize, direction, selection, benchmark, func_mode):
     variable = test_var
     result = results[obj_func][metric][normalize][direction][selection]
     benchmark.group = "OptimizationFunction " + str(obj_func) + " " + metric
@@ -83,12 +80,12 @@ def test_grid_search(obj_func, metric, normalize, direction, selection, benchmar
                                 search_space=search_space, direction=direction,
                                 select_randomly_from_optimal_values=(selection=='RANDOM'),
                                 seed=0)
-    if mode == 'Python':
+    if func_mode == 'Python':
         EX = f.function
-    elif mode == 'LLVM':
+    elif func_mode == 'LLVM':
         e = pnlvm.execution.FuncExecution(f)
         EX = e.execute
-    elif mode == 'PTX':
+    elif func_mode == 'PTX':
         e = pnlvm.execution.FuncExecution(f)
         EX = e.cuda_execute
 
@@ -96,7 +93,7 @@ def test_grid_search(obj_func, metric, normalize, direction, selection, benchmar
 
     assert np.allclose(res[0], result[0])
     assert np.allclose(res[1], result[1])
-    if mode == 'Python':
+    if func_mode == 'Python':
         assert np.allclose(res[2], result[2])
         assert np.allclose(res[3], result[3])
 

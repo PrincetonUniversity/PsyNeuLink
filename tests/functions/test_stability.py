@@ -36,17 +36,14 @@ names = [
 @pytest.mark.benchmark
 @pytest.mark.parametrize("metric, normalize, expected", test_data, ids=names)
 @pytest.mark.parametrize("variable", [test_var, test_var.astype(np.float32)], ids=["float", "float32"] )
-@pytest.mark.parametrize('mode', ['Python',
-                                  pytest.param('LLVM', marks=pytest.mark.llvm),
-                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-def test_basic(variable, metric, normalize, expected, benchmark, mode):
+def test_basic(variable, metric, normalize, expected, benchmark, func_mode):
     f = Functions.Stability(default_variable=variable, metric=metric, normalize=normalize)
-    if mode == 'Python':
+    if func_mode == 'Python':
         EX = f.function
-    elif mode == 'LLVM':
+    elif func_mode == 'LLVM':
         e = pnlvm.execution.FuncExecution(f)
         EX = e.execute
-    elif mode == 'PTX':
+    elif func_mode == 'PTX':
         e = pnlvm.execution.FuncExecution(f)
         EX = e.cuda_execute
 

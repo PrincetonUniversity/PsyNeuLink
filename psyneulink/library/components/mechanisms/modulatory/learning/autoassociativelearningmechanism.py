@@ -401,7 +401,8 @@ class AutoAssociativeLearningMechanism(LearningMechanism):
 
         )
 
-        if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref:
+        from psyneulink.core.compositions.report import ReportOutput
+        if self.initialization_status != ContextFlags.INITIALIZING and self.reportOutputPref is not ReportOutput.OFF:
             print("\n{} weight change matrix: \n{}\n".format(self.name, self.parameters.learning_signal._get(context)))
 
         value = np.array([learning_signal])

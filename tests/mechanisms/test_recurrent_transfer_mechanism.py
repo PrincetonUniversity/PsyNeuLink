@@ -100,20 +100,17 @@ class TestRecurrentTransferMechanismInputs:
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
-    @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=pytest.mark.llvm),
-                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-    def test_recurrent_mech_inputs_list_of_ints(self, benchmark, mode):
+    def test_recurrent_mech_inputs_list_of_ints(self, benchmark, mech_mode):
         R = RecurrentTransferMechanism(
             name='R',
             default_variable=[0, 0, 0, 0]
         )
-        if mode == 'Python':
+        if mech_mode == 'Python':
             EX = R.execute
-        elif mode == 'LLVM':
+        elif mech_mode == 'LLVM':
             e = pnlvm.execution.MechExecution(R)
             EX = e.execute
-        elif mode == 'PTX':
+        elif mech_mode == 'PTX':
             e = pnlvm.execution.MechExecution(R)
             EX = e.cuda_execute
 
@@ -130,20 +127,17 @@ class TestRecurrentTransferMechanismInputs:
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
-    @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=pytest.mark.llvm),
-                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-    def test_recurrent_mech_inputs_list_of_floats(self, benchmark, mode):
+    def test_recurrent_mech_inputs_list_of_floats(self, benchmark, mech_mode):
         R = RecurrentTransferMechanism(
             name='R',
             size=4
         )
-        if mode == 'Python':
+        if mech_mode == 'Python':
             EX = R.execute
-        elif mode == 'LLVM':
+        elif mech_mode == 'LLVM':
             e = pnlvm.execution.MechExecution(R)
             EX = e.execute
-        elif mode == 'PTX':
+        elif mech_mode == 'PTX':
             e = pnlvm.execution.MechExecution(R)
             EX = e.cuda_execute
 
@@ -153,22 +147,19 @@ class TestRecurrentTransferMechanismInputs:
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
-    @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=pytest.mark.llvm),
-                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-    def test_recurrent_mech_integrator(self, benchmark, mode):
+    def test_recurrent_mech_integrator(self, benchmark, mech_mode):
         R = RecurrentTransferMechanism(size=2,
                                        function=Logistic(),
                                        hetero=-2.0,
                                        integrator_mode=True,
                                        integration_rate=0.01,
                                        output_ports = [RESULT])
-        if mode == 'Python':
+        if mech_mode == 'Python':
             EX = R.execute
-        elif mode == 'LLVM':
+        elif mech_mode == 'LLVM':
             e = pnlvm.execution.MechExecution(R)
             EX = e.execute
-        elif mode == 'PTX':
+        elif mech_mode == 'PTX':
             e = pnlvm.execution.MechExecution(R)
             EX = e.cuda_execute
 
@@ -187,22 +178,19 @@ class TestRecurrentTransferMechanismInputs:
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
-    @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=pytest.mark.llvm),
-                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-    def test_recurrent_mech_lci(self, benchmark, mode):
+    def test_recurrent_mech_lci(self, benchmark, mech_mode):
         LCI = pnl.LeakyCompetingIntegrator(rate=0.4)
         R = RecurrentTransferMechanism(size=2,
                                        hetero=-2.0,
                                        integrator_mode=True,
                                        integrator_function=LCI,
                                        output_ports = [RESULT])
-        if mode == 'Python':
+        if mech_mode == 'Python':
             EX = R.execute
-        elif mode == 'LLVM':
+        elif mech_mode == 'LLVM':
             e = pnlvm.execution.MechExecution(R)
             EX = e.execute
-        elif mode == 'PTX':
+        elif mech_mode == 'PTX':
             e = pnlvm.execution.MechExecution(R)
             EX = e.cuda_execute
 
@@ -234,20 +222,17 @@ class TestRecurrentTransferMechanismInputs:
     @pytest.mark.mechanism
     @pytest.mark.recurrent_transfer_mechanism
     @pytest.mark.benchmark(group="RecurrentTransferMechanism")
-    @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVM', marks=pytest.mark.llvm),
-                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
-    def test_recurrent_mech_no_inputs(self, benchmark, mode):
+    def test_recurrent_mech_no_inputs(self, benchmark, mech_mode):
         R = RecurrentTransferMechanism(
             name='R'
         )
         np.testing.assert_allclose(R.defaults.variable, [[0]])
-        if mode == 'Python':
+        if mech_mode == 'Python':
             EX = R.execute
-        elif mode == 'LLVM':
+        elif mech_mode == 'LLVM':
             e = pnlvm.execution.MechExecution(R)
             EX = e.execute
-        elif mode == 'PTX':
+        elif mech_mode == 'PTX':
             e = pnlvm.execution.MechExecution(R)
             EX = e.cuda_execute
 
@@ -1113,11 +1098,6 @@ class TestCustomCombinationFunction:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     @pytest.mark.parametrize('cond0, cond1, expected', [
         (pnl.Never(), pnl.AtTrial(2),
          [[np.array([0.5]), np.array([0.5])],
@@ -1144,7 +1124,10 @@ class TestCustomCombinationFunction:
           [np.array([0.5]), np.array([0.9375])],
           [np.array([0.5]), np.array([0.96875])]]),
         ], ids=lambda x: str(x) if isinstance(x, pnl.Condition) else "")
-    def test_reset_stateful_function_when_composition(self, mode, cond0, cond1, expected):
+    # 'LLVM' mode is not supported, because synchronization of compiler and
+    # python values during execution is not implemented.
+    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    def test_reset_stateful_function_when_composition(self, comp_mode, cond0, cond1, expected):
         I1 = pnl.RecurrentTransferMechanism(integrator_mode=True,
                                             integration_rate=0.5)
         I2 = pnl.RecurrentTransferMechanism(integrator_mode=True,
@@ -1155,17 +1138,12 @@ class TestCustomCombinationFunction:
         C.add_node(I1)
         C.add_node(I2)
 
-        C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, bin_execute=mode)
+        C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, execution_mode=comp_mode)
 
         assert np.allclose(expected, C.results)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     @pytest.mark.parametrize('cond0, cond1, expected', [
         (pnl.AtPass(0), pnl.AtTrial(2),
          [[np.array([0.5]), np.array([0.5])],
@@ -1177,10 +1155,13 @@ class TestCustomCombinationFunction:
           [np.array([0.5]), np.array([0.96875])]]),
         ], ids=lambda x: str(x) if isinstance(x, pnl.Condition) else "")
     @pytest.mark.parametrize('has_initializers2', [True, False],
-                             ids=lambda x: "initializers1" if x else "NO initializers1")
+                             ids=["initializers1", "NO initializers1"])
     @pytest.mark.parametrize('has_initializers1', [True, False],
-                             ids=lambda x: "initializers2" if x else "NO initializers2")
-    def test_reset_stateful_function_when_has_initializers_composition(self, mode, cond0, cond1, expected,
+                             ids=["initializers2", "NO initializers2"])
+    # 'LLVM' mode is not supported, because synchronization of compiler and
+    # python values during execution is not implemented.
+    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    def test_reset_stateful_function_when_has_initializers_composition(self, comp_mode, cond0, cond1, expected,
                                            has_initializers1, has_initializers2):
         I1 = pnl.RecurrentTransferMechanism(integrator_mode=True,
                                             integration_rate=0.5)
@@ -1202,22 +1183,20 @@ class TestCustomCombinationFunction:
         if not has_initializers2:
             exp = list(zip((x[0] for x in exp), def_res))
 
-        C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, bin_execute=mode)
+        C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, execution_mode=comp_mode)
 
         assert np.allclose(exp, C.results)
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    @pytest.mark.parametrize('mode', ['Python',
-                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
-                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     @pytest.mark.parametrize('until_finished, expected', [
         (True, [[[[0.96875]]], [[[0.9990234375]]]]), # The 5th and the 10th iteration
         (False, [[[[0.5]]], [[[0.75]]]]), # The first and the second iteration
     ], ids=['until_finished', 'oneshot'])
-    def test_max_executions_before_finished(self, mode, until_finished, expected):
+    # 'LLVM' mode is not supported, because synchronization of compiler and
+    # python values during execution is not implemented.
+    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    def test_max_executions_before_finished(self, comp_mode, until_finished, expected):
         I1 = pnl.RecurrentTransferMechanism(integrator_mode=True,
                                             integration_rate=0.5,
                                             termination_threshold=0.0,
@@ -1226,10 +1205,10 @@ class TestCustomCombinationFunction:
         C = pnl.Composition()
         C.add_node(I1)
 
-        results = C.run(inputs={I1: [[1.0]]}, num_trials=1, bin_execute=mode)
-        if mode == 'Python':
+        results = C.run(inputs={I1: [[1.0]]}, num_trials=1, execution_mode=comp_mode)
+        if comp_mode is pnl.ExecutionMode.Python:
             assert I1.parameters.is_finished_flag.get(C) is until_finished
-        results2 = C.run(inputs={I1: [[1.0]]}, num_trials=1, bin_execute=mode)
+        results2 = C.run(inputs={I1: [[1.0]]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(expected[0], results)
         assert np.allclose(expected[1], results2)
 

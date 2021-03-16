@@ -28,12 +28,12 @@ Use
 
 Compiled form of a model can be invoked by passing one of the following values to the `bin_execute` parameter of `Composition.run`, or `Composition.exec`:
 
-  * `False` or `Python`: Normal python execution
-  * `LLVM`: Compile and execute individual nodes. The scheduling loop still runs in Python. If any of the nodes fails to compile, an error is raised. *NOTE:* Schedules that require access to node data will not work correctly.
-  * `LLVMExec`: Execution of `Composition.exec` is replaced by a compiled equivalent. If the `Composition` fails to compile, an error is raised.
-  * `LLVMRun`: Execution of `Composition.run` is replaced by a compiled equivalent. If the `Composition` fails to compiler, an error is raised.
-  * `True`: This option attempts all three above mentioned granularities, and gracefully falls back to lower granularity. Warnings are raised in place of errors. This is the recommended way to invoke compiled execution as the final fallback is the Python baseline.
+  * `ExecutionMode.Python`: Normal python execution
+  * `ExecutionMode.LLVM`: Compile and execute individual nodes. The scheduling loop still runs in Python. If any of the nodes fails to compile, an error is raised. *NOTE:* Schedules that require access to node data will not work correctly.
+  * `ExecutionMode.LLVMExec`: Execution of `Composition.exec` is replaced by a compiled equivalent. If the `Composition` fails to compile, an error is raised.
+  * `ExecutionMode.LLVMRun`: Execution of `Composition.run` is replaced by a compiled equivalent. If the `Composition` fails to compile, an error is raised.
+  * `ExecutionMode.Auto`: This option attempts all three above mentioned granularities, and gracefully falls back to lower granularity. Warnings are raised in place of errors. This is the recommended way to invoke compiled execution as the final fallback is the Python baseline.
 
 Note that data other than `Composition.run` outputs are not synchronized between Python and compiled execution.
  
- It is possible to invoke compiled version of `FUnction` s and `Mechanism` s. This functionality is provided for testing purposes only, because of the lack of data synchronization it is not recommended for general use.
+It is possible to invoke compiled version of `Function` s and `Mechanism` s. This functionality is provided for testing purposes only, because of the lack of data synchronization it is not recommended for general use.

@@ -9,6 +9,7 @@
 # ********************************************* AutodiffComposition *************************************************
 import numpy as np
 
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.keywords import OBJECTIVE_MECHANISM, TRAINING_SET
 from inspect import isgeneratorfunction
@@ -135,7 +136,7 @@ class CompositionRunner():
                      call_before_minibatch = None,
                      call_after_minibatch = None,
                      context=None,
-                     bin_execute=False,
+                     execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
                      **kwargs):
         """
         Runs the composition repeatedly with the specified parameters
@@ -144,7 +145,7 @@ class CompositionRunner():
         ---------
         Outputs from the final execution
         """
-        if bin_execute is False or bin_execute == 'Python':
+        if not execution_mode:
             self._is_llvm_mode = False
         else:
             self._is_llvm_mode = True
@@ -190,7 +191,7 @@ class CompositionRunner():
                 raise Exception("The minibatch size cannot be greater than the number of trials.")
 
             early_stopper = None
-            if patience is not None and (bin_execute is False or bin_execute == 'Python'):
+            if patience is not None and not execution_mode:
                 early_stopper = EarlyStopping(min_delta=min_delta, patience=patience)
 
             if callable(stim_input) and not isgeneratorfunction(stim_input):
@@ -218,7 +219,7 @@ class CompositionRunner():
                                   num_trials=run_trials,
                                   skip_initialization=skip_initialization,
                                   skip_analyze_graph=True,
-                                  bin_execute=bin_execute,
+                                  execution_mode=execution_mode,
                                   context=context,
                                   **kwargs)
             skip_initialization = True

@@ -78,7 +78,7 @@ different execution contexts and can be modified by modulated `ModulatorySignal_
     <Parameter.set>` method, see `BasicsAndPrimer_Parameters`.
 
 
-.. _technical_note::
+.. technical_note::
 
     Developers must keep in mind state when writing new Components for PsyNeuLink. Any parameters or values that may
     change during a `run <Run_Overview>` must become stateful Parameters, or they are at risk of computational
@@ -1267,7 +1267,8 @@ class Parameter(ParameterBase):
         value = self._set(self._parse(value), context, skip_history, skip_log, **kwargs)
 
         try:
-            value = value.__self__
+            if isinstance(value.__self__, Component):
+                value = value.__self__
         except AttributeError:
             pass
 

@@ -8,13 +8,202 @@
 #
 # **********************************************  PreferenceSet **********************************************************
 #
+"""
+.. _Preferences:
+
+Preferences specify the behavior of Components when they are executed.  They can be specified by their value, or
+by a PreferenceSet, which specifies the
+
+Standard Preferences
+--------------------
+
+The following preferences are available for all Components (see `Component prefs <Component_Prefs>` for
+additional details):
+
+* **verbosePref** (bool : default False) - enables/disables reporting of (non-exception) warnings and system function;
+
+* **paramValidationPref** (bool : default False) - enables/disables run-time validation of the execute method of a
+  Function object;
+
+.. _PreferenceSet_reportOutputPref:
+
+* **reportOutputPref** (`ReportOutput`, *PARAMS*, str, list): default ReportOutput.OFF) - enables/disables and
+  determines format and content for reporting execution of the `Component` (see `ReportOutput` for options). If
+  *PARAMS* is specified, then `ReportOutput.FULL` is used automatically (rather than the default, `ReportOutput.OFF`),
+  and the Component's `Parameters` are included along with its input and output.  A list of specific Parameters of
+  the Component and/or its `function <Component_Function>` can also be specified, in which case only those are
+  included. If the Component is a `Mechanism` executed within a `Composition`, its preference is overridden
+  by the **report_output** argument specified in any of the Composition's `execution methods
+  <Composition_Execution_Methods>` unless ReportOutput.USE_PREFS is specified in the argument; see below for
+  examples and `execution reporting <Composition_Execution_Reporting>` for additional details.
+
+* **logPref** (`LogCondition` : default LogCondition.OFF) - sets `LogCondition` for a given Component;
+
+COMMENT:
+THIS DOES NOT APPEAR CURRENTLY TO BE USED:
+* **runtimeParamModulationPref** (Modulation, default: Modulation.MULTIPLY) -  sets type of `Modulation`
+  used for modulating parameters by runtime specification (in pathway);
+COMMENT
+
+.. technical_note::
+   * **deliverPref** (LogCondition, default: LogCondition.OFF) - sets whether attribute data are added to context rpc
+     pipeline for delivery to external applications.
+
+
+Examples
+--------
+
+reportOutputPref
+~~~~~~~~~~~~~~~~
+
+By default, executing a Component, such as the Mechanism below, does not produce any output:
+
+  >>> import psyneulink as pnl
+  >>> my_mech = pnl.TransferMechanism()
+  >>> my_mech.execute()
+  <BLANKLINE>
+
+Output can be specified by specifying a value of `ReportOutput` as the Mechanism's `reportOutputPref` preference.
+Assigning `ReportOutput.FULL` generates a report of its input and output values when it was executed:
+
+  >>> my_mech.reportOutputPref = pnl.ReportOutput.FULL
+  >>> my_mech.execute()
+  ╭─ My Mechanism ─╮
+  │ input: 0.0     │
+  │ output: 0.0    │
+  ╰────────────────╯
+
+Assigning `ReportOutput.TERSE` generates a simpler report:
+
+  >>> my_mech.reportOutputPref = pnl.ReportOutput.TERSE
+  >>> my_mech.execute()
+   My Mechanism executed
+
+This can be useful when there are many Components executed (e.g., as part of the `execution <Composition_Execution>`
+of a complex `Composition`.
+
+Assigning the *PARAMS* keyword produces a display of the Mechanism's input and output as well as the value of
+all of its `Parameters` (for brevity, not all are shown below):
+
+  >>> my_mech.reportOutputPref = pnl.PARAMS
+  >>> my_mech.execute()
+  ╭────────────────────────────────────────── My Mechanism ──────────────────────────────────────────╮
+  │ input: 0.0                                                                                       │
+  │ ╭──────────────────────────────────────────────────────────────────────────────────────────────╮ │
+  │ │ params:                                                                                      │ │
+     ...
+  │ │         integration_rate: 0.5                                                                │ │
+     ...
+  │ │         noise: 0.0                                                                           │ │
+     ...
+  │ │         function: Linear Function-6                                                          │ │
+  │ │                 intercept: 0.0                                                               │ │
+     ...
+  │ │                 slope: 1.0                                                                   │ │
+  │ │                 value: 0.0                                                                   │ │
+  │ │                 variable: 0.0                                                                │ │
+  │ │         integrator_function: AdaptiveIntegrator Function-1                                   │ │
+     ...
+  │ │                 previous_value: 0                                                            │ │
+  │ │                 rate: 0.5                                                                    │ │
+  │ │                 value: 0.0                                                                   │ │
+  │ │                 variable: 0                                                                  │ │
+  │ │         termination_measure: Distance Function-5                                             │ │
+     ...
+  │ │                 metric: max_abs_diff                                                         │ │
+  │ │                 normalize: False                                                             │ │
+  │ │                 value: 0.0                                                                   │ │
+  │ │                 variable: 0 0                                                                │ │
+  │ ╰──────────────────────────────────────────────────────────────────────────────────────────────╯ │
+  │ output: 0.0                                                                                      │
+  ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+Note that specifying *PARAMS* forces a full output (i.e., equivalent to also specifying `ReportOutput.FULL`).
+
+Generally, not all of a Component's `Parameters` are of interest.  The display can be restricted to
+just those of interest by including them in a list specified for reportOutputPref:
+
+  >>> my_mech.reportOutputPref = ['integration_rate', 'slope', 'rate']
+  >>> my_mech.execute()
+  ╭────────────────────────────────────────── My Mechanism ──────────────────────────────────────────╮
+  │ input: 0.0                                                                                       │
+  │ ╭──────────────────────────────────────────────────────────────────────────────────────────────╮ │
+  │ │ params:                                                                                      │ │
+  │ │         integration_rate: 0.5                                                                │ │
+  │ │         function: Linear Function-6                                                          │ │
+  │ │                 slope: 1.0                                                                   │ │
+  │ │         integrator_function: AdaptiveIntegrator Function-1                                   │ │
+  │ │                 rate: 0.5                                                                    │ │
+  │ ╰──────────────────────────────────────────────────────────────────────────────────────────────╯ │
+  │ output: 0.0                                                                                      │
+  ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+
+This can be overridden by specifying `ReportOutput.TERSE` (i.e., without having to delete all of the parameter
+specifications, which can be useful when testing):
+
+  >>> my_mech.reportOutputPref = ['integration_rate', 'slope', 'rate', pnl.ReportOutput.TERSE]
+  >>> my_mech.execute()
+   My Mechanism executed
+
+When a Mechanism is executed as part of a Composition, the Composition's reportOutputPref takes precedence:
+
+  >>> my_comp = pnl.Composition(pathways=[my_mech])
+  >>> my_mech.reportOutputPref = ['integration_rate', 'slope', 'rate']
+  >>> my_comp.run()
+  <BLANKLINE>
+
+Note that the Composition's setting, which is ReportOutput.OFF by default, overrode the Mechanism's
+reportOutputPref settings.  The **report_output** argument of a Composition's `execution method
+<Composition_Execution_Methods>` can also be used to specify report contents;  this too overrides
+the Mechanism's reportOutputPref setting:
+
+  >>> my_mech.reportOutputPref = ['integration_rate', 'slope', 'rate', pnl.ReportOutput.FULL]
+  >>> my_comp.run(report_output=pnl.ReportOutput.TERSE)
+  Composition-0 TRIAL 0 ====================
+   Time Step 0 ---------
+     My Mechanism executed
+
+Note that the report for the execution of a Composition contains information about the `TRIAL <TimeScale.TRIAL>`
+and `TIME_STEP <TimeScale.TIME_STEP>` in which the Mechanism executed.
+
+A more complete report of the execution can be generated using the `Report.FULL` and `Report.USE_PREFS` options in the
+**report_output** argument of a Composition's `execution methods <Composition_Execution_Methods>`, that also includes
+the input and output for the Composition:
+
+  >>> my_comp = pnl.Composition(pathways=[my_mech])
+  >>> my_mech.reportOutputPref = ['integration_rate', 'slope', 'rate']
+  >>> my_comp.run(report_output=pnl.ReportOutput.FULL)
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  Composition-0: Trial 0  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃                                                                                                          ┃
+  ┃ input: [[0.0]]                                                                                           ┃
+  ┃                                                                                                          ┃
+  ┃ ┌────────────────────────────────────────────  Time Step 0 ────────────────────────────────────────────┐ ┃
+  ┃ │ ╭────────────────────────────────────────── My Mechanism ──────────────────────────────────────────╮ │ ┃
+  ┃ │ │ input: 0.0                                                                                       │ │ ┃
+  ┃ │ │ ╭──────────────────────────────────────────────────────────────────────────────────────────────╮ │ │ ┃
+  ┃ │ │ │ params:                                                                                      │ │ │ ┃
+  ┃ │ │ │         integration_rate: 0.5                                                                │ │ │ ┃
+  ┃ │ │ │         function: Linear Function-6                                                          │ │ │ ┃
+  ┃ │ │ │                 slope: 1.0                                                                   │ │ │ ┃
+  ┃ │ │ │         integrator_function: AdaptiveIntegrator Function-1                                   │ │ │ ┃
+  ┃ │ │ │                 rate: 0.5                                                                    │ │ │ ┃
+  ┃ │ │ ╰──────────────────────────────────────────────────────────────────────────────────────────────╯ │ │ ┃
+  ┃ │ │ output: 0.0                                                                                      │ │ ┃
+  ┃ │ ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯ │ ┃
+  ┃ └──────────────────────────────────────────────────────────────────────────────────────────────────────┘ ┃
+  ┃                                                                                                          ┃
+  ┃ result: [[0.0]]                                                                                          ┃
+  ┃                                                                                                          ┃
+  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+"""
+
 import abc
 import inspect
-
 from collections import namedtuple
 from enum import Enum, IntEnum
 
-from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import DEFAULT_PREFERENCE_SET_OWNER, PREFERENCE_SET_NAME
 from psyneulink.core.globals.utilities import iscompatible, kwCompatibilityType
 
@@ -51,6 +240,7 @@ class PreferenceSetError(Exception):
 class PreferenceSet(object):
     """Abstract class for PreferenceSets that stores preferences and provides access to level-specific settings
 
+    COMMENT:
     Description:
         Each PreferenceSet object stores a set of preferences in its corresponding attributes
         Every class in the Component hierarchy is assigned a PreferenceLevel:
@@ -149,6 +339,7 @@ class PreferenceSet(object):
 
     Instance methods:
         None
+    COMMENT
     """
 
     def __init__(self,
@@ -456,7 +647,7 @@ class PreferenceSet(object):
 #                                          " must be a {2} or PreferenceLevel".
 #                                          format(pref_spec, pref_attrib_name, type(pref_spec).__name__))
 
-    def set_preference(self, candidate_info, pref_ivar_name, default_entry=None):
+    def set_preference(self, candidate_info, pref_ivar_name, default_entry=None, skip_validation=False):
         """Validate and assign PreferenceSet, setting, or level to a PreferenceSet preference attribute
 
         Validate candidate candidate_info and, if OK, assign to pref_ivar_name attribute; candidate_info can be a:
@@ -527,7 +718,7 @@ class PreferenceSet(object):
                 candidate_info = PreferenceEntry(candidate_info[0], candidate_info[1])
             setting_OK = self.validate_setting(candidate_info.setting, default_setting, pref_ivar_name)
             level_OK = isinstance(candidate_info.level, PreferenceLevel)
-            if level_OK and setting_OK:
+            if (level_OK and setting_OK) or skip_validation:
                 setattr(self, pref_ivar_name, candidate_info)
                 return_val = candidate_info
             else:
@@ -541,12 +732,12 @@ class PreferenceSet(object):
         # candidate_info is a presumed setting
         else:
             setting_OK = self.validate_setting(candidate_info, default_setting, pref_ivar_name)
-            if setting_OK:
+            if setting_OK or skip_validation:
                 setattr(self, pref_ivar_name, PreferenceEntry(candidate_info, default_level))
                 return_val = PreferenceEntry(setting=candidate_info, level=None)
 
         # All is OK, so return
-        if level_OK and setting_OK:
+        if (level_OK and setting_OK) or skip_validation:
             return return_val
 
         # Something's amiss, so raise exception
@@ -582,7 +773,10 @@ class PreferenceSet(object):
         # if pref_ivar_name is LOG_PREF:
         #     self.validate_log(candidate_setting, self)
 
-        setting_OK = iscompatible(candidate_setting, reference_setting, **{kwCompatibilityType:Enum})
+        setting_OK = (
+            iscompatible(candidate_setting, reference_setting, **{kwCompatibilityType:Enum})
+            or isinstance(candidate_setting, bool)
+        )
         # setting_OK = iscompatible(candidate_setting, reference_setting)
 
         # if not setting_OK and (isinstance(candidate_setting, Enum) or isinstance(reference_setting, Enum)):

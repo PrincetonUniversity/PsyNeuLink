@@ -9,14 +9,13 @@ from psyneulink.core.components.mechanisms.processing.integratormechanism import
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.compositions.composition import Composition
 
-debug_options=["const_input=[[[7]]]", "const_input", "const_data", "const_params", "const_data", "const_state"]
+debug_options=["const_input=[[[7]]]", "const_input", "const_data", "const_params", "const_data", "const_state", "stat"]
 options_combinations = (";".join(("debug_info", *c)) for i in range(len(debug_options) + 1) for c in combinations(debug_options, i))
 
 @pytest.mark.composition
-@pytest.mark.parametrize("mode", [
-                                  pytest.param('LLVMRun', marks=pytest.mark.llvm),
-                                  pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
-                                  ])
+@pytest.mark.parametrize("mode", [pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
+                                  pytest.helpers.cuda_param(pnlvm.ExecutionMode.PTXRun)
+                                 ])
 @pytest.mark.parametrize("debug_env", [comb for comb in options_combinations if comb.count("const_input") < 2])
 def test_debug_comp(mode, debug_env):
     # save old debug env var
@@ -31,8 +30,8 @@ def test_debug_comp(mode, debug_env):
     comp.add_linear_processing_pathway([A, B])
 
     inputs_dict = {A: [5]}
-    output1 = comp.run(inputs=inputs_dict, bin_execute=mode)
-    output2 = comp.run(inputs=inputs_dict, bin_execute=mode)
+    output1 = comp.run(inputs=inputs_dict, execution_mode=mode)
+    output2 = comp.run(inputs=inputs_dict, execution_mode=mode)
     # restore old debug env var and cleanup the debug configuration
     if old_env is None:
         del os.environ["PNL_LLVM_DEBUG"]
