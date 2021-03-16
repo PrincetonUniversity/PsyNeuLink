@@ -1364,9 +1364,8 @@ class LearningMechanism(ModulatoryMechanism_Base):
             summed_learning_signal += learning_signal
             summed_error_signal += error_signal
 
-        from psyneulink.core.compositions.report import ReportOutput
-        if (self.reportOutputPref is not ReportOutput.OFF
-                and self.initialization_status != ContextFlags.INITIALIZING):
+        if (self.reportOutputPref and
+                self.initialization_status != ContextFlags.INITIALIZING):
             print("\n{} weight change matrix: \n{}\n".format(self.name, summed_learning_signal))
 
         # Durning initialization return zeros so that the first "real" trial for Backprop does not start

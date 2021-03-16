@@ -292,7 +292,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         # Check that all function_arg params with length > 1 have the same length
         elif any(len(v)!=len(values[0]) for v in values):
             raise FunctionError(f"The parameters with len>1 specified for {self.name} "
-                                f"({sorted(params_to_check.keys())}) don't all have the same length")
+                                f"({list(params_to_check.keys())}) don't all have the same length")
     # MODIFIED 6/21/19 END
 
     # MODIFIED 6/21/19 NEW: [JDC]
@@ -2522,7 +2522,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         val = builder.fadd(val, factor)
 
         val = builder.fadd(val, offset)
-        neg_threshold = pnlvm.helpers.fneg(builder, threshold)
+        neg_threshold = builder.fsub(threshold.type(0), threshold)
         val = pnlvm.helpers.fclamp(builder, val, neg_threshold, threshold)
 
         # Store value result

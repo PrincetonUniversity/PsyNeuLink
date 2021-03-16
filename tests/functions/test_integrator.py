@@ -124,8 +124,12 @@ GROUP_PREFIX="IntegratorFunction "
     (Functions.DriftDiffusionIntegrator, DriftIntFun),
     (Functions.LeakyCompetingIntegrator, LeakyFun),
     ], ids=lambda x: x[0])
+@pytest.mark.parametrize("mode", [
+    'Python',
+    pytest.param('LLVM', marks=pytest.mark.llvm),
+    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
 @pytest.mark.benchmark
-def test_execute(func, func_mode, variable, noise, params, benchmark):
+def test_execute(func, mode, variable, noise, params, benchmark):
     benchmark.group = GROUP_PREFIX + func[0].componentName
     try:
         noise = noise()
@@ -139,11 +143,11 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
 
     f = func[0](default_variable=variable, noise=noise, **params)
 
-    if func_mode == 'Python':
+    if mode == 'Python':
         ex = f
-    elif func_mode == 'LLVM':
+    elif mode == 'LLVM':
         ex = pnlvm.execution.FuncExecution(f).execute
-    elif func_mode == 'PTX':
+    elif mode == 'PTX':
         ex = pnlvm.execution.FuncExecution(f).cuda_execute
     ex(variable)
     ex(variable)
@@ -180,7 +184,7 @@ def test_integrator_function_with_params_of_different_lengths():
     with pytest.raises(FunctionError) as error_text:
         Functions.AdaptiveIntegrator(rate=[.1, .2, .3], offset=[.4,.5])
     error_msg_a = "The parameters with len>1 specified for AdaptiveIntegrator Function"
-    error_msg_b = "(['offset', 'rate']) don't all have the same length"
+    error_msg_b = "(['rate', 'offset']) don't all have the same length"
     assert error_msg_a in str(error_text.value)
     assert error_msg_b in str(error_text.value)
 

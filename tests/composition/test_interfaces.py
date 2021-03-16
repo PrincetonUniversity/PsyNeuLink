@@ -124,7 +124,14 @@ class TestConnectCompositionsViaCIMS:
 
     @pytest.mark.nested
     @pytest.mark.composition
-    def test_connect_compositions_with_simple_states(self, comp_mode):
+    @pytest.mark.parametrize("mode", ['Python',
+                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                             ])
+    def test_connect_compositions_with_simple_states(self, mode):
 
         comp1 = Composition(name="first_composition")
 
@@ -181,16 +188,23 @@ class TestConnectCompositionsViaCIMS:
         # comp3:
         # input = 5.0
         # output = 180.0
-        res = comp3.run(inputs={comp1: [[5.]]}, execution_mode=comp_mode)
+        res = comp3.run(inputs={comp1: [[5.]]}, bin_execute=mode)
         assert np.allclose(res, [[[180.0]]])
-        if comp_mode is pnlvm.ExecutionMode.Python:
+        if mode == 'Python':
             assert np.allclose(comp1.output_port.parameters.value.get(comp3), [30.0])
             assert np.allclose(comp2.output_port.parameters.value.get(comp3), [180.0])
             assert np.allclose(comp3.output_port.parameters.value.get(comp3), [180.0])
 
     @pytest.mark.nested
     @pytest.mark.composition
-    def test_connect_compositions_with_complicated_states(self, comp_mode):
+    @pytest.mark.parametrize("mode", ['Python',
+                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                             ])
+    def test_connect_compositions_with_complicated_states(self, mode):
 
         inner_composition_1 = Composition(name="comp1")
 
@@ -242,18 +256,25 @@ class TestConnectCompositionsViaCIMS:
         output = outer_composition.run(
             inputs={inner_composition_1: [[[5.0], [50.0]]]},
             scheduler=sched,
-            execution_mode=comp_mode
+            bin_execute=mode
         )
 
         assert np.allclose(output, [[[180.], [1800.]]])
-        if comp_mode is pnlvm.ExecutionMode.Python:
+        if mode == 'Python':
             assert np.allclose(inner_composition_1.get_output_values(outer_composition), [[30.], [300.]])
             assert np.allclose(inner_composition_2.get_output_values(outer_composition), [[180.], [1800.]])
             assert np.allclose(outer_composition.get_output_values(outer_composition), [[180.], [1800.]])
 
     @pytest.mark.nested
     @pytest.mark.composition
-    def test_compositions_as_origin_nodes(self, comp_mode):
+    @pytest.mark.parametrize("mode", ['Python',
+                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                             ])
+    def test_compositions_as_origin_nodes(self, mode):
 
         inner_composition_1 = Composition(name="inner_composition_1")
 
@@ -310,11 +331,11 @@ class TestConnectCompositionsViaCIMS:
                                           B: [1.0]},
                 inner_composition_2: [[12.0]]},
             scheduler=sched,
-            execution_mode=comp_mode
+            bin_execute=mode
         )
         assert np.allclose(output, [[[36.]]])
 
-        if comp_mode is pnlvm.ExecutionMode.Python:
+        if mode == 'Python':
             assert np.allclose(A.get_output_values(outer_composition), [[1.0]])
             assert np.allclose(B.get_output_values(outer_composition), [[2.0]])
             assert np.allclose(C.get_output_values(outer_composition), [[9.0]])
@@ -327,7 +348,14 @@ class TestConnectCompositionsViaCIMS:
 
     @pytest.mark.nested
     @pytest.mark.composition
-    def test_compositions_as_origin_nodes_multiple_trials(self, comp_mode):
+    @pytest.mark.parametrize("mode", ['Python',
+                             pytest.param('LLVM', marks=pytest.mark.llvm),
+                             pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                             pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                             pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                             pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                             ])
+    def test_compositions_as_origin_nodes_multiple_trials(self, mode):
 
         inner_composition_1 = Composition(name="inner_composition_1")
 
@@ -394,7 +422,7 @@ class TestConnectCompositionsViaCIMS:
                                       B: [[1.0], [1.5], [1.5]]},
                 inner_composition_2: [[12.0], [11.5], [12.5]]},
             scheduler=sched,
-            execution_mode=comp_mode
+            bin_execute=mode
         )
 
         # trial 0:

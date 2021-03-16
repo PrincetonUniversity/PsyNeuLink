@@ -93,14 +93,18 @@ derivative_names = [
 @pytest.mark.transfer_function
 @pytest.mark.benchmark
 @pytest.mark.parametrize("func, variable, params, fail, expected", test_data, ids=names)
-def test_execute(func, variable, params, fail, expected, benchmark, func_mode):
+@pytest.mark.parametrize("mode", [
+    'Python',
+    pytest.param('LLVM', marks=pytest.mark.llvm),
+    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_execute(func, variable, params, fail, expected, benchmark, mode):
     f = func(default_variable=variable, **params)
     benchmark.group = "TransferFunction " + func.componentName
-    if func_mode == 'Python':
+    if mode == 'Python':
         ex = f
-    elif func_mode == 'LLVM':
+    elif mode == 'LLVM':
         ex = pnlvm.execution.FuncExecution(f).execute
-    elif func_mode == 'PTX':
+    elif mode == 'PTX':
         ex = pnlvm.execution.FuncExecution(f).cuda_execute
     res = ex(variable)
     assert np.allclose(res, expected)
@@ -112,14 +116,18 @@ def test_execute(func, variable, params, fail, expected, benchmark, func_mode):
 @pytest.mark.transfer_function
 @pytest.mark.benchmark
 @pytest.mark.parametrize("func, variable, params, expected", derivative_test_data, ids=derivative_names)
-def test_execute_derivative(func, variable, params, expected, benchmark, func_mode):
+@pytest.mark.parametrize("mode", [
+    'Python',
+    pytest.param('LLVM', marks=pytest.mark.llvm),
+    pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_execute_derivative(func, variable, params, expected, benchmark, mode):
     f = func(default_variable=variable, **params)
     benchmark.group = "TransferFunction " + func.componentName + " Derivative"
-    if func_mode == 'Python':
+    if mode == 'Python':
         ex = f.derivative
-    elif func_mode == 'LLVM':
+    elif mode == 'LLVM':
         ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative"})).execute
-    elif func_mode == 'PTX':
+    elif mode == 'PTX':
         ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative"})).cuda_execute
     res = ex(variable)
     assert np.allclose(res, expected)
@@ -138,27 +146,27 @@ def test_transfer_with_costs_function():
     assert np.allclose(f.intensity_cost, 7.38905609893065)
     assert f.adjustment_cost is None
     assert f.duration_cost is None
-    assert np.allclose(f.combined_costs, 7.38905609893065)
+    assert np.allclose(np.float(f.combined_costs), 7.38905609893065)
     f.toggle_cost(Functions.CostFunctions.ADJUSTMENT)
     result = f(3)
     assert np.allclose(result, 3)
     assert np.allclose(f.intensity_cost, 20.085536923187668)
     assert np.allclose(f.adjustment_cost, 1)
     assert f.duration_cost is None
-    assert np.allclose(f.combined_costs, 21.085536923187668)
+    assert np.allclose(np.float(f.combined_costs), 21.085536923187668)
     f.toggle_cost(Functions.CostFunctions.DURATION)
     result = f(5)
     assert np.allclose(result, 5)
     assert np.allclose(f.intensity_cost, 148.413159102576603)
     assert np.allclose(f.adjustment_cost, 2)
     assert np.allclose(f.duration_cost, 5)
-    assert np.allclose(f.combined_costs, 155.413159102576603)
+    assert np.allclose(np.float(f.combined_costs), 155.413159102576603)
     result = f(1)
     assert np.allclose(result, 1)
     assert np.allclose(f.intensity_cost, 2.718281828459045)
     assert np.allclose(f.adjustment_cost, 4)
     assert np.allclose(f.duration_cost, 6)
-    assert np.allclose(f.combined_costs, 12.718281828459045)
+    assert np.allclose(np.float(f.combined_costs), 12.718281828459045)
 
 
 @pytest.mark.parametrize(

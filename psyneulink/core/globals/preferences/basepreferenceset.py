@@ -231,6 +231,7 @@ class BasePreferenceSet(PreferenceSet):
             LOG_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
             DELIVERY_PREF: PreferenceEntry(LogCondition.OFF, PreferenceLevel.CATEGORY),
             RUNTIME_PARAM_MODULATION_PREF: PreferenceEntry(Modulation.MULTIPLY, PreferenceLevel.COMPOSITION)
+
     }
 
     baseClass = None
@@ -364,14 +365,8 @@ class BasePreferenceSet(PreferenceSet):
         """
         # If the level of the object is below the Preference level,
         #    recursively calls super (closer to base) classes to get preference at specified level
-        # return self.get_pref_setting_for_level(REPORT_OUTPUT_PREF, self._report_output_pref.level)[0]
-        from psyneulink.core.compositions.report import ReportOutput
-        pref = self.get_pref_setting_for_level(REPORT_OUTPUT_PREF, self._report_output_pref.level)[0]
-        if pref is False:
-            return ReportOutput.OFF
-        elif pref is True:
-            return ReportOutput.TERSE
-        return pref
+        return self.get_pref_setting_for_level(REPORT_OUTPUT_PREF, self._report_output_pref.level)[0]
+
 
     @reportOutputPref.setter
     def reportOutputPref(self, setting):
@@ -379,14 +374,7 @@ class BasePreferenceSet(PreferenceSet):
         :param setting:
         :return:
         """
-        # skip setting validation because default is bool but 'params'
-        # string should be accepted
-        from psyneulink.core.compositions.report import ReportOutput
-        if setting is False:
-            setting = ReportOutput.OFF
-        elif setting is True:
-            setting = ReportOutput.TERSE
-        self.set_preference(candidate_info=setting, pref_ivar_name=REPORT_OUTPUT_PREF, skip_validation=True)
+        self.set_preference(candidate_info=setting, pref_ivar_name=REPORT_OUTPUT_PREF)
 
     @property
     def logPref(self):

@@ -17,6 +17,5 @@ Core
    - `Visualization`
    - `Scheduling`
    - `Compilation`
-   - `Report`
    - `Log`
    - `json`

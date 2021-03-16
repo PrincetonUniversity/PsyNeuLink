@@ -364,18 +364,19 @@ class TestReset:
 
 VECTOR_SIZE=4
 
-def _get_mechanism_execution(mech, mech_mode):
-    if mech_mode == 'Python':
+def _get_mechanism_execution(mech, mode):
+    if mode == 'Python':
         def ex(variable):
             mech.execute(variable)
             return mech.output_values
         return ex
-    elif mech_mode == 'LLVM':
-        return pnlvm.execution.MechExecution(mech).execute
-    elif mech_mode == 'PTX':
-        return pnlvm.execution.MechExecution(mech).cuda_execute
-    else:
-        assert False, "Unknown execution mode: {}".format(mech_mode)
+    elif mode == 'LLVM':
+        e = pnlvm.execution.MechExecution(mech)
+        return e.execute
+    elif mode == 'PTX':
+        e = pnlvm.execution.MechExecution(mech)
+        return e.cuda_execute
+    assert False, "Unknown execution mode: {}".format(mode)
 
 class TestIntegratorFunctions:
 
@@ -397,13 +398,16 @@ class TestIntegratorFunctions:
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.benchmark(group="IntegratorMechanism")
-    def test_integrator_multiple_input(self, benchmark, mech_mode):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_integrator_multiple_input(self, benchmark, mode):
         I = IntegratorMechanism(
             function=Linear(slope=2.0, intercept=1.0),
             default_variable=[[1], [2]],
             input_ports=['a', 'b'],
         )
-        ex = _get_mechanism_execution(I, mech_mode)
+        ex = _get_mechanism_execution(I, mode)
 
         val = ex([[1], [2]])
         assert np.allclose(val, [[3]])
@@ -414,12 +418,15 @@ class TestIntegratorFunctions:
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.benchmark(group="IntegratorMechanism")
-    def test_integrator_multiple_output(self, benchmark, mech_mode):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_integrator_multiple_output(self, benchmark, mode):
         I = IntegratorMechanism(
             default_variable=[5],
             output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}, 'c'],
         )
-        ex = _get_mechanism_execution(I, mech_mode)
+        ex = _get_mechanism_execution(I, mode)
 
         val = ex([5])
         assert np.allclose(val, [[2.5], [2.5]])
@@ -430,7 +437,10 @@ class TestIntegratorFunctions:
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.benchmark(group="IntegratorMechanism")
-    def test_integrator_multiple_input_output(self, benchmark, mech_mode):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_integrator_multiple_input_output(self, benchmark, mode):
         I = IntegratorMechanism(
             function=Linear(slope=2.0, intercept=1.0),
             default_variable=[[1], [2]],
@@ -438,7 +448,7 @@ class TestIntegratorFunctions:
             output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 1)},
                           {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}],
         )
-        ex = _get_mechanism_execution(I, mech_mode)
+        ex = _get_mechanism_execution(I, mode)
 
         val = ex([[1], [2]])
         assert np.allclose(val, [[5], [3]])
@@ -448,12 +458,15 @@ class TestIntegratorFunctions:
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.benchmark(group="IntegratorMechanism")
-    def test_FitzHughNagumo_simple_scalar(self, benchmark, mech_mode):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_FitzHughNagumo_simple_scalar(self, benchmark, mode):
         var = [1.0]
         I = IntegratorMechanism(name="I",
                                 default_variable=[var],
                                 function=FitzHughNagumoIntegrator())
-        ex = _get_mechanism_execution(I, mech_mode)
+        ex = _get_mechanism_execution(I, mode)
 
         val = ex(var)
         assert np.allclose(val[0], [0.05127053])
@@ -463,12 +476,15 @@ class TestIntegratorFunctions:
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.benchmark(group="IntegratorMechanism")
-    def test_FitzHughNagumo_simple_vector(self, benchmark, mech_mode):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_FitzHughNagumo_simple_vector(self, benchmark, mode):
         var = [1.0, 3.0]
         I = IntegratorMechanism(name="I",
                                 default_variable=var,
                                 function=FitzHughNagumoIntegrator)
-        ex = _get_mechanism_execution(I, mech_mode)
+        ex = _get_mechanism_execution(I, mode)
 
         val = ex(var)
         assert np.allclose(val[0], [0.05127053, 0.15379818])
@@ -478,11 +494,14 @@ class TestIntegratorFunctions:
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.benchmark(group="IntegratorMechanism")
-    def test_transfer_integrator(self, benchmark, mech_mode):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_transfer_integrator(self, benchmark, mode):
         I = IntegratorMechanism(
             default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Linear(slope=5.0))
-        ex = _get_mechanism_execution(I, mech_mode)
+        ex = _get_mechanism_execution(I, mode)
 
         val = benchmark(ex, [1.0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
@@ -611,9 +630,12 @@ class TestIntegratorFunctions:
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
     @pytest.mark.benchmark(group="IntegratorMechanism")
-    def test_integrator_no_function(self, benchmark, mech_mode):
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVM', marks=pytest.mark.llvm),
+                                      pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+    def test_integrator_no_function(self, benchmark, mode):
         I = IntegratorMechanism()
-        ex = _get_mechanism_execution(I, mech_mode)
+        ex = _get_mechanism_execution(I, mode)
 
         val = ex([10])
         assert np.allclose(val, [[5.0]])
@@ -963,7 +985,7 @@ class TestIntegratorRate:
                 ))
 
         error_msg_a = "The parameters with len>1 specified for AccumulatorIntegrator Function-0 "
-        error_msg_b = "(['increment', 'rate']) don't all have the same length"
+        error_msg_b = "(['rate', 'increment']) don't all have the same length"
         assert error_msg_a in str(error_text.value)
         assert error_msg_b in str(error_text.value)
 
@@ -1188,6 +1210,11 @@ class TestStatefulness:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
+    @pytest.mark.parametrize('mode', ['Python',
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
     @pytest.mark.parametrize('cond0, cond1, expected', [
         (pnl.Never(), pnl.AtTrial(2),
          [[np.array([0.5]), np.array([0.5])],
@@ -1214,10 +1241,7 @@ class TestStatefulness:
           [np.array([0.5]), np.array([0.9375])],
           [np.array([0.5]), np.array([0.96875])]]),
         ], ids=lambda x: str(x) if isinstance(x, pnl.Condition) else "")
-    # 'LLVM' mode is not supported, because synchronization of compiler and
-    # python values during execution is not implemented.
-    @pytest.mark.usefixtures("comp_mode_no_llvm")
-    def test_reset_stateful_function_when_composition(self, comp_mode, cond0, cond1, expected):
+    def test_reset_stateful_function_when_composition(self, mode, cond0, cond1, expected):
         I1 = pnl.IntegratorMechanism()
         I2 = pnl.IntegratorMechanism()
         I1.reset_stateful_function_when = cond0
@@ -1226,7 +1250,7 @@ class TestStatefulness:
         C.add_node(I1)
         C.add_node(I2)
 
-        C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, execution_mode=comp_mode)
+        C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, bin_execute=mode)
 
         assert np.allclose(expected, C.results)
 

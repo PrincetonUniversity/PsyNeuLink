@@ -191,7 +191,10 @@ RAND3_S = np.random.rand()
 @pytest.mark.parametrize("weights", [None, 0.5, 'VC', 'VR'], ids=["W_NONE", "W_SCALAR", "W_VECTORN", "W_VECTORM"])
 @pytest.mark.parametrize("scale", [RAND1_S, RAND1_V], ids=["S_SCALAR", "S_VECTOR"])
 @pytest.mark.parametrize("offset", [RAND2_S, RAND2_V], ids=["O_SCALAR", "O_VECTOR"])
-def test_reduce_function(variable, operation, exponents, weights, scale, offset, func_mode, benchmark):
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_reduce_function(variable, operation, exponents, weights, scale, offset, mode, benchmark):
     if weights == 'VC':
         weights = [[(-1) ** i] for i, v in enumerate(variable)]
     if weights == 'VR':
@@ -213,12 +216,12 @@ def test_reduce_function(variable, operation, exponents, weights, scale, offset,
             pytest.xfail("vector offset is not supported")
         raise e from None
 
-    if func_mode == 'Python':
+    if mode == 'Python':
         EX = f.function
-    elif func_mode == 'LLVM':
+    elif mode == 'LLVM':
         e = pnlvm.execution.FuncExecution(f)
         EX = e.execute
-    elif func_mode == 'PTX':
+    elif mode == 'PTX':
         e = pnlvm.execution.FuncExecution(f)
         EX = e.cuda_execute
 
@@ -247,7 +250,10 @@ def test_reduce_function(variable, operation, exponents, weights, scale, offset,
 @pytest.mark.parametrize("weights", [None, 0.5, 'V'], ids=["W_NONE", "W_SCALAR", "W_VECTORN"])
 @pytest.mark.parametrize("scale", [None, RAND1_S, RAND1_V], ids=["S_NONE", "S_SCALAR", "S_VECTOR"])
 @pytest.mark.parametrize("offset", [None, RAND2_S, RAND2_V], ids=["O_NONE", "O_SCALAR", "O_VECTOR"])
-def test_linear_combination_function(variable, operation, exponents, weights, scale, offset, func_mode, benchmark):
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_linear_combination_function(variable, operation, exponents, weights, scale, offset, mode, benchmark):
     if weights == 'V':
         weights = [[-1 ** i] for i, v in enumerate(variable)]
     if exponents == 'V':
@@ -259,12 +265,12 @@ def test_linear_combination_function(variable, operation, exponents, weights, sc
                               weights=weights,
                               scale=scale,
                               offset=offset)
-    if func_mode == 'Python':
+    if mode == 'Python':
         EX = f.function
-    elif func_mode == 'LLVM':
+    elif mode == 'LLVM':
         e = pnlvm.execution.FuncExecution(f)
         EX = e.execute
-    elif func_mode == 'PTX':
+    elif mode == 'PTX':
         e = pnlvm.execution.FuncExecution(f)
         EX = e.cuda_execute
 
@@ -291,16 +297,19 @@ def test_linear_combination_function(variable, operation, exponents, weights, sc
 @pytest.mark.parametrize("input, input_ports", [ ([[1,2,3,4]], ["hi"]), ([[1,2,3,4], [5,6,7,8], [9,10,11,12]], ['1','2','3']), ([[1, 2, 3, 4], [5, 6, 7, 8], [0, 0, 1, 2]], ['1','2','3']) ], ids=["1S", "2S", "3S"])
 @pytest.mark.parametrize("scale", [None, 2.5, [1,2.5,0,0]], ids=["S_NONE", "S_SCALAR", "S_VECTOR"])
 @pytest.mark.parametrize("offset", [None, 1.5, [1,2.5,0,0]], ids=["O_NONE", "O_SCALAR", "O_VECTOR"])
-def test_linear_combination_function_in_mechanism(operation, input, input_ports, scale, offset, benchmark, func_mode):
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_linear_combination_function_in_mechanism(operation, input, input_ports, scale, offset, benchmark, mode):
     f = pnl.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
     p = pnl.ProcessingMechanism(size=[len(input[0])] * len(input), function=f, input_ports=input_ports)
 
-    if func_mode == 'Python':
+    if mode == 'Python':
         EX = p.execute
-    elif func_mode == 'LLVM':
+    elif mode == 'LLVM':
         e = pnlvm.execution.MechExecution(p)
         EX = e.execute
-    elif func_mode == 'PTX':
+    elif mode == 'PTX':
         e = pnlvm.execution.MechExecution(p)
         EX = e.cuda_execute
 

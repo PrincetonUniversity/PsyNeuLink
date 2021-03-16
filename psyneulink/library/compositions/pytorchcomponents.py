@@ -179,8 +179,7 @@ class PytorchProjectionWrapper():
                                            ctx.int32_ty(self._idx)])
 
         dim_x, dim_y = self.matrix.detach().numpy().shape
-        proj_func = pnlvm.helpers.get_param_ptr(builder, self._projection, proj_params, "function")
-        proj_matrix = pnlvm.helpers.get_param_ptr(builder, self._projection.function, proj_func, "matrix")
+        proj_matrix = pnlvm.helpers.get_param_ptr(builder, self._projection, proj_params, "matrix")
         proj_matrix = builder.bitcast(proj_matrix, pnlvm.ir.types.ArrayType(
             pnlvm.ir.types.ArrayType(ctx.float_ty, dim_y), dim_x).as_pointer())
 

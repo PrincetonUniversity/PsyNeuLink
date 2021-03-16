@@ -65,18 +65,21 @@ names = [
 @pytest.mark.memory_function
 @pytest.mark.benchmark
 @pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
-def test_basic(func, variable, params, expected, benchmark, func_mode):
-    if func is Functions.Buffer and func_mode != 'Python':
+@pytest.mark.parametrize('mode', ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_basic(func, variable, params, expected, benchmark, mode):
+    if func is Functions.Buffer and mode != 'Python':
         pytest.skip("Not implemented")
 
     f = func(default_variable=variable, **params)
     benchmark.group = func.componentName
-    if func_mode == 'Python':
+    if mode == 'Python':
         EX = f.function
-    elif func_mode == 'LLVM':
+    elif mode == 'LLVM':
         e = pnlvm.execution.FuncExecution(f)
         EX = e.execute
-    elif func_mode == 'PTX':
+    elif mode == 'PTX':
         e = pnlvm.execution.FuncExecution(f)
         EX = e.cuda_execute
     EX(variable)

@@ -388,33 +388,38 @@ Class Reference
 
 """
 import copy
-from collections.abc import Iterable
-
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core import llvm as pnlvm
+from collections.abc import Iterable
+
 from psyneulink.core.components.component import DefaultsFlexibility
-from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.function import is_function_type, FunctionError
 from psyneulink.core.components.functions.optimizationfunctions import \
     GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.transferfunctions import CostFunctions
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import \
+    ObjectiveMechanism, ObjectiveMechanismError
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.components.ports.inputport import InputPort, _parse_shadow_inputs
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import _parse_port_spec
-from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.globals.context import Context, ContextFlags
-from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, \
-    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMS
-from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
+    OPTIMIZATION_CONTROL_MECHANISM, OBJECTIVE_MECHANISM, OUTCOME, PRODUCT, PARAMS, \
+    CONTROL, AUTO_ASSIGN_MATRIX
 from psyneulink.core.globals.utilities import convert_to_np_array
+from psyneulink.core.globals.parameters import Parameter, ParameterAlias
+from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
+from psyneulink.core.globals.context import handle_external_context
+from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
+
+from psyneulink.core import llvm as pnlvm
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
@@ -443,7 +448,6 @@ def _control_allocation_search_space_getter(owning_component=None, context=None)
         return [c.parameters.allocation_samples._get(context) for c in owning_component.control_signals]
     else:
         return search_space
-
 
 class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(         \
@@ -1018,8 +1022,8 @@ class OptimizationControlMechanism(ControlMechanism):
             context.composition = self.agent_rep
 
             # We shouldn't get this far if execution mode is not Python
-            assert self.parameters.comp_execution_mode._get(context) == "Python"
-            exec_mode = pnlvm.ExecutionMode.Python
+            exec_mode = self.parameters.comp_execution_mode._get(context)
+            assert exec_mode == "Python"
             result = self.agent_rep.evaluate(self.parameters.feature_values._get(context),
                                              control_allocation,
                                              self.parameters.num_estimates._get(context),
@@ -1118,46 +1122,6 @@ class OptimizationControlMechanism(ControlMechanism):
         objective = builder.load(objective_ptr)
         net_outcome = builder.fsub(objective, builder.load(total_cost))
         builder.store(net_outcome, arg_out)
-
-        builder.ret_void()
-        return llvm_func
-
-    def _gen_llvm_evaluate_alloc_range_function(self, *, ctx:pnlvm.LLVMBuilderContext,
-                                                   tags=frozenset()):
-        assert "evaluate" in tags
-        assert "alloc_range" in tags
-        evaluate_f = ctx.import_llvm_function(self,
-                                              tags=tags - {"alloc_range"})
-
-
-        args = [*evaluate_f.type.pointee.args[:2],
-                ctx.int32_ty, ctx.int32_ty,
-                *evaluate_f.type.pointee.args[3:]]
-        builder = ctx.create_llvm_function(args, self, str(self) + "_evaluate_range")
-        llvm_func = builder.function
-
-        params, state, start, stop, arg_out, arg_in, data = llvm_func.args
-        for p in llvm_func.args:
-            if isinstance(p.type, (pnlvm.ir.PointerType)):
-                p.attributes.add('nonnull')
-
-        nodes_params = pnlvm.helpers.get_param_ptr(builder, self.composition,
-                                                   params, "nodes")
-        my_idx = self.composition._get_node_index(self)
-        my_params = builder.gep(nodes_params, [ctx.int32_ty(0),
-                                               ctx.int32_ty(my_idx)])
-        func_params = pnlvm.helpers.get_param_ptr(builder, self,
-                                                  my_params, "function")
-        search_space = pnlvm.helpers.get_param_ptr(builder, self.function,
-                                                   func_params, "search_space")
-
-        allocation = builder.alloca(evaluate_f.args[2].type.pointee)
-        with pnlvm.helpers.for_loop(builder, start, stop, stop.type(1), "alloc_loop") as (b, idx):
-
-            func_out = b.gep(arg_out, [idx])
-            pnlvm.helpers.create_allocation(b, allocation, search_space, idx)
-
-            b.call(evaluate_f, [params, state, allocation, func_out, arg_in, data])
 
         builder.ret_void()
         return llvm_func
@@ -1285,8 +1249,6 @@ class OptimizationControlMechanism(ControlMechanism):
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
         if "net_outcome" in tags:
             return self._gen_llvm_net_outcome_function(ctx=ctx, tags=tags)
-        if "evaluate" in tags and "alloc_range" in tags:
-            return self._gen_llvm_evaluate_alloc_range_function(ctx=ctx, tags=tags)
         if "evaluate" in tags:
             return self._gen_llvm_evaluate_function(ctx=ctx, tags=tags)
 

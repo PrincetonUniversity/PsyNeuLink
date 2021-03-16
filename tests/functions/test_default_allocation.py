@@ -7,15 +7,19 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 @pytest.mark.function
 @pytest.mark.identity_function
 @pytest.mark.benchmark(group="IdentityFunction")
-def test_basic(benchmark, func_mode):
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                  ])
+def test_basic(benchmark, mode):
     variable = np.random.rand(1)
     f = DefaultAllocationFunction()
-    if func_mode == 'Python':
+    if mode == 'Python':
         EX = f.function
-    elif func_mode == 'LLVM':
+    elif mode == 'LLVM':
         e = pnlvm.execution.FuncExecution(f)
         EX = e.execute
-    elif func_mode == 'PTX':
+    elif mode == 'PTX':
         e = pnlvm.execution.FuncExecution(f)
         EX = e.cuda_execute
 

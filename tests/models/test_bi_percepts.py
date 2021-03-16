@@ -10,7 +10,6 @@ import numpy as np
 import psyneulink as pnl
 import pytest
 from itertools import product
-from psyneulink.core.compositions.report import ReportOutput
 
 
 expected_3_10 = [[ 205.67990124], [ 205.536034],   [ 206.29612605],
@@ -31,7 +30,15 @@ expected_8_10 = [[-71427.62150144271], [-71428.44255569541],
     pytest.param(3, 10, expected_3_10, id="3-10"),
     pytest.param(8, 10, expected_8_10, id="8-10"),
 ])
-def test_necker_cube(benchmark, comp_mode, n_nodes, n_time_steps, expected):
+@pytest.mark.parametrize("mode", [
+    'Python',
+    pytest.param('LLVM', marks=[pytest.mark.llvm]),
+    pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
+    pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
+    pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+])
+def test_necker_cube(benchmark, mode, n_nodes, n_time_steps, expected):
     # this code only works for N_PERCEPTS == 2
     ALL_PERCEPTS = ['a', 'b']
 
@@ -81,7 +88,7 @@ def test_necker_cube(benchmark, comp_mode, n_nodes, n_time_steps, expected):
             pathway=(node_j, [-inhib_level], node_i))
 
     # turn off report
-    reportOutputPref = ReportOutput.OFF
+    reportOutputPref = False
 
     # make sure all nodes are both input and outputs
     # # MODIFIED 4/25/20 OLD:
@@ -114,7 +121,7 @@ def test_necker_cube(benchmark, comp_mode, n_nodes, n_time_steps, expected):
     #                                                                                         pnl.NodeRole.OUTPUT])))
 
     # turn off report
-    reportOutputPref = ReportOutput.OFF
+    reportOutputPref = False
     # MODIFIED 4/4/20 END
 
     # bp_comp.show_graph()
@@ -125,7 +132,7 @@ def test_necker_cube(benchmark, comp_mode, n_nodes, n_time_steps, expected):
     }
 
     # run the model
-    res = bp_comp.run(input_dict, num_trials=n_time_steps, execution_mode=comp_mode)
+    res = bp_comp.run(input_dict, num_trials=n_time_steps, bin_execute=mode)
     np.testing.assert_allclose(res, expected)
 
     # Test that order of CIM ports follows order of Nodes in self.nodes
@@ -139,12 +146,19 @@ def test_necker_cube(benchmark, comp_mode, n_nodes, n_time_steps, expected):
 
     if benchmark.enabled:
         benchmark.group = "Necker Cube {}-{}".format(n_nodes, n_time_steps)
-        benchmark(bp_comp.run, input_dict, num_trials=n_time_steps, execution_mode=comp_mode)
+        benchmark(bp_comp.run, input_dict, num_trials=n_time_steps, bin_execute=mode)
 
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Necker Cube")
-def test_vectorized_necker_cube(benchmark, comp_mode):
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVM', marks=[pytest.mark.llvm]),
+                                  pytest.param('LLVMExec', marks=[pytest.mark.llvm]),
+                                  pytest.param('LLVMRun', marks=[pytest.mark.llvm]),
+                                  pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                  pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                  ])
+def test_vectorized_necker_cube(benchmark, mode):
 
     Build_N_Matrix = np.zeros((16,5))
     Build_N_Matrix[0,:] = [0, 1, 3, 4, 8]
@@ -219,7 +233,7 @@ def test_vectorized_necker_cube(benchmark, comp_mode):
                   node4: np.random.random((1,16))
                  }
 
-    result = comp2.run(input_dict, num_trials=10, execution_mode=comp_mode)
+    result = comp2.run(input_dict, num_trials=10, bin_execute=mode)
     assert np.allclose(result,
             [[ 2636.29181172,  -662.53579899,  2637.35386946,  -620.15550833,
                -595.55319772,  2616.74310649,  -442.74286574,  2588.4778162 ,
@@ -231,4 +245,4 @@ def test_vectorized_necker_cube(benchmark, comp_mode):
                 615.39758884, -2599.45663784,   462.67291695, -2570.99427346]])
 
     if benchmark.enabled:
-        benchmark(comp2.run, input_dict, num_trials=10, execution_mode=comp_mode)
+        benchmark(comp2.run, input_dict, num_trials=10, bin_execute=mode)

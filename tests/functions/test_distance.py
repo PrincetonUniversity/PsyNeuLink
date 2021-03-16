@@ -66,19 +66,23 @@ names = [
 @pytest.mark.distance_function
 @pytest.mark.benchmark
 @pytest.mark.parametrize("metric, normalize, fail, expected", test_data, ids=names)
-@pytest.mark.parametrize("variable", [test_var, test_var.astype(np.float32), test_var.tolist()], ids=["np.default", "np.float32", "list"])
-def test_basic(variable, metric, normalize, fail, expected, benchmark, func_mode):
+@pytest.mark.parametrize("variable", [test_var, test_var.astype(np.float32), test_var.tolist()], ids=["np.float", "np.float32", "list"])
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                  ])
+def test_basic(variable, metric, normalize, fail, expected, benchmark, mode):
     if fail is not None:
         pytest.xfail(fail)
 
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     f = Functions.Distance(default_variable=variable, metric=metric, normalize=normalize)
-    if func_mode == 'Python':
+    if mode == 'Python':
         EX = f.function
-    elif func_mode == 'LLVM':
+    elif mode == 'LLVM':
         e = pnlvm.execution.FuncExecution(f)
         EX = e.execute
-    elif func_mode == 'PTX':
+    elif mode == 'PTX':
         e = pnlvm.execution.FuncExecution(f)
         EX = e.cuda_execute
 

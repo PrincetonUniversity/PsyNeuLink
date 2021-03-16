@@ -1070,7 +1070,10 @@ import copy
 import inspect
 import itertools
 import logging
+import re
+import types
 import warnings
+
 from collections import defaultdict, OrderedDict, UserDict, UserList
 from inspect import isclass
 from numbers import Number
@@ -1082,31 +1085,31 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.functions.function import FunctionOutputType
 from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.shellclasses import Function, Mechanism, Projection, Port
 from psyneulink.core.components.ports.inputport import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputPort
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.port import \
     REMOVE_PORTS, PORT_SPEC, _parse_port_spec, PORT_SPECIFIC_PARAMS, PROJECTION_SPECIFIC_PARAMS
-from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 # TODO: remove unused keywords
 from psyneulink.core.globals.keywords import \
-    ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION_PARAMS, \
+    ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION, FUNCTION_PARAMS, \
     INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, INPUT, \
-    INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORT_PARAMS, INPUT_PORTS, MECHANISM, MECHANISM_VALUE, \
-    MECHANISM_COMPONENT_CATEGORY, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
-    MULTIPLICATIVE_PARAM, \
-    NAME, OUTPUT, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORT_PARAMS, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_VALUE, \
+    INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORT_PARAMS, INPUT_PORTS, INPUT_PORT_VARIABLES, \
+    MECHANISM, MECHANISM_VALUE, MECHANISM_COMPONENT_CATEGORY, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
+    MONITOR_FOR_CONTROL, MONITOR_FOR_LEARNING, MULTIPLICATIVE_PARAM, \
+    NAME, OUTPUT, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORT_PARAMS, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_EXECUTION_TIME, OWNER_VALUE, \
     PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.scheduling.condition import Condition, TimeScale
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, \
     iscompatible, kwCompatibilityNumeric
-from psyneulink.core.scheduling.condition import Condition, TimeScale
 
 __all__ = [
     'Mechanism_Base', 'MechanismError', 'MechanismRegistry'
@@ -2307,7 +2310,6 @@ class Mechanism_Base(Mechanism):
                 input=None,
                 context=None,
                 runtime_params=None,
-                report_output=False
                 ):
         """Carry out a single `execution <Mechanism_Execution>` of the Mechanism.
 
@@ -2533,20 +2535,16 @@ class Mechanism_Base(Mechanism):
         # REPORT EXECUTION if called from command line
         #  If called by a Composition, it handles reporting.
         if context.source == ContextFlags.COMMAND_LINE:
-            # FIX: 3/11/21 THIS SHOULD BE REFACTORED TO USE Report.report_output rather than printing directly
-            from psyneulink.core.compositions.report import ReportOutput
-            if (self.prefs.reportOutputPref is not ReportOutput.OFF
-                    and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING)):
-                from psyneulink.core.compositions.report import Report
+            if self.prefs.reportOutputPref and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING):
+                from psyneulink.core.compositions.composition import _report_node_execution
                 from rich import print
-                if self.prefs.reportOutputPref is ReportOutput.TERSE:
-                    print(f'{self.name} executed')
-                else:
-                    print(Report.node_execution_report(self,
-                                                       input_val=self.get_input_values(context),
-                                                       output_val=self.output_port.parameters.value._get(context),
-                                                       report_output=True,
-                                                       context=context))
+                print(
+                    _report_node_execution(self,
+                                           input_val=self.get_input_values(context),
+                                           output_val=self.output_port.parameters.value._get(context),
+                                           context=context)
+                )
+
         return value
 
     def _get_variable_from_input(self, input, context=None):
@@ -3612,6 +3610,7 @@ class Mechanism_Base(Mechanism):
 
         """
         # from psyneulink.core.components.ports.inputPort import INPUT_PORT
+        from psyneulink.core.components.ports.outputport import OutputPort
 
         # Put in list to standardize treatment below
         if not isinstance(ports, (list, ContentAddressableList)):

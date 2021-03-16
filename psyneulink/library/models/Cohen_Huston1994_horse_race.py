@@ -1,7 +1,6 @@
 import argparse
 
 import numpy as np
-
 import psyneulink as pnl
 
 parser = argparse.ArgumentParser()
@@ -275,7 +274,7 @@ post_settlement_multiplier = int(prior120 / 5)
 for cond in range(conditions):
 # ---------------------------------------------------------------------------------------------------------------------
     # Run congruent trial with word presented 1200 trials prior ------------------------------------------------------------
-    for run in range(runs):  # use 1 as starting point to insure Composition is called with non-zero num_trials)
+    for run in range(runs):
         response_color_weights = pnl.MappingProjection(matrix=np.array([[0.0, 0.0, 0.0],
                                                                         [0.0, 0.0, 0.0]]))
 

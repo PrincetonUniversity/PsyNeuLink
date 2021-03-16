@@ -1267,8 +1267,7 @@ class Parameter(ParameterBase):
         value = self._set(self._parse(value), context, skip_history, skip_log, **kwargs)
 
         try:
-            if isinstance(value.__self__, Component):
-                value = value.__self__
+            value = value.__self__
         except AttributeError:
             pass
 

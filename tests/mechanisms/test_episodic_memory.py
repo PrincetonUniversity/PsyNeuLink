@@ -37,16 +37,19 @@ names = [
 @pytest.mark.memory_function
 @pytest.mark.benchmark
 @pytest.mark.parametrize('variable, func, params, expected', test_data, ids=names)
-def test_basic(variable, func, params, expected, benchmark, mech_mode):
+@pytest.mark.parametrize('mode', ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_basic(variable, func, params, expected, benchmark, mode):
     f = func(seed=0, **params)
     m = EpisodicMemoryMechanism(content_size=len(variable[0]), assoc_size=len(variable[1]), function=f)
-    if mech_mode == 'Python':
+    if mode == 'Python':
         def EX(variable):
             m.execute(variable)
             return m.output_values
-    elif mech_mode == 'LLVM':
+    elif mode == 'LLVM':
         EX = pnlvm.execution.MechExecution(m).execute
-    elif mech_mode == 'PTX':
+    elif mode == 'PTX':
         EX = pnlvm.execution.MechExecution(m).cuda_execute
 
     EX(variable)

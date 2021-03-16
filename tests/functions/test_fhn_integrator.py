@@ -50,14 +50,17 @@ names = [
 @pytest.mark.fitzHughNagumo_integrator_function
 @pytest.mark.benchmark(group="FitzHughNagumoIntegrator")
 @pytest.mark.parametrize("func, variable, integration_method, params, expected", test_data, ids=names)
-def test_basic(func, variable, integration_method, params, expected, benchmark, func_mode):
+@pytest.mark.parametrize('mode', ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_basic(func, variable, integration_method, params, expected, benchmark, mode):
     f = func(default_variable=variable, integration_method=integration_method, params=params)
-    if func_mode == 'Python':
+    if mode == 'Python':
         EX = f.function
-    elif func_mode == 'LLVM':
+    elif mode == 'LLVM':
         e = pnlvm.execution.FuncExecution(f)
         EX = e.execute
-    elif func_mode == 'PTX':
+    elif mode == 'PTX':
         e = pnlvm.execution.FuncExecution(f)
         EX = e.cuda_execute
 

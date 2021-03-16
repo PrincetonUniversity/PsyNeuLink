@@ -1498,16 +1498,23 @@ class TestFeedback:
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
+    @pytest.mark.parametrize('mode', ['Python',
+                                      # 'LLVM' mode is not supported
+                                      # the comparison values and checks
+                                      # are not synced between binary
+                                      # and Python structures
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                     ])
     @pytest.mark.parametrize('timescale, expected',
                              [(TimeScale.TIME_STEP, [[0.5], [0.4375]]),
                               (TimeScale.PASS, [[0.5], [0.4375]]),
                               (TimeScale.TRIAL, [[1.5], [0.4375]]),
                               (TimeScale.RUN, [[1.5], [0.4375]])],
                               ids=lambda x: x if isinstance(x, TimeScale) else "")
-    # 'LLVM' mode is not supported, because synchronization of compiler and
-    # python values during execution is not implemented.
-    @pytest.mark.usefixtures("comp_mode_no_llvm")
-    def test_time_termination_measures(self, comp_mode, timescale, expected):
+    def test_time_termination_measures(self, mode, timescale, expected):
         in_one_pass = timescale in {TimeScale.TIME_STEP, TimeScale.PASS}
         attention = pnl.TransferMechanism(name='Attention',
                                  integrator_mode=True,
@@ -1526,14 +1533,21 @@ class TestFeedback:
         comp.scheduler.add_condition(response, pnl.WhenFinished(attention))
         comp.scheduler.add_condition(counter, pnl.Always())
         inputs = {attention: [[0.5]], counter: [[2.0]]}
-        result = comp.run(inputs=inputs, execution_mode=comp_mode)
-        if comp_mode is pnl.ExecutionMode.Python:
+        result = comp.run(inputs=inputs, bin_execute=mode)
+        if mode == 'Python':
             assert attention.execution_count == 3
             assert counter.execution_count == 1 if in_one_pass else 3
             assert response.execution_count == 1
         assert np.allclose(result, expected)
 
     @pytest.mark.composition
+    @pytest.mark.parametrize("mode", ['Python',
+                                      # 'LLVM' mode is not supported, because synchronization of compiler and python values during execution is not implemented.
+                                      pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                     ])
     @pytest.mark.parametrize("condition,scale,expected_result",
                              [(pnl.BeforeNCalls, TimeScale.TRIAL, [[.05, .05]]),
                               (pnl.BeforeNCalls, TimeScale.PASS, [[.05, .05]]),
@@ -1554,10 +1568,7 @@ class TestFeedback:
                               (pnl.AtTrial, None, [[0.05, 0.05]]),
                               #(pnl.Never), #TODO: Find a good test case for this!
                             ])
-    # 'LLVM' mode is not supported, because synchronization of compiler and
-    # python values during execution is not implemented.
-    @pytest.mark.usefixtures("comp_mode_no_llvm")
-    def test_scheduler_conditions(self, comp_mode, condition, scale, expected_result):
+    def test_scheduler_conditions(self, mode, condition, scale, expected_result):
         decisionMaker = pnl.DDM(
                         function=pnl.DriftDiffusionIntegrator(starting_point=0,
                                                               threshold=1,
@@ -1606,17 +1617,17 @@ class TestFeedback:
         elif condition is pnl.AtTrial:
             comp.scheduler.add_condition(response, condition(0))
 
-        result = comp.run([0.05], execution_mode=comp_mode)
+        result = comp.run([0.05], bin_execute=mode)
         #HACK: The result is an object dtype in Python mode for some reason?
-        if comp_mode is pnl.ExecutionMode.Python:
+        if mode == 'Python':
             result = np.asfarray(result[0])
         assert np.allclose(result, expected_result)
 
 
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python,
-                                      pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda]),
+    @pytest.mark.parametrize("mode", ['Python',
+                                      pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                      pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda]),
                                      ])
     @pytest.mark.parametrize("condition,scale,expected_result",
                              [(pnl.AtTrial, None, [[[1.0]], [[2.0]]]),
@@ -1631,6 +1642,6 @@ class TestFeedback:
         comp.scheduler.termination_conds = {
             pnl.TimeScale.RUN: condition(2)
         }
-        r = comp.run(inputs=[1], num_trials=5, execution_mode=mode)
+        r = comp.run(inputs=[1], num_trials=5, bin_execute=mode)
         assert np.allclose(r, expected_result[-1])
         assert np.allclose(comp.results, expected_result)

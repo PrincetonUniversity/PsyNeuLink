@@ -8,51 +8,13 @@
 #
 # **********************************************  PreferenceSet **********************************************************
 #
-"""
-.. _Preferences:
-
-Preferences specify the behavior of Components when they are executed.  They can be specified by their value, or
-by a PreferenceSet, which specifies the
-
-Standard Preferences
--------------------
-
-The following preferences are available for all Components (see `Component prefs <Component_Prefs>` for
-additional details):
-
-* **verbosePref** (bool : default False) - enables/disables reporting of (non-exception) warnings and system function;
-
-* **paramValidationPref** (bool : default False) - enables/disables run-time validation of the execute method of a
-  Function object;
-
-.. _PreferenceSet_reportOutputPref:
-
-* **reportOutputPref** (list['params', `ReportOutput`]: default ReportOutput.OFF) - enables/disables
-  and determines format and content for reporting execution of the `Component` (see `ReportOutput` for options).
-  If 'params' (or 'parameters') is specified, then the Component's `Parameters are included along with its input and
-  output when `ReportOutput.FULL` is also specified. If the Component is a `Mechanism` executed within a `Composition`,
-  this preference may be overridden by the **report_output** argument specified in any of the Composition's
-  `execution methods <Composition_Execution_Methods>` (see `execution reporting <Composition_Execution_Reporting>`
-  for additional details).
-
-* **logPref** (`LogCondition` : default LogCondition.OFF) - sets `LogCondition` for a given Component;
-
-COMMENT:
-THIS DOES NOT APPEAR CURRENTLY TO BE USED:
-* **runtimeParamModulationPref** (Modulation, default: Modulation.MULTIPLY) -  sets type of `Modulation`
-  used for modulating parameters by runtime specification (in pathway);
-COMMENT
-
-.. _technical_note::
-   * **deliverPref** (LogCondition, default: LogCondition.OFF) - sets whether attribute data are added to context rpc
-     pipeline for delivery to external applications.
-"""
-
 import abc
 import inspect
+
 from collections import namedtuple
 from enum import Enum, IntEnum
 
+from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import DEFAULT_PREFERENCE_SET_OWNER, PREFERENCE_SET_NAME
 from psyneulink.core.globals.utilities import iscompatible, kwCompatibilityType
 
@@ -89,7 +51,6 @@ class PreferenceSetError(Exception):
 class PreferenceSet(object):
     """Abstract class for PreferenceSets that stores preferences and provides access to level-specific settings
 
-    COMMENT:
     Description:
         Each PreferenceSet object stores a set of preferences in its corresponding attributes
         Every class in the Component hierarchy is assigned a PreferenceLevel:
@@ -188,7 +149,6 @@ class PreferenceSet(object):
 
     Instance methods:
         None
-    COMMENT
     """
 
     def __init__(self,
@@ -496,7 +456,7 @@ class PreferenceSet(object):
 #                                          " must be a {2} or PreferenceLevel".
 #                                          format(pref_spec, pref_attrib_name, type(pref_spec).__name__))
 
-    def set_preference(self, candidate_info, pref_ivar_name, default_entry=None, skip_validation=False):
+    def set_preference(self, candidate_info, pref_ivar_name, default_entry=None):
         """Validate and assign PreferenceSet, setting, or level to a PreferenceSet preference attribute
 
         Validate candidate candidate_info and, if OK, assign to pref_ivar_name attribute; candidate_info can be a:
@@ -567,7 +527,7 @@ class PreferenceSet(object):
                 candidate_info = PreferenceEntry(candidate_info[0], candidate_info[1])
             setting_OK = self.validate_setting(candidate_info.setting, default_setting, pref_ivar_name)
             level_OK = isinstance(candidate_info.level, PreferenceLevel)
-            if (level_OK and setting_OK) or skip_validation:
+            if level_OK and setting_OK:
                 setattr(self, pref_ivar_name, candidate_info)
                 return_val = candidate_info
             else:
@@ -581,12 +541,12 @@ class PreferenceSet(object):
         # candidate_info is a presumed setting
         else:
             setting_OK = self.validate_setting(candidate_info, default_setting, pref_ivar_name)
-            if setting_OK or skip_validation:
+            if setting_OK:
                 setattr(self, pref_ivar_name, PreferenceEntry(candidate_info, default_level))
                 return_val = PreferenceEntry(setting=candidate_info, level=None)
 
         # All is OK, so return
-        if (level_OK and setting_OK) or skip_validation:
+        if level_OK and setting_OK:
             return return_val
 
         # Something's amiss, so raise exception
@@ -622,10 +582,7 @@ class PreferenceSet(object):
         # if pref_ivar_name is LOG_PREF:
         #     self.validate_log(candidate_setting, self)
 
-        setting_OK = (
-            iscompatible(candidate_setting, reference_setting, **{kwCompatibilityType:Enum})
-            or isinstance(candidate_setting, bool)
-        )
+        setting_OK = iscompatible(candidate_setting, reference_setting, **{kwCompatibilityType:Enum})
         # setting_OK = iscompatible(candidate_setting, reference_setting)
 
         # if not setting_OK and (isinstance(candidate_setting, Enum) or isinstance(reference_setting, Enum)):

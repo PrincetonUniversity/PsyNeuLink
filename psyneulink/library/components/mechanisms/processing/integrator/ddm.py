@@ -1145,7 +1145,7 @@ class DDM(ProcessingMechanism):
                 ctx.int32_ty(self.DECISION_VARIABLE_INDEX),
                 ctx.int32_ty(0)])
             thr_cmp = builder.fcmp_ordered("<", random_val, prob_lower_thr)
-            neg_threshold = pnlvm.helpers.fneg(builder, threshold)
+            neg_threshold = builder.fsub(threshold.type(-0.0), threshold)
             res = builder.select(thr_cmp, neg_threshold, threshold)
 
             builder.store(res, dst)

@@ -1317,27 +1317,20 @@ class OutputPort(Port_Base):
         # FIXME: Add support for other cost types
         assert self.cost_options == CostFunctions.INTENSITY
 
-        ifunc = ctx.import_llvm_function(self.function.intensity_cost_fct)
-
+        func = ctx.import_llvm_function(self.intensity_cost_function)
         func_params = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                  "function")
+                                                  "intensity_cost_function")
         func_state = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                 "function")
-        ifunc_params = pnlvm.helpers.get_param_ptr(builder, self.function,
-                                                   func_params,
-                                                   "intensity_cost_fct")
-        ifunc_state = pnlvm.helpers.get_state_ptr(builder, self.function,
-                                                  func_state,
-                                                  "intensity_cost_fct")
-        ifunc_out = builder.alloca(ifunc.args[3].type.pointee)
+                                                 "intensity_cost_function")
+        func_out = builder.alloca(func.args[3].type.pointee)
         # Port input is always struct
-        ifunc_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        func_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
-        builder.call(ifunc, [ifunc_params, ifunc_state, ifunc_in, ifunc_out])
+        builder.call(func, [func_params, func_state, func_in, func_out])
 
 
         # Cost function output is 1 element array
-        ret_ptr = builder.gep(ifunc_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        ret_ptr = builder.gep(func_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         ret_val = builder.load(ret_ptr)
         builder.ret(ret_val)
 

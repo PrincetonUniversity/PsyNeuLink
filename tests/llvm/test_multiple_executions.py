@@ -24,17 +24,20 @@ expected = np.linalg.norm(v1 - v2)
 @pytest.mark.distance_function
 @pytest.mark.benchmark
 @pytest.mark.parametrize("executions", [1,10,100])
-def test_function(benchmark, executions, func_mode):
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_function(benchmark, executions, mode):
     f = Functions.Distance(default_variable=test_var, metric=kw.EUCLIDEAN)
     benchmark.group = "DistanceFunction multirun {}".format(executions)
     var = [test_var for _ in range(executions)] if executions > 1 else test_var
-    if func_mode == 'Python':
+    if mode == 'Python':
         e = lambda x : [f.function(x[i]) for i in range(executions)]
         res = benchmark(e if executions > 1 else f.function, var)
-    elif func_mode == 'LLVM':
+    elif mode == 'LLVM':
         e = pnlvm.execution.FuncExecution(f, [None for _ in range(executions)])
         res = benchmark(e.execute, var)
-    elif func_mode == 'PTX':
+    elif mode == 'PTX':
         e = pnlvm.execution.FuncExecution(f, [None for _ in range(executions)])
         res = benchmark(e.cuda_execute, var)
     assert np.allclose(res, [expected for _ in range(executions)])
@@ -45,7 +48,10 @@ def test_function(benchmark, executions, func_mode):
 @pytest.mark.transfer_mechanism
 @pytest.mark.benchmark
 @pytest.mark.parametrize("executions", [1,10,100])
-def test_mechanism(benchmark, executions, mech_mode):
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('PTX', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_mechanism(benchmark, executions, mode):
     benchmark.group = "TransferMechanism multirun {}".format(executions)
     variable = [0 for _ in range(SIZE)]
     T = TransferMechanism(
@@ -57,13 +63,13 @@ def test_mechanism(benchmark, executions, mech_mode):
     )
     var = [[10.0 for _ in range(SIZE)] for _ in range(executions)]
     expected = [[8.0 for i in range(SIZE)]]
-    if mech_mode == 'Python':
+    if mode == 'Python':
         f = lambda x : [T.execute(x[i]) for i in range(executions)]
         res = benchmark(f if executions > 1 else T.execute, var)
-    elif mech_mode == 'LLVM':
+    elif mode == 'LLVM':
         e = pnlvm.execution.MechExecution(T, [None for _ in range(executions)])
         res = benchmark(e.execute, var)
-    elif mech_mode == 'PTX':
+    elif mode == 'PTX':
         e = pnlvm.execution.MechExecution(T, [None for _ in range(executions)])
         res = benchmark(e.cuda_execute, var)
     if executions > 1:

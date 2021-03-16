@@ -23,7 +23,13 @@ import psyneulink.core.components.functions.transferfunctions
 @pytest.mark.parametrize("reps", [1,
                                   pytest.param(10, marks=pytest.mark.stress),
                                   pytest.param(100, marks=pytest.mark.stress)])
-def test_botvinick_model(benchmark, comp_mode, reps):
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                  pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                  pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                  pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])])
+def test_botvinick_model(benchmark, mode, reps):
     benchmark.group = "Botvinick (scale " + str(reps / 100) + ")"
 
     # SET UP MECHANISMS ----------------------------------------------------------------------------------------------------
@@ -179,20 +185,20 @@ def test_botvinick_model(benchmark, comp_mode, reps):
     ntrials0 = 5 * reps
     ntrials = 10 * reps
 
-    def run(mode):
+    def run(bin_execute):
         results = []
         for i, stim in enumerate(Stimulus):
             # RUN the COMPOSITION to initialize --------------------------------
             exec_id = "exec_" + str(i)
-            comp.run(inputs=stim[0], num_trials=ntrials0, execution_mode=mode, context=exec_id)
-            comp.run(inputs=stim[1], num_trials=ntrials, execution_mode=mode, context=exec_id)
+            comp.run(inputs=stim[0], num_trials=ntrials0, bin_execute=bin_execute, context=exec_id)
+            comp.run(inputs=stim[1], num_trials=ntrials, bin_execute=bin_execute, context=exec_id)
 
             # Comp results include concatenation of both the above runs
             results.append(comp.results)
 
         return results
 
-    res = run(comp_mode)
+    res = run(mode)
     # the corresponding output port indices in composition results
     # these were 0 and 1 in the prior version of the test
     response_results_index = 3
@@ -284,4 +290,4 @@ def test_botvinick_model(benchmark, comp_mode, reps):
         assert np.allclose(res[2][ntrials0 - 1][response_decision_energy_index], [0.94440397])
         assert np.allclose(res[2][-1][response_decision_energy_index], [0.90033387])
     if benchmark.enabled:
-        benchmark(run, comp_mode)
+        benchmark(run, mode)

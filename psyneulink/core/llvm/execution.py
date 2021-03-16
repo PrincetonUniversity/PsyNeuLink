@@ -11,12 +11,11 @@
 from psyneulink.core.globals.context import Context
 
 from collections import Counter
-import concurrent.futures
 import copy
 import ctypes
 import numpy as np
 from inspect import isgenerator
-import os
+import itertools
 import sys
 
 
@@ -64,41 +63,16 @@ def _pretty_size(size):
     return "{:.2f} {}".format(size, u)
 
 
-class Execution:
-    def __init__(self):
-        self._debug_env = debug_env
-
-    def _get_compilation_param(self, name, init_method, arg):
-        struct = getattr(self, name)
-        if struct is None:
-            struct_ty = self._bin_func.byref_arg_types[arg]
-            init_f = getattr(self._obj, init_method)
-            if len(self._execution_contexts) > 1:
-                struct_ty = struct_ty * len(self._execution_contexts)
-                initializer = (init_f(ex) for ex in self._execution_contexts)
-            else:
-                initializer = init_f(self._execution_contexts[0])
-
-            struct = struct_ty(*initializer)
-            setattr(self, name, struct)
-            if "stat" in self._debug_env:
-                print("Instantiated struct:", name, "( size:" ,
-                      _pretty_size(ctypes.sizeof(struct_ty)), ")",
-                      "for", self._obj.name)
-
-        return struct
-
-
-class CUDAExecution(Execution):
+class CUDAExecution:
     def __init__(self, buffers=['param_struct', 'state_struct', 'out']):
-        super().__init__()
         for b in buffers:
             setattr(self, "_buffer_cuda_" + b, None)
         self._uploaded_bytes = Counter()
         self._downloaded_bytes = Counter()
+        self.__debug_env = debug_env
 
     def __del__(self):
-        if "cuda_data" in self._debug_env:
+        if "cuda_data" in self.__debug_env:
             try:
                 name = self._bin_func.name
             except AttributeError:
@@ -118,10 +92,15 @@ class CUDAExecution(Execution):
         # CUDA uses the same function for single and multi run
         return self._bin_func
 
+    def _get_ctype_bytes(self, data):
+        # Return dummy buffer. CUDA does not handle 0 size well.
+        if ctypes.sizeof(data) == 0:
+            return bytearray(b'aaaa')
+        return bytearray(data)
+
     def upload_ctype(self, data, name='other'):
         self._uploaded_bytes[name] += ctypes.sizeof(data)
-        assert ctypes.sizeof(data) != 0
-        return jit_engine.pycuda.driver.to_device(bytearray(data))
+        return jit_engine.pycuda.driver.to_device(self._get_ctype_bytes(data))
 
     def download_ctype(self, source, ty, name='other'):
         self._downloaded_bytes[name] += ctypes.sizeof(ty)
@@ -187,9 +166,7 @@ class FuncExecution(CUDAExecution):
             Context(execution_id=eid) for eid in execution_ids
         ]
         self._component = component
-
-        self._param = None
-        self._state = None
+        self.__debug_env = debug_env
 
         par_struct_ty, ctx_struct_ty, vi_ty, vo_ty = self._bin_func.byref_arg_types
 
@@ -199,27 +176,56 @@ class FuncExecution(CUDAExecution):
             vo_ty = vo_ty * len(execution_ids)
             vi_ty = vi_ty * len(execution_ids)
 
+            self.__param_struct = None
+            self.__state_struct = None
+
         self._vo_ty = vo_ty
         self._ct_vo = vo_ty()
         self._vi_ty = vi_ty
         self._vi_dty = _element_dtype(vi_ty)
-        if "stat" in self._debug_env:
+        if "stat" in self.__debug_env:
             print("Input struct size:", _pretty_size(ctypes.sizeof(vi_ty)),
                   "for", self._component.name)
             print("Output struct size:", _pretty_size(ctypes.sizeof(vo_ty)),
                   "for", self._component.name)
 
-    @property
-    def _obj(self):
-        return self._component
+    def _get_compilation_param(self, name, initializer, arg, context):
+        param = getattr(self._component._compilation_data, name)
+        struct = param._get(context)
+        if struct is None:
+            initializer = getattr(self._component, initializer)(context)
+            struct_ty = self._bin_func.byref_arg_types[arg]
+            struct = struct_ty(*initializer)
+            param._set(struct, context=context)
+            if "stat" in self.__debug_env:
+                print("Instantiated struct:", name, "( size:" ,
+                      _pretty_size(ctypes.sizeof(struct_ty)), ")",
+                      "for", self._component.name)
+
+        return struct
+
+    def _get_multirun_struct(self, arg, init):
+        struct_ty = self._bin_multirun.byref_arg_types[arg] * len(self._execution_contexts)
+        initializer = (getattr(self._component, init)(ex_id) for ex_id in self._execution_contexts)
+        return struct_ty(*initializer)
 
     @property
     def _param_struct(self):
-        return self._get_compilation_param('_param', '_get_param_initializer', 0)
+        if len(self._execution_contexts) > 1:
+            if self.__param_struct is None:
+                self.__param_struct = self._get_multirun_struct(0, '_get_param_initializer')
+            return self.__param_struct
+
+        return self._get_compilation_param('parameter_struct', '_get_param_initializer', 0, self._execution_contexts[0])
 
     @property
     def _state_struct(self):
-        return self._get_compilation_param('_state', '_get_state_initializer', 1)
+        if len(self._execution_contexts) > 1:
+            if self.__state_struct is None:
+                self.__state_struct = self._get_multirun_struct(1, '_get_state_initializer')
+            return self.__state_struct
+
+        return self._get_compilation_param('state_struct', '_get_state_initializer', 1, self._execution_contexts[0])
 
     def execute(self, variable):
         # Make sure function inputs are 2d.
@@ -227,14 +233,15 @@ class FuncExecution(CUDAExecution):
         new_variable = np.asfarray(np.atleast_2d(variable),
                                    dtype=self._vi_dty)
 
-        ct_vi = np.ctypeslib.as_ctypes(new_variable)
         if len(self._execution_contexts) > 1:
             # wrap_call casts the arguments so we only need contiguous data
             # layout
+            ct_vi = np.ctypeslib.as_ctypes(new_variable)
             self._bin_multirun.wrap_call(self._param_struct,
                                          self._state_struct,
                                          ct_vi, self._ct_vo, self._ct_len)
         else:
+            ct_vi = np.ctypeslib.as_ctypes(new_variable)
             self._bin_func(ctypes.byref(self._param_struct),
                            ctypes.byref(self._state_struct),
                            ct_vi, ctypes.byref(self._ct_vo))
@@ -267,35 +274,17 @@ class CompExecution(CUDAExecution):
         self.__bin_func = None
         self.__bin_run_func = None
         self.__bin_run_multi_func = None
+        self.__debug_env = debug_env
         self.__frozen_vals = None
         self.__tags = frozenset(additional_tags)
 
-        self.__conds = None
-        self._state = None
-        self._param = None
-        self._data = None
-
+        # TODO: Consolidate these
         if len(execution_ids) > 1:
+            self.__state_struct = None
+            self.__param_struct = None
+            self.__data_struct = None
+            self.__conds = None
             self._ct_len = ctypes.c_int(len(execution_ids))
-
-    @staticmethod
-    def get(composition, context, additional_tags=frozenset()):
-        executions = composition._compilation_data.execution._get(context)
-        if executions is None:
-            executions = dict()
-            composition._compilation_data.execution._set(executions, context)
-
-        execution = executions.get(additional_tags, None)
-        if execution is None:
-            execution = pnlvm.CompExecution(composition, [context.execution_id],
-                                            additional_tags=additional_tags)
-            executions[additional_tags] = execution
-
-        return execution
-
-    @property
-    def _obj(self):
-        return self._composition
 
     @property
     def _bin_func(self):
@@ -326,42 +315,60 @@ class CompExecution(CUDAExecution):
 
     @property
     def _conditions(self):
-        if self.__conds is None:
-            gen = helpers.ConditionGenerator(None, self._composition)
-            if len(self._execution_contexts) > 1:
+        if len(self._execution_contexts) > 1:
+            if self.__conds is None:
                 cond_type = self._bin_func_multirun.byref_arg_types[4] * len(self._execution_contexts)
+                gen = helpers.ConditionGenerator(None, self._composition)
                 cond_initializer = (gen.get_condition_initializer() for _ in self._execution_contexts)
-            else:
-                cond_type = self._bin_func.byref_arg_types[4]
-                cond_initializer = gen.get_condition_initializer()
+                self.__conds = cond_type(*cond_initializer)
+            return self.__conds
 
-            self.__conds = cond_type(*cond_initializer)
-            if "stat" in self._debug_env:
+        conds = self._composition._compilation_data.scheduler_conditions._get(self._execution_contexts[0])
+        if conds is None:
+            cond_type = self._bin_func.byref_arg_types[4]
+            gen = helpers.ConditionGenerator(None, self._composition)
+            cond_initializer = gen.get_condition_initializer()
+            conds = cond_type(*cond_initializer)
+            self._composition._compilation_data.scheduler_conditions._set(conds, context=self._execution_contexts[0])
+            if "stat" in self.__debug_env:
                 print("Instantiated condition struct ( size:" ,
-                      _pretty_size(ctypes.sizeof(cond_type)), ")",
+                      _pretty_size(ctypes.sizeof(struct_ty)), ")",
+                      "for", self._composition.name)
+        return conds
+
+    def _get_compilation_param(self, name, initializer, arg, context):
+        param = getattr(self._composition._compilation_data, name)
+        struct = param._get(context)
+        if struct is None:
+            initializer = getattr(self._composition, initializer)(context)
+            struct_ty = self._bin_func.byref_arg_types[arg]
+            struct = struct_ty(*initializer)
+            param._set(struct, context=context)
+            if "stat" in self.__debug_env:
+                print("Instantiated struct:", name, "( size:" ,
+                      _pretty_size(ctypes.sizeof(struct_ty)), ")",
                       "for", self._composition.name)
 
-        return self.__conds
+        return struct
+
+    def _get_multirun_struct(self, arg, init):
+        struct_ty = self._bin_func_multirun.byref_arg_types[arg] * len(self._execution_contexts)
+        initializer = (getattr(self._composition, init)(ex) for ex in self._execution_contexts)
+        return struct_ty(*initializer)
 
     @property
     def _param_struct(self):
-        return self._get_compilation_param('_param', '_get_param_initializer', 1)
+        if len(self._execution_contexts) > 1:
+            if self.__param_struct is None:
+                self.__param_struct = self._get_multirun_struct(1, '_get_param_initializer')
+            return self.__param_struct
 
-    @property
-    def _state_struct(self):
-        return self._get_compilation_param('_state', '_get_state_initializer', 0)
-
-    @property
-    def _data_struct(self):
-        # Run wrapper changed argument order
-        arg = 2 if self._bin_func is self.__bin_run_func else 3
-        return self._get_compilation_param('_data', '_get_data_initializer', arg)
-
-    @_data_struct.setter
-    def _data_struct(self, data_struct):
-        self._data = data_struct
+        return self._get_compilation_param('parameter_struct', '_get_param_initializer', 1, self._execution_contexts[0])
 
     def _copy_params_to_pnl(self, context=None, component=None, params=None):
+        # need to special case compositions
+        from psyneulink.core.compositions import Composition
+        from psyneulink.core.components.projections.pathway import MappingProjection
 
         if component is None:
             component = self._composition
@@ -370,35 +377,57 @@ class CompExecution(CUDAExecution):
             assert component == self._composition
             params = self._param_struct
 
-        for idx, attribute in enumerate(component.llvm_param_ids):
-            if attribute == 'nodes':
-                params_node_list = getattr(params, params._fields_[idx][0])
-                for node_id, node in enumerate(component._all_nodes):
-                    node_params = getattr(params_node_list,
-                                          params_node_list._fields_[node_id][0])
-                    self._copy_params_to_pnl(context=context, component=node,
-                                             params=node_params)
-            elif attribute == 'projections':
-                params_projection_list = getattr(params, params._fields_[idx][0])
-                for proj_id, projection in enumerate(component._inner_projections):
-                    projection_params = getattr(params_projection_list,
-                                                params_projection_list._fields_[proj_id][0])
-                    self._copy_params_to_pnl(context=context,
-                                             component=projection,
-                                             params=projection_params)
-            elif attribute == 'function':
-                function_params = getattr(params, params._fields_[idx][0])
-                self._copy_params_to_pnl(context=context,
-                                         component=component.function,
-                                         params=function_params)
-            elif attribute == 'matrix':
-                pnl_param = component.parameters.matrix
+        if isinstance(component, Composition):
+            # first handle all inner projections
+            params_projections_list = getattr(params, params._fields_[1][0])
+            for idx, projection in enumerate(component._inner_projections):
+                projection_params = getattr(params_projections_list, params_projections_list._fields_[idx][0])
+                self._copy_params_to_pnl(context=context, component=projection, params=projection_params)
+
+            # now recurse on all nodes
+            params_node_list = getattr(params, params._fields_[0][0])
+            for idx, node in enumerate(component._all_nodes):
+                node_params = getattr(params_node_list, params_node_list._fields_[idx][0])
+                self._copy_params_to_pnl(context=context, component=node, params=node_params)
+        elif isinstance(component, MappingProjection):
+            # we copy all ids back
+            for idx, attribute in enumerate(component.llvm_param_ids):
+                to_set = getattr(component.parameters, attribute)
                 parameter_ctype = getattr(params, params._fields_[idx][0])
                 value = _convert_ctype_to_python(parameter_ctype)
-                # Unflatten the matrix
-                # FIXME: this seems to break something when generalized for all attributes
-                value = np.array(value).reshape(pnl_param._get(context).shape)
-                pnl_param._set(value, context=context)
+                if attribute == 'matrix':
+                    # special case since we have to unflatten matrix
+                    # FIXME: this seems to break something when generalized for all attributes
+                    value = np.array(value).reshape(component.parameters.matrix._get(context).shape)
+                    to_set._set(value, context=context)
+
+    @property
+    def _state_struct(self):
+        if len(self._execution_contexts) > 1:
+            if self.__state_struct is None:
+                self.__state_struct = self._get_multirun_struct(0, '_get_state_initializer')
+            return self.__state_struct
+
+        return self._get_compilation_param('state_struct', '_get_state_initializer', 0, self._execution_contexts[0])
+
+    @property
+    def _data_struct(self):
+        # Run wrapper changed argument order
+        arg = 2 if self._bin_func is self.__bin_run_func else 3
+
+        if len(self._execution_contexts) > 1:
+            if self.__data_struct is None:
+                self.__data_struct = self._get_multirun_struct(arg, '_get_data_initializer')
+            return self.__data_struct
+
+        return self._get_compilation_param('data_struct', '_get_data_initializer', arg, self._execution_contexts[0])
+
+    @_data_struct.setter
+    def _data_struct(self, data_struct):
+        if len(self._execution_contexts) > 1:
+            self.__data_struct = data_struct
+        else:
+            self._composition._compilation_data.data_struct._set(data_struct, context=self._execution_contexts[0])
 
     def _extract_node_struct(self, node, data):
         # context structure consists of a list of node contexts,
@@ -452,7 +481,7 @@ class CompExecution(CUDAExecution):
         else:
             input_data = ([x] for x in self._composition._build_variable_for_input_CIM(inputs))
 
-        if "stat" in self._debug_env:
+        if "stat" in self.__debug_env:
             print("Input struct size:", _pretty_size(ctypes.sizeof(c_input)),
                   "for", self._composition.name)
         return c_input(*_tupleize(input_data))
@@ -488,7 +517,7 @@ class CompExecution(CUDAExecution):
         self._bin_func(self._state_struct, self._param_struct,
                        inputs, self.__frozen_vals, self._data_struct)
 
-        if "comp_node_debug" in self._debug_env:
+        if "comp_node_debug" in self.__debug_env:
             print("RAN: {}. CTX: {}".format(node, self.extract_node_state(node)))
             print("RAN: {}. Params: {}".format(node, self.extract_node_params(node)))
             print("RAN: {}. Results: {}".format(node, self.extract_node_output(node)))
@@ -586,7 +615,7 @@ class CompExecution(CUDAExecution):
             ct_vo = ct_vo * len(self._execution_contexts)
         outputs = ct_vo()
 
-        if "stat" in self._debug_env:
+        if "stat" in self.__debug_env:
             print("Input struct size:", _pretty_size(ctypes.sizeof(inputs)),
                   "for", self._composition.name)
             print("Output struct size:", _pretty_size(ctypes.sizeof(outputs)),
@@ -626,7 +655,7 @@ class CompExecution(CUDAExecution):
         data_out = jit_engine.pycuda.driver.mem_alloc(output_size)
 
         # number of trials argument
-        runs_np = np.full(len(self._execution_contexts), runs, dtype=np.int32)
+        runs_np = np.array([runs] * len(self._execution_contexts), dtype=np.int32)
         runs_count = jit_engine.pycuda.driver.InOut(runs_np)
         self._uploaded_bytes['input'] += runs_np.nbytes
         self._downloaded_bytes['input'] += runs_np.nbytes
@@ -650,69 +679,47 @@ class CompExecution(CUDAExecution):
             assert runs_np[0] <= runs, "Composition ran more times than allowed!"
             return _convert_ctype_to_python(ct_out)[0:runs_np[0]]
 
-    def _prepare_evaluate(self, variable, num_evaluations):
+    def cuda_evaluate(self, variable, search_space):
         ocm = self._composition.controller
         assert len(self._execution_contexts) == 1
         context = self._execution_contexts[0]
 
-        bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset({"evaluate", "alloc_range"}))
+        bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset({"evaluate"}))
         self.__bin_func = bin_func
-        assert len(bin_func.byref_arg_types) == 7
+        assert len(bin_func.byref_arg_types) == 6
 
-        # There are 7 arguments to evaluate_alloc_range:
-        # comp_param, comp_state, from, to, results, input, comp_data
-        # all but #4 are shared
+        # There are 6 arguments to evaluate:
+        # comp_param, comp_state, allocations, results, output, input, comp_data
+        # all but #2 and #3 are shared
 
         # Directly initialized structures
         ct_comp_param = bin_func.byref_arg_types[0](*ocm.agent_rep._get_param_initializer(context))
         ct_comp_state = bin_func.byref_arg_types[1](*ocm.agent_rep._get_state_initializer(context))
-        ct_comp_data = bin_func.byref_arg_types[6](*ocm.agent_rep._get_data_initializer(context))
+        ct_comp_data = bin_func.byref_arg_types[5](*ocm.agent_rep._get_data_initializer(context))
+
+        # Construct the allocations array
+        alloc_vals = itertools.product(*search_space)
+        alloc_dty = _element_dtype(bin_func.byref_arg_types[2])
+        allocations = np.asfarray(np.atleast_2d([*alloc_vals]), dtype=alloc_dty)
+        ct_allocations = allocations.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[2] * len(allocations)))
 
         # Construct input variable
-        var_dty = _element_dtype(bin_func.byref_arg_types[5])
-        converted_variable = np.asfarray(np.concatenate(variable), dtype=var_dty)
-
-        # Output ctype
-        out_ty = bin_func.byref_arg_types[4] * num_evaluations
-
-        return ct_comp_param, ct_comp_state, ct_comp_data, converted_variable, out_ty
-
-    def cuda_evaluate(self, variable, num_evaluations):
-        ct_comp_param, ct_comp_state, ct_comp_data, converted_variable, out_ty = \
-            self._prepare_evaluate(variable, num_evaluations)
-        self._uploaded_bytes['input'] += converted_variable.nbytes
+        el_dty = _element_dtype(bin_func.byref_arg_types[4])
+        converted_variable = np.array(np.asfarray(x, dtype=el_dty) for x in variable)
+        ct_in = converted_variable.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[4]))
 
         # Ouput is allocated on device, but we need the ctype.
+        out_ty = bin_func.byref_arg_types[3] * len(allocations)
 
         cuda_args = (self.upload_ctype(ct_comp_param, 'params'),
                      self.upload_ctype(ct_comp_state, 'state'),
+                     self.upload_ctype(ct_allocations.contents, 'input'),
                      jit_engine.pycuda.driver.mem_alloc(ctypes.sizeof(out_ty)),
-                     jit_engine.pycuda.driver.In(converted_variable),
+                     self.upload_ctype(ct_in.contents, 'input'),
                      self.upload_ctype(ct_comp_data, 'data'),
                     )
 
-        self.__bin_func.cuda_call(*cuda_args, threads=int(num_evaluations))
-        ct_results = self.download_ctype(cuda_args[2], out_ty, 'result')
+        bin_func.cuda_call(*cuda_args, threads=len(allocations))
+        ct_results = self.download_ctype(cuda_args[3], out_ty, 'result')
 
-        return ct_results
-
-    def thread_evaluate(self, variable, num_evaluations):
-        ct_param, ct_state, ct_data, converted_variale, out_ty = \
-            self._prepare_evaluate(variable, num_evaluations)
-
-        ct_results = out_ty()
-        ct_variable = converted_variale.ctypes.data_as(self.__bin_func.c_func.argtypes[5])
-        # There are 7 arguments to evaluate_alloc_range:
-        # comp_param, comp_state, from, to, results, input, comp_data
-        jobs = min(os.cpu_count(), num_evaluations)
-        evals_per_job = (num_evaluations + jobs - 1) // jobs
-        executor = concurrent.futures.ThreadPoolExecutor(max_workers=jobs)
-        for i in range(jobs):
-            start = i * evals_per_job
-            stop = min((i + 1) * evals_per_job, num_evaluations)
-            executor.submit(self.__bin_func, ct_param, ct_state, int(start),
-                            int(stop), ct_results, ct_variable, ct_data)
-
-        executor.shutdown()
-
-        return ct_results
+        return ct_allocations.contents, ct_results

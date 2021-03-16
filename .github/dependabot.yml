@@ -26,4 +26,3 @@ updates:
       prefix: "requirements"
     labels:
       - "deps"
-    open-pull-requests-limit: 15

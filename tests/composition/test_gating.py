@@ -5,7 +5,14 @@ import psyneulink as pnl
 
 @pytest.mark.composition
 @pytest.mark.benchmark(group="Gating")
-def test_gating(benchmark, comp_mode):
+@pytest.mark.parametrize("mode", ['Python',
+                                  pytest.param('LLVM', marks=pytest.mark.llvm),
+                                  pytest.param('LLVMExec', marks=pytest.mark.llvm),
+                                  pytest.param('LLVMRun', marks=pytest.mark.llvm),
+                                  pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+                                  pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+                                  ])
+def test_gating(benchmark, mode):
 
     Input_Layer = pnl.TransferMechanism(
         name='Input_Layer',
@@ -39,7 +46,7 @@ def test_gating(benchmark, comp_mode):
     comp.add_linear_processing_pathway(p_pathway)
     comp.add_node(Gating_Mechanism)
 
-    comp.run(num_trials=4, inputs=stim_list, execution_mode=comp_mode)
+    comp.run(num_trials=4, inputs=stim_list, bin_execute=mode)
 
     expected_results = [
         [np.array([0., 0., 0.])],
@@ -50,12 +57,19 @@ def test_gating(benchmark, comp_mode):
 
     np.testing.assert_allclose(comp.results, expected_results)
     if benchmark.enabled:
-        benchmark(comp.run, num_trials=4, inputs=stim_list, execution_mode=comp_mode)
+        benchmark(comp.run, num_trials=4, inputs=stim_list, bin_execute=mode)
 
 # DEPRECATED FUNCTIONALITY 9/26/19
 # @pytest.mark.composition
 # @pytest.mark.benchmark(group="Gating")
-# def test_gating_using_ControlMechanism(benchmark, comp_mode):
+# @pytest.mark.parametrize("mode", ['Python',
+#                                   pytest.param('LLVM', marks=pytest.mark.llvm),
+#                                   pytest.param('LLVMExec', marks=pytest.mark.llvm),
+#                                   pytest.param('LLVMRun', marks=pytest.mark.llvm),
+#                                   pytest.param('PTXExec', marks=[pytest.mark.llvm, pytest.mark.cuda]),
+#                                   pytest.param('PTXRun', marks=[pytest.mark.llvm, pytest.mark.cuda])
+#                                   ])
+# def test_gating_using_ControlMechanism(benchmark, mode):
 #
 #     Input_Layer = pnl.TransferMechanism(
 #         name='Input_Layer',
@@ -89,7 +103,7 @@ def test_gating(benchmark, comp_mode):
 #     comp.add_linear_processing_pathway(p_pathway)
 #     comp.add_node(Gating_Mechanism)
 #
-#     comp.run(num_trials=4, inputs=stim_list, execution_mode=comp_mode)
+#     comp.run(num_trials=4, inputs=stim_list, bin_execute=mode)
 #
 #     expected_results = [
 #         [np.array([0., 0., 0.])],
@@ -99,4 +113,4 @@ def test_gating(benchmark, comp_mode):
 #     ]
 #
 #     np.testing.assert_allclose(comp.results, expected_results)
-#     benchmark(comp.run, num_trials=4, inputs=stim_list, execution_mode=comp_mode)
+#     benchmark(comp.run, num_trials=4, inputs=stim_list, bin_execute=mode)

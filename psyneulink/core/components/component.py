@@ -182,13 +182,8 @@ user once the component is constructed, with the one exception of `prefs <Compon
 
 .. _Component_Prefs:
 
-* **prefs** - the `prefs <Component.prefs>` attribute contains the `PreferenceSet` assigned to the Component when
-  it was created.  If it was not specified, a default is assigned using `classPreferences` defined in
-  COMMENT:
-  THIS SEEMS TO BE INCORRECT:
-  ``__init__.py``
-  COMMENT
-  `BasePreferences`
+* **prefs** - the `prefs <Components.prefs>` attribute contains the `PreferenceSet` assigned to the Component when
+  it was created.  If it was not specified, a default is assigned using `classPreferences` defined in ``__init__.py``
   Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
   preference (see `Preferences` for details).
 
@@ -1073,6 +1068,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         '_init_args',
     ])
 
+    class _CompilationData(ParametersBase):
+        parameter_struct = None
+        state_struct = None
+
     def __init__(self,
                  default_variable,
                  param_defaults,
@@ -1136,7 +1135,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             default_variable = self.defaults.variable
         else:
             default_variable = var
-            self.defaults.variable = copy.deepcopy(default_variable)
+            self.defaults.variable = default_variable
             self.parameters.variable._user_specified = True
 
         # ASSIGN PREFS
@@ -1243,6 +1242,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         self.initialization_status = ContextFlags.INITIALIZED
 
+        self._compilation_data = self._CompilationData(owner=self)
+
         self._update_parameter_components(context)
 
     def __repr__(self):
@@ -1268,6 +1269,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             # may be in DEFERRED INIT, so parameters/defaults belongs to class
             newone.parameters._owner = newone
             newone.defaults._owner = newone
+            newone._compilation_data._owner = newone
 
         # by copying, this instance is no longer "inherent" to a single
         # 'import psyneulink' call
@@ -1292,7 +1294,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         def _is_compilation_state(p):
             #FIXME: This should use defaults instead of 'p.get'
             return p.name not in blacklist and \
-                   not isinstance(p, (ParameterAlias, SharedParameter)) and \
                    (p.name in whitelist or isinstance(p.get(), Component))
 
         return filter(_is_compilation_state, self.parameters)
@@ -1352,7 +1353,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         if hasattr(self, 'ports'):
             blacklist.update(["matrix", "integration_rate"])
         def _is_compilation_param(p):
-            if p.name not in blacklist and not isinstance(p, (ParameterAlias, SharedParameter)):
+            if p.name not in blacklist and not isinstance(p, ParameterAlias):
                 #FIXME: this should use defaults
                 val = p.get()
                 # Check if the value type is valid for compilation
@@ -2927,16 +2928,15 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _instantiate_value(self, context=None):
         #  - call self.execute to get value, since the value of a Component is defined as what is returned by its
         #    execute method, not its function
-        default_variable = copy.deepcopy(self.defaults.variable)
         try:
-            value = self.execute(variable=default_variable, context=context)
+            value = self.execute(variable=self.defaults.variable, context=context)
         except TypeError as e:
             # don't hide other TypeErrors
             if "execute() got an unexpected keyword argument 'variable'" != str(e):
                 raise
 
             try:
-                value = self.execute(input=default_variable, context=context)
+                value = self.execute(input=self.defaults.variable, context=context)
             except TypeError as e:
                 if "execute() got an unexpected keyword argument 'input'" != str(e):
                     raise
@@ -2984,8 +2984,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
                 try:
                     val._update_default_variable(function_default_variable, context)
-                    if isinstance(p.default_value, Component):
-                        p.default_value._update_default_variable(function_default_variable, context)
+                    p.default_value._update_default_variable(copy.deepcopy(function_default_variable), context)
                 except (AttributeError, TypeError):
                     pass
 
@@ -3194,7 +3193,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
             return arr
 
-        var = convert_all_elements_to_np_array(copy.deepcopy(var), cast_from=int, cast_to=float)
+        var = convert_all_elements_to_np_array(var, cast_from=np.integer, cast_to=float)
 
         # handle simple wrapping of a Component (e.g. from ParameterPort in
         # case of set after Component instantiation)
@@ -3348,20 +3347,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     @property
     def reportOutputPref(self):
-        from psyneulink.core.compositions.report import ReportOutput
-        if self.prefs.reportOutputPref is False:
-            return ReportOutput.OFF
-        elif self.prefs.reportOutputPref is True:
-            return ReportOutput.TERSE
         return self.prefs.reportOutputPref
 
     @reportOutputPref.setter
     def reportOutputPref(self, setting):
-        from psyneulink.core.compositions.report import ReportOutput
-        if setting is False:
-            setting = ReportOutput.OFF
-        elif setting is True:
-            setting = ReportOutput.TERSE
         self.prefs.reportOutputPref = setting
 
     @property
@@ -3724,7 +3713,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 except AttributeError:
                     pass
 
-                if isinstance(param_value, Component) and param_value is not self:
+                if isinstance(param_value, Component):
                     self._parameter_components.add(param_value)
             # ControlMechanism and GatingMechanism have Parameters that only
             # throw these errors
@@ -3845,7 +3834,7 @@ class ParameterValue:
 
     @property
     def base(self):
-        return self._parameter.get(self._owner.most_recent_context)
+        return self._parameter._get(self._owner.most_recent_context)
 
     @base.setter
     def base(self, value):
