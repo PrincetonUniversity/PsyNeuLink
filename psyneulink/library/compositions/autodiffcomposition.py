@@ -144,6 +144,8 @@ else:
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.compositions.composition import CompositionError
+from psyneulink.core.compositions.report \
+    import ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import SOFT_CLAMP
 from psyneulink.core.scheduling.scheduler import Scheduler
@@ -476,10 +478,11 @@ class AutodiffComposition(Composition):
                 runtime_params=None,
                 execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
                 skip_initialization=False,
-                report_output=False,
-                report_progress=False,
-                report_simulations=False,
-                report_to_devices=None,
+                report_output:ReportOutput=ReportOutput.OFF,
+                report_params:ReportOutput=ReportParams.OFF,
+                report_progress:ReportProgress=ReportProgress.OFF,
+                report_simulations:ReportSimulations=ReportSimulations.OFF,
+                report_to_devices:ReportDevices=None,
                 report=None,
                 run_report=None,
                 ):
