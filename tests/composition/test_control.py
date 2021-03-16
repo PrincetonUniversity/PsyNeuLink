@@ -1,14 +1,13 @@
-import functools
-import numpy as np
-import psyneulink as pnl
-import psyneulink.core.components.functions.distributionfunctions
-import pytest
 import re
 
-from psyneulink.core.components.functions.optimizationfunctions import OptimizationFunctionError
-from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
+import numpy as np
+import pytest
+
+import psyneulink as pnl
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
 from psyneulink.core.globals.log import LogCondition
+from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
+
 
 class TestControlSpecification:
     # These test the coordination of adding a node with a control specification to a Composition
@@ -1677,11 +1676,12 @@ class TestModelBasedOptimizationControlMechanisms:
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Model Based OCM")
     @pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
-                                     [pytest.helpers.cuda_param('Python-PTX')])
+                                     [pytest.helpers.cuda_param('Python-PTX'),
+                                      pytest.param('Python-LLVM', marks=pytest.mark.llvm)])
     def test_model_based_ocm_after(self, benchmark, mode):
-        if mode == 'Python-PTX':
+        if str(mode).startswith('Python-'):
+            ocm_mode = mode.split('-')[1]
             mode = pnl.ExecutionMode.Python
-            ocm_mode = 'PTX'
         else:
             # OCM default mode is Python
             ocm_mode = 'Python'
@@ -1724,11 +1724,12 @@ class TestModelBasedOptimizationControlMechanisms:
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Model Based OCM")
     @pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
-                                     [pytest.helpers.cuda_param('Python-PTX')])
+                                     [pytest.helpers.cuda_param('Python-PTX'),
+                                      pytest.param('Python-LLVM', marks=pytest.mark.llvm)])
     def test_model_based_ocm_before(self, benchmark, mode):
-        if mode == 'Python-PTX':
+        if str(mode).startswith('Python-'):
+            ocm_mode = mode.split('-')[1]
             mode = pnl.ExecutionMode.Python
-            ocm_mode = 'PTX'
         else:
             # OCM default mode is Python
             ocm_mode = 'Python'

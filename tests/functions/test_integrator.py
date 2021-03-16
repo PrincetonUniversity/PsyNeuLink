@@ -185,7 +185,7 @@ def test_integrator_function_with_params_of_different_lengths():
     with pytest.raises(FunctionError) as error_text:
         Functions.AdaptiveIntegrator(rate=[.1, .2, .3], offset=[.4,.5])
     error_msg_a = "The parameters with len>1 specified for AdaptiveIntegrator Function"
-    error_msg_b = "(['rate', 'offset']) don't all have the same length"
+    error_msg_b = "(['offset', 'rate']) don't all have the same length"
     assert error_msg_a in str(error_text.value)
     assert error_msg_b in str(error_text.value)
 

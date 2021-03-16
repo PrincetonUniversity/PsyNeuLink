@@ -127,9 +127,10 @@ Class Reference
 ---------------
 
 """
+import logging
+
 import numpy as np
 
-import logging
 try:
     import torch
     from torch import nn
@@ -140,15 +141,11 @@ except ImportError:
 else:
     from psyneulink.library.compositions.pytorchmodelcreator import PytorchModelCreator
 
-
-from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU
-from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import SOFT_CLAMP, TRAINING_SET
+from psyneulink.core.globals.keywords import SOFT_CLAMP
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.time import TimeScale
@@ -479,6 +476,12 @@ class AutodiffComposition(Composition):
                 runtime_params=None,
                 execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
                 skip_initialization=False,
+                report_output=False,
+                report_progress=False,
+                report_simulations=False,
+                report_to_devices=None,
+                report=None,
+                run_report=None,
                 ):
         self._assign_execution_ids(context)
         context.composition = self
@@ -511,8 +514,13 @@ class AutodiffComposition(Composition):
             # FIX 5/28/20:
             context.execution_phase = execution_phase
 
-
             scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
+
+            # MODIFIED 3/2/21 NEW:  FIX: CAUSES CRASH... NEEDS TO BE FIXED
+            # progress.report_output(self, run_report, scheduler, show_output, 'trial', context)
+            # MODIFIED 3/2/21 END
+            report.report_progress(self, run_report, context)
+
             return output
 
         return super(AutodiffComposition, self).execute(inputs=inputs,
@@ -528,6 +536,11 @@ class AutodiffComposition(Composition):
                                                         clamp_input=clamp_input,
                                                         runtime_params=runtime_params,
                                                         execution_mode=execution_mode,
+                                                        report_progress=report_progress,
+                                                        report_output=report_output,
+                                                        report_simulations=False,
+                                                        report_to_devices=None,
+                                                        report=None,
                                                         )
 
     def _get_state_struct_type(self, ctx):

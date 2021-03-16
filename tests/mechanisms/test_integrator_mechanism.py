@@ -963,7 +963,7 @@ class TestIntegratorRate:
                 ))
 
         error_msg_a = "The parameters with len>1 specified for AccumulatorIntegrator Function-0 "
-        error_msg_b = "(['rate', 'increment']) don't all have the same length"
+        error_msg_b = "(['increment', 'rate']) don't all have the same length"
         assert error_msg_a in str(error_text.value)
         assert error_msg_b in str(error_text.value)
 
@@ -1189,14 +1189,6 @@ class TestStatefulness:
 
     @pytest.mark.mechanism
     @pytest.mark.integrator_mechanism
-    @pytest.mark.parametrize('mode', [pnl.ExecutionMode.Python,
-                                      # 'LLVM' mode is not supported, because
-                                      # 'reset_when' needs compiled scheduler
-                                      pytest.param(pnl.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
-                                      pytest.param(pnl.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param(pnl.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda])
-                                     ])
     @pytest.mark.parametrize('cond0, cond1, expected', [
         (pnl.Never(), pnl.AtTrial(2),
          [[np.array([0.5]), np.array([0.5])],
@@ -1223,7 +1215,10 @@ class TestStatefulness:
           [np.array([0.5]), np.array([0.9375])],
           [np.array([0.5]), np.array([0.96875])]]),
         ], ids=lambda x: str(x) if isinstance(x, pnl.Condition) else "")
-    def test_reset_stateful_function_when_composition(self, mode, cond0, cond1, expected):
+    # 'LLVM' mode is not supported, because synchronization of compiler and
+    # python values during execution is not implemented.
+    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    def test_reset_stateful_function_when_composition(self, comp_mode, cond0, cond1, expected):
         I1 = pnl.IntegratorMechanism()
         I2 = pnl.IntegratorMechanism()
         I1.reset_stateful_function_when = cond0
@@ -1232,7 +1227,7 @@ class TestStatefulness:
         C.add_node(I1)
         C.add_node(I2)
 
-        C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, execution_mode=mode)
+        C.run(inputs={I1: [[1.0]], I2: [[1.0]]}, num_trials=7, execution_mode=comp_mode)
 
         assert np.allclose(expected, C.results)
 

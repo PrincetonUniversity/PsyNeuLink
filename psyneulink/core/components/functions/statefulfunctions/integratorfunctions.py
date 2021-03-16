@@ -292,7 +292,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         # Check that all function_arg params with length > 1 have the same length
         elif any(len(v)!=len(values[0]) for v in values):
             raise FunctionError(f"The parameters with len>1 specified for {self.name} "
-                                f"({list(params_to_check.keys())}) don't all have the same length")
+                                f"({sorted(params_to_check.keys())}) don't all have the same length")
     # MODIFIED 6/21/19 END
 
     # MODIFIED 6/21/19 NEW: [JDC]

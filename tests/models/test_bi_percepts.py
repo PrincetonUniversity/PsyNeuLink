@@ -10,6 +10,7 @@ import numpy as np
 import psyneulink as pnl
 import pytest
 from itertools import product
+from psyneulink.core.compositions.report import ReportOutput
 
 
 expected_3_10 = [[ 205.67990124], [ 205.536034],   [ 206.29612605],
@@ -80,7 +81,7 @@ def test_necker_cube(benchmark, comp_mode, n_nodes, n_time_steps, expected):
             pathway=(node_j, [-inhib_level], node_i))
 
     # turn off report
-    reportOutputPref = False
+    reportOutputPref = ReportOutput.OFF
 
     # make sure all nodes are both input and outputs
     # # MODIFIED 4/25/20 OLD:
@@ -113,7 +114,7 @@ def test_necker_cube(benchmark, comp_mode, n_nodes, n_time_steps, expected):
     #                                                                                         pnl.NodeRole.OUTPUT])))
 
     # turn off report
-    reportOutputPref = False
+    reportOutputPref = ReportOutput.OFF
     # MODIFIED 4/4/20 END
 
     # bp_comp.show_graph()

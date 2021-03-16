@@ -1925,17 +1925,10 @@ class TestOnResumeIntegratorMode:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     @pytest.mark.benchmark(group="TransferMechanism")
-    @pytest.mark.parametrize('mode', [pnlvm.ExecutionMode.Python,
-                                      # 'LLVM' mode is not supported
-                                      # the comparison values and checks
-                                      # are not synced between binary
-                                      # and Python structures
-                                      pytest.param(pnlvm.ExecutionMode.LLVMExec, marks=pytest.mark.llvm),
-                                      pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm),
-                                      pytest.param(pnlvm.ExecutionMode.PTXExec, marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                      pytest.param(pnlvm.ExecutionMode.PTXRun, marks=[pytest.mark.llvm, pytest.mark.cuda]),
-                                     ])
-    def test_termination_measures(self, mode):
+    # 'LLVM' mode is not supported, because synchronization of compiler and
+    # python values during execution is not implemented.
+    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    def test_termination_measures(self, comp_mode):
         stim_input = ProcessingMechanism(size=2, name='Stim Input')
         stim_percept = TransferMechanism(name='Stimulus', size=2, function=Logistic)
         instruction_input = ProcessingMechanism(size=2, function=Linear(slope=10))
@@ -1957,10 +1950,10 @@ class TestOnResumeIntegratorMode:
         comp.add_linear_processing_pathway([instruction_input, attention, stim_percept])
         inputs = {stim_input: [[1, 1], [1, 1]],
                   instruction_input: [[1, -1], [-1, 1]]}
-        result = comp.run(inputs=inputs, execution_mode=mode)
+        result = comp.run(inputs=inputs, execution_mode=comp_mode)
 
         assert np.allclose(result, [[0.43636140750487973, 0.47074475219780554]])
-        if mode is pnlvm.ExecutionMode.Python:
+        if comp_mode is pnlvm.ExecutionMode.Python:
             assert decision.num_executions.time_step == 1
             assert decision.num_executions.pass_ == 2
             assert decision.num_executions.trial== 1

@@ -1,19 +1,20 @@
-import pytest
 import numpy as np
+import pytest
 
 import psyneulink as pnl
+from psyneulink.core.components.functions.objectivefunctions import Distance
+from psyneulink.core.components.functions.optimizationfunctions import GridSearch, MINIMIZE
+from psyneulink.core.components.functions.transferfunctions import GaussianDistort
+from psyneulink.core.components.mechanisms.modulatory.control import OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.mechanisms.modulatory.control import OptimizationControlMechanism
-from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
-from psyneulink.core.components.functions.objectivefunctions import Distance
-from psyneulink.core.components.functions.optimizationfunctions import GridSearch, MINIMIZE
-from psyneulink.core.components.functions.transferfunctions import GaussianDistort, Exponential
-from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.inputport import SHADOW_INPUTS
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.globals.keywords import VARIANCE, NORMED_L0_SIMILARITY
+from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
+
 
 @pytest.mark.model
 @pytest.mark.benchmark(group="Greedy Agent")
@@ -109,7 +110,8 @@ def test_simplified_greedy_agent_random(benchmark, comp_mode):
 @pytest.mark.model
 @pytest.mark.benchmark(group="Predator Prey")
 @pytest.mark.parametrize("mode", pytest.helpers.get_comp_execution_modes() +
-                                 [pytest.helpers.cuda_param('Python-PTX')])
+                                 [pytest.helpers.cuda_param('Python-PTX'),
+                                  pytest.param('Python-LLVM', marks=pytest.mark.llvm)])
 @pytest.mark.parametrize("samples", [[0,10],
     pytest.param([0,3,6,10], marks=pytest.mark.stress),
     pytest.param([0,2,4,6,8,10], marks=pytest.mark.stress),
@@ -119,11 +121,11 @@ def test_predator_prey(benchmark, mode, samples):
     if len(samples) > 10 and mode not in {pnl.ExecutionMode.LLVM,
                                           pnl.ExecutionMode.LLVMExec,
                                           pnl.ExecutionMode.LLVMRun,
-                                          "Python-PTX"}:
+                                          "Python-PTX", "Python-LLVM"}:
         pytest.skip("This test takes too long")
-    if mode == 'Python-PTX':
+    if str(mode).startswith('Python-'):
+        ocm_mode = mode.split('-')[1]
         mode = pnl.ExecutionMode.Python
-        ocm_mode = 'PTX'
     else:
         # OCM default mode is Python
         ocm_mode = 'Python'

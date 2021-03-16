@@ -11,11 +11,12 @@
 from psyneulink.core.globals.context import Context
 
 from collections import Counter
+import concurrent.futures
 import copy
 import ctypes
 import numpy as np
 from inspect import isgenerator
-import itertools
+import os
 import sys
 
 
@@ -117,15 +118,10 @@ class CUDAExecution(Execution):
         # CUDA uses the same function for single and multi run
         return self._bin_func
 
-    def _get_ctype_bytes(self, data):
-        # Return dummy buffer. CUDA does not handle 0 size well.
-        if ctypes.sizeof(data) == 0:
-            return bytearray(b'aaaa')
-        return bytearray(data)
-
     def upload_ctype(self, data, name='other'):
         self._uploaded_bytes[name] += ctypes.sizeof(data)
-        return jit_engine.pycuda.driver.to_device(self._get_ctype_bytes(data))
+        assert ctypes.sizeof(data) != 0
+        return jit_engine.pycuda.driver.to_device(bytearray(data))
 
     def download_ctype(self, source, ty, name='other'):
         self._downloaded_bytes[name] += ctypes.sizeof(ty)
@@ -464,12 +460,13 @@ class CompExecution(CUDAExecution):
     def freeze_values(self):
         self.__frozen_vals = copy.deepcopy(self._data_struct)
 
-    def execute_node(self, node, inputs=None):
+    def execute_node(self, node, inputs=None, context=None):
         # We need to reconstruct the input dictionary here if it was not provided.
         # This happens during node execution of nested compositions.
         assert len(self._execution_contexts) == 1
         if inputs is None and node is self._composition.input_CIM:
-            context = self._execution_contexts[0]
+            if context is None:
+                context = self._execution_contexts[0]
             port_inputs = {origin_port:[proj.parameters.value._get(context) for proj in p[0].path_afferents] for (origin_port, p) in self._composition.input_CIM_ports.items()}
             inputs = {}
             for p, v in port_inputs.items():
@@ -496,6 +493,8 @@ class CompExecution(CUDAExecution):
             print("RAN: {}. CTX: {}".format(node, self.extract_node_state(node)))
             print("RAN: {}. Params: {}".format(node, self.extract_node_params(node)))
             print("RAN: {}. Results: {}".format(node, self.extract_node_output(node)))
+
+        node._propagate_most_recent_context(context)
 
     @property
     def _bin_exec_func(self):
@@ -630,7 +629,7 @@ class CompExecution(CUDAExecution):
         data_out = jit_engine.pycuda.driver.mem_alloc(output_size)
 
         # number of trials argument
-        runs_np = np.array([runs] * len(self._execution_contexts), dtype=np.int32)
+        runs_np = np.full(len(self._execution_contexts), runs, dtype=np.int32)
         runs_count = jit_engine.pycuda.driver.InOut(runs_np)
         self._uploaded_bytes['input'] += runs_np.nbytes
         self._downloaded_bytes['input'] += runs_np.nbytes
@@ -654,47 +653,69 @@ class CompExecution(CUDAExecution):
             assert runs_np[0] <= runs, "Composition ran more times than allowed!"
             return _convert_ctype_to_python(ct_out)[0:runs_np[0]]
 
-    def cuda_evaluate(self, variable, search_space):
+    def _prepare_evaluate(self, variable, num_evaluations):
         ocm = self._composition.controller
         assert len(self._execution_contexts) == 1
         context = self._execution_contexts[0]
 
-        bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset({"evaluate"}))
+        bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset({"evaluate", "alloc_range"}))
         self.__bin_func = bin_func
-        assert len(bin_func.byref_arg_types) == 6
+        assert len(bin_func.byref_arg_types) == 7
 
-        # There are 6 arguments to evaluate:
-        # comp_param, comp_state, allocations, results, input, comp_data
-        # all but #2 and #3 are shared
+        # There are 7 arguments to evaluate_alloc_range:
+        # comp_param, comp_state, from, to, results, input, comp_data
+        # all but #4 are shared
 
         # Directly initialized structures
         ct_comp_param = bin_func.byref_arg_types[0](*ocm.agent_rep._get_param_initializer(context))
         ct_comp_state = bin_func.byref_arg_types[1](*ocm.agent_rep._get_state_initializer(context))
-        ct_comp_data = bin_func.byref_arg_types[5](*ocm.agent_rep._get_data_initializer(context))
-
-        # Construct the allocations array
-        alloc_vals = itertools.product(*search_space)
-        alloc_dty = _element_dtype(bin_func.byref_arg_types[2])
-        allocations = np.asfarray(np.atleast_2d([*alloc_vals]), dtype=alloc_dty)
-        ct_allocations = allocations.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[2] * len(allocations)))
+        ct_comp_data = bin_func.byref_arg_types[6](*ocm.agent_rep._get_data_initializer(context))
 
         # Construct input variable
-        el_dty = _element_dtype(bin_func.byref_arg_types[4])
-        converted_variable = np.array(np.asfarray(x, dtype=el_dty) for x in variable)
-        ct_in = converted_variable.ctypes.data_as(ctypes.POINTER(bin_func.byref_arg_types[4]))
+        var_dty = _element_dtype(bin_func.byref_arg_types[5])
+        converted_variable = np.asfarray(np.concatenate(variable), dtype=var_dty)
+
+        # Output ctype
+        out_ty = bin_func.byref_arg_types[4] * num_evaluations
+
+        return ct_comp_param, ct_comp_state, ct_comp_data, converted_variable, out_ty
+
+    def cuda_evaluate(self, variable, num_evaluations):
+        ct_comp_param, ct_comp_state, ct_comp_data, converted_variable, out_ty = \
+            self._prepare_evaluate(variable, num_evaluations)
+        self._uploaded_bytes['input'] += converted_variable.nbytes
 
         # Ouput is allocated on device, but we need the ctype.
-        out_ty = bin_func.byref_arg_types[3] * len(allocations)
 
         cuda_args = (self.upload_ctype(ct_comp_param, 'params'),
                      self.upload_ctype(ct_comp_state, 'state'),
-                     self.upload_ctype(ct_allocations.contents, 'input'),
                      jit_engine.pycuda.driver.mem_alloc(ctypes.sizeof(out_ty)),
-                     self.upload_ctype(ct_in.contents, 'input'),
+                     jit_engine.pycuda.driver.In(converted_variable),
                      self.upload_ctype(ct_comp_data, 'data'),
                     )
 
-        bin_func.cuda_call(*cuda_args, threads=len(allocations))
-        ct_results = self.download_ctype(cuda_args[3], out_ty, 'result')
+        self.__bin_func.cuda_call(*cuda_args, threads=int(num_evaluations))
+        ct_results = self.download_ctype(cuda_args[2], out_ty, 'result')
 
-        return ct_allocations.contents, ct_results
+        return ct_results
+
+    def thread_evaluate(self, variable, num_evaluations):
+        ct_param, ct_state, ct_data, converted_variale, out_ty = \
+            self._prepare_evaluate(variable, num_evaluations)
+
+        ct_results = out_ty()
+        ct_variable = converted_variale.ctypes.data_as(self.__bin_func.c_func.argtypes[5])
+        # There are 7 arguments to evaluate_alloc_range:
+        # comp_param, comp_state, from, to, results, input, comp_data
+        jobs = min(os.cpu_count(), num_evaluations)
+        evals_per_job = (num_evaluations + jobs - 1) // jobs
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=jobs)
+        for i in range(jobs):
+            start = i * evals_per_job
+            stop = min((i + 1) * evals_per_job, num_evaluations)
+            executor.submit(self.__bin_func, ct_param, ct_state, int(start),
+                            int(stop), ct_results, ct_variable, ct_data)
+
+        executor.shutdown()
+
+        return ct_results

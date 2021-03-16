@@ -362,10 +362,19 @@ def _gen_cuda_kernel_wrapper_module(function):
 
     decl_f = ir.Function(module, function.type.pointee, function.name)
     assert decl_f.is_declaration
+    orig_args = function.type.pointee.args
 
-    wrapper_type = ir.FunctionType(ir.VoidType(), (*function.type.pointee.args,
-                                                   ir.IntType(32)))
+    # remove indices if this is grid_evauate_ranged
+    is_grid_ranged = len(orig_args) == 7 and isinstance(orig_args[2], ir.IntType)
+    if is_grid_ranged:
+        orig_args = orig_args[:2] + orig_args[4:]
+
+    wrapper_type = ir.FunctionType(ir.VoidType(), [*orig_args, ir.IntType(32)])
     kernel_func = ir.Function(module, wrapper_type, function.name + "_cuda_kernel")
+    # Add kernel mark metadata
+    module.add_named_metadata("nvvm.annotations", [kernel_func, "kernel", ir.IntType(32)(1)])
+
+    # Start the function
     block = kernel_func.append_basic_block(name="entry")
     builder = ir.IRBuilder(block)
 
@@ -385,6 +394,15 @@ def _gen_cuda_kernel_wrapper_module(function):
     # Index all pointer arguments. Ignore the thread count argument
     args = list(kernel_func.args)[:-1]
     indexed_args = []
+
+    # If we're calling ranged search there are no offsets
+    if is_grid_ranged:
+        next_id = builder.add(global_id, global_id.type(1))
+        call_args = args[:2] + [global_id, next_id] + args[2:]
+        builder.call(decl_f, call_args)
+        builder.ret_void()
+        return module
+
 
     # There are 6 arguments to evaluate:
     # comp_param, comp_state, allocations, output, input, comp_data
@@ -420,9 +438,6 @@ def _gen_cuda_kernel_wrapper_module(function):
         indexed_args.append(arg)
     builder.call(decl_f, indexed_args)
     builder.ret_void()
-
-    # Add kernel mark metadata
-    module.add_named_metadata("nvvm.annotations", [kernel_func, "kernel", ir.IntType(32)(1)])
 
     return module
 
