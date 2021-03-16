@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Migrating Learning Compositions from before PsyNeuLink 0.7.4 &mdash; PsyNeuLink 0.8.6.0+1.ga2d06bfb77 documentation</title>
+  <title>Migrating Learning Compositions from before PsyNeuLink 0.7.4 &mdash; PsyNeuLink 0.8.7.0+101.gd105add documentation</title>
   
 
   
@@ -27,7 +27,6 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -96,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.6.0+1
+                  0.8.7.0+101
                 </div>
               
             
@@ -199,10 +198,10 @@
 <p>As of PsyNeuLink release 0.7.5, the API for learning has been changed.
 At a high level, the major goals of this change were:</p>
 <ol class="arabic simple">
-<li><p>To streamline the process of learning in PsyNeuLink by moving the API closer to those of other python libraries</p></li>
-<li><p>To merge the APIs of standard learning and autodiff learning into one cohesive API, while minimizing impact to the user</p></li>
-<li><p>To make features such as minibatching, epochs, and early stopping universally available to all methods of learning</p></li>
-<li><p>To open up new avenues of development with major changes and cleanup of PsyNeuLink code</p></li>
+<li>To streamline the process of learning in PsyNeuLink by moving the API closer to those of other python libraries</li>
+<li>To merge the APIs of standard learning and autodiff learning into one cohesive API, while minimizing impact to the user</li>
+<li>To make features such as minibatching, epochs, and early stopping universally available to all methods of learning</li>
+<li>To open up new avenues of development with major changes and cleanup of PsyNeuLink code</li>
 </ol>
 <p>As part of these changes, there were a few small changes to the API for learning in PsyNeuLink.
 This guide aims to demonstrate these changes by way of example, and should serve as a point of reference for those looking to convert
@@ -211,11 +210,11 @@ Pre 0.7.5 PsyNeuLink code to the new API.</p>
 <h2>Learning using Standard PsyNeuLink Compositions<a class="headerlink" href="#learning-using-standard-psyneulink-compositions" title="Permalink to this headline">¶</a></h2>
 <p>Learning using standard PsyNeuLink is largely unchanged. The two changes that impact this are:</p>
 <ol class="arabic simple">
-<li><p>The removal of the <code class="xref any docutils literal notranslate"><span class="pre">enable_learning</span></code> parameter of compositions, and</p></li>
-<li><p>The addition of the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Composition.learn</span></code></a> method to swap to learning mode</p></li>
+<li>The removal of the <code class="xref any docutils literal"><span class="pre">enable_learning</span></code> parameter of compositions, and</li>
+<li>The addition of the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal"><span class="pre">Composition.learn</span></code></a> method to swap to learning mode</li>
 </ol>
 <p>To demonstrate this by example, consider the two following code blocks which both implement a simple three-layer network that learns XOR</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="nb">input</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="nb">input</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
 <span class="gp">... </span>    <span class="n">hidden</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Hidden&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">())</span>
 <span class="gp">... </span>    <span class="n">output</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Output&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">())</span>
 <span class="gp">... </span>    <span class="n">input_weights</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input Weights&#39;</span><span class="p">,</span> <span class="n">matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
@@ -235,7 +234,7 @@ Pre 0.7.5 PsyNeuLink code to the new API.</p>
 </pre></div>
 </div>
 <p>And this code block is AFTER the changes:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="nb">input</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="nb">input</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
 <span class="gp">... </span>    <span class="n">hidden</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Hidden&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">())</span>
 <span class="gp">... </span>    <span class="n">output</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Output&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">())</span>
 <span class="gp">... </span>    <span class="n">input_weights</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input Weights&#39;</span><span class="p">,</span> <span class="n">matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
@@ -255,9 +254,9 @@ Pre 0.7.5 PsyNeuLink code to the new API.</p>
 <span class="gp">... </span>                 <span class="n">animate</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;show_learning&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">})</span>
 </pre></div>
 </div>
-<p>Notice that both code blocks are largely the same, with the exception of the removal of <code class="xref any docutils literal notranslate"><span class="pre">xor_comp.enable_learning</span> <span class="pre">=</span> <span class="pre">True</span></code> and the replacement of <code class="xref any docutils literal notranslate"><span class="pre">xor_comp.run</span></code> with <code class="xref any docutils literal notranslate"><span class="pre">xor_comp.learn</span></code></p>
+<p>Notice that both code blocks are largely the same, with the exception of the removal of <code class="xref any docutils literal"><span class="pre">xor_comp.enable_learning</span> <span class="pre">=</span> <span class="pre">True</span></code> and the replacement of <code class="xref any docutils literal"><span class="pre">xor_comp.run</span></code> with <code class="xref any docutils literal"><span class="pre">xor_comp.learn</span></code></p>
 <p>The changes to the learning api also add new ways to pass input for learning, for added convenience. Namely, one can now pass targets directly to output nodes if they should desire to do so. This is demonstrated in the following block of code:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="nb">input</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="nb">input</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
 <span class="gp">... </span>    <span class="n">hidden</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Hidden&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">())</span>
 <span class="gp">... </span>    <span class="n">output</span> <span class="o">=</span> <span class="n">TransferMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Output&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">())</span>
 <span class="gp">... </span>    <span class="n">input_weights</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input Weights&#39;</span><span class="p">,</span> <span class="n">matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
@@ -276,15 +275,15 @@ Pre 0.7.5 PsyNeuLink code to the new API.</p>
 <span class="gp">... </span>                   <span class="n">animate</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;show_learning&#39;</span><span class="p">:</span><span class="kc">True</span><span class="p">})</span>
 </pre></div>
 </div>
-<p>Notice that we no longer have to extract the target node from the <code class="xref any docutils literal notranslate"><span class="pre">add_backpropagation_learning_pathway</span> <span class="pre">method</span></code>, and can instead pass the targets as output nodes mapped to values, in a new parameter called <code class="xref any docutils literal notranslate"><span class="pre">targets</span></code> in the <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method.</p>
+<p>Notice that we no longer have to extract the target node from the <code class="xref any docutils literal"><span class="pre">add_backpropagation_learning_pathway</span> <span class="pre">method</span></code>, and can instead pass the targets as output nodes mapped to values, in a new parameter called <code class="xref any docutils literal"><span class="pre">targets</span></code> in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal"><span class="pre">learn</span></code></a> method.</p>
 </div>
 <div class="section" id="learning-using-autodiffcompositions">
 <h2>Learning using AutodiffCompositions<a class="headerlink" href="#learning-using-autodiffcompositions" title="Permalink to this headline">¶</a></h2>
 <p>AutodiffCompositions are also update in this change. In addition to the API changes mentioned for learning in compositions, several parameters of AutodiffCompositions have been moved from
-its constructor to be runtime parameters of its <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method.</p>
+its constructor to be runtime parameters of its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal"><span class="pre">learn</span></code></a> method.</p>
 <p>This is demonstrated in the following codeblocks:</p>
 <p>This is the OLD code:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="n">my_mech_1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="n">my_mech_1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
 <span class="gp">... </span>    <span class="n">my_mech_2</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span>
 <span class="gp">... </span>    <span class="n">my_projection</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">MappingProjection</span><span class="p">(</span><span class="n">matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span>
 <span class="gp">... </span>                        <span class="n">sender</span><span class="o">=</span><span class="n">my_mech_1</span><span class="p">,</span>
@@ -307,7 +306,7 @@ its constructor to be runtime parameters of its <a class="reference internal" hr
 </pre></div>
 </div>
 <p>And this is equivalent code AFTER the changes:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="n">my_mech_1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span>    <span class="n">my_mech_1</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">3</span><span class="p">)</span>
 <span class="gp">... </span>    <span class="n">my_mech_2</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span> <span class="n">size</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span>
 <span class="gp">... </span>    <span class="n">my_projection</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">MappingProjection</span><span class="p">(</span><span class="n">matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span>
 <span class="gp">... </span>                        <span class="n">sender</span><span class="o">=</span><span class="n">my_mech_1</span><span class="p">,</span>
@@ -329,8 +328,8 @@ its constructor to be runtime parameters of its <a class="reference internal" hr
 <span class="gp">... </span>    <span class="n">my_autodiff</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">input_dict</span><span class="p">[</span><span class="s1">&#39;inputs&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>Notice that the <code class="xref any docutils literal notranslate"><span class="pre">patience</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">epochs</span></code> parameters have been moved to the call to <code class="xref any docutils literal notranslate"><span class="pre">my_autodiff.learn</span></code>.
-In addition, notice that the inputs to <code class="xref any docutils literal notranslate"><span class="pre">autodiffcomposition.run</span></code> can no longer be the same dictionary as those passed to <code class="xref any docutils literal notranslate"><span class="pre">autodiffcomposition.learn</span></code>.</p>
+<p>Notice that the <code class="xref any docutils literal"><span class="pre">patience</span></code> and <code class="xref any docutils literal"><span class="pre">epochs</span></code> parameters have been moved to the call to <code class="xref any docutils literal"><span class="pre">my_autodiff.learn</span></code>.
+In addition, notice that the inputs to <code class="xref any docutils literal"><span class="pre">autodiffcomposition.run</span></code> can no longer be the same dictionary as those passed to <code class="xref any docutils literal"><span class="pre">autodiffcomposition.learn</span></code>.</p>
 </div>
 </div>
 
@@ -387,12 +386,21 @@ In addition, notice that the inputs to <code class="xref any docutils literal no
   
 
      
-       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript">
+           var DOCUMENTATION_OPTIONS = {
+               URL_ROOT:'./',
+               VERSION:'0.8.7.0+101.gd105add',
+               LANGUAGE:'None',
+               COLLAPSE_INDEX:false,
+               FILE_SUFFIX:'.html',
+               HAS_SOURCE:  true,
+               SOURCELINK_SUFFIX: '.txt'
+           };
+       </script>
+         <script type="text/javascript" src="_static/jquery.js"></script>
+         <script type="text/javascript" src="_static/underscore.js"></script>
+         <script type="text/javascript" src="_static/doctools.js"></script>
+         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

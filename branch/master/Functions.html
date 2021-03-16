@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Functions &mdash; PsyNeuLink 0.8.6.0+1.ga2d06bfb77 documentation</title>
+  <title>Functions &mdash; PsyNeuLink 0.8.7.0+101.gd105add documentation</title>
   
 
   
@@ -27,7 +27,6 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -96,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.6.0+1
+                  0.8.7.0+101
                 </div>
               
             
@@ -209,13 +208,15 @@
 <li class="toctree-l1"><a class="reference internal" href="LearningFunctions.html">LearningFunctions</a></li>
 </ul>
 </div>
-<span class="target" id="module-psyneulink.core.components.functions.function"></span><dl class="simple">
-<dt>Function</dt><dd><ul class="simple">
-<li><p><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base" title="psyneulink.core.components.functions.function.Function_Base"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Function_Base</span></code></a></p></li>
+<span class="target" id="module-psyneulink.core.components.functions.function"></span><dl class="docutils">
+<dt>Function</dt>
+<dd><ul class="first last simple">
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base" title="psyneulink.core.components.functions.function.Function_Base"><code class="xref any py py-class docutils literal"><span class="pre">Function_Base</span></code></a></li>
 </ul>
 </dd>
-<dt>Example function:</dt><dd><ul class="simple">
-<li><p><a class="reference internal" href="#psyneulink.core.components.functions.function.ArgumentTherapy" title="psyneulink.core.components.functions.function.ArgumentTherapy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ArgumentTherapy</span></code></a></p></li>
+<dt>Example function:</dt>
+<dd><ul class="first last simple">
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.ArgumentTherapy" title="psyneulink.core.components.functions.function.ArgumentTherapy"><code class="xref any py py-class docutils literal"><span class="pre">ArgumentTherapy</span></code></a></li>
 </ul>
 </dd>
 </dl>
@@ -223,33 +224,33 @@
 <span id="function-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A Function is a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> that “packages” a function for use by other Components.
 Every Component in PsyNeuLink is assigned a Function; when that Component is executed, its
-Function’s <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is executed.  The <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> can be any callable
+Function’s <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is executed.  The <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be any callable
 operation, although most commonly it is a mathematical operation (and, for those, almost always uses a call to one or
 more numpy functions).  There are two reasons PsyNeuLink packages functions in a Function Component:</p>
 <ul class="simple">
-<li><p><strong>Manage parameters</strong> – parameters are attributes of a Function that either remain stable over multiple calls to the
-function (e.g., the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> or <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.bias" title="psyneulink.core.components.functions.transferfunctions.Logistic.bias"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias</span></code></a> of a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function, or the learning rate
+<li><strong>Manage parameters</strong> – parameters are attributes of a Function that either remain stable over multiple calls to the
+function (e.g., the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> or <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.bias" title="psyneulink.core.components.functions.transferfunctions.Logistic.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a> of a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function, or the learning rate
 of a learning function); or, if they change, they do so less frequently or under the control of different factors
 than the function’s variable (i.e., its input).  As a consequence, it is useful to manage these separately from the
 function’s variable, and not have to provide them every time the function is called.  To address this, every
 PsyNeuLink Function has a set of attributes corresponding to the parameters of the function, that can be specified at
 the time the Function is created (in arguments to its constructor), and can be modified independently
-of a call to its <code class="xref std std-keyword docutils literal notranslate"><span class="pre">function</span></code>. Modifications can be directly (e.g., in a script), or by the operation of other
-PsyNeuLink Components (e.g., <a class="reference internal" href="ModulatoryMechanisms.html"><span class="doc">Modulatory Mechanisms</span></a>) by way of <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>.</p></li>
+of a call to its <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code>. Modifications can be directly (e.g., in a script), or by the operation of other
+PsyNeuLink Components (e.g., <a class="reference internal" href="ModulatoryMechanisms.html"><span class="doc">Modulatory Mechanisms</span></a>) by way of <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a>.</li>
 </ul>
 <ul class="simple">
-<li><p><strong>Modularity</strong> – by providing a standard interface, any Function assigned to a Components in PsyNeuLink can be
+<li><strong>Modularity</strong> – by providing a standard interface, any Function assigned to a Components in PsyNeuLink can be
 replaced with other PsyNeuLink Functions, or with user-written custom functions so long as they adhere to certain
-standards (the PsyNeuLink <code class="xref any docutils literal notranslate"><span class="pre">Function</span> <span class="pre">API</span></code>).</p></li>
+standards (the PsyNeuLink <code class="xref any docutils literal"><span class="pre">Function</span> <span class="pre">API</span></code>).</li>
 </ul>
 </div>
 <div class="section" id="creating-a-function">
 <span id="function-creation"></span><h2>Creating a Function<a class="headerlink" href="#creating-a-function" title="Permalink to this headline">¶</a></h2>
 <p>A Function can be created directly by calling its constructor.  Functions are also created automatically whenever
-any other type of PsyNeuLink Component is created (and its <code class="xref std std-keyword docutils literal notranslate"><span class="pre">function</span></code> is not otherwise specified). The
-constructor for a Function has an argument for its <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.variable" title="psyneulink.core.components.functions.function.Function_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> and each of the parameters of
-its <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  The <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.variable" title="psyneulink.core.components.functions.function.Function_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> argument is used both to format the
-input to the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, and assign its default value.  The arguments for each parameter can
+any other type of PsyNeuLink Component is created (and its <code class="xref std std-keyword docutils literal"><span class="pre">function</span></code> is not otherwise specified). The
+constructor for a Function has an argument for its <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.variable" title="psyneulink.core.components.functions.function.Function_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and each of the parameters of
+its <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  The <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.variable" title="psyneulink.core.components.functions.function.Function_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> argument is used both to format the
+input to the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and assign its default value.  The arguments for each parameter can
 be used to specify the default value for that parameter; the values can later be modified in various ways as described
 below.</p>
 </div>
@@ -259,297 +260,256 @@ below.</p>
 <span id="function-core-attributes"></span><h3><em>Core Attributes</em><a class="headerlink" href="#core-attributes" title="Permalink to this headline">¶</a></h3>
 <p>Every Function has the following core attributes:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.variable" title="psyneulink.core.components.functions.function.Function_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> – provides the input to the Function’s <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.variable" title="psyneulink.core.components.functions.function.Function_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> – provides the input to the Function’s <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</li>
 </ul>
 <ul class="simple">
-<li><p><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> – determines the computation carried out by the Function; it must be a
-callable object (that is, a python function or method of some kind). Unlike other PsyNeuLink <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>, it <em>cannot</em> be (another) Function object (it can’t be “turtles” all the way down!).</p></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> – determines the computation carried out by the Function; it must be a
+callable object (that is, a python function or method of some kind). Unlike other PsyNeuLink <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>, it <em>cannot</em> be (another) Function object (it can’t be “turtles” all the way down!).</li>
 </ul>
-<p>A Function also has an attribute for each of the parameters of its <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
+<p>A Function also has an attribute for each of the parameters of its <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
 </div>
 <div class="section" id="owner">
 <h3><em>Owner</em><a class="headerlink" href="#owner" title="Permalink to this headline">¶</a></h3>
-<p>If a Function has been assigned to another <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>, then it also has an <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> attribute
+<p>If a Function has been assigned to another <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>, then it also has an <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> attribute
 that refers to that Component.  The Function itself is assigned as the Component’s
-<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> attribute.  Each of the Function’s attributes is also assigned
-as an attribute of the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a>, and those are each associated with with a
-<a class="reference internal" href="ParameterPort.html"><span class="doc">parameterPort</span></a> of the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a>.  Projections to those parameterPorts can be
+<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute.  Each of the Function’s attributes is also assigned
+as an attribute of the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>, and those are each associated with with a
+<a class="reference internal" href="ParameterPort.html"><span class="doc">parameterPort</span></a> of the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a>.  Projections to those parameterPorts can be
 used by <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to modify the Function’s parameters.</p>
 </div>
 <div class="section" id="modulatory-parameters">
 <span id="function-modulatory-params"></span><h3><em>Modulatory Parameters</em><a class="headerlink" href="#modulatory-parameters" title="Permalink to this headline">¶</a></h3>
-<p>Some classes of Functions also implement a pair of modulatory parameters: <code class="xref any docutils literal notranslate"><span class="pre">multiplicative_param</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">additive_param</span></code>.
-Each of these is assigned the name of one of the function’s parameters. These are used by <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> to modulate the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> and thereby its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> and <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-detail-figure"><span class="std std-ref">figure</span></a> for additional
-details). For example, a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> typically uses the <code class="xref any docutils literal notranslate"><span class="pre">multiplicative_param</span></code> to modulate the value of a parameter
-of a Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, whereas a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> uses the <code class="xref any docutils literal notranslate"><span class="pre">additive_param</span></code> to increment
-the <code class="xref any docutils literal notranslate"><span class="pre">value</span></code> of the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.</p>
+<p>Some classes of Functions also implement a pair of modulatory parameters: <code class="xref any docutils literal"><span class="pre">multiplicative_param</span></code> and <code class="xref any docutils literal"><span class="pre">additive_param</span></code>.
+Each of these is assigned the name of one of the function’s parameters. These are used by <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> to modulate the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> and thereby its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> and <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-detail-figure"><span class="std std-ref">figure</span></a> for additional
+details). For example, a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> typically uses the <code class="xref any docutils literal"><span class="pre">multiplicative_param</span></code> to modulate the value of a parameter
+of a Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, whereas a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> uses the <code class="xref any docutils literal"><span class="pre">additive_param</span></code> to increment
+the <code class="xref any docutils literal"><span class="pre">value</span></code> of the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.</p>
 </div>
 </div>
 <div class="section" id="execution">
 <span id="function-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>Functions are executable objects that can be called directly.  More commonly, however, they are called when
-their <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> is executed.  The parameters
-of the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> can be modified when it is executed, by assigning a
+their <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> is executed.  The parameters
+of the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be modified when it is executed, by assigning a
 <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter specification dictionary</span></a> to the <strong>params</strong> argument in the
-call to the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
+call to the <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
 <p>For <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, this can also be done by specifying <a class="reference internal" href="Composition.html#composition-runtime-params"><span class="std std-ref">runtime_params</span></a> in the
-<code class="xref any docutils literal notranslate"><span class="pre">Run</span></code> method of their <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
+<code class="xref any docutils literal"><span class="pre">Run</span></code> method of their <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 </div>
 <div class="section" id="class-reference">
 <h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
-<dt id="psyneulink.core.components.functions.function.ArgumentTherapy">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.function.</code><code class="sig-name descname">ArgumentTherapy</code><span class="sig-paren">(</span><em class="sig-param">default_variable=None</em>, <em class="sig-param">propensity=10.0</em>, <em class="sig-param">pertincacity=&lt;Manner.CONTRARIAN: 1&gt;</em>, <em class="sig-param">params=None</em>, <em class="sig-param">owner=None</em>, <em class="sig-param">prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy" title="Permalink to this definition">¶</a></dt>
-<dd><p id="argumenttherapist">Return <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> or <code class="xref std std-keyword docutils literal notranslate"><span class="pre">False</span></code> according to the manner of the therapist.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> (<em>boolean</em><em> or </em><em>statement that resolves to one : default class_defaults.variable</em>) – assertion for which a therapeutic response will be offered.</p></li>
-<li><p><strong>propensity</strong> (<em>Manner value : default Manner.CONTRARIAN</em>) – specifies preferred therapeutic manner</p></li>
-<li><p><strong>pertinacity</strong> (<em>float : default 10.0</em>) – specifies therapeutic consistency</p></li>
-<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
-function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</p></li>
-<li><p><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p></li>
-<li><p><strong>name</strong> (str : default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code>) – specifies the name of the Function.</p></li>
-<li><p><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py attribute">
-<dt id="psyneulink.core.components.functions.function.ArgumentTherapy.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>assertion to which a therapeutic response is made.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>boolean</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="psyneulink.core.components.functions.function.ArgumentTherapy.propensity">
-<code class="sig-name descname">propensity</code><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.propensity" title="Permalink to this definition">¶</a></dt>
-<dd><p>determines therapeutic manner:  tendency to agree or disagree.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Manner value : default Manner.CONTRARIAN</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="psyneulink.core.components.functions.function.ArgumentTherapy.pertinacity">
-<code class="sig-name descname">pertinacity</code><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.pertinacity" title="Permalink to this definition">¶</a></dt>
-<dd><p>determines consistency with which the manner complies with the propensity.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float : default 10.0</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="psyneulink.core.components.functions.function.ArgumentTherapy.owner">
-<code class="sig-name descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.owner" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="psyneulink.core.components.functions.function.ArgumentTherapy.name">
-<code class="sig-name descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
-assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt id="psyneulink.core.components.functions.function.ArgumentTherapy.prefs">
-<code class="sig-name descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
-constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
-for details).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>PreferenceSet or specification dict : Function.classPreferences</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt id="psyneulink.core.components.functions.function.ArgumentTherapy.Manner">
-<em class="property">class </em><code class="sig-name descname">Manner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.Manner" title="Permalink to this definition">¶</a></dt>
-<dd><p>An enumeration.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="psyneulink.core.components.functions.function.ArgumentTherapy._validate_variable">
-<code class="sig-name descname">_validate_variable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy._validate_variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validates variable and returns validated value</p>
-<p>This overrides the class method, to perform more detailed type checking
-See explanation in class method.
-Note: this method (or the class version) is called only if the parameter_validation attribute is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> – (anything but a dict) - variable to be validated:</p></li>
-<li><p><strong>context</strong> – (str)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return variable</dt>
-<dd class="field-even"><ul class="simple">
-<li><p>validated</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="psyneulink.core.components.functions.function.ArgumentTherapy._validate_params">
-<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy._validate_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validates variable and /or params and assigns to targets</p>
-<p>This overrides the class method, to perform more detailed type checking
-See explanation in class method.
-Note: this method (or the class version) is called only if the parameter_validation attribute is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>request_set</strong> – (dict) - params to be validated</p></li>
-<li><p><strong>target_set</strong> – (dict) - destination of validated params</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return none</dt>
-<dd class="field-even"><p></p></dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="psyneulink.core.components.functions.function.ArgumentTherapy._function">
-<code class="sig-name descname">_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy._function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Returns a boolean that is (or tends to be) the same as or opposite the one passed in.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> (<em>boolean : default class_defaults.variable</em>) – an assertion to which a therapeutic response is made.</p></li>
-<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
-function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>therapeutic response</strong></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>boolean</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
+<dl class="class">
 <dt id="psyneulink.core.components.functions.function.Function_Base">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.function.</code><code class="sig-name descname">Function_Base</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">default_variable</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">owner</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.function.</code><code class="descname">Function_Base</code><span class="sig-paren">(</span><em>default_variable</em>, <em>params</em>, <em>owner=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>context=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement abstract class for Function category of Component class</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> (<em>value : default class_defaults.variable</em>) – specifies the format and a default value for the input to <a class="reference internal" href="Function.html"><span class="doc">function</span></a>.</p></li>
-<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>value : default class_defaults.variable</em>) – specifies the format and a default value for the input to <a class="reference internal" href="Function.html"><span class="doc">function</span></a>.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</p></li>
-<li><p><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p></li>
-<li><p><strong>name</strong> (str : default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code>) – specifies the name of the Function.</p></li>
-<li><p><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p></li>
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
+<li><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
 </ul>
-</dd>
-</dl>
-<dl class="py attribute">
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.function.Function_Base.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>format and default value can be specified by the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">variable</span></code> argument of the constructor;  otherwise,
-they are specified by the Function’s <code class="xref std std-keyword docutils literal notranslate"><span class="pre">class_defaults.variable</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>value</p>
-</dd>
-</dl>
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>value</em> – format and default value can be specified by the <code class="xref std std-keyword docutils literal"><span class="pre">variable</span></code> argument of the constructor;  otherwise,
+they are specified by the Function’s <code class="xref std std-keyword docutils literal"><span class="pre">class_defaults.variable</span></code>.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.function.Function_Base.function">
-<code class="sig-name descname">function</code><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>called by the Function’s <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> when it is executed.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>function</p>
-</dd>
-</dl>
+<code class="descname">function</code><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>function</em> – called by the Function’s <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> when it is executed.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.function.Function_Base.owner">
-<code class="sig-name descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
-</dd>
-</dl>
+<code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.function.Function_Base.name">
-<code class="sig-name descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+<code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
 assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.function.Function_Base.prefs">
-<code class="sig-name descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
-constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
 for details).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>PreferenceSet or specification dict : Function.classPreferences</p>
-</dd>
-</dl>
 </dd></dl>
 
-<dl class="py method">
-<dt id="psyneulink.core.components.functions.function.Function_Base._parse_arg_generic">
-<code class="sig-name descname">_parse_arg_generic</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">arg_val</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._parse_arg_generic" title="Permalink to this definition">¶</a></dt>
-<dd><p>Argument parser for any argument that does not have a specialized parser</p>
-</dd></dl>
-
-<dl class="py method">
+<dl class="method">
 <dt id="psyneulink.core.components.functions.function.Function_Base._validate_parameter_spec">
-<code class="sig-name descname">_validate_parameter_spec</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">param</span></em>, <em class="sig-param"><span class="n">param_name</span></em>, <em class="sig-param"><span class="n">numeric_only</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._validate_parameter_spec" title="Permalink to this definition">¶</a></dt>
+<code class="descname">_validate_parameter_spec</code><span class="sig-paren">(</span><em>param</em>, <em>param_name</em>, <em>numeric_only=True</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._validate_parameter_spec" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validates function param
 Replace direct call to parameter_spec in tc, which seems to not get called by Function __init__()’s</p>
 </dd></dl>
 
-<dl class="py method">
-<dt id="psyneulink.core.components.functions.function.Function_Base._model_spec_parameter_blacklist">
-<em class="property">property </em><code class="sig-name descname">_model_spec_parameter_blacklist</code><a class="headerlink" href="#psyneulink.core.components.functions.function.Function_Base._model_spec_parameter_blacklist" title="Permalink to this definition">¶</a></dt>
-<dd><p>A set of Parameter names that should not be added to the generated
-constructor string</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.function.ArgumentTherapy">
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.function.</code><code class="descname">ArgumentTherapy</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>propensity=10.0</em>, <em>pertincacity=&lt;Manner.CONTRARIAN: 1&gt;</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy" title="Permalink to this definition">¶</a></dt>
+<dd><p id="argumenttherapist">Return <code class="xref any docutils literal"><span class="pre">True</span></code> or <code class="xref std std-keyword docutils literal"><span class="pre">False</span></code> according to the manner of the therapist.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>variable</strong> (<em>boolean</em><em> or </em><em>statement that resolves to one : default class_defaults.variable</em>) – assertion for which a therapeutic response will be offered.</li>
+<li><strong>propensity</strong> (<em>Manner value : default Manner.CONTRARIAN</em>) – specifies preferred therapeutic manner</li>
+<li><strong>pertinacity</strong> (<em>float : default 10.0</em>) – specifies therapeutic consistency</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
+<li><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.function.ArgumentTherapy.variable">
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>boolean</em> – assertion to which a therapeutic response is made.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.function.ArgumentTherapy.propensity">
+<code class="descname">propensity</code><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.propensity" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Manner value : default Manner.CONTRARIAN</em> – determines therapeutic manner:  tendency to agree or disagree.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.function.ArgumentTherapy.pertinacity">
+<code class="descname">pertinacity</code><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.pertinacity" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float : default 10.0</em> – determines consistency with which the manner complies with the propensity.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.function.ArgumentTherapy.owner">
+<code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.function.ArgumentTherapy.name">
+<code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.function.ArgumentTherapy.prefs">
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
+for details).</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="psyneulink.core.components.functions.function.ArgumentTherapy.Manner">
+<em class="property">class </em><code class="descname">Manner</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.Manner" title="Permalink to this definition">¶</a></dt>
+<dd><p>An enumeration.</p>
+<dl class="attribute">
+<dt id="psyneulink.core.components.functions.function.ArgumentTherapy.Manner._member_type_">
+<code class="descname">_member_type_</code><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy.Manner._member_type_" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.function.ArgumentTherapy._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy._function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a boolean that is (or tends to be) the same as or opposite the one passed in.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>boolean : default class_defaults.variable</em>) – an assertion to which a therapeutic response is made.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>therapeutic response</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">boolean</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.function.ArgumentTherapy._validate_params">
+<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates variable and /or params and assigns to targets</p>
+<p>This overrides the class method, to perform more detailed type checking
+See explanation in class method.
+Note: this method (or the class version) is called only if the parameter_validation attribute is <code class="xref any docutils literal"><span class="pre">True</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>request_set</strong> – (dict) - params to be validated</li>
+<li><strong>target_set</strong> – (dict) - destination of validated params</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return none:</th><td class="field-body"></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.function.ArgumentTherapy._validate_variable">
+<code class="descname">_validate_variable</code><span class="sig-paren">(</span><em>variable</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.function.ArgumentTherapy._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates variable and returns validated value</p>
+<p>This overrides the class method, to perform more detailed type checking
+See explanation in class method.
+Note: this method (or the class version) is called only if the parameter_validation attribute is <code class="xref any docutils literal"><span class="pre">True</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> – (anything but a dict) - variable to be validated:</li>
+<li><strong>context</strong> – (str)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name" colspan="2">Return variable:</th></tr>
+<tr class="field-even field"><td>&#160;</td><td class="field-body"><ul class="first last simple">
+<li>validated</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -618,12 +578,21 @@ constructor string</p>
   
 
      
-       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript">
+           var DOCUMENTATION_OPTIONS = {
+               URL_ROOT:'./',
+               VERSION:'0.8.7.0+101.gd105add',
+               LANGUAGE:'None',
+               COLLAPSE_INDEX:false,
+               FILE_SUFFIX:'.html',
+               HAS_SOURCE:  true,
+               SOURCELINK_SUFFIX: '.txt'
+           };
+       </script>
+         <script type="text/javascript" src="_static/jquery.js"></script>
+         <script type="text/javascript" src="_static/underscore.js"></script>
+         <script type="text/javascript" src="_static/doctools.js"></script>
+         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

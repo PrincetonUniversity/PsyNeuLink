@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MemoryFunctions &mdash; PsyNeuLink 0.8.7.0 documentation</title>
+  <title>MemoryFunctions &mdash; PsyNeuLink 0.8.7.0+101.gd105add documentation</title>
   
 
   
@@ -27,7 +27,6 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -96,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.7.0
+                  0.8.7.0+101
                 </div>
               
             
@@ -200,657 +199,514 @@
 </div>
 <span class="target" id="module-psyneulink.core.components.functions.statefulfunctions.memoryfunctions"></span><p>Functions that store and can retrieve a record of their current input.</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Buffer</span></code></a></p></li>
-<li><p><a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContentAddressableMemory</span></code></a></p></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer"><code class="xref any py py-class docutils literal"><span class="pre">Buffer</span></code></a></li>
+<li><a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory"><code class="xref any py py-class docutils literal"><span class="pre">ContentAddressableMemory</span></code></a></li>
 </ul>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>Functions that store and can return a record of their input.</p>
-<dl class="py class">
-<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.MemoryFunction">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.statefulfunctions.memoryfunctions.</code><code class="sig-name descname">MemoryFunction</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.MemoryFunction" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py class">
+<dl class="class">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.statefulfunctions.memoryfunctions.</code><code class="sig-name descname">Buffer</code><span class="sig-paren">(</span><em class="sig-param">default_variable=None</em>, <em class="sig-param">rate=1.0</em>, <em class="sig-param">noise=0.0</em>, <em class="sig-param">history=None</em>, <em class="sig-param">initializer</em>, <em class="sig-param">params=None</em>, <em class="sig-param">owner=None</em>, <em class="sig-param">prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer" title="Permalink to this definition">¶</a></dt>
-<dd><p id="buffer">Append <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> to the end of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> (i.e., right-append
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.statefulfunctions.memoryfunctions.</code><code class="descname">Buffer</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>rate=None</em>, <em>noise=None</em>, <em>history=None</em>, <em>initializer=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer" title="Permalink to this definition">¶</a></dt>
+<dd><p id="buffer">Append <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to the end of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> (i.e., right-append
 to deque of previous inputs).</p>
 <div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Every appended item must have same shape as the first.</p>
+<p class="first admonition-title">Note</p>
+<p class="last">Every appended item must have same shape as the first.</p>
 </div>
-<p>If specified, <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.rate" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> and/or <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.noise" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> are applied to items already stored in the
+<p>If specified, <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.rate" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> and/or <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.noise" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> are applied to items already stored in the
 array, as follows:</p>
-<div class="math notranslate nohighlight">
+<div class="math">
 \[stored\_item * rate + noise\]</div>
 <div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Because <strong>rate</strong> and <strong>noise</strong> are applied on every call, their effects accumulative exponentially over calls
-to <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>.</p>
+<p class="first admonition-title">Note</p>
+<p class="last">Because <strong>rate</strong> and <strong>noise</strong> are applied on every call, their effects accumulative exponentially over calls
+to <code class="xref any docutils literal"><span class="pre">function</span></code>.</p>
 </div>
-<p>If the length of the result exceeds <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.history" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.history"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">history</span></code></a>, delete the first item.
-Return <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> appended with <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default class_defaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
-integrated.</p></li>
-<li><p><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies a value applied multiplicatively to each item already stored in the deque on each call to <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>;  must be in interval [0,1]</p></li>
-<li><p><strong>noise</strong> (<em>float</em><em> or </em><em>Function : default 0.0</em>) – specifies a random value added to each item already in the deque on each call to <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>
-(see <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.noise" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> for details).</p></li>
-<li><p><strong>history</strong> (<em>int : default None</em>) – specifies the maxlen of the deque, and hence <code class="xref any docutils literal notranslate"><span class="pre">value</span></code>.</p></li>
-<li><p><strong>float</strong> (<em>initializer</em>) – specifies a starting value for the deque;  if none is specified, the deque is initialized with an empty list.</p></li>
-<li><p><strong>or ndarray</strong> (<em>list</em>) – specifies a starting value for the deque;  if none is specified, the deque is initialized with an empty list.</p></li>
-<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+<p>If the length of the result exceeds <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.history" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.history"><code class="xref any py py-attr docutils literal"><span class="pre">history</span></code></a>, delete the first item.
+Return <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> appended with <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default class_defaults.variable</em>) – specifies a template for the value to be integrated;  if it is a list or array, each element is independently
+integrated.</li>
+<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies a value applied multiplicatively to each item already stored in the deque on each call to <code class="xref any docutils literal"><span class="pre">function</span></code>;  must be in interval [0,1]</li>
+<li><strong>noise</strong> (<em>float</em><em> or </em><em>Function : default 0.0</em>) – specifies a random value added to each item already in the deque on each call to <code class="xref any docutils literal"><span class="pre">function</span></code>
+(see <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.noise" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
+<li><strong>history</strong> (<em>int : default None</em>) – specifies the maxlen of the deque, and hence <code class="xref any docutils literal"><span class="pre">value</span></code>.</li>
+<li><strong>float</strong><strong>, </strong><strong>list</strong><strong> or </strong><strong>ndarray</strong> (<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.initializer" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.initializer"><em>initializer</em></a>) – specifies a starting value for the deque;  if none is specified, the deque is initialized with an empty list.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</p></li>
-<li><p><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p></li>
-<li><p><strong>name</strong> (str : default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code>) – specifies the name of the Function.</p></li>
-<li><p><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p></li>
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
+<li><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
 </ul>
-</dd>
-</dl>
-<dl class="py attribute">
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>current input value appended to the end of the deque.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>number or array</p>
-</dd>
-</dl>
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number or array</em> – current input value appended to the end of the deque.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.rate">
-<code class="sig-name descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>multiplicatively applied to each item already in the deque on call to <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>;
+<code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d array with all elements in interval [0,1]</em> – multiplicatively applied to each item already in the deque on call to <code class="xref any docutils literal"><span class="pre">function</span></code>;
 implements exponential decay of stored items.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float or 1d array with all elements in interval [0,1]</p>
-</dd>
-</dl>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.noise">
-<code class="sig-name descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p>random value added to each item of the deque in each call to <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>
-(see <code class="xref any docutils literal notranslate"><span class="pre">noise</span></code> for additional details).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float or Function</p>
-</dd>
-</dl>
+<code class="descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.noise" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or Function</em> – random value added to each item of the deque in each call to <code class="xref any docutils literal"><span class="pre">function</span></code>
+(see <code class="xref any docutils literal"><span class="pre">noise</span></code> for additional details).</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.history">
-<code class="sig-name descname">history</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.history" title="Permalink to this definition">¶</a></dt>
-<dd><p>determines maxlen of the deque and the value returned by the <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>. If appending
-<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> to <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> exceeds history, the first item of
-<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> is deleted, and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is appended to it,
-so that <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> maintains a constant length.  If history is not specified,
+<code class="descname">history</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.history" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – determines maxlen of the deque and the value returned by the <code class="xref any docutils literal"><span class="pre">function</span></code>. If appending
+<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> exceeds history, the first item of
+<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> is deleted, and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is appended to it,
+so that <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> maintains a constant length.  If history is not specified,
 the value returned continues to be extended indefinitely.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.initializer">
-<code class="sig-name descname">initializer</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.initializer" title="Permalink to this definition">¶</a></dt>
-<dd><p>value assigned as the first item of the deque when the Function is initialized, or reset
-if the <strong>new_previous_value</strong> argument is not specified in the call to <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.reset" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float, list or ndarray</p>
-</dd>
-</dl>
+<code class="descname">initializer</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.initializer" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float, list or ndarray</em> – value assigned as the first item of the deque when the Function is initialized, or reset
+if the <strong>new_previous_value</strong> argument is not specified in the call to <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.reset" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a>.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value">
-<code class="sig-name descname">previous_value</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p>state of the deque prior to appending <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> in the current call.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>1d array : default class_defaults.variable</p>
-</dd>
-</dl>
+<code class="descname">previous_value</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d array : default class_defaults.variable</em> – state of the deque prior to appending <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> in the current call.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.owner">
-<code class="sig-name descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.owner" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
-</dd>
-</dl>
+<code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.name">
-<code class="sig-name descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+<code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
 assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.prefs">
-<code class="sig-name descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
-constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
 for details).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>PreferenceSet or specification dict : Function.classPreferences</p>
-</dd>
-</dl>
 </dd></dl>
 
-<dl class="py method">
-<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.reset">
-<code class="sig-name descname">reset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">previous_value</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.reset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clears the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> deque.</p>
-<p>If an argument is passed into reset or if the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.initializer" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.initializer"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializer</span></code></a> attribute contains a
-value besides [], then that value is used to start the new <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> deque.
-Otherwise, the new <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> deque starts out empty.</p>
-<p><code class="xref any docutils literal notranslate"><span class="pre">value</span></code> takes on the same value as  <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>.</p>
-</dd></dl>
-
-<dl class="py method">
+<dl class="method">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer._function">
-<code class="sig-name descname">_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer._function" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default class_defaults.variable</em>) – a single value or array of values to be integrated.</p></li>
-<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer._function" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default class_defaults.variable</em>) – a single value or array of values to be integrated.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</p></li>
+arguments of the constructor.</li>
 </ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>updated value of deque</strong></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>deque</p>
-</dd>
-</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>updated value of deque</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">deque</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><em>previous_value=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> deque.</p>
+<p>If an argument is passed into reset or if the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.initializer" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> attribute contains a
+value besides [], then that value is used to start the new <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> deque.
+Otherwise, the new <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> deque starts out empty.</p>
+<p><code class="xref any docutils literal"><span class="pre">value</span></code> takes on the same value as  <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.Buffer.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>.</p>
 </dd></dl>
 
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.statefulfunctions.memoryfunctions.</code><code class="sig-name descname">ContentAddressableMemory</code><span class="sig-paren">(</span><em class="sig-param">default_variable=None</em>, <em class="sig-param">retrieval_prob=1.0                                   storage_prob=1.0                                     rate=None</em>, <em class="sig-param">noise=0.0</em>, <em class="sig-param">initializer=None</em>, <em class="sig-param">distance_function=Distance(metric=COSINE)</em>, <em class="sig-param">selection_function=OneHot(mode=MIN_VAL)</em>, <em class="sig-param">equidistant_keys_select=RANDOM</em>, <em class="sig-param">duplicate_keys=False</em>, <em class="sig-param">max_entries=None</em>, <em class="sig-param">params=None</em>, <em class="sig-param">owner=None</em>, <em class="sig-param">prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.statefulfunctions.memoryfunctions.</code><code class="descname">ContentAddressableMemory</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>retrieval_prob=None</em>, <em>storage_prob=None</em>, <em>noise=None</em>, <em>rate=None</em>, <em>initializer=None</em>, <em>distance_function=None</em>, <em>selection_function=None</em>, <em>duplicate_keys=None</em>, <em>equidistant_keys_select=None</em>, <em>max_entries=None</em>, <em>seed=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory" title="Permalink to this definition">¶</a></dt>
 <dd><p id="contentaddressablememory">Implement a configurable, dictionary-style storage and retrieval of key-value pairs, in which storage
-is determined by <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">storage_prob</span></code></a>, and retrieval of items is
-determined by <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">distance_function</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">selection_function</span></code></a>, and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.retrieval_prob" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.retrieval_prob"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">retrieval_prob</span></code></a>.
+is determined by <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob"><code class="xref any py py-attr docutils literal"><span class="pre">storage_prob</span></code></a>, and retrieval of items is
+determined by <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal"><span class="pre">distance_function</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function"><code class="xref any py py-attr docutils literal"><span class="pre">selection_function</span></code></a>, and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.retrieval_prob" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.retrieval_prob"><code class="xref any py py-attr docutils literal"><span class="pre">retrieval_prob</span></code></a>.
 Keys and values may have different lengths, and values may vary in length from entry to entry, but all keys
-must be the same length. Duplicate keys can be allowed, disallowed, or overwritten using <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duplicate_keys</span></code></a>), and how selection is made among duplicate keys or ones
-indistinguishable by the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">distance_function</span></code></a> can be specified
-using <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.equidistant_keys_select" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.equidistant_keys_select"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">equidistant_keys_select</span></code></a>.</p>
-<p>The class also provides methods for directly retrieving an entry (<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.get_memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.get_memory"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">get_memory</span></code></a>), and adding (<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.add_to_memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.add_to_memory"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_to_memory</span></code></a>)
-and deleting (<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.delete_from_memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.delete_from_memory"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">delete_from_memory</span></code></a>) one or more entries.</p>
+must be the same length. Duplicate keys can be allowed, disallowed, or overwritten using <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys"><code class="xref any py py-attr docutils literal"><span class="pre">duplicate_keys</span></code></a>), and how selection is made among duplicate keys or ones
+indistinguishable by the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal"><span class="pre">distance_function</span></code></a> can be specified
+using <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.equidistant_keys_select" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.equidistant_keys_select"><code class="xref any py py-attr docutils literal"><span class="pre">equidistant_keys_select</span></code></a>.</p>
+<p>The class also provides methods for directly retrieving an entry (<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.get_memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.get_memory"><code class="xref any py py-meth docutils literal"><span class="pre">get_memory</span></code></a>), and adding (<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.add_to_memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.add_to_memory"><code class="xref any py py-meth docutils literal"><span class="pre">add_to_memory</span></code></a>)
+and deleting (<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.delete_from_memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.delete_from_memory"><code class="xref any py py-meth docutils literal"><span class="pre">delete_from_memory</span></code></a>) one or more entries.</p>
 <p>An item is stored and retrieved as a 2d array containing a key-value pair ([[key][value]]).  A 3d array of such
 pairs can be used to initialize the contents of memory by providing it in the <strong>initialzer</strong> argument of the
-ContentAddressableMemory’s constructor, or in a call to its <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.reset" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a>
-method.  The current contents of the memory can be inspected using the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>
+ContentAddressableMemory’s constructor, or in a call to its <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.reset" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.reset"><code class="xref any py py-meth docutils literal"><span class="pre">reset</span></code></a>
+method.  The current contents of the memory can be inspected using the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>
 attribute, which returns a list containing the current entries, each as a 2 item list containing a key-value pair.</p>
-<p>When <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> is executed, it first retrieves the
-item in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> with the key that most closely matches the key of the item
+<p>When <code class="xref any docutils literal"><span class="pre">function</span></code> is executed, it first retrieves the
+item in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> with the key that most closely matches the key of the item
 (key-value pair) in the call, stores the latter in memory, and returns the retrieved item (key-value pair).
-If key of the pair in the call is an exact match of a key in memory and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duplicate_keys</span></code></a> is False, then the matching item is returned, but the
+If key of the pair in the call is an exact match of a key in memory and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys"><code class="xref any py py-attr docutils literal"><span class="pre">duplicate_keys</span></code></a> is False, then the matching item is returned, but the
 pair in the call is not stored. These steps are described in more detail below:</p>
 <ul class="simple">
-<li><p>First, with probability <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.retrieval_prob" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.retrieval_prob"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">retrieval_prob</span></code></a>, an entry is retrieved from
-<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> that has a key that is closest to the one in the call (first item of
-<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>), as determined by the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">distance_function</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">selection_function</span></code></a>.  The <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">distance_function</span></code></a> generates a list of distances of each key in memory from the
-one in the call;  the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">selection_function</span></code></a> then determines which
-to select ones for consideration.  If more than one entry from memory is identified, <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.equidistant_keys_select" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.equidistant_keys_select"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">equidistant_keys_select</span></code></a> is used to determine which to retrieve.  If no retrieval
+<li>First, with probability <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.retrieval_prob" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.retrieval_prob"><code class="xref any py py-attr docutils literal"><span class="pre">retrieval_prob</span></code></a>, an entry is retrieved from
+<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> that has a key that is closest to the one in the call (first item of
+<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>), as determined by the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal"><span class="pre">distance_function</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function"><code class="xref any py py-attr docutils literal"><span class="pre">selection_function</span></code></a>.  The <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal"><span class="pre">distance_function</span></code></a> generates a list of distances of each key in memory from the
+one in the call;  the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function"><code class="xref any py py-attr docutils literal"><span class="pre">selection_function</span></code></a> then determines which
+to select ones for consideration.  If more than one entry from memory is identified, <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.equidistant_keys_select" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.equidistant_keys_select"><code class="xref any py py-attr docutils literal"><span class="pre">equidistant_keys_select</span></code></a> is used to determine which to retrieve.  If no retrieval
 occurs, an appropriately shaped zero-valued array is assigned as the retrieved memory (and returned by the
-<code class="xref any docutils literal notranslate"><span class="pre">function</span></code>.</p></li>
+<code class="xref any docutils literal"><span class="pre">function</span></code>.</li>
 </ul>
 <ul class="simple">
-<li><p>After retrieval, the key-value pair in the call (<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) is stored in</p></li>
+<li>After retrieval, the key-value pair in the call (<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) is stored in</li>
 </ul>
 <blockquote>
-<div><dl class="simple">
-<dt><a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> with probability <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">storage_prob</span></code></a>.</dt><dd><p>If the key (<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>[0]) is identical to one already in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duplicate_keys</span></code></a>
+<div><dl class="docutils">
+<dt><a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> with probability <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob"><code class="xref any py py-attr docutils literal"><span class="pre">storage_prob</span></code></a>.</dt>
+<dd>If the key (<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>[0]) is identical to one already in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys"><code class="xref any py py-attr docutils literal"><span class="pre">duplicate_keys</span></code></a>
 is set to False, storage is skipped; if it is set to <em>OVERWRITE</em>, the value of the key in memory is replaced
 with the one in the call.  If <strong>rate</strong> and/or <strong>noise</strong> arguments are specified in the
-construtor, it is applied to the key before storing, as follows:</p>
-</dd>
+construtor, it is applied to the key before storing, as follows:</dd>
 </dl>
 </div></blockquote>
-<div class="math notranslate nohighlight">
+<div class="math">
 \[variable[1] * rate + noise\]</div>
 <p>If the number of entries exceeds <a href="#id1"><span class="problematic" id="id2">`</span></a>max_entries &lt;ContentAddressableMemory.max_entries&gt;, the first (oldest) item in
 memory is deleted.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>default_variable</strong> (<em>list</em><em> or </em><em>2d array : default class_defaults.variable</em>) – specifies a template for the key and value entries of the dictionary;  list must have two entries, each
-of which is a list or array;  first item is used as key, and second as value entry of dictionary.</p></li>
-<li><p><strong>retrieval_prob</strong> (<em>float in interval</em><em> [</em><em>0</em><em>,</em><em>1</em><em>] </em><em>: default 1.0</em>) – specifies probability of retrieiving a key from <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p></li>
-<li><p><strong>storage_prob</strong> (<em>float in interval</em><em> [</em><em>0</em><em>,</em><em>1</em><em>] </em><em>: default 1.0</em>) – specifies probability of adding <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> to <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p></li>
-<li><p><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em>, or </em><em>array : default 1.0</em>) – specifies a value used to multiply key (first item of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) before
-storing in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> (see <a href="#id3"><span class="problematic" id="id4">`</span></a>rate &lt;ContentAddressableMemory.noise&gt; for details).</p></li>
-<li><p><strong>noise</strong> (<em>float</em><em>, </em><em>list</em><em>, </em><em>array</em><em>, or </em><em>Function : default 0.0</em>) – specifies a random value added to key (first item of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) before
-storing in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> (see <a href="#id5"><span class="problematic" id="id6">`</span></a>noise &lt;ContentAddressableMemory.noise&gt; for details).</p></li>
-<li><p><strong>initializer</strong> (<em>3d array</em><em> or </em><em>list : default None</em>) – specifies an initial set of entries for <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>. It must be of the following
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>default_variable</strong> (<em>list</em><em> or </em><em>2d array : default class_defaults.variable</em>) – specifies a template for the key and value entries of the dictionary;  list must have two entries, each
+of which is a list or array;  first item is used as key, and second as value entry of dictionary.</li>
+<li><strong>retrieval_prob</strong> (<em>float in interval</em><em> [</em><em>0</em><em>,</em><em>1</em><em>] </em><em>: default 1.0</em>) – specifies probability of retrieiving a key from <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</li>
+<li><strong>storage_prob</strong> (<em>float in interval</em><em> [</em><em>0</em><em>,</em><em>1</em><em>] </em><em>: default 1.0</em>) – specifies probability of adding <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</li>
+<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em>, or </em><em>array : default 1.0</em>) – specifies a value used to multiply key (first item of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) before
+storing in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> (see <a href="#id3"><span class="problematic" id="id4">`</span></a>rate &lt;ContentAddressableMemory.noise&gt; for details).</li>
+<li><strong>noise</strong> (<em>float</em><em>, </em><em>list</em><em>, </em><em>array</em><em>, or </em><em>Function : default 0.0</em>) – specifies a random value added to key (first item of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) before
+storing in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> (see <a href="#id5"><span class="problematic" id="id6">`</span></a>noise &lt;ContentAddressableMemory.noise&gt; for details).</li>
+<li><strong>initializer</strong> (<em>3d array</em><em> or </em><em>list : default None</em>) – specifies an initial set of entries for <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>. It must be of the following
 form: [[[key],[value]], [[key],[value]], …], such that each item in the outer dimension (axis 0)
 is a 2d array or list containing a key and a value pair for that entry. All of the keys must 1d arrays or
-lists of the same length.</p></li>
-<li><p><strong>distance_function</strong> (<a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Distance" title="psyneulink.core.components.functions.objectivefunctions.Distance"><em>Distance</em></a><em> or </em><em>function : default Distance</em><em>(</em><em>metric=COSINE</em><em>)</em>) – specifies the function used during retrieval to compare the first item in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> with keys in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p></li>
-<li><p><strong>selection_function</strong> (<a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot" title="psyneulink.core.components.functions.selectionfunctions.OneHot"><em>OneHot</em></a><em> or </em><em>function : default OneHot</em><em>(</em><em>mode=MIN_VAL</em><em>)</em>) – specifies the function used during retrieval to evaluate the distances returned by <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">distance_function</span></code></a> and select the item to return.</p></li>
-<li><p><strong>equidistant_keys_select</strong> (<em>RANDOM | OLDEST | NEWEST : default RANDOM</em>) – specifies which item is chosen for retrieval if two or more keys have the same distance from the first item of
-<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p></li>
-<li><p><strong>duplicate_keys</strong> (<em>bool | OVERWRITE : default False</em>) – specifies whether entries with duplicate keys are allowed in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>
-(see <code class="xref any docutils literal notranslate"><span class="pre">duplicate_keys</span></code>).</p></li>
-<li><p><strong>max_entries</strong> (<em>int : default None</em>) – specifies the maximum number of entries allowed in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>
-(see <code class="xref any docutils literal notranslate"><span class="pre">max_entries</span></code>).</p></li>
-<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+lists of the same length.</li>
+<li><strong>distance_function</strong> (<a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Distance" title="psyneulink.core.components.functions.objectivefunctions.Distance"><em>Distance</em></a><em> or </em><em>function : default Distance</em><em>(</em><em>metric=COSINE</em><em>)</em>) – specifies the function used during retrieval to compare the first item in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> with keys in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</li>
+<li><strong>selection_function</strong> (<a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot" title="psyneulink.core.components.functions.selectionfunctions.OneHot"><em>OneHot</em></a><em> or </em><em>function : default OneHot</em><em>(</em><em>mode=MIN_VAL</em><em>)</em>) – specifies the function used during retrieval to evaluate the distances returned by <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal"><span class="pre">distance_function</span></code></a> and select the item to return.</li>
+<li><strong>equidistant_keys_select</strong> (<em>RANDOM | OLDEST | NEWEST : default RANDOM</em>) – specifies which item is chosen for retrieval if two or more keys have the same distance from the first item of
+<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
+<li><strong>duplicate_keys</strong> (<em>bool | OVERWRITE : default False</em>) – specifies whether entries with duplicate keys are allowed in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>
+(see <code class="xref any docutils literal"><span class="pre">duplicate_keys</span></code>).</li>
+<li><strong>max_entries</strong> (<em>int : default None</em>) – specifies the maximum number of entries allowed in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>
+(see <code class="xref any docutils literal"><span class="pre">max_entries</span></code>).</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</p></li>
-<li><p><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p></li>
-<li><p><strong>name</strong> (str : default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code>) – specifies the name of the Function.</p></li>
-<li><p><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p></li>
+arguments of the constructor.</li>
+<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
+<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
+<li><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
 </ul>
-</dd>
-</dl>
-<dl class="py attribute">
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>1st item (variable[0] is the key used to retrieve an enrtry from <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>,
-and 2nd item (variable[1]) is the value of the entry, paired with key and added to the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>2d array</p>
-</dd>
-</dl>
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>2d array</em> – 1st item (variable[0] is the key used to retrieve an enrtry from <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>,
+and 2nd item (variable[1]) is the value of the entry, paired with key and added to the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.key_size">
-<code class="sig-name descname">key_size</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.key_size" title="Permalink to this definition">¶</a></dt>
-<dd><p>length of keys in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
+<code class="descname">key_size</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.key_size" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – length of keys in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.val_size">
-<code class="sig-name descname">val_size</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.val_size" title="Permalink to this definition">¶</a></dt>
-<dd><p>length of values in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
+<code class="descname">val_size</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.val_size" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – length of values in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.retrieval_prob">
-<code class="sig-name descname">retrieval_prob</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.retrieval_prob" title="Permalink to this definition">¶</a></dt>
-<dd><p>probability of retrieiving a value from <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float in interval [0,1]</p>
-</dd>
-</dl>
+<code class="descname">retrieval_prob</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.retrieval_prob" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float in interval [0,1]</em> – probability of retrieiving a value from <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob">
-<code class="sig-name descname">storage_prob</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob" title="Permalink to this definition">¶</a></dt>
-<dd><p>probability of adding <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> to <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float in interval [0,1]</p>
-</dd>
-</dl>
+<code class="descname">storage_prob</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float in interval [0,1]</em> – probability of adding <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.rate">
-<code class="sig-name descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.rate" title="Permalink to this definition">¶</a></dt>
-<dd><p>value applied multiplicatively to key (first item of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) before
-storing in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> (see <code class="xref any docutils literal notranslate"><span class="pre">rate</span></code> for additional details).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float or 1d array</p>
-</dd>
-</dl>
+<code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float or 1d array</em> – value applied multiplicatively to key (first item of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) before
+storing in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> (see <code class="xref any docutils literal"><span class="pre">rate</span></code> for additional details).</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.noise">
-<code class="sig-name descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p>value added to key (first item of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) before storing in
-<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> (see <code class="xref any docutils literal notranslate"><span class="pre">noise</span></code> for additional details).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float, 1d array or Function</p>
-</dd>
-</dl>
+<code class="descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.noise" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>float, 1d array or Function</em> – value added to key (first item of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) before storing in
+<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> (see <code class="xref any docutils literal"><span class="pre">noise</span></code> for additional details).</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.initializer">
-<code class="sig-name descname">initializer</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.initializer" title="Permalink to this definition">¶</a></dt>
-<dd><p>initial set of entries for <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>; each is a 2d array with a key-value pair.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>3d array</p>
-</dd>
-</dl>
+<code class="descname">initializer</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.initializer" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>3d array</em> – initial set of entries for <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>; each is a 2d array with a key-value pair.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory">
-<code class="sig-name descname">memory</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="Permalink to this definition">¶</a></dt>
-<dd><p>list of key-value pairs containing entries in ContentAddressableMemory:
+<code class="descname">memory</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>list</em> – list of key-value pairs containing entries in ContentAddressableMemory:
 [[[key 1], [value 1]], [[key 2], value 2]]…]</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>list</p>
-</dd>
-</dl>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function">
-<code class="sig-name descname">distance_function</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="Permalink to this definition">¶</a></dt>
-<dd><p>function used during retrieval to compare the first item in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
-with keys in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Distance" title="psyneulink.core.components.functions.objectivefunctions.Distance">Distance</a> or function : default Distance(metric=COSINE)</p>
-</dd>
-</dl>
+<code class="descname">distance_function</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Distance or function : default Distance(metric=COSINE)</em> – function used during retrieval to compare the first item in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>
+with keys in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function">
-<code class="sig-name descname">selection_function</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function" title="Permalink to this definition">¶</a></dt>
-<dd><p>function used during retrieval to evaluate the distances returned by <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">distance_function</span></code></a> and select the item(s) to return.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot" title="psyneulink.core.components.functions.selectionfunctions.OneHot">OneHot</a> or function : default OneHot(mode=MIN_VAL)</p>
-</dd>
-</dl>
+<code class="descname">selection_function</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>OneHot or function : default OneHot(mode=MIN_VAL)</em> – function used during retrieval to evaluate the distances returned by <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal"><span class="pre">distance_function</span></code></a> and select the item(s) to return.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value">
-<code class="sig-name descname">previous_value</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p>state of the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> prior to storing <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> in the current call.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>1d array</p>
-</dd>
-</dl>
+<code class="descname">previous_value</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>1d array</em> – state of the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> prior to storing <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> in the current call.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys">
-<code class="sig-name descname">duplicate_keys</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys" title="Permalink to this definition">¶</a></dt>
-<dd><p>determines whether entries with duplicate keys are allowed in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.
+<code class="descname">duplicate_keys</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>bool | OVERWRITE</em> – determines whether entries with duplicate keys are allowed in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.
 If True (the default), items with keys that are the same as ones in memory can be stored;  on retrieval, a
-single one is selected based on <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.equidistant_keys_select" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.equidistant_keys_select"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">equidistant_keys_select</span></code></a>.
-If False, then an attempt to store and item with a key that is already in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> is ignored, and the entry already in memory with that key is retrieved.
+single one is selected based on <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.equidistant_keys_select" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.equidistant_keys_select"><code class="xref any py py-attr docutils literal"><span class="pre">equidistant_keys_select</span></code></a>.
+If False, then an attempt to store and item with a key that is already in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> is ignored, and the entry already in memory with that key is retrieved.
 If a duplicate key is identified during retrieval (e.g., <strong>duplicate_keys</strong> is changed from True to
 False), a warning is issued and zeros are returned.  If <em>OVERWRITE</em>, then retrieval of a cue with an identical
 key causes the value at that entry to be overwritten with the new value.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>bool | OVERWRITE</p>
-</dd>
-</dl>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.equidistant_keys_select">
-<code class="sig-name descname">equidistant_keys_select</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.equidistant_keys_select" title="Permalink to this definition">¶</a></dt>
-<dd><p>deterimines which entry is retrieved when duplicate keys are identified or are indistinguishable by the
-<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">distance_function</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>RANDOM | OLDEST | NEWEST</p>
-</dd>
-</dl>
+<code class="descname">equidistant_keys_select</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.equidistant_keys_select" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>RANDOM | OLDEST | NEWEST</em> – deterimines which entry is retrieved when duplicate keys are identified or are indistinguishable by the
+<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal"><span class="pre">distance_function</span></code></a>.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.max_entries">
-<code class="sig-name descname">max_entries</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.max_entries" title="Permalink to this definition">¶</a></dt>
-<dd><p>maximum number of entries allowed in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>;  if storing a memory
+<code class="descname">max_entries</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.max_entries" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>int</em> – maximum number of entries allowed in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>;  if storing a memory
 exceeds the number, the oldest memory is deleted.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>int</p>
-</dd>
-</dl>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.random_state">
-<code class="sig-name descname">random_state</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.random_state" title="Permalink to this definition">¶</a></dt>
-<dd><p>private pseudorandom number generator</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>numpy.RandomState</p>
-</dd>
-</dl>
+<code class="descname">random_state</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.random_state" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>numpy.RandomState</em> – private pseudorandom number generator</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.owner">
-<code class="sig-name descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.owner" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
-</dd>
-</dl>
+<code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Component</em> – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.name">
-<code class="sig-name descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.name" title="Permalink to this definition">¶</a></dt>
-<dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+<code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.name" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
 assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>str</p>
-</dd>
-</dl>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.prefs">
-<code class="sig-name descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
-constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
+<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>PreferenceSet or specification dict : Function.classPreferences</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
 for details).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>PreferenceSet or specification dict : Function.classPreferences</p>
-</dd>
-</dl>
 </dd></dl>
 
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><strong>value and key of entry that best matches first item of `variable &lt;ContentAddressableMemory.variable&gt;`</strong> – if no retrieval occures, an appropriately shaped zero-valued array is returned.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>2d array</p>
-</dd>
-</dl>
-<dl class="py method">
-<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._validate_params">
-<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._validate_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validate params and assign validated values to targets,</p>
-<p>This performs top-level type validation of params</p>
-<p>This can be overridden by a subclass to perform more detailed checking (e.g., range, recursive, etc.)
-It is called only if the parameter_validation attribute is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> (which it is by default)</p>
-<dl class="simple">
-<dt>IMPLEMENTATION NOTES:</dt><dd><ul class="simple">
-<li><p>future versions should add recursive and content (e.g., range) checking</p></li>
-<li><p>should method return validated param set?</p></li>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>value and key of entry that best matches first item of `variable &lt;ContentAddressableMemory.variable&gt;`</strong> – if no retrieval occures, an appropriately shaped zero-valued array is returned.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">2d array</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._function">
+<code class="descname">_function</code><span class="sig-paren">(</span><em>variable=None</em>, <em>context=None</em>, <em>params=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._function" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return entry in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> that key of which best matches first item of
+<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (query key), then add <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> to <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> (see <a class="reference internal" href="#contentaddressablememory-execution"><span class="std std-ref">above</span></a> for additional details).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>variable</strong> (<em>list</em><em> or </em><em>2d array : default class_defaults.variable</em>) – first item (variable[0]) is treated as the key for retrieval; second item (variable[1]), paired
+with key, is added to <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</li>
+<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+arguments of the constructor.</li>
 </ul>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>(</strong><strong>request_set</strong><strong>) </strong><strong>- set of params to be validated</strong> (<em>dict</em>) – </p></li>
-<li><p><strong>(</strong><strong>target_set</strong><strong>) </strong><strong>- repository of params that have been validated</strong> (<em>dict</em>) – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Return none</dt>
-<dd class="field-even"><p></p></dd>
-</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>value of entry that best matches first item of `variable &lt;ContentAddressableMemory.variable&gt;`</strong></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">1d array</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
+<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._initialize_previous_value">
+<code class="descname">_initialize_previous_value</code><span class="sig-paren">(</span><em>initializer</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._initialize_previous_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_value</p>
+<ul class="simple">
+<li><dl class="first docutils">
+<dt>Validate, if initializer is specified, it is a 3d array</dt>
+<dd>(must be done here rather than in validate_params as it is needed to initialize previous_value</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>Insure that it has exactly 2 items in outer dimension (axis 0)</dt>
+<dd>and that all items in each of those two items are all arrays</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._parse_memories">
+<code class="descname">_parse_memories</code><span class="sig-paren">(</span><em>memories</em>, <em>method</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._parse_memories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse passing of single vs. multiple memories, validate memories, and return ndarray</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._store_memory">
+<code class="descname">_store_memory</code><span class="sig-paren">(</span><em>memory</em>, <em>context</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._store_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save an key-value pair to <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>memory</strong> (<em>list</em><em> or </em><em>2d array</em>) – must be two items, a key and a vaue, each of which must a list of numbers or 1d array;
+the key must be the same length as key(s) of any existing entries in <code class="xref any docutils literal"><span class="pre">dict</span></code>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._validate">
-<code class="sig-name descname">_validate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._validate" title="Permalink to this definition">¶</a></dt>
+<code class="descname">_validate</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._validate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate distance_function, selection_function and memory store</p>
 </dd></dl>
 
-<dl class="py method">
-<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._initialize_previous_value">
-<code class="sig-name descname">_initialize_previous_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">initializer</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._initialize_previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p>Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_value</p>
-<ul class="simple">
-<li><dl class="simple">
-<dt>Validate, if initializer is specified, it is a 3d array</dt><dd><p>(must be done here rather than in validate_params as it is needed to initialize previous_value</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>Insure that it has exactly 2 items in outer dimension (axis 0)</dt><dd><p>and that all items in each of those two items are all arrays</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd></dl>
-
-<dl class="py method">
-<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.reset">
-<code class="sig-name descname">reset</code><span class="sig-paren">(</span><em class="sig-param">&lt;new_dictionary&gt; default={}</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.reset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Clears the memory in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>.</p>
-<p>If an argument is passed into reset or if the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.initializer" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.initializer"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializer</span></code></a>
-attribute contains a value besides [], then that value is used to start the new memory in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>. Otherwise, the new <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> memory starts out empty.</p>
-<p><code class="xref any docutils literal notranslate"><span class="pre">value</span></code> takes on the same value as
-<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._function">
-<code class="sig-name descname">_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._function" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return entry in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> that key of which best matches first item of
-<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> (query key), then add <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> to <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> (see <a class="reference internal" href="#contentaddressablememory-execution"><span class="std std-ref">above</span></a> for additional details).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>variable</strong> (<em>list</em><em> or </em><em>2d array : default class_defaults.variable</em>) – first item (variable[0]) is treated as the key for retrieval; second item (variable[1]), paired
-with key, is added to <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p></li>
-<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
-function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>value of entry that best matches first item of `variable &lt;ContentAddressableMemory.variable&gt;`</strong></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>1d array</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.get_memory">
-<code class="sig-name descname">get_memory</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">query_key</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.get_memory" title="Permalink to this definition">¶</a></dt>
-<dd><p>Retrieve memory from <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> based on <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">distance_function</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">selection_function</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>query_key</strong> (<em>list</em><em> or </em><em>1d array</em>) – must be same length as key(s) of any existing entries in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>value and key for item retrieved</strong> – if no retrieval occurs, returns appropriately shaped zero-valued array.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>2d array as list</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._store_memory">
-<code class="sig-name descname">_store_memory</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">memory</span></em>, <em class="sig-param"><span class="n">context</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._store_memory" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save an key-value pair to <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>memory</strong> (<em>list</em><em> or </em><em>2d array</em>) – must be two items, a key and a vaue, each of which must a list of numbers or 1d array;
-the key must be the same length as key(s) of any existing entries in <code class="xref any docutils literal notranslate"><span class="pre">dict</span></code>.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
+<dl class="method">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.add_to_memory">
-<code class="sig-name descname">add_to_memory</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">memories</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.add_to_memory" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add one or more key-value pairs into <code class="xref any docutils literal notranslate"><span class="pre">memory</span></code></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>memories</strong> (<em>list</em><em> or </em><em>array</em>) – a single memory (list or 2d array) or list or array of memorys, each of which must be a valid entry
+<code class="descname">add_to_memory</code><span class="sig-paren">(</span><em>memories</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.add_to_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add one or more key-value pairs into <code class="xref any docutils literal"><span class="pre">memory</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>memories</strong> (<em>list</em><em> or </em><em>array</em>) – a single memory (list or 2d array) or list or array of memorys, each of which must be a valid entry
 consisting of two items (e.g., [[key],[value]] or [[[key1],[value1]],[[key2],[value2]]].
-The keys must all be the same length and equal to the length as key(s) of any existing entries in <code class="xref any docutils literal notranslate"><span class="pre">dict</span></code>.  Items are added to memory in the order listed.</p>
-</dd>
-</dl>
+The keys must all be the same length and equal to the length as key(s) of any existing entries in <code class="xref any docutils literal"><span class="pre">dict</span></code>.  Items are added to memory in the order listed.</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
-<dl class="py method">
+<dl class="method">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.delete_from_memory">
-<code class="sig-name descname">delete_from_memory</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">memories</span></em>, <em class="sig-param"><span class="n">key_only</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.delete_from_memory" title="Permalink to this definition">¶</a></dt>
-<dd><p>Delete one or more key-value pairs from <code class="xref any docutils literal notranslate"><span class="pre">memory</span></code></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>memories</strong> (<em>list</em><em> or </em><em>array</em>) – a single memory (list or 2d array) or list or array of memorys, each of which must be a valid entry
-consisting of two items (e.g., [[key],[value]] or [[[key1],[value1]],[[key2],[value2]]].</p></li>
-<li><p><strong>key_only</strong> (<em>bool : default True</em>) – if True, delete all memories with the same keys as those listed in <strong>memories</strong>;  if False,
-delete only memories that have the same key <em>and</em> value as those listed in <strong>memories</strong>.</p></li>
+<code class="descname">delete_from_memory</code><span class="sig-paren">(</span><em>memories</em>, <em>key_only=True</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.delete_from_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delete one or more key-value pairs from <code class="xref any docutils literal"><span class="pre">memory</span></code></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>memories</strong> (<em>list</em><em> or </em><em>array</em>) – a single memory (list or 2d array) or list or array of memorys, each of which must be a valid entry
+consisting of two items (e.g., [[key],[value]] or [[[key1],[value1]],[[key2],[value2]]].</li>
+<li><strong>key_only</strong> (<em>bool : default True</em>) – if True, delete all memories with the same keys as those listed in <strong>memories</strong>;  if False,
+delete only memories that have the same key <em>and</em> value as those listed in <strong>memories</strong>.</li>
 </ul>
-</dd>
-</dl>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
-<dl class="py method">
-<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._parse_memories">
-<code class="sig-name descname">_parse_memories</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">memories</span></em>, <em class="sig-param"><span class="n">method</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory._parse_memories" title="Permalink to this definition">¶</a></dt>
-<dd><p>Parse passing of single vs. multiple memories, validate memories, and return ndarray</p>
+<dl class="method">
+<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.get_memory">
+<code class="descname">get_memory</code><span class="sig-paren">(</span><em>query_key</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.get_memory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve memory from <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> based on <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal"><span class="pre">distance_function</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function"><code class="xref any py py-attr docutils literal"><span class="pre">selection_function</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>query_key</strong> (<em>list</em><em> or </em><em>1d array</em>) – must be same length as key(s) of any existing entries in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>value and key for item retrieved</strong> – if no retrieval occurs, returns appropriately shaped zero-valued array.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">2d array as list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.reset">
+<code class="descname">reset</code><span class="sig-paren">(</span><em>previous_value=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the memory in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>.</p>
+<p>If an argument is passed into reset or if the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.initializer" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a>
+attribute contains a value besides [], then that value is used to start the new memory in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>. Otherwise, the new <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> memory starts out empty.</p>
+<p><code class="xref any docutils literal"><span class="pre">value</span></code> takes on the same value as
+<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -910,12 +766,21 @@ delete only memories that have the same key <em>and</em> value as those listed i
   
 
      
-       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript">
+           var DOCUMENTATION_OPTIONS = {
+               URL_ROOT:'./',
+               VERSION:'0.8.7.0+101.gd105add',
+               LANGUAGE:'None',
+               COLLAPSE_INDEX:false,
+               FILE_SUFFIX:'.html',
+               HAS_SOURCE:  true,
+               SOURCELINK_SUFFIX: '.txt'
+           };
+       </script>
+         <script type="text/javascript" src="_static/jquery.js"></script>
+         <script type="text/javascript" src="_static/underscore.js"></script>
+         <script type="text/javascript" src="_static/doctools.js"></script>
+         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   
