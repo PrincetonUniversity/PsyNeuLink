@@ -150,7 +150,7 @@ __all__ = [
     'scalar_distance', 'sinusoid',
     'tensor_power', 'TEST_CONDTION', 'type_match',
     'underscore_to_camelCase', 'UtilitiesError', 'unproxy_weakproxy', 'create_union_set', 'merge_dictionaries',
-    'contains_type'
+    'contains_type', 'is_numeric_scalar', 'try_extract_0d_array_item',
 ]
 
 logger = logging.getLogger(__name__)
@@ -2115,3 +2115,33 @@ def toposort_key(
             return -1
 
     return _generated_toposort_key
+
+
+# np.isscalar returns true on non-numeric items
+def is_numeric_scalar(obj) -> bool:
+    """
+        Returns:
+            True if **obj** is a numbers.Number or a numpy ndarray
+                containing a single numeric value
+            False otherwise
+    """
+
+    try:
+        # getting .item() and checking type is significantly slower
+        return obj.ndim == 0 and obj.dtype.kind in {'i', 'f'}
+    except (AttributeError, ValueError):
+        return isinstance(obj, Number)
+
+
+def try_extract_0d_array_item(arr: np.ndarray):
+    """
+        Returns:
+            the single item in **arr** if **arr** is a 0-dimensional
+            numpy ndarray, otherwise **arr**
+    """
+    try:
+        if arr.ndim == 0:
+            return arr.item()
+    except AttributeError:
+        pass
+    return arr
