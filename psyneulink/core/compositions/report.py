@@ -1057,6 +1057,7 @@ class Report:
         # Render params if specified -------------------------------------------------------------------------------
 
         from psyneulink.core.components.shellclasses import Function
+        report_params = convert_to_list(report_params)
         params = {p.name: p._get(context) for p in node.parameters}
         try:
             # Check for PARAMS keyword (or 'parameters') and remove from node_prefs if there
