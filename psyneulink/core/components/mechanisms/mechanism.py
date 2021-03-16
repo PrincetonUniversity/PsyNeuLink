@@ -2308,6 +2308,7 @@ class Mechanism_Base(Mechanism):
                 context=None,
                 runtime_params=None,
                 report_output=None,
+                report_params=None,
                 run_report=None
                 ):
         """Carry out a single `execution <Mechanism_Execution>` of the Mechanism.
@@ -2535,17 +2536,20 @@ class Mechanism_Base(Mechanism):
 
         if (context.source == ContextFlags.COMMAND_LINE or
                 context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING)):
-            from psyneulink.core.compositions.report import Report, ReportOutput
-            # Use report_output passed to execute from Composition or command line;
+            from psyneulink.core.compositions.report import Report, ReportOutput, ReportParams
+            # Use report_output and report_params options passed to execute from Composition or command line;
             # otherwise try to get from Mechanism's reportOutputPref
             report_output = report_output or next((pref for pref in convert_to_list(self.prefs.reportOutputPref)
                                                    if isinstance(pref, ReportOutput)), None)
+            report_params = report_params or next((pref for pref in convert_to_list(self.prefs.reportOutputPref)
+                                                   if isinstance(pref, ReportParams)), None)
             if report_output is not ReportOutput.OFF:
                 with Report(self, context=context) as report:
                     report.report_output(caller=self,
                                          report_num=run_report,
                                          scheduler=None,
                                          report_output=report_output,
+                                         report_params=report_params,
                                          content='node',
                                          context=context,
                                          node=self)

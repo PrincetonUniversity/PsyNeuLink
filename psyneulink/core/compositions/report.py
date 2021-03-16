@@ -15,7 +15,7 @@ python console or other devices, as described below.
 
 .. _Report_Output:
 
-Output reporting
+Output Reporting
 ----------------
 
 Output reporting provides information about the input and output to a `Mechanism` or to a `Composition` and
@@ -24,15 +24,18 @@ the `reportOutputPref <PreferenceSet_reportOutputPref>` of a Component, or the *
 Mechanism's `execute <Mechanism_Base.execute>` method or any of a Composition's `execution methods
 <Composition_Execution_Methods>`.  If `USE_PREFS <ReportOutput.USE_PREFS>` or `TERSE <ReportOutput.TERSE>` is used,
 reporting is generated as execution of each Component occurs;  if `FULL <ReportOutput.FULL>` is used, then the
-information is reported at the end of each `TRIAL <TimeScale.TRIAL>` executed. Whether `simulations
+information is reported at the end of each `TRIAL <TimeScale.TRIAL>` executed.  This always includes the input and
+output to a `Mechanism` or a `Composition` and its `Nodes <Composition_Nodes>`, and can also include the values
+of their `Parameters`, depending on the specification of the **report_params** argument (using `ReportParams` options`
+and/or the `reportOutputPref <PreferenceSet_reportOutputPref>` settings of individual Mechanisms. Whether `simulations
 <OptimizationControlMechanism_Execution>` executed by a Composition's `controller <Composition_Controller>` are
 included is determined by the **report_simulations** argument using a `ReportSimulations` option. Output is reported
-to the devices specified in the **report_to_devices** argument using the `ReportDevices` options
+to the devices specified in the **report_to_devices** argument using the `ReportDevices` options.
 
 
 .. _Report_Progress:
 
-Progress reporting
+Progress Reporting
 ------------------
 
 Progress reporting provides information about the status of execution of a Composition's `run <Composition.run>`
@@ -86,10 +89,8 @@ import types
 import warnings
 from enum import Enum, Flag, auto
 from io import StringIO
-from functools import reduce
 
 import numpy as np
-
 from rich import print, box
 from rich.console import Console, RenderGroup
 from rich.panel import Panel
@@ -97,11 +98,11 @@ from rich.progress import Progress as RichProgress
 
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS
+from psyneulink.core.globals.keywords import FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS, VALUE
 from psyneulink.core.globals.utilities import convert_to_list
 
-__all__ = ['Report', 'ReportOutput', 'ReportProgress', 'ReportDevices', 'ReportSimulations',
-           'CONSOLE', 'RECORD', 'DIVERT', 'PNL_VIEW']
+__all__ = ['Report', 'ReportOutput', 'ReportParams', 'ReportProgress', 'ReportDevices', 'ReportSimulations',
+           'CONSOLE', 'CONTROLLED', 'LOGGED', 'MODULATED', 'RECORD', 'DIVERT', 'PNL_VIEW', ]
 
 SIMULATION = 'Simulat'
 DEFAULT = 'Execut'
@@ -164,6 +165,58 @@ class ReportOutput(Enum):
     TERSE = 2
     ON = 2
     FULL = 3
+
+
+class ReportParams(Enum):
+    """
+    Options used in the **report_params** argument of a `Composition`\'s `execution methods
+    <Composition_Execution_Methods>`, to specify the scope of reporting for its `Parameters` and those of its
+    `Nodes <Composition_Nodes>`; see `Reporting Parameter values <Report_Params>` under `Report_Output` for
+    additional details.
+
+    .. technical_note::
+        Use of these options is expected in the **report_output** constructor for the `Report` object,
+        and are used as the values of its `report_params <Report.report_params>` attribute.
+
+    Attributes
+    ----------
+
+    OFF
+        suppress reporting of parameter values.
+
+    USE_PREFS
+        defers to `reportOutputPref <PreferenceSet_reportOutputPref>` settings of individual Components.
+
+    MODULATED (aka CONTROLLED)
+        report all `Parameters` that are being `modulated <ModulatorySignal.modulation>` (i.e., controlled) by a
+        `ControlMechanism` within the `Composition` (that is, those for which the corresponding `ParameterPort`
+        receives a `ControlProjection` from a `ControlSignal`.
+
+    CONTROLLED (aka MODULATED)
+        report all `Parameters` that are being controlled (i.e., `modulated <ModulatorySignal.modulation>`) by a
+        `ControlMechanism` within the `Composition` (that is, those for which the corresponding `ParameterPort`
+        receives a `ControlProjection` from a `ControlSignal`.
+
+    LOGGED
+        report all `Parameters` that are specified to be logged with `LogCondition.EXECUTION`;  see `Log` for
+        additional details.
+
+    ALL
+        enforce reporting of all `Parameters` of a `Composition` and its `Nodes <Composition_Nodes>`.
+
+    """
+
+    OFF = 0
+    MODULATED = auto()
+    CONTROLLED = MODULATED
+    MONITORED = auto()
+    LOGGED = auto()
+    ALL = auto()
+
+MODULATED = ReportParams.MODULATED
+CONTROLLED = ReportParams.CONTROLLED
+LOGGED = ReportParams.LOGGED
+ALL = ReportParams.ALL
 
 
 class ReportProgress(Enum):
@@ -299,6 +352,9 @@ class Report:
         specifies whether to report output of the execution on a trial-by-trial as it is generated;
         see `ReportOutput` for options.
 
+    _report_params : list[ReportParams] : default [ReportParams.USE_PREFS]
+        specifies which params are reported if ReportOutput.FULL is in effect.
+
     report_progress : ReportProgress : default ReportProgress.OFF
         specifies whether to report progress of each `TRIAL <TimeScale.TRIAL>` of a `Composition`\\'s execution,
         showing the number of `TRIALS <TimeScale.TRIAL>` that have been executed and a progress bar;  see
@@ -308,7 +364,7 @@ class Report:
         specifies whether to report output and progress for `simulations <OptimizationControlMechanism_Execution>`
         executed by an a Composition's `controller <Composition_Controller>`; see `ReportSimulations` for options.
 
-    report_to_devices : list(ReportDevices) : default ReportDevices.CONSOLE
+    report_to_devices : list[ReportDevices] : default [ReportDevices.CONSOLE]
         specifies devices to which output and progress reporting is sent;  see `ReportDevices` for options.
 
     Attributes
@@ -324,18 +380,21 @@ class Report:
         identifies whether reporting is enabled;  True if either the **_report_output** or **_report_progress**
         progress arguments of the constructor were specified as not False.
 
-    _report_output : bool, *TERSE*, or *FULL* : default False
+    _report_output : ReportOutput : default ReportOutput.OFF
         determines whether and, if so, what form of output is displayed and/or captured.
 
-    _report_progress : bool : default False
+    _report_params : list[ReportParams] : default [ReportParams.USE_PREFS]
+        determines which params are reported if ReportOutput.FULL is in effect.
+
+    _report_progress : ReportProgress : default ReportProgress.OFF
         determines whether progress is displayed and/or captured.
 
-    _report_simulations : bool : default False
+    _report_simulations : ReportSimulations : default ReportSimulations.OFF
         determines whether reporting occurs for output and/or progress of `simulations
         <OptimizationControlMechanism_Execution>`  carried out by the `controller <Composition_Controller>` of a
         `Composition`.
 
-    _report_to_devices : list
+    _report_to_devices : list[ReportDevices : [ReportDevices.CONSOLE]
         list of devices currently enabled for reporting.
 
     _use_rich : False, *CONSOLE*, *DIVERT* or list: default *CONSOLE*
@@ -397,6 +456,7 @@ class Report:
     def __new__(cls,
                 caller,
                 report_output:ReportOutput=ReportOutput.OFF,
+                report_params:ReportParams=ReportParams.OFF,
                 report_progress:ReportProgress=ReportProgress.OFF,
                 report_simulations:ReportSimulations=ReportSimulations.OFF,
                 report_to_devices:(list(ReportDevices.__members__), list)=ReportDevices.CONSOLE,
@@ -427,6 +487,7 @@ class Report:
             # Assign option properties
             cls._report_progress = report_progress
             cls._report_output = report_output
+            cls._report_params = convert_to_list(report_params)
             cls._reporting_enabled = report_output is not ReportOutput.OFF or cls._report_progress
             cls._report_simulations = report_simulations
             cls._rich_console = ReportDevices.CONSOLE in cls._report_to_devices
@@ -680,10 +741,12 @@ class Report:
             self._print_and_record_reports(PROGRESS_REPORT, context)
 
 
-    def report_output(self, caller,
+    def report_output(self,
+                      caller,
                       report_num:int,
                       scheduler,
                       report_output:ReportOutput,
+                      report_params:list,
                       content:str,
                       context:Context,
                       nodes_to_report:bool=False,
@@ -708,6 +771,11 @@ class Report:
 
         report_output : ReportOutput
             conveys `ReportOutput` option specified in the **report_output** argument of the call to a Composition's
+            `execution method <Composition_Execution_Method>` or a Mechanism's `execute <Mechanism_Base.execute>`
+            method.
+
+        report_params : [ReportParams]
+            conveys `ReportParams` option(s) specified in the **report_params** argument of the call to a Composition's
             `execution method <Composition_Execution_Method>` or a Mechanism's `execute <Mechanism_Base.execute>`
             method.
 
@@ -818,6 +886,7 @@ class Report:
                                                      input_val=node.get_input_values(context),
                                                      output_val=node.output_port.parameters.value._get(context),
                                                      report_output=node_report_type,
+                                                     report_params=report_params,
                                                      context=context
                                                      )
             # If trial is using FULL report, save Node's to run_report
@@ -912,6 +981,7 @@ class Report:
                               input_val=None,
                               output_val=None,
                               report_output=ReportOutput.USE_PREFS,
+                              report_params=ReportParams.OFF,
                               context=None):
         """
         Generates formatted output report for the `node <Composition_Nodes>` of a `Composition` or a `Mechanism`.
@@ -987,6 +1057,7 @@ class Report:
         # Render params if specified -------------------------------------------------------------------------------
 
         from psyneulink.core.components.shellclasses import Function
+        report_params = convert_to_list(report_params)
         params = {p.name: p._get(context) for p in node.parameters}
         try:
             # Check for PARAMS keyword (or 'parameters') and remove from node_prefs if there
@@ -1000,19 +1071,142 @@ class Report:
             # If any are left, assume they are for the node's function
             function_params = node_params_prefs
             # Display parameters if any are specified
-            include_params = node_params or function_params or params_keyword
+            include_params = node_params or function_params or params_keyword or report_params
         except (TypeError, IndexError):
-            # FIX: SHOULD PUT ERROR MESSAGE HERE REGARDING BAD reportOutputPref SPEC?
             assert False, f'PROGRAM ERROR: Problem processing reportOutputPref args for {node.name}.'
             # include_params = False
 
+        params_string = ''
+        function_params_string = ''
+
         if include_params:
-            # print("- params:")
-            params_string = (f"params:")
-            function_params_string = ""
+
+            def param_is_specified(name, specified_set):
+                """Helper method: check whether param has been specified based on options"""
+
+                from psyneulink.core.components.mechanisms.mechanism import Mechanism
+                from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+                from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism \
+                    import CompositionInterfaceMechanism
+                from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism \
+                    import ModulatoryMechanism_Base
+
+                # Helper methods for testing whether param satisfies specifications -----------------------------
+
+                def get_controller(proj):
+                    """Helper method: get modulator (controller) of modulated params"""
+                    # if not isinstance(proj.sender.owner, CompositionInterfaceMechanism):
+                    if isinstance(proj.sender.owner, ModulatoryMechanism_Base):
+                        return proj.sender.owner.name
+                    #   mediating a projection from a ModulatoryMechanism in a Composition in which this is nested
+                    if not isinstance(proj.sender.owner, CompositionInterfaceMechanism):
+                        assert False, f'PROGRAM ERROR Projection to ParameterPort for {param_name} of {node.name} ' \
+                                      f'from non ModulatoryMechanism'
+                    # Recursively call to get ModulatoryMechanism in outer Composition
+                    return get_controller(proj.sender.owner.afferents[0])
+
+                def is_modulated():
+                    """Helper method: determine whether parameter is being modulated
+                       by checking whether ParameterPort receives aControlProjection
+                    """
+                    try:
+                        if isinstance(node, Mechanism):
+                            if name in node.parameter_ports.names:
+                                param_port = node.parameter_ports[name]
+                                if param_port.mod_afferents:
+                                    controller_names = [get_controller(c) for c in param_port.mod_afferents]
+                                    controllers_str = ' and '.join(controller_names)
+                                    return f'modulated by {controllers_str}'
+                    except:
+                        print(f'Failed to find {name} on {node.name}')
+                    # return ''
+
+
+                def get_monitor(proj):
+                    """Helper method: get modulator (controller) of modulated params"""
+                    # if not isinstance(proj.sender.owner, CompositionInterfaceMechanism):
+                    if isinstance(proj.receiver.owner, (ObjectiveMechanism, ModulatoryMechanism_Base)):
+                        return proj.receiver.owner.name
+                    # Mediating a projection from a monitored Mechanism to a Composition in which it is nested, so
+                    # recursively call to get receiver in outer Composition
+                    if isinstance(proj.receiver.owner, CompositionInterfaceMechanism) and proj.receiver.owner.efferents:
+                        # owners = []
+                        # for efferent in proj.receiver.owner.efferents:
+                        #     owner = get_monitor(efferent)
+                        #     if owner:
+                        #         owners.extend(owner)
+                        # return(owners)
+                        owners = [get_monitor(efferent) for efferent in proj.receiver.owner.efferents]
+                        return owners
+
+
+                def is_monitored():
+                    """Helper method: determine whether parameter is being monitored by checking whether OutputPort
+                    sends a MappingProjection to an ObjectiveMechanism or  ControlMechanism.
+                    """
+                    try:
+                        if name is VALUE and isinstance(node, Mechanism):
+                            monitor_names = []
+                            for output_port in node.output_ports:
+                                monitors = []
+                                for proj in output_port.efferents:
+                                    monitor = get_monitor(proj)
+                                    if isinstance(monitor, list):
+                                        monitors.extend(monitor)
+                                    else:
+                                        monitors.append(monitor)
+                                monitor_names.extend([monitor_name for monitor_name in monitors if monitor_name])
+                            if monitor_names:
+                                monitor_str = ' and '.join(monitor_names)
+                                return f'monitored by {monitor_str}'
+                    except:
+                        print(f'Failed to find {name} on {node.name}')
+                    # return ''
+
+                def is_logged():
+                    pass
+
+                # Evaluate tests: -----------------------------------------------------------------------
+
+                # Get modulated and monitored descriptions if they apply
+                mod_str = is_modulated()
+                monitor_str = is_monitored()
+                if monitor_str and mod_str:
+                    control_str = " and ".join([monitor_str, mod_str])
+                else:
+                    control_str = monitor_str or mod_str
+                if control_str:
+                    control_str = f' ({control_str})'
+
+                # Include if param is explicitly specified or ReportParams.ALL (or 'params') is specified
+                if (name in specified_set
+                        # FIX: ADD SUPPORT FOR ReportParams.ALL
+                        # PARAMS specified as keyword to display all params
+                        or include_params is params_keyword):
+                    return control_str or True
+
+                # Include if param is modulated and ReportParams.MODULATED (CONTROLLED) is specified
+                if any(k in report_params for k in (ReportParams.MODULATED, ReportParams.CONTROLLED)) and mod_str:
+                    return control_str
+
+                # FIX: NEED TO FILTER OUT RESPONSES TO FUNCTION VALUE AND TO OBJECTIVE MECHANISM ISELF
+                # # Include if param is monitored and ReportParams.MONITORED is specified
+                # if ReportParams.MONITORED in report_params and monitor_str:
+                #     return control_str
+
+                # Include if param is being logged and ReportParams.LOGGED is specified
+                if report_params is ReportParams.LOGGED:
+                    pass
+
+                return False
+
+            # Test whether param matches specifications: -----------------------------------------
+
             # Sort for consistency of output
             params_keys_sorted = sorted(params.keys())
             for param_name in params_keys_sorted:
+
+                # Check for function
                 param_is_function = False
                 # No need to report:
                 #    function_params here, as they will be reported for the function itself below;
@@ -1029,15 +1223,21 @@ class Report:
                 elif isinstance(param_value, (types.FunctionType, types.MethodType)):
                     param = param_value.__node__.__class__.__name__
                     param_is_function = True
-                # Node_param
-                elif param_name in node_params or include_params is params_keyword:
+
+                # Node param(s)
+                elif param_is_specified(param_name, node_params):
                     # Put in params_string if param is specified or 'params' is specified
                     param_value = params[param_name]
+                    if not params_string:
+                        # Add header
+                        params_string = (f"params:")
                     params_string += f"\n\t{param_name}: {str(param_value).__str__().strip('[]')}"
                     if node_params:
                         node_params.pop(node_params.index(param_name))
                     # Don't include functions in params_string yet (to keep at bottom of report)
                     continue
+
+                # Function param(s)
                 if param_is_function:
                     # Sort for consistency of output
                     # func_params_keys_sorted = sorted(node.function.parameters.names())
@@ -1046,16 +1246,24 @@ class Report:
                     for fct_param_name in func_params_keys_sorted:
                         # Put in function_params_string if function param is specified or 'params' is specified
                         # (appended to params_string below to keep functions at bottom of report)
-                        if fct_param_name in function_params or include_params is params_keyword:
+                        modulated = False
+                        qualification = param_is_specified(fct_param_name, function_params)
+                        if qualification:
                             if not header_printed:
                                 function_params_string += f"\n\t{param_name}: {param_value.name.__str__().strip('[]')}"
                                 header_printed = True
                             param_value = getattr(getattr(node,param_name).parameters,fct_param_name)._get(context)
                             param_value = np.squeeze(param_value)
                             param_value_str = str(param_value).__str__().strip('[]')
-                            function_params_string += f"\n\t\t{fct_param_name}: {param_value_str}"
+                            if not params_string:
+                                params_string = (f"params:")
+                            if isinstance(qualification, str):
+                                qualification = qualification
+                            else:
+                                qualification = ''
+                            function_params_string += f"\n\t\t{fct_param_name}: {param_value_str}{qualification}"
                             if function_params:
-                                function_params.pop(function_params.index(param_name))
+                                function_params.pop(function_params.index(fct_param_name))
 
             assert not node_params, f"PROGRAM ERROR in execution of Report.node_execution_report() " \
                                     f"for '{node.name}': {node_params} remaining in node_params."
@@ -1065,13 +1273,12 @@ class Report:
 
             params_string += function_params_string
 
-    # Generate report -------------------------------------------------------------------------------
+        # Generate report -------------------------------------------------------------------------------
 
-        if include_params:
+        if params_string:
             width = 100
             expand = True
             node_report = RenderGroup(input_report,Panel(params_string), output_report)
-            params_string
         else:
             width = None
             expand = False
