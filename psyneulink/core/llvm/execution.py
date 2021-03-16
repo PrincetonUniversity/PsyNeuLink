@@ -460,12 +460,13 @@ class CompExecution(CUDAExecution):
     def freeze_values(self):
         self.__frozen_vals = copy.deepcopy(self._data_struct)
 
-    def execute_node(self, node, inputs=None):
+    def execute_node(self, node, inputs=None, context=None):
         # We need to reconstruct the input dictionary here if it was not provided.
         # This happens during node execution of nested compositions.
         assert len(self._execution_contexts) == 1
         if inputs is None and node is self._composition.input_CIM:
-            context = self._execution_contexts[0]
+            if context is None:
+                context = self._execution_contexts[0]
             port_inputs = {origin_port:[proj.parameters.value._get(context) for proj in p[0].path_afferents] for (origin_port, p) in self._composition.input_CIM_ports.items()}
             inputs = {}
             for p, v in port_inputs.items():
@@ -492,6 +493,8 @@ class CompExecution(CUDAExecution):
             print("RAN: {}. CTX: {}".format(node, self.extract_node_state(node)))
             print("RAN: {}. Params: {}".format(node, self.extract_node_params(node)))
             print("RAN: {}. Results: {}".format(node, self.extract_node_output(node)))
+
+        node._propagate_most_recent_context(context)
 
     @property
     def _bin_exec_func(self):

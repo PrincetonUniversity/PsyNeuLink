@@ -8404,9 +8404,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # copies back matrix to pnl from param struct (after learning)
                     _comp_ex._copy_params_to_pnl(context=context)
 
+                self._propagate_most_recent_context(context)
                 # KAM added the [-1] index after changing Composition run()
                 # behavior to return only last trial of run (11/7/18)
-                self.most_recent_context = context
                 return results[-1]
 
             except Exception as e:
@@ -8740,7 +8740,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.controller.execute(context=context)
 
                 if execution_mode:
-                    _comp_ex.execute_node(self.controller)
+                    _comp_ex.execute_node(self.controller, context=context)
 
                 context.remove_flag(ContextFlags.PROCESSING)
 
@@ -8962,6 +8962,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if report._rich_diverted_reports:
                                 self.rich_diverted_reports = report._rich_diverted_reports
 
+                        self._propagate_most_recent_context(context)
                         return _comp_ex.extract_node_output(self.output_CIM)
 
                     except Exception as e:
@@ -9055,7 +9056,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 build_CIM_input = self._build_variable_for_input_CIM(inputs)
 
             if execution_mode:
-                _comp_ex.execute_node(self.input_CIM, inputs)
+                _comp_ex.execute_node(self.input_CIM, inputs, context)
                 # FIXME: parameter_CIM should be executed here as well,
                 #        but node execution of nested compositions with
                 #        outside control is not supported yet.
@@ -9309,7 +9310,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         # Execute Mechanism
                         if execution_mode:
-                            _comp_ex.execute_node(node)
+                            _comp_ex.execute_node(node, context=context)
                         else:
                             if node is not self.controller:
                                 mech_context = copy(context)
@@ -9507,14 +9508,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Extract result here
             if execution_mode:
                 _comp_ex.freeze_values()
-                _comp_ex.execute_node(self.output_CIM)
+                _comp_ex.execute_node(self.output_CIM, context=context)
                 report.report_progress(self, run_report, context)
                 if context.source & ContextFlags.COMMAND_LINE:
                     if report._recorded_reports:
                         self.recorded_reports = report._recorded_reports
                     if report._rich_diverted_reports:
                         self.rich_diverted_reports = report._rich_diverted_reports
-
                 return _comp_ex.extract_node_output(self.output_CIM)
 
             # Reset context flags
