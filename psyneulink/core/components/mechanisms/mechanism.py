@@ -1105,7 +1105,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, \
-    iscompatible, kwCompatibilityNumeric
+    iscompatible, kwCompatibilityNumeric, convert_to_list
 from psyneulink.core.scheduling.condition import Condition, TimeScale
 
 __all__ = [
@@ -2307,7 +2307,9 @@ class Mechanism_Base(Mechanism):
                 input=None,
                 context=None,
                 runtime_params=None,
-                report_output=False
+                report_output=None,
+                report_params=None,
+                run_report=None
                 ):
         """Carry out a single `execution <Mechanism_Execution>` of the Mechanism.
 
@@ -2530,23 +2532,28 @@ class Mechanism_Base(Mechanism):
             if not self.parameters.execute_until_finished._get(context):
                 break
 
-        # REPORT EXECUTION if called from command line
-        #  If called by a Composition, it handles reporting.
-        if context.source == ContextFlags.COMMAND_LINE:
-            # FIX: 3/11/21 THIS SHOULD BE REFACTORED TO USE Report.report_output rather than printing directly
-            from psyneulink.core.compositions.report import ReportOutput
-            if (self.prefs.reportOutputPref is not ReportOutput.OFF
-                    and (context.execution_phase & ContextFlags.PROCESSING | ContextFlags.LEARNING)):
-                from psyneulink.core.compositions.report import Report
-                from rich import print
-                if self.prefs.reportOutputPref is ReportOutput.TERSE:
-                    print(f'{self.name} executed')
-                else:
-                    print(Report.node_execution_report(self,
-                                                       input_val=self.get_input_values(context),
-                                                       output_val=self.output_port.parameters.value._get(context),
-                                                       report_output=True,
-                                                       context=context))
+        # REPORT EXECUTION
+
+        if (context.source == ContextFlags.COMMAND_LINE or
+                context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING)):
+            from psyneulink.core.compositions.report import Report, ReportOutput, ReportParams
+            # Use report_output and report_params options passed to execute from Composition or command line;
+            # otherwise try to get from Mechanism's reportOutputPref
+            report_output = report_output or next((pref for pref in convert_to_list(self.prefs.reportOutputPref)
+                                                   if isinstance(pref, ReportOutput)), None)
+            report_params = report_params or next((pref for pref in convert_to_list(self.prefs.reportOutputPref)
+                                                   if isinstance(pref, ReportParams)), None)
+            if report_output is not ReportOutput.OFF:
+                with Report(self, context=context) as report:
+                    report.report_output(caller=self,
+                                         report_num=run_report,
+                                         scheduler=None,
+                                         report_output=report_output,
+                                         report_params=report_params,
+                                         content='node',
+                                         context=context,
+                                         node=self)
+
         return value
 
     def _get_variable_from_input(self, input, context=None):

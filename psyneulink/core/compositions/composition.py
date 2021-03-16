@@ -882,18 +882,18 @@ can also be called directly, but this is useful mostly for debugging.
 
 .. _Composition_Execution_Reporting:
 
-*Reporting*. Executing a Composition returns the results of its last `TRIAL <TimeScale.TRIAL>` of execution.  If
-either `run <Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS <TimeScale.TRIAL>`
-executed are available in the Composition's `results <Composition.results>` attribute (see `Results
-<Composition_Execution_Results>` for additional details).  A report of the results of each
-`TRIAL <TimeScale.TRIAL>` can also be generated as the Compostion is executing, using the **report_output** and
-**report_progress** arguments of any of the execution methods. **report_output** generates a report of the input and
-output the Composition and its `Nodes <Composition_Nodes>`, while **report_progress** shows a progress bar indicating
-how many `TRIALS <TimeScale.TRIAL>` have been executed and an estimate of the time remaining to completion (see the
-`execute <Composition.execute>`, `run <Composition.run>` and `learn <Composition.learn>` methods for additional
-details).  These options are both False by default.  The values of individual Components (and their `parameters
-<Parameters>`) assigned during execution can also be recorded in their `log <Component_Log>` attribute using the
-`Log` facility.
+*Results, Reporting and Logging*. Executing a Composition returns the results of its last `TRIAL <TimeScale.TRIAL>` of
+execution. If either `run <Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS
+<TimeScale.TRIAL>` executed are available in the Composition's `results <Composition.results>` attribute (see `Results
+<Composition_Execution_Results>` for additional details).  A report of the results of each `TRIAL <TimeScale.TRIAL>`
+can also be generated as the Compostion is executing, using the **report_output** and **report_progress** arguments
+of any of the execution methods. **report_output** (specified using `ReportOutput` options) generates a report of the
+input and output of the Composition and its `Nodes <Composition_Nodes>`, and optionally their `Parameters` (specified
+in the **report_params** arg using `ReportParams` options);  **report_progress** (specified using `ReportProgress`
+options) shows a progress bar  indicating how many `TRIALS <TimeScale.TRIAL>` have been executed and an estimate of
+the time remaining to completion.  These options are all OFF by default (see `Report` for additional details).
+The values of individual Components (and their `parameters <Parameters>`) assigned during execution can also be
+recorded in their `log <Component_Log>` attribute using the `Log` facility.
 
 *Inputs*. All methods of executing a Composition require specification of an **inputs** argument, which designates
 the values assigned to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for each `TRIAL <TimeScale.TRIAL>`.
@@ -2394,12 +2394,13 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
-from psyneulink.core.compositions.report import Report, ReportOutput, ReportProgress, ReportSimulations
-from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET
+from psyneulink.core.compositions.report import Report,\
+    ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices
+from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET, SHOW_CONTROLLER
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROLLER, CONTROL_SIGNAL, DEFAULT, \
-    FEEDBACK, FULL, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LEARNED_PROJECTIONS, \
+    FEEDBACK, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LEARNED_PROJECTIONS, \
     LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, \
     MODEL_SPEC_ID_PSYNEULINK, \
@@ -7457,14 +7458,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                execution_mode=execution_mode,
                                skip_initialization=True,
                                report_output=report._report_output,
+                               report_params=report._report_params,
                                report_progress=report._report_progress,
                                report_simulations=report._report_simulations,
                                report_to_devices=report._report_to_devices
                                )
-        context.remove_flag(ContextFlags.SIMULATION_MODE)
-        context.execution_phase = ContextFlags.CONTROL
-        if buffer_animate_state:
-            self._animate = buffer_animate_state
+            context.remove_flag(ContextFlags.SIMULATION_MODE)
+            context.execution_phase = ContextFlags.CONTROL
+            if buffer_animate_state:
+                self._animate = buffer_animate_state
 
         # Store simulation results on "base" composition
         if self.initialization_status != ContextFlags.INITIALIZING:
@@ -8023,6 +8025,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             termination_processing=None,
             skip_analyze_graph=False,
             report_output:ReportOutput=ReportOutput.OFF,
+            report_params:ReportParams=ReportParams.OFF,
             report_progress=ReportProgress.OFF,
             report_simulations=ReportSimulations.OFF,
             report_to_devices=None,
@@ -8126,6 +8129,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         report_output : ReportOutput : default ReportOutput.OFF
             specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial as
             it is generated; see `Report_Output` for additional details and `ReportOutput` for options.
+
+        report_params : ReportParams : default ReportParams.OFF
+            specifies whether to show values the `Parameters` of the Composition and its `Nodes <Composition_Nodes>`
+            as part of the output report; see `Report_Output` for additional details and `ReportParams` for options.
 
         report_progress : ReportProgress : default ReportProgress.OFF
             specifies whether to report progress of execution in real time; see `Report_Progress` for additional
@@ -8397,9 +8404,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # copies back matrix to pnl from param struct (after learning)
                     _comp_ex._copy_params_to_pnl(context=context)
 
+                self._propagate_most_recent_context(context)
                 # KAM added the [-1] index after changing Composition run()
                 # behavior to return only last trial of run (11/7/18)
-                self.most_recent_context = context
                 return results[-1]
 
             except Exception as e:
@@ -8418,12 +8425,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         with Report(self,
                     report_output=report_output,
+                    report_params=report_params,
                     report_progress=report_progress,
                     report_simulations=report_simulations,
                     report_to_devices=report_to_devices,
                     context=context) as report:
 
-            progress_report = report.start_progress_report(self, num_trials, context)
+            run_report = report.start_run_report(self, num_trials, context)
 
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
@@ -8461,10 +8469,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             skip_initialization=True,
                                             execution_mode=execution_mode,
                                             report_output=report_output,
+                                            report_params=report_params,
                                             report_progress=report_progress,
                                             report_simulations=report_simulations,
                                             report=report,
-                                            progress_report=progress_report
+                                            run_report=run_report
                                             )
 
                 # ---------------------------------------------------------------------------------
@@ -8494,9 +8503,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if call_after_trial:
                     call_with_pruned_args(call_after_trial, context=context)
 
-                # Report results to output devices
-                report.report_output(self, progress_report, scheduler, report_output, 'run', context)
-
             if report._recorded_reports:
                 self.recorded_reports = report._recorded_reports
             if report._rich_diverted_reports:
@@ -8505,8 +8511,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # IMPLEMENTATION NOTE:
             # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
             # method whether or not we are at the last trial of the run.
-            # The BEFORE Run controller execution takes place in the execute method,, because we can't execute the controller until after
-            # setup has occurred for the Input CIM.
+            # The BEFORE Run controller execution takes place in the execute method,
+            # because we can't execute the controller until after setup has occurred for the Input CIM.
             if (self.controller_mode == AFTER and
                 self.controller_time_scale == TimeScale.RUN):
                 try:
@@ -8516,6 +8522,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._execute_controller(
                     execution_mode=execution_mode,
                     _comp_ex=_comp_ex,
+                    report=report,
                     context=context
                 )
 
@@ -8634,17 +8641,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 called after each minibatch is executed
 
             report_output : ReportOutput : default ReportOutput.OFF
-                specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial as
-                it is generated; see `Report_Output` for additional details and `ReportOutput` for options.
+                specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` trial-by-trial
+                as it is generated; see `Report_Output` for additional details and `ReportOutput` for options.
+
+            report_params : ReportParams : default ReportParams.OFF
+                specifies whether to show values the `Parameters` of the Composition and its `Nodes <Composition_Nodes>`
+                as part of the output report; see `Report_Output` for additional details and `ReportParams` for options.
 
             report_progress : ReportProgress : default ReportProgress.OFF
                 specifies whether to report progress of execution in real time; see `Report_Progress` for additional
                 details.
 
             report_simulations : ReportSimulatons : default ReportSimulations.OFF
-                specifies whether to show output and/or progress for `simulations <OptimizationControlMechanism_Execution>`
-                executed by the Composition's `controller <Composition_Controller>`; see `Report_Simulations` for
-                additional details.
+                specifies whether to show output and/or progress for `simulations
+                <OptimizationControlMechanism_Execution>` executed by the Composition's `controller
+                <Composition_Controller>`; see `Report_Simulations` for additional details.
 
             report_to_devices : list(ReportDevices) : default ReportDevices.CONSOLE
                 specifies where output and progress should be reported; see `Report_To_Devices` for additional
@@ -8699,7 +8710,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context.remove_flag(ContextFlags.LEARNING_MODE)
         return learning_results
 
-    def _execute_controller(self, relative_order=AFTER, execution_mode=False, _comp_ex=False, context=None):
+    def _execute_controller(self,
+                            relative_order=AFTER,
+                            execution_mode=False,
+                            _comp_ex=False,
+                            report=None,
+                            context=None
+                            ):
         execution_scheduler = context.composition.scheduler
         if (self.enable_controller and
             self.controller_mode == relative_order and
@@ -8713,6 +8730,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.initialization_status != ContextFlags.INITIALIZING
                     and ContextFlags.SIMULATION_MODE not in context.runmode
             ):
+
+                report._execution_stack.append(self.controller)
+
                 if self.controller and not execution_mode:
                     # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
                     # FIX: END REMOVE
@@ -8720,7 +8740,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.controller.execute(context=context)
 
                 if execution_mode:
-                    _comp_ex.execute_node(self.controller)
+                    _comp_ex.execute_node(self.controller, context=context)
 
                 context.remove_flag(ContextFlags.PROCESSING)
 
@@ -8729,6 +8749,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self._animate_execution(self.controller, context)
                 context.remove_flag(ContextFlags.CONTROL)
+
+                report._execution_stack.pop()
 
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
     def execute(
@@ -8748,11 +8770,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             skip_initialization=False,
             execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
             report_output:ReportOutput=ReportOutput.OFF,
-            report_progress=ReportProgress.OFF,
-            report_simulations=ReportSimulations.OFF,
-            report_to_devices=None,
+            report_params:ReportOutput=ReportParams.OFF,
+            report_progress:ReportProgress=ReportProgress.OFF,
+            report_simulations:ReportSimulations=ReportSimulations.OFF,
+            report_to_devices:ReportDevices=None,
             report=None,
-            progress_report=None,
+            run_report=None,
             ):
         """
             Passes inputs to any `Nodes <Composition_Nodes>` receiving inputs directly from the user (via the "inputs"
@@ -8817,6 +8840,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 specifies whether to show output of the Composition and its `Nodes <Composition_Nodes>` for the
                 execution; see `Report_Output` for additional details and `ReportOutput` for options.
 
+            report_params : ReportParams : default ReportParams.OFF
+                specifies whether to show values the `Parameters` of the Composition and its `Nodes <Composition_Nodes>`
+                for the execution; see `Report_Output` for additional details and `ReportParams` for options.
+
             report_progress : ReportProgress : default ReportProgress.OFF
                 specifies whether to report progress of the execution; see `Report_Progress` for additional details.
 
@@ -8837,15 +8864,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         with Report(self,
                     report_output=report_output,
+                    report_params=report_params,
                     report_progress=report_progress,
                     report_simulations=report_simulations,
                     report_to_devices=report_to_devices,
                     context=context) as report:
 
-            # FIX: Call Report with context and progress_report handle this in there 3/3/21
+            # FIX: Call Report with context and run_report handle this in there 3/3/21
             # If execute method is called directly, need to create Report object for reporting
-            if not (context.source & ContextFlags.COMPOSITION) or progress_report is None:
-                progress_report = report.start_progress_report(comp=self, num_trials=1, context=context)
+            if not (context.source & ContextFlags.COMPOSITION) or run_report is None:
+                run_report = report.start_run_report(comp=self, num_trials=1, context=context)
 
             execution_scheduler = scheduler or self.scheduler
 
@@ -8926,7 +8954,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         else:
                             assert False, "Unknown execution mode: {}".format(execution_mode)
 
-                        report.report_progress(self, progress_report, context)
+                        report.report_progress(self, run_report, context)
                         # If called from the command line, get report as only this trial is run
                         if context.source & ContextFlags.COMMAND_LINE:
                             if report._recorded_reports:
@@ -8934,6 +8962,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if report._rich_diverted_reports:
                                 self.rich_diverted_reports = report._rich_diverted_reports
 
+                        self._propagate_most_recent_context(context)
                         return _comp_ex.extract_node_output(self.output_CIM)
 
                     except Exception as e:
@@ -8981,7 +9010,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 reset_stateful_functions_to = {}
 
             # # Report trial_num and Composition input (now that it has been assigned)
-            # progress.report_output(self, progress_report, execution_scheduler, report_output, 'trial_init', context)
+            # progress.report_output(self, run_report, execution_scheduler, report_output, 'trial_init', context)
 
             for node in self.nodes:
                 node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TRIAL, 0)
@@ -9027,7 +9056,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 build_CIM_input = self._build_variable_for_input_CIM(inputs)
 
             if execution_mode:
-                _comp_ex.execute_node(self.input_CIM, inputs)
+                _comp_ex.execute_node(self.input_CIM, inputs, context)
                 # FIXME: parameter_CIM should be executed here as well,
                 #        but node execution of nested compositions with
                 #        outside control is not supported yet.
@@ -9091,6 +9120,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         relative_order=BEFORE,
                         execution_mode=execution_mode,
                         _comp_ex=_comp_ex,
+                        report=report,
                         context=context
                     )
             elif self.controller_time_scale == TimeScale.TRIAL:
@@ -9098,6 +9128,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     relative_order=BEFORE,
                     execution_mode=execution_mode,
                     _comp_ex=_comp_ex,
+                    report=report,
                     context=context
                 )
 
@@ -9120,6 +9151,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     relative_order=BEFORE,
                     execution_mode=execution_mode,
                     _comp_ex=_comp_ex,
+                    report=report,
                     context=context
                 )
 
@@ -9133,8 +9165,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for i in range(scheduler.clock.time.time_step):
                     execution_sets.__next__()
 
-            # Report trial_num and Composition input (now that it has been assigned)
-            report.report_output(self, progress_report, execution_scheduler, report_output, 'trial_init', context)
+            # Add TRIAL header and Composition's input to output report (now that they are known)
+            report.report_output(caller=self,
+                                 report_num=run_report,
+                                 scheduler=execution_scheduler,
+                                 report_output=report_output,
+                                 report_params=report_params,
+                                 content='trial_init',
+                                 context=context
+                                 )
 
             for next_execution_set in execution_sets:
 
@@ -9159,6 +9198,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             relative_order=AFTER,
                             execution_mode=execution_mode,
                             _comp_ex=_comp_ex,
+                            report=report,
                             context=context
                         )
                     next_pass_after += 1
@@ -9171,6 +9211,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             relative_order=BEFORE,
                             execution_mode=execution_mode,
                             _comp_ex=_comp_ex,
+                            report=report,
                             context=context
                         )
                     next_pass_before += 1
@@ -9183,6 +9224,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         relative_order=BEFORE,
                         execution_mode=execution_mode,
                         _comp_ex=_comp_ex,
+                        report=report,
                         context=context
                     )
 
@@ -9201,11 +9243,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if not self._is_learning(context):
                     next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
-                # INITIALIZE self._time_step_report AND SHOW TIME_STEP DIVIDER
+                # Add TIME_STEP header to output report
                 nodes_to_report = any(node.reportOutputPref for node in next_execution_set)
-                report.report_output(self, progress_report,
+                report.report_output(self, run_report,
                                      execution_scheduler,
                                      report_output,
+                                     report_params,
                                      'time_step_init',
                                      context,
                                      nodes_to_report=True)
@@ -9267,7 +9310,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         # Execute Mechanism
                         if execution_mode:
-                            _comp_ex.execute_node(node)
+                            _comp_ex.execute_node(node, context=context)
                         else:
                             if node is not self.controller:
                                 mech_context = copy(context)
@@ -9276,6 +9319,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     for port in node.input_ports:
                                         port._update(context=context)
                                 node.execute(context=mech_context,
+                                             report_output=report_output,
+                                             report_params=report_params,
+                                             run_report=run_report,
                                              runtime_params=execution_runtime_params,
                                              )
                             # Reset runtim_params
@@ -9302,6 +9348,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # EXECUTE A NESTED COMPOSITION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
                     elif isinstance(node, Composition):
+
+                        report._execution_stack.append(node)
 
                         if execution_mode:
                             # Invoking nested composition passes data via Python
@@ -9340,6 +9388,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             pnlvm.ExecutionMode.Python
                         ret = node.execute(context=context,
                                            report_output=report_output,
+                                           report_params=report_params,
                                            report_progress=report_progress,
                                            execution_mode=nested_execution_mode)
 
@@ -9353,18 +9402,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         context.composition = self
 
+                        report._execution_stack.pop()
+
+                        # Add Node info for TIME_STEP to output report
+                        report.report_output(self,
+                                             run_report,
+                                             execution_scheduler,
+                                             report_output,
+                                             report_params,
+                                             'node',
+                                             context,
+                                             node=node)
+
                     # ANIMATE node ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     if self._animate is not False and self._animate_unit == COMPONENT:
                         self._animate_execution(node, context)
 
-                    # Add report for node to time_step_report
-                    report.report_output(self,
-                                         progress_report,
-                                         execution_scheduler,
-                                         report_output,
-                                         'node',
-                                         context,
-                                         node=node)
 
                     # MANAGE INPUTS (for next execution_set)~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -9396,6 +9449,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         relative_order=AFTER,
                         execution_mode=execution_mode,
                         _comp_ex=_comp_ex,
+                        report=report,
                         context=context
                     )
 
@@ -9403,9 +9457,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     call_with_pruned_args(call_after_time_step, context=context)
 
 
-                # Add report for time_step to trial_report
-                report.report_output(self, progress_report, execution_scheduler, report_output, 'time_step', context,
-                                       nodes_to_report= nodes_to_report)
+                # Complete TIME_STEP entry for output report
+                report.report_output(self, run_report, execution_scheduler,
+                                     report_output, report_params, 'time_step', context,
+                                     nodes_to_report= nodes_to_report)
 
             context.remove_flag(ContextFlags.PROCESSING)
 
@@ -9428,6 +9483,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     relative_order=AFTER,
                     execution_mode=execution_mode,
                     _comp_ex=_comp_ex,
+                    report=report,
                     context=context
                 )
 
@@ -9438,28 +9494,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._animate_execution(self.output_CIM, context)
             # FIX: END
 
+
             # EXECUTE CONTROLLER (if controller_mode == AFTER) *********************************************************
             if self.controller_time_scale == TimeScale.TRIAL:
                 self._execute_controller(
                     relative_order=AFTER,
                     execution_mode=execution_mode,
                     _comp_ex=_comp_ex,
+                    report=report,
                     context=context
                 )
-
-            # REPORT RESULTS *******************************************************************************************
 
             # Extract result here
             if execution_mode:
                 _comp_ex.freeze_values()
-                _comp_ex.execute_node(self.output_CIM)
-                report.report_progress(self, progress_report, context)
+                _comp_ex.execute_node(self.output_CIM, context=context)
+                report.report_progress(self, run_report, context)
                 if context.source & ContextFlags.COMMAND_LINE:
                     if report._recorded_reports:
                         self.recorded_reports = report._recorded_reports
                     if report._rich_diverted_reports:
                         self.rich_diverted_reports = report._rich_diverted_reports
-
                 return _comp_ex.extract_node_output(self.output_CIM)
 
             # Reset context flags
@@ -9472,14 +9527,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for port in self.output_CIM.output_ports:
                 output_values.append(port.parameters.value._get(context))
 
-            # Report results and progress to output devices
-            report.report_output(self, progress_report, execution_scheduler, report_output, 'trial', context)
-            report.report_progress(self, progress_report, context)
-            if context.source & ContextFlags.COMMAND_LINE:
-                if report._recorded_reports:
-                    self.recorded_reports = report._recorded_reports
-                if report._rich_diverted_reports:
-                    self.rich_diverted_reports = report._rich_diverted_reports
+            # Complete TRIAL entry for output report, and report progress
+            report.report_output(self, run_report, execution_scheduler, report_output,
+                                 report_params, 'trial', context)
+            report.report_progress(self, run_report, context)
 
             # UPDATE TIME and RETURN ***********************************************************************************
 
