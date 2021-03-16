@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DefaultControlMechanism &mdash; PsyNeuLink 0.8.7.0+101.gd105add documentation</title>
+  <title>DefaultControlMechanism &mdash; PsyNeuLink 0.8.7.0 documentation</title>
   
 
   
@@ -27,6 +27,7 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -95,7 +96,7 @@
               
               
                 <div class="version">
-                  0.8.7.0+101
+                  0.8.7.0
                 </div>
               
             
@@ -195,12 +196,12 @@
               
   <div class="section" id="module-psyneulink.core.components.mechanisms.modulatory.control.defaultcontrolmechanism">
 <span id="defaultcontrolmechanism"></span><h1>DefaultControlMechanism<a class="headerlink" href="#module-psyneulink.core.components.mechanisms.modulatory.control.defaultcontrolmechanism" title="Permalink to this headline">¶</a></h1>
-<p>The DefaultControlMechanism is created for a <code class="xref any docutils literal"><span class="pre">System</span></code> if no other controller type is specified. The
+<p>The DefaultControlMechanism is created for a <code class="xref any docutils literal notranslate"><span class="pre">System</span></code> if no other controller type is specified. The
 DefaultControlMechanism creates an <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> for each <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> it is assigned, and uses
-<code class="xref any docutils literal"><span class="pre">defaultControlAllocation</span></code> as the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> for the ControlSignal.  By default,
-<code class="xref any docutils literal"><span class="pre">defaultControlAllocation</span></code> =  1, so that ControlProjections from the DefaultControlMechanism have no effect on their
+<code class="xref any docutils literal notranslate"><span class="pre">defaultControlAllocation</span></code> as the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> for the ControlSignal.  By default,
+<code class="xref any docutils literal notranslate"><span class="pre">defaultControlAllocation</span></code> =  1, so that ControlProjections from the DefaultControlMechanism have no effect on their
 parameters.  However, it can be used to uniformly control the parameters that receive ControlProjections from it,
-by manually changing the value of <code class="xref any docutils literal"><span class="pre">defaultControlAllocation</span></code>.  See <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> for additional
+by manually changing the value of <code class="xref any docutils literal notranslate"><span class="pre">defaultControlAllocation</span></code>.  See <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> for additional
 details of how ControlMechanism are created, executed and their attributes.</p>
 </div>
 
@@ -253,21 +254,12 @@ details of how ControlMechanism are created, executed and their attributes.</p>
   
 
      
-       <script type="text/javascript">
-           var DOCUMENTATION_OPTIONS = {
-               URL_ROOT:'./',
-               VERSION:'0.8.7.0+101.gd105add',
-               LANGUAGE:'None',
-               COLLAPSE_INDEX:false,
-               FILE_SUFFIX:'.html',
-               HAS_SOURCE:  true,
-               SOURCELINK_SUFFIX: '.txt'
-           };
-       </script>
-         <script type="text/javascript" src="_static/jquery.js"></script>
-         <script type="text/javascript" src="_static/underscore.js"></script>
-         <script type="text/javascript" src="_static/doctools.js"></script>
-         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/doctools.js"></script>
+         <script src="_static/language_data.js"></script>
+         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   
