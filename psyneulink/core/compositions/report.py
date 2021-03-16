@@ -98,7 +98,7 @@ from rich.progress import Progress as RichProgress
 
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS
+from psyneulink.core.globals.keywords import FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS, VALUE
 from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = ['Report', 'ReportOutput', 'ReportParams', 'ReportProgress', 'ReportDevices', 'ReportSimulations',
@@ -184,6 +184,9 @@ class ReportParams(Enum):
     OFF
         suppress reporting of parameter values.
 
+    USE_PREFS
+        defers to `reportOutputPref <PreferenceSet_reportOutputPref>` settings of individual Components.
+
     MODULATED (aka CONTROLLED)
         report all `Parameters` that are being `modulated <ModulatorySignal.modulation>` (i.e., controlled) by a
         `ControlMechanism` within the `Composition` (that is, those for which the corresponding `ParameterPort`
@@ -206,6 +209,7 @@ class ReportParams(Enum):
     OFF = 0
     MODULATED = auto()
     CONTROLLED = MODULATED
+    MONITORED = auto()
     LOGGED = auto()
     ALL = auto()
 
@@ -348,6 +352,9 @@ class Report:
         specifies whether to report output of the execution on a trial-by-trial as it is generated;
         see `ReportOutput` for options.
 
+    _report_params : list[ReportParams] : default [ReportParams.USE_PREFS]
+        specifies which params are reported if ReportOutput.FULL is in effect.
+
     report_progress : ReportProgress : default ReportProgress.OFF
         specifies whether to report progress of each `TRIAL <TimeScale.TRIAL>` of a `Composition`\\'s execution,
         showing the number of `TRIALS <TimeScale.TRIAL>` that have been executed and a progress bar;  see
@@ -357,7 +364,7 @@ class Report:
         specifies whether to report output and progress for `simulations <OptimizationControlMechanism_Execution>`
         executed by an a Composition's `controller <Composition_Controller>`; see `ReportSimulations` for options.
 
-    report_to_devices : list(ReportDevices) : default ReportDevices.CONSOLE
+    report_to_devices : list[ReportDevices] : default [ReportDevices.CONSOLE]
         specifies devices to which output and progress reporting is sent;  see `ReportDevices` for options.
 
     Attributes
@@ -373,18 +380,21 @@ class Report:
         identifies whether reporting is enabled;  True if either the **_report_output** or **_report_progress**
         progress arguments of the constructor were specified as not False.
 
-    _report_output : bool, *TERSE*, or *FULL* : default False
+    _report_output : ReportOutput : default ReportOutput.OFF
         determines whether and, if so, what form of output is displayed and/or captured.
 
-    _report_progress : bool : default False
+    _report_params : list[ReportParams] : default [ReportParams.USE_PREFS]
+        determines which params are reported if ReportOutput.FULL is in effect.
+
+    _report_progress : ReportProgress : default ReportProgress.OFF
         determines whether progress is displayed and/or captured.
 
-    _report_simulations : bool : default False
+    _report_simulations : ReportSimulations : default ReportSimulations.OFF
         determines whether reporting occurs for output and/or progress of `simulations
         <OptimizationControlMechanism_Execution>`  carried out by the `controller <Composition_Controller>` of a
         `Composition`.
 
-    _report_to_devices : list
+    _report_to_devices : list[ReportDevices : [ReportDevices.CONSOLE]
         list of devices currently enabled for reporting.
 
     _use_rich : False, *CONSOLE*, *DIVERT* or list: default *CONSOLE*
@@ -477,7 +487,7 @@ class Report:
             # Assign option properties
             cls._report_progress = report_progress
             cls._report_output = report_output
-            cls._report_params = report_params
+            cls._report_params = convert_to_list(report_params)
             cls._reporting_enabled = report_output is not ReportOutput.OFF or cls._report_progress
             cls._report_simulations = report_simulations
             cls._rich_console = ReportDevices.CONSOLE in cls._report_to_devices
@@ -736,7 +746,7 @@ class Report:
                       report_num:int,
                       scheduler,
                       report_output:ReportOutput,
-                      report_params:ReportParams,
+                      report_params:list,
                       content:str,
                       context:Context,
                       nodes_to_report:bool=False,
@@ -761,6 +771,11 @@ class Report:
 
         report_output : ReportOutput
             conveys `ReportOutput` option specified in the **report_output** argument of the call to a Composition's
+            `execution method <Composition_Execution_Method>` or a Mechanism's `execute <Mechanism_Base.execute>`
+            method.
+
+        report_params : [ReportParams]
+            conveys `ReportParams` option(s) specified in the **report_params** argument of the call to a Composition's
             `execution method <Composition_Execution_Method>` or a Mechanism's `execute <Mechanism_Base.execute>`
             method.
 
@@ -1068,18 +1083,20 @@ class Report:
             def param_is_specified(name, specified_set):
                 """Helper method: check whether param has been specified based on options"""
 
+                from psyneulink.core.components.mechanisms.mechanism import Mechanism
+                from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+                from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism \
+                    import CompositionInterfaceMechanism
+                from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism \
+                    import ModulatoryMechanism_Base
+
                 # Helper methods for testing whether param satisfies specifications -----------------------------
 
                 def get_controller(proj):
                     """Helper method: get modulator (controller) of modulated params"""
-                    from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism \
-                        import CompositionInterfaceMechanism
-                    from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism \
-                        import ModulatoryMechanism_Base
                     # if not isinstance(proj.sender.owner, CompositionInterfaceMechanism):
                     if isinstance(proj.sender.owner, ModulatoryMechanism_Base):
                         return proj.sender.owner.name
-                    # If it is not a ModulatoryMechansim, it must be a CompositionInterfaceMechanism
                     #   mediating a projection from a ModulatoryMechanism in a Composition in which this is nested
                     if not isinstance(proj.sender.owner, CompositionInterfaceMechanism):
                         assert False, f'PROGRAM ERROR Projection to ParameterPort for {param_name} of {node.name} ' \
@@ -1092,49 +1109,92 @@ class Report:
                        by checking whether ParameterPort receives aControlProjection
                     """
                     try:
-                        from psyneulink.core.components.mechanisms.mechanism import Mechanism
                         if isinstance(node, Mechanism):
                             if name in node.parameter_ports.names:
                                 param_port = node.parameter_ports[name]
                                 if param_port.mod_afferents:
                                     controller_names = [get_controller(c) for c in param_port.mod_afferents]
                                     controllers_str = ' and '.join(controller_names)
-                                    return f' (modulated by {controllers_str})'
+                                    return f'modulated by {controllers_str}'
                     except:
-                        print(f'Failed to find {param_name} on {node.name}')
+                        print(f'Failed to find {name} on {node.name}')
+                    # return ''
 
-                mod_str = is_modulated()
+
+                def get_monitor(proj):
+                    """Helper method: get modulator (controller) of modulated params"""
+                    # if not isinstance(proj.sender.owner, CompositionInterfaceMechanism):
+                    if isinstance(proj.receiver.owner, (ObjectiveMechanism, ModulatoryMechanism_Base)):
+                        return proj.receiver.owner.name
+                    # Mediating a projection from a monitored Mechanism to a Composition in which it is nested, so
+                    # recursively call to get receiver in outer Composition
+                    if isinstance(proj.receiver.owner, CompositionInterfaceMechanism) and proj.receiver.owner.efferents:
+                        # owners = []
+                        # for efferent in proj.receiver.owner.efferents:
+                        #     owner = get_monitor(efferent)
+                        #     if owner:
+                        #         owners.extend(owner)
+                        # return(owners)
+                        owners = [get_monitor(efferent) for efferent in proj.receiver.owner.efferents]
+                        return owners
+
 
                 def is_monitored():
-                    """Helper method: determine whether parameter is being modulated
-                       by checking whether ParameterPort receives aControlProjection
+                    """Helper method: determine whether parameter is being monitored by checking whether OutputPort
+                    sends a MappingProjection to an ObjectiveMechanism or  ControlMechanism.
                     """
-                    pass
+                    try:
+                        if name is VALUE and isinstance(node, Mechanism):
+                            monitor_names = []
+                            for output_port in node.output_ports:
+                                monitors = []
+                                for proj in output_port.efferents:
+                                    monitor = get_monitor(proj)
+                                    if isinstance(monitor, list):
+                                        monitors.extend(monitor)
+                                    else:
+                                        monitors.append(monitor)
+                                monitor_names.extend([monitor_name for monitor_name in monitors if monitor_name])
+                            if monitor_names:
+                                monitor_str = ' and '.join(monitor_names)
+                                return f'monitored by {monitor_str}'
+                    except:
+                        print(f'Failed to find {name} on {node.name}')
+                    # return ''
 
                 def is_logged():
                     pass
 
                 # Evaluate tests: -----------------------------------------------------------------------
 
+                control_str = ''
+                mod_str = is_modulated()
+                monitor_str = is_monitored()
+                if monitor_str and mod_str:
+                    control_str = " and ".join([monitor_str, mod_str])
+                elif mod_str:
+                    control_str = mod_str
+                elif monitor_str:
+                    control_str = monitor_str
+                control_str = f' ({control_str})'
+
                 # Include if param is explicitly specified or ReportParams.ALL (or 'params') is specified
                 if (name in specified_set
                         # FIX: ADD SUPPORT FOR ReportParams.ALL
                         # PARAMS specified as keyword to display all params
                         or include_params is params_keyword):
-                    return mod_str or True
+                    return control_str or True
 
                 # Include if param is modulated and ReportParams.MODULATED (CONTROLLED) is specified
-                if report_params in (ReportParams.MODULATED, ReportParams.CONTROLLED):
-                    return mod_str
+                if any(k in report_params for k in (ReportParams.MODULATED, ReportParams.CONTROLLED)) and mod_str:
+                    return control_str
 
-                # Include if param is monitored and ReportParams.MONITORED is specified
-                if report_params in ReportParams.MONITORED:
-                    # return monitor_str
-                    pass
+                # # Include if param is monitored and ReportParams.MONITORED is specified
+                # if ReportParams.MONITORED in report_params and monitor_str:
+                #     return control_str
 
                 # Include if param is being logged and ReportParams.LOGGED is specified
-                if report_params in ReportParams.LOGGED:
-                    # return monitor_str
+                if report_params is ReportParams.LOGGED:
                     pass
 
                 return False
