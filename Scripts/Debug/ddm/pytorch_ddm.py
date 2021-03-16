@@ -3,54 +3,61 @@ import time
 import torch
 from torch import nn
 
+from typing import Tuple
+
 if torch.cuda.is_available():
   dev = "cuda:0"
 else:
   dev = "cpu"
 
 
-def simulate_ddms(starting_value: float = 0.0,
-                  rate: float = 1.0,
-                  non_decision_time: float = 0.0,
-                  threshold: float = 1.0,
-                  noise: float = 1.0,
-                  time_step_size: float = 0.01,
-                  num_walkers: int = 1000,
-                  dev: str = "cuda:0"):
-    """
-    A simulation of
+class DriftDiffusionModel(torch.nn.Module):
+    def forward(self,
+                starting_value: float = 0.0,
+                rate: float = 1.0,
+                non_decision_time: float = 0.0,
+                threshold: float = 1.0,
+                noise: float = 1.0,
+                time_step_size: float = 0.01,
+                num_walkers: int = 1000,
+                dev: str = "cuda:0") -> Tuple[torch.Tensor, torch.Tensor]:
 
-    Args:
-        starting_value:
-        rate:
-        non_decision_time:
-        threshold:
-        noise:
-        time_step_size:
-        num_walkers:
-        dev:
+        """
+        A model that simulates many instances of a simple noisy drift diffusion model in parallel.
 
-    Returns:
+        Args:
+            starting_value: The starting value of each particle in the model.
+            rate: The drift rate for each particle.
+            non_decision_time: A constant amount of time added to each reaction time that signifies automatic processing
+                times of stimuli.
+            threshold: The threshold that a particle must reach to stop integration.
+            noise: The standard deviation of the Gaussian noise added to each particles position at each time step.
+            time_step_size: The time step size (in seconds) for the integration process.
+            num_walkers: The number of particles to simulate.
+            dev: The device the model should be run on.
 
-    """
+        Returns:
+            A two element tuple containing the reaction times and the decisions
+        """
 
-    particle = torch.full(size=(num_walkers,), fill_value=starting_value, device=dev)
-    active = torch.ones(size=(num_walkers,), dtype=torch.bool, device=dev)
-    rts = torch.zeros(size=(num_walkers,), device=dev)
+        particle = torch.ones(size=(num_walkers,), device=dev) * starting_value
+        active = torch.ones(size=(num_walkers,), dtype=torch.bool, device=dev)
+        rts = torch.zeros(size=(num_walkers,), device=dev)
 
-    for i in range(3000):
-        #dw = torch.distributions.Normal(loc=rate * time_step_size * active, scale=noise * active).rsample()
-        dw = torch.normal(mean=rate * time_step_size * active, std=noise * active)
-        particle = particle + dw * torch.sqrt(time_step_size)
-        rts = rts + active
-        active = torch.abs(particle) < threshold
+        for i in range(3000):
+            #dw = torch.distributions.Normal(loc=rate * time_step_size * active, scale=noise * active).rsample()
+            dw = torch.normal(mean=rate * time_step_size * active, std=noise * active)
+            particle = particle + dw * torch.sqrt(time_step_size)
+            rts = rts + active
+            active = torch.abs(particle) < threshold
 
-    rts = (non_decision_time + rts * time_step_size)
+        rts = (non_decision_time + rts * time_step_size)
 
-    decisions = torch.ones(size=(num_walkers,), device=dev)
-    decisions[particle <= -threshold] = 0
+        decisions = torch.ones(size=(num_walkers,), device=dev)
+        decisions[particle <= -threshold] = 0
 
-    return rts, decisions
+        return rts, decisions
+
 
 ddm_params = dict(starting_value=0.0, rate=0.3, non_decision_time=0.15, threshold=0.6, noise=1.0, time_step_size=0.001)
 
@@ -63,50 +70,59 @@ for key, val in ddm_params.items():
 #%%
 
 t0 = time.time()
-rts, decision = simulate_ddms(**ddm_params, num_walkers=NUM_WALKERS, dev=dev)
+ddm_model = DriftDiffusionModel()
+rts, decision = ddm_model(**ddm_params, num_walkers=NUM_WALKERS, dev=dev)
 rts = rts.to("cpu")
 decision = decision.to("cpu")
-print(f"PyTorch Elapsed: {time.time() - t0}")
+print(f"PyTorch Elapsed: {1000.0 * (time.time() - t0)} milliseconds")
 
 #%%
 
 # JIT
-jit_simulate_ddms = torch.jit.script(simulate_ddms)
+jit_ddm_model = torch.jit.script(ddm_model)
 
 #%%
-rts, decision = jit_simulate_ddms(**ddm_params, num_walkers=NUM_WALKERS)
-
-NUM_TIMES = 50
-t0 = time.time()
-for i in range(NUM_TIMES):
-    rts, decision = jit_simulate_ddms(**ddm_params, num_walkers=NUM_WALKERS)
-    rts = rts.to("cpu")
-    decision = decision.to("cpu")
-print(f"JIT Elapsed: {1000 * ((time.time() - t0) / NUM_TIMES)} milliseconds")
-
-#%%
-class DriftDiffusionModel(torch.nn.Module):
-    def forward(self,
-                starting_value,
-                rate,
-                non_decision_time,
-                threshold,
-                noise,
-                time_step_size,
-                num_walkers):
-        return simulate_ddms(starting_value, rate, non_decision_time, threshold, noise, time_step_size, num_walkers)
+# rts, decision = jit_ddm_model(**ddm_params, num_walkers=NUM_WALKERS)
+#
+# NUM_TIMES = 50
+# t0 = time.time()
+# for i in range(NUM_TIMES):
+#     rts, decision = jit_ddm_model(**ddm_params, num_walkers=NUM_WALKERS)
+#     rts = rts.to("cpu")
+#     decision = decision.to("cpu")
+# print(f"JIT Elapsed: {1000 * ((time.time() - t0) / NUM_TIMES)} milliseconds")
 
 #%%
-ddm_model = torch.jit.script(DriftDiffusionModel())
 
-with open('ddm.onnx', 'wb') as file:
-    torch.onnx.export(model=ddm_model,
-                      args=tuple(ddm_params.values()) + (torch.tensor(NUM_WALKERS),),
-                      example_outputs=(rts, decision),
-                      f=file,
-                      verbose=True,
-                      opset_version=11)
+jit_ddm_model.save("ddm.pt")
 
 #%%
-import seaborn as sns
-sns.kdeplot(rts)
+# with open('ddm.onnx', 'wb') as file:
+#     torch.onnx.export(model=torch.jit.script(DriftDiffusionModel()),
+#                       args=tuple(ddm_params.values()) + (torch.tensor(NUM_WALKERS),),
+#                       example_outputs=(rts, decision),
+#                       f=file,
+#                       verbose=True,
+#                       opset_version=12)
+
+#%%
+# import seaborn as sns
+# sns.kdeplot(rts)
+
+#%%
+graph = jit_ddm_model.graph
+parsed_graph = {}
+graph_nodes = []
+for node in graph.nodes():
+    op = node.kind();
+    outputs = [o.unique() for o in node.outputs()]
+    inputs  = [i.unique() for i in node.inputs()]
+    graph_node = # Create a node for current AST Node
+    parsed_graph[graph_node.id] = graph_node
+    # Reference:
+    # https://github.com/waleedka/hiddenlayer/blob/master/hiddenlayer/pytorch_builder.py
+    for to in graph.nodes():
+        to_inputs = [i.unique() for i in to.inputs()]
+        edges = set(outputs) & set(to_inputs)
+        if edges:
+            graph_node.edges.append(Edge(to, edges))

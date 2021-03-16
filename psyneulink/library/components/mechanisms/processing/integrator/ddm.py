@@ -845,6 +845,9 @@ class DDM(ProcessingMechanism):
                 # set normally by default
                 pass
 
+        if default_variable is None:
+            default_variable = np.array([0.0])
+
         # # Conflict with above
         # self.size = size
 
