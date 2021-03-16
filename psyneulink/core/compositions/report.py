@@ -1081,7 +1081,7 @@ class Report:
 
         if include_params:
 
-            def param_is_specified(name, specified_set):
+            def param_is_specified(name, specified_set, param_type):
                 """Helper method: check whether param has been specified based on options"""
 
                 from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -1190,9 +1190,10 @@ class Report:
                     return control_str
 
                 # FIX: NEED TO FILTER OUT RESPONSES TO FUNCTION VALUE AND TO OBJECTIVE MECHANISM ISELF
-                # # Include if param is monitored and ReportParams.MONITORED is specified
-                # if ReportParams.MONITORED in report_params and monitor_str:
-                #     return control_str
+                # Include if param is monitored and ReportParams.MONITORED is specified
+                # FIX: PUT CHECK FOR mech EARLIER??
+                if ReportParams.MONITORED in report_params and monitor_str and param_type is 'node':
+                    return control_str
 
                 # Include if param is being logged and ReportParams.LOGGED is specified
                 if report_params is ReportParams.LOGGED:
@@ -1225,7 +1226,7 @@ class Report:
                     param_is_function = True
 
                 # Node param(s)
-                elif param_is_specified(param_name, node_params):
+                elif param_is_specified(param_name, node_params, param_type='node'):
                     # Put in params_string if param is specified or 'params' is specified
                     param_value = params[param_name]
                     if not params_string:
@@ -1247,7 +1248,7 @@ class Report:
                         # Put in function_params_string if function param is specified or 'params' is specified
                         # (appended to params_string below to keep functions at bottom of report)
                         modulated = False
-                        qualification = param_is_specified(fct_param_name, function_params)
+                        qualification = param_is_specified(fct_param_name, function_params, param_type='func')
                         if qualification:
                             if not header_printed:
                                 function_params_string += f"\n\t{param_name}: {param_value.name.__str__().strip('[]')}"
