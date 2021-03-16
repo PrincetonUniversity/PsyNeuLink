@@ -1167,16 +1167,15 @@ class Report:
 
                 # Evaluate tests: -----------------------------------------------------------------------
 
-                control_str = ''
+                # Get modulated and monitored descriptions if they apply
                 mod_str = is_modulated()
                 monitor_str = is_monitored()
                 if monitor_str and mod_str:
                     control_str = " and ".join([monitor_str, mod_str])
-                elif mod_str:
-                    control_str = mod_str
-                elif monitor_str:
-                    control_str = monitor_str
-                control_str = f' ({control_str})'
+                else:
+                    control_str = monitor_str or mod_str
+                if control_str:
+                    control_str = f' ({control_str})'
 
                 # Include if param is explicitly specified or ReportParams.ALL (or 'params') is specified
                 if (name in specified_set
@@ -1189,6 +1188,7 @@ class Report:
                 if any(k in report_params for k in (ReportParams.MODULATED, ReportParams.CONTROLLED)) and mod_str:
                     return control_str
 
+                # FIX: NEED TO FILTER OUT RESPONSES TO FUNCTION VALUE AND TO OBJECTIVE MECHANISM ISELF
                 # # Include if param is monitored and ReportParams.MONITORED is specified
                 # if ReportParams.MONITORED in report_params and monitor_str:
                 #     return control_str
