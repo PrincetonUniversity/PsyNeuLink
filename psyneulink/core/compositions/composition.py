@@ -8768,7 +8768,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                      context,
                                      node=self.controller)
 
-
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
     def execute(
             self,
