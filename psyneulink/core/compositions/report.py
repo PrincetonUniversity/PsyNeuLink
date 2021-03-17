@@ -801,6 +801,8 @@ class Report:
         if report_output is ReportOutput.OFF:
             return
 
+        # FIX: ASSIGN SCHEDULE IF IT IS NONE (i.e., FROM MECHANISM):  GET IT FROM LATEST COMP ON STACK
+
         # Determine report type and relevant parameters ----------------------------------------------------------------
 
         # Get ReportOutputPref for node
