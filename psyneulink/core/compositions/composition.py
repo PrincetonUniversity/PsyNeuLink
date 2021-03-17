@@ -8503,11 +8503,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if call_after_trial:
                     call_with_pruned_args(call_after_trial, context=context)
 
-            if report._recorded_reports:
-                self.recorded_reports = report._recorded_reports
-            if report._rich_diverted_reports:
-                self.rich_diverted_reports = report._rich_diverted_reports
-
             # IMPLEMENTATION NOTE:
             # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
             # method whether or not we are at the last trial of the run.
@@ -8528,6 +8523,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     report_params=report_params,
                     context=context
                 )
+
+            if report._recorded_reports:
+                self.recorded_reports = report._recorded_reports
+            if report._rich_diverted_reports:
+                self.rich_diverted_reports = report._rich_diverted_reports
 
             # Reset input spec for next trial
             self.parameters.input_specification._set(None, context)
@@ -9025,9 +9025,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not reset_stateful_functions_to:
                 reset_stateful_functions_to = {}
 
-            # # Report trial_num and Composition input (now that it has been assigned)
-            # progress.report_output(self, run_report, execution_scheduler, report_output, 'trial_init', context)
-
             for node in self.nodes:
                 node.parameters.num_executions.get(context)._set_by_time_scale(TimeScale.TRIAL, 0)
                 if node.parameters.has_initializers._get(context):
@@ -9048,6 +9045,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # FIX 5/28/20
             context.remove_flag(ContextFlags.PREPARING)
+
+            # Begin reporting of TRIAL:
+            # - add TRIAL header and Composition's input to output report (now that they are known)
+            report.report_output(caller=self,
+                                 report_num=run_report,
+                                 scheduler=execution_scheduler,
+                                 report_output=report_output,
+                                 report_params=report_params,
+                                 content='trial_init',
+                                 context=context
+                                 )
 
             # EXECUTE INPUT CIM ********************************************************************************************
 
@@ -9189,16 +9197,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if context.runmode == ContextFlags.SIMULATION_MODE:
                 for i in range(scheduler.clock.time.time_step):
                     execution_sets.__next__()
-
-            # Add TRIAL header and Composition's input to output report (now that they are known)
-            report.report_output(caller=self,
-                                 report_num=run_report,
-                                 scheduler=execution_scheduler,
-                                 report_output=report_output,
-                                 report_params=report_params,
-                                 content='trial_init',
-                                 context=context
-                                 )
 
             for next_execution_set in execution_sets:
 
@@ -9570,10 +9568,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for port in self.output_CIM.output_ports:
                 output_values.append(port.parameters.value._get(context))
 
-            # Complete TRIAL entry for output report, and report progress
-            report.report_output(self, run_report, execution_scheduler, report_output,
-                                 report_params, 'trial', context)
-            report.report_progress(self, run_report, context)
+            # Complete TRIAL entry for output report, and report progress if executed from COMMAND_LINE,
+            #    since run() will not be returning to run
+            if context.source & ContextFlags.COMMAND_LINE:
+                report.report_output(self, run_report, execution_scheduler, report_output,
+                                     report_params, 'trial', context)
+                report.report_progress(self, run_report, context)
 
             # UPDATE TIME and RETURN ***********************************************************************************
 

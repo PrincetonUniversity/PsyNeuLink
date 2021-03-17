@@ -1214,18 +1214,17 @@ class Report:
                 if param_name in {FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS}:
                     continue
                 param_value = params[param_name]
+                # PsyNeuLink Function
                 if isinstance(param_value, Function):
                     param = param_value.name
                     param_is_function = True
+                # PsyNeuLink Function class
                 elif isinstance(param_value, type(Function)):
                     param = param_value.__name__
                     param_is_function = True
+                # Python, Numpy or other type of function
                 elif isinstance(param_value, (types.FunctionType, types.MethodType)):
-                    try:
-                        param = param_value.__node__.__class__.__name__
-                        param_is_function = True
-                    except AttributeError:
-                        param = param_value.__name__
+                    param = param_value.__name__
 
                 # Node param(s)
                 qualification = param_is_specified(param_name, node_params, param_type='node')
