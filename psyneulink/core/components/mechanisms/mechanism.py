@@ -2543,16 +2543,15 @@ class Mechanism_Base(Mechanism):
                                                    if isinstance(pref, ReportOutput)), None)
             report_params = report_params or next((pref for pref in convert_to_list(self.prefs.reportOutputPref)
                                                    if isinstance(pref, ReportParams)), None)
-            if report_output is not ReportOutput.OFF:
-                with Report(self, context=context) as report:
-                    report.report_output(caller=self,
-                                         report_num=run_report,
-                                         scheduler=None,
-                                         report_output=report_output,
-                                         report_params=report_params,
-                                         content='node',
-                                         context=context,
-                                         node=self)
+            with Report(self, context=context) as report:
+                report.report_output(caller=self,
+                                     report_num=run_report,
+                                     scheduler=None,
+                                     report_output=report_output,
+                                     report_params=report_params,
+                                     content='node',
+                                     context=context,
+                                     node=self)
 
         return value
 

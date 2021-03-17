@@ -9046,17 +9046,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX 5/28/20
             context.remove_flag(ContextFlags.PREPARING)
 
-            # Begin reporting of TRIAL:
-            # - add TRIAL header and Composition's input to output report (now that they are known)
-            report.report_output(caller=self,
-                                 report_num=run_report,
-                                 scheduler=execution_scheduler,
-                                 report_output=report_output,
-                                 report_params=report_params,
-                                 content='trial_init',
-                                 context=context
-                                 )
-
             # EXECUTE INPUT CIM ********************************************************************************************
 
             # FIX: 6/12/19 MOVE TO EXECUTE BELOW?
@@ -9163,6 +9152,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 )
 
             # EXECUTE EACH EXECUTION SET *********************************************************************************
+
+            # Begin reporting of TRIAL:
+            # - add TRIAL header and Composition's input to output report (now that they are known)
+            report.report_output(caller=self,
+                                 report_num=run_report,
+                                 scheduler=execution_scheduler,
+                                 report_output=report_output,
+                                 report_params=report_params,
+                                 content='trial_init',
+                                 context=context
+                                 )
 
             # PREPROCESS (get inputs, call_before_pass, animate first frame) ----------------------------------
 
@@ -9568,17 +9568,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for port in self.output_CIM.output_ports:
                 output_values.append(port.parameters.value._get(context))
 
-            # Complete TRIAL entry for output report, and report progress if executed from COMMAND_LINE,
-            #    since run() will not be returning to run
-            if context.source & ContextFlags.COMMAND_LINE:
-                report.report_output(self, run_report, execution_scheduler, report_output,
-                                     report_params, 'trial', context)
-                report.report_progress(self, run_report, context)
+            # Complete TRIAL entry for output report, and report progress
+            report.report_output(self, run_report, execution_scheduler, report_output,
+                                 report_params, 'trial', context)
+            report.report_progress(self, run_report, context)
+
 
             # UPDATE TIME and RETURN ***********************************************************************************
 
             execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
-
+            
             return output_values
 
     def __call__(self, *args, **kwargs):
