@@ -858,6 +858,13 @@ class Report:
                 sim_str = ''
             run_report = self._run_reports[run_report_owner][run_mode][report_num]
 
+        # FIX: GENERALIZE THIS, PUT AS ATTRIBUTE ON Report, AND THEN REFERENCE THAT IN report_progress
+        indent_factor = 2
+        depth_indent = depth_str = ''
+        if simulation_mode or self._execution_stack_depth:
+            depth_indent = indent_factor * self._execution_stack_depth * ' '
+            depth_str = f' (depth: {self._execution_stack_depth})'
+
         # Construct output report -----------------------------------------------------------------------------
 
         if content is 'trial_init':
@@ -865,12 +872,12 @@ class Report:
             #  if FULL output, report trial number and Composition's input
             #  note:  header for Trial Panel is constructed under 'content is Trial' case below
             if trial_report_type is ReportOutput.FULL:
-                run_report.trial_report = [f"\n[bold {trial_panel_color}]input:[/]"
-                                                 f" {[i.tolist() for i in caller.get_input_values(context)]}"]
+                run_report.trial_report = [f"\n[bold {trial_panel_color}]{depth_indent}input:[/]"
+                                           f" {[i.tolist() for i in caller.get_input_values(context)]}"]
             else: # TERSE output
                 # print trial title and separator + input array to Composition
-                trial_header = f"[bold {trial_panel_color}]{caller.name}{sim_str} TRIAL {trial_num} " \
-                               f"===================="
+                trial_header = f"[bold {trial_panel_color}]" \
+                               f"{depth_indent}{caller.name}{sim_str} TRIAL {trial_num} ===================="
                 self._rich_progress.console.print(trial_header)
                 if self._record_reports:
                     self._recorded_reports += trial_header
@@ -879,7 +886,8 @@ class Report:
             if trial_report_type is ReportOutput.FULL:
                 run_report.time_step_report = [] # Contains rich.Panel for each node executed in time_step
             elif nodes_to_report: # TERSE output
-                time_step_header = f'[{time_step_panel_color}] Time Step {scheduler.clock.time.time_step} ---------'
+                time_step_header = f'[{time_step_panel_color}]' \
+                                   f'{depth_indent} Time Step {scheduler.clock.time.time_step} ---------'
                 self._rich_progress.console.print(time_step_header)
                 if self._record_reports:
                     self._recorded_reports += time_step_header
@@ -910,7 +918,7 @@ class Report:
                     run_report.time_step_report.append(node_report)
             # Otherwise, just print it to the console (as part of otherwise TERSE report)
             else: # TERSE output
-                self._rich_progress.console.print(node_report)
+                self._rich_progress.console.print(f'{depth_indent}{node_report}')
                 if self._record_reports:
                     with self._recording_console.capture() as capture:
                         self._recording_console.print(node_report)
@@ -994,11 +1002,11 @@ class Report:
 
     def node_execution_report(self,
                               node,
-                              input_val=None,
-                              output_val=None,
+                              input_val:Optional[np.ndarray]=None,
+                              output_val:Optional[np.ndarray]=None,
                               report_output=ReportOutput.USE_PREFS,
-                              report_params=ReportParams.OFF,
-                              context=None):
+                              report_params:ReportParams=ReportParams.OFF,
+                              context:Context=None) -> Panel:
         """
         Generates formatted output report for the `node <Composition_Nodes>` of a `Composition` or a `Mechanism`.
         Called by `report_output <Report.report_output>` for execution of a Composition, and directly by the `execute
@@ -1009,6 +1017,9 @@ class Report:
 
         Arguments
         ---------
+
+        node : Composition or Mechanism
+            node for which report is being requested
 
         input_val : 2d array : default None
             the `input_value <Mechanism_Base.input_value>` of the `Mechanism` or `external_input_values
@@ -1023,12 +1034,12 @@ class Report:
             the `output_values <Mechanism_Base.output_value>` of the `Mechanism` or `external_output_values
             <Composition.external_output_values>` of the `Composition` for which execution is being reported.
 
-        report_output : ReportOutput
+        report_output : ReportOutput : default ReportOutput.OFF
             conveys `ReportOutput` option specified in the **report_output** argument of the call to a Composition's
             `execution method <Composition_Execution_Method>` or a Mechanism's `execute <Mechanism_Base.execute>`
             method.
 
-        context : Context
+        context : Context : default None
             context of current execution.
         """
 
