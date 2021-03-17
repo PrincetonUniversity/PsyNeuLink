@@ -95,6 +95,7 @@ import numpy as np
 from rich import print, box
 from rich.console import Console, RenderGroup
 from rich.panel import Panel
+from rich.padding import Padding
 from rich.progress import Progress as RichProgress
 
 from psyneulink.core.globals.context import Context
@@ -862,10 +863,9 @@ class Report:
 
         # FIX: GENERALIZE THIS, PUT AS ATTRIBUTE ON Report, AND THEN REFERENCE THAT IN report_progress
         indent_factor = 2
-        depth_indent = depth_str = ''
+        depth_indent = 0
         if simulation_mode or self._execution_stack_depth:
-            depth_indent = indent_factor * self._execution_stack_depth * ' '
-            depth_str = f' (depth: {self._execution_stack_depth})'
+            depth_indent = indent_factor * self._execution_stack_depth
 
         # Construct output report -----------------------------------------------------------------------------
 
@@ -874,12 +874,12 @@ class Report:
             #  if FULL output, report trial number and Composition's input
             #  note:  header for Trial Panel is constructed under 'content is Trial' case below
             if trial_report_type is ReportOutput.FULL:
-                run_report.trial_report = [f"\n[bold {trial_panel_color}]{depth_indent}input:[/]"
-                                           f" {[i.tolist() for i in caller.get_input_values(context)]}"]
+                run_report.trial_report = [f'\n[bold {trial_panel_color}]{depth_indent * " "}input:[/]'
+                                           f' {[i.tolist() for i in caller.get_input_values(context)]}']
             else: # TERSE output
                 # print trial title and separator + input array to Composition
-                trial_header = f"[bold {trial_panel_color}]" \
-                               f"{depth_indent}{caller.name}{sim_str} TRIAL {trial_num} ===================="
+                trial_header = f'[bold {trial_panel_color}]' \
+                               f'{depth_indent * " "}{caller.name}{sim_str} TRIAL {trial_num} ===================='
                 self._rich_progress.console.print(trial_header)
                 if self._record_reports:
                     self._recorded_reports += trial_header
@@ -889,7 +889,7 @@ class Report:
                 run_report.time_step_report = [] # Contains rich.Panel for each node executed in time_step
             elif nodes_to_report: # TERSE output
                 time_step_header = f'[{time_step_panel_color}]' \
-                                   f'{depth_indent} Time Step {scheduler.clock.time.time_step} ---------'
+                                   f'{depth_indent * " "} Time Step {scheduler.clock.time.time_step} ---------'
                 self._rich_progress.console.print(time_step_header)
                 if self._record_reports:
                     self._recorded_reports += time_step_header
@@ -929,13 +929,17 @@ class Report:
         elif content is 'time_step':
             if nodes_to_report and trial_report_type is ReportOutput.FULL:
                 run_report.trial_report.append('')
-                run_report.trial_report.append(Panel(RenderGroup(*run_report.time_step_report),
-                                                           # box=box.HEAVY,
-                                                           border_style=time_step_panel_color,
-                                                           box=time_step_panel_box,
-                                                           title=f'[bold {time_step_panel_color}]\nTime Step '
-                                                                 f'{scheduler.clock.time.time_step}[/]',
-                                                           expand=False))
+                run_report.trial_report.append(
+                    Padding.indent(
+                        Panel(RenderGroup(*run_report.time_step_report),
+                              # box=box.HEAVY,
+                              border_style=time_step_panel_color,
+                              box=time_step_panel_box,
+                              title=f'[bold {time_step_panel_color}]\nTime Step '
+                                    f'{scheduler.clock.time.time_step}[/]',
+                              expand=False),
+                        depth_indent)
+                )
 
         elif content is 'trial':
             if trial_report_type is ReportOutput.FULL:
@@ -944,12 +948,16 @@ class Report:
                     output_values.append(port.parameters.value._get(context))
                 run_report.trial_report.append(f"\n[bold {trial_output_color}]result:[/]"
                                           f" {[r.tolist() for r in output_values]}\n")
-                run_report.trial_report = Panel(RenderGroup(*run_report.trial_report),
-                                                     box=trial_panel_box,
-                                                     border_style=trial_panel_color,
-                                                     title=f'[bold{trial_panel_color}] {caller.name}{sim_str}: '
-                                                           f'Trial {trial_num} [/]',
-                                                     expand=False)
+                run_report.trial_report = \
+                    Padding.indent(
+                        Panel(RenderGroup(*run_report.trial_report),
+                              box=trial_panel_box,
+                              border_style=trial_panel_color,
+                              title=f'[bold{trial_panel_color}] {caller.name}{sim_str}: '
+                                    f'Trial {trial_num} [/]',
+                              expand=False),
+                        depth_indent
+                    )
 
             if trial_report_type is not ReportOutput.OFF:
                 self._print_and_record_reports(OUTPUT_REPORT, context, run_report)
@@ -1046,9 +1054,9 @@ class Report:
         """
 
         indent_factor = 2
-        depth_indent = self._depth_str = ''
+        depth_indent = 0
         if self._simulating or self._execution_stack_depth:
-            depth_indent = indent_factor * self._execution_stack_depth * ' '
+            depth_indent = indent_factor * self._execution_stack_depth
 
         # Use TERSE format if that has been specified by report_output (i.e., in the arg of an execution method),
         #   or as the reportOutputPref for a node when USE_PREFS is in effect
@@ -1062,7 +1070,7 @@ class Report:
             indent = '  '
             if hasattr(node, 'composition') and node.composition:
                 indent = ''
-            return f'[{node_panel_color}]{depth_indent}{indent}{node.name} executed'
+            return f'[{node_panel_color}]{depth_indent * " "}{indent}{node.name} executed'
 
         # Render input --------------------------------------------------------------------------------------------
 
@@ -1326,13 +1334,16 @@ class Report:
             expand = False
             node_report = f'{input_report}\n{output_report}'
 
-        return Panel(node_report,
-                     box=node_panel_box,
-                     border_style=node_panel_color,
-                     width=width,
-                     expand=expand,
-                     title=f'[{node_panel_color}]{node.name}',
-                     highlight=True)
+        report = Panel(node_report,
+                            box=node_panel_box,
+                            border_style=node_panel_color,
+                            width=width,
+                            expand=expand,
+                            title=f'[{node_panel_color}]{node.name}',
+                            highlight=True
+                       )
+
+        return Padding.indent(report, depth_indent)
 
     @property
     def _execution_stack_depth(self):
