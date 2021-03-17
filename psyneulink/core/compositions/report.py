@@ -89,6 +89,7 @@ import types
 import warnings
 from enum import Enum, Flag, auto
 from io import StringIO
+from typing import Union, Optional
 
 import numpy as np
 from rich import print, box
@@ -840,9 +841,11 @@ class Report:
             trial_num = scheduler.clock.time.trial
             run_report_owner = caller
 
-        # Determine run_mode and get run_report if call is from a Composition or a Mechanism being executed by one
-        if isinstance(caller, Composition) or context.source == ContextFlags.COMPOSITION:
-            simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
+        # Determine run_mode and get run_report
+        # if call is from a Composition or a Mechanism being executed by one              # <- FIX IS THIS NEEDED??
+        if isinstance(caller, Composition) or context.source == ContextFlags.COMPOSITION: # <- FIX IS THIS NEEDED??
+            # simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
+            simulation_mode = self._simulating
             if simulation_mode and self._report_simulations is ReportSimulations.OFF:
                 return
             if simulation_mode:
@@ -1081,7 +1084,7 @@ class Report:
 
         if include_params:
 
-            def param_is_specified(name, specified_set, param_type):
+            def param_is_specified(name: str, specified_set: list, param_type: str) -> Union[str, bool]:
                 """Helper method: check whether param has been specified based on options"""
 
                 from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -1093,7 +1096,7 @@ class Report:
 
                 # Helper methods for testing whether param satisfies specifications -----------------------------
 
-                def get_controller(proj):
+                def get_controller(proj) -> Optional[str]:
                     """Helper method: get modulator (controller) of modulated params"""
                     # if not isinstance(proj.sender.owner, CompositionInterfaceMechanism):
                     if isinstance(proj.sender.owner, ModulatoryMechanism_Base):
@@ -1105,7 +1108,7 @@ class Report:
                     # Recursively call to get ModulatoryMechanism in outer Composition
                     return get_controller(proj.sender.owner.afferents[0])
 
-                def is_modulated():
+                def is_modulated() -> Optional[str]:
                     """Helper method: determine whether parameter is being modulated
                        by checking whether ParameterPort receives aControlProjection
                     """
@@ -1119,10 +1122,8 @@ class Report:
                                     return f'modulated by {controllers_str}'
                     except:
                         print(f'Failed to find {name} on {node.name}')
-                    # return ''
 
-
-                def get_monitor(proj):
+                def get_monitor(proj) -> Union[str,list,None]:
                     """Helper method: get modulator (controller) of modulated params"""
                     # if not isinstance(proj.sender.owner, CompositionInterfaceMechanism):
                     if isinstance(proj.receiver.owner, (ObjectiveMechanism, ModulatoryMechanism_Base)):
@@ -1139,13 +1140,12 @@ class Report:
                         owners = [get_monitor(efferent) for efferent in proj.receiver.owner.efferents]
                         return owners
 
-
-                def is_monitored():
+                def is_monitored() -> Optional[str]:
                     """Helper method: determine whether parameter is being monitored by checking whether OutputPort
                     sends a MappingProjection to an ObjectiveMechanism or  ControlMechanism.
                     """
                     try:
-                        if name is VALUE and isinstance(node, Mechanism):
+                        if name is VALUE and isinstance(node, Mechanism) and param_type is 'node':
                             monitor_names = []
                             for output_port in node.output_ports:
                                 monitors = []
@@ -1161,7 +1161,6 @@ class Report:
                                 return f'monitored by {monitor_str}'
                     except:
                         print(f'Failed to find {name} on {node.name}')
-                    # return ''
 
                 def is_logged():
                     pass
@@ -1189,10 +1188,10 @@ class Report:
                 if any(k in report_params for k in (ReportParams.MODULATED, ReportParams.CONTROLLED)) and mod_str:
                     return control_str
 
-                # FIX: NEED TO FILTER OUT RESPONSES TO FUNCTION VALUE AND TO OBJECTIVE MECHANISM ISELF
                 # Include if param is monitored and ReportParams.MONITORED is specified
-                # FIX: PUT CHECK FOR mech EARLIER??
-                if ReportParams.MONITORED in report_params and monitor_str and param_type is 'node':
+                # FIX: PUT CHECK FOR node EARLIER??
+                # if ReportParams.MONITORED in report_params and monitor_str and param_type is 'node':
+                if ReportParams.MONITORED in report_params and monitor_str:
                     return control_str
 
                 # Include if param is being logged and ReportParams.LOGGED is specified
@@ -1222,17 +1221,26 @@ class Report:
                     param = param_value.__name__
                     param_is_function = True
                 elif isinstance(param_value, (types.FunctionType, types.MethodType)):
-                    param = param_value.__node__.__class__.__name__
-                    param_is_function = True
+                    try:
+                        param = param_value.__node__.__class__.__name__
+                        param_is_function = True
+                    except AttributeError:
+                        param = param_value.__name__
 
                 # Node param(s)
-                elif param_is_specified(param_name, node_params, param_type='node'):
+                qualification = param_is_specified(param_name, node_params, param_type='node')
+                if qualification:
                     # Put in params_string if param is specified or 'params' is specified
                     param_value = params[param_name]
                     if not params_string:
                         # Add header
                         params_string = (f"params:")
-                    params_string += f"\n\t{param_name}: {str(param_value).__str__().strip('[]')}"
+                    param_value_str = str(param_value).__str__().strip('[]')
+                    if isinstance(qualification, str):
+                        qualification = qualification
+                    else:
+                        qualification = ''
+                    params_string += f"\n\t\t{param_name}: {param_value_str}{qualification}"
                     if node_params:
                         node_params.pop(node_params.index(param_name))
                     # Don't include functions in params_string yet (to keep at bottom of report)

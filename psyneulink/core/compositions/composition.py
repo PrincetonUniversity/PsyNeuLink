@@ -8523,6 +8523,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_mode=execution_mode,
                     _comp_ex=_comp_ex,
                     report=report,
+                    report_num=run_report,
+                    report_output=report_output,
+                    report_params=report_params,
                     context=context
                 )
 
@@ -8715,6 +8718,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             execution_mode=False,
                             _comp_ex=False,
                             report=None,
+                            report_num=None,
+                            report_output=None,
+                            report_params=None,
                             context=None
                             ):
         execution_scheduler = context.composition.scheduler
@@ -8751,6 +8757,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 context.remove_flag(ContextFlags.CONTROL)
 
                 report._execution_stack.pop()
+
+                # Report execution
+                report.report_output(self,
+                                     report_num,
+                                     execution_scheduler,
+                                     report_output,
+                                     report_params,
+                                     'node',
+                                     context,
+                                     node=self.controller)
+
 
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
     def execute(
@@ -9121,6 +9138,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         execution_mode=execution_mode,
                         _comp_ex=_comp_ex,
                         report=report,
+                        report_num=run_report,
+                        report_output=report_output,
+                        report_params=report_params,
                         context=context
                     )
             elif self.controller_time_scale == TimeScale.TRIAL:
@@ -9129,6 +9149,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_mode=execution_mode,
                     _comp_ex=_comp_ex,
                     report=report,
+                    report_num=run_report,
+                    report_output=report_output,
+                    report_params=report_params,
                     context=context
                 )
 
@@ -9152,6 +9175,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_mode=execution_mode,
                     _comp_ex=_comp_ex,
                     report=report,
+                    report_num=run_report,
+                    report_output=report_output,
+                    report_params=report_params,
                     context=context
                 )
 
@@ -9199,6 +9225,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             execution_mode=execution_mode,
                             _comp_ex=_comp_ex,
                             report=report,
+                            report_num=run_report,
+                            report_output=report_output,
+                            report_params=report_params,
                             context=context
                         )
                     next_pass_after += 1
@@ -9212,6 +9241,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             execution_mode=execution_mode,
                             _comp_ex=_comp_ex,
                             report=report,
+                            report_num=run_report,
+                            report_output=report_output,
+                            report_params=report_params,
                             context=context
                         )
                     next_pass_before += 1
@@ -9225,6 +9257,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         execution_mode=execution_mode,
                         _comp_ex=_comp_ex,
                         report=report,
+                        report_num=run_report,
+                        report_output=report_output,
+                        report_params=report_params,
                         context=context
                     )
 
@@ -9450,6 +9485,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         execution_mode=execution_mode,
                         _comp_ex=_comp_ex,
                         report=report,
+                        report_num=run_report,
+                        report_output=report_output,
+                        report_params=report_params,
                         context=context
                     )
 
@@ -9484,6 +9522,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_mode=execution_mode,
                     _comp_ex=_comp_ex,
                     report=report,
+                    report_num=run_report,
+                    report_output=report_output,
+                    report_params=report_params,
                     context=context
                 )
 
@@ -9502,6 +9543,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     execution_mode=execution_mode,
                     _comp_ex=_comp_ex,
                     report=report,
+                    report_num=run_report,
+                    report_output=report_output,
+                    report_params=report_params,
                     context=context
                 )
 

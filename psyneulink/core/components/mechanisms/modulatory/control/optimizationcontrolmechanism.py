@@ -28,7 +28,7 @@ maximizing the Expected Value of Control, as described below.
 
 **Expected Value of Control**
 
-The `net_outcome <ControlMechanism.net_outcome>` of an OptmizationControlMechanism, like any `ControlMechanism`
+The `net_outcome <ControlMechanism.net_outcome>` of an OptimizationControlMechanism, like any `ControlMechanism`
 is computed as the difference between the `outcome <ControlMechanism.outcome>` computed by its `objective_mechanism
 <ControlMechanism.objective_mechanism>` and the `costs <ControlMechanism.costs>` of its `control_signals
 <ControlMechanism.control_signals>` for a given `state <OptimizationControlMechanism_State>` (i.e.,
