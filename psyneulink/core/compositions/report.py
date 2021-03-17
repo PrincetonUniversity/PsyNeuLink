@@ -842,8 +842,8 @@ class Report:
             run_report_owner = caller
 
         # Determine run_mode and get run_report
-        # if call is from a Composition or a Mechanism being executed by one              # <- FIX IS THIS NEEDED??
-        if isinstance(caller, Composition) or context.source == ContextFlags.COMPOSITION: # <- FIX IS THIS NEEDED??
+        # if call is from a Composition or a Mechanism being executed by one
+        if isinstance(caller, Composition) or context.source == ContextFlags.COMPOSITION:
             # simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
             simulation_mode = self._simulating
             if simulation_mode and self._report_simulations is ReportSimulations.OFF:
@@ -897,11 +897,12 @@ class Report:
                 try:
                     # Controller, so print and record (since it happens outside the context of a TRIAL
                     # and its TIME_STEPS, so won't be included in those reports
-                    self._rich_progress.console.print(node_report)
-                    if self._record_reports:
-                        with self._recording_console.capture() as capture:
-                            self._recording_console.print(node_report)
-                        self._recorded_reports += capture.get()
+                    if node.composition:
+                        self._rich_progress.console.print(node_report)
+                        if self._record_reports:
+                            with self._recording_console.capture() as capture:
+                                self._recording_console.print(node_report)
+                            self._recorded_reports += capture.get()
                 except AttributeError:
                     # Non-controller, so add to time_step report
                     run_report.time_step_report.append(node_report)
