@@ -651,16 +651,17 @@ class Report:
                 start = True
 
             indent_factor = 2
-            depth_indent = depth_str = ''
+            self._depth_indent_i = self._depth_str_i = ''
             if run_mode is SIMULATION or self._execution_stack_depth:
-                depth_indent = indent_factor * self._execution_stack_depth * ' '
-                depth_str = f' (depth: {self._execution_stack_depth})'
+                self._depth_indent_i = indent_factor * self._execution_stack_depth * ' '
+                self._depth_str_i = f' (depth: {self._execution_stack_depth})'
 
-            id = self._rich_progress.add_task(f"[red]{depth_indent}{comp.name}: {run_mode}ing {depth_str}...",
-                                         total=num_trials,
-                                         start=start,
-                                         visible=visible
-                                         )
+            id = self._rich_progress.add_task(f"[red]{self._depth_indent_i}{comp.name}: "
+                                              f"{run_mode}ing {self._depth_str_i}...",
+                                              total=num_trials,
+                                              start=start,
+                                              visible=visible
+                                              )
 
             self._run_reports[comp][run_mode].append(RunReport(id, num_trials))
             report_num = len(self._run_reports[comp][run_mode]) - 1
@@ -726,11 +727,12 @@ class Report:
 
             # Construct update text
             indent_factor = 2
-            depth_indent = depth_str = ''
+            self._depth_indent = self._depth_str = ''
             if simulation_mode or self._execution_stack_depth:
-                depth_indent = indent_factor * self._execution_stack_depth * ' '
-                depth_str = f' (depth: {self._execution_stack_depth})'
-            update = f'{depth_indent}{caller.name}: {run_mode}ed {trial_num+1}{num_trials_str} trials{depth_str}'
+                self._depth_indent = indent_factor * self._execution_stack_depth * ' '
+                self._depth_str = f' (depth: {self._execution_stack_depth})'
+            update = f'{self._depth_indent}{caller.name}: ' \
+                     f'{run_mode}ed {trial_num+1}{num_trials_str} trials{self._depth_str}'
 
             # Do update
             self._rich_progress.update(run_report.rich_task_id,
@@ -918,7 +920,7 @@ class Report:
                     run_report.time_step_report.append(node_report)
             # Otherwise, just print it to the console (as part of otherwise TERSE report)
             else: # TERSE output
-                self._rich_progress.console.print(f'{depth_indent}{node_report}')
+                self._rich_progress.console.print(node_report)
                 if self._record_reports:
                     with self._recording_console.capture() as capture:
                         self._recording_console.print(node_report)
@@ -1043,6 +1045,11 @@ class Report:
             context of current execution.
         """
 
+        indent_factor = 2
+        depth_indent = self._depth_str = ''
+        if self._simulating or self._execution_stack_depth:
+            depth_indent = indent_factor * self._execution_stack_depth * ' '
+
         # Use TERSE format if that has been specified by report_output (i.e., in the arg of an execution method),
         #   or as the reportOutputPref for a node when USE_PREFS is in effect
         node_pref = convert_to_list(node.reportOutputPref)
@@ -1055,7 +1062,7 @@ class Report:
             indent = '  '
             if hasattr(node, 'composition') and node.composition:
                 indent = ''
-            return f'[{node_panel_color}]{indent}{node.name} executed'
+            return f'[{node_panel_color}]{depth_indent}{indent}{node.name} executed'
 
         # Render input --------------------------------------------------------------------------------------------
 
