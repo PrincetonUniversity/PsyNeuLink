@@ -1052,7 +1052,10 @@ class Report:
         node_params_prefs = node_pref
         if (report_output is ReportOutput.TERSE
                 or (report_output is not ReportOutput.FULL and ReportOutput.TERSE in report_output_pref)):
-            return f'[{node_panel_color}]  {node.name} executed'
+            indent = '  '
+            if hasattr(node, 'composition') and node.composition:
+                indent = ''
+            return f'[{node_panel_color}]{indent}{node.name} executed'
 
         # Render input --------------------------------------------------------------------------------------------
 
