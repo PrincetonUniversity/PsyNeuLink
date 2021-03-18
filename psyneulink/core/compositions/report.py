@@ -100,7 +100,8 @@ from rich.progress import Progress as RichProgress
 
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS, VALUE
+from psyneulink.core.globals.log import LogCondition
+from psyneulink.core.globals.keywords import FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS, TRIAL, VALUE
 from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = ['Report', 'ReportOutput', 'ReportParams', 'ReportProgress', 'ReportDevices', 'ReportSimulations',
@@ -1143,6 +1144,7 @@ class Report:
                     sends a MappingProjection to an ObjectiveMechanism or  ControlMechanism.
                     """
                     try:
+                        # Restrict to looking for VALUE parameter on nodes (i.e., not functions)
                         if name in VALUE and isinstance(node, Mechanism) and param_type is 'node':
                             monitor_names = []
                             for output_port in node.output_ports:
@@ -1160,8 +1162,13 @@ class Report:
                     except:
                         print(f'Failed to find {name} on {node.name}')
 
-                def is_logged():
-                    pass
+                def is_logged(node, name):
+                    try:
+                        if (LogCondition.from_string(node.log.loggable_items[name])
+                                & (LogCondition.TRIAL | LogCondition.RUN)):
+                            return True
+                    except KeyError:
+                        pass
 
                 # Evaluate tests: -----------------------------------------------------------------------
 
@@ -1193,8 +1200,9 @@ class Report:
                     return control_str
 
                 # Include if param is being logged and ReportParams.LOGGED is specified
-                if report_params is ReportParams.LOGGED:
-                    pass
+                if ReportParams.LOGGED in report_params:
+                    # FIX: RESTRICT VALUE AND VARIABLE TO MECHANISM (USE FUNC_VALUE AND FUNC_VARIBALE FOR FUNCTION)
+                    return is_logged(node, name)
 
                 return False
 
