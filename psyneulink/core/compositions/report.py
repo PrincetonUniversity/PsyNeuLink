@@ -876,7 +876,7 @@ class Report:
             #  if FULL output, report trial number and Composition's input
             #  note:  header for Trial Panel is constructed under 'content is Trial' case below
             if trial_report_type is ReportOutput.FULL:
-                run_report.trial_report = [f'\n[bold {trial_panel_color}]{depth_indent * " "}input:[/]'
+                run_report.trial_report = [f'\n[bold {trial_panel_color}]input:[/]'
                                            f' {[i.tolist() for i in caller.get_input_values(context)]}']
             else: # TERSE output
                 # print trial title and separator + input array to Composition
@@ -1009,10 +1009,13 @@ class Report:
             context of current execution.
         """
 
-        depth_indent = 0
+        indent = '  '
         if hasattr(node, 'composition') and node.composition:
-            if self._simulating or self._execution_stack_depth:
-                depth_indent = self._indent_factor * self._execution_stack_depth
+            indent = ''
+
+        depth_indent = 0
+        if self._simulating or self._execution_stack_depth:
+            depth_indent = self._indent_factor * self._execution_stack_depth
 
         # Use TERSE format if that has been specified by report_output (i.e., in the arg of an execution method),
         #   or as the reportOutputPref for a node when USE_PREFS is in effect
@@ -1023,7 +1026,6 @@ class Report:
         node_params_prefs = node_pref
         if (report_output is ReportOutput.TERSE
                 or (report_output is not ReportOutput.FULL and ReportOutput.TERSE in report_output_pref)):
-            indent = '  '
             return f'[{node_panel_color}]{depth_indent * " "}{indent}{node.name} executed'
 
         # Render input --------------------------------------------------------------------------------------------
@@ -1296,6 +1298,10 @@ class Report:
                             title=f'[{node_panel_color}]{node.name}',
                             highlight=True
                        )
+
+        # Don't indent for nodes in Panels (Composition.controller is not in a Panel)
+        if not hasattr(node, 'composition'):
+            depth_indent = 0
 
         return Padding.indent(report, depth_indent)
 
