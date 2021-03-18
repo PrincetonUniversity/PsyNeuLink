@@ -863,7 +863,7 @@ class Report:
         if isinstance(caller, Composition) or context.source == ContextFlags.COMPOSITION:
             simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
             # simulation_mode = self._simulating # <- FIX: MAY CAUSE INDENTATIN PROBLEMS
-            if simulation_mode and self._report_simulations is ReportSimulations.OFF:
+            if (simulation_mode or self._simulating) and self._report_simulations is ReportSimulations.OFF:
                 return
             if simulation_mode:
                 run_mode = SIMULATION
