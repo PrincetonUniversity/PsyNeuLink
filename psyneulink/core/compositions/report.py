@@ -94,13 +94,13 @@ from typing import Union, Optional
 import numpy as np
 from rich import print, box
 from rich.console import Console, RenderGroup
-from rich.panel import Panel
 from rich.padding import Padding
+from rich.panel import Panel
 from rich.progress import Progress as RichProgress
 
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS, VALUE, VARIABLE
+from psyneulink.core.globals.keywords import FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS, VALUE
 from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = ['Report', 'ReportOutput', 'ReportParams', 'ReportProgress', 'ReportDevices', 'ReportSimulations',
@@ -1237,7 +1237,7 @@ class Report:
                         qualification = qualification
                     else:
                         qualification = ''
-                    params_string += f"\n\t\t{param_name}: {param_value_str}{qualification}"
+                    params_string += f"\n\t{param_name}: {param_value_str}{qualification}"
                     if node_params:
                         node_params.pop(node_params.index(param_name))
                     # Don't include functions in params_string yet (to keep at bottom of report)
