@@ -651,7 +651,7 @@ class Report:
             else:
                 start = True
 
-            indent_factor = 2
+            indent_factor = 5
             self._depth_indent_i = self._depth_str_i = ''
             if run_mode is SIMULATION or self._execution_stack_depth:
                 self._depth_indent_i = indent_factor * self._execution_stack_depth * ' '
@@ -727,7 +727,7 @@ class Report:
                 num_trials_str = ''
 
             # Construct update text
-            indent_factor = 2
+            indent_factor = 5
             self._depth_indent = self._depth_str = ''
             if simulation_mode or self._execution_stack_depth:
                 self._depth_indent = indent_factor * self._execution_stack_depth * ' '
@@ -862,7 +862,7 @@ class Report:
             run_report = self._run_reports[run_report_owner][run_mode][report_num]
 
         # FIX: GENERALIZE THIS, PUT AS ATTRIBUTE ON Report, AND THEN REFERENCE THAT IN report_progress
-        indent_factor = 2
+        indent_factor = 5
         depth_indent = 0
         if simulation_mode or self._execution_stack_depth:
             depth_indent = indent_factor * self._execution_stack_depth
@@ -1053,7 +1053,7 @@ class Report:
             context of current execution.
         """
 
-        indent_factor = 2
+        indent_factor = 5
         depth_indent = 0
         if self._simulating or self._execution_stack_depth:
             depth_indent = indent_factor * self._execution_stack_depth
