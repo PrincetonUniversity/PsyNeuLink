@@ -842,7 +842,7 @@ class Report:
                     # Return if it is OFF
                     if node_report_type is ReportOutput.OFF:
                         return
-            trial_num = scheduler.clock.time.trial
+            trial_num = scheduler.get_clock(context).time.trial
             run_report_owner = caller
 
         # Determine run_mode and get run_report
@@ -889,7 +889,7 @@ class Report:
                 run_report.time_step_report = [] # Contains rich.Panel for each node executed in time_step
             elif nodes_to_report: # TERSE output
                 time_step_header = f'[{time_step_panel_color}]' \
-                                   f'{depth_indent} Time Step {scheduler.clock.time.time_step} ---------'
+                                   f'{depth_indent} Time Step {scheduler.get_clock(context).time.time_step} ---------'
                 self._rich_progress.console.print(time_step_header)
                 if self._record_reports:
                     self._recorded_reports += time_step_header
@@ -934,7 +934,7 @@ class Report:
                                                            border_style=time_step_panel_color,
                                                            box=time_step_panel_box,
                                                            title=f'[bold {time_step_panel_color}]\nTime Step '
-                                                                 f'{scheduler.clock.time.time_step}[/]',
+                                                                 f'{scheduler.get_clock(context).time.time_step}[/]',
                                                            expand=False))
 
         elif content is 'trial':
