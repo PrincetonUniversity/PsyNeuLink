@@ -8886,12 +8886,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     report_to_devices=report_to_devices,
                     context=context) as report:
 
+            execution_scheduler = scheduler or self.scheduler
+
+            # TODO: scheduler counts and clocks were not expected to be
+            # used prior to Scheduler.run calls. Remove this hack when
+            # accommodation is written
+            execution_scheduler._init_counts(context.execution_id, base_context.execution_id)
+
             # FIX: Call Report with context and run_report handle this in there 3/3/21
             # If execute method is called directly, need to create Report object for reporting
             if not (context.source & ContextFlags.COMPOSITION) or run_report is None:
                 run_report = report.start_run_report(comp=self, num_trials=1, context=context)
-
-            execution_scheduler = scheduler or self.scheduler
 
             # ASSIGNMENTS **************************************************************************************************
 
