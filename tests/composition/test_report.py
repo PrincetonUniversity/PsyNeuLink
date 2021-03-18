@@ -37,8 +37,7 @@ class TestReport():
 
         comp.run(report_output=ReportOutput.USE_PREFS, report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
-        expected_output = '\'\\nCOMP TRIAL 0 ====================\\n Time Step 0 ---------\\n<rich.panel.Panel object at 0x7fa0f0e121d0>\\n Time Step 1 ---------\\n Time Step 2 ---------\\n<rich.panel.Panel object at 0x7fa0f15ee9d0>\\n\''
-        # expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\n╭───── a ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n Time Step 1 ---------\n Time Step 2 ---------\n╭───── c ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n'
+        expected_output = '\nCOMP TRIAL 0 ====================\n Time Step 0 ---------\n╭───── a ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n Time Step 1 ---------\n Time Step 2 ---------\n╭───── c ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\n'
         assert actual_output == expected_output
 
         comp.run(report_output=ReportOutput.USE_PREFS,
@@ -330,7 +329,7 @@ class TestReport():
 
         f = io.StringIO()
         with contextlib.redirect_stdout(f):
-            t.execute(1)
+            t.execute(1, report_output=ReportOutput.FULL)
         output = f.getvalue()
 
         assert 'input: 1.0' in output
