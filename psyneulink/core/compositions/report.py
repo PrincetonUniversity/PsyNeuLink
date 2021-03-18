@@ -100,7 +100,7 @@ from rich.progress import Progress as RichProgress
 
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS, VALUE
+from psyneulink.core.globals.keywords import FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS, VALUE, VARIABLE
 from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = ['Report', 'ReportOutput', 'ReportParams', 'ReportProgress', 'ReportDevices', 'ReportSimulations',
@@ -864,10 +864,10 @@ class Report:
                 sim_str = ''
             run_report = self._run_reports[run_report_owner][run_mode][report_num]
 
-        # FIX: GENERALIZE THIS, PUT AS ATTRIBUTE ON Report, AND THEN REFERENCE THAT IN report_progress
-        depth_indent = 0
-        if simulation_mode or self._execution_stack_depth:
-            depth_indent = self._indent_factor * self._execution_stack_depth
+            # FIX: GENERALIZE THIS, PUT AS ATTRIBUTE ON Report, AND THEN REFERENCE THAT IN report_progress
+            depth_indent = 0
+            if simulation_mode or self._execution_stack_depth:
+                depth_indent = self._indent_factor * self._execution_stack_depth
 
         # Construct output report -----------------------------------------------------------------------------
 
@@ -1143,7 +1143,7 @@ class Report:
                     sends a MappingProjection to an ObjectiveMechanism or  ControlMechanism.
                     """
                     try:
-                        if name is VALUE and isinstance(node, Mechanism) and param_type is 'node':
+                        if name in VALUE and isinstance(node, Mechanism) and param_type is 'node':
                             monitor_names = []
                             for output_port in node.output_ports:
                                 monitors = []
