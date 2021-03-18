@@ -224,7 +224,7 @@ class TestReport():
                   report_to_devices=ReportDevices.DIVERT
                   )
         actual_output = ocomp.rich_diverted_reports
-        expected_output = '\nicomp TRIAL 0 ====================\n Time Step 0 ---------\n  ia executed\n Time Step 0 ---------\n  ib executed\n Time Step 0 ---------\n  iController Objective Mechanism executed\nicomp TRIAL 0 ====================\n Time Step 0 ---------\n  ia executed\n Time Step 0 ---------\n  ib executed\n Time Step 0 ---------\n  iController Objective Mechanism executed\nocomp TRIAL 0 ====================\n Time Step 0 ---------\nicomp TRIAL 0 ====================\n Time Step 0 ---------\n  ia executed\n Time Step 0 ---------\n  ib executed\n Time Step 0 ---------\n  iController Objective Mechanism executed\n  icomp executed\n Time Step 1 ---------\n  oController Objective Mechanism executed\n'
+        expected_output = '\noController executed\nocomp TRIAL 0 ====================\n Time Step 0 ---------\n    icomp TRIAL 0 ====================\n     Time Step 0 ---------\n      ia executed\n     Time Step 1 ---------\n      ib executed\n     Time Step 2 ---------\n      iController Objective Mechanism executed\n    iController executed\n  icomp executed\n Time Step 1 ---------\n  oController Objective Mechanism executed\n'
         assert actual_output == expected_output
 
         ocomp.run(inputs={icomp:-2},
@@ -234,7 +234,7 @@ class TestReport():
                   report_to_devices=ReportDevices.DIVERT
                   )
         actual_output = ocomp.rich_diverted_reports
-        expected_output = 'ocomp: Executed 1 of 1 trials\n    icomp: Executed 1 of 1 trials (depth: 2)\n    icomp: Executed 1 of 1 trials (depth: 2)\n  icomp: Executed 1 of 1 trials (depth: 1)\n'
+        expected_output = 'ocomp: Executed 1 of 1 trials\n        icomp: Executed 1 of 1 trials (depth: 2)\n        icomp: Executed 1 of 1 trials (depth: 2)\n    icomp: Executed 1 of 1 trials (depth: 1)\n'
         assert actual_output == expected_output
 
         ocomp.run(inputs={icomp:-2},
@@ -244,7 +244,7 @@ class TestReport():
                   report_to_devices=ReportDevices.DIVERT
                   )
         actual_output = ocomp.rich_diverted_reports
-        expected_output = '\nicomp TRIAL 0 ====================\n Time Step 0 ---------\n  ia executed\n Time Step 0 ---------\n  ib executed\n Time Step 0 ---------\n  iController Objective Mechanism executed\nicomp TRIAL 0 ====================\n Time Step 0 ---------\n  ia executed\n Time Step 0 ---------\n  ib executed\n Time Step 0 ---------\n  iController Objective Mechanism executed\nocomp TRIAL 0 ====================\n Time Step 0 ---------\nicomp TRIAL 0 ====================\n Time Step 0 ---------\n  ia executed\n Time Step 0 ---------\n  ib executed\n Time Step 0 ---------\n  iController Objective Mechanism executed\n  icomp executed\n Time Step 1 ---------\n  oController Objective Mechanism executed\nocomp: Executed 1 of 1 trials\n    icomp: Executed 1 of 1 trials (depth: 2)\n    icomp: Executed 1 of 1 trials (depth: 2)\n  icomp: Executed 1 of 1 trials (depth: 1)\n'
+        expected_output = '\noController executed\nocomp TRIAL 0 ====================\n Time Step 0 ---------\n    icomp TRIAL 2 ====================\n     Time Step 0 ---------\n      ia executed\n     Time Step 1 ---------\n      ib executed\n     Time Step 2 ---------\n      iController Objective Mechanism executed\n    iController executed\n  icomp executed\n Time Step 1 ---------\n  oController Objective Mechanism executed\nocomp: Executed 1 of 1 trials\n        icomp: Executed 1 of 1 trials (depth: 2)\n        icomp: Executed 1 of 1 trials (depth: 2)\n    icomp: Executed 1 of 1 trials (depth: 1)\n'
         assert actual_output == expected_output
 
         ocomp.run(inputs={icomp:-2},

@@ -100,8 +100,8 @@ from rich.progress import Progress as RichProgress
 
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.keywords import FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS, VALUE
 from psyneulink.core.globals.log import LogCondition
-from psyneulink.core.globals.keywords import FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS, TRIAL, VALUE
 from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = ['Report', 'ReportOutput', 'ReportParams', 'ReportProgress', 'ReportDevices', 'ReportSimulations',
@@ -446,8 +446,8 @@ class Report:
         in `_execution_stack <Report._execution_stack>`.
 
     _simulating : bool : default False
-        True if there are any `controllers <Composition_Controller>`
-        in `_execution_stack <Report._execution_stack>`.
+        True if there are any `controllers <Composition_Controller>` in `_execution_stack <Report._execution_stack>`
+        (that is, current call is nested under a simulation of an outer Composition).
 
     _indent_factor : int : default 2
         amount by which to indent for each level of `nested compositions <Composition_Nested>`
