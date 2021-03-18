@@ -449,6 +449,14 @@ class Report:
         True if there are any `controllers <Composition_Controller>` in `_execution_stack <Report._execution_stack>`
         (that is, current call is nested under a simulation of an outer Composition).
 
+        .. technical_note::
+           This is distinct from the state of context.runmode (and used to assign ``run_mode`` in several of the
+           methods on Report), which identifies whether the inner-most Composition is currently executing a simulation;
+           note that context.runmode is only set to ContextFlags.SIMULATION_MODE once a controller has begun calling
+           for simulations, and that it itself is called with context.runmode set to ContextFlags.DEFAULT_MODE; under
+           that condition, _simulating may be True, while the ``run_mode`` variable set in a method may be
+           SIMULATION.
+
     _indent_factor : int : default 2
         amount by which to indent for each level of `nested compositions <Composition_Nested>`
         and/or `simulations <OptimizationControlMechanism_Execution>`.
