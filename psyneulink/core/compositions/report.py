@@ -448,6 +448,10 @@ class Report:
         True if there are any `controllers <Composition_Controller>`
         in `_execution_stack <Report._execution_stack>`.
 
+    _indent_factor : int : default 2
+        amount by which to indent for each level of `nested compositions <Composition_Nested>`
+        and/or `simulations <OptimizationControlMechanism_Execution>`.
+
     _ref_count : int : default 0
         tracks how many times object has been referenced;  counter is incremented on each context __enter__
         and decrements on each __exit__, to ensure stop progress is not called until all references have been released.
@@ -462,8 +466,10 @@ class Report:
                 report_progress:ReportProgress=ReportProgress.OFF,
                 report_simulations:ReportSimulations=ReportSimulations.OFF,
                 report_to_devices:(list(ReportDevices.__members__), list)=ReportDevices.CONSOLE,
-                context:Context=None
+                indent_factor:int = 4,
+                context:Optional[Context]=None
                 ) -> 'Report':
+
         if cls._instance is None:
 
             # Validate arguments
@@ -502,6 +508,7 @@ class Report:
             cls._use_pnl_view = ReportDevices.PNL_VIEW in cls._report_to_devices
 
             cls._execution_stack = [caller]
+            cls._indent_factor = indent_factor
 
             # Instantiate rich progress context object
             # - it is not started until the self.start_run_report() method is called
@@ -601,14 +608,12 @@ class Report:
 
         RunReport id : int
             id is stored in `_run_reports <Report._run_reports>`.
-
         """
 
         if not comp:
             assert False, "Report.start_progress() called without a Composition specified in 'comp'."
         if num_trials is None:
             assert False, "Report.start_progress() called with num_trials unspecified."
-
 
         # Generate space before beginning of output
         if self._use_rich and not self._run_reports:
@@ -651,10 +656,9 @@ class Report:
             else:
                 start = True
 
-            indent_factor = 5
             self._depth_indent_i = self._depth_str_i = ''
             if run_mode is SIMULATION or self._execution_stack_depth:
-                self._depth_indent_i = indent_factor * self._execution_stack_depth * ' '
+                self._depth_indent_i = self._indent_factor * self._execution_stack_depth * ' '
                 self._depth_str_i = f' (depth: {self._execution_stack_depth})'
 
             id = self._rich_progress.add_task(f"[red]{self._depth_indent_i}{comp.name}: "
@@ -727,10 +731,9 @@ class Report:
                 num_trials_str = ''
 
             # Construct update text
-            indent_factor = 5
             self._depth_indent = self._depth_str = ''
             if simulation_mode or self._execution_stack_depth:
-                self._depth_indent = indent_factor * self._execution_stack_depth * ' '
+                self._depth_indent = self._indent_factor * self._execution_stack_depth * ' '
                 self._depth_str = f' (depth: {self._execution_stack_depth})'
             update = f'{self._depth_indent}{caller.name}: ' \
                      f'{run_mode}ed {trial_num+1}{num_trials_str} trials{self._depth_str}'
@@ -862,10 +865,9 @@ class Report:
             run_report = self._run_reports[run_report_owner][run_mode][report_num]
 
         # FIX: GENERALIZE THIS, PUT AS ATTRIBUTE ON Report, AND THEN REFERENCE THAT IN report_progress
-        indent_factor = 5
         depth_indent = 0
         if simulation_mode or self._execution_stack_depth:
-            depth_indent = indent_factor * self._execution_stack_depth
+            depth_indent = self._indent_factor * self._execution_stack_depth
 
         # Construct output report -----------------------------------------------------------------------------
 
@@ -930,17 +932,13 @@ class Report:
         elif content is 'time_step':
             if nodes_to_report and trial_report_type is ReportOutput.FULL:
                 run_report.trial_report.append('')
-                run_report.trial_report.append(
-                    Padding.indent(
-                        Panel(RenderGroup(*run_report.time_step_report),
-                              # box=box.HEAVY,
-                              border_style=time_step_panel_color,
-                              box=time_step_panel_box,
-                              title=f'[bold {time_step_panel_color}]\nTime Step '
-                                    f'{scheduler.get_clock(context).time.time_step}[/]',
-                              expand=False),
-                        depth_indent)
-                )
+                run_report.trial_report.append(Panel(RenderGroup(*run_report.time_step_report),
+                                                     # box=box.HEAVY,
+                                                     border_style=time_step_panel_color,
+                                                     box=time_step_panel_box,
+                                                     title=f'[bold {time_step_panel_color}]\nTime Step '
+                                                           f'{scheduler.get_clock(context).time.time_step}[/]',
+                                                     expand=False))
 
         elif content is 'trial':
             if trial_report_type is ReportOutput.FULL:
@@ -967,49 +965,6 @@ class Report:
             assert False, f"Bad 'content' argument in call to Report.report_output() for {caller.name}: {content}."
 
         return
-
-    def _print_and_record_reports(self, report_type:str, context:Context, run_report:RunReport=None):
-        """
-        Conveys output reporting to device specified in `_report_to_devices <Report._report_to_devices>`.
-        Called by `report_output <Report.report_output>` and `report_progress <Report.report_progress>`
-
-        Arguments
-        ---------
-
-        run_report : int
-            id of RunReport for caller[run_mode] in self._run_reports to use for reporting.
-        """
-
-        # Print and record output report as they are created (progress reports are printed by _rich_progress.console)
-        if report_type is OUTPUT_REPORT:
-            # Print output reports as they are created
-            if (self._rich_console or self._rich_divert) and run_report.trial_report:
-                self._rich_progress.console.print(run_report.trial_report)
-                self._rich_progress.console.print('')
-            # Record output reports as they are created
-            if len(self._execution_stack)==1 and self._report_output is not ReportOutput.OFF:
-                    if self._rich_divert:
-                        self._rich_diverted_reports += (f'\n{self._rich_progress.console.file.getvalue()}')
-                    if self._record_reports:
-                        with self._recording_console.capture() as capture:
-                            self._recording_console.print(run_report.trial_report)
-                        self._recorded_reports += capture.get()
-
-        # Record progress after execution of outer-most Composition
-        if len(self._execution_stack)==1:
-            if report_type is PROGRESS_REPORT:
-                # add progress report to any already recorded for output
-                progress_reports = '\n'.join([t.description for t in self._rich_progress.tasks])
-                if self._rich_divert:
-                    self._rich_diverted_reports += progress_reports + '\n'
-                if self._record_reports:
-                    self._recorded_reports += progress_reports + '\n'
-            outer_comp = self._execution_stack[0]
-            # store recorded reports on outer-most Composition
-            if self._rich_divert:
-                outer_comp.rich_diverted_reports = self._rich_diverted_reports
-            if self._record_reports:
-                outer_comp.recorded_reports = self._recorded_reports
 
     def node_execution_report(self,
                               node,
@@ -1054,10 +1009,10 @@ class Report:
             context of current execution.
         """
 
-        indent_factor = 5
         depth_indent = 0
-        if self._simulating or self._execution_stack_depth:
-            depth_indent = indent_factor * self._execution_stack_depth
+        if hasattr(node, 'composition') and node.composition:
+            if self._simulating or self._execution_stack_depth:
+                depth_indent = self._indent_factor * self._execution_stack_depth
 
         # Use TERSE format if that has been specified by report_output (i.e., in the arg of an execution method),
         #   or as the reportOutputPref for a node when USE_PREFS is in effect
@@ -1069,8 +1024,6 @@ class Report:
         if (report_output is ReportOutput.TERSE
                 or (report_output is not ReportOutput.FULL and ReportOutput.TERSE in report_output_pref)):
             indent = '  '
-            if hasattr(node, 'composition') and node.composition:
-                indent = ''
             return f'[{node_panel_color}]{depth_indent * " "}{indent}{node.name} executed'
 
         # Render input --------------------------------------------------------------------------------------------
@@ -1345,6 +1298,49 @@ class Report:
                        )
 
         return Padding.indent(report, depth_indent)
+
+    def _print_and_record_reports(self, report_type:str, context:Context, run_report:RunReport=None):
+        """
+        Conveys output reporting to device specified in `_report_to_devices <Report._report_to_devices>`.
+        Called by `report_output <Report.report_output>` and `report_progress <Report.report_progress>`
+
+        Arguments
+        ---------
+
+        run_report : int
+            id of RunReport for caller[run_mode] in self._run_reports to use for reporting.
+        """
+
+        # Print and record output report as they are created (progress reports are printed by _rich_progress.console)
+        if report_type is OUTPUT_REPORT:
+            # Print output reports as they are created
+            if (self._rich_console or self._rich_divert) and run_report.trial_report:
+                self._rich_progress.console.print(run_report.trial_report)
+                self._rich_progress.console.print('')
+            # Record output reports as they are created
+            if len(self._execution_stack)==1 and self._report_output is not ReportOutput.OFF:
+                    if self._rich_divert:
+                        self._rich_diverted_reports += (f'\n{self._rich_progress.console.file.getvalue()}')
+                    if self._record_reports:
+                        with self._recording_console.capture() as capture:
+                            self._recording_console.print(run_report.trial_report)
+                        self._recorded_reports += capture.get()
+
+        # Record progress after execution of outer-most Composition
+        if len(self._execution_stack)==1:
+            if report_type is PROGRESS_REPORT:
+                # add progress report to any already recorded for output
+                progress_reports = '\n'.join([t.description for t in self._rich_progress.tasks])
+                if self._rich_divert:
+                    self._rich_diverted_reports += progress_reports + '\n'
+                if self._record_reports:
+                    self._recorded_reports += progress_reports + '\n'
+            outer_comp = self._execution_stack[0]
+            # store recorded reports on outer-most Composition
+            if self._rich_divert:
+                outer_comp.rich_diverted_reports = self._rich_diverted_reports
+            if self._record_reports:
+                outer_comp.recorded_reports = self._recorded_reports
 
     @property
     def _execution_stack_depth(self):
