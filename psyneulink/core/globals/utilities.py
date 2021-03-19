@@ -96,21 +96,19 @@ import copy
 import inspect
 import logging
 import numbers
-import psyneulink
 import re
 import time
-import warnings
-import weakref
 import types
 import typing
-import typecheck as tc
-
-from enum import Enum, EnumMeta, IntEnum
-from collections.abc import Mapping
+import warnings
+import weakref
 from collections import UserDict, UserList
+from collections.abc import Mapping
+from enum import Enum, EnumMeta, IntEnum
 from itertools import chain, combinations
 
 import numpy as np
+import typecheck as tc
 
 from psyneulink.core.globals.keywords import \
     comparison_operators, DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
@@ -548,6 +546,9 @@ def iscompatible(candidate, reference=None, **kargs):
                         candidate = np.asarray(candidate)
                     if isinstance(reference, np.matrix):
                         reference = np.asarray(reference)
+                    if (isinstance(candidate, np.ndarray) and isinstance(reference, np.ndarray)
+                            and candidate.shape == reference.shape):
+                        return True
                     cr = zip(candidate, reference)
                     if all(iscompatible(c, r, **kargs) for c, r in cr):
                         return True
