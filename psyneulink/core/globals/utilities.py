@@ -96,19 +96,21 @@ import copy
 import inspect
 import logging
 import numbers
+import psyneulink
 import re
 import time
-import types
-import typing
 import warnings
 import weakref
-from collections import UserDict, UserList
-from collections.abc import Mapping
+import types
+import typing
+import typecheck as tc
+
 from enum import Enum, EnumMeta, IntEnum
+from collections.abc import Mapping
+from collections import UserDict, UserList
 from itertools import chain, combinations
 
 import numpy as np
-import typecheck as tc
 
 from psyneulink.core.globals.keywords import \
     comparison_operators, DISTANCE_METRICS, EXPONENTIAL, GAUSSIAN, LINEAR, MATRIX_KEYWORD_VALUES, NAME, SINUSOID, VALUE
