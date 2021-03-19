@@ -9852,6 +9852,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_parsed_variable(self, *args, **kwargs):
         raise TypeError(f'_get_parsed_variable unsupported for {self.__class__.__name__}')
 
+    def _delete_contexts(self, *contexts, check_simulation_storage=False, visited=None):
+        super()._delete_contexts(*contexts, check_simulation_storage=check_simulation_storage, visited=visited)
+
+        for c in contexts:
+            self.scheduler._delete_counts(c.execution_id)
 
     # ******************************************************************************************************************
     #                                           LLVM
