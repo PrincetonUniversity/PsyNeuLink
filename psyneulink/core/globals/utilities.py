@@ -548,9 +548,6 @@ def iscompatible(candidate, reference=None, **kargs):
                         candidate = np.asarray(candidate)
                     if isinstance(reference, np.matrix):
                         reference = np.asarray(reference)
-                    if (isinstance(candidate, np.ndarray) and isinstance(reference, np.ndarray)
-                            and candidate.shape == reference.shape):
-                        return True
                     cr = zip(candidate, reference)
                     if all(iscompatible(c, r, **kargs) for c, r in cr):
                         return True
