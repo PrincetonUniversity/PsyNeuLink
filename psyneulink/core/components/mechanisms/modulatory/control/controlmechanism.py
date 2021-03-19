@@ -560,24 +560,26 @@ Class Reference
 
 """
 
-import copy
 import collections
+import copy
 import itertools
-import numpy as np
 import threading
-import typecheck as tc
+import uuid
 import warnings
 
+import numpy as np
+import typecheck as tc
+
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import Function_Base, is_function_type
 from psyneulink.core.components.functions.combinationfunctions import LinearCombination
-from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
+from psyneulink.core.components.functions.function import Function_Base, is_function_type
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
-from psyneulink.core.components.ports.port import Port, _parse_port_spec
-from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
+from psyneulink.core.components.ports.port import Port, _parse_port_spec
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, \
@@ -587,7 +589,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, convert_to_np_array, copy_iterable_with_shared, is_iterable
+from psyneulink.core.globals.utilities import ContentAddressableList, convert_to_list, convert_to_np_array, is_iterable
 
 __all__ = [
     'CONTROL_ALLOCATION', 'GATING_ALLOCATION', 'ControlMechanism', 'ControlMechanismError', 'ControlMechanismRegistry',
@@ -1766,8 +1768,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
             except KeyError:
                 sim_num = 0
                 self._sim_counts[context.execution_id] = 1
-
-        return '{0}{1}-{2}'.format(context.execution_id, EID_SIMULATION, sim_num)
+        # return '{0}{1}-{2}'.format(context.execution_id, EID_SIMULATION, sim_num)
+        return '{0}{1}-{2}-{3}'.format(context.execution_id, EID_SIMULATION, sim_num, uuid.uuid4())
 
     @property
     def _dependent_components(self):
