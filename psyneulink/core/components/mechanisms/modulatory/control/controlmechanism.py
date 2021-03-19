@@ -566,6 +566,7 @@ import itertools
 import numpy as np
 import threading
 import typecheck as tc
+import uuid
 import warnings
 
 from psyneulink.core import llvm as pnlvm
@@ -1758,7 +1759,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             self.__sim_count_lock = threading.Lock()
             return self.__sim_count_lock
 
-    def get_next_sim_id(self, context):
+    def get_next_sim_id(self, context, allocation=None):
         with self._sim_count_lock:
             try:
                 sim_num = self._sim_counts[context.execution_id]
@@ -1767,7 +1768,20 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 sim_num = 0
                 self._sim_counts[context.execution_id] = 1
 
-        return '{0}{1}-{2}'.format(context.execution_id, EID_SIMULATION, sim_num)
+        try:
+            # should always be called when a composition defined here,
+            # but just in case
+            composition = context.composition.name
+        except AttributeError:
+            composition = None
+
+        # NOTE: anything in square brackets is removed from
+        # rich/console/reporting Report.report_output
+        return (
+            f'{context.execution_id}{EID_SIMULATION}'
+            f'{{simulator: {composition}, num: {sim_num},'
+            f' allocation: {allocation}, uuid: {uuid.uuid4()}}}'
+        )
 
     @property
     def _dependent_components(self):
