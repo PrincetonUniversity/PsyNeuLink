@@ -971,10 +971,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _set_up_simulation(self, base_context=Context(execution_id=None), control_allocation=None):
         sim_context = copy.copy(base_context)
-        sim_context.execution_id = self.get_next_sim_id(base_context)
-
-        if control_allocation is not None:
-            sim_context.execution_id += f'-{control_allocation}'
+        sim_context.execution_id = self.get_next_sim_id(base_context, control_allocation)
 
         try:
             self.parameters.simulation_ids._get(base_context).append(sim_context.execution_id)
