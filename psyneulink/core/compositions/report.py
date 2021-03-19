@@ -92,6 +92,7 @@ from io import StringIO
 from typing import Union, Optional
 
 import numpy as np
+
 from rich import print, box
 from rich.console import Console, RenderGroup
 from rich.padding import Padding
