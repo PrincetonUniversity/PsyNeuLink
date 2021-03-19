@@ -28,14 +28,26 @@ additional details):
 .. _PreferenceSet_reportOutputPref:
 
 * **reportOutputPref** (`ReportOutput`, *PARAMS*, str, list): default ReportOutput.OFF) - enables/disables and
-  determines format and content for reporting execution of the `Component` (see `ReportOutput` for options). If
-  *PARAMS* is specified, then `ReportOutput.FULL` is used automatically (rather than the default, `ReportOutput.OFF`),
-  and the Component's `Parameters` are included along with its input and output.  A list of specific Parameters of
-  the Component and/or its `function <Component_Function>` can also be specified, in which case only those are
-  included. If the Component is a `Mechanism` executed within a `Composition`, its preference is overridden
-  by the **report_output** argument specified in any of the Composition's `execution methods
-  <Composition_Execution_Methods>` unless ReportOutput.USE_PREFS is specified in the argument; see below for
-  examples and `execution reporting <Composition_Execution_Reporting>` for additional details.
+  determines format and content for reporting execution of the `Component` (see `ReportOutput` for options). The
+  following options can be used:
+
+  * `ReportOutput.FULL` or *PARAMS* - when output is reported for the Compnents, its input and output as well as
+    the value of all of its `Parameters` are reported.
+
+  * `ReportOutput.TERSE` - when output is reported for the Compnents, on input and output as well as
+    the value of all of its `Parameters` are reported.
+    XXX
+      and the Component's `Parameters` are included along with its input and output.  A list of specific Parameters of
+      the Component and/or its `function <Component_Function>` can also be specified, in which case only those are
+      included. If the Component is a `Mechanism` executed within a `Composition`, its preference is overridden
+      by the **report_output** argument specified in any of the Composition's `execution methods
+      <Composition_Execution_Methods>` unless ReportOutput.USE_PREFS is specified in the argument; see below for
+      examples and `execution reporting <Composition_Execution_Reporting>` for additional details.
+
+  .. note::
+     the reportOutputPref setting(s) for a Component only take effect when the Component is executed on it own
+     (using its `execute method <Component_Execution>` or if `ReportOutput.USE_PREFS` is specified in the
+     **report_output** argument of a Composition's `execution method <Composition_ExecutionMethods>`.
 
 * **logPref** (`LogCondition` : default LogCondition.OFF) - sets `LogCondition` for a given Component;
 

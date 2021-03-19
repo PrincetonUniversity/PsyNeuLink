@@ -92,7 +92,6 @@ from io import StringIO
 from typing import Union, Optional
 
 import numpy as np
-
 from rich import print, box
 from rich.console import Console, RenderGroup
 from rich.padding import Padding
@@ -106,7 +105,7 @@ from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = ['Report', 'ReportOutput', 'ReportParams', 'ReportProgress', 'ReportDevices', 'ReportSimulations',
-           'CONSOLE', 'CONTROLLED', 'LOGGED', 'MODULATED', 'RECORD', 'DIVERT', 'PNL_VIEW', ]
+           'CONSOLE', 'CONTROLLED', 'LOGGED', 'MODULATED', 'MONITORED', 'RECORD', 'DIVERT', 'PNL_VIEW', ]
 
 SIMULATION = 'Simulat'
 DEFAULT = 'Execut'
@@ -199,7 +198,11 @@ class ReportParams(Enum):
     CONTROLLED (aka MODULATED)
         report all `Parameters` that are being controlled (i.e., `modulated <ModulatorySignal.modulation>`) by a
         `ControlMechanism` within the `Composition` (that is, those for which the corresponding `ParameterPort`
-        receives a `ControlProjection` from a `ControlSignal`.
+        receives a `ControlProjection` from a `ControlSignal`).
+
+    MONITORED
+        report the `value <Mechanism_Base.value>` of any `Mechanism` that is being `monitored
+        <ControlMechanism_Monitor_for_Control>` by a `ControlMechanism` or `ObjectiveMechanism`.
 
     LOGGED
         report all `Parameters` that are specified to be logged with `LogCondition.EXECUTION`;  see `Log` for
@@ -219,6 +222,7 @@ class ReportParams(Enum):
 
 MODULATED = ReportParams.MODULATED
 CONTROLLED = ReportParams.CONTROLLED
+MONITORED = ReportParams.MONITORED
 LOGGED = ReportParams.LOGGED
 ALL = ReportParams.ALL
 
