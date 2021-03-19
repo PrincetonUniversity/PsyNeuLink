@@ -4542,7 +4542,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     proj_name = "(" + output_port.name + ") to (" + interface_input_port.name + ")"
 
-                    # create projection from the output port on the input CIM to the input port on the input node
+                    # create projection from the output port of the output node to input port on the output CIM
                     proj = MappingProjection(
                         sender=output_port,
                         receiver=interface_input_port,
@@ -4559,9 +4559,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if isinstance(node, Composition):
                         proj._activate_for_compositions(node)
 
-        # compare the set of ports in output_CIM_ports to the set of output ports of output nodes that currently exist in
-        # the composition, so that we can remove ports on the output CIM that correspond to nodes that no longer should
-        # connect to the CIM
+        # compare the set of ports in output_CIM_ports to the set of output ports of output nodes that currently exist
+        # in the composition, so that we can remove ports on the output CIM that correspond to nodes that no longer
+        # should connect to the CIM
         previous_output_node_output_ports = set(self.output_CIM_ports.keys())
         for output_port in previous_output_node_output_ports.difference(current_output_node_output_ports):
             # remove the CIM input and output ports associated with this Terminal Node OutputPort
@@ -5645,7 +5645,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             warnings.warn(f'No new {Projection.__name__}s were added to {item.name} that was included in '
                           f'the {pathway_arg_str}, since there were ones already specified {arg_name}.')
             del pathway[pathway.index(item)]
-        # MODIFIED 8/12/19 END
 
         # Then, loop through pathway and validate that the Mechanism-Projection relationships make sense
         # and add MappingProjection(s) where needed
@@ -9133,7 +9132,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # method, because there's no way to tell from within the execute method whether or not we are at the last trial
             # of the run.
             if (self.controller_time_scale == TimeScale.RUN and
-                scheduler.clock.time.trial == 0):
+                scheduler.get_clock(context).time.trial == 0):
                     self._execute_controller(
                         relative_order=BEFORE,
                         execution_mode=execution_mode,
@@ -9200,7 +9199,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           skip_trial_time_increment=True,
                                                           )
             if context.runmode == ContextFlags.SIMULATION_MODE:
-                for i in range(scheduler.clock.time.time_step):
+                for i in range(scheduler.get_clock(context).time.time_step):
                     execution_sets.__next__()
 
             for next_execution_set in execution_sets:
