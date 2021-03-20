@@ -1025,7 +1025,7 @@ class Report:
             method.
 
         is_controller : bool : default False
-            specified whether or not the node is the `controller <Composition.controller>` of a Composition.
+            specifies whether or not the node is the `controller <Composition.controller>` of a Composition.
 
         context : Context : default None
             context of current execution.
