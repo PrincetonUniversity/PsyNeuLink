@@ -928,16 +928,15 @@ class Report:
                                                      )
             # If trial is using FULL report, save Node's to run_report
             if trial_report_type is ReportOutput.FULL:
-                try:
+                if is_controller:
                     # Controller, so print and record (since it happens outside the context of a TRIAL
                     # and its TIME_STEPS, so won't be included in those reports
-                    if is_controller:
-                        self._rich_progress.console.print(node_report)
-                        if self._record_reports:
-                            with self._recording_console.capture() as capture:
-                                self._recording_console.print(node_report)
-                            self._recorded_reports += capture.get()
-                except AttributeError:
+                    self._rich_progress.console.print(node_report)
+                    if self._record_reports:
+                        with self._recording_console.capture() as capture:
+                            self._recording_console.print(node_report)
+                        self._recorded_reports += capture.get()
+                else:
                     # Non-controller, so add to time_step report
                     run_report.time_step_report.append(node_report)
             # Otherwise, just print it to the console (as part of otherwise TERSE report)
