@@ -173,9 +173,9 @@ class ReportOutput(Enum):
 class ReportParams(Enum):
     """
     Options used in the **report_params** argument of a `Composition`\'s `execution methods
-    <Composition_Execution_Methods>`, to specify the scope of reporting for its `Parameters` and those of its
-    `Nodes <Composition_Nodes>`; see `Reporting Parameter values <Report_Params>` under `Report_Output` for
-    additional details.
+    <Composition_Execution_Methods>`, to specify the scope of reporting for values of it `Parameters`
+    and those of its `Nodes <Composition_Nodes>`; see `Reporting Parameter values <Report_Params>` under
+    `Report_Output` for additional details.
 
     .. technical_note::
         Use of these options is expected in the **report_output** constructor for the `Report` object,
@@ -829,6 +829,10 @@ class Report:
         if node:
             node_pref = next((pref for pref in convert_to_list(node.reportOutputPref)
                                          if isinstance(pref, ReportOutput)), None)
+            if hasattr(node, 'composition') and node.composition:
+                is_controller = True
+            else:
+                is_controller = False
 
         # Assign report_output as default for trial_report_type and node_report_type...
         trial_report_type = node_report_type = report_output
@@ -919,6 +923,7 @@ class Report:
                                                      output_val=node.output_port.parameters.value._get(context),
                                                      report_output=node_report_type,
                                                      report_params=report_params,
+                                                     is_controller=is_controller,
                                                      context=context
                                                      )
             # If trial is using FULL report, save Node's to run_report
@@ -926,7 +931,7 @@ class Report:
                 try:
                     # Controller, so print and record (since it happens outside the context of a TRIAL
                     # and its TIME_STEPS, so won't be included in those reports
-                    if node.composition:
+                    if is_controller:
                         self._rich_progress.console.print(node_report)
                         if self._record_reports:
                             with self._recording_console.capture() as capture:
@@ -986,6 +991,7 @@ class Report:
                               output_val:Optional[np.ndarray]=None,
                               report_output=ReportOutput.USE_PREFS,
                               report_params:ReportParams=ReportParams.OFF,
+                              is_controller=False,
                               context:Context=None) -> Panel:
         """
         Generates formatted output report for the `node <Composition_Nodes>` of a `Composition` or a `Mechanism`.
@@ -1019,12 +1025,15 @@ class Report:
             `execution method <Composition_Execution_Method>` or a Mechanism's `execute <Mechanism_Base.execute>`
             method.
 
+        is_controller : bool : default False
+            specified whether or not the node is the `controller <Composition.controller>` of a Composition.
+
         context : Context : default None
             context of current execution.
         """
 
         indent = '  '
-        if hasattr(node, 'composition') and node.composition:
+        if is_controller:
             indent = ''
 
         depth_indent = 0
@@ -1321,7 +1330,7 @@ class Report:
                        )
 
         # Don't indent for nodes in Panels (Composition.controller is not in a Panel)
-        if not hasattr(node, 'composition'):
+        if not is_controller:
             depth_indent = 0
 
         return Padding.indent(report, depth_indent)

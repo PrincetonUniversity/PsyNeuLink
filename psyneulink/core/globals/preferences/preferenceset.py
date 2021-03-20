@@ -27,27 +27,28 @@ additional details):
 
 .. _PreferenceSet_reportOutputPref:
 
-* **reportOutputPref** (`ReportOutput`, *PARAMS*, str, list): default ReportOutput.OFF) - enables/disables and
-  determines format and content for reporting execution of the `Component` (see `ReportOutput` for options). The
-  following options can be used:
+* **reportOutputPref** (`ReportOutput` or list[`ReportOutput`, *PARAMS* or str, str...] : default ReportOutput.OFF) -
+  enables/disables and determines format and content for reporting execution of the `Component` (see `ReportOutput`
+  for options). The following options can be used (also see `Examples` below):
 
-  * `ReportOutput.FULL` or *PARAMS* - when output is reported for the Compnents, its input and output as well as
-    the value of all of its `Parameters` are reported.
+  * `ReportOutput.OFF` - suppress reporting execution of the Component;
 
-  * `ReportOutput.TERSE` - when output is reported for the Compnents, on input and output as well as
-    the value of all of its `Parameters` are reported.
-    XXX
-      and the Component's `Parameters` are included along with its input and output.  A list of specific Parameters of
-      the Component and/or its `function <Component_Function>` can also be specified, in which case only those are
-      included. If the Component is a `Mechanism` executed within a `Composition`, its preference is overridden
-      by the **report_output** argument specified in any of the Composition's `execution methods
-      <Composition_Execution_Methods>` unless ReportOutput.USE_PREFS is specified in the argument; see below for
-      examples and `execution reporting <Composition_Execution_Reporting>` for additional details.
+  * `ReportOutput.TERSE` - report only the execution of the Component, but no information about it;
+
+  * `ReportOutput.FULL` - report the input and output of the Component when it is executed;
+
+  * [`ReportOutput.FULL`, *PARAMS*] - report the input and output as well as the value of all of the Component's
+    `Parameters` when it is executed;
+
+  * [`ReportOutput.FULL`, <parameter name>, <parameter name>...] - report the value of specific `Parameters` of
+      the Component and/or its `function <Component_Function>`.
 
   .. note::
-     the reportOutputPref setting(s) for a Component only take effect when the Component is executed on it own
-     (using its `execute method <Component_Execution>` or if `ReportOutput.USE_PREFS` is specified in the
-     **report_output** argument of a Composition's `execution method <Composition_ExecutionMethods>`.
+     the reportOutputPref settings for a Component only take effect when the Component is executed on it own
+     (using its `execute method <Component_Execution>`) or if `ReportOutput.USE_PREFS` is specified in the
+     **report_output** argument of one of the Composition's `execution methods <Composition_Execution_Methods>`.
+     Otherwise, the ReportOutput option specified in the **report_output** and **report_params** arguments of a
+     Composition's execution method takes precedence (see `ReportOutput`).
 
 * **logPref** (`LogCondition` : default LogCondition.OFF) - sets `LogCondition` for a given Component;
 
@@ -61,6 +62,7 @@ COMMENT
    * **deliverPref** (LogCondition, default: LogCondition.OFF) - sets whether attribute data are added to context rpc
      pipeline for delivery to external applications.
 
+.. _Examples:
 
 Examples
 --------
@@ -94,8 +96,8 @@ Assigning `ReportOutput.TERSE` generates a simpler report:
 This can be useful when there are many Components executed (e.g., as part of the `execution <Composition_Execution>`
 of a complex `Composition`.
 
-Assigning the *PARAMS* keyword produces a display of the Mechanism's input and output as well as the value of
-all of its `Parameters` (for brevity, not all are shown below):
+Assigning the *PARAMS* keyword with `Report.FULL` produces a display of the Mechanism's input and output as well as the
+value of all of its `Parameters` (for brevity, not all are shown below):
 
   >>> my_mech.reportOutputPref = pnl.PARAMS
   >>> my_mech.execute()
@@ -135,7 +137,7 @@ Note that specifying *PARAMS* forces a full output (i.e., equivalent to also spe
 Generally, not all of a Component's `Parameters` are of interest.  The display can be restricted to
 just those of interest by including them in a list specified for reportOutputPref:
 
-  >>> my_mech.reportOutputPref = ['integration_rate', 'slope', 'rate']
+  >>> my_mech.reportOutputPref = [ReportOutout.FULL, 'integration_rate', 'slope', 'rate']
   >>> my_mech.execute()
   ╭────────────────────────────────────────── My Mechanism ──────────────────────────────────────────╮
   │ input: 0.0                                                                                       │
@@ -151,10 +153,9 @@ just those of interest by including them in a list specified for reportOutputPre
   ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 
 
-This can be overridden by specifying `ReportOutput.TERSE` (i.e., without having to delete all of the parameter
-specifications, which can be useful when testing):
+Note that this is overridden if `ReportOutput.TERSE` is specified:
 
-  >>> my_mech.reportOutputPref = ['integration_rate', 'slope', 'rate', pnl.ReportOutput.TERSE]
+  >>> my_mech.reportOutputPref = [pnl.ReportOutput.TERSE, 'integration_rate', 'slope', 'rate']
   >>> my_mech.execute()
    My Mechanism executed
 
