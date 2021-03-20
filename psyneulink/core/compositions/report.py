@@ -928,17 +928,23 @@ class Report:
             trial_num = scheduler.get_clock(context).time.trial
             run_report_owner = caller
 
-        # Determine run_mode and get run_report
+        # Determine run_mode and assign relevant header info
         # if call is from a Composition or a Mechanism being executed by one
         if isinstance(caller, Composition) or context.source == ContextFlags.COMPOSITION:
             simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
-            # simulation_mode = self._simulating # <- FIX: MAY CAUSE INDENTATIN PROBLEMS
             if (simulation_mode or self._simulating) and self._report_simulations is ReportSimulations.OFF:
                 return
             if simulation_mode:
+                # Actual simulation execution
                 run_mode = SIMULATION
-                sim_str = ' SIMULATION'
+                sim_str = f' SIMULATION {_get_sim_number(context)}'
+            elif self._simulating:
+                # Composition or controller executing in simulation (happens in DEFAULT_MODE)
+                sim_str = f' SIMULATION {_get_sim_number(context)}'
+                # sim_str = f' SIMULATING'
+                run_mode = DEFAULT
             else:
+                # Non-simulation (but potentiall nested) execution
                 run_mode = DEFAULT
                 sim_str = ''
             run_report = self._run_reports[run_report_owner][run_mode][report_num]
