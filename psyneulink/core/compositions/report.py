@@ -74,6 +74,51 @@ The device(s) to which reporting is sent can be specified using the **report_to_
 this can be used to store reports in a Composition's `recorded_reports <Composition.recorded_reports>` attribute;
 see `ReportDevices` for options.
 
+
+COMMENT:
+Examples of ReportOutput and ReportParams options, including with more than one trial of execution and with simulations
+
+.. _ReportOutput_Examples:
+
+Examples
+--------
+
+Note that the report for the execution of a Composition contains information about the `TRIAL <TimeScale.TRIAL>`
+and `TIME_STEP <TimeScale.TIME_STEP>` in which the Mechanism executed.
+
+A more complete report of the execution can be generated using the `Report.FULL` and `Report.USE_PREFS` options in the
+**report_output** argument of a Composition's `execution methods <Composition_Execution_Methods>`, that also includes
+the input and output for the Composition:
+
+  >>> my_comp = pnl.Composition(pathways=[my_mech])
+  >>> my_mech.reportOutputPref = ['integration_rate', 'slope', 'rate']
+  >>> my_comp.run(report_output=pnl.ReportOutput.FULL)
+  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  Composition-0: Trial 0  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+  ┃                                                                                                          ┃
+  ┃ input: [[0.0]]                                                                                           ┃
+  ┃                                                                                                          ┃
+  ┃ ┌────────────────────────────────────────────  Time Step 0 ────────────────────────────────────────────┐ ┃
+  ┃ │ ╭────────────────────────────────────────── My Mechanism ──────────────────────────────────────────╮ │ ┃
+  ┃ │ │ input: 0.0                                                                                       │ │ ┃
+  ┃ │ │ ╭──────────────────────────────────────────────────────────────────────────────────────────────╮ │ │ ┃
+  ┃ │ │ │ params:                                                                                      │ │ │ ┃
+  ┃ │ │ │         integration_rate: 0.5                                                                │ │ │ ┃
+  ┃ │ │ │         function: Linear Function-6                                                          │ │ │ ┃
+  ┃ │ │ │                 slope: 1.0                                                                   │ │ │ ┃
+  ┃ │ │ │         integrator_function: AdaptiveIntegrator Function-1                                   │ │ │ ┃
+  ┃ │ │ │                 rate: 0.5                                                                    │ │ │ ┃
+  ┃ │ │ ╰──────────────────────────────────────────────────────────────────────────────────────────────╯ │ │ ┃
+  ┃ │ │ output: 0.0                                                                                      │ │ ┃
+  ┃ │ ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯ │ ┃
+  ┃ └──────────────────────────────────────────────────────────────────────────────────────────────────────┘ ┃
+  ┃                                                                                                          ┃
+  ┃ result: [[0.0]]                                                                                          ┃
+  ┃                                                                                                          ┃
+  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+COMMENT
+
+
+
 .. _Report_Options:
 
 Reporting Options

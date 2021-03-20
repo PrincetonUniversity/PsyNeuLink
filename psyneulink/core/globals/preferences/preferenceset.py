@@ -99,7 +99,7 @@ of a complex `Composition`.
 Assigning the *PARAMS* keyword with `Report.FULL` produces a display of the Mechanism's input and output as well as the
 value of all of its `Parameters` (for brevity, not all are shown below):
 
-  >>> my_mech.reportOutputPref = pnl.PARAMS
+  >>> my_mech.reportOutputPref = [ReportOutput.FULL, pnl.PARAMS]
   >>> my_mech.execute()
   ╭────────────────────────────────────────── My Mechanism ──────────────────────────────────────────╮
   │ input: 0.0                                                                                       │
@@ -152,7 +152,6 @@ just those of interest by including them in a list specified for reportOutputPre
   │ output: 0.0                                                                                      │
   ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯
 
-
 Note that this is overridden if `ReportOutput.TERSE` is specified:
 
   >>> my_mech.reportOutputPref = [pnl.ReportOutput.TERSE, 'integration_rate', 'slope', 'rate']
@@ -161,8 +160,8 @@ Note that this is overridden if `ReportOutput.TERSE` is specified:
 
 When a Mechanism is executed as part of a Composition, the Composition's reportOutputPref takes precedence:
 
-  >>> my_comp = pnl.Composition(pathways=[my_mech])
   >>> my_mech.reportOutputPref = ['integration_rate', 'slope', 'rate']
+  >>> my_comp = pnl.Composition(pathways=[my_mech])
   >>> my_comp.run()
   <BLANKLINE>
 
@@ -177,39 +176,10 @@ the Mechanism's reportOutputPref setting:
    Time Step 0 ---------
      My Mechanism executed
 
-Note that the report for the execution of a Composition contains information about the `TRIAL <TimeScale.TRIAL>`
-and `TIME_STEP <TimeScale.TIME_STEP>` in which the Mechanism executed.
-
-A more complete report of the execution can be generated using the `Report.FULL` and `Report.USE_PREFS` options in the
-**report_output** argument of a Composition's `execution methods <Composition_Execution_Methods>`, that also includes
-the input and output for the Composition:
-
-  >>> my_comp = pnl.Composition(pathways=[my_mech])
-  >>> my_mech.reportOutputPref = ['integration_rate', 'slope', 'rate']
-  >>> my_comp.run(report_output=pnl.ReportOutput.FULL)
-  ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  Composition-0: Trial 0  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-  ┃                                                                                                          ┃
-  ┃ input: [[0.0]]                                                                                           ┃
-  ┃                                                                                                          ┃
-  ┃ ┌────────────────────────────────────────────  Time Step 0 ────────────────────────────────────────────┐ ┃
-  ┃ │ ╭────────────────────────────────────────── My Mechanism ──────────────────────────────────────────╮ │ ┃
-  ┃ │ │ input: 0.0                                                                                       │ │ ┃
-  ┃ │ │ ╭──────────────────────────────────────────────────────────────────────────────────────────────╮ │ │ ┃
-  ┃ │ │ │ params:                                                                                      │ │ │ ┃
-  ┃ │ │ │         integration_rate: 0.5                                                                │ │ │ ┃
-  ┃ │ │ │         function: Linear Function-6                                                          │ │ │ ┃
-  ┃ │ │ │                 slope: 1.0                                                                   │ │ │ ┃
-  ┃ │ │ │         integrator_function: AdaptiveIntegrator Function-1                                   │ │ │ ┃
-  ┃ │ │ │                 rate: 0.5                                                                    │ │ │ ┃
-  ┃ │ │ ╰──────────────────────────────────────────────────────────────────────────────────────────────╯ │ │ ┃
-  ┃ │ │ output: 0.0                                                                                      │ │ ┃
-  ┃ │ ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯ │ ┃
-  ┃ └──────────────────────────────────────────────────────────────────────────────────────────────────────┘ ┃
-  ┃                                                                                                          ┃
-  ┃ result: [[0.0]]                                                                                          ┃
-  ┃                                                                                                          ┃
-  ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
-
+`ReportOutput.USE_PREFS` can be used in the **report_output** argument to allow the reportOutputPref of individual
+Components to determine what is displayed when a `Composition` is executed.  See `ReportOutput` for other options
+and additional examples of how to **report_output** argument of a Composition's `execution methods
+<Composition_Execution_Methods>` can be used to configure the output.
 """
 
 import abc
