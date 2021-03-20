@@ -38,13 +38,15 @@ additional details):
   * `ReportOutput.FULL` - report the input and output of the Component when it is executed;
 
   * [`ReportOutput.FULL`, *PARAMS*] - report the input and output as well as the value of all of the Component's
-    `Parameters` when it is executed;
+  `Parameters` when it is executed;
 
   * [`ReportOutput.FULL`, <parameter name>, <parameter name>...] - report the value of specific `Parameters` of
-      the Component and/or its `function <Component_Function>`.
+      the Component and/or its `function <Component_Function>`.  Specifying *VARIABLE* and/or *VALUE* displays the
+      `variable <Mechanism_Base.variable>` and/or `value <Mechanism_Base.value>` attributes of a Mechanism,
+      respectivey, and not those attributes of its primary `function <Mechanism_Base.function>` or secondary ones.
 
   .. note::
-     the reportOutputPref settings for a Component only take effect when the Component is executed on it own
+     The reportOutputPref settings for a Component only take effect when the Component is executed on it own
      (using its `execute method <Component_Execution>`) or if `ReportOutput.USE_PREFS` is specified in the
      **report_output** argument of one of the Composition's `execution methods <Composition_Execution_Methods>`.
      Otherwise, the ReportOutput option specified in the **report_output** and **report_params** arguments of a
