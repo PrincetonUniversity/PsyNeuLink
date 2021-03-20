@@ -6,6 +6,8 @@ import pytest
 import psyneulink.core.components.functions.transferfunctions
 import psyneulink.core.llvm as pnlvm
 
+from psyneulink.core.compositions.report import _get_sim_number
+
 class TestLCControlMechanism:
 
     @pytest.mark.mechanism
@@ -296,3 +298,13 @@ class TestLCControlMechanism:
         assert m2.parameter_ports[pnl.SLOPE].value == [10]
         assert c2.control_signals[2].value == [10]
         assert m3.parameter_ports[pnl.SLOPE].value == [10]
+
+
+class TestSimulationIDs:
+    def test_sim_numbers(self):
+        cmech = pnl.ControlMechanism()
+        context = pnl.Context('comp')
+
+        for i in range(10):
+            sim_id = cmech.get_next_sim_id(context)
+            assert _get_sim_number(sim_id) == i
