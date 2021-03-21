@@ -403,6 +403,7 @@ class RunReport():
 
     def __init__(self, id, num_trials):
         self.num_trials = num_trials
+        self.sim_num = None
         self.rich_task_id = id # used for task id in rich
         self.trial_report = []
         self.time_step_report = []
@@ -787,7 +788,7 @@ class Report:
             from pprint import pprint
             pprint(f'{caller.name} {str(context.runmode)} REPORT')
 
-        # Not in simulation and have reached num_trials (if specified),
+        # Not in simulation and have reached num_trials (if specified) (i.e. end of run or set of simulations)
         if self._run_reports[caller][SIMULATING] and not simulation_mode:
             # If was simulating previously, then have just exited, so:
             #   (note: need to use transition and not explicit count of simulations,
@@ -934,20 +935,42 @@ class Report:
             simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
             if (simulation_mode or self._simulating) and self._report_simulations is ReportSimulations.OFF:
                 return
+
+            # Track simulation count within each simulation set:
+            sim_num = None
+            if content in {'trial_init'}:
+                if self._run_reports[caller][SIMULATING]:
+                    if not simulation_mode:
+                        # If was simulating previously but not now in SIMULATION_MODE, then have just exited,
+                        #   so reset trial_num
+                        #   (note: need to use transition and not explicit count of simulations,
+                        #    since number of simulation trials being run is generally not known)
+                        self._run_reports[caller][SIMULATION][report_num].sim_num = None
+                    elif self._run_reports[caller][SIMULATION][report_num].sim_num is None:
+                        # This is the first simulation, so set to 0
+                        self._run_reports[caller][SIMULATION][report_num].sim_num = 0
+                    else:
+                        # This is a new simulation, so increment number
+                        self._run_reports[caller][SIMULATION][report_num].sim_num += 1
+                    sim_num = self._run_reports[caller][SIMULATION][report_num].sim_num
+
             if simulation_mode:
                 # Actual simulation execution
                 run_mode = SIMULATION
-                sim_str = f' SIMULATION {_get_sim_number(context)}'
+                sim_str = f' SIMULATION {sim_num}'
             elif self._simulating:
                 # Composition or controller executing in simulation (happens in DEFAULT_MODE)
-                sim_str = f' SIMULATION {_get_sim_number(context)}'
+                sim_str = ''
+                # sim_str = f' SIMULATION {sim_num}'
                 # sim_str = f' SIMULATING'
+                # self._run_reports[caller][SIMULATION][report_num].sim_num = 0
                 run_mode = DEFAULT
             else:
                 # Non-simulation (but potentiall nested) execution
                 run_mode = DEFAULT
                 sim_str = ''
             run_report = self._run_reports[run_report_owner][run_mode][report_num]
+
 
             # FIX: GENERALIZE THIS, PUT AS ATTRIBUTE ON Report, AND THEN REFERENCE THAT IN report_progress
             depth_indent = 0
