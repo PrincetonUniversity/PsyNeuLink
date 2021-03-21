@@ -887,7 +887,7 @@ class Report:
 
         # Determine report type and relevant parameters ----------------------------------------------------------------
 
-        # Get ReportOutputPref for node
+        # Get ReportOutputPref for node and whether it is a controller
         if node:
             node_pref = next((pref for pref in convert_to_list(node.reportOutputPref)
                                          if isinstance(pref, ReportOutput)), None)
@@ -937,7 +937,8 @@ class Report:
                 return
 
             # Track simulation count within each simulation set:
-            # sim_num = None
+            # if content in {'trial_init', 'trial'}:
+            sim_str = ''
             if content in {'trial_init'}:
                 if self._run_reports[caller][SIMULATING]:
                     if not simulation_mode:
