@@ -2394,7 +2394,7 @@ from psyneulink.core.components.projections.pathway.mappingprojection import Map
 from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
-from psyneulink.core.compositions.report import Report,\
+from psyneulink.core.compositions.report import Report, \
     ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET, SHOW_CONTROLLER
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
@@ -9549,6 +9549,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._animate_execution(self.output_CIM, context)
             # FIX: END
 
+            # MODIFIED 3/21/21 NEW:
+            # Complete TRIAL entry for output report, and report progress
+            # Note: do so before executing controller, so that its report appears after trial if controller_mode =AFTER
+            report.report_output(self, run_report, execution_scheduler, report_output,
+                                 report_params, 'trial', context)
+            report.report_progress(self, run_report, context)
+            # MODIFIED 3/21/21 END
 
             # EXECUTE CONTROLLER (if controller_mode == AFTER) *********************************************************
             if self.controller_time_scale == TimeScale.TRIAL:
@@ -9585,10 +9592,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for port in self.output_CIM.output_ports:
                 output_values.append(port.parameters.value._get(context))
 
-            # Complete TRIAL entry for output report, and report progress
-            report.report_output(self, run_report, execution_scheduler, report_output,
-                                 report_params, 'trial', context)
-            report.report_progress(self, run_report, context)
+            # # MODIFIED 3/21/21 OLD:
+            # # Complete TRIAL entry for output report, and report progress
+            # report.report_output(self, run_report, execution_scheduler, report_output,
+            #                      report_params, 'trial', context)
+            # report.report_progress(self, run_report, context)
+            # MODIFIED 3/21/21 END
 
 
             # UPDATE TIME and RETURN ***********************************************************************************

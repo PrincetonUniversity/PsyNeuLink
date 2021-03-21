@@ -1155,7 +1155,7 @@ class Report:
                 or (report_output is not ReportOutput.FULL and ReportOutput.TERSE in report_output_pref)):
             if is_controller:
                 execute_str = f'simulation of {node.composition.name} ' \
-                              f'{node.composition.controller_mode} TRIAL {trial_num}'
+                              f'[underline]{node.composition.controller_mode}[/] TRIAL {trial_num}'
             else:
                 execute_str = 'executed'
             return f'[{node_panel_color}]{depth_indent * " "}{indent}{node.name} {execute_str}'
