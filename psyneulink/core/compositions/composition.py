@@ -8739,8 +8739,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 report._execution_stack.append(self.controller)
 
                 if self.controller and not execution_mode:
-                    # FIX: REMOVE ONCE context IS SET TO CONTROL ABOVE
-                    # FIX: END REMOVE
                     context.execution_phase = ContextFlags.PROCESSING
                     self.controller.execute(context=context)
 
@@ -8757,6 +8755,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 report._execution_stack.pop()
 
+                # FIX: MOVE TO ABOVE TO PRECEDE SIMULATIONS
                 # Report execution
                 report.report_output(self,
                                      report_num,

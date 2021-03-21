@@ -937,7 +937,7 @@ class Report:
                 return
 
             # Track simulation count within each simulation set:
-            sim_num = None
+            # sim_num = None
             if content in {'trial_init'}:
                 if self._run_reports[caller][SIMULATING]:
                     if not simulation_mode:
@@ -953,24 +953,22 @@ class Report:
                         # This is a new simulation, so increment number
                         self._run_reports[caller][SIMULATION][report_num].sim_num += 1
                     sim_num = self._run_reports[caller][SIMULATION][report_num].sim_num
+                    sim_str = f' SIMULATION {sim_num}'
 
             if simulation_mode:
                 # Actual simulation execution
                 run_mode = SIMULATION
-                sim_str = f' SIMULATION {sim_num}'
             elif self._simulating:
                 # Composition or controller executing in simulation (happens in DEFAULT_MODE)
                 sim_str = ''
                 # sim_str = f' SIMULATION {sim_num}'
                 # sim_str = f' SIMULATING'
-                # self._run_reports[caller][SIMULATION][report_num].sim_num = 0
                 run_mode = DEFAULT
             else:
                 # Non-simulation (but potentiall nested) execution
-                run_mode = DEFAULT
                 sim_str = ''
+                run_mode = DEFAULT
             run_report = self._run_reports[run_report_owner][run_mode][report_num]
-
 
             # FIX: GENERALIZE THIS, PUT AS ATTRIBUTE ON Report, AND THEN REFERENCE THAT IN report_progress
             depth_indent = 0
