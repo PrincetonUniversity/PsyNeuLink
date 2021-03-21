@@ -926,8 +926,17 @@ class Report:
                     # Return if it is OFF
                     if node_report_type is ReportOutput.OFF:
                         return
-            trial_num = scheduler.get_clock(context).time.trial
+            # MODIFIED 3/21/21 OLD:
+            # trial_num = scheduler.get_clock(context).time.trial
+            # MODIFIED 3/21/21 END
             run_report_owner = caller
+
+        # MODIFIED 3/21/21 NEW:
+        if scheduler:
+            trial_num = scheduler.get_clock(context).time.trial
+        else:
+            trial_num = None
+        # MODIFIED 3/21/21 END
 
         # Determine run_mode and assign relevant header info
         # if call is from a Composition or a Mechanism being executed by one
@@ -943,7 +952,7 @@ class Report:
                 if self._run_reports[caller][SIMULATING]:
                     if not simulation_mode:
                         # If was simulating previously but not now in SIMULATION_MODE, then have just exited,
-                        #   so reset trial_num
+                        #   so reset sim_num
                         #   (note: need to use transition and not explicit count of simulations,
                         #    since number of simulation trials being run is generally not known)
                         self._run_reports[caller][SIMULATION][report_num].sim_num = None
@@ -955,6 +964,7 @@ class Report:
                         self._run_reports[caller][SIMULATION][report_num].sim_num += 1
                     sim_num = self._run_reports[caller][SIMULATION][report_num].sim_num
                     sim_str = f' SIMULATION {sim_num}'
+                    self._run_reports[caller][SIMULATION][report_num].sim_str = sim_str
 
             if simulation_mode:
                 # Actual simulation execution
@@ -1012,6 +1022,7 @@ class Report:
                                                      output_val=node.output_port.parameters.value._get(context),
                                                      report_output=node_report_type,
                                                      report_params=report_params,
+                                                     trial_num=trial_num,
                                                      is_controller=is_controller,
                                                      context=context
                                                      )
@@ -1054,6 +1065,7 @@ class Report:
                     output_values.append(port.parameters.value._get(context))
                 run_report.trial_report.append(f"\n[bold {trial_output_color}]result:[/]"
                                           f" {[r.tolist() for r in output_values]}\n")
+                sim_str = self._run_reports[caller][SIMULATION][report_num].sim_str # FIX: ASSIGN in START
                 run_report.trial_report = \
                     Padding.indent(
                         Panel(RenderGroup(*run_report.trial_report),
@@ -1079,6 +1091,7 @@ class Report:
                               output_val:Optional[np.ndarray]=None,
                               report_output=ReportOutput.USE_PREFS,
                               report_params:ReportParams=ReportParams.OFF,
+                              trial_num:Optional[int]=None,
                               is_controller=False,
                               context:Context=None) -> Panel:
         """
@@ -1113,6 +1126,9 @@ class Report:
             `execution method <Composition_Execution_Method>` or a Mechanism's `execute <Mechanism_Base.execute>`
             method.
 
+        trial_num : int : default None
+            current `TRIAL <TimeScale.TRIAL>` number (None if not known).
+
         is_controller : bool : default False
             specifies whether or not the node is the `controller <Composition.controller>` of a Composition.
 
@@ -1137,7 +1153,12 @@ class Report:
         node_params_prefs = node_pref
         if (report_output is ReportOutput.TERSE
                 or (report_output is not ReportOutput.FULL and ReportOutput.TERSE in report_output_pref)):
-            return f'[{node_panel_color}]{depth_indent * " "}{indent}{node.name} executed'
+            if is_controller:
+                execute_str = f'simulation of {node.composition.name} ' \
+                              f'{node.composition.controller_mode} TRIAL {trial_num}'
+            else:
+                execute_str = 'executed'
+            return f'[{node_panel_color}]{depth_indent * " "}{indent}{node.name} {execute_str}'
 
         # Render input --------------------------------------------------------------------------------------------
 
