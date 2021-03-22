@@ -836,7 +836,11 @@ class Report:
                       node=None):
         """
         Report output of execution in call to `execute <Composition.execute>` method of a `Composition` or a
-        Mechanism <Mechanism_Base.execute>`.
+        Mechanism <Mechanism_Base.execute>`.  Report.TERSE generates a line-by-line report of executions, but
+        no other information (ie., no input, output or parameter information); output is generated in every call;
+        Report.FULL generates a rich-formatted report, that includes that information;  it is constructed throughout
+        the execution of the `TRIAL <TimeScale.TRIAL>` (beginning with content='trial_init'), and reported at the end
+        of the `TRIAL <TimeScale.TRIAL>`(content='trial').
 
         Arguments
         ---------
@@ -938,6 +942,8 @@ class Report:
             trial_num = None
         # MODIFIED 3/21/21 END
 
+        self._sim_str = ''
+
         # Determine run_mode and assign relevant header info
         # if call is from a Composition or a Mechanism being executed by one
         if isinstance(caller, Composition) or context.source == ContextFlags.COMPOSITION:
@@ -947,7 +953,7 @@ class Report:
 
             # Track simulation count within each simulation set:
             # if content in {'trial_init', 'trial'}:
-            sim_str = ''
+            # sim_str = ''
             if content in {'trial_init'}:
                 if self._run_reports[caller][SIMULATING]:
                     if not simulation_mode:
@@ -963,21 +969,21 @@ class Report:
                         # This is a new simulation, so increment number
                         self._run_reports[caller][SIMULATION][report_num].sim_num += 1
                     sim_num = self._run_reports[caller][SIMULATION][report_num].sim_num
-                    sim_str = f' SIMULATION {sim_num}'
-                    self._run_reports[caller][SIMULATION][report_num].sim_str = sim_str
+                    self._sim_str = f' SIMULATION {sim_num}'
+                    # self._run_reports[caller][SIMULATION][report_num].sim_str = sim_str
 
             if simulation_mode:
                 # Actual simulation execution
                 run_mode = SIMULATION
             elif self._simulating:
                 # Composition or controller executing in simulation (happens in DEFAULT_MODE)
-                sim_str = ''
+                # sim_str = ''
                 # sim_str = f' SIMULATION {sim_num}'
                 # sim_str = f' SIMULATING'
                 run_mode = DEFAULT
             else:
                 # Non-simulation (but potentiall nested) execution
-                sim_str = ''
+                # sim_str = ''
                 run_mode = DEFAULT
             run_report = self._run_reports[run_report_owner][run_mode][report_num]
 
@@ -995,13 +1001,15 @@ class Report:
             if trial_report_type is ReportOutput.FULL:
                 run_report.trial_report = [f'\n[bold {trial_panel_color}]input:[/]'
                                            f' {[i.tolist() for i in caller.get_input_values(context)]}']
+                self._trial_header =f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial {trial_num} [/]',
             else: # TERSE output
                 # print trial title and separator + input array to Composition
-                trial_header = f'[bold {trial_panel_color}]' \
-                               f'{depth_indent * " "}{caller.name}{sim_str} TRIAL {trial_num} ===================='
-                self._rich_progress.console.print(trial_header)
+                self._trial_header = f'[bold {trial_panel_color}]' \
+                               f'{depth_indent * " "}{caller.name}{self._sim_str} TRIAL {trial_num} ' \
+                               f'===================='
+                self._rich_progress.console.print(self._trial_header)
                 if self._record_reports:
-                    self._recorded_reports += trial_header
+                    self._recorded_reports += self._trial_header
 
         elif content is 'time_step_init':
             if trial_report_type is ReportOutput.FULL:
@@ -1065,14 +1073,17 @@ class Report:
                     output_values.append(port.parameters.value._get(context))
                 run_report.trial_report.append(f"\n[bold {trial_output_color}]result:[/]"
                                           f" {[r.tolist() for r in output_values]}\n")
-                sim_str = self._run_reports[caller][SIMULATION][report_num].sim_str # FIX: ASSIGN in START
+                # sim_str = self._run_reports[caller][SIMULATION][report_num].sim_str # FIX: ASSIGN in START
                 run_report.trial_report = \
                     Padding.indent(
                         Panel(RenderGroup(*run_report.trial_report),
                               box=trial_panel_box,
                               border_style=trial_panel_color,
-                              title=f'[bold{trial_panel_color}] {caller.name}{sim_str}: '
-                                    f'Trial {trial_num} [/]',
+                              # title=f'[bold{trial_panel_color}] {caller.name}{sim_str}: '
+                              #       f'Trial {trial_num} [/]',
+                              # title=f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: '
+                              #       f'Trial {trial_num} [/]',
+                              title=self._trial_header,
                               expand=False),
                         depth_indent
                     )
