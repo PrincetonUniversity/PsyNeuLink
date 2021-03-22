@@ -1065,7 +1065,7 @@ class Report:
                     output_values.append(port.parameters.value._get(context))
                 run_report.trial_report.append(f"\n[bold {trial_output_color}]result:[/]"
                                           f" {[r.tolist() for r in output_values]}\n")
-                # sim_str = self._run_reports[caller][SIMULATION][report_num].sim_str # FIX: ASSIGN in START
+                sim_str = self._run_reports[caller][SIMULATION][report_num].sim_str # FIX: ASSIGN in START
                 run_report.trial_report = \
                     Padding.indent(
                         Panel(RenderGroup(*run_report.trial_report),
