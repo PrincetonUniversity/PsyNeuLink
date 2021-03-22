@@ -9549,13 +9549,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._animate_execution(self.output_CIM, context)
             # FIX: END
 
-            # MODIFIED 3/21/21 NEW:
             # Complete TRIAL Panel for output report, and report progress
             #  note: do so before executing controller, so that it appears after trial report if controller_mode=AFTER
             report.report_output(self, run_report, execution_scheduler, report_output,
                                  report_params, 'trial', context)
             report.report_progress(self, run_report, context)
-            # MODIFIED 3/21/21 END
 
             # EXECUTE CONTROLLER (if controller_mode == AFTER) *********************************************************
             if self.controller_time_scale == TimeScale.TRIAL:
@@ -9591,13 +9589,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output_values = []
             for port in self.output_CIM.output_ports:
                 output_values.append(port.parameters.value._get(context))
-
-            # # MODIFIED 3/21/21 OLD:
-            # # Complete TRIAL entry for output report, and report progress
-            # report.report_output(self, run_report, execution_scheduler, report_output,
-            #                      report_params, 'trial', context)
-            # report.report_progress(self, run_report, context)
-            # MODIFIED 3/21/21 END
 
 
             # UPDATE TIME and RETURN ***********************************************************************************

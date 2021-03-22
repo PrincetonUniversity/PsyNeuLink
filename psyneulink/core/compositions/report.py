@@ -943,17 +943,12 @@ class Report:
                     # Return if it is OFF
                     if node_report_type is ReportOutput.OFF:
                         return
-            # MODIFIED 3/21/21 OLD:
-            # trial_num = scheduler.get_clock(context).time.trial
-            # MODIFIED 3/21/21 END
             run_report_owner = caller
 
-        # MODIFIED 3/21/21 NEW:
         if scheduler:
             trial_num = scheduler.get_clock(context).time.trial
         else:
             trial_num = None
-        # MODIFIED 3/21/21 END
 
         self._sim_str = ''
 
