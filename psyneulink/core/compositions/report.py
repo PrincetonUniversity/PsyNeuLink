@@ -524,6 +524,15 @@ class Report:
            that condition, _simulating may be True, while the ``run_mode`` variable set in a method may be
            SIMULATION.
 
+    _sim_str : str : default ''
+        string added to `_trial_header <Report._trial_header>` when context.runmode = ContextFlags.SIMULATION_MODE
+        and `_simulating <Report._simulating>` is True.
+
+    _trial_header : str
+        header information for a `TRIAL <TimeScale.TRIAL>`;  constructed in `report_output <Report.report_output>`
+        when content='trial_init'.  Reported at the beginning of a trial for ReportOutput.TERSE; used as the
+        title of a Trial Panel in ReportOutput.FULL that is reported at the end of the `TRIAL <TimeScale.TRIAL>`.
+
     _indent_factor : int : default 2
         amount by which to indent for each level of `nested compositions <Composition_Nested>`
         and/or `simulations <OptimizationControlMechanism_Execution>`.
