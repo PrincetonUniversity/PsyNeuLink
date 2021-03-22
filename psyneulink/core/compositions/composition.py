@@ -9550,8 +9550,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX: END
 
             # MODIFIED 3/21/21 NEW:
-            # Complete TRIAL entry for output report, and report progress
-            # Note: do so before executing controller, so that its report appears after trial if controller_mode =AFTER
+            # Complete TRIAL Panel for output report, and report progress
+            #  note: do so before executing controller, so that it appears after trial report if controller_mode=AFTER
             report.report_output(self, run_report, execution_scheduler, report_output,
                                  report_params, 'trial', context)
             report.report_progress(self, run_report, context)

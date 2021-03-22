@@ -528,10 +528,13 @@ class Report:
         string added to `_trial_header <Report._trial_header>` when context.runmode = ContextFlags.SIMULATION_MODE
         and `_simulating <Report._simulating>` is True.
 
-    _trial_header : str
-        header information for a `TRIAL <TimeScale.TRIAL>`;  constructed in `report_output <Report.report_output>`
-        when content='trial_init'.  Reported at the beginning of a trial for ReportOutput.TERSE; used as the
-        title of a Trial Panel in ReportOutput.FULL that is reported at the end of the `TRIAL <TimeScale.TRIAL>`.
+    _trial_header_stack : str
+        header information for `TRIAL <TimeScale.TRIAL>` when report_out=ReportOutput.FULL;  constructed in
+        `report_output <Report.report_output>` at the beginning of the trial (when content='trial_init') and pushed
+        to the stack; then popped from the stack and used to construct the rich Panel for the `TRIAL <TimeScale.TRIAL>`
+        and report it at the end of the `TRIAL <TimeScale.TRIAL>` (when content='trial').  This is needed to cache
+        the trial_headers across nested executions.  (Note: not needed for ReportOutput.TERSE since trial_header is
+        reported as soon as it is constructed, at the beginning of a `TRIAL <TimeScale.TRIAL>`.)
 
     _indent_factor : int : default 2
         amount by which to indent for each level of `nested compositions <Composition_Nested>`
@@ -593,6 +596,7 @@ class Report:
             cls._use_pnl_view = ReportDevices.PNL_VIEW in cls._report_to_devices
 
             cls._execution_stack = [caller]
+            cls._trial_header = []
             cls._indent_factor = indent_factor
 
             # Instantiate rich progress context object
@@ -1010,15 +1014,17 @@ class Report:
             if trial_report_type is ReportOutput.FULL:
                 run_report.trial_report = [f'\n[bold {trial_panel_color}]input:[/]'
                                            f' {[i.tolist() for i in caller.get_input_values(context)]}']
-                self._trial_header =f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial {trial_num} [/]'
+                # Push trial_header to stack in case there are intervening executions of nested comps or simulations
+                self._trial_header_stack.append(f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial' \
+                                           f' {trial_num} [/]')
             else: # TERSE output
                 # print trial title and separator + input array to Composition
-                self._trial_header = f'[bold {trial_panel_color}]' \
+                trial_header = f'[bold {trial_panel_color}]' \
                                f'{depth_indent * " "}{caller.name}{self._sim_str} TRIAL {trial_num} ' \
                                f'===================='
-                self._rich_progress.console.print(self._trial_header)
+                self._rich_progress.console.print(trial_header)
                 if self._record_reports:
-                    self._recorded_reports += self._trial_header
+                    self._recorded_reports += trial_header
 
         elif content is 'time_step_init':
             if trial_report_type is ReportOutput.FULL:
@@ -1088,11 +1094,7 @@ class Report:
                         Panel(RenderGroup(*run_report.trial_report),
                               box=trial_panel_box,
                               border_style=trial_panel_color,
-                              # title=f'[bold{trial_panel_color}] {caller.name}{sim_str}: '
-                              #       f'Trial {trial_num} [/]',
-                              # title=f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: '
-                              #       f'Trial {trial_num} [/]',
-                              title=self._trial_header,
+                              title=self._trial_header_stack.pop(),
                               expand=False),
                         depth_indent
                     )
