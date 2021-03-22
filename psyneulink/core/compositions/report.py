@@ -596,7 +596,7 @@ class Report:
             cls._use_pnl_view = ReportDevices.PNL_VIEW in cls._report_to_devices
 
             cls._execution_stack = [caller]
-            cls._trial_header = []
+            cls._trial_header_stack = []
             cls._indent_factor = indent_factor
 
             # Instantiate rich progress context object
