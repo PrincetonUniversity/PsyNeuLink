@@ -1001,7 +1001,7 @@ class Report:
             if trial_report_type is ReportOutput.FULL:
                 run_report.trial_report = [f'\n[bold {trial_panel_color}]input:[/]'
                                            f' {[i.tolist() for i in caller.get_input_values(context)]}']
-                self._trial_header =f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial {trial_num} [/]',
+                self._trial_header =f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial {trial_num} [/]'
             else: # TERSE output
                 # print trial title and separator + input array to Composition
                 self._trial_header = f'[bold {trial_panel_color}]' \
