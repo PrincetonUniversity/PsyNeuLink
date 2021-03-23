@@ -397,7 +397,7 @@ class ReportError(Exception):
 
 class RunReport():
     """
-    Object used to package Progress reporting for a call to the `run <Composition.run>` or `learn
+    Object used to package output and progress reporting for a call to the `run <Composition.run>` or `learn
     <Composition.learn>` methods of a `Composition`.
     """
 
@@ -405,6 +405,7 @@ class RunReport():
         self.num_trials = num_trials
         self.sim_num = None
         self.rich_task_id = id # used for task id in rich
+        self._run_report = []
         self.trial_report = []
         self.time_step_report = []
 
@@ -1044,21 +1045,32 @@ class Report:
                                                      is_controller=is_controller,
                                                      context=context
                                                      )
-            # If trial is using FULL report, save Node's to run_report
             if trial_report_type is ReportOutput.FULL:
+                # If trial is using FULL report, save Panel for node to run_report
                 if is_controller:
-                    # Controller, so print and record (since it happens outside the context of a TRIAL
-                    # and its TIME_STEPS, so won't be included in those reports
-                    self._rich_progress.console.print(node_report)
+                    # # MODIFIED 3/23/21 OLD:
+                    # # Controller, so print and record (since it happens outside the context of a TRIAL
+                    # # and its TIME_STEPS, so won't be included in those reports
+                    # self._rich_progress.console.print(node_report)
+                    # if self._record_reports:
+                    #     with self._recording_console.capture() as capture:
+                    #         self._recording_console.print(node_report)
+                    #     self._recorded_reports += capture.get()
+                    # MODIFIED 3/23/21 NEW:
+                    # FIX: CONSTRUCT HEADER FOR SIMULATION SET USING CONTROLLER'S NAME,
+                    #  ADD AS ITS INPUT THE ControlMechanism's outcome ATTRIBUTE (i.e., INPUT FROM ObjectiveMechanism)
+                    #  AND, AT END OF RUN, REPORT THE control_allocation IT SETTLED ON
                     if self._record_reports:
                         with self._recording_console.capture() as capture:
-                            self._recording_console.print(node_report)
+                            # FIX: REPLACE THIS WITH STUFF CONSTRUCTED ABOVE
+                            # self._recording_console.print(node_report)
                         self._recorded_reports += capture.get()
+                    # MODIFIED 3/23/21 END
                 else:
                     # Non-controller, so add to time_step report
                     run_report.time_step_report.append(node_report)
-            # Otherwise, just print it to the console (as part of otherwise TERSE report)
             else: # TERSE output
+            # Otherwise, just print it to the console (as part of otherwise TERSE report)
                 self._rich_progress.console.print(node_report)
                 if self._record_reports:
                     with self._recording_console.capture() as capture:
