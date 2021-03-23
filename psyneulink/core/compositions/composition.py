@@ -9590,11 +9590,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for port in self.output_CIM.output_ports:
                 output_values.append(port.parameters.value._get(context))
 
-
             # UPDATE TIME and RETURN ***********************************************************************************
 
             execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
-            
+
             return output_values
 
     def __call__(self, *args, **kwargs):

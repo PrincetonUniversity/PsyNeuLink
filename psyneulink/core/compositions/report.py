@@ -1010,8 +1010,8 @@ class Report:
                 run_report.trial_report = [f'\n[bold {trial_panel_color}]input:[/]'
                                            f' {[i.tolist() for i in caller.get_input_values(context)]}']
                 # Push trial_header to stack in case there are intervening executions of nested comps or simulations
-                self._trial_header_stack.append(f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial' \
-                                           f' {trial_num} [/]')
+                self._trial_header_stack.append(
+                    f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial {trial_num} [/]')
             else: # TERSE output
                 # print trial title and separator + input array to Composition
                 trial_header = f'[bold {trial_panel_color}]' \
