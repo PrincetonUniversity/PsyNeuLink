@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.8.7.0+4.gce6cbae274 documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.8.7.0+5.gd5c5604946 documentation</title>
   
 
   
@@ -96,7 +96,7 @@
               
               
                 <div class="version">
-                  0.8.7.0+4
+                  0.8.7.0+5
                 </div>
               
             
@@ -206,7 +206,7 @@ the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.co
 (or part of one) that it controls, and its <a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ObjectiveFunction</span></code></a> seeks to maximize this, which corresponds to
 maximizing the Expected Value of Control, as described below.</p>
 <p id="optimizationcontrolmechanism-evc"><strong>Expected Value of Control</strong></p>
-<p>The <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a> of an OptmizationControlMechanism, like any <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>
+<p>The <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a> of an OptimizationControlMechanism, like any <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>
 is computed as the difference between the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">outcome</span></code></a> computed by its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_mechanism</span></code></a> and the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.costs" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.costs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">costs</span></code></a> of its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_signals</span></code></a> for a given <a class="reference internal" href="#optimizationcontrolmechanism-state"><span class="std std-ref">state</span></a> (i.e.,
 set of <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">feature_values</span></code></a> and <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_allocation</span></code></a>.  If the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">outcome</span></code></a> is configured to measure the
 value of processing (e.g., reward received, time taken to respond, or a combination of these, etc.),

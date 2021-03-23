@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Preferences &mdash; PsyNeuLink 0.8.7.0+4.gce6cbae274 documentation</title>
+  <title>Preferences &mdash; PsyNeuLink 0.8.7.0+5.gd5c5604946 documentation</title>
   
 
   
@@ -96,7 +96,7 @@
               
               
                 <div class="version">
-                  0.8.7.0+4
+                  0.8.7.0+5
                 </div>
               
             
@@ -207,15 +207,35 @@ additional details):</p>
 <li><p><strong>paramValidationPref</strong> (bool : default False) - enables/disables run-time validation of the execute method of a
 Function object;</p></li>
 </ul>
-<ul class="simple" id="preferenceset-reportoutputpref">
-<li><p><strong>reportOutputPref</strong> (<a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput" title="psyneulink.core.compositions.report.ReportOutput"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportOutput</span></code></a>, <em>PARAMS</em>, str, list): default ReportOutput.OFF) - enables/disables and
-determines format and content for reporting execution of the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> (see <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput" title="psyneulink.core.compositions.report.ReportOutput"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportOutput</span></code></a> for options). If
-<em>PARAMS</em> is specified, then <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput.FULL" title="psyneulink.core.compositions.report.ReportOutput.FULL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ReportOutput.FULL</span></code></a> is used automatically (rather than the default, <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput.OFF" title="psyneulink.core.compositions.report.ReportOutput.OFF"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ReportOutput.OFF</span></code></a>),
-and the Component’s <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> are included along with its input and output.  A list of specific Parameters of
-the Component and/or its <a class="reference internal" href="Component.html#component-function"><span class="std std-ref">function</span></a> can also be specified, in which case only those are
-included. If the Component is a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> executed within a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, its preference is overridden
-by the <strong>report_output</strong> argument specified in any of the Composition’s <a class="reference internal" href="Composition.html#composition-execution-methods"><span class="std std-ref">execution methods</span></a> unless ReportOutput.USE_PREFS is specified in the argument; see below for
-examples and <a class="reference internal" href="Composition.html#composition-execution-reporting"><span class="std std-ref">execution reporting</span></a> for additional details.</p></li>
+<ul id="preferenceset-reportoutputpref">
+<li><p><strong>reportOutputPref</strong> (<a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput" title="psyneulink.core.compositions.report.ReportOutput"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportOutput</span></code></a> or list[<a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput" title="psyneulink.core.compositions.report.ReportOutput"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportOutput</span></code></a>, <em>PARAMS</em> or str, str…] : default ReportOutput.OFF) -
+enables/disables and determines format and content for reporting execution of the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> (see <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput" title="psyneulink.core.compositions.report.ReportOutput"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportOutput</span></code></a>
+for options). The following options can be used (also see <a class="reference internal" href="#examples"><span class="std std-ref">Examples</span></a> below):</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput.OFF" title="psyneulink.core.compositions.report.ReportOutput.OFF"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ReportOutput.OFF</span></code></a> - suppress reporting execution of the Component;</p></li>
+<li><p><a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput.TERSE" title="psyneulink.core.compositions.report.ReportOutput.TERSE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ReportOutput.TERSE</span></code></a> - report only the execution of the Component, but no information about it;</p></li>
+<li><p><a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput.FULL" title="psyneulink.core.compositions.report.ReportOutput.FULL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ReportOutput.FULL</span></code></a> - report the input and output of the Component when it is executed;</p></li>
+<li><p>[<a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput.FULL" title="psyneulink.core.compositions.report.ReportOutput.FULL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ReportOutput.FULL</span></code></a>, <em>PARAMS</em>] - report the input and output as well as the value of all of the Component’s</p></li>
+</ul>
+<p><a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> when it is executed;</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>[<a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput.FULL" title="psyneulink.core.compositions.report.ReportOutput.FULL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ReportOutput.FULL</span></code></a>, &lt;parameter name&gt;, &lt;parameter name&gt;…] - report the value of specific <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> of</dt><dd><p>the Component and/or its <a class="reference internal" href="Component.html#component-function"><span class="std std-ref">function</span></a>.  Specifying <em>VARIABLE</em> and/or <em>VALUE</em> displays the
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> and/or <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> attributes of a Mechanism,
+respectivey, and not those attributes of its primary <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> or secondary ones.</p>
+</dd>
+</dl>
+</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The reportOutputPref settings for a Component only take effect when the Component is executed on it own
+(using its <a class="reference internal" href="Component.html#component-execution"><span class="std std-ref">execute method</span></a>) or if <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput.USE_PREFS" title="psyneulink.core.compositions.report.ReportOutput.USE_PREFS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ReportOutput.USE_PREFS</span></code></a> is specified in the
+<strong>report_output</strong> argument of one of the Composition’s <a class="reference internal" href="Composition.html#composition-execution-methods"><span class="std std-ref">execution methods</span></a>.
+Otherwise, the ReportOutput option specified in the <strong>report_output</strong> and <strong>report_params</strong> arguments of a
+Composition’s execution method takes precedence (see <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput" title="psyneulink.core.compositions.report.ReportOutput"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportOutput</span></code></a>).</p>
+</div>
+</li>
 <li><p><strong>logPref</strong> (<a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogCondition</span></code></a> : default LogCondition.OFF) - sets <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogCondition</span></code></a> for a given Component;</p></li>
 </ul>
 <div class="technical-note docutils container">
@@ -224,7 +244,7 @@ examples and <a class="reference internal" href="Composition.html#composition-ex
 pipeline for delivery to external applications.</p></li>
 </ul>
 </div>
-<p class="rubric">Examples</p>
+<p class="rubric" id="examples">Examples</p>
 <div class="section" id="reportoutputpref">
 <h3>reportOutputPref<a class="headerlink" href="#reportoutputpref" title="Permalink to this headline">¶</a></h3>
 <p>By default, executing a Component, such as the Mechanism below, does not produce any output:</p>
@@ -251,9 +271,9 @@ Assigning <a class="reference internal" href="Report.html#psyneulink.core.compos
 </div>
 <p>This can be useful when there are many Components executed (e.g., as part of the <a class="reference internal" href="Composition.html#composition-execution"><span class="std std-ref">execution</span></a>
 of a complex <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
-<p>Assigning the <em>PARAMS</em> keyword produces a display of the Mechanism’s input and output as well as the value of
-all of its <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> (for brevity, not all are shown below):</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">reportOutputPref</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">PARAMS</span>
+<p>Assigning the <em>PARAMS</em> keyword with <code class="xref any docutils literal notranslate"><span class="pre">Report.FULL</span></code> produces a display of the Mechanism’s input and output as well as the
+value of all of its <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> (for brevity, not all are shown below):</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">reportOutputPref</span> <span class="o">=</span> <span class="p">[</span><span class="n">ReportOutput</span><span class="o">.</span><span class="n">FULL</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">PARAMS</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 <span class="go">╭────────────────────────────────────────── My Mechanism ──────────────────────────────────────────╮</span>
 <span class="go">│ input: 0.0                                                                                       │</span>
@@ -290,7 +310,7 @@ all of its <a class="reference internal" href="Parameters.html"><span class="doc
 <p>Note that specifying <em>PARAMS</em> forces a full output (i.e., equivalent to also specifying <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput.FULL" title="psyneulink.core.compositions.report.ReportOutput.FULL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ReportOutput.FULL</span></code></a>).</p>
 <p>Generally, not all of a Component’s <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> are of interest.  The display can be restricted to
 just those of interest by including them in a list specified for reportOutputPref:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">reportOutputPref</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;integration_rate&#39;</span><span class="p">,</span> <span class="s1">&#39;slope&#39;</span><span class="p">,</span> <span class="s1">&#39;rate&#39;</span><span class="p">]</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">reportOutputPref</span> <span class="o">=</span> <span class="p">[</span><span class="n">ReportOutout</span><span class="o">.</span><span class="n">FULL</span><span class="p">,</span> <span class="s1">&#39;integration_rate&#39;</span><span class="p">,</span> <span class="s1">&#39;slope&#39;</span><span class="p">,</span> <span class="s1">&#39;rate&#39;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 <span class="go">╭────────────────────────────────────────── My Mechanism ──────────────────────────────────────────╮</span>
 <span class="go">│ input: 0.0                                                                                       │</span>
@@ -306,16 +326,15 @@ just those of interest by including them in a list specified for reportOutputPre
 <span class="go">╰──────────────────────────────────────────────────────────────────────────────────────────────────╯</span>
 </pre></div>
 </div>
-<p>This can be overridden by specifying <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput.TERSE" title="psyneulink.core.compositions.report.ReportOutput.TERSE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ReportOutput.TERSE</span></code></a> (i.e., without having to delete all of the parameter
-specifications, which can be useful when testing):</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">reportOutputPref</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;integration_rate&#39;</span><span class="p">,</span> <span class="s1">&#39;slope&#39;</span><span class="p">,</span> <span class="s1">&#39;rate&#39;</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ReportOutput</span><span class="o">.</span><span class="n">TERSE</span><span class="p">]</span>
+<p>Note that this is overridden if <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput.TERSE" title="psyneulink.core.compositions.report.ReportOutput.TERSE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ReportOutput.TERSE</span></code></a> is specified:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">reportOutputPref</span> <span class="o">=</span> <span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">ReportOutput</span><span class="o">.</span><span class="n">TERSE</span><span class="p">,</span> <span class="s1">&#39;integration_rate&#39;</span><span class="p">,</span> <span class="s1">&#39;slope&#39;</span><span class="p">,</span> <span class="s1">&#39;rate&#39;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 <span class="go"> My Mechanism executed</span>
 </pre></div>
 </div>
 <p>When a Mechanism is executed as part of a Composition, the Composition’s reportOutputPref takes precedence:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">(</span><span class="n">pathways</span><span class="o">=</span><span class="p">[</span><span class="n">my_mech</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">reportOutputPref</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;integration_rate&#39;</span><span class="p">,</span> <span class="s1">&#39;slope&#39;</span><span class="p">,</span> <span class="s1">&#39;rate&#39;</span><span class="p">]</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">reportOutputPref</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;integration_rate&#39;</span><span class="p">,</span> <span class="s1">&#39;slope&#39;</span><span class="p">,</span> <span class="s1">&#39;rate&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">(</span><span class="n">pathways</span><span class="o">=</span><span class="p">[</span><span class="n">my_mech</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_comp</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -329,38 +348,9 @@ the Mechanism’s reportOutputPref setting:</p>
 <span class="go">   My Mechanism executed</span>
 </pre></div>
 </div>
-<p>Note that the report for the execution of a Composition contains information about the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>
-and <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> in which the Mechanism executed.</p>
-<p>A more complete report of the execution can be generated using the <code class="xref any docutils literal notranslate"><span class="pre">Report.FULL</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">Report.USE_PREFS</span></code> options in the
-<strong>report_output</strong> argument of a Composition’s <a class="reference internal" href="Composition.html#composition-execution-methods"><span class="std std-ref">execution methods</span></a>, that also includes
-the input and output for the Composition:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">(</span><span class="n">pathways</span><span class="o">=</span><span class="p">[</span><span class="n">my_mech</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">reportOutputPref</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;integration_rate&#39;</span><span class="p">,</span> <span class="s1">&#39;slope&#39;</span><span class="p">,</span> <span class="s1">&#39;rate&#39;</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">my_comp</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">report_output</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ReportOutput</span><span class="o">.</span><span class="n">FULL</span><span class="p">)</span>
-<span class="go">┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  Composition-0: Trial 0  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓</span>
-<span class="go">┃                                                                                                          ┃</span>
-<span class="go">┃ input: [[0.0]]                                                                                           ┃</span>
-<span class="go">┃                                                                                                          ┃</span>
-<span class="go">┃ ┌────────────────────────────────────────────  Time Step 0 ────────────────────────────────────────────┐ ┃</span>
-<span class="go">┃ │ ╭────────────────────────────────────────── My Mechanism ──────────────────────────────────────────╮ │ ┃</span>
-<span class="go">┃ │ │ input: 0.0                                                                                       │ │ ┃</span>
-<span class="go">┃ │ │ ╭──────────────────────────────────────────────────────────────────────────────────────────────╮ │ │ ┃</span>
-<span class="go">┃ │ │ │ params:                                                                                      │ │ │ ┃</span>
-<span class="go">┃ │ │ │         integration_rate: 0.5                                                                │ │ │ ┃</span>
-<span class="go">┃ │ │ │         function: Linear Function-6                                                          │ │ │ ┃</span>
-<span class="go">┃ │ │ │                 slope: 1.0                                                                   │ │ │ ┃</span>
-<span class="go">┃ │ │ │         integrator_function: AdaptiveIntegrator Function-1                                   │ │ │ ┃</span>
-<span class="go">┃ │ │ │                 rate: 0.5                                                                    │ │ │ ┃</span>
-<span class="go">┃ │ │ ╰──────────────────────────────────────────────────────────────────────────────────────────────╯ │ │ ┃</span>
-<span class="go">┃ │ │ output: 0.0                                                                                      │ │ ┃</span>
-<span class="go">┃ │ ╰──────────────────────────────────────────────────────────────────────────────────────────────────╯ │ ┃</span>
-<span class="go">┃ └──────────────────────────────────────────────────────────────────────────────────────────────────────┘ ┃</span>
-<span class="go">┃                                                                                                          ┃</span>
-<span class="go">┃ result: [[0.0]]                                                                                          ┃</span>
-<span class="go">┃                                                                                                          ┃</span>
-<span class="go">┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛</span>
-</pre></div>
-</div>
+<p><a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput.USE_PREFS" title="psyneulink.core.compositions.report.ReportOutput.USE_PREFS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ReportOutput.USE_PREFS</span></code></a> can be used in the <strong>report_output</strong> argument to allow the reportOutputPref of individual
+Components to determine what is displayed when a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> is executed.  See <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput" title="psyneulink.core.compositions.report.ReportOutput"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ReportOutput</span></code></a> for other options
+and additional examples of how to <strong>report_output</strong> argument of a Composition’s <a class="reference internal" href="Composition.html#composition-execution-methods"><span class="std std-ref">execution methods</span></a> can be used to configure the output.</p>
 </div>
 </div>
 </div>
