@@ -934,7 +934,7 @@ class Report:
                                                      box=trial_panel_box,
                                                      border_style=trial_panel_color,
                                                      title=f'[bold{trial_panel_color}] {caller.name}{sim_str}: '
-                                                           f'Trial {trial_num} [/]',
+                                                           f'Trial {trial_num}[/] ',
                                                      expand=False)
 
             if trial_report_type is not ReportOutput.OFF:
