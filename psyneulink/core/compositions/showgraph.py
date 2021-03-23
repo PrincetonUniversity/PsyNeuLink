@@ -194,24 +194,25 @@ Class Reference
 
 import inspect
 import warnings
+
 import numpy as np
 import typecheck as tc
 from PIL import Image
 
 from psyneulink.core.components.component import Component
-from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.core.components.shellclasses import Mechanism, Projection
+from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.globals.utilities import convert_to_list
+from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ALL, BOLD, BOTH, COMPONENT, COMPOSITION, CONDITIONS, FUNCTIONS, INSET, LABELS, MECHANISM, MECHANISMS, NESTED, \
+    ALL, BOLD, COMPONENT, COMPOSITION, CONDITIONS, FUNCTIONS, INSET, LABELS, MECHANISM, MECHANISMS, NESTED, \
     PROJECTION, PROJECTIONS, ROLES, SIMULATIONS, VALUES
+from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = ['DURATION', 'EXECUTION_SET', 'INITIAL_FRAME', 'MOVIE_DIR', 'MOVIE_NAME',
            'MECH_FUNCTION_PARAMS', 'NUM_TRIALS', 'NUM_RUNS', 'PORT_FUNCTION_PARAMS',
@@ -2396,9 +2397,9 @@ class ShowGraph():
                 return "{}\n{}".format(item.name, dim_string)
 
         if isinstance(item, CompositionInterfaceMechanism):
-            name = name.replace('Input_CIM','INPUT')
-            name = name.replace('Parameter_CIM', 'CONTROL')
-            name = name.replace('Output_CIM', 'OUTPUT')
+            name = name.replace('Input_CIM','INPUT_CIM')
+            name = name.replace('Parameter_CIM', 'PARAMETER_CIM')
+            name = name.replace('Output_CIM', 'OUTPUT_CIM')
 
         return name
 

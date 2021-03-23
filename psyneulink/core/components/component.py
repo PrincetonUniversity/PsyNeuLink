@@ -1232,6 +1232,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #    - assign function's output to self.defaults.value (based on call of self.execute)
         self._instantiate_function(function=function, function_params=function_params, context=context)
 
+        # FIX TIME 3/18/21
+        if '(RESULT) to (OUTPUT_CIM_TransferMechanism-1_RESULT)' in self.name:
+            assert True
         self._instantiate_value(context=context)
 
         # INSTANTIATE ATTRIBUTES AFTER FUNCTION

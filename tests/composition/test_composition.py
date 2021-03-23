@@ -1,40 +1,38 @@
 import functools
 import logging
-
 from timeit import timeit
 
 import numpy as np
 import pytest
 
-from itertools import product
-
-import psyneulink.core.llvm as pnlvm
 import psyneulink as pnl
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.learningfunctions import Reinforcement, BackPropagation
+from psyneulink.core.components.functions.optimizationfunctions import GridSearch
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
     AdaptiveIntegrator, DriftDiffusionIntegrator, IntegratorFunction, SimpleIntegrator
 from psyneulink.core.components.functions.transferfunctions import \
     Linear, Logistic, INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
-from psyneulink.core.components.functions.learningfunctions import Reinforcement, BackPropagation
-from psyneulink.core.components.functions.optimizationfunctions import GridSearch
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
+    OptimizationControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import OptimizationControlMechanism
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal, CostFunctions
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS, LEARNED_PROJECTIONS, \
+    ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS, \
+    LEARNED_PROJECTIONS, \
     NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, SLOPE, TARGET_MECHANISM, VARIANCE
-from psyneulink.core.scheduling.condition import AfterNCalls, AtTimeStep, AtTrial, Never
+from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never
 from psyneulink.core.scheduling.condition import EveryNCalls
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
@@ -2804,6 +2802,7 @@ class TestRunInputSpecifications:
         inputs_generator_instance = inputs_generator_function()
 
         # run Composition with all three input types and assert that results are as expected.
+        # ocomp.show_graph(show_controller=True, show_cim=True)
         ocomp.run(inputs=inputs_generator_function)
         ocomp.run(inputs=inputs_generator_instance)
         ocomp.run(inputs=inputs_dict)
@@ -4754,6 +4753,7 @@ class TestNestedCompositions:
 
         result = c_lvl0.run([5])
         assert result == [4500]
+
 
 class TestOverloadedCompositions:
     def test_mechanism_different_inputs(self):

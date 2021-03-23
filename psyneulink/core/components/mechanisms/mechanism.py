@@ -2540,19 +2540,18 @@ class Mechanism_Base(Mechanism):
             # Use report_output and report_params options passed to execute from Composition or command line;
             # otherwise try to get from Mechanism's reportOutputPref
             report_output = report_output or next((pref for pref in convert_to_list(self.prefs.reportOutputPref)
-                                                   if isinstance(pref, ReportOutput)), None)
+                                                   if isinstance(pref, ReportOutput)), ReportOutput.OFF)
             report_params = report_params or next((pref for pref in convert_to_list(self.prefs.reportOutputPref)
-                                                   if isinstance(pref, ReportParams)), None)
-            if report_output is not ReportOutput.OFF:
-                with Report(self, context=context) as report:
-                    report.report_output(caller=self,
-                                         report_num=run_report,
-                                         scheduler=None,
-                                         report_output=report_output,
-                                         report_params=report_params,
-                                         content='node',
-                                         context=context,
-                                         node=self)
+                                                   if isinstance(pref, ReportParams)), ReportParams.OFF)
+            with Report(self, context=context) as report:
+                report.report_output(caller=self,
+                                     report_num=run_report,
+                                     scheduler=None,
+                                     report_output=report_output,
+                                     report_params=report_params,
+                                     content='node',
+                                     context=context,
+                                     node=self)
 
         return value
 
