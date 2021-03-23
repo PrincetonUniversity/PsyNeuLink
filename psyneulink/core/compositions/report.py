@@ -1057,6 +1057,9 @@ class Report:
                     #         self._recording_console.print(node_report)
                     #     self._recorded_reports += capture.get()
                     # MODIFIED 3/23/21 NEW:
+                    self._simulation_header_stack.append(
+                        f'[bold{simulation_panel_color}] {caller.name} simulaton of {}: Trial {trial_num}[/] ')
+                    )
                     # FIX: CONSTRUCT HEADER FOR SIMULATION SET USING CONTROLLER'S NAME,
                     #  ADD AS ITS INPUT THE ControlMechanism's outcome ATTRIBUTE (i.e., INPUT FROM ObjectiveMechanism)
                     #  AND, AT END OF RUN, REPORT THE control_allocation IT SETTLED ON
