@@ -4755,6 +4755,7 @@ class TestNestedCompositions:
         result = c_lvl0.run([5])
         assert result == [4500]
 
+
 class TestOverloadedCompositions:
     def test_mechanism_different_inputs(self):
         a = TransferMechanism(name='a', function=Linear(slope=2))
