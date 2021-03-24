@@ -8736,7 +8736,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     and ContextFlags.SIMULATION_MODE not in context.runmode
             ):
 
-                # MODIFIED 3/21/21 NEW:
                 # Report controller engagement before executing simulations so it appears before them in the report
                 report.report_output(self,
                                      report_num,
@@ -8746,7 +8745,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                      'node',
                                      context,
                                      node=self.controller)
-                # MODIFIED 3/21/21 END
 
                 report._execution_stack.append(self.controller)
 
@@ -8766,19 +8764,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 context.remove_flag(ContextFlags.CONTROL)
 
                 report._execution_stack.pop()
-
-                # # MODIFIED 3/21/21 OLD:
-                # # FIX: MOVE TO ABOVE TO PRECEDE SIMULATIONS
-                # # Report execution
-                # report.report_output(self,
-                #                      report_num,
-                #                      execution_scheduler,
-                #                      report_output,
-                #                      report_params,
-                #                      'node',
-                #                      context,
-                #                      node=self.controller)
-                # MODIFIED 3/21/21 END
 
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
     def execute(
