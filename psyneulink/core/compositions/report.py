@@ -147,7 +147,7 @@ from rich.progress import Progress as RichProgress
 
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import FUNCTION_PARAMS, INPUT_PORTS, OUTPUT_PORTS, VALUE
+from psyneulink.core.globals.keywords import FUNCTION_PARAMS, INPUT_PORTS, OUTCOME, OUTPUT_PORTS, VALUE
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.utilities import convert_to_list
 
@@ -1092,15 +1092,13 @@ class Report:
                                                    box=trial_panel_box,
                                                    border_style=trial_panel_color,
                                                    title=self._trial_header_stack.pop(),
-                                                   expand=False),
+                                                   expand=False)
                 if simulation_mode:
                     output_report.simulation_report.append(output_report.trial_report)
                     # printing/recording of reporting will occur when content = 'controller_end'
                     return
-                # # MODIFIED 3/23/21 OLD:
-                # else:
-                #     output_report.trial_report = Padding.indent(output_report.trial_report, depth_indent)
-                # MODIFIED 3/23/21 END
+                else:
+                    output_report.trial_report = Padding.indent(output_report.trial_report, depth_indent)
 
             if trial_report_type is not ReportOutput.OFF:
                 self._print_and_record_reports(TRIAL_OUTPUT_REPORT, context, output_report)
@@ -1108,8 +1106,11 @@ class Report:
         elif content is 'controller_start':
             # Report the value of the controller's `outcome <ControlMechanism.outcome>` attribute
             #  (generally the value of its *OUTCOME* InputPort)
-            output_report.simulation_report.append(f"\n[bold {controller_input_color}]objective outcome:[/]"
-                                            f" {node.outcome.tolist()}\n")
+            features_str = f'[bold {controller_input_color}]features:[/] ' \
+                           f'{[p.parameters.value.get(context).tolist() for p in node.input_ports if p.name != OUTCOME]}'
+            outcome_str = f'[bold {controller_input_color}]outcome:[/] ' \
+                         f'{node.input_ports[OUTCOME].parameters.value.get(context).tolist()}'
+            output_report.simulation_report.append(f"\n{features_str}\n{outcome_str}\n")
         elif content is 'controller_end':
             # TERSE is handled above by treating controller as node
             if ReportOutput is ReportOutput.FULL:
@@ -1515,8 +1516,8 @@ class Report:
                 if output_report.trial_report and report_type is TRIAL_OUTPUT_REPORT:
                     self._rich_progress.console.print(output_report.trial_report)
                     self._rich_progress.console.print('')
-                elif output_report.run_report and report_type is SIMULATION_OUTPUT_REPORT:
-                    self._rich_progress.console.print(output_report.run_report)
+                elif output_report.simulation_report and report_type is SIMULATION_OUTPUT_REPORT:
+                    self._rich_progress.console.print(output_report.simulation_report)
                     self._rich_progress.console.print('')
             # Record output reports as they are created
             if len(self._execution_stack)==1 and self._report_output is not ReportOutput.OFF:
@@ -1527,7 +1528,7 @@ class Report:
                             if report_type is TRIAL_OUTPUT_REPORT:
                                 self._recording_console.print(output_report.trial_report)
                             elif report_type is SIMULATION_OUTPUT_REPORT:
-                                self._recording_console.print(output_report.run_report)
+                                self._recording_console.print(output_report.simulation_report)
                         self._recorded_reports += capture.get()
 
         # Record progress after execution of outer-most Composition
