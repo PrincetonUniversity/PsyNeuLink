@@ -1004,8 +1004,8 @@ class Report:
                 # sim_str = ''
                 run_mode = DEFAULT
             output_report = self.output_reports[output_report_owner][run_mode][report_num]
-            if self.output_reports[output_report_owner][SIMULATION]:
-                simulation_report = self.output_reports[output_report_owner][SIMULATION][report_num]
+            # if self.output_reports[output_report_owner][SIMULATION]:
+            #     simulation_report = self.output_reports[output_report_owner][SIMULATION][report_num]
 
             # FIX: GENERALIZE THIS, PUT AS ATTRIBUTE ON Report, AND THEN REFERENCE THAT IN report_progress
             depth_indent = 0
@@ -1127,9 +1127,9 @@ class Report:
                 #                                         title=f'[bold{controller_panel_color}] {node.name} ' \
                 #                                               f'SIMULATION OF {node.composition.name}[/] ',
                 #                                         expand=False)
-                output_report = output_report.simulation_report
-                output_report.extend(simulation_report.simulation_report)
-                output_report.append(f"\n[bold {controller_output_color}]control allocation:[/]"
+                sim_report = output_report.simulation_report
+                sim_report.extend(self.output_reports[output_report_owner][SIMULATION][report_num].simulation_report)
+                sim_report.append(f"\n[bold {controller_output_color}]control allocation:[/]"
                                      f" {[r.tolist() for r in node.control_allocation]}\n")
                 # output_report = Panel(RenderGroup(*output_report.simulation_report),
                 #                           box=controller_panel_box,
@@ -1137,12 +1137,12 @@ class Report:
                 #                           title=f'[bold{controller_panel_color}] {node.name} ' \
                 #                                 f'SIMULATION OF {node.composition.name}[/] ',
                 #                           expand=False)
-                output_report = Panel(RenderGroup(*output_report),
-                                          box=controller_panel_box,
-                                          border_style=controller_panel_color,
-                                          title=f'[bold{controller_panel_color}] {node.name} ' \
-                                                f'SIMULATION OF {node.composition.name}[/] ',
-                                          expand=False)
+                output_report.simulation_report = Panel(RenderGroup(*sim_report),
+                                                        box=controller_panel_box,
+                                                        border_style=controller_panel_color,
+                                                        title=f'[bold{controller_panel_color}] {node.name} ' \
+                                                              f'SIMULATION OF {node.composition.name}[/] ',
+                                                        expand=False)
             # FIX: ??THIS:
             if trial_report_type is not ReportOutput.OFF:
                 self._print_and_record_reports(SIMULATION_OUTPUT_REPORT, context, output_report)
