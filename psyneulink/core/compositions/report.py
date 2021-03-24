@@ -177,7 +177,7 @@ trial_input_color = 'green'
 trial_output_color = 'red'
 trial_panel_box = box.HEAVY
 # controller simulaton
-controller_panel_color = 'dodger_blue3'
+controller_panel_color = 'purple'
 controller_input_color = 'purple'
 controller_output_color = 'blue'
 controller_panel_box = box.HEAVY
@@ -1004,17 +1004,18 @@ class Report:
                 # sim_str = ''
                 run_mode = DEFAULT
             output_report = self.output_reports[output_report_owner][run_mode][report_num]
-            # if self.output_reports[output_report_owner][SIMULATION]:
-            #     simulation_report = self.output_reports[output_report_owner][SIMULATION][report_num]
 
             # FIX: GENERALIZE THIS, PUT AS ATTRIBUTE ON Report, AND THEN REFERENCE THAT IN report_progress
             depth_indent = 0
             if simulation_mode or self._execution_stack_depth:
                 depth_indent = self._indent_factor * self._execution_stack_depth
 
-        if content is 'controller_start' and report_output is ReportOutput.TERSE:
+        if content is 'controller_start':
+            if report_output is ReportOutput.TERSE:
             # For TERSE reporting, treat controller as node
-            content = 'node'
+                content = 'node'
+            else:
+                return
 
         # Construct output report -----------------------------------------------------------------------------
 
@@ -1106,38 +1107,20 @@ class Report:
             if trial_report_type is not ReportOutput.OFF:
                 self._print_and_record_reports(TRIAL_OUTPUT_REPORT, context, output_report)
 
-        elif content is 'controller_start':
-            # Report the value of the controller's inputs (generally, its
-            #    `features <OptimizationControlMechanism_State>` and `outcome <ControlMechanism.outcome>`)
-            features_str = f'[bold {controller_input_color}]features:[/] ' \
-                           f'{[p.parameters.value.get(context).tolist() for p in node.input_ports if p.name != OUTCOME]}'
-            outcome_str = f'[bold {controller_input_color}]outcome:[/] ' \
-                         f'{node.input_ports[OUTCOME].parameters.value.get(context).tolist()}'
-            output_report.simulation_report.append(f"\n{features_str}\n{outcome_str}\n")
-            # simulation_report.append(f"\n{features_str}\n{outcome_str}\n")
-
         elif content is 'controller_end':
             # Only deal with FULL;  TERSE is handled above by treating controller as node
             if report_output is ReportOutput.FULL:
-                # output_report.simulation_report.append(f"\n[bold {controller_output_color}]control allocation:[/]"
-                #                                        f" {[r.tolist() for r in node.control_allocation]}\n")
-                # output_report.simulation_report = Panel(RenderGroup(*output_report.simulation_report),
-                #                                         box=controller_panel_box,
-                #                                         border_style=controller_panel_color,
-                #                                         title=f'[bold{controller_panel_color}] {node.name} ' \
-                #                                               f'SIMULATION OF {node.composition.name}[/] ',
-                #                                         expand=False)
-                sim_report = output_report.simulation_report
-                sim_report.extend(self.output_reports[output_report_owner][SIMULATION][report_num].simulation_report)
-                sim_report.append(f"\n[bold {controller_output_color}]control allocation:[/]"
-                                     f" {[r.tolist() for r in node.control_allocation]}\n")
-                # output_report = Panel(RenderGroup(*output_report.simulation_report),
-                #                           box=controller_panel_box,
-                #                           border_style=controller_panel_color,
-                #                           title=f'[bold{controller_panel_color}] {node.name} ' \
-                #                                 f'SIMULATION OF {node.composition.name}[/] ',
-                #                           expand=False)
-                output_report.simulation_report = Panel(RenderGroup(*sim_report),
+
+                features = [p.parameters.value.get(context).tolist() for p in node.input_ports if p.name != OUTCOME]
+                outcome = node.input_ports[OUTCOME].parameters.value.get(context).tolist()
+                control_allocation = [r.tolist() for r in node.control_allocation]
+
+                ctlr_report = [f'\n[bold {controller_input_color}]features:[/] {features}'
+                                     f'\n[bold {controller_input_color}]outcome:[/] {outcome}']
+                ctlr_report.extend(self.output_reports[output_report_owner][SIMULATION][report_num].simulation_report)
+                ctlr_report.append(f"\n[bold {controller_output_color}]control allocation:[/] {control_allocation}\n")
+
+                output_report.simulation_report = Panel(RenderGroup(*ctlr_report),
                                                         box=controller_panel_box,
                                                         border_style=controller_panel_color,
                                                         title=f'[bold{controller_panel_color}] {node.name} ' \
