@@ -503,7 +503,10 @@ class Report:
 
     _execution_stack : list : default []
         tracks `nested compositions <Composition_Nested>` and `controllers <Composition_Controller>`
-        (i.e., being used to `simulate <OptimizationControlMechanism_Execution>` a `Composition`).
+        (i.e., being used to `simulate <OptimizationControlMechanism_Execution>` a `Composition`).   Entries
+        are the nested Compositions and/or controllers in order of their nesting, and are appended and popped,
+        respectively, just before and after they are executed (the former in a Composition's `_execute_controller
+        <Composition._execute_controller>` method; and the latter in its `execute <Composition.execute>` method).
 
     _execution_stack_depth : int : default 0
         depth of nesting of executions, including `nested compositions <Composition_Nested>` and any `controllers
@@ -1001,6 +1004,10 @@ class Report:
             if simulation_mode or self._execution_stack_depth:
                 depth_indent = self._indent_factor * self._execution_stack_depth
 
+        if content is 'controller_start' and report_output is ReportOutput.TERSE:
+            # For TERSE reporting, treat controller as node
+            content = 'node'
+
         # Construct output report -----------------------------------------------------------------------------
 
         if content is 'trial_init':
@@ -1047,17 +1054,7 @@ class Report:
                                                      )
             # If trial is using FULL report, save Node's to output_report
             if trial_report_type is ReportOutput.FULL:
-                if is_controller:
-                    # Controller, so print and record (since it happens outside the context of a TRIAL
-                    # and its TIME_STEPS, so won't be included in those reports
-                    self._rich_progress.console.print(node_report)
-                    if self._record_reports:
-                        with self._recording_console.capture() as capture:
-                            self._recording_console.print(node_report)
-                        self._recorded_reports += capture.get()
-                else:
-                    # Non-controller, so add to time_step report
-                    output_report.time_step_report.append(node_report)
+                output_report.time_step_report.append(node_report)
             # Otherwise, just print it to the console (as part of otherwise TERSE report)
             else: # TERSE output
                 self._rich_progress.console.print(node_report)
@@ -1097,6 +1094,24 @@ class Report:
 
             if trial_report_type is not ReportOutput.OFF:
                 self._print_and_record_reports(OUTPUT_REPORT, context, output_report)
+
+        elif content is 'controller_start':
+            # Controller, so print and record (since it happens outside the context of a TRIAL
+            # and its TIME_STEPS, so won't be included in those reports
+            self.output_reports[output_report_owner][run_mode][report_num].
+
+            -----------------
+
+
+        elif content is 'controller_end':
+            if ReportOutput is ReportOutput.TERSE:
+                pass
+            # FIX: CREATE TITLE, THEN CREATE PANEL AND CALL _print_and_record...
+            self._rich_progress.console.print(node_report)
+            if self._record_reports:
+                with self._recording_console.capture() as capture:
+                    self._recording_console.print(node_report)
+                self._recorded_reports += capture.get()
 
         else:
             assert False, f"Bad 'content' argument in call to Report.report_output() for {caller.name}: {content}."
