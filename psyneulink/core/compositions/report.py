@@ -1097,8 +1097,10 @@ class Report:
                     output_report.simulation_report.append(output_report.trial_report)
                     # printing/recording of reporting will occur when content = 'controller_end'
                     return
-                else:
-                    output_report.trial_report = Padding.indent(output_report.trial_report, depth_indent)
+                # # MODIFIED 3/23/21 OLD:
+                # else:
+                #     output_report.trial_report = Padding.indent(output_report.trial_report, depth_indent)
+                # MODIFIED 3/23/21 END
 
             if trial_report_type is not ReportOutput.OFF:
                 self._print_and_record_reports(TRIAL_OUTPUT_REPORT, context, output_report)
