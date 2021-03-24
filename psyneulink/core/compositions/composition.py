@@ -8736,7 +8736,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     and ContextFlags.SIMULATION_MODE not in context.runmode
             ):
 
-                # Report controller engagement before executing simulations so it appears before them in the report
+                # Report controller engagement before executing simulations
+                #    so it appears before them for ReportOutput.TERSE
                 report.report_output(self,
                                      report_num,
                                      execution_scheduler,
@@ -8765,7 +8766,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 report._execution_stack.pop()
 
-                # Report controller engagement before executing simulations so it appears before them in the report
+                # Report controller execution after executing simulations
+                #    so it includes the results for ReportOutput.FULL
                 report.report_output(self,
                                      report_num,
                                      execution_scheduler,
