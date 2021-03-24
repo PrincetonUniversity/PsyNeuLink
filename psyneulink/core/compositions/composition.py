@@ -8742,7 +8742,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                      execution_scheduler,
                                      report_output,
                                      report_params,
-                                     'node',
+                                     'controller_start',
                                      context,
                                      node=self.controller)
 
@@ -8764,6 +8764,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 context.remove_flag(ContextFlags.CONTROL)
 
                 report._execution_stack.pop()
+
+                # Report controller engagement before executing simulations so it appears before them in the report
+                report.report_output(self,
+                                     report_num,
+                                     execution_scheduler,
+                                     report_output,
+                                     report_params,
+                                     'controller_end',
+                                     context,
+                                     node=self.controller)
 
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
     def execute(
