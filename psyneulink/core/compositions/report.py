@@ -411,9 +411,9 @@ class OutputReport():
         self.num_trials = num_trials
         self.sim_num = None
         self.rich_task_id = id # used for task id in rich
-        self.controller_report = []
-        self.trial_report = []
         self.time_step_report = []
+        self.trial_report = []
+        self.controller_report = []
 
 
 class Report:
