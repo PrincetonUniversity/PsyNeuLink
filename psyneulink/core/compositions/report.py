@@ -444,6 +444,19 @@ class Report:
     report_to_devices : list[ReportDevices] : default [ReportDevices.CONSOLE]
         specifies devices to which output and progress reporting is sent;  see `ReportDevices` for options.
 
+    depth_indent_factor : int : default 4
+        specifies amount by which to indent for each level of `nested compositions <Composition_Nested>`
+        and/or `simulations <OptimizationControlMechanism_Execution>` for ReportOutput.TERSE.
+
+    padding_indent : int : default 1
+        specifies the number of spaces by which to indent the border of each nested Panel
+        relative the outer one in which it is nested.
+
+    padding_lines : int  : default 1
+        specifies the number of lines below each Panel to separate it from the one below it.
+
+    context : Context : default None
+
     Attributes
     ----------
 
@@ -547,14 +560,15 @@ class Report:
         reported as soon as it is constructed, at the beginning of a `TRIAL <TimeScale.TRIAL>`.)
 
     depth_indent_factor : int : default 2
-        amount by which to indent for each level of `nested compositions <Composition_Nested>`
+        determines the amount by which to indent for each level of `nested compositions <Composition_Nested>`
         and/or `simulations <OptimizationControlMechanism_Execution>` for ReportOutput.TERSE.
 
     padding_indent : int : default 1
-        number of space by which to indent the border of each nested Panel relative the outer one in which it is nested.
+        determines the number of spaces by which to indent the border of each nested Panel
+        relative the outer one in which it is nested.
 
     padding_lines : int : default 1
-        number of lines below each Panel to separated it from the next one below it.
+        determines the number of lines below each Panel to separated it from the one below it.
 
     _ref_count : int : default 0
         tracks how many times object has been referenced;  counter is incremented on each context __enter__
