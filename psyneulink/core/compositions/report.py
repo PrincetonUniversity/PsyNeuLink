@@ -546,9 +546,15 @@ class Report:
         the trial_headers across nested executions.  (Note: not needed for ReportOutput.TERSE since trial_header is
         reported as soon as it is constructed, at the beginning of a `TRIAL <TimeScale.TRIAL>`.)
 
-    _indent_factor : int : default 2
+    _depth_indent_factor : int : default 2
         amount by which to indent for each level of `nested compositions <Composition_Nested>`
-        and/or `simulations <OptimizationControlMechanism_Execution>`.
+        and/or `simulations <OptimizationControlMechanism_Execution>` for ReportOutput.TERSE.
+
+    _padding_indent : int : default 1
+        number of space by which to indent the border of each nested Panel relative the outer one in which it is nested.
+
+    _padding_lines : int : default 1
+        number of lines below each Panel to separated it from the next one below it.
 
     _ref_count : int : default 0
         tracks how many times object has been referenced;  counter is incremented on each context __enter__
@@ -564,7 +570,9 @@ class Report:
                 report_progress:ReportProgress=ReportProgress.OFF,
                 report_simulations:ReportSimulations=ReportSimulations.OFF,
                 report_to_devices:(list(ReportDevices.__members__), list)=ReportDevices.CONSOLE,
-                indent_factor:int = 4,
+                depth_indent_factor:int = 4,
+                padding_indent:int = 1,
+                padding_lines:int = 1,
                 context:Optional[Context]=None
                 ) -> 'Report':
 
@@ -608,7 +616,9 @@ class Report:
             cls._execution_stack = []
 
             cls._trial_header_stack = []
-            cls._indent_factor = indent_factor
+            cls._depth_indent_factor = depth_indent_factor
+            cls._padding_indent = padding_indent
+            cls._padding_lines = padding_lines
 
             # Instantiate rich progress context object
             # - it is not started until the self.start_output_report() method is called
@@ -758,7 +768,7 @@ class Report:
 
             self._depth_indent_i = self._depth_str_i = ''
             if run_mode is SIMULATION or self._execution_stack_depth:
-                self._depth_indent_i = self._indent_factor * self._execution_stack_depth * ' '
+                self._depth_indent_i = self._depth_indent_factor * self._execution_stack_depth * ' '
                 self._depth_str_i = f' (depth: {self._execution_stack_depth})'
 
             id = self._rich_progress.add_task(f"[red]{self._depth_indent_i}{comp.name}: "
@@ -833,7 +843,7 @@ class Report:
             # Construct update text
             self._depth_indent = self._depth_str = ''
             if simulation_mode or self._execution_stack_depth:
-                self._depth_indent = self._indent_factor * self._execution_stack_depth * ' '
+                self._depth_indent = self._depth_indent_factor * self._execution_stack_depth * ' '
                 self._depth_str = f' (depth: {self._execution_stack_depth})'
             update = f'{self._depth_indent}{caller.name}: ' \
                      f'{run_mode}ed {trial_num+1}{num_trials_str} trials{self._depth_str}'
@@ -1003,7 +1013,7 @@ class Report:
             # FIX: GENERALIZE THIS, PUT AS ATTRIBUTE ON Report, AND THEN REFERENCE THAT IN report_progress
             depth_indent = 0
             if simulation_mode or self._execution_stack_depth:
-                depth_indent = self._indent_factor * self._execution_stack_depth
+                depth_indent = self._depth_indent_factor * self._execution_stack_depth
 
         # Construct output report -----------------------------------------------------------------------------
 
@@ -1072,12 +1082,14 @@ class Report:
             if content == 'nested_comp':
                 # Assign last run_report for execution of nested_comp (node) as node_report
                 title = f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] within {caller.name}'
-                nested_comp_run_report = Panel(RenderGroup(*(self.output_reports[node][DEFAULT][-1].run_report)),
-                                               box=trial_panel_box,
-                                               border_style=trial_panel_color,
-                                               title=title,
-                                               padding=1,
-                                               expand=False)
+                nested_comp_run_report = Padding.indent(Panel(RenderGroup(*(self.output_reports[node][DEFAULT][
+                                                                                -1].run_report)),
+                                                              box=trial_panel_box,
+                                                              border_style=trial_panel_color,
+                                                              title=title,
+                                                              padding=self._padding_lines,
+                                                              expand=False),
+                                                        self._padding_indent)
                 node_report = nested_comp_run_report
 
             else:
@@ -1114,14 +1126,15 @@ class Report:
         elif content == 'time_step':
             if nodes_to_report and trial_report_type is ReportOutput.FULL:
                 output_report.trial_report.append('')
-                output_report.trial_report.append(Panel(RenderGroup(*output_report.time_step_report),
-                                                        # box=box.HEAVY,
-                                                        border_style=time_step_panel_color,
-                                                        box=time_step_panel_box,
-                                                        title=f'[bold {time_step_panel_color}]\nTime Step '
-                                                              f'{scheduler.get_clock(context).time.time_step}[/]',
-                                                        padding=1,
-                                                        expand=False))
+                title = f'[bold {time_step_panel_color}]\nTime Step {scheduler.get_clock(context).time.time_step}[/]'
+                output_report.trial_report.append(Padding.indent(Panel(RenderGroup(*output_report.time_step_report),
+                                                                       # box=box.HEAVY,
+                                                                       border_style=time_step_panel_color,
+                                                                       box=time_step_panel_box,
+                                                                       title=title,
+                                                                       padding=self._padding_lines,
+                                                                       expand=False),
+                                                                 self._padding_indent))
 
         elif content == 'trial_end':
             if trial_report_type is ReportOutput.FULL:
@@ -1135,12 +1148,13 @@ class Report:
                     title = self._trial_header_stack.pop()
                 else:
                     title = f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial {trial_num}[/] '
-                output_report.trial_report = Panel(RenderGroup(*output_report.trial_report),
-                                                   box=trial_panel_box,
-                                                   border_style=trial_panel_color,
-                                                   title=title,
-                                                   padding=1,
-                                                   expand=False)
+                output_report.trial_report = Padding.indent(Panel(RenderGroup(*output_report.trial_report),
+                                                                  box=trial_panel_box,
+                                                                  border_style=trial_panel_color,
+                                                                  title=title,
+                                                                  padding=self._padding_lines,
+                                                                  expand=False),
+                                                            self._padding_indent)
 
                 # # TEST PRINT:
                 # self._rich_progress.console.print(output_report.trial_report)
@@ -1166,13 +1180,14 @@ class Report:
                 ctlr_report.extend(self.output_reports[output_report_owner][DEFAULT][report_num].run_report)
                 # MODIFIED 3/25/21 END
                 ctlr_report.append(f"\n[bold {controller_output_color}]control allocation:[/] {control_allocation}")
-                ctlr_report = Panel(RenderGroup(*ctlr_report),
-                                    box=controller_panel_box,
-                                    border_style=controller_panel_color,
-                                    title=f'[bold{controller_panel_color}] {node.name} ' \
-                                          f'SIMULATION OF {node.composition.name}[/] ',
-                                    padding=1,
-                                    expand=False)
+                ctlr_report = Padding.indent(Panel(RenderGroup(*ctlr_report),
+                                                   box=controller_panel_box,
+                                                   border_style=controller_panel_color,
+                                                   title=f'[bold{controller_panel_color}] {node.name} ' \
+                                                         f'SIMULATION OF {node.composition.name}[/] ',
+                                                   padding=self._padding_lines,
+                                                   expand=False),
+                                             self._padding_indent)
                 self.output_reports[caller][DEFAULT][-1].run_report.append('')
                 self.output_reports[caller][DEFAULT][-1].run_report.append(ctlr_report)
 
@@ -1188,12 +1203,14 @@ class Report:
                 return
 
             if len(self._execution_stack) == 0 and trial_report_type is not ReportOutput.OFF:
-                output_report.run_report = Panel(RenderGroup(*output_report.run_report),
-                                                 box=trial_panel_box,
-                                                 border_style=trial_panel_color,
-                                                 title=f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] ',
-                                                 padding=1,
-                                                 expand=False)
+                title = f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] '
+                output_report.run_report = Padding.indent(Panel(RenderGroup(*output_report.run_report),
+                                                                box=trial_panel_box,
+                                                                border_style=trial_panel_color,
+                                                                title=title,
+                                                                padding=self._padding_lines,
+                                                                expand=False),
+                                                          self._padding_indent)
                 self._print_and_record_reports(RUN_REPORT, context, output_report)
 
         else:
@@ -1258,7 +1275,7 @@ class Report:
 
         depth_indent = 0
         if self._simulating or self._execution_stack_depth:
-            depth_indent = self._indent_factor * self._execution_stack_depth
+            depth_indent = self._depth_indent_factor * self._execution_stack_depth
 
         # Use TERSE format if that has been specified by report_output (i.e., in the arg of an execution method),
         #   or as the reportOutputPref for a node when USE_PREFS is in effect
