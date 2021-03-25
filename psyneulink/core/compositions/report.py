@@ -1114,6 +1114,7 @@ class Report:
                 output_report.trial_report.append(f"\n[bold {trial_output_color}]result:[/]"
                                           f" {[r.tolist() for r in output_values]}")
                 if self._simulating:
+                    # If simulating, get header that was stored at the beginning of the simulation set
                     title = self._trial_header_stack.pop()
                 else:
                     title = f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial {trial_num}[/] '
@@ -1127,6 +1128,7 @@ class Report:
                 # # TEST PRINT:
                 # self._rich_progress.console.print(output_report.trial_report)
 
+                output_report.run_report.append('')
                 output_report.run_report.append(output_report.trial_report)
 
             self._execution_stack.pop()
@@ -1141,7 +1143,7 @@ class Report:
                 control_allocation = [r.tolist() for r in node.control_allocation]
 
                 ctlr_report = [f'[bold {controller_input_color}]features:[/] {features}'
-                                     f'\n[bold {controller_input_color}]outcome:[/] {outcome}\n']
+                                     f'\n[bold {controller_input_color}]outcome:[/] {outcome}']
                 ctlr_report.extend(self.output_reports[output_report_owner][SIMULATION][report_num].run_report)
                 # MODIFIED 3/25/21 NEW: FIX: THIS DOESN'T SEEM TO DO ANYTHING
                 ctlr_report.extend(self.output_reports[output_report_owner][DEFAULT][report_num].run_report)
@@ -1154,6 +1156,7 @@ class Report:
                                           f'SIMULATION OF {node.composition.name}[/] ',
                                     padding=1,
                                     expand=False)
+                self.output_reports[caller][DEFAULT][-1].run_report.append('')
                 self.output_reports[caller][DEFAULT][-1].run_report.append(ctlr_report)
 
                 # # TEST PRINT:
