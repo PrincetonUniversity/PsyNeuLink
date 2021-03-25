@@ -1016,6 +1016,13 @@ class Report:
                 self._execution_stack.append(caller.controller)
             else:
                 self._execution_stack.append(caller)
+
+            if trial_report_type is ReportOutput.TERSE and not self._simulating:
+                # Report execution at start, in accord with TERSE reporting at initiation of execution
+                report = f'[bold{trial_panel_color}]{self._depth_indent_i}Execution of {caller.name}:[/]'
+                self._rich_progress.console.print(report)
+                if self._record_reports:
+                    self._recorded_reports += report
             return
 
         if content == 'trial_init':
@@ -1046,6 +1053,10 @@ class Report:
             if trial_report_type is ReportOutput.FULL:
                 output_report.time_step_report = [] # Contains rich.Panel for each node executed in time_step
             elif nodes_to_report: # TERSE output
+
+                # FIX: ADD THE FOLLOWING FOR NESTED COMP'S
+                # node_report = f'{self._depth_indent_i}[bold{trial_panel_color}]Execution of {node.name}[/] within {caller.name}'
+
                 time_step_header = f'[{time_step_panel_color}]' \
                                    f'{depth_indent * " "} Time Step {scheduler.get_clock(context).time.time_step} ' \
                                    f'---------'
@@ -1080,14 +1091,19 @@ class Report:
                                                          is_controller=is_controller,
                                                          context=context
                                                          )
-
             if trial_report_type is ReportOutput.FULL:
                 if content=='start_controller':
                     # skip controller, as its report is assigned after execution of simulations
                     return
                 output_report.time_step_report.append(node_report)
+
             # For ReportOutput.TERSE, just print it to the console
             elif trial_report_type is ReportOutput.TERSE:
+
+                if content == 'nested_comp':
+                    # Execution of nested Composition is reported before XXX
+                    return
+
                 self._rich_progress.console.print(node_report)
                 if self._record_reports:
                     with self._recording_console.capture() as capture:
@@ -1165,6 +1181,10 @@ class Report:
         elif content == 'run_end':
 
             self._execution_stack.pop()
+
+            if trial_report_type is ReportOutput.TERSE:
+                # Report handled at beginning of run, in accord with TERSE in which lines indicate order of initiation
+                return
 
             if len(self._execution_stack) == 0 and trial_report_type is not ReportOutput.OFF:
                 output_report.run_report = Panel(RenderGroup(*output_report.run_report),
