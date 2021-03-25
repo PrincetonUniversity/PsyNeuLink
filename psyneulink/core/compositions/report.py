@@ -1067,7 +1067,15 @@ class Report:
             if content == 'nested_comp':
                 # Assign last trial_report for execution of nested_comp (node) in default (non-simulation) mode
                 # FIX: NEED TO ADD ANY CTLR REPORT HERE AS WELL
-                node_report = self.output_reports[node][DEFAULT][-1].trial_report
+                # node_report = self.output_reports[node][DEFAULT][-1].trial_report
+                # node_report = self.output_reports[node][DEFAULT][-1].run_report
+                # FIX: CONSTRUCT "EXECUTION OF " PANEL HERE USING run_report BELOW AS RENDERABLE
+                nested_comp_run_report = Panel(RenderGroup(*(self.output_reports[node][DEFAULT][-1].run_report)),
+                                           box=trial_panel_box,
+                                           border_style=trial_panel_color,
+                                           title=f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] ',
+                                           expand=False)
+                node_report = nested_comp_run_report
 
             else:
                 # - controller is assigned a report here for use with ReportOutput.TERSE;
