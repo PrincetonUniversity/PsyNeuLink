@@ -984,7 +984,9 @@ class Report:
             # Track simulation count within each simulation set:
             if content == 'trial_init':
 
+                # FIX: SHOULDN'T POPULATE sim_str IF self._simulating IS FALSE, BUT IT IS AND NOT DOING SO CRASHES
                 if self.output_reports[caller][SIMULATING]:
+                # if self._simulating:
                     if not simulation_mode:
                         # If was simulating previously but not now in SIMULATION_MODE, then have just exited,
                         #   so reset sim_num
@@ -1054,7 +1056,7 @@ class Report:
                 previous_caller = self._execution_stack[-2]
                 if (isinstance(caller, Composition) and isinstance(previous_caller, Composition)):
                     trial_header += f'{self._depth_indent_i}[bold {trial_panel_color}]Execution of {caller.name} ' \
-                                    f'within {previous_caller.name}[/]\n'
+                                    f'within {previous_caller.name}:[/]\n'
 
                 # print trial title and separator + input array to Composition
                 trial_header += f'[bold {trial_panel_color}]' \
