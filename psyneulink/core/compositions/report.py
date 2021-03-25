@@ -605,11 +605,7 @@ class Report:
                              and (cls._rich_console or cls._rich_divert or cls._record_reports))
             cls._use_pnl_view = ReportDevices.PNL_VIEW in cls._report_to_devices
 
-            # # MODIFIED 3/24/21 OLD:
-            # cls._execution_stack = [caller]
-            # MODIFIED 3/24/21 NEW:
             cls._execution_stack = []
-            # MODIFIED 3/24/21 END
 
             cls._trial_header_stack = []
             cls._indent_factor = indent_factor
@@ -1018,8 +1014,8 @@ class Report:
                 self._execution_stack.append(caller)
 
             if trial_report_type is ReportOutput.TERSE and not self._simulating:
-                # Report execution at start, in accord with TERSE reporting at initiation of execution
-                report = f'[bold{trial_panel_color}]{self._depth_indent_i}Execution of {caller.name}:[/]'
+                # Report execution at start of run, in accord with TERSE reporting at initiation of execution
+                report = f'[bold {trial_panel_color}]{self._depth_indent_i}Execution of {caller.name}:[/]'
                 self._rich_progress.console.print(report)
                 if self._record_reports:
                     self._recorded_reports += report
@@ -1027,9 +1023,7 @@ class Report:
 
         if content == 'trial_init':
 
-            # MODIFIED 3/24/21 NEW:
             self._execution_stack.append(caller)
-            # MODIFIED 3/24/21 END
 
             output_report.trial_report = []
             #  if FULL output, report trial number and Composition's input
@@ -1041,10 +1035,20 @@ class Report:
                 self._trial_header_stack.append(
                     f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial {trial_num}[/] ')
             else: # TERSE output
+                # FIX: ADD THE FOLLOWING FOR NESTED COMP'S, BEFORE trial_header
+
+                trial_header = ''
+
+                # If nested Composition (indicated by current and previous entries on the stack being Compositions)
+                previous_caller = self._execution_stack[-2]
+                if (isinstance(caller, Composition) and isinstance(previous_caller, Composition)):
+                    trial_header += f'{self._depth_indent_i}[bold {trial_panel_color}]Execution of {caller.name} ' \
+                                    f'within {previous_caller.name}[/]\n'
+
                 # print trial title and separator + input array to Composition
-                trial_header = f'[bold {trial_panel_color}]' \
-                               f'{depth_indent * " "}{caller.name}{self._sim_str} TRIAL {trial_num} ' \
-                               f'===================='
+                trial_header += f'[bold {trial_panel_color}]' \
+                                f'{depth_indent * " "}{caller.name}{self._sim_str} TRIAL {trial_num} ' \
+                                f'===================='
                 self._rich_progress.console.print(trial_header)
                 if self._record_reports:
                     self._recorded_reports += trial_header
@@ -1053,9 +1057,6 @@ class Report:
             if trial_report_type is ReportOutput.FULL:
                 output_report.time_step_report = [] # Contains rich.Panel for each node executed in time_step
             elif nodes_to_report: # TERSE output
-
-                # FIX: ADD THE FOLLOWING FOR NESTED COMP'S
-                # node_report = f'{self._depth_indent_i}[bold{trial_panel_color}]Execution of {node.name}[/] within {caller.name}'
 
                 time_step_header = f'[{time_step_panel_color}]' \
                                    f'{depth_indent * " "} Time Step {scheduler.get_clock(context).time.time_step} ' \
