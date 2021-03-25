@@ -8432,7 +8432,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             output_report = report.start_output_report(self, num_trials, context)
 
-            # MODIFIED 3/24/21 NEW:
             report.report_output(self,
                      output_report,
                      scheduler,
@@ -8440,7 +8439,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                      report_params,
                      'run_start',
                      context)
-            # MODIFIED 3/24/21 END
 
             # Loop over the length of the list of inputs - each input represents a TRIAL
             for trial_num in range(num_trials):
@@ -8533,7 +8531,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context=context
                 )
 
-            # MODIFIED 3/24/21 NEW:
             # Report controller execution after executing simulations
             #    so it includes the results for ReportOutput.FULL
             report.report_output(self,
@@ -8544,7 +8541,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                  'run_end',
                                  context,
                                  node=self)
-            # MODIFIED 3/24/21 END
 
             if report._recorded_reports:
                 self.recorded_reports = report._recorded_reports
@@ -8770,10 +8766,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                      context,
                                      node=self.controller)
 
-                # # MODIFIED 3/24/21 OLD:
-                # report._execution_stack.append(self.controller)
-                # MODIFIED 3/24/21 END
-
                 if self.controller and not execution_mode:
                     context.execution_phase = ContextFlags.PROCESSING
                     self.controller.execute(context=context)
@@ -8789,11 +8781,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._animate_execution(self.controller, context)
                 context.remove_flag(ContextFlags.CONTROL)
 
-                # # MODIFIED 3/24/21 OLD:
-                # report._execution_stack.pop()
-                # MODIFIED 3/24/21 END
-
-                # MODIFIED 3/24/21 OLD:
                 # Report controller execution after executing simulations
                 #    so it includes the results for ReportOutput.FULL
                 report.report_output(self,
@@ -8804,7 +8791,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                      'controller_end',
                                      context,
                                      node=self.controller)
-                # MODIFIED 3/24/21 END
 
     @handle_external_context(execution_phase=ContextFlags.PROCESSING)
     def execute(
@@ -9424,10 +9410,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     elif isinstance(node, Composition):
 
-                        # # MODIFIED 3/24/21 OLD:
-                        # report._execution_stack.append(node)
-                        # MODIFIED 3/24/21 END
-
                         if execution_mode:
                             # Invoking nested composition passes data via Python
                             # structures. Make sure all sources get their latest values
@@ -9479,11 +9461,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         context.composition = self
 
-                        # # # MODIFIED 3/24/21 OLD:
-                        # report._execution_stack.pop()
-                        # # MODIFIED 3/24/21 END
-
-                        # MODIFIED 3/24/21 OLD:
                         # Add Node info for TIME_STEP to output report
                         report.report_output(self,
                                              output_report,
@@ -9493,7 +9470,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              'nested_comp',
                                              context,
                                              node=node)
-                        # MODIFIED 3/24/21 END
 
                     # ANIMATE node ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     if self._animate is not False and self._animate_unit == COMPONENT:
