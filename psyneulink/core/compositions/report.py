@@ -985,8 +985,8 @@ class Report:
             if content == 'trial_init':
 
                 # FIX: SHOULDN'T POPULATE sim_str IF self._simulating IS FALSE, BUT IT IS AND NOT DOING SO CRASHES
-                if self.output_reports[caller][SIMULATING]:
                 # if self._simulating:
+                if self.output_reports[caller][SIMULATING]:
                     if not simulation_mode:
                         # If was simulating previously but not now in SIMULATION_MODE, then have just exited,
                         #   so reset sim_num
