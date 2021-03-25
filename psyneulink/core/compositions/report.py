@@ -1181,6 +1181,12 @@ class Report:
                 output_report.run_report.append('')
                 output_report.run_report.append(output_report.trial_report)
 
+                # # MODIFIED 3/25/24 OLD:
+                # if trial_report_type is not ReportOutput.OFF:
+                #     self._print_and_record_reports(TRIAL_REPORT, context, output_report)
+                # MODIFIED 3/25/24 END
+
+
             self._execution_stack.pop()
 
         elif content == 'controller_end':
@@ -1621,7 +1627,7 @@ class Report:
                     self._rich_progress.console.print(output_report.run_report)
                     self._rich_progress.console.print('')
             # Record output reports as they are created
-            if len(self._execution_stack)==1 and self._report_output is not ReportOutput.OFF:
+            if len(self._execution_stack)==0 and self._report_output is not ReportOutput.OFF:
                     if self._rich_divert:
                         self._rich_diverted_reports += (f'\n{self._rich_progress.console.file.getvalue()}')
                     if self._record_reports:
@@ -1633,7 +1639,7 @@ class Report:
                         self._recorded_reports += capture.get()
 
         # Record progress after execution of outer-most Composition
-        if len(self._execution_stack)==1:
+        if len(self._execution_stack)==0:
             if report_type is PROGRESS_REPORT:
                 # add progress report to any already recorded for output
                 progress_reports = '\n'.join([t.description for t in self._rich_progress.tasks])
@@ -1641,7 +1647,9 @@ class Report:
                     self._rich_diverted_reports += progress_reports + '\n'
                 if self._record_reports:
                     self._recorded_reports += progress_reports + '\n'
-            outer_comp = self._execution_stack[0]
+            # outer_comp = self._execution_stack[0]
+            # Get outer comp (from output_report passed in as arg)
+            outer_comp = [k for k,v in self.output_reports.items() if  output_report in v['Execut']][0]
             # store recorded reports on outer-most Composition
             if self._rich_divert:
                 outer_comp.rich_diverted_reports = self._rich_diverted_reports
