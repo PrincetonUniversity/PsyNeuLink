@@ -1633,7 +1633,7 @@ class Report:
                         self._recorded_reports += capture.get()
 
         # Record progress after execution of outer-most Composition
-        if len(self._execution_stack)==0:
+        if len(self._execution_stack)==1:
             if report_type is PROGRESS_REPORT:
                 # add progress report to any already recorded for output
                 progress_reports = '\n'.join([t.description for t in self._rich_progress.tasks])
