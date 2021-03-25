@@ -429,7 +429,7 @@ class Report:
         specifies whether to report output of the execution on a trial-by-trial as it is generated;
         see `ReportOutput` for options.
 
-    _report_params : list[ReportParams] : default [ReportParams.USE_PREFS]
+    report_params : list[ReportParams] : default [ReportParams.USE_PREFS]
         specifies which params are reported if ReportOutput.FULL is in effect.
 
     report_progress : ReportProgress : default ReportProgress.OFF
@@ -1633,7 +1633,7 @@ class Report:
                         self._recorded_reports += capture.get()
 
         # Record progress after execution of outer-most Composition
-        if len(self._execution_stack)==1:
+        if len(self._execution_stack)==0:
             if report_type is PROGRESS_REPORT:
                 # add progress report to any already recorded for output
                 progress_reports = '\n'.join([t.description for t in self._rich_progress.tasks])
