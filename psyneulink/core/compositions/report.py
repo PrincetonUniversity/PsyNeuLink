@@ -993,14 +993,16 @@ class Report:
                         #   (note: need to use transition and not explicit count of simulations,
                         #    since number of simulation trials being run is generally not known)
                         self.output_reports[caller][SIMULATION][report_num].sim_num = None
-                    elif self.output_reports[caller][SIMULATION][report_num].sim_num is None:
-                        # This is the first simulation, so set to 0
-                        self.output_reports[caller][SIMULATION][report_num].sim_num = 0
+                        self._sim_str = ''
                     else:
-                        # This is a new simulation, so increment number
-                        self.output_reports[caller][SIMULATION][report_num].sim_num += 1
-                    sim_num = self.output_reports[caller][SIMULATION][report_num].sim_num
-                    self._sim_str = f' SIMULATION {sim_num}'
+                        if self.output_reports[caller][SIMULATION][report_num].sim_num is None:
+                            # This is the first simulation, so set to 0
+                            self.output_reports[caller][SIMULATION][report_num].sim_num = 0
+                        else:
+                            # This is a new simulation, so increment number
+                            self.output_reports[caller][SIMULATION][report_num].sim_num += 1
+                        sim_num = self.output_reports[caller][SIMULATION][report_num].sim_num
+                        self._sim_str = f' SIMULATION {sim_num}'
 
             if simulation_mode:
                 # Actual simulation execution
@@ -1072,7 +1074,7 @@ class Report:
             elif nodes_to_report: # TERSE output
 
                 time_step_header = f'[{time_step_panel_color}]' \
-                                   f'{depth_indent * " "} Time Step {scheduler.get_clock(context).time.time_step} ' \
+                                   f'{depth_indent * " "}Time Step {scheduler.get_clock(context).time.time_step} ' \
                                    f'---------'
                 self._rich_progress.console.print(time_step_header)
                 if self._record_reports:
