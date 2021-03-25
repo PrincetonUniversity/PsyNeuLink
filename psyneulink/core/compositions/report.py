@@ -975,8 +975,6 @@ class Report:
                 return
 
             # Track simulation count within each simulation set:
-            # if content in {'trial_init', 'trial'}:
-            # sim_str = ''
             if content == 'trial_init':
 
                 if self.output_reports[caller][SIMULATING]:
@@ -994,20 +992,15 @@ class Report:
                         self.output_reports[caller][SIMULATION][report_num].sim_num += 1
                     sim_num = self.output_reports[caller][SIMULATION][report_num].sim_num
                     self._sim_str = f' SIMULATION {sim_num}'
-                    # self.output_reports[caller][SIMULATION][report_num].sim_str = sim_str
 
             if simulation_mode:
                 # Actual simulation execution
                 run_mode = SIMULATION
             elif self._simulating:
-                # Composition or controller executing in simulation (happens in DEFAULT_MODE)
-                # sim_str = ''
-                # sim_str = f' SIMULATION {sim_num}'
-                # sim_str = f' SIMULATING'
+                # Composition or controller executing in simulation happens in DEFAULT_MODE
                 run_mode = DEFAULT
             else:
-                # Non-simulation (but potentiall nested) execution
-                # sim_str = ''
+                # Non-simulation (but potentially nested) execution
                 run_mode = DEFAULT
             output_report = self.output_reports[output_report_owner][run_mode][report_num]
 
@@ -1065,11 +1058,7 @@ class Report:
                 assert False, 'Node not specified in call to Report report_output'
 
             if content == 'nested_comp':
-                # Assign last trial_report for execution of nested_comp (node) in default (non-simulation) mode
-                # FIX: NEED TO ADD ANY CTLR REPORT HERE AS WELL
-                # node_report = self.output_reports[node][DEFAULT][-1].trial_report
-                # node_report = self.output_reports[node][DEFAULT][-1].run_report
-                # FIX: CONSTRUCT "EXECUTION OF " PANEL HERE USING run_report BELOW AS RENDERABLE
+                # Assign last run_report for execution of nested_comp (node) as node_report
                 title = f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] within {caller.name}'
                 nested_comp_run_report = Panel(RenderGroup(*(self.output_reports[node][DEFAULT][-1].run_report)),
                                            box=trial_panel_box,
@@ -1155,23 +1144,16 @@ class Report:
                 ctlr_report.extend(self.output_reports[output_report_owner][DEFAULT][report_num].run_report)
                 # MODIFIED 3/25/21 END
                 ctlr_report.append(f"\n[bold {controller_output_color}]control allocation:[/] {control_allocation}\n")
-
                 ctlr_report = Panel(RenderGroup(*ctlr_report),
                                     box=controller_panel_box,
                                     border_style=controller_panel_color,
                                     title=f'[bold{controller_panel_color}] {node.name} ' \
                                           f'SIMULATION OF {node.composition.name}[/] ',
                                     expand=False)
-                # FIX: THIS ADDS SOMETHING, BUT NOT ENOUGH:
                 self.output_reports[caller][DEFAULT][-1].run_report.append(ctlr_report)
-
-                # self.output_reports[self._execution_stack[-1]][DEFAULT][-1].run_report.append(ctlr_report)
-                # self.output_reports[caller][DEFAULT][-1].trial_report.append(ctlr_report)
-                # output_report.run_report.append(ctlr_report)
 
                 # # TEST PRINT:
                 # self._rich_progress.console.print(ctlr_report)
-                # MODIFIED 3/24/21 END
 
         elif content == 'run_end':
 
