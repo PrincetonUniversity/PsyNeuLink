@@ -1028,7 +1028,7 @@ class Report:
             #  if FULL output, report trial number and Composition's input
             #  note:  header for Trial Panel is constructed under 'content is Trial' case below
             if trial_report_type is ReportOutput.FULL:
-                output_report.trial_report = [f'\n[bold {trial_panel_color}]input:[/]'
+                output_report.trial_report = [f'[bold {trial_panel_color}]input:[/]'
                                            f' {[i.tolist() for i in caller.get_input_values(context)]}']
                 # Push trial_header to stack in case there are intervening executions of nested comps or simulations
                 self._trial_header_stack.append(
@@ -1061,10 +1061,11 @@ class Report:
                 # Assign last run_report for execution of nested_comp (node) as node_report
                 title = f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] within {caller.name}'
                 nested_comp_run_report = Panel(RenderGroup(*(self.output_reports[node][DEFAULT][-1].run_report)),
-                                           box=trial_panel_box,
-                                           border_style=trial_panel_color,
-                                           title=title,
-                                           expand=False)
+                                               box=trial_panel_box,
+                                               border_style=trial_panel_color,
+                                               title=title,
+                                               padding=1,
+                                               expand=False)
                 node_report = nested_comp_run_report
 
             else:
@@ -1097,12 +1098,13 @@ class Report:
             if nodes_to_report and trial_report_type is ReportOutput.FULL:
                 output_report.trial_report.append('')
                 output_report.trial_report.append(Panel(RenderGroup(*output_report.time_step_report),
-                                                     # box=box.HEAVY,
-                                                     border_style=time_step_panel_color,
-                                                     box=time_step_panel_box,
-                                                     title=f'[bold {time_step_panel_color}]\nTime Step '
-                                                           f'{scheduler.get_clock(context).time.time_step}[/]',
-                                                     expand=False))
+                                                        # box=box.HEAVY,
+                                                        border_style=time_step_panel_color,
+                                                        box=time_step_panel_box,
+                                                        title=f'[bold {time_step_panel_color}]\nTime Step '
+                                                              f'{scheduler.get_clock(context).time.time_step}[/]',
+                                                        padding=1,
+                                                        expand=False))
 
         elif content == 'trial_end':
             if trial_report_type is ReportOutput.FULL:
@@ -1110,7 +1112,7 @@ class Report:
                 for port in caller.output_CIM.output_ports:
                     output_values.append(port.parameters.value._get(context))
                 output_report.trial_report.append(f"\n[bold {trial_output_color}]result:[/]"
-                                          f" {[r.tolist() for r in output_values]}\n")
+                                          f" {[r.tolist() for r in output_values]}")
                 if self._simulating:
                     title = self._trial_header_stack.pop()
                 else:
@@ -1119,6 +1121,7 @@ class Report:
                                                    box=trial_panel_box,
                                                    border_style=trial_panel_color,
                                                    title=title,
+                                                   padding=1,
                                                    expand=False)
 
                 # # TEST PRINT:
@@ -1137,18 +1140,19 @@ class Report:
                 outcome = node.input_ports[OUTCOME].parameters.value.get(context).tolist()
                 control_allocation = [r.tolist() for r in node.control_allocation]
 
-                ctlr_report = [f'\n[bold {controller_input_color}]features:[/] {features}'
-                                     f'\n[bold {controller_input_color}]outcome:[/] {outcome}']
+                ctlr_report = [f'[bold {controller_input_color}]features:[/] {features}'
+                                     f'\n[bold {controller_input_color}]outcome:[/] {outcome}\n']
                 ctlr_report.extend(self.output_reports[output_report_owner][SIMULATION][report_num].run_report)
                 # MODIFIED 3/25/21 NEW: FIX: THIS DOESN'T SEEM TO DO ANYTHING
                 ctlr_report.extend(self.output_reports[output_report_owner][DEFAULT][report_num].run_report)
                 # MODIFIED 3/25/21 END
-                ctlr_report.append(f"\n[bold {controller_output_color}]control allocation:[/] {control_allocation}\n")
+                ctlr_report.append(f"\n[bold {controller_output_color}]control allocation:[/] {control_allocation}")
                 ctlr_report = Panel(RenderGroup(*ctlr_report),
                                     box=controller_panel_box,
                                     border_style=controller_panel_color,
                                     title=f'[bold{controller_panel_color}] {node.name} ' \
                                           f'SIMULATION OF {node.composition.name}[/] ',
+                                    padding=1,
                                     expand=False)
                 self.output_reports[caller][DEFAULT][-1].run_report.append(ctlr_report)
 
@@ -1161,10 +1165,11 @@ class Report:
 
             if len(self._execution_stack) == 0 and trial_report_type is not ReportOutput.OFF:
                 output_report.run_report = Panel(RenderGroup(*output_report.run_report),
-                                                  box=trial_panel_box,
-                                                  border_style=trial_panel_color,
-                                                  title=f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] ',
-                                                  expand=False)
+                                                 box=trial_panel_box,
+                                                 border_style=trial_panel_color,
+                                                 title=f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] ',
+                                                 padding=1,
+                                                 expand=False)
                 self._print_and_record_reports(RUN_REPORT, context, output_report)
 
         else:
@@ -1518,12 +1523,12 @@ class Report:
             node_report = f'{input_report}\n{output_report}'
 
         report = Panel(node_report,
-                            box=node_panel_box,
-                            border_style=node_panel_color,
-                            width=width,
-                            expand=expand,
-                            title=f'[{node_panel_color}]{node.name}',
-                            highlight=True
+                       box=node_panel_box,
+                       border_style=node_panel_color,
+                       width=width,
+                       expand=expand,
+                       title=f'[{node_panel_color}]{node.name}',
+                       highlight=True
                        )
 
         # Don't indent for nodes in Panels (Composition.controller is not in a Panel)
