@@ -98,8 +98,8 @@ Assigning `ReportOutput.TERSE` generates a simpler report:
 This can be useful when there are many Components executed (e.g., as part of the `execution <Composition_Execution>`
 of a complex `Composition`.
 
-Assigning the *PARAMS* keyword with `Report.FULL` produces a display of the Mechanism's input and output as well as the
-value of all of its `Parameters` (for brevity, not all are shown below):
+Assigning the *PARAMS* keyword with `ReportOutput.FULL` produces a display of the Mechanism's input and output as well
+as the value of all of its `Parameters` (for brevity, not all are shown below):
 
   >>> my_mech.reportOutputPref = [ReportOutput.FULL, pnl.PARAMS]
   >>> my_mech.execute()
