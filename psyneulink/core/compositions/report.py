@@ -163,6 +163,7 @@ EXECUTE_REPORT = 'execute_report'
 RUN_REPORT = 'run_report'
 PROGRESS_REPORT = 'progress_report'
 
+# rich colors: https://rich.readthedocs.io/en/stable/appendix/colors.html?highlight=colors
 # rich console report styles
 # node
 node_panel_color = 'orange1'
@@ -176,12 +177,19 @@ trial_panel_color = 'dodger_blue3'
 trial_input_color = 'green'
 trial_output_color = 'red'
 trial_panel_box = box.HEAVY
-# controller simulaton
+# controller simulation outer Panel
 controller_panel_color = 'purple'
 controller_input_color = 'purple'
 controller_output_color = 'blue'
 controller_panel_box = box.HEAVY
+# simulaton trial Panels
+simulation_panel_color = 'medium_orchid'
+simulation_input_color = 'purple'
+simulation_output_color = 'blue'
+simulation_panel_box = box.HEAVY
 
+
+"medium_orchid"
 
 def _get_sim_number(context):
     try:
@@ -553,7 +561,7 @@ class Report:
 
     _trial_header_stack : str
         header information for `TRIAL <TimeScale.TRIAL>` when report_out=ReportOutput.FULL;  constructed in
-        `report_output <Report.report_output>` at the beginning of the trial (when content='trial_init') and pushed
+        `report_output <Report.report_output>` at the beginning of the trial (when content='trial_start') and pushed
         to the stack; then popped from the stack and used to construct the rich Panel for the `TRIAL <TimeScale.TRIAL>`
         and report it at the end of the `TRIAL <TimeScale.TRIAL>` (when content='trial_end').  This is needed to cache
         the trial_headers across nested executions.  (Note: not needed for ReportOutput.TERSE since trial_header is
@@ -888,7 +896,7 @@ class Report:
         Mechanism <Mechanism_Base.execute>`.  Report.TERSE generates a line-by-line report of executions, but
         no other information (ie., no input, output or parameter information); output is generated in every call;
         ReportOutput.FULL generates a rich-formatted report, that includes that information;  it is constructed
-        throughout the execution of the `TRIAL <TimeScale.TRIAL>` (beginning with content='trial_init'), and reported
+        throughout the execution of the `TRIAL <TimeScale.TRIAL>` (beginning with content='trial_start'), and reported
         at the end of the `TRIAL <TimeScale.TRIAL>`(content='trial_end').
 
         Arguments
@@ -916,7 +924,7 @@ class Report:
             method.
 
         content : str
-            specifies content of current element of report;  must be: 'trial_init', 'time_step_init', 'node',
+            specifies content of current element of report;  must be: 'trial_start', 'time_step_init', 'node',
             'time_step', 'trial_end', 'controller_start', 'controller_end', 'run_start, or 'run_end'.
 
         context : Context
@@ -1005,7 +1013,7 @@ class Report:
                 return
 
             # Track simulation count within each simulation set:
-            if content == 'trial_init':
+            if content == 'trial_start':
 
                 # FIX: SHOULDN'T POPULATE sim_str IF self._simulating IS FALSE, BUT IT IS AND NOT DOING SO CRASHES
                 # if self._simulating:
@@ -1059,7 +1067,23 @@ class Report:
                     self._recorded_reports += report
             return
 
-        if content == 'trial_init':
+        # MODIFIED 3/25/21 NEW:
+        elif content == 'execute_start':
+            if simulation_mode:
+                self._execution_stack.append(caller.controller)
+            else:
+                self._execution_stack.append(caller)
+
+            if trial_report_type in {ReportOutput.TERSE, ReportOutput.USE_PREFS} and not self._simulating:
+                # Report execution at start of run, in accord with TERSE reporting at initiation of execution
+                report = f'[bold {trial_panel_color}]{self._depth_indent_i}Execution of {caller.name}:[/]'
+                self._rich_progress.console.print(report)
+                if self._record_reports:
+                    self._recorded_reports += report
+            return
+        # MODIFIED 3/25/21 END
+
+        elif content == 'trial_start':
 
             self._execution_stack.append(caller)
 
@@ -1072,6 +1096,7 @@ class Report:
                 # Push trial_header to stack in case there are intervening executions of nested comps or simulations
                 self._trial_header_stack.append(
                     f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial {trial_num}[/] ')
+
             else: # TERSE or USE_PREFS
 
                 trial_header = ''
@@ -1109,6 +1134,11 @@ class Report:
             if not node:
                 assert False, 'Node not specified in call to Report report_output'
 
+            # # MODIFIED 3/25/21 NEW:
+            # if content == 'controller_start' and self._report_simulations is ReportSimulations.OFF:
+            #     content = 'node'
+            # MODIFIED 3/25/21 END
+
             if content == 'nested_comp':
                 # Assign last run_report for execution of nested_comp (node) as node_report
                 title = f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] within {caller.name}'
@@ -1135,7 +1165,11 @@ class Report:
                                                          context=context
                                                          )
             if trial_report_type is ReportOutput.FULL:
+                # MODIFIED 3/25/21 OLD:
                 if content=='start_controller':
+                # # MODIFIED 3/25/21 NEW:
+                # if content=='start_controller' and self._report_simulations is ReportSimulations.ON:
+                # MODIFIED 3/25/21 END
                     # skip controller, as its report is assigned after execution of simulations
                     return
                 output_report.time_step_report.append(node_report)
@@ -1193,16 +1227,19 @@ class Report:
 
             self._execution_stack.pop()
 
-            # If call is from COMMAND_LINE, the only running an execution, in which case, print and record report
+            # MODIFIED 3/25/21 NEW:
+            # If call is from COMMAND_LINE, then only running an execution, in which case, print and record report
             if context.source is ContextFlags.COMMAND_LINE:
                 self._print_and_record_reports(EXECUTE_REPORT, context, output_report, caller)
                 # self._print_and_record_reports(RUN_REPORT, context, output_report, caller)
+            # MODIFIED 3/25/21 END
 
         elif content == 'controller_end':
 
             # Only deal with ReportOutput.FULL;  ReportOutput.TERSE is handled above under content='controller_start'
-            # if report_output in {ReportOutput.FULL, ReportOutput.USE_PREFS}:
-            if trial_report_type is ReportOutput.FULL:
+            if report_output in {ReportOutput.FULL, ReportOutput.USE_PREFS}:
+            # if trial_report_type is ReportOutput.FULL and self._report_simulations is ReportSimulations.ON:
+            # if trial_report_type is ReportOutput.FULL and self._report_simulations is ReportSimulations.ON:
 
                 features = [p.parameters.value.get(context).tolist() for p in node.input_ports if p.name != OUTCOME]
                 outcome = node.input_ports[OUTCOME].parameters.value.get(context).tolist()
@@ -1210,9 +1247,15 @@ class Report:
 
                 ctlr_report = [f'[bold {controller_input_color}]{self._padding_indent_str}features:[/] {features}'
                                f'\n[bold {controller_input_color}]{self._padding_indent_str}outcome:[/] {outcome}']
-                ctlr_report.extend(self.output_reports[output_report_owner][SIMULATION][report_num].run_report)
-                # MODIFIED 3/25/21 NEW: FIX: THIS DOESN'T SEEM TO DO ANYTHING
-                ctlr_report.extend(self.output_reports[output_report_owner][DEFAULT][report_num].run_report)
+                # # MODIFIED 3/25/21 OLD:
+                # ctlr_report.extend(self.output_reports[output_report_owner][SIMULATION][report_num].run_report)
+                # # MODIFIED 3/25/21 NEW: FIX: THIS DOESN'T SEEM TO DO ANYTHING
+                # ctlr_report.extend(self.output_reports[output_report_owner][DEFAULT][report_num].run_report)
+                # MODIFIED 3/25/21 NEWER:
+                if self._report_simulations is ReportSimulations.ON:
+                    ctlr_report.extend(self.output_reports[output_report_owner][SIMULATION][report_num].run_report)
+                    # MODIFIED 3/25/21 NEW: FIX: THIS DOESN'T SEEM TO DO ANYTHING
+                    ctlr_report.extend(self.output_reports[output_report_owner][DEFAULT][report_num].run_report)
                 # MODIFIED 3/25/21 END
                 ctlr_report.append(f"\n[bold {controller_output_color}]{self._padding_indent_str}control allocation:[/]"
                                    f" {control_allocation}")
@@ -1229,6 +1272,24 @@ class Report:
 
                 # # TEST PRINT:
                 # self._rich_progress.console.print(ctlr_report)
+
+        elif content == 'execute_end':
+
+            outer_comp = self._execution_stack.pop()
+
+            if len(self._execution_stack) == 0 and trial_report_type is not ReportOutput.OFF:
+
+                if trial_report_type is ReportOutput.FULL:
+                    # For ReportOutput.TERSE, report is generated at beginning of run prior to execution
+                    title = f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] '
+                    output_report.run_report = Padding.indent(Panel(RenderGroup(*output_report.run_report),
+                                                                    box=trial_panel_box,
+                                                                    border_style=trial_panel_color,
+                                                                    title=title,
+                                                                    padding=self.padding_lines,
+                                                                    expand=False),
+                                                              self.padding_indent)
+                self._print_and_record_reports(RUN_REPORT, context, output_report, outer_comp)
 
         elif content == 'run_end':
 
