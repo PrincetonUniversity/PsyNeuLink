@@ -991,11 +991,8 @@ class Report:
         elif isinstance(caller, Composition):
             # USE_PREFS is specified for report called by a Composition:
             if report_output is ReportOutput.USE_PREFS:
-                if content in {'run_start',  'run_end'}:
-                    # At end of run, need to pop the _execution_stack and generate recording if specified
-                    pass
                 # If report is for execution of a node, assign its report type using its reportOutputPref:
-                elif node:
+                if node:
                     # Get ReportOutput spec from reportOutputPref if there is one
                     # If None was found, assign ReportOutput.FULL as default
                     node_report_type = node_pref or ReportOutput.FULL
@@ -1071,10 +1068,15 @@ class Report:
         # Construct output report -----------------------------------------------------------------------------
 
         if content == 'run_start':
+            # MODIFIED 3/26/21 OLD:
             if simulation_mode:
                 self._execution_stack.append(caller.controller)
             else:
                 self._execution_stack.append(caller)
+            # # MODIFIED 3/26/21 NEW:  MOVE PUSH FOR CONTROLLER TO 'controller_start'
+            # if not simulation_mode:
+            #     self._execution_stack.append(caller)
+            # MODIFIED 3/26/21 END
 
             if trial_report_type in {ReportOutput.TERSE, ReportOutput.USE_PREFS} and not self._simulating:
                 # Report execution at start of run, in accord with TERSE reporting at initiation of execution
@@ -1086,10 +1088,15 @@ class Report:
 
         # MODIFIED 3/25/21 NEW:
         elif content == 'execute_start':
+            # MODIFIED 3/26/21 OLD:
             if simulation_mode:
                 self._execution_stack.append(caller.controller)
             else:
                 self._execution_stack.append(caller)
+            # # MODIFIED 3/26/21 NEW:
+            # if not simulation_mode:
+            #     self._execution_stack.append(caller)
+            # MODIFIED 3/26/21 END
 
             if trial_report_type in {ReportOutput.TERSE, ReportOutput.USE_PREFS} and not self._simulating:
                 # Report execution at start of run, in accord with TERSE reporting at initiation of execution
@@ -1154,6 +1161,13 @@ class Report:
             # # MODIFIED 3/25/21 NEW:
             # if content == 'controller_start' and self._report_simulations is ReportSimulations.OFF:
             #     content = 'node'
+            # # MODIFIED 3/26/21 NEWER:
+            # if content == 'controller_start':
+            #     # If ReportSimulation.OFF, treat controllers as node rather than generating a full simulation report
+            #     if self._report_simulations is ReportSimulations.OFF:
+            #         content = 'node'
+            #     self._execution_stack.append(caller.controller)
+
             # MODIFIED 3/25/21 END
 
             if content == 'nested_comp':
@@ -1251,6 +1265,10 @@ class Report:
 
         elif content == 'controller_end':
 
+            # # MODIFIED 3/26/21 NEW:
+            # self._execution_stack.pop()
+            # MODIFIED 3/26/21 END
+
             # Only deal with ReportOutput.FULL;  ReportOutput.TERSE is handled above under content='controller_start'
             if report_output in {ReportOutput.FULL, ReportOutput.USE_PREFS}:
             # if trial_report_type is ReportOutput.FULL and self._report_simulations is ReportSimulations.ON:
@@ -1278,12 +1296,18 @@ class Report:
                 self.output_reports[caller][DEFAULT][-1].run_report.append('')
                 self.output_reports[caller][DEFAULT][-1].run_report.append(ctlr_report)
 
+
                 # # TEST PRINT:
                 # self._rich_progress.console.print(ctlr_report)
 
         elif content == 'execute_end':
 
+            # MODIFIED 3/26/21 OLD:
             outer_comp = self._execution_stack.pop()
+            # # # MODIFIED 3/26/21 NEW:
+            # if not simulation_mode:
+            #     outer_comp = self._execution_stack.pop()
+            # MODIFIED 3/26/21 END
 
             if len(self._execution_stack) == 0 and trial_report_type is not ReportOutput.OFF:
 
@@ -1301,9 +1325,18 @@ class Report:
 
         elif content == 'run_end':
 
+            # MODIFIED 3/26/21 OLD:
             outer_comp = self._execution_stack.pop()
 
             if len(self._execution_stack) == 0 and trial_report_type is not ReportOutput.OFF:
+            # # MODIFIED 3/26/21 NEW:
+            # outer_comp = self._execution_stack[-1]
+            # # MODIFIED 3/26/21 NEWER:
+            # if not simulation_mode:
+            #     outer_comp = self._execution_stack.pop()
+            #
+            # if len(self._execution_stack) == 0 and trial_report_type is not ReportOutput.OFF:
+            # MODIFIED 3/26/21 END:
 
                 # if trial_report_type is not ReportOutput.TERSE:
                 if trial_report_type is ReportOutput.FULL:
