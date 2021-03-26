@@ -1265,8 +1265,8 @@ class Report:
 
         elif content == 'controller_end':
 
-            # MODIFIED 3/26/21 NEW:
-            self._execution_stack.pop()
+            # # MODIFIED 3/26/21 NEW:
+            # self._execution_stack.pop()
             # MODIFIED 3/26/21 END
 
             # Only deal with ReportOutput.FULL;  ReportOutput.TERSE is handled above under content='controller_start'
