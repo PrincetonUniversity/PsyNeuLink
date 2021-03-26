@@ -8921,6 +8921,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # If execute method is called directly, need to create Report object for reporting
             if not (context.source & ContextFlags.COMPOSITION) or output_report is None:
                 output_report = report.start_output_report(comp=self, num_trials=1, context=context)
+                # MODIFIED 3/25/21 NEW:
+                # Also, call report_output to generate initial line of report
+                if context.source is ContextFlags.COMMAND_LINE:
+                    report.report_output(self,
+                                         output_report,
+                                         report_output=report_output,
+                                         report_params=report_params,
+                                         scheduler=execution_scheduler,
+                                         content='execute_start',
+                                         context=context
+                                         )
+                # MODIFIED 3/25/21 END
+
 
             # ASSIGNMENTS **************************************************************************************************
 
@@ -9189,7 +9202,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                  scheduler=execution_scheduler,
                                  report_output=report_output,
                                  report_params=report_params,
-                                 content='trial_init',
+                                 content='trial_start',
                                  context=context
                                  )
 
@@ -9584,6 +9597,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     report_params=report_params,
                     context=context
                 )
+
+            # # MODIFIED 3/25/21 NEW:
+            # # If called directly, wrap up reporting
+            if context.source is ContextFlags.COMMAND_LINE:
+                report.report_output(self,
+                                     output_report,
+                                     execution_scheduler,
+                                     report_output,
+                                     report_params,
+                                     'execute_end',
+                                     context)
+            # MODIFIED 3/25/21 END
 
             # Extract result here
             if execution_mode:
