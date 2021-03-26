@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>UserDefinedFunction &mdash; PsyNeuLink 0.8.7.0 documentation</title>
+  <title>UserDefinedFunction &mdash; PsyNeuLink 0.8.7.0+11.g0d56d0f documentation</title>
   
 
   
@@ -27,7 +27,6 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -96,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.7.0
+                  0.8.7.0+11
                 </div>
               
             
@@ -198,63 +197,63 @@
 <h1>UserDefinedFunction<a class="headerlink" href="#userdefinedfunction" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 </div>
-<span class="target" id="module-psyneulink.core.components.functions.userdefinedfunction"></span><dl class="py class">
+<span class="target" id="module-psyneulink.core.components.functions.userdefinedfunction"></span><dl class="class">
 <dt id="psyneulink.core.components.functions.userdefinedfunction.UserDefinedFunction">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.userdefinedfunction.</code><code class="sig-name descname">UserDefinedFunction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">custom_function</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">default_variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">owner</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.userdefinedfunction.UserDefinedFunction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.userdefinedfunction.</code><code class="descname">UserDefinedFunction</code><span class="sig-paren">(</span><em>custom_function=None</em>, <em>default_variable=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.userdefinedfunction.UserDefinedFunction" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div><p id="udf-description">A UserDefinedFunction (UDF) is used to “wrap” a Python function or method, including a lamdba function,
-as a PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a>, so that it can be used as the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a
-<a class="reference internal" href="Component.html"><span class="doc">Component</span></a>.  This is done automatically if a Python function or method is assigned as the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> attribute of a Component.  A Python function or method can also be wrapped explicitly,
+as a PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a>, so that it can be used as the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a
+<a class="reference internal" href="Component.html"><span class="doc">Component</span></a>.  This is done automatically if a Python function or method is assigned as the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute of a Component.  A Python function or method can also be wrapped explicitly,
 using the UserDefinedFunction constructor, and assigning the Python function or method to its <strong>custom_function</strong>
 argument.  A Python function or method wrapped as a UDF must obey the following conventions to be treated
 correctly:</p>
 <ul class="simple" id="udf-variable">
-<li><p>It must have <strong>at least one argument</strong> (that can be a positional or a keyword argument);  this will be treated
-as the <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code> attribute of the UDF’s <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>.
+<li>It must have <strong>at least one argument</strong> (that can be a positional or a keyword argument);  this will be treated
+as the <code class="xref any docutils literal"><span class="pre">variable</span></code> attribute of the UDF’s <code class="xref any docutils literal"><span class="pre">function</span></code>.
 When the UDF calls the function or method that it wraps, an initial attempt is made to do so with <strong>variable</strong>
 as the name of the first argument; if that fails, it is called positionally.  The argument is always passed as a
 2d np.array, that may contain one or more items (elements in axis 0), depending upon the Component to which the
 UDF is assigned.  It is the user’s responsibility to insure that the number of items expected in the first
-argument of the function or method is compatible with the circumstances in which it will be called.</p></li>
+argument of the function or method is compatible with the circumstances in which it will be called.</li>
 </ul>
 <ul class="simple" id="udf-additional-arguments">
-<li><p>It may have have <strong>any number of additional arguments</strong> (positional and/or keyword);  these are treated as
+<li>It may have have <strong>any number of additional arguments</strong> (positional and/or keyword);  these are treated as
 parameters of the UDF, and can be modulated by <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> like the parameters of
 ordinary PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a>.  If the UDF is assigned to (or automatically created for) a
 <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, these parameters are each automatically assigned a
 <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> so that they can be modulated by <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> or <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignals</span></a>, respectively.  If the UDF is assigned to (or automatically created for) an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or
 <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>, and any of the parameters are specified as <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">Modulatory Parameters</span></a> (see <a class="reference internal" href="#udf-modulatory-params"><span class="std std-ref">below</span></a>), then they can be modulated by <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignals</span></a>. The function or method
 wrapped by the UDF is called with these parameters by their name and with their current values (i.e.,
-as determined by any <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> assigned to them).</p></li>
+as determined by any <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> assigned to them).</li>
 </ul>
 <ul class="simple" id="udf-params-context">
-<li><p>It may include <strong>self</strong>, <strong>owner</strong>, <strong>context</strong>, and/or <strong>params</strong> arguments;  none of these are
+<li>It may include <strong>self</strong>, <strong>owner</strong>, <strong>context</strong>, and/or <strong>params</strong> arguments;  none of these are
 required, but can be included to gain access to the standard <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> parameters (such as the history of its
-parameter values), those of the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> to which it has been assigned (i.e., its <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code>,
+parameter values), those of the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> to which it has been assigned (i.e., its <code class="xref any docutils literal"><span class="pre">owner</span></code>,
 and/or receive information about the current conditions of execution.   When the function or method is called,
-an initial attempt is made to pass these arguments; if that fails, it is called again without them.</p></li>
+an initial attempt is made to pass these arguments; if that fails, it is called again without them.</li>
 </ul>
 <ul id="udf-modulatory-params">
-<li><p>The parameters of a UDF can be specified as <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">Modulatory Parameters</span></a> in a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter specification dictionary</span></a> assigned to the <strong>params</strong> argument of the constructor for either the Python
+<li><p class="first">The parameters of a UDF can be specified as <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">Modulatory Parameters</span></a> in a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter specification dictionary</span></a> assigned to the <strong>params</strong> argument of the constructor for either the Python
 function or method, or of an explicitly defined UDF (see <a class="reference internal" href="#udf-modulatory-params-examples"><span class="std std-ref">examples below</span></a>).
 It can include either or both of the following two entries:</p>
 <blockquote>
 <div><p><em>MULTIPLICATIVE_PARAM</em>: &lt;parameter name&gt;</p>
 <p><em>ADDITIVE_PARAM</em>: &lt;parameter name&gt;</p>
 </div></blockquote>
-<p>These are used only when the UDF is assigned as the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of an InputPort or
+<p>These are used only when the UDF is assigned as the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an InputPort or
 OutputPort that receives one more more <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>.</p>
 </li>
 </ul>
 <div class="admonition tip">
-<p class="admonition-title">Tip</p>
-<p>The format of the <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code> passed to the <code class="xref any docutils literal notranslate"><span class="pre">custom_function</span></code> function can be verified by adding a <code class="docutils literal notranslate"><span class="pre">print(variable)</span></code> or
-<code class="docutils literal notranslate"><span class="pre">print(type(variable))</span></code> statement to the function.</p>
+<p class="first admonition-title">Tip</p>
+<p class="last">The format of the <code class="xref any docutils literal"><span class="pre">variable</span></code> passed to the <code class="xref any docutils literal"><span class="pre">custom_function</span></code> function can be verified by adding a <code class="docutils literal"><span class="pre">print(variable)</span></code> or
+<code class="docutils literal"><span class="pre">print(type(variable))</span></code> statement to the function.</p>
 </div>
 <p><strong>Assigning a custom function to a Mechanism</strong></p>
 <p id="udf-lambda-function-examples">The following example assigns a simple lambda function that returns the sum of the elements of a 1d array) to a
 <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]],</span>
 <span class="gp">... </span>                                  <span class="n">function</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span><span class="nb">sum</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="nb">input</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
@@ -262,18 +261,18 @@ OutputPort that receives one more more <a class="reference internal" href="Gatin
 </pre></div>
 </div>
 <p>Note that the function treats its argument, x, as a 2d array, and accesses its first item for the calculation.
-This is because  the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> of <code class="docutils literal notranslate"><span class="pre">my_mech</span></code> is defined in the <strong>size</strong> argument of
-its constructor as having a single item (a 1d array of length 3;  (see <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.size" title="psyneulink.core.components.component.Component.size"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">size</span></code></a>).  In the
+This is because  the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of <code class="docutils literal"><span class="pre">my_mech</span></code> is defined in the <strong>size</strong> argument of
+its constructor as having a single item (a 1d array of length 3;  (see <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.size" title="psyneulink.core.components.component.Component.size"><code class="xref any py py-attr docutils literal"><span class="pre">size</span></code></a>).  In the
 following example, a function is defined for a Mechanism in which the variable has two items, that are summed by
 the function:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
 <span class="gp">... </span>                                  <span class="n">function</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="nb">input</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">],[</span><span class="mi">2</span><span class="p">]])</span>
 <span class="go">array([[3]])</span>
 </pre></div>
 </div>
 <p id="udf-defined-function-examples">The <strong>function</strong> argument can also be assigned a function defined in Python:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_fct</span><span class="p">(</span><span class="n">variable</span><span class="p">):</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_fct</span><span class="p">(</span><span class="n">variable</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">return</span> <span class="n">variable</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">variable</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
 <span class="gp">... </span>                                  <span class="n">function</span><span class="o">=</span><span class="n">my_fct</span><span class="p">)</span>
@@ -282,7 +281,7 @@ the function:</p>
 <p>This will produce the same result as the last example.  This can be useful for assigning the function to more than
 one Component.</p>
 <p>More complicated functions, including ones with more than one parameter can also be used;  for example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_sinusoidal_fct</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_sinusoidal_fct</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
 <span class="gp">... </span>                      <span class="n">phase</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
 <span class="gp">... </span>                      <span class="n">amplitude</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
 <span class="gp">... </span>   <span class="n">frequency</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
@@ -292,23 +291,23 @@ one Component.</p>
 <span class="gp">... </span>                                       <span class="n">function</span><span class="o">=</span><span class="n">my_sinusoidal_fct</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Note that in this example, <code class="docutils literal notranslate"><span class="pre">input</span></code> is used as the name of the first argument, instead of <code class="docutils literal notranslate"><span class="pre">variable</span></code>
+<p>Note that in this example, <code class="docutils literal"><span class="pre">input</span></code> is used as the name of the first argument, instead of <code class="docutils literal"><span class="pre">variable</span></code>
 as in the examples above. The name of the first argument of a function to be “wrapped” as a UDF does not matter;
-in general it is good practice to use <code class="docutils literal notranslate"><span class="pre">variable</span></code>, as the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.variable" title="psyneulink.core.components.component.Component.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> of the Component
+in general it is good practice to use <code class="docutils literal"><span class="pre">variable</span></code>, as the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.variable" title="psyneulink.core.components.component.Component.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of the Component
 to which the UDF is assigned is what is passed to the function as its first argument.  However, if it is helpful to
 name it something else, that is fine.</p>
-<p>Notice also that <code class="docutils literal notranslate"><span class="pre">my_sinusoidal_fct</span></code> takes two values in its <code class="docutils literal notranslate"><span class="pre">input</span></code> argument, that it assigns to the
-<code class="docutils literal notranslate"><span class="pre">frequency</span></code> and <code class="docutils literal notranslate"><span class="pre">t</span></code> variables of the function.  While  it could have been specified more compactly as a 1d array
+<p>Notice also that <code class="docutils literal"><span class="pre">my_sinusoidal_fct</span></code> takes two values in its <code class="docutils literal"><span class="pre">input</span></code> argument, that it assigns to the
+<code class="docutils literal"><span class="pre">frequency</span></code> and <code class="docutils literal"><span class="pre">t</span></code> variables of the function.  While  it could have been specified more compactly as a 1d array
 with two elements (i.e. [0,0]), it is specified in the example as a 2d array with two items to make it clear that
 it matches the format of the <strong>default_variable</strong> for the ProcessingMechanism to which it will be assigned,
-which requires it be formatted this way (since the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.variable" title="psyneulink.core.components.component.Component.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> of all Components are converted
+which requires it be formatted this way (since the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.variable" title="psyneulink.core.components.component.Component.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of all Components are converted
 to a 2d array).</p>
-<p><code class="docutils literal notranslate"><span class="pre">my_sinusoidal_fct</span></code> also has two other arguments, <code class="docutils literal notranslate"><span class="pre">phase</span></code> and <code class="docutils literal notranslate"><span class="pre">amplitude</span></code>.   When it is assigned to
-<code class="docutils literal notranslate"><span class="pre">my_wave_mech</span></code>, those parameters are assigned to <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPorts</span></a> of <code class="docutils literal notranslate"><span class="pre">my_wave_mech</span></code>, which
-that be used to modify their values by <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> (see <code class="xref any docutils literal notranslate"><span class="pre">example</span> <span class="pre">below</span></code>).</p>
+<p><code class="docutils literal"><span class="pre">my_sinusoidal_fct</span></code> also has two other arguments, <code class="docutils literal"><span class="pre">phase</span></code> and <code class="docutils literal"><span class="pre">amplitude</span></code>.   When it is assigned to
+<code class="docutils literal"><span class="pre">my_wave_mech</span></code>, those parameters are assigned to <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPorts</span></a> of <code class="docutils literal"><span class="pre">my_wave_mech</span></code>, which
+that be used to modify their values by <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> (see <code class="xref any docutils literal"><span class="pre">example</span> <span class="pre">below</span></code>).</p>
 <p id="udf-explicit-creation-examples">In all of the examples above, a UDF was automatically created for the functions assigned to the Mechanism.  A UDF
 can also be created explicitly, as follows:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_sinusoidal_UDF</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">UserDefinedFunction</span><span class="p">(</span><span class="n">custom_function</span><span class="o">=</span><span class="n">my_sinusoidal_fct</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_sinusoidal_UDF</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">UserDefinedFunction</span><span class="p">(</span><span class="n">custom_function</span><span class="o">=</span><span class="n">my_sinusoidal_fct</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_wave_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
 <span class="gp">... </span>                                       <span class="n">function</span><span class="o">=</span><span class="n">my_sinusoidal_UDF</span><span class="p">)</span>
 </pre></div>
@@ -316,28 +315,28 @@ can also be created explicitly, as follows:</p>
 <p>When the UDF is created explicitly, parameters of the function can be included as arguments to its constructor,
 to assign them default values that differ from the those in the definition of the function, or for parameters
 that don’t define default values.  For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_sinusoidal_UDF</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">UserDefinedFunction</span><span class="p">(</span><span class="n">custom_function</span><span class="o">=</span><span class="n">my_sinusoidal_fct</span><span class="p">,</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_sinusoidal_UDF</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">UserDefinedFunction</span><span class="p">(</span><span class="n">custom_function</span><span class="o">=</span><span class="n">my_sinusoidal_fct</span><span class="p">,</span>
 <span class="gp">... </span>                                 <span class="n">phase</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
 <span class="gp">... </span>                                 <span class="n">amplitude</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_wave_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
 <span class="gp">... </span>                                       <span class="n">function</span><span class="o">=</span><span class="n">my_sinusoidal_UDF</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>assigns <code class="docutils literal notranslate"><span class="pre">my_sinusoidal_fct</span></code> as the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> for <code class="docutils literal notranslate"><span class="pre">my_mech</span></code>, but with the default
-values of its <code class="docutils literal notranslate"><span class="pre">phase</span></code> and <code class="docutils literal notranslate"><span class="pre">amplitude</span></code> parameters assigned new values.  This can be useful for assigning the
+<p>assigns <code class="docutils literal"><span class="pre">my_sinusoidal_fct</span></code> as the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for <code class="docutils literal"><span class="pre">my_mech</span></code>, but with the default
+values of its <code class="docutils literal"><span class="pre">phase</span></code> and <code class="docutils literal"><span class="pre">amplitude</span></code> parameters assigned new values.  This can be useful for assigning the
 same function to different Mechanisms with different default values.</p>
 <p id="udf-control-signal-example">Explicitly defining the UDF can also be used to <a class="reference internal" href="ControlSignal.html#controlsignal-specification"><span class="std std-ref">specify control</span></a> for parameters of
 the function, as in the following example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
 <span class="gp">... </span>                                  <span class="n">function</span><span class="o">=</span><span class="n">UserDefinedFunction</span><span class="p">(</span><span class="n">custom_function</span><span class="o">=</span><span class="n">my_sinusoidal_fct</span><span class="p">,</span>
 <span class="gp">... </span>                                                               <span class="n">amplitude</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">CONTROL</span><span class="p">)))</span>
 </pre></div>
 </div>
-<p>This specifies that the default value of the <code class="docutils literal notranslate"><span class="pre">amplitude</span></code> parameter of <code class="docutils literal notranslate"><span class="pre">my_sinusoidal_fct</span></code> be <code class="docutils literal notranslate"><span class="pre">1.0</span></code>, but
+<p>This specifies that the default value of the <code class="docutils literal"><span class="pre">amplitude</span></code> parameter of <code class="docutils literal"><span class="pre">my_sinusoidal_fct</span></code> be <code class="docutils literal"><span class="pre">1.0</span></code>, but
 its value should be modulated by a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>.</p>
 <p>Custom functions can be as elaborate as desired, and can even include other PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a>
 indirectly, such as:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">L</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span> <span class="o">=</span> <span class="mi">2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_fct</span><span class="p">(</span><span class="n">variable</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">return</span> <span class="n">L</span><span class="p">(</span><span class="n">variable</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span>
@@ -347,10 +346,10 @@ indirectly, such as:</p>
 </pre></div>
 </div>
 <p id="udf-assign-to-port-examples"><strong>Assigning of a custom function to a Port</strong></p>
-<p>A custom function can also be assigned as the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>.
-For example, the following assigns <code class="docutils literal notranslate"><span class="pre">my_sinusoidal_fct</span></code> to the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.function" title="psyneulink.core.components.ports.outputport.OutputPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of an OutputPort
-of <code class="docutils literal notranslate"><span class="pre">my_mech</span></code>, rather the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_wave_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<p>A custom function can also be assigned as the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>.
+For example, the following assigns <code class="docutils literal"><span class="pre">my_sinusoidal_fct</span></code> to the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.function" title="psyneulink.core.components.ports.outputport.OutputPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of an OutputPort
+of <code class="docutils literal"><span class="pre">my_mech</span></code>, rather the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_wave_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 <span class="gp">... </span>                                       <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span>
 <span class="gp">... </span>                                       <span class="n">output_ports</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;SINUSOIDAL OUTPUT&#39;</span><span class="p">,</span>
 <span class="gp">... </span>                                                      <span class="n">pnl</span><span class="o">.</span><span class="n">VARIABLE</span><span class="p">:</span> <span class="p">[(</span><span class="n">pnl</span><span class="o">.</span><span class="n">OWNER_VALUE</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span><span class="n">pnl</span><span class="o">.</span><span class="n">EXECUTION_COUNT</span><span class="p">],</span>
@@ -361,14 +360,14 @@ of <code class="docutils literal notranslate"><span class="pre">my_mech</span></
 Below is an example plot of the output of the ‘SINUSOIDAL OUTPUT’ <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> from my_wave_mech above, as the
 execution count increments, when the input to the mechanism is 0.005 for 1000 runs:</p>
 </div></blockquote>
-<div class="figure align-default">
+<div class="figure">
 <a class="reference internal image-reference" href="_images/sinusoid_005.png"><img alt="Sinusoid function" src="_images/sinusoid_005.png" style="width: 640.0px; height: 480.0px;" /></a>
 </div>
 <blockquote id="udf-modulatory-params-examples">
-<div><p>The parameters of a custom function assigned to an InputPort or OutputPort can also be used for <a class="reference internal" href="GatingMechanism.html#gatingmechanism-specifying-gating"><span class="std std-ref">gating</span></a>.  However, this requires that its <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">Modulatory Parameters</span></a> be specified
+<div><p>The parameters of a custom function assigned to an InputPort or OutputPort can also be used for <code class="xref any docutils literal"><span class="pre">gating</span></code>.  However, this requires that its <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">Modulatory Parameters</span></a> be specified
 (see <a class="reference internal" href="#udf-modulatory-params"><span class="std std-ref">above</span></a>). This can be done by including a <strong>params</strong> argument in the definition of
 the function itself:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_sinusoidal_fct</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_sinusoidal_fct</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
 <span class="gp">... </span>                     <span class="n">phase</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
 <span class="gp">... </span>                     <span class="n">amplitude</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 <span class="gp">... </span>                     <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">ADDITIVE_PARAM</span><span class="p">:</span><span class="s1">&#39;phase&#39;</span><span class="p">,</span>
@@ -379,16 +378,16 @@ the function itself:</p>
 </pre></div>
 </div>
 <p>or in the explicit creation of a UDF:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_sinusoidal_UDF</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">UserDefinedFunction</span><span class="p">(</span><span class="n">custom_function</span><span class="o">=</span><span class="n">my_sinusoidal_fct</span><span class="p">,</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_sinusoidal_UDF</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">UserDefinedFunction</span><span class="p">(</span><span class="n">custom_function</span><span class="o">=</span><span class="n">my_sinusoidal_fct</span><span class="p">,</span>
 <span class="gp">... </span>                                            <span class="n">phase</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
 <span class="gp">... </span>                                            <span class="n">amplitude</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
 <span class="gp">... </span>                                            <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">ADDITIVE_PARAM</span><span class="p">:</span><span class="s1">&#39;phase&#39;</span><span class="p">,</span>
 <span class="gp">... </span>                                                    <span class="n">pnl</span><span class="o">.</span><span class="n">MULTIPLICATIVE_PARAM</span><span class="p">:</span><span class="s1">&#39;amplitude&#39;</span><span class="p">})</span>
 </pre></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">phase</span></code> and <code class="docutils literal notranslate"><span class="pre">amplitude</span></code> parameters of <code class="docutils literal notranslate"><span class="pre">my_sinusoidal_fct</span></code> can now be used as the
+<p>The <code class="docutils literal"><span class="pre">phase</span></code> and <code class="docutils literal"><span class="pre">amplitude</span></code> parameters of <code class="docutils literal"><span class="pre">my_sinusoidal_fct</span></code> can now be used as the
 <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">Modulatory Parameters</span></a> for gating any InputPort or OutputPort to which the function is assigned (see
-<a class="reference internal" href="GatingMechanism.html#gatingmechanism-specifying-gating"><span class="std std-ref">Specifying gating</span></a> and <a class="reference internal" href="GatingSignal.html#gatingsignal-examples"><span class="std std-ref">Examples</span></a>).</p>
+<code class="xref any docutils literal"><span class="pre">GatingMechanism_Specifying_Gating</span></code> and <a class="reference internal" href="GatingSignal.html#gatingsignal-examples"><span class="std std-ref">Examples</span></a>).</p>
 </div></blockquote>
 <blockquote id="udf-compilation">
 <div><p><strong>Compiling a User Defined Function</strong></p>
@@ -397,93 +396,68 @@ There are several restrictions to take into account:</p>
 </div></blockquote>
 <blockquote id="udf-compilation-restrictions">
 <div><ul class="simple">
-<li><p><em>Lambda Functions</em> – User defined functions currently do not support Python Lambda functions</p></li>
-<li><p><em>Loops</em> – User defined functions currently do not support Loops</p></li>
-<li><p><em>Python Data Types</em> – User defined functions currently do not support <em>dict</em> and <em>class</em> types</p></li>
-<li><p><em>Nested Functions</em> – User defined functions currently do not support recursive calls, nested functions, or closures</p></li>
-<li><p><em>Slicing and comprehensions</em> – User defined functions currently have limited support for slicing, and do not support comprehensions</p></li>
-<li><p><em>Libraries</em> – User defined functions currently do not support libraries, aside from <strong>NumPy</strong> (with limited support)</p></li>
+<li><em>Lambda Functions</em> – User defined functions currently do not support Python Lambda functions</li>
+<li><em>Loops</em> – User defined functions currently do not support Loops</li>
+<li><em>Python Data Types</em> – User defined functions currently do not support <em>dict</em> and <em>class</em> types</li>
+<li><em>Nested Functions</em> – User defined functions currently do not support recursive calls, nested functions, or closures</li>
+<li><em>Slicing and comprehensions</em> – User defined functions currently have limited support for slicing, and do not support comprehensions</li>
+<li><em>Libraries</em> – User defined functions currently do not support libraries, aside from <strong>NumPy</strong> (with limited support)</li>
 </ul>
 </div></blockquote>
 <blockquote id="udf-compilation-numpy">
 <div><p><strong>NumPy Support for Compiled User Defined Functions</strong></p>
 <p>Compiled User Defined Functions also provide access to limited compiled NumPy functionality; The supported features are listed as follows:</p>
 <ul class="simple">
-<li><p><em>Data Types</em> – Numpy Arrays and Matrices are supported, as long as their dimensionality is less than 3. In addition, the elementwise multiplication and addition of NumPy arrays and matrices is fully supported</p></li>
-<li><p><em>Numerical functions</em> – the <code class="xref any docutils literal notranslate"><span class="pre">exp</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">tanh</span></code> methods are currently supported in compiled mode</p></li>
+<li><em>Data Types</em> – Numpy Arrays and Matrices are supported, as long as their dimensionality is less than 3. In addition, the elementwise multiplication and addition of NumPy arrays and matrices is fully supported</li>
+<li><em>Numerical functions</em> – the <code class="xref any docutils literal"><span class="pre">exp</span></code> and <code class="xref any docutils literal"><span class="pre">tanh</span></code> methods are currently supported in compiled mode</li>
 </ul>
 <p>It is highly recommended that users who require additional functionality request it as an issue <a class="reference external" href="https://github.com/PrincetonUniversity/PsyNeuLink/issues">here</a>.</p>
 <p><strong>Class Definition:</strong></p>
-<dl>
-<dt>custom_function<span class="classifier">function</span></dt><dd><p>specifies the function to “wrap.” It can be any function or method, including a lambda function;
-see <a class="reference internal" href="#udf-description"><span class="std std-ref">above</span></a> for additional details.</p>
-</dd>
-<dt>params<span class="classifier">Dict[param keyword: param value]</span><span class="classifier">default None</span></dt><dd><p>a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the function.
-This can be used to define an <code class="xref any docutils literal notranslate"><span class="pre">additive_param</span></code> and/or
-<code class="xref any docutils literal notranslate"><span class="pre">multiplicative_param</span></code> for the UDF, by including one or both
+<dl class="docutils">
+<dt>custom_function <span class="classifier-delimiter">:</span> <span class="classifier">function</span></dt>
+<dd>specifies the function to “wrap.” It can be any function or method, including a lambda function;
+see <a class="reference internal" href="#udf-description"><span class="std std-ref">above</span></a> for additional details.</dd>
+<dt>params <span class="classifier-delimiter">:</span> <span class="classifier">Dict[param keyword: param value]</span> <span class="classifier-delimiter">:</span> <span class="classifier">default None</span></dt>
+<dd><p class="first">a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the function.
+This can be used to define an <code class="xref any docutils literal"><span class="pre">additive_param</span></code> and/or
+<code class="xref any docutils literal"><span class="pre">multiplicative_param</span></code> for the UDF, by including one or both
 of the following entries:</p>
 <blockquote>
 <div><p><em>ADDITIVE_PARAM</em>: &lt;param_name&gt;</p>
 <p><em>MULTIPLICATIVE_PARAM</em>: &lt;param_name&gt;</p>
 </div></blockquote>
-<p>Values specified for parameters in the dictionary override any assigned to those parameters in arguments of
+<p class="last">Values specified for parameters in the dictionary override any assigned to those parameters in arguments of
 the constructor.</p>
 </dd>
-<dt>owner<span class="classifier">Component</span></dt><dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
-</dd>
-<dt>name<span class="classifier">str</span><span class="classifier">default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code></span></dt><dd><p>specifies the name of the Function.</p>
-</dd>
-<dt>prefs<span class="classifier">PreferenceSet or specification dict</span><span class="classifier">default Function.classPreferences</span></dt><dd><p>specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p>
-</dd>
+<dt>owner <span class="classifier-delimiter">:</span> <span class="classifier">Component</span></dt>
+<dd><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</dd>
+<dt>name <span class="classifier-delimiter">:</span> <span class="classifier">str</span> <span class="classifier-delimiter">:</span> <span class="classifier">default see <code class="xref any docutils literal"><span class="pre">name</span></code></span></dt>
+<dd>specifies the name of the Function.</dd>
+<dt>prefs <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span> <span class="classifier-delimiter">:</span> <span class="classifier">default Function.classPreferences</span></dt>
+<dd>specifies the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</dd>
 </dl>
-<dl class="simple">
-<dt>variable: value</dt><dd><p>format and default value of the function “wrapped” by the UDF.</p>
-</dd>
-<dt>custom_function<span class="classifier">function</span></dt><dd><p>the user-specified function: called by the Function’s <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> when it is executed.</p>
-</dd>
-<dt>additive_param<span class="classifier">str</span></dt><dd><p>this contains the name of the additive_param, if one has been specified for the UDF
-(see <a class="reference internal" href="#udf-modulatory-params"><span class="std std-ref">above</span></a> for details).</p>
-</dd>
-<dt>multiplicative_param<span class="classifier">str</span></dt><dd><p>this contains the name of the multiplicative_param, if one has been specified for the UDF
-(see <a class="reference internal" href="#udf-modulatory-params"><span class="std std-ref">above</span></a> for details).</p>
-</dd>
-<dt>owner<span class="classifier">Component</span></dt><dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
-</dd>
-<dt>name<span class="classifier">str</span></dt><dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
-assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
-</dd>
-<dt>prefs<span class="classifier">PreferenceSet or specification dict</span></dt><dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function; if it is not specified in the <strong>prefs</strong> argument of the
-constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
-for details).</p>
-</dd>
+<dl class="docutils">
+<dt>variable: value</dt>
+<dd>format and default value of the function “wrapped” by the UDF.</dd>
+<dt>custom_function <span class="classifier-delimiter">:</span> <span class="classifier">function</span></dt>
+<dd>the user-specified function: called by the Function’s <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal"><span class="pre">owner</span></code></a> when it is executed.</dd>
+<dt>additive_param <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>this contains the name of the additive_param, if one has been specified for the UDF
+(see <a class="reference internal" href="#udf-modulatory-params"><span class="std std-ref">above</span></a> for details).</dd>
+<dt>multiplicative_param <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>this contains the name of the multiplicative_param, if one has been specified for the UDF
+(see <a class="reference internal" href="#udf-modulatory-params"><span class="std std-ref">above</span></a> for details).</dd>
+<dt>owner <span class="classifier-delimiter">:</span> <span class="classifier">Component</span></dt>
+<dd><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</dd>
+<dt>name <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
+<dd>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</dd>
+<dt>prefs <span class="classifier-delimiter">:</span> <span class="classifier">PreferenceSet or specification dict</span></dt>
+<dd>the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function; if it is not specified in the <strong>prefs</strong> argument of the
+constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
+for details).</dd>
 </dl>
 </div></blockquote>
-<dl class="py method">
-<dt id="psyneulink.core.components.functions.userdefinedfunction.UserDefinedFunction._validate_params">
-<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.userdefinedfunction.UserDefinedFunction._validate_params" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validate params and assign validated values to targets,</p>
-<p>This performs top-level type validation of params</p>
-<p>This can be overridden by a subclass to perform more detailed checking (e.g., range, recursive, etc.)
-It is called only if the parameter_validation attribute is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> (which it is by default)</p>
-<dl class="simple">
-<dt>IMPLEMENTATION NOTES:</dt><dd><ul class="simple">
-<li><p>future versions should add recursive and content (e.g., range) checking</p></li>
-<li><p>should method return validated param set?</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>(</strong><strong>request_set</strong><strong>) </strong><strong>- set of params to be validated</strong> (<em>dict</em>) – </p></li>
-<li><p><strong>(</strong><strong>target_set</strong><strong>) </strong><strong>- repository of params that have been validated</strong> (<em>dict</em>) – </p></li>
-</ul>
-</dd>
-<dt class="field-even">Return none</dt>
-<dd class="field-even"><p></p></dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 </div>
@@ -537,12 +511,21 @@ It is called only if the parameter_validation attribute is <code class="xref any
   
 
      
-       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript">
+           var DOCUMENTATION_OPTIONS = {
+               URL_ROOT:'./',
+               VERSION:'0.8.7.0+11.g0d56d0f',
+               LANGUAGE:'None',
+               COLLAPSE_INDEX:false,
+               FILE_SUFFIX:'.html',
+               HAS_SOURCE:  true,
+               SOURCELINK_SUFFIX: '.txt'
+           };
+       </script>
+         <script type="text/javascript" src="_static/jquery.js"></script>
+         <script type="text/javascript" src="_static/underscore.js"></script>
+         <script type="text/javascript" src="_static/doctools.js"></script>
+         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

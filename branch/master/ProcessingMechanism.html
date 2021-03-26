@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ProcessingMechanism &mdash; PsyNeuLink 0.8.7.0+101.gd105adda0a documentation</title>
+  <title>ProcessingMechanism &mdash; PsyNeuLink 0.8.7.0+11.g0d56d0f documentation</title>
   
 
   
@@ -27,7 +27,6 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -96,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.7.0+101
+                  0.8.7.0+11
                 </div>
               
             
@@ -210,48 +209,48 @@
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
-<li><p><a class="reference internal" href="#processingmechanism-overview"><span class="std std-ref">Overview</span></a></p></li>
-<li><p><a class="reference internal" href="#processingmechanism-creation"><span class="std std-ref">Creating a ProcessingMechanism</span></a></p></li>
-<li><p><a class="reference internal" href="#processingmechanism-structure"><span class="std std-ref">Structure</span></a></p></li>
-<li><p><a class="reference internal" href="#processingmechanism-execution"><span class="std std-ref">Execution</span></a></p></li>
-<li><p><a class="reference internal" href="#processingmechanism-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
+<li><a class="reference internal" href="#processingmechanism-overview"><span class="std std-ref">Overview</span></a></li>
+<li><a class="reference internal" href="#processingmechanism-creation"><span class="std std-ref">Creating a ProcessingMechanism</span></a></li>
+<li><a class="reference internal" href="#processingmechanism-structure"><span class="std std-ref">Structure</span></a></li>
+<li><a class="reference internal" href="#processingmechanism-execution"><span class="std std-ref">Execution</span></a></li>
+<li><a class="reference internal" href="#processingmechanism-class-reference"><span class="std std-ref">Class Reference</span></a></li>
 </ul>
 </div></blockquote>
 </div>
 <div class="section" id="overview">
 <span id="processingmechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>A ProcessingMechanism is a type of <code class="xref any docutils literal notranslate"><span class="pre">Mechanism</span></code> that transforms its input in some way.  A ProcessingMechanism always
+<p>A ProcessingMechanism is a type of <code class="xref any docutils literal"><span class="pre">Mechanism</span></code> that transforms its input in some way.  A ProcessingMechanism always
 receives its input either from another Mechanism, or from the input to a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> when it is
 executed.  Similarly, its output is generally conveyed to another Mechanism or used as the output for a Composition.</p>
 <p>The ProcessingMechanism is the simplest mechanism in PsyNeuLink. It does not have any extra arguments or
 specialized validation. Almost any PsyNeuLink Function, including the <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">UserDefinedFunction</span></a>, may be the function of a
-ProcessingMechanism. Currently, the only exception is <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="psyneulink.core.components.functions.learningfunctions.BackPropagation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BackPropagation</span></code></a>. Subtypes of
+ProcessingMechanism. Currently, the only exception is <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="psyneulink.core.components.functions.learningfunctions.BackPropagation"><code class="xref any py py-class docutils literal"><span class="pre">BackPropagation</span></code></a>. Subtypes of
 ProcessingMechanism have more specialized features, and often have restrictions on which Functions are allowed.</p>
 <p>The output of a ProcessingMechanism may also be used by a <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a> to modify the
 parameters of other components (or its own parameters). ProcessingMechanisms are always executed before all
 ModulatoryMechanisms in the Composition to which they belong, so that any modifications made by the ModulatoryMechanism
-are available to all ProcessingMechanisms in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>.</p>
+are available to all ProcessingMechanisms in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a>.</p>
 </div>
 <div class="section" id="creating-a-processingmechanism">
 <span id="processingmechanism-creation"></span><h2>Creating a ProcessingMechanism<a class="headerlink" href="#creating-a-processingmechanism" title="Permalink to this headline">¶</a></h2>
 <p>A ProcessingMechanism is created by calling its constructor.</p>
-<p>Its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is specified in the <strong>function</strong> argument, which may be the name of a
+<p>Its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is specified in the <strong>function</strong> argument, which may be the name of a
 <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> class:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_processing_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>in which case all of the function’s parameters will be set to their default values.</p>
 <p>Alternatively, the <strong>function</strong> argument may be a call to a Function constructor, in which case values may be specified
 for the Function’s parameters:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_logistic_processing_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">))</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_logistic_processing_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="structure">
 <span id="processingmechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A ProcessingMechanism has the same structure as a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, with the addition of several
-<a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">StandardOutputPorts</span></a> to its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports" title="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a> attribute.</p>
+<a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">StandardOutputPorts</span></a> to its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports" title="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a> attribute.</p>
 <p>See documentation for individual subtypes of ProcessingMechanism for more specific information about their structure.</p>
 </div>
 <div class="section" id="execution">
@@ -261,59 +260,47 @@ for the Function’s parameters:</p>
 </div>
 <div class="section" id="class-reference">
 <span id="processingmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
+<dl class="class">
 <dt id="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.mechanisms.processing.processingmechanism.</code><code class="sig-name descname">ProcessingMechanism</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.mechanisms.processing.processingmechanism.</code><code class="descname">ProcessingMechanism</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>size=None</em>, <em>input_ports=None</em>, <em>output_ports=None</em>, <em>function=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements instance of <a class="reference internal" href="#"><span class="doc">ProcessingMechanism_Base</span></a> subclass of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.
 See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> and <a class="reference internal" href="#processingmechanism-subtypes"><span class="std std-ref">subclasses</span></a> of ProcessingMechanism
 for arguments and additional attributes.</p>
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports">
-<code class="sig-name descname">standard_output_ports</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports" title="Permalink to this definition">¶</a></dt>
-<dd><blockquote>
-<div><p>list of the dictionary specifications for <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">StandardOutputPorts</span></a> that can be assigned as
-<a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>, in addition to the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a>
-of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>; each assigns as the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the OutputPort a quantity
-calculated over the elements of the first item in the outermost dimension (axis 0) of the Mechanism`s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>. <a class="reference internal" href="#processingmechanism-subtypes"><span class="std std-ref">Subclasses</span></a> of ProcessingMechanism may extend this
-list to include additional <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">StandardOutputPorts</span></a>.</p>
-</div></blockquote>
-<dl class="simple">
-<dt><em>MEAN</em><span class="classifier">float</span></dt><dd><p>mean of the elements.</p>
-</dd>
-<dt><em>MEDIAN</em><span class="classifier">float</span></dt><dd><p>median of the elements.</p>
-</dd>
-<dt><em>STANDARD_DEVIATION</em><span class="classifier">float</span></dt><dd><p>standard deviation of the elements.</p>
-</dd>
-<dt><em>VARIANCE</em><span class="classifier">float</span></dt><dd><p>variance of the elements.</p>
-</dd>
-<dt><em>MAX_VAL</em><span class="classifier">float</span></dt><dd><p>greatest signed value of the elements.</p>
-</dd>
-<dt><em>MAX_ABS_VAL</em><span class="classifier">float</span></dt><dd><p>greatest absolute value of the elements.</p>
-</dd>
-<dt><em>MAX_ONE_HOT</em><span class="classifier">float</span></dt><dd><p>element with the greatest signed value is assigned that value, all others are assigned 0.</p>
-</dd>
-<dt><em>MAX_ABS_ONE_HOT</em><span class="classifier">float</span></dt><dd><p>element with the greatest absolute value is assigned that value, all others are assigned 0.</p>
-</dd>
-<dt><em>MAX_INDICATOR</em><span class="classifier">1d array</span></dt><dd><p>element with the greatest signed value is assigned 1, all others are assigned 0.</p>
-</dd>
-<dt><em>MAX_ABS_INDICATOR</em><span class="classifier">1d array</span></dt><dd><p>element with the greatest absolute value is assigned 1, all others are assigned 0.</p>
-</dd>
-<dt><em>PROB</em><span class="classifier">float</span></dt><dd><p>element chosen probabilistically based on softmax distribution is assigned its value, all others are assigned 0.</p>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>list[dict]</p>
-</dd>
+<code class="descname">standard_output_ports</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="docutils">
+<dt><em>list[dict]</em> –  list of the dictionary specifications for <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">StandardOutputPorts</span></a> that can be assigned as</dt>
+<dd><a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>, in addition to the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports"><code class="xref any py py-attr docutils literal"><span class="pre">standard_output_ports</span></code></a>
+of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>; each assigns as the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the OutputPort a quantity
+calculated over the elements of the first item in the outermost dimension (axis 0) of the Mechanism`s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>. <a class="reference internal" href="#processingmechanism-subtypes"><span class="std std-ref">Subclasses</span></a> of ProcessingMechanism may extend this
+list to include additional <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">StandardOutputPorts</span></a>.</dd>
+<dt><em>MEAN</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>mean of the elements.</dd>
+<dt><em>MEDIAN</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>median of the elements.</dd>
+<dt><em>STANDARD_DEVIATION</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>standard deviation of the elements.</dd>
+<dt><em>VARIANCE</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>variance of the elements.</dd>
+<dt><em>MAX_VAL</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>greatest signed value of the elements.</dd>
+<dt><em>MAX_ABS_VAL</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>greatest absolute value of the elements.</dd>
+<dt><em>MAX_ONE_HOT</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>element with the greatest signed value is assigned that value, all others are assigned 0.</dd>
+<dt><em>MAX_ABS_ONE_HOT</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>element with the greatest absolute value is assigned that value, all others are assigned 0.</dd>
+<dt><em>MAX_INDICATOR</em> <span class="classifier-delimiter">:</span> <span class="classifier">1d array</span></dt>
+<dd>element with the greatest signed value is assigned 1, all others are assigned 0.</dd>
+<dt><em>MAX_ABS_INDICATOR</em> <span class="classifier-delimiter">:</span> <span class="classifier">1d array</span></dt>
+<dd>element with the greatest absolute value is assigned 1, all others are assigned 0.</dd>
+<dt><em>PROB</em> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd>element chosen probabilistically based on softmax distribution is assigned its value, all others are assigned 0.</dd>
 </dl>
 </dd></dl>
 
 </dd></dl>
-
-<dl class="py exception">
-<dt id="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanismError">
-<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.components.mechanisms.processing.processingmechanism.</code><code class="sig-name descname">ProcessingMechanismError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanismError" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
 
 </div>
 </div>
@@ -375,12 +362,21 @@ list to include additional <a class="reference internal" href="OutputPort.html#o
   
 
      
-       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript">
+           var DOCUMENTATION_OPTIONS = {
+               URL_ROOT:'./',
+               VERSION:'0.8.7.0+11.g0d56d0f',
+               LANGUAGE:'None',
+               COLLAPSE_INDEX:false,
+               FILE_SUFFIX:'.html',
+               HAS_SOURCE:  true,
+               SOURCELINK_SUFFIX: '.txt'
+           };
+       </script>
+         <script type="text/javascript" src="_static/jquery.js"></script>
+         <script type="text/javascript" src="_static/underscore.js"></script>
+         <script type="text/javascript" src="_static/doctools.js"></script>
+         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

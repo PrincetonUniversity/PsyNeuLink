@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Keywords &mdash; PsyNeuLink 0.8.7.0 documentation</title>
+  <title>Keywords &mdash; PsyNeuLink 0.8.7.0+11.g0d56d0f documentation</title>
   
 
   
@@ -27,7 +27,6 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -96,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.7.0
+                  0.8.7.0+11
                 </div>
               
             
@@ -194,109 +193,109 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.core.globals.keywords">
-<span id="keywords"></span><h1>Keywords<a class="headerlink" href="#module-psyneulink.core.globals.keywords" title="Permalink to this headline">¶</a></h1>
-<p>This module provides the string keywords used throughout psyneulink</p>
+  <div class="section" id="keywords">
+<h1>Keywords<a class="headerlink" href="#keywords" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-psyneulink.core.globals.keywords"></span><p>This module provides the string keywords used throughout psyneulink</p>
 <p><a class="reference external" href="https://princetonuniversity.github.io/PsyNeuLink/Keywords.html">https://princetonuniversity.github.io/PsyNeuLink/Keywords.html</a></p>
-<dl class="py class">
+<dl class="class">
 <dt id="psyneulink.core.globals.keywords.MatrixKeywords">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.globals.keywords.</code><code class="sig-name descname">MatrixKeywords</code><a class="headerlink" href="#psyneulink.core.globals.keywords.MatrixKeywords" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="py attribute">
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.keywords.</code><code class="descname">MatrixKeywords</code><a class="headerlink" href="#psyneulink.core.globals.keywords.MatrixKeywords" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="attribute">
 <dt id="psyneulink.core.globals.keywords.MatrixKeywords.IDENTITY_MATRIX">
-<code class="sig-name descname">IDENTITY_MATRIX</code><a class="headerlink" href="#psyneulink.core.globals.keywords.MatrixKeywords.IDENTITY_MATRIX" title="Permalink to this definition">¶</a></dt>
+<code class="descname">IDENTITY_MATRIX</code><a class="headerlink" href="#psyneulink.core.globals.keywords.MatrixKeywords.IDENTITY_MATRIX" title="Permalink to this definition">¶</a></dt>
 <dd><p>a square matrix of 1’s along the diagonal, 0’s elsewhere; this requires that the length of the sender and
 receiver values are the same.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.globals.keywords.MatrixKeywords.HOLLOW_MATRIX">
-<code class="sig-name descname">HOLLOW_MATRIX</code><a class="headerlink" href="#psyneulink.core.globals.keywords.MatrixKeywords.HOLLOW_MATRIX" title="Permalink to this definition">¶</a></dt>
+<code class="descname">HOLLOW_MATRIX</code><a class="headerlink" href="#psyneulink.core.globals.keywords.MatrixKeywords.HOLLOW_MATRIX" title="Permalink to this definition">¶</a></dt>
 <dd><p>a square matrix of 0’s along the diagonal, 1’s elsewhere; this requires that the length of the sender and
 receiver values are the same.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX">
-<code class="sig-name descname">FULL_CONNECTIVITY_MATRIX</code><a class="headerlink" href="#psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="Permalink to this definition">¶</a></dt>
+<code class="descname">FULL_CONNECTIVITY_MATRIX</code><a class="headerlink" href="#psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="Permalink to this definition">¶</a></dt>
 <dd><p>a matrix that has a number of rows equal to the length of the sender’s value, and a number of columns equal
 to the length of the receiver’s value, all the elements of which are 1’s.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.globals.keywords.MatrixKeywords.RANDOM_CONNECTIVITY_MATRIX">
-<code class="sig-name descname">RANDOM_CONNECTIVITY_MATRIX</code><a class="headerlink" href="#psyneulink.core.globals.keywords.MatrixKeywords.RANDOM_CONNECTIVITY_MATRIX" title="Permalink to this definition">¶</a></dt>
+<code class="descname">RANDOM_CONNECTIVITY_MATRIX</code><a class="headerlink" href="#psyneulink.core.globals.keywords.MatrixKeywords.RANDOM_CONNECTIVITY_MATRIX" title="Permalink to this definition">¶</a></dt>
 <dd><p>a matrix that has a number of rows equal to the length of the sender’s value, and a number of columns equal
 to the length of the receiver’s value, all the elements of which are filled with random values uniformly
 distributed between 0 and 1.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.globals.keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX">
-<code class="sig-name descname">AUTO_ASSIGN_MATRIX</code><a class="headerlink" href="#psyneulink.core.globals.keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX" title="Permalink to this definition">¶</a></dt>
-<dd><p>if the sender and receiver are of equal length, an <a class="reference internal" href="#psyneulink.core.globals.keywords.MatrixKeywords.IDENTITY_MATRIX" title="psyneulink.core.globals.keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">IDENTITY_MATRIX</span></code></a> is assigned;  otherwise, a
-<a class="reference internal" href="#psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a> is assigned.</p>
+<code class="descname">AUTO_ASSIGN_MATRIX</code><a class="headerlink" href="#psyneulink.core.globals.keywords.MatrixKeywords.AUTO_ASSIGN_MATRIX" title="Permalink to this definition">¶</a></dt>
+<dd><p>if the sender and receiver are of equal length, an <a class="reference internal" href="#psyneulink.core.globals.keywords.MatrixKeywords.IDENTITY_MATRIX" title="psyneulink.core.globals.keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">IDENTITY_MATRIX</span></code></a> is assigned;  otherwise, a
+<a class="reference internal" href="#psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a> is assigned.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.globals.keywords.MatrixKeywords.DEFAULT_MATRIX">
-<code class="sig-name descname">DEFAULT_MATRIX</code><a class="headerlink" href="#psyneulink.core.globals.keywords.MatrixKeywords.DEFAULT_MATRIX" title="Permalink to this definition">¶</a></dt>
-<dd><p>used if no matrix specification is provided in the constructor;  it presently assigns an <a class="reference internal" href="#psyneulink.core.globals.keywords.MatrixKeywords.IDENTITY_MATRIX" title="psyneulink.core.globals.keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">IDENTITY_MATRIX</span></code></a>.</p>
+<code class="descname">DEFAULT_MATRIX</code><a class="headerlink" href="#psyneulink.core.globals.keywords.MatrixKeywords.DEFAULT_MATRIX" title="Permalink to this definition">¶</a></dt>
+<dd><p>used if no matrix specification is provided in the constructor;  it presently assigns an <a class="reference internal" href="#psyneulink.core.globals.keywords.MatrixKeywords.IDENTITY_MATRIX" title="psyneulink.core.globals.keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal"><span class="pre">IDENTITY_MATRIX</span></code></a>.</p>
 </dd></dl>
 
 </dd></dl>
 
-<dl class="py class">
+<dl class="class">
 <dt id="psyneulink.core.globals.keywords.DistanceMetrics">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.globals.keywords.</code><code class="sig-name descname">DistanceMetrics</code><a class="headerlink" href="#psyneulink.core.globals.keywords.DistanceMetrics" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.globals.keywords.</code><code class="descname">DistanceMetrics</code><a class="headerlink" href="#psyneulink.core.globals.keywords.DistanceMetrics" title="Permalink to this definition">¶</a></dt>
 <dd><p>Distance between two arrays.</p>
-<p>Each keyword specifies a metric for the distance between two arrays, <span class="math notranslate nohighlight">\(a_1\)</span> and <span class="math notranslate nohighlight">\(a_2\)</span>, of equal length
-for which <em>len</em> is their length, <span class="math notranslate nohighlight">\(\bar{a}\)</span> is the mean of an array, <span class="math notranslate nohighlight">\(\sigma_{a}\)</span> the standard
-deviation of an array, and <span class="math notranslate nohighlight">\(w_{a_1a_2}\)</span> a coupling coefficient (“weight”) between a pair of elements,
+<p>Each keyword specifies a metric for the distance between two arrays, <span class="math">\(a_1\)</span> and <span class="math">\(a_2\)</span>, of equal length
+for which <em>len</em> is their length, <span class="math">\(\bar{a}\)</span> is the mean of an array, <span class="math">\(\sigma_{a}\)</span> the standard
+deviation of an array, and <span class="math">\(w_{a_1a_2}\)</span> a coupling coefficient (“weight”) between a pair of elements,
 one from each array:</p>
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.globals.keywords.DistanceMetrics.MAX_ABS_DIFF">
-<code class="sig-name descname">MAX_ABS_DIFF</code><a class="headerlink" href="#psyneulink.core.globals.keywords.DistanceMetrics.MAX_ABS_DIFF" title="Permalink to this definition">¶</a></dt>
-<dd><p><span class="math notranslate nohighlight">\(d = \max(|a_1-a_2|)\)</span></p>
+<code class="descname">MAX_ABS_DIFF</code><a class="headerlink" href="#psyneulink.core.globals.keywords.DistanceMetrics.MAX_ABS_DIFF" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="math">\(d = \max(|a_1-a_2|)\)</span></p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.globals.keywords.DistanceMetrics.DIFFERENCE">
-<code class="sig-name descname">DIFFERENCE</code><a class="headerlink" href="#psyneulink.core.globals.keywords.DistanceMetrics.DIFFERENCE" title="Permalink to this definition">¶</a></dt>
+<code class="descname">DIFFERENCE</code><a class="headerlink" href="#psyneulink.core.globals.keywords.DistanceMetrics.DIFFERENCE" title="Permalink to this definition">¶</a></dt>
 <dd><p>(can also be referenced as <em>L0</em>)</p>
-<p><span class="math notranslate nohighlight">\(d = \sum\limits^{len}(|a_1-a_2|)\)</span></p>
+<p><span class="math">\(d = \sum\limits^{len}(|a_1-a_2|)\)</span></p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.globals.keywords.DistanceMetrics.EUCLIDEAN">
-<code class="sig-name descname">EUCLIDEAN</code><a class="headerlink" href="#psyneulink.core.globals.keywords.DistanceMetrics.EUCLIDEAN" title="Permalink to this definition">¶</a></dt>
+<code class="descname">EUCLIDEAN</code><a class="headerlink" href="#psyneulink.core.globals.keywords.DistanceMetrics.EUCLIDEAN" title="Permalink to this definition">¶</a></dt>
 <dd><p>(can also be referenced as <em>L1</em>)</p>
-<p><span class="math notranslate nohighlight">\(d = \sum\limits^{len}\sqrt{(a_1-a_2)^2}\)</span></p>
+<p><span class="math">\(d = \sum\limits^{len}\sqrt{(a_1-a_2)^2}\)</span></p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.globals.keywords.DistanceMetrics.COSINE">
-<code class="sig-name descname">COSINE</code><a class="headerlink" href="#psyneulink.core.globals.keywords.DistanceMetrics.COSINE" title="Permalink to this definition">¶</a></dt>
-<dd><p><span class="math notranslate nohighlight">\(d = 1 - \frac{\sum\limits^{len}a_1a_2}{\sqrt{\sum\limits^{len}a_1^2}\sqrt{\sum\limits^{len}a_2^2}}\)</span></p>
+<code class="descname">COSINE</code><a class="headerlink" href="#psyneulink.core.globals.keywords.DistanceMetrics.COSINE" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="math">\(d = 1 - \frac{\sum\limits^{len}a_1a_2}{\sqrt{\sum\limits^{len}a_1^2}\sqrt{\sum\limits^{len}a_2^2}}\)</span></p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.globals.keywords.DistanceMetrics.CORRELATION">
-<code class="sig-name descname">CORRELATION</code><a class="headerlink" href="#psyneulink.core.globals.keywords.DistanceMetrics.CORRELATION" title="Permalink to this definition">¶</a></dt>
-<dd><p><span class="math notranslate nohighlight">\(d = 1 - \left|\frac{\sum\limits^{len}(a_1-\bar{a}_1)(a_2-\bar{a}_2)}{(len-1)\sigma_{a_1}\sigma_{
+<code class="descname">CORRELATION</code><a class="headerlink" href="#psyneulink.core.globals.keywords.DistanceMetrics.CORRELATION" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="math">\(d = 1 - \left|\frac{\sum\limits^{len}(a_1-\bar{a}_1)(a_2-\bar{a}_2)}{(len-1)\sigma_{a_1}\sigma_{
 a_2}}\right|\)</span></p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.globals.keywords.DistanceMetrics.CROSS_ENTROPY">
-<code class="sig-name descname">CROSS_ENTROPY</code><a class="headerlink" href="#psyneulink.core.globals.keywords.DistanceMetrics.CROSS_ENTROPY" title="Permalink to this definition">¶</a></dt>
+<code class="descname">CROSS_ENTROPY</code><a class="headerlink" href="#psyneulink.core.globals.keywords.DistanceMetrics.CROSS_ENTROPY" title="Permalink to this definition">¶</a></dt>
 <dd><p>(can also be referenced as <em>ENTROPY</em>)</p>
-<p><span class="math notranslate nohighlight">\(d = \sum\limits^{len}a_1log(a_2)\)</span></p>
+<p><span class="math">\(d = \sum\limits^{len}a_1log(a_2)\)</span></p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.globals.keywords.DistanceMetrics.ENERGY">
-<code class="sig-name descname">ENERGY</code><a class="headerlink" href="#psyneulink.core.globals.keywords.DistanceMetrics.ENERGY" title="Permalink to this definition">¶</a></dt>
-<dd><p><span class="math notranslate nohighlight">\(d = -\frac{1}{2}\sum\limits_{i,j}a_{1_i}a_{2_j}w_{ij}\)</span></p>
+<code class="descname">ENERGY</code><a class="headerlink" href="#psyneulink.core.globals.keywords.DistanceMetrics.ENERGY" title="Permalink to this definition">¶</a></dt>
+<dd><p><span class="math">\(d = -\frac{1}{2}\sum\limits_{i,j}a_{1_i}a_{2_j}w_{ij}\)</span></p>
 </dd></dl>
 
 </dd></dl>
@@ -352,12 +351,21 @@ a_2}}\right|\)</span></p>
   
 
      
-       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript">
+           var DOCUMENTATION_OPTIONS = {
+               URL_ROOT:'./',
+               VERSION:'0.8.7.0+11.g0d56d0f',
+               LANGUAGE:'None',
+               COLLAPSE_INDEX:false,
+               FILE_SUFFIX:'.html',
+               HAS_SOURCE:  true,
+               SOURCELINK_SUFFIX: '.txt'
+           };
+       </script>
+         <script type="text/javascript" src="_static/jquery.js"></script>
+         <script type="text/javascript" src="_static/underscore.js"></script>
+         <script type="text/javascript" src="_static/doctools.js"></script>
+         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

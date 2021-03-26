@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Welcome to &mdash; PsyNeuLink 0.8.7.0 documentation</title>
+  <title>Welcome to &mdash; PsyNeuLink 0.8.7.0+11.g0d56d0f documentation</title>
   
 
   
@@ -27,7 +27,6 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -96,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.7.0
+                  0.8.7.0+11
                 </div>
               
             
@@ -197,15 +196,15 @@
   <div class="section" id="welcome-to-logo">
 <h1>Welcome to       <a class="reference external" href="http://psyneulink.org"><img alt="logo" src="_images/PsyNeuLink_logo.svg" width="20%" /></a><a class="headerlink" href="#welcome-to-logo" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
-<li><p><a class="reference internal" href="#purpose"><span class="std std-ref">Purpose</span></a></p></li>
-<li><p><a class="reference internal" href="#what-psyneulink-is"><span class="std std-ref">What PsyNeuLink IS</span></a></p></li>
-<li><p><a class="reference internal" href="#what-psyneulink-is-not"><span class="std std-ref">What PsyNeuLink is NOT</span></a></p></li>
-<li><p><a class="reference internal" href="#overview"><span class="std std-ref">Environment Overview</span></a></p></li>
-<li><p><a class="reference internal" href="#installation"><span class="std std-ref">Installation</span></a></p></li>
-<li><p><a class="reference internal" href="#tutorial"><span class="std std-ref">Tutorial</span></a></p></li>
-<li><p><a class="reference internal" href="#help-and-issues"><span class="std std-ref">Help and Issues</span></a></p></li>
-<li><p><a class="reference internal" href="#contributors"><span class="std std-ref">Contributors</span></a></p></li>
-<li><p><a class="reference internal" href="#indices-and-tables"><span class="std std-ref">Indices and tables</span></a></p></li>
+<li><a class="reference internal" href="#purpose"><span class="std std-ref">Purpose</span></a></li>
+<li><a class="reference internal" href="#what-psyneulink-is"><span class="std std-ref">What PsyNeuLink IS</span></a></li>
+<li><a class="reference internal" href="#what-psyneulink-is-not"><span class="std std-ref">What PsyNeuLink is NOT</span></a></li>
+<li><a class="reference internal" href="#overview"><span class="std std-ref">Environment Overview</span></a></li>
+<li><a class="reference internal" href="#installation"><span class="std std-ref">Installation</span></a></li>
+<li><a class="reference internal" href="#tutorial"><span class="std std-ref">Tutorial</span></a></li>
+<li><a class="reference internal" href="#help-and-issues"><span class="std std-ref">Help and Issues</span></a></li>
+<li><a class="reference internal" href="#contributors"><span class="std std-ref">Contributors</span></a></li>
+<li><a class="reference internal" href="#indices-and-tables"><span class="std std-ref">Indices and tables</span></a></li>
 </ul>
 <div class="section" id="purpose">
 <span id="id1"></span><h2>Purpose<a class="headerlink" href="#purpose" title="Permalink to this headline">¶</a></h2>
@@ -230,33 +229,33 @@ concise, executable, and easy to interpret form, that can be shared, compared, a
 <p>It is:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><em>open source</em>, freeing users of the costs or restrictions associated with proprietary software.</p></li>
+<li><em>open source</em>, freeing users of the costs or restrictions associated with proprietary software.</li>
 </ul>
 <ul class="simple">
-<li><p><em>computationally general</em> – it can be used to implement, seamlessly integrate, and simulate interactions among
+<li><em>computationally general</em> –&nbsp;it can be used to implement, seamlessly integrate, and simulate interactions among
 disparate components that vary in their granularity of representation and function (from individual neurons or
-neural populations to functional subsystems and abstract cognitive functions) and at any time scale of execution.</p></li>
+neural populations to functional subsystems and abstract cognitive functions) and at any time scale of execution.</li>
 </ul>
 <ul class="simple">
-<li><p><em>integrative</em> – it provides a standard and accessible environment for model comparison, sharing, and documentation;</p></li>
+<li><em>integrative</em> – it provides a standard and accessible environment for model comparison, sharing, and documentation;</li>
 </ul>
 <ul>
-<li><p><em>extensible</em> – it has an interface (API) that allows it to be used with other powerful tools for implementing
+<li><p class="first"><em>extensible</em> – it has an interface (API) that allows it to be used with other powerful tools for implementing
 individual components, such as:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>Neuron and Nengo (biophysically realistic models of neuronal function)</p></li>
-<li><p>Emergent (broad class of neurally-plausible connectionist models);</p></li>
-<li><p>Pytorch and TensorFlow (ODE’s, deep learning);</p></li>
-<li><p>ACT-R (symbolic, production system models).</p></li>
+<li>Neuron and Nengo (biophysically realistic models of neuronal function)</li>
+<li>Emergent (broad class of neurally-plausible connectionist models);</li>
+<li>Pytorch and TensorFlow (ODE’s, deep learning);</li>
+<li>ACT-R (symbolic, production system models).</li>
 </ul>
 </div></blockquote>
 </li>
 </ul>
 </div></blockquote>
 <div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>PsyNeuLink is alpha software, that is still being actively developed.  Although it is useable, and most of the
+<p class="first admonition-title">Note</p>
+<p class="last">PsyNeuLink is alpha software, that is still being actively developed.  Although it is useable, and most of the
 documented functionality is available, some features may not yet be fully implemented and/or subject to
 modification.  Please report any bugs and/or suggestions for development to <a class="reference external" href="mailto:psyneulinkhelp&#37;&#52;&#48;princeton&#46;edu">psyneulinkhelp<span>&#64;</span>princeton<span>&#46;</span>edu</a>.</p>
 </div>
@@ -271,9 +270,9 @@ simple to moderately complex models, and for the integration of disparate models
 it is presently less well suited to efforts involving massively large computations, such as:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>extensive model fitting</p></li>
-<li><p>large scale simulations</p></li>
-<li><p>highly detailed biophysical models of neurons or neuronal populations</p></li>
+<li>extensive model fitting</li>
+<li>large scale simulations</li>
+<li>highly detailed biophysical models of neurons or neuronal populations</li>
 </ul>
 </div></blockquote>
 <p>Other packages currently better suited to such applications are:
@@ -289,13 +288,14 @@ PsyNeuLink has been to make it as flexible and easy to use as possible, with the
 constructed in other packages (including some of the ones listed above) into a single environment.  These are
 characteristics that are often (at least in the initial stages of development) in tension with efficiency (think:
 interpreted vs. compiled).</p>
-<dl class="simple">
-<dt>That said, priorities for ongoing development of PsyNeuLink are:</dt><dd><ol class="lowerroman simple">
-<li><p>acceleration, using just-in-time compilation methods and parallelization;</p></li>
-<li><p>enhancement of the API to facilitate wrapping modules from other packages for integration into the PsyNeuLink
-environment (examples currently exist for Pytorch and Emergent);</p></li>
-<li><p>integration of tools for parameter estimation, model comparison and data fitting; and</p></li>
-<li><p>a graphic interface for the construction of models and realtime display of their execution.</p></li>
+<dl class="docutils">
+<dt>That said, priorities for ongoing development of PsyNeuLink are:</dt>
+<dd><ol class="first last lowerroman simple">
+<li>acceleration, using just-in-time compilation methods and parallelization;</li>
+<li>enhancement of the API to facilitate wrapping modules from other packages for integration into the PsyNeuLink
+environment (examples currently exist for Pytorch and Emergent);</li>
+<li>integration of tools for parameter estimation, model comparison and data fitting; and</li>
+<li>a graphic interface for the construction of models and realtime display of their execution.</li>
 </ol>
 </dd>
 </dl>
@@ -312,54 +312,54 @@ construction of models using PsyNeuLink.  <a class="reference internal" href="Co
 <div class="section" id="installation">
 <span id="id4"></span><h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink is compatible with python versions &gt;= 3.5, and is available through <a class="reference external" href="https://pypi.python.org/pypi/PsyNeuLink">PyPI</a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">psyneulink</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">psyneulink</span>
 </pre></div>
 </div>
 <p>All prerequisite packages will be automatically added to your environment.</p>
 <p>If you downloaded the source code, navigate to the cloned directory in a terminal,
 switch to your preferred python3 environment, then run</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">.</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">.</span>
 </pre></div>
 </div>
 <p>Dependencies that are automatically installed (except those noted as optional) include:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>numpy</p></li>
-<li><p>matplotlib</p></li>
-<li><p>toposort</p></li>
-<li><p>typecheck-decorator (version 1.2)</p></li>
-<li><p>pillow</p></li>
-<li><p>llvmlite</p></li>
-<li><p>mpi4py (optional)</p></li>
-<li><p>autograd (optional)</p></li>
+<li>numpy</li>
+<li>matplotlib</li>
+<li>toposort</li>
+<li>typecheck-decorator (version 1.2)</li>
+<li>pillow</li>
+<li>llvmlite</li>
+<li>mpi4py (optional)</li>
+<li>autograd (optional)</li>
 </ul>
 </div></blockquote>
 <p>Lists of required packages for PsyNeuLink, developing PsyNeuLink, and running the PsyNeuLink tutorial are also
-stored in pip-style <code class="xref any docutils literal notranslate"><span class="pre">requirements.txt</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">dev_requirements.txt</span></code>, and <code class="xref any docutils literal notranslate"><span class="pre">tutorial_requirements.txt</span></code> in the source code.</p>
+stored in pip-style <code class="xref any docutils literal"><span class="pre">requirements.txt</span></code>, <code class="xref any docutils literal"><span class="pre">dev_requirements.txt</span></code>, and <code class="xref any docutils literal"><span class="pre">tutorial_requirements.txt</span></code> in the source code.</p>
 <p>PsyNeuLink is an open source project maintined on <a class="reference external" href="https://github.com">GitHub</a>. The repo can be cloned
 from <a class="reference external" href="https://github.com/PrincetonUniversity/PsyNeuLink">here</a>.</p>
 <p>If you have trouble installing the package, or run into other problems, please contact <a class="reference external" href="mailto:psyneulinkhelp&#37;&#52;&#48;princeton&#46;edu">psyneulinkhelp<span>&#64;</span>princeton<span>&#46;</span>edu</a>.</p>
 </div>
 <div class="section" id="tutorial">
 <span id="id5"></span><h2>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference download internal" download="" href="_downloads/9f1ca4fe52cc4418643c508e231f4661/PsyNeuLink Tutorial.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">PsyNeuLink</span> <span class="pre">Tutorial.ipynb</span></code></a></p>
-<p>PsyNeuLink includes a <a class="reference download internal" download="" href="_downloads/9f1ca4fe52cc4418643c508e231f4661/PsyNeuLink Tutorial.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">tutorial</span></code></a>, that provides examples of how to create basic Components
+<p><a class="reference download internal" href="_downloads/PsyNeuLink Tutorial.ipynb" download=""><code class="xref download docutils literal"><span class="pre">Download</span> <span class="pre">PsyNeuLink</span> <span class="pre">Tutorial.ipynb</span></code></a></p>
+<p>PsyNeuLink includes a <a class="reference download internal" href="_downloads/PsyNeuLink Tutorial.ipynb" download=""><code class="xref download docutils literal"><span class="pre">tutorial</span></code></a>, that provides examples of how to create basic Components
 in PsyNeuLink, and combine them into Processes and a System.  The examples include construction of a simple
 decision making process using a Drift Diffusion Model, a neural network model of the Stroop effect, and a
 backpropagation network for learning the XOR problem.</p>
 <p>The tutorial can be run in a browser by clicking the badge below, or <a class="reference external" href="https://mybinder.org/v2/gh/PrincetonUniversity/PsyNeuLink/master">this link</a>.</p>
 <a class="reference external image-reference" href="https://mybinder.org/v2/gh/PrincetonUniversity/PsyNeuLink/master"><img alt="https://mybinder.org/badge.svg" src="https://mybinder.org/badge.svg" /></a>
 <p>To run the tutorial locally, you must run python 3.5 and install additional packages:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">psyneulink</span><span class="p">[</span><span class="n">tutorial</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">psyneulink</span><span class="p">[</span><span class="n">tutorial</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>or if you downloaded the source:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">.</span><span class="p">[</span><span class="n">tutorial</span><span class="p">]</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">.</span><span class="p">[</span><span class="n">tutorial</span><span class="p">]</span>
 </pre></div>
 </div>
 <p>To access the tutorial, make sure you fulfill the requirements
-mentioned above, download the <a class="reference download internal" download="" href="_downloads/9f1ca4fe52cc4418643c508e231f4661/PsyNeuLink Tutorial.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">tutorial</span> <span class="pre">notebook</span></code></a>, then run the terminal command</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">jupyter</span> <span class="n">notebook</span>
+mentioned above, download the <a class="reference download internal" href="_downloads/PsyNeuLink Tutorial.ipynb" download=""><code class="xref download docutils literal"><span class="pre">tutorial</span> <span class="pre">notebook</span></code></a>, then run the terminal command</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">jupyter</span> <span class="n">notebook</span>
 </pre></div>
 </div>
 <p>Once the notebook opens in your browser, navigate to the location where you saved the tutorial notebook, and
@@ -374,36 +374,36 @@ click on “PsyNeuLink Tutorial.ipynb”.</p>
 <span id="id6"></span><h2>Contributors<a class="headerlink" href="#contributors" title="Permalink to this headline">¶</a></h2>
 <p><em>(in alphabetical order)</em></p>
 <ul class="simple">
-<li><p><strong>Allie Burton</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
-<li><p><strong>Laura Bustamante</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
-<li><p><strong>Jonathan D. Cohen</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
-<li><p><strong>Samyak Gupta</strong>, Department of Computer Science, Rutgers University</p></li>
-<li><p><strong>Abigail Hoskin</strong>, Department of Psychology, Princeton University</p></li>
-<li><p><strong>Peter Johnson</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
-<li><p><strong>Justin Junge</strong>, Department of Psychology, Princeton University</p></li>
-<li><p><strong>Qihong Lu</strong>, Department of Psychology, Princeton University</p></li>
-<li><p><strong>Kristen Manning</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
-<li><p><strong>Katherine Mantel</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
-<li><p><strong>Lena Rosendahl</strong>, Department of Mechanical and Aerospace Engineering, Princeton University</p></li>
-<li><p><strong>Dillon Smith</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
-<li><p><strong>Markus Spitzer</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
-<li><p><strong>David Turner</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
-<li><p><strong>Jan Vesely</strong>, Department of Computer Science, Rutgers University</p></li>
-<li><p><strong>Changyan Wang</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
-<li><p><strong>Nate Wilson</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
+<li><strong>Allie Burton</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Laura Bustamante</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Jonathan D. Cohen</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Samyak Gupta</strong>, Department of Computer Science, Rutgers University</li>
+<li><strong>Abigail Hoskin</strong>, Department of Psychology, Princeton University</li>
+<li><strong>Peter Johnson</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Justin Junge</strong>, Department of Psychology, Princeton University</li>
+<li><strong>Qihong Lu</strong>, Department of Psychology, Princeton University</li>
+<li><strong>Kristen Manning</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Katherine Mantel</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Lena Rosendahl</strong>, Department of Mechanical and Aerospace Engineering, Princeton University</li>
+<li><strong>Dillon Smith</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Markus Spitzer</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>David Turner</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Jan Vesely</strong>, Department of Computer Science, Rutgers University</li>
+<li><strong>Changyan Wang</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Nate Wilson</strong>, Princeton Neuroscience Institute, Princeton University</li>
 </ul>
 <p>With substantial and greatly appreciated assistance from:</p>
 <ul class="simple">
-<li><p><strong>Abhishek Bhattacharjee</strong>, Department of Computer Science, Rutgers University</p></li>
-<li><p><strong>Mihai Capota</strong>, Intel Labs, Intel Corporation</p></li>
-<li><p><strong>Bryn Keller</strong>, Intel Labs, Intel Corporation</p></li>
-<li><p><strong>Susan Liu</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
-<li><p><strong>Garrett McGrath</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
-<li><p><strong>Sebastian Musslick</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
-<li><p><strong>Amitai Shenhav</strong>, Cognitive, Linguistic, &amp; Psychological Sciences, Brown University</p></li>
-<li><p><strong>Michael Shvartsman</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
-<li><p><strong>Ben Singer</strong>, Princeton Neuroscience Institute, Princeton University</p></li>
-<li><p><strong>Ted Willke</strong>, Intel Labs, Intel Corporation</p></li>
+<li><strong>Abhishek Bhattacharjee</strong>, Department of Computer Science, Rutgers University</li>
+<li><strong>Mihai Capota</strong>, Intel Labs, Intel Corporation</li>
+<li><strong>Bryn Keller</strong>, Intel Labs, Intel Corporation</li>
+<li><strong>Susan Liu</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Garrett McGrath</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Sebastian Musslick</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Amitai Shenhav</strong>, Cognitive, Linguistic, &amp; Psychological Sciences, Brown University</li>
+<li><strong>Michael Shvartsman</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Ben Singer</strong>, Princeton Neuroscience Institute, Princeton University</li>
+<li><strong>Ted Willke</strong>, Intel Labs, Intel Corporation</li>
 </ul>
 </div>
 <div class="section" id="table-of-contents">
@@ -506,9 +506,9 @@ click on “PsyNeuLink Tutorial.ipynb”.</p>
 <div class="section" id="indices-and-tables">
 <span id="id7"></span><h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
-<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
-<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
 </ul>
 </div>
 </div>
@@ -574,12 +574,21 @@ click on “PsyNeuLink Tutorial.ipynb”.</p>
   
 
      
-       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript">
+           var DOCUMENTATION_OPTIONS = {
+               URL_ROOT:'./',
+               VERSION:'0.8.7.0+11.g0d56d0f',
+               LANGUAGE:'None',
+               COLLAPSE_INDEX:false,
+               FILE_SUFFIX:'.html',
+               HAS_SOURCE:  true,
+               SOURCELINK_SUFFIX: '.txt'
+           };
+       </script>
+         <script type="text/javascript" src="_static/jquery.js"></script>
+         <script type="text/javascript" src="_static/underscore.js"></script>
+         <script type="text/javascript" src="_static/doctools.js"></script>
+         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

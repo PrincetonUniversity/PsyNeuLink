@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EpisodicMemoryMechanism &mdash; PsyNeuLink 0.8.7.0 documentation</title>
+  <title>EpisodicMemoryMechanism &mdash; PsyNeuLink 0.8.7.0+11.g0d56d0f documentation</title>
   
 
   
@@ -27,7 +27,6 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Objective Mechanisms" href="ObjectiveMechanisms.html" />
@@ -98,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.0
+                  0.8.7.0+11
                 </div>
               
             
@@ -212,11 +211,11 @@
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
-<li><p><a class="reference internal" href="#episodicmemorymechanism-overview"><span class="std std-ref">Overview</span></a></p></li>
-<li><p><a class="reference internal" href="#episodicmemorymechanism-creation"><span class="std std-ref">Creating a TransferMechanism</span></a></p></li>
-<li><p><a class="reference internal" href="#episodicmemorymechanism-structure"><span class="std std-ref">Structure</span></a></p></li>
-<li><p><a class="reference internal" href="#episodicmemorymechanism-execution"><span class="std std-ref">Execution</span></a></p></li>
-<li><p><a class="reference internal" href="#episodicmemorymechanism-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
+<li><a class="reference internal" href="#episodicmemorymechanism-overview"><span class="std std-ref">Overview</span></a></li>
+<li><a class="reference internal" href="#episodicmemorymechanism-creation"><span class="std std-ref">Creating a TransferMechanism</span></a></li>
+<li><a class="reference internal" href="#episodicmemorymechanism-structure"><span class="std std-ref">Structure</span></a></li>
+<li><a class="reference internal" href="#episodicmemorymechanism-execution"><span class="std std-ref">Execution</span></a></li>
+<li><a class="reference internal" href="#episodicmemorymechanism-class-reference"><span class="std std-ref">Class Reference</span></a></li>
 </ul>
 </div></blockquote>
 </div>
@@ -234,111 +233,88 @@ that define the shapes of the items stored in its memory.</p>
 <span id="episodicmemorymechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>An EpisodicMemoryMechanism has at least one <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>, its <em>CONTENT_INPUT</em> and,
 optionally, an <em>ASSOC_INPUT</em> InputPort (if its <em>assoc_size</em> is specified and is not 0) that represent
-an item to store;  a <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> that stores and retrieves content-assoc pairs from its
+an item to store;  a <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> that stores and retrieves content-assoc pairs from its
 memory; and at least one <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>, <em>CONTENT_OUTPUT</em>, as well as a 2nd, <em>CONTENT_OUTPUT</em> if it has
-an <em>ASSOC_INPUT</em> InputPort, that represent a retrieved item. The default function is a <a class="reference internal" href="MemoryFunctions.html#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContentAddressableMemory</span></code></a> that
+an <em>ASSOC_INPUT</em> InputPort, that represent a retrieved item. The default function is a <a class="reference internal" href="MemoryFunctions.html#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory"><code class="xref any py py-class docutils literal"><span class="pre">ContentAddressableMemory</span></code></a> that
 implements a simple form of content-addressable memory, but a custom function can be specified, so long as it meets the
 following requirements:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>It must accept a 2d array as its first argument, the first item of which is the content and the second the
-associate.</p></li>
-<li><p>It must return a 2d array, the first item of which is the retrieved content and the second of which is the
-assoc with which it is associated in the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>'s <a class="reference internal" href="#id0" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">memory</span></code></a>.</p></li>
-<li><p>It may also implement a memory attribute;  if it does, it can be accessed by the EpisodicMemoryMechanism’s
-<a class="reference internal" href="#id0" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">memory</span></code></a> attribute.</p></li>
+<li>It must accept a 2d array as its first argument, the first item of which is the content and the second the
+associate.</li>
+<li>It must return a 2d array, the first item of which is the retrieved content and the second of which is the
+assoc with which it is associated in the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a>.</li>
+<li>It may also implement a memory attribute;  if it does, it can be accessed by the EpisodicMemoryMechanism’s
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory"><code class="xref any py py-attr docutils literal"><span class="pre">memory</span></code></a> attribute.</li>
 </ul>
 </div></blockquote>
 </div>
 <div class="section" id="execution">
 <span id="episodicmemorymechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>When an EpisodicMemoryMechanism is executed, its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> carries out
+<p>When an EpisodicMemoryMechanism is executed, its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> carries out
 the following operations:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>retrieves an item from its memory based on the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of its <em>CONTENT_INPUT</em> <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>;
-if no retrieval is made, appropriately shaped zero-valued arrays are assigned to the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the <em>CONTENT_OUTPUT</em> and, if specified, it <em>ASSOC_OUTPUT</em> OutputPorts.</p></li>
+<li>retrieves an item from its memory based on the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <em>CONTENT_INPUT</em> <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>;
+if no retrieval is made, appropriately shaped zero-valued arrays are assigned to the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <em>CONTENT_OUTPUT</em> and, if specified, it <em>ASSOC_OUTPUT</em> OutputPorts.</li>
 </ul>
 <ul class="simple">
-<li><p>stores the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of its <em>CONTENT_INPUT</em> and, if specified, <em>ASSOC_INPUT</em> <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> in its memory.</p></li>
+<li>stores the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of its <em>CONTENT_INPUT</em> and, if specified, <em>ASSOC_INPUT</em> <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> in its memory.</li>
 </ul>
 <ul class="simple">
-<li><p>assigns the value of the retrieved item’s content in the EpisodicMemoryMechanism’s  <em>CONTENT_OUTPUT</em>
-<a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>, and the value of the assoc of the retrieved item in the <em>ASSOC_OUTPUT</em> OutputPort.</p></li>
+<li>assigns the value of the retrieved item’s content in the EpisodicMemoryMechanism’s  <em>CONTENT_OUTPUT</em>
+<a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>, and the value of the assoc of the retrieved item in the <em>ASSOC_OUTPUT</em> OutputPort.</li>
 </ul>
 <div class="admonition note">
-<p class="admonition-title">Note</p>
+<p class="first admonition-title">Note</p>
 <p>The order of storage and retieval is determined by the function.</p>
 <p>The value of the content of the item retrieved from memory (and stored in <em>CONTENT_OUTPUT</em>)
-may be different than the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of <em>CONTENT</em> used to retrieve the item.</p>
-<p>If no retrieval is made, appropriately shaped zero-valued arrays are assigned as the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the <em>CONTENT_OUTPUT</em> and, if specified, <em>ASSOC_OUTPUT</em> OutputPorts.</p>
+may be different than the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of <em>CONTENT</em> used to retrieve the item.</p>
+<p class="last">If no retrieval is made, appropriately shaped zero-valued arrays are assigned as the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <em>CONTENT_OUTPUT</em> and, if specified, <em>ASSOC_OUTPUT</em> OutputPorts.</p>
 </div>
 </div></blockquote>
 </div>
 <div class="section" id="class-reference">
 <span id="episodicmemorymechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
+<dl class="class">
 <dt id="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.</code><code class="sig-name descname">EpisodicMemoryMechanism</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">content_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">assoc_size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">function</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.</code><code class="descname">EpisodicMemoryMechanism</code><span class="sig-paren">(</span><em>content_size=None</em>, <em>assoc_size=None</em>, <em>function=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="IntegratorMechanism.html"><span class="doc">IntegratorMechanism</span></a> that implements a <a href="#id1"><span class="problematic" id="id2">`differentiable neural dictionary
 (ContentAddressableMemory)&lt;HTML&gt;`_</span></a>.  See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for additional arguments and
 attributes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>content_size</strong> (<em>int : default 1</em>) – specifies length of the content stored in the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>s memory.</p></li>
-<li><p><strong>assoc_size</strong> (<em>int : default 0</em>) – specifies length of the assoc stored in the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>s memory;
-if it is 0 (the default) then no <em>ASSOC_INPUT</em> InputPort or <em>ASSOC_OUTPUT</em> OutputPort are created.</p></li>
-<li><p><strong>function</strong> (<em>function : default ContentAddressableMemory</em>) – specifies the function that implements a memory store and methods to store to and retrieve from it.  It
-must take as its <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code> a 2d array, the first item of which is the content and the second
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>content_size</strong> (<em>int : default 1</em>) – specifies length of the content stored in the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>s memory.</li>
+<li><strong>assoc_size</strong> (<em>int : default 0</em>) – specifies length of the assoc stored in the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>s memory;
+if it is 0 (the default) then no <em>ASSOC_INPUT</em> InputPort or <em>ASSOC_OUTPUT</em> OutputPort are created.</li>
+<li><strong>function</strong> (<em>function : default ContentAddressableMemory</em>) – specifies the function that implements a memory store and methods to store to and retrieve from it.  It
+must take as its <code class="xref any docutils literal"><span class="pre">variable</span></code> a 2d array, the first item of which is the content and the second
 the associate to be stored in its memory, and must return a 2d array that is the value of the
-content and assoc retrieved from its memory.</p></li>
+content and assoc retrieved from its memory.</li>
 </ul>
-</dd>
-</dl>
-<dl class="py attribute">
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function">
-<code class="sig-name descname">function</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>function that implements storage and retrieval from a memory.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>function</p>
-</dd>
-</dl>
+<code class="descname">function</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>function</em> – function that implements storage and retrieval from a memory.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory">
-<code class="sig-name descname">memory</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory" title="Permalink to this definition">¶</a></dt>
-<dd><p>contains key-value pairs stored in the <code class="xref any docutils literal notranslate"><span class="pre">function</span> <span class="pre">&lt;EpisodicMemoryMechanism.function&gt;'s</span> <span class="pre">`memory</span></code> attribute
+<code class="descname">memory</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>3d array</em> – contains key-value pairs stored in the <code class="xref any docutils literal"><span class="pre">function</span> <span class="pre">&lt;EpisodicMemoryMechanism.function&gt;'s</span> <span class="pre">`memory</span></code> attribute
 (if it has one).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>3d array</p>
-</dd>
-</dl>
 </dd></dl>
 
-<dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism._instantiate_output_ports">
-<code class="sig-name descname">_instantiate_output_ports</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism._instantiate_output_ports" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call Port._instantiate_output_ports to instantiate orderedDict of OutputPort(s)</p>
-<dl class="simple">
-<dt>This is a stub, implemented to allow Mechanism subclasses to override _instantiate_output_ports</dt><dd><p>or process InputPorts before and/or after call to _instantiate_output_ports</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism._parse_function_variable">
-<code class="sig-name descname">_parse_function_variable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism._parse_function_variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>Parses the <strong>variable</strong> passed in to a Component into a function_variable that can be used with the
-Function associated with this Component</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="id0">
-<em class="property">property </em><code class="sig-name descname">memory</code><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dl class="attribute">
+<dt>
+<code class="descname">memory</code></dt>
 <dd><p>Return function’s memory attribute</p>
 </dd></dl>
 
@@ -413,12 +389,21 @@ Function associated with this Component</p>
   
 
      
-       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript">
+           var DOCUMENTATION_OPTIONS = {
+               URL_ROOT:'./',
+               VERSION:'0.8.7.0+11.g0d56d0f',
+               LANGUAGE:'None',
+               COLLAPSE_INDEX:false,
+               FILE_SUFFIX:'.html',
+               HAS_SOURCE:  true,
+               SOURCELINK_SUFFIX: '.txt'
+           };
+       </script>
+         <script type="text/javascript" src="_static/jquery.js"></script>
+         <script type="text/javascript" src="_static/underscore.js"></script>
+         <script type="text/javascript" src="_static/doctools.js"></script>
+         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   
