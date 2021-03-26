@@ -1068,9 +1068,11 @@ class Report:
 
                 trial_header = ''
 
-                # If nested Composition (indicated by current and previous entries on the stack being Compositions)
+                # If nested Composition
+                #   (indicated by current and previous entries on the stack both being Compositions but not the same)
                 previous_caller = self._execution_stack[-2]
-                if (isinstance(caller, Composition) and isinstance(previous_caller, Composition)):
+                if (caller is not previous_caller
+                        and isinstance(caller, Composition) and isinstance(previous_caller, Composition)):
                     trial_header += f'{self._depth_indent_i}[bold {trial_panel_color}]Execution of {caller.name} ' \
                                     f'within {previous_caller.name}:[/]\n'
 
@@ -1181,10 +1183,10 @@ class Report:
                 output_report.run_report.append('')
                 output_report.run_report.append(output_report.trial_report)
 
-                # # MODIFIED 3/25/24 OLD:
-                # if trial_report_type is not ReportOutput.OFF:
-                #     self._print_and_record_reports(TRIAL_REPORT, context, output_report)
-                # MODIFIED 3/25/24 END
+            # # MODIFIED 3/25/24 OLD:
+            # if trial_report_type is not ReportOutput.OFF:
+            #     self._print_and_record_reports(TRIAL_REPORT, context, output_report)
+            # MODIFIED 3/25/24 END
 
 
             self._execution_stack.pop()
@@ -1222,22 +1224,21 @@ class Report:
 
         elif content == 'run_end':
 
-            self._execution_stack.pop()
-
-            if trial_report_type is ReportOutput.TERSE:
-                # Report handled at beginning of run, in accord with TERSE in which lines indicate order of initiation
-                return
+            outer_comp = self._execution_stack.pop()
 
             if len(self._execution_stack) == 0 and trial_report_type is not ReportOutput.OFF:
-                title = f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] '
-                output_report.run_report = Padding.indent(Panel(RenderGroup(*output_report.run_report),
-                                                                box=trial_panel_box,
-                                                                border_style=trial_panel_color,
-                                                                title=title,
-                                                                padding=self.padding_lines,
-                                                                expand=False),
-                                                          self.padding_indent)
-                self._print_and_record_reports(RUN_REPORT, context, output_report)
+
+                if trial_report_type is not ReportOutput.TERSE:
+                    # For ReportOutput.TERSE, report is generated at beginning of run prior to execution
+                    title = f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] '
+                    output_report.run_report = Padding.indent(Panel(RenderGroup(*output_report.run_report),
+                                                                    box=trial_panel_box,
+                                                                    border_style=trial_panel_color,
+                                                                    title=title,
+                                                                    padding=self.padding_lines,
+                                                                    expand=False),
+                                                              self.padding_indent)
+                self._print_and_record_reports(RUN_REPORT, context, output_report, outer_comp)
 
         else:
             assert False, f"Bad 'content' argument in call to Report.report_output() for {caller.name}: {content}."
@@ -1604,7 +1605,11 @@ class Report:
 
         return Padding.indent(report, depth_indent)
 
-    def _print_and_record_reports(self, report_type:str, context:Context, output_report:OutputReport=None):
+    def _print_and_record_reports(self,
+                                  report_type:str,
+                                  context:Context,
+                                  output_report:OutputReport=None,
+                                  outer_comp=None):
         """
         Conveys output reporting to device specified in `_report_to_devices <Report._report_to_devices>`.
         Called by `report_output <Report.report_output>` and `report_progress <Report.report_progress>`
@@ -1612,8 +1617,17 @@ class Report:
         Arguments
         ---------
 
-        output_report : int
-            id of OutputReport for caller[run_mode] in self.output_reports to use for reporting.
+        report_type : TRIAL_REPORT or RUN_REPORT
+            report to print and record
+
+        context : Context
+
+        output_report : OutputReport  : default None
+            OutputReport for caller[run_mode] in self.output_reports to use for reporting.
+
+        outer_comp : Composition : default None
+            outermost Composition executed, used to store reports if it is being recorded or using rich_divert
+
         """
 
         # Print and record output report as they are created (progress reports are printed by _rich_progress.console)
@@ -1647,10 +1661,6 @@ class Report:
                     self._rich_diverted_reports += progress_reports + '\n'
                 if self._record_reports:
                     self._recorded_reports += progress_reports + '\n'
-            # outer_comp = self._execution_stack[0]
-            # Get outer comp (from output_report passed in as arg)
-            outer_comp = [k for k,v in self.output_reports.items() if  output_report in v['Execut']][0]
-            # store recorded reports on outer-most Composition
             if self._rich_divert:
                 outer_comp.rich_diverted_reports = self._rich_diverted_reports
             if self._record_reports:
