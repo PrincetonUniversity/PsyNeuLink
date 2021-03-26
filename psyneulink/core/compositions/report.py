@@ -971,7 +971,7 @@ class Report:
         elif isinstance(caller, Composition):
             # USE_PREFS is specified for report called by a Composition:
             if report_output is ReportOutput.USE_PREFS:
-                # First, if report is for execution of a node, assign its report type using its reportOutputPref:
+                # If report is for execution of a node, assign its report type using its reportOutputPref:
                 if node:
                     # Get ReportOutput spec from reportOutputPref if there is one
                     # If None was found, assign ReportOutput.FULL as default
@@ -979,6 +979,12 @@ class Report:
                     # Return if it is OFF
                     if node_report_type is ReportOutput.OFF:
                         return
+                # else:
+                #     caller_pref = next((pref for pref in convert_to_list(caller.reportOutputPref)
+                #                         if isinstance(pref, ReportOutput)), None)
+                #     if caller_pref is ReportOutput.OFF:
+                #         return
+
             output_report_owner = caller
 
         if scheduler:
