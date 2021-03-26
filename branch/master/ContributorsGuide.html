@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Contributors Guide &mdash; PsyNeuLink 0.8.7.0+11.g0d56d0f documentation</title>
+  <title>Contributors Guide &mdash; PsyNeuLink 0.8.7.0+11.g0d56d0f7d5 documentation</title>
   
 
   
@@ -27,6 +27,7 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="prev" title="Models" href="Models.html" /> 
@@ -197,15 +198,15 @@
   <div class="section" id="contributors-guide">
 <h1>Contributors Guide<a class="headerlink" href="#contributors-guide" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
-<li><a class="reference internal" href="#introduction"><span class="std std-ref">Introduction</span></a></li>
-<li><a class="reference internal" href="#file-structure"><span class="std std-ref">File Structure</span></a></li>
-<li><a class="reference internal" href="#environment-setup"><span class="std std-ref">Environment Setup</span></a></li>
-<li><a class="reference internal" href="#contribution-checklist"><span class="std std-ref">Contribution Checklist</span></a></li>
-<li><a class="reference internal" href="#components-overview"><span class="std std-ref">Components Overview</span></a></li>
-<li><a class="reference internal" href="#compositions-overview"><span class="std std-ref">Compositions Overview</span></a></li>
-<li><a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a></li>
-<li><a class="reference internal" href="#testing"><span class="std std-ref">Testing</span></a></li>
-<li><a class="reference internal" href="#documentation"><span class="std std-ref">Documentation</span></a></li>
+<li><p><a class="reference internal" href="#introduction"><span class="std std-ref">Introduction</span></a></p></li>
+<li><p><a class="reference internal" href="#file-structure"><span class="std std-ref">File Structure</span></a></p></li>
+<li><p><a class="reference internal" href="#environment-setup"><span class="std std-ref">Environment Setup</span></a></p></li>
+<li><p><a class="reference internal" href="#contribution-checklist"><span class="std std-ref">Contribution Checklist</span></a></p></li>
+<li><p><a class="reference internal" href="#components-overview"><span class="std std-ref">Components Overview</span></a></p></li>
+<li><p><a class="reference internal" href="#compositions-overview"><span class="std std-ref">Compositions Overview</span></a></p></li>
+<li><p><a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a></p></li>
+<li><p><a class="reference internal" href="#testing"><span class="std std-ref">Testing</span></a></p></li>
+<li><p><a class="reference internal" href="#documentation"><span class="std std-ref">Documentation</span></a></p></li>
 </ul>
 <div class="section" id="introduction">
 <span id="id1"></span><h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
@@ -215,67 +216,63 @@
 <span id="id2"></span><h2>File Structure<a class="headerlink" href="#file-structure" title="Permalink to this headline">¶</a></h2>
 <p>In the PsyNeuLink repo, there are many files. The following folders and files are the most relevant:</p>
 <ul>
-<li><p class="first"><em>docs</em> contains the documentation files, including the Contributors Guide</p>
+<li><p><em>docs</em> contains the documentation files, including the Contributors Guide</p>
 <blockquote>
 <div><ul class="simple">
-<li><em>source</em> contains the Sphinx files used to generate the HTML documentation</li>
-<li><em>build</em> contains the generated HTML documentation, which is generated using Sphinx commands</li>
+<li><p><em>source</em> contains the Sphinx files used to generate the HTML documentation</p></li>
+<li><p><em>build</em> contains the generated HTML documentation, which is generated using Sphinx commands</p></li>
 </ul>
 </div></blockquote>
 </li>
 </ul>
 <ul class="simple">
-<li><em>Scripts</em> contains sample PsyNeuLink scripts. These scripts are not actively maintained and may be outdated</li>
+<li><p><em>Scripts</em> contains sample PsyNeuLink scripts. These scripts are not actively maintained and may be outdated</p></li>
 </ul>
 <ul class="simple">
-<li><em>tests</em> contains the test code, which is actively maintained</li>
+<li><p><em>tests</em> contains the test code, which is actively maintained</p></li>
 </ul>
 <ul class="simple">
-<li><em>CONVENTIONS.md</em> describes coding conventions that contributors must follow, such as documentation style and variable naming</li>
+<li><p><em>CONVENTIONS.md</em> describes coding conventions that contributors must follow, such as documentation style and variable naming</p></li>
 </ul>
 <ul class="simple">
-<li><em>psyneulink</em> contains the source code of PsyNeuLink</li>
+<li><p><em>psyneulink</em> contains the source code of PsyNeuLink</p></li>
 </ul>
 <p>Within <em>psyneulink</em>, the <em>library</em> folder represents non-core objects, while the other folders hold the core of PsyNeuLink. Thus, custom Mechanisms, Projections, etc. belong in <em>library</em>.</p>
 </div>
 <div class="section" id="environment-setup">
 <span id="id3"></span><h2>Environment Setup<a class="headerlink" href="#environment-setup" title="Permalink to this headline">¶</a></h2>
-<p>PsyNeuLink is coded in Python 3, and should work in Python 3.6. First install Python and pip on your machine, if not installed already. Clone the PsyNeuLink git repository. To install the required packages, navigate to the PsyNeuLink folder and run <code class="xref any docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code> and <code class="xref any docutils literal"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">dev_requirements.txt</span></code>. If necessary, use <code class="xref any docutils literal"><span class="pre">pip3</span></code> instead of <code class="xref any docutils literal"><span class="pre">pip</span></code>.</p>
-<p>PsyNeuLink uses <code class="xref any docutils literal"><span class="pre">pytest</span></code> to run its tests. To build documentation, we use Sphinx. <strong>insert Sphinx setup instructions here</strong></p>
-<p>To contribute, make a branch off of the <code class="xref any docutils literal"><span class="pre">devel</span></code> branch. Make a pull request to <code class="xref any docutils literal"><span class="pre">devel</span></code> once your changes are complete. <code class="xref any docutils literal"><span class="pre">devel</span></code> is periodically merged into the <code class="xref any docutils literal"><span class="pre">master</span></code> branch, which is the branch most users use.</p>
+<p>PsyNeuLink is coded in Python 3, and should work in Python 3.6. First install Python and pip on your machine, if not installed already. Clone the PsyNeuLink git repository. To install the required packages, navigate to the PsyNeuLink folder and run <code class="xref any docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">requirements.txt</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-r</span> <span class="pre">dev_requirements.txt</span></code>. If necessary, use <code class="xref any docutils literal notranslate"><span class="pre">pip3</span></code> instead of <code class="xref any docutils literal notranslate"><span class="pre">pip</span></code>.</p>
+<p>PsyNeuLink uses <code class="xref any docutils literal notranslate"><span class="pre">pytest</span></code> to run its tests. To build documentation, we use Sphinx. <strong>insert Sphinx setup instructions here</strong></p>
+<p>To contribute, make a branch off of the <code class="xref any docutils literal notranslate"><span class="pre">devel</span></code> branch. Make a pull request to <code class="xref any docutils literal notranslate"><span class="pre">devel</span></code> once your changes are complete. <code class="xref any docutils literal notranslate"><span class="pre">devel</span></code> is periodically merged into the <code class="xref any docutils literal notranslate"><span class="pre">master</span></code> branch, which is the branch most users use.</p>
 </div>
 <div class="section" id="contribution-checklist">
 <span id="id4"></span><h2>Contribution Checklist<a class="headerlink" href="#contribution-checklist" title="Permalink to this headline">¶</a></h2>
 <p>This is the general workflow for contributing to PsyNeuLink:</p>
 <ul>
-<li><p class="first">Using git, create a branch off of the <code class="xref any docutils literal"><span class="pre">devel</span></code> branch.</p>
-</li>
-<li><p class="first">Make your changes to the code. Ideally, notify the PsyNeuLink team in advance of what you intend to do, so that they can provide you with relevant tips in advance.</p>
+<li><p>Using git, create a branch off of the <code class="xref any docutils literal notranslate"><span class="pre">devel</span></code> branch.</p></li>
+<li><p>Make your changes to the code. Ideally, notify the PsyNeuLink team in advance of what you intend to do, so that they can provide you with relevant tips in advance.</p>
 <blockquote>
 <div><ul class="simple">
-<li>While writing code on your branch, be sure to keep pulling from <code class="xref any docutils literal"><span class="pre">devel</span></code> from time to time! Since PsyNeuLink is being developed rapidly, substantial changes are still being made to the code.</li>
+<li><p>While writing code on your branch, be sure to keep pulling from <code class="xref any docutils literal notranslate"><span class="pre">devel</span></code> from time to time! Since PsyNeuLink is being developed rapidly, substantial changes are still being made to the code.</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p class="first">Once you’ve added your changes, add tests that check that your feature or bugfix functions as expected. This helps ensure that other developers don’t accidentally break your code when making their own changes!</p>
-</li>
-<li><p class="first">Once your changes are complete and working, run the Pytest tests and make sure all tests pass. If you encounter unexpected test failures, please notify the PsyNeuLink team.</p>
-</li>
-<li><p class="first">Once tests pass, submit a pull request to the PsyNeuLink devel branch! The PsyNeuLink team will then review your changes.</p>
-</li>
+<li><p>Once you’ve added your changes, add tests that check that your feature or bugfix functions as expected. This helps ensure that other developers don’t accidentally break your code when making their own changes!</p></li>
+<li><p>Once your changes are complete and working, run the Pytest tests and make sure all tests pass. If you encounter unexpected test failures, please notify the PsyNeuLink team.</p></li>
+<li><p>Once tests pass, submit a pull request to the PsyNeuLink devel branch! The PsyNeuLink team will then review your changes.</p></li>
 </ul>
 </div>
 <div class="section" id="components-overview">
 <span id="id5"></span><h2>Components Overview<a class="headerlink" href="#components-overview" title="Permalink to this headline">¶</a></h2>
 <p>Most PsyNeuLink objects are <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>. All <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a>, <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>, and <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> are subclasses of Component. These subclasses use and override many functions from the Component class, so they are initialized and executed in similar ways.</p>
-<p>The subclasses of Component should override Component’s functions to implement their own functionality. However, function overrides must call the overridden function using <code class="xref any docutils literal"><span class="pre">super()</span></code>, while passing the same arguments. For example, to instantiate a Projection’s receiver after instantiating its function, the Projection_Base class overrides the <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_attributes_after_function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_attributes_after_function"><code class="xref any py py-meth docutils literal"><span class="pre">_instantiate_attributes_after_function</span></code></a> as follows:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Projection_Base</span><span class="p">(</span><span class="n">Projection</span><span class="p">):</span>
+<p>The subclasses of Component should override Component’s functions to implement their own functionality. However, function overrides must call the overridden function using <code class="xref any docutils literal notranslate"><span class="pre">super()</span></code>, while passing the same arguments. For example, to instantiate a Projection’s receiver after instantiating its function, the Projection_Base class overrides the <a class="reference internal" href="KohonenMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism._instantiate_attributes_after_function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism._instantiate_attributes_after_function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">_instantiate_attributes_after_function</span></code></a> as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Projection_Base</span><span class="p">(</span><span class="n">Projection</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">_instantiate_attributes_after_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_instantiate_receiver</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">)</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_instantiate_attributes_after_function</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="n">context</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="Context.html#module-psyneulink.core.globals.context" title="psyneulink.core.globals.context"><code class="xref any py py-mod docutils literal"><span class="pre">context</span></code></a> is a string argument passed among PsyNeuLink functions to provide outside information about when a function is being called. Usually, if you modify <a class="reference internal" href="Context.html#module-psyneulink.core.globals.context" title="psyneulink.core.globals.context"><code class="xref any py py-mod docutils literal"><span class="pre">context</span></code></a>, you should append to it rather than overwriting it.</p>
+<p><a class="reference internal" href="Context.html#module-psyneulink.core.globals.context" title="psyneulink.core.globals.context"><code class="xref any py py-mod docutils literal notranslate"><span class="pre">context</span></code></a> is a string argument passed among PsyNeuLink functions to provide outside information about when a function is being called. Usually, if you modify <a class="reference internal" href="Context.html#module-psyneulink.core.globals.context" title="psyneulink.core.globals.context"><code class="xref any py py-mod docutils literal notranslate"><span class="pre">context</span></code></a>, you should append to it rather than overwriting it.</p>
 </div>
 <div class="section" id="compositions-overview">
 <span id="id6"></span><h2>Compositions Overview<a class="headerlink" href="#compositions-overview" title="Permalink to this headline">¶</a></h2>
@@ -288,9 +285,9 @@
 </div>
 <div class="section" id="documentation">
 <span id="id9"></span><h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h2>
-<p>Documentation is done through the Sphinx library. Documentation for the <code class="xref any docutils literal"><span class="pre">master</span></code> and <code class="xref any docutils literal"><span class="pre">devel</span></code> branches can be found <a class="reference external" href="https://princetonuniversity.github.io/PsyNeuLink/">here</a> and <a class="reference external" href="https://princetonuniversity.github.io/PsyNeuLink/branch/devel/index.html">here</a>, respectively. When learning about PsyNeuLink, generating the Sphinx documentation is unnecessary because the online documentation exists.</p>
+<p>Documentation is done through the Sphinx library. Documentation for the <code class="xref any docutils literal notranslate"><span class="pre">master</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">devel</span></code> branches can be found <a class="reference external" href="https://princetonuniversity.github.io/PsyNeuLink/">here</a> and <a class="reference external" href="https://princetonuniversity.github.io/PsyNeuLink/branch/devel/index.html">here</a>, respectively. When learning about PsyNeuLink, generating the Sphinx documentation is unnecessary because the online documentation exists.</p>
 <p>To understand Sphinx syntax, start <a class="reference external" href="http://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html">here</a> .</p>
-<p>However, when editing documentation, you should generate Sphinx documentation in order to preview your changes before publishing to <code class="xref any docutils literal"><span class="pre">devel</span></code>. To generate Sphinx documentation from your local branch, run <code class="xref any docutils literal"><span class="pre">make</span> <span class="pre">html</span></code> in Terminal, while in the <code class="xref any docutils literal"><span class="pre">docs</span></code> folder. The resulting HTML should be in your <code class="xref any docutils literal"><span class="pre">docs/build</span></code> folder. (Do not commit these built HTML files to Github. They are simply for testing/preview purposes.)</p>
+<p>However, when editing documentation, you should generate Sphinx documentation in order to preview your changes before publishing to <code class="xref any docutils literal notranslate"><span class="pre">devel</span></code>. To generate Sphinx documentation from your local branch, run <code class="xref any docutils literal notranslate"><span class="pre">make</span> <span class="pre">html</span></code> in Terminal, while in the <code class="xref any docutils literal notranslate"><span class="pre">docs</span></code> folder. The resulting HTML should be in your <code class="xref any docutils literal notranslate"><span class="pre">docs/build</span></code> folder. (Do not commit these built HTML files to Github. They are simply for testing/preview purposes.)</p>
 </div>
 </div>
 
@@ -361,21 +358,12 @@
   
 
      
-       <script type="text/javascript">
-           var DOCUMENTATION_OPTIONS = {
-               URL_ROOT:'./',
-               VERSION:'0.8.7.0+11.g0d56d0f',
-               LANGUAGE:'None',
-               COLLAPSE_INDEX:false,
-               FILE_SUFFIX:'.html',
-               HAS_SOURCE:  true,
-               SOURCELINK_SUFFIX: '.txt'
-           };
-       </script>
-         <script type="text/javascript" src="_static/jquery.js"></script>
-         <script type="text/javascript" src="_static/underscore.js"></script>
-         <script type="text/javascript" src="_static/doctools.js"></script>
-         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/doctools.js"></script>
+         <script src="_static/language_data.js"></script>
+         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   
