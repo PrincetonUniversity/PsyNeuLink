@@ -1249,21 +1249,18 @@ class Report:
                                f'\n[bold {controller_input_color}]{self._padding_indent_str}outcome:[/] {outcome}']
                 # # MODIFIED 3/25/21 OLD:
                 # ctlr_report.extend(self.output_reports[output_report_owner][SIMULATION][report_num].run_report)
-                # # MODIFIED 3/25/21 NEW: FIX: THIS DOESN'T SEEM TO DO ANYTHING
-                # ctlr_report.extend(self.output_reports[output_report_owner][DEFAULT][report_num].run_report)
-                # MODIFIED 3/25/21 NEWER:
+                # MODIFIED 3/25/21 NEW:
                 if self._report_simulations is ReportSimulations.ON:
                     ctlr_report.extend(self.output_reports[output_report_owner][SIMULATION][report_num].run_report)
-                    # MODIFIED 3/25/21 NEW: FIX: THIS DOESN'T SEEM TO DO ANYTHING
-                    ctlr_report.extend(self.output_reports[output_report_owner][DEFAULT][report_num].run_report)
                 # MODIFIED 3/25/21 END
                 ctlr_report.append(f"\n[bold {controller_output_color}]{self._padding_indent_str}control allocation:[/]"
                                    f" {control_allocation}")
+                title = f'[bold{controller_panel_color}] {node.name} SIMULATION OF {node.composition.name}[/] ' \
+                        f'{node.composition.controller_mode.upper()} its Trial {trial_num}'
                 ctlr_report = Padding.indent(Panel(RenderGroup(*ctlr_report),
                                                    box=controller_panel_box,
                                                    border_style=controller_panel_color,
-                                                   title=f'[bold{controller_panel_color}] {node.name} ' \
-                                                         f'SIMULATION OF {node.composition.name}[/] ',
+                                                   title=title,
                                                    padding=self.padding_lines,
                                                    expand=False),
                                              self.padding_indent)
