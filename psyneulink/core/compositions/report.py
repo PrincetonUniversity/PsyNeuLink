@@ -971,8 +971,11 @@ class Report:
         elif isinstance(caller, Composition):
             # USE_PREFS is specified for report called by a Composition:
             if report_output is ReportOutput.USE_PREFS:
+                if content in {'run_start',  'run_end'}:
+                    # At end of run, need to pop the _execution_stack and generate recording if specified
+                    pass
                 # If report is for execution of a node, assign its report type using its reportOutputPref:
-                if node:
+                elif node:
                     # Get ReportOutput spec from reportOutputPref if there is one
                     # If None was found, assign ReportOutput.FULL as default
                     node_report_type = node_pref or ReportOutput.FULL
@@ -1048,7 +1051,7 @@ class Report:
             else:
                 self._execution_stack.append(caller)
 
-            if trial_report_type is ReportOutput.TERSE and not self._simulating:
+            if trial_report_type in {ReportOutput.TERSE, ReportOutput.USE_PREFS} and not self._simulating:
                 # Report execution at start of run, in accord with TERSE reporting at initiation of execution
                 report = f'[bold {trial_panel_color}]{self._depth_indent_i}Execution of {caller.name}:[/]'
                 self._rich_progress.console.print(report)
@@ -1063,14 +1066,13 @@ class Report:
             output_report.trial_report = []
             #  if FULL output, report trial number and Composition's input
             #  note:  header for Trial Panel is constructed under 'content is Trial' case below
-            if trial_report_type in {ReportOutput.USE_PREFS, ReportOutput.FULL}:
+            if trial_report_type is ReportOutput.FULL:
                 output_report.trial_report = [f'[bold {trial_panel_color}]{self._padding_indent_str}input:[/]'
                                            f' {[i.tolist() for i in caller.get_input_values(context)]}']
                 # Push trial_header to stack in case there are intervening executions of nested comps or simulations
                 self._trial_header_stack.append(
                     f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial {trial_num}[/] ')
-            else: # TERSE output
-                # FIX: ADD THE FOLLOWING FOR NESTED COMP'S, BEFORE trial_header
+            else: # TERSE or USE_PREFS
 
                 trial_header = ''
 
@@ -1091,7 +1093,7 @@ class Report:
                     self._recorded_reports += trial_header
 
         elif content == 'time_step_init':
-            if trial_report_type in {ReportOutput.USE_PREFS, ReportOutput.FULL}:
+            if trial_report_type is ReportOutput.FULL:
                 output_report.time_step_report = [] # Contains rich.Panel for each node executed in time_step
             elif nodes_to_report: # TERSE output
 
@@ -1131,19 +1133,18 @@ class Report:
                                                          is_controller=is_controller,
                                                          context=context
                                                          )
-            if trial_report_type in {ReportOutput.USE_PREFS, ReportOutput.FULL}:
+            if trial_report_type is ReportOutput.FULL:
                 if content=='start_controller':
                     # skip controller, as its report is assigned after execution of simulations
                     return
                 output_report.time_step_report.append(node_report)
 
-            # For ReportOutput.TERSE, just print it to the console
-            elif trial_report_type is ReportOutput.TERSE:
-
+            # For TERSE or USE_PREFS:
+            else:
+                # Execution of nested Composition is reported before execution
                 if content == 'nested_comp':
-                    # Execution of nested Composition is reported before XXX
                     return
-
+                # Otherwise, print to console
                 self._rich_progress.console.print(node_report)
                 if self._record_reports:
                     with self._recording_console.capture() as capture:
@@ -1151,7 +1152,7 @@ class Report:
                     self._recorded_reports += capture.get()
 
         elif content == 'time_step':
-            if nodes_to_report and trial_report_type in {ReportOutput.USE_PREFS, ReportOutput.FULL}:
+            if nodes_to_report and trial_report_type is ReportOutput.FULL:
                 output_report.trial_report.append('')
                 title = f'[bold {time_step_panel_color}]\nTime Step {scheduler.get_clock(context).time.time_step}[/]'
                 output_report.trial_report.append(Padding.indent(Panel(RenderGroup(*output_report.time_step_report),
@@ -1164,12 +1165,12 @@ class Report:
                                                                  self.padding_indent))
 
         elif content == 'trial_end':
-            if trial_report_type in {ReportOutput.USE_PREFS, ReportOutput.FULL}:
+            if trial_report_type is ReportOutput.FULL:
                 output_values = []
                 for port in caller.output_CIM.output_ports:
                     output_values.append(port.parameters.value._get(context))
                 output_report.trial_report.append(f"\n[bold {trial_output_color}]{self._padding_indent_str}result:[/]"
-                                          f" {[r.tolist() for r in output_values]}")
+                                                  f" {[r.tolist() for r in output_values]}")
                 if self._simulating:
                     # If simulating, get header that was stored at the beginning of the simulation set
                     title = self._trial_header_stack.pop()
@@ -1189,19 +1190,13 @@ class Report:
                 output_report.run_report.append('')
                 output_report.run_report.append(output_report.trial_report)
 
-            # # MODIFIED 3/25/24 OLD:
-            # if trial_report_type is not ReportOutput.OFF:
-            #     self._print_and_record_reports(TRIAL_REPORT, context, output_report)
-            # MODIFIED 3/25/24 END
-
-
             self._execution_stack.pop()
 
         elif content == 'controller_end':
 
             # Only deal with ReportOutput.FULL;  ReportOutput.TERSE is handled above under content='controller_start'
             # if report_output in {ReportOutput.FULL, ReportOutput.USE_PREFS}:
-            if trial_report_type in {ReportOutput.FULL, ReportOutput.USE_PREFS}:
+            if trial_report_type is ReportOutput.FULL:
 
                 features = [p.parameters.value.get(context).tolist() for p in node.input_ports if p.name != OUTCOME]
                 outcome = node.input_ports[OUTCOME].parameters.value.get(context).tolist()
@@ -1235,7 +1230,8 @@ class Report:
 
             if len(self._execution_stack) == 0 and trial_report_type is not ReportOutput.OFF:
 
-                if trial_report_type is not ReportOutput.TERSE:
+                # if trial_report_type is not ReportOutput.TERSE:
+                if trial_report_type is ReportOutput.FULL:
                     # For ReportOutput.TERSE, report is generated at beginning of run prior to execution
                     title = f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] '
                     output_report.run_report = Padding.indent(Panel(RenderGroup(*output_report.run_report),
