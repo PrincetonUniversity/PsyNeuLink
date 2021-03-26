@@ -159,7 +159,7 @@ DEFAULT = 'Execut'
 SIMULATIONS = 'simulations'
 SIMULATING = 'simulating'
 REPORT_REPORT = False # USED FOR DEBUGGING
-TRIAL_REPORT = 'trial_report'
+EXECUTE_REPORT = 'execute_report'
 RUN_REPORT = 'run_report'
 PROGRESS_REPORT = 'progress_report'
 
@@ -584,7 +584,7 @@ class Report:
                 report_progress:ReportProgress=ReportProgress.OFF,
                 report_simulations:ReportSimulations=ReportSimulations.OFF,
                 report_to_devices:(list(ReportDevices.__members__), list)=ReportDevices.CONSOLE,
-                depth_indent_factor:int = 4,
+                depth_indent_factor:int = 2,
                 padding_indent:int = 1,
                 padding_lines:int = 1,
                 context:Optional[Context]=None
@@ -870,7 +870,7 @@ class Report:
                                   refresh=True)
 
         if self._report_progress is not ReportProgress.OFF:
-            self._print_and_record_reports(PROGRESS_REPORT, context)
+            self._print_and_record_reports(PROGRESS_REPORT, context, outer_comp=caller)
 
 
     def report_output(self,
@@ -1078,11 +1078,12 @@ class Report:
 
                 # If nested Composition
                 #   (indicated by current and previous entries on the stack both being Compositions but not the same)
-                previous_caller = self._execution_stack[-2]
-                if (caller is not previous_caller
-                        and isinstance(caller, Composition) and isinstance(previous_caller, Composition)):
-                    trial_header += f'{self._depth_indent_i}[bold {trial_panel_color}]Execution of {caller.name} ' \
-                                    f'within {previous_caller.name}:[/]\n'
+                if len(self._execution_stack) > 1:
+                    previous_caller = self._execution_stack[-2]
+                    if (caller is not previous_caller
+                            and isinstance(caller, Composition) and isinstance(previous_caller, Composition)):
+                        trial_header += f'{self._depth_indent_i}[bold {trial_panel_color}]Execution of {caller.name} ' \
+                                        f'within {previous_caller.name}:[/]\n'
 
                 # print trial title and separator + input array to Composition
                 trial_header += f'[bold {trial_panel_color}]' \
@@ -1191,6 +1192,11 @@ class Report:
                 output_report.run_report.append(output_report.trial_report)
 
             self._execution_stack.pop()
+
+            # If call is from COMMAND_LINE, the only running an execution, in which case, print and record report
+            if context.source is ContextFlags.COMMAND_LINE:
+                self._print_and_record_reports(EXECUTE_REPORT, context, output_report, caller)
+                # self._print_and_record_reports(RUN_REPORT, context, output_report, caller)
 
         elif content == 'controller_end':
 
@@ -1620,7 +1626,7 @@ class Report:
         Arguments
         ---------
 
-        report_type : TRIAL_REPORT or RUN_REPORT
+        report_type : EXECUTE_REPORT or RUN_REPORT
             report to print and record
 
         context : Context
@@ -1634,10 +1640,10 @@ class Report:
         """
 
         # Print and record output report as they are created (progress reports are printed by _rich_progress.console)
-        if report_type in {TRIAL_REPORT, RUN_REPORT}:
+        if report_type in {EXECUTE_REPORT, RUN_REPORT}:
             # Print output reports as they are created
             if self._rich_console or self._rich_divert:
-                if output_report.trial_report and report_type is TRIAL_REPORT:
+                if output_report.trial_report and report_type is EXECUTE_REPORT:
                     self._rich_progress.console.print(output_report.trial_report)
                     self._rich_progress.console.print('')
                 elif output_report.run_report and report_type is RUN_REPORT:
@@ -1649,7 +1655,7 @@ class Report:
                         self._rich_diverted_reports += (f'\n{self._rich_progress.console.file.getvalue()}')
                     if self._record_reports:
                         with self._recording_console.capture() as capture:
-                            if report_type is TRIAL_REPORT:
+                            if report_type is EXECUTE_REPORT:
                                 self._recording_console.print(output_report.trial_report)
                             elif report_type is RUN_REPORT:
                                 self._recording_console.print(output_report.run_report)
@@ -1671,7 +1677,7 @@ class Report:
 
     @property
     def _execution_stack_depth(self):
-        return len(self._execution_stack) - 1
+        return len(self._execution_stack)
 
     @property
     def _nested(self):
