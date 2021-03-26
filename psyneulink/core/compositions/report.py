@@ -88,9 +88,9 @@ Examples
 Note that the report for the execution of a Composition contains information about the `TRIAL <TimeScale.TRIAL>`
 and `TIME_STEP <TimeScale.TIME_STEP>` in which the Mechanism executed.
 
-A more complete report of the execution can be generated using the `Report.FULL` and `Report.USE_PREFS` options in the
-**report_output** argument of a Composition's `execution methods <Composition_Execution_Methods>`, that also includes
-the input and output for the Composition:
+A more complete report of the execution can be generated using the `ReportOutput.FULL` and `Report.USE_PREFS` options
+in the **report_output** argument of a Composition's `execution methods <Composition_Execution_Methods>`, that also
+includes the input and output for the Composition:
 
   >>> my_comp = pnl.Composition(pathways=[my_mech])
   >>> my_mech.reportOutputPref = ['integration_rate', 'slope', 'rate']
@@ -229,9 +229,9 @@ class ReportOutput(Enum):
     """
 
     OFF = 0
-    USE_PREFS = 1
-    TERSE = 2
-    ON = 2
+    TERSE = 1
+    ON = 1
+    USE_PREFS = 2
     FULL = 3
 
 
@@ -887,9 +887,9 @@ class Report:
         Report output of execution in call to `execute <Composition.execute>` method of a `Composition` or a
         Mechanism <Mechanism_Base.execute>`.  Report.TERSE generates a line-by-line report of executions, but
         no other information (ie., no input, output or parameter information); output is generated in every call;
-        Report.FULL generates a rich-formatted report, that includes that information;  it is constructed throughout
-        the execution of the `TRIAL <TimeScale.TRIAL>` (beginning with content='trial_init'), and reported at the end
-        of the `TRIAL <TimeScale.TRIAL>`(content='trial_end').
+        ReportOutput.FULL generates a rich-formatted report, that includes that information;  it is constructed
+        throughout the execution of the `TRIAL <TimeScale.TRIAL>` (beginning with content='trial_init'), and reported
+        at the end of the `TRIAL <TimeScale.TRIAL>`(content='trial_end').
 
         Arguments
         ---------
@@ -1057,7 +1057,7 @@ class Report:
             output_report.trial_report = []
             #  if FULL output, report trial number and Composition's input
             #  note:  header for Trial Panel is constructed under 'content is Trial' case below
-            if trial_report_type is ReportOutput.FULL:
+            if trial_report_type in {ReportOutput.USE_PREFS, ReportOutput.FULL}:
                 output_report.trial_report = [f'[bold {trial_panel_color}]{self._padding_indent_str}input:[/]'
                                            f' {[i.tolist() for i in caller.get_input_values(context)]}']
                 # Push trial_header to stack in case there are intervening executions of nested comps or simulations
@@ -1085,7 +1085,7 @@ class Report:
                     self._recorded_reports += trial_header
 
         elif content == 'time_step_init':
-            if trial_report_type is ReportOutput.FULL:
+            if trial_report_type in {ReportOutput.USE_PREFS, ReportOutput.FULL}:
                 output_report.time_step_report = [] # Contains rich.Panel for each node executed in time_step
             elif nodes_to_report: # TERSE output
 
@@ -1125,7 +1125,7 @@ class Report:
                                                          is_controller=is_controller,
                                                          context=context
                                                          )
-            if trial_report_type is ReportOutput.FULL:
+            if trial_report_type in {ReportOutput.USE_PREFS, ReportOutput.FULL}:
                 if content=='start_controller':
                     # skip controller, as its report is assigned after execution of simulations
                     return
@@ -1145,7 +1145,7 @@ class Report:
                     self._recorded_reports += capture.get()
 
         elif content == 'time_step':
-            if nodes_to_report and trial_report_type is ReportOutput.FULL:
+            if nodes_to_report and trial_report_type in {ReportOutput.USE_PREFS, ReportOutput.FULL}:
                 output_report.trial_report.append('')
                 title = f'[bold {time_step_panel_color}]\nTime Step {scheduler.get_clock(context).time.time_step}[/]'
                 output_report.trial_report.append(Padding.indent(Panel(RenderGroup(*output_report.time_step_report),
@@ -1158,7 +1158,7 @@ class Report:
                                                                  self.padding_indent))
 
         elif content == 'trial_end':
-            if trial_report_type is ReportOutput.FULL:
+            if trial_report_type in {ReportOutput.USE_PREFS, ReportOutput.FULL}:
                 output_values = []
                 for port in caller.output_CIM.output_ports:
                     output_values.append(port.parameters.value._get(context))
@@ -1194,7 +1194,8 @@ class Report:
         elif content == 'controller_end':
 
             # Only deal with ReportOutput.FULL;  ReportOutput.TERSE is handled above under content='controller_start'
-            if report_output is ReportOutput.FULL:
+            # if report_output in {ReportOutput.FULL, ReportOutput.USE_PREFS}:
+            if trial_report_type in {ReportOutput.FULL, ReportOutput.USE_PREFS}:
 
                 features = [p.parameters.value.get(context).tolist() for p in node.input_ports if p.name != OUTCOME]
                 outcome = node.input_ports[OUTCOME].parameters.value.get(context).tolist()
