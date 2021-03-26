@@ -182,7 +182,7 @@ controller_panel_color = 'purple'
 controller_input_color = 'purple'
 controller_output_color = 'blue'
 controller_panel_box = box.HEAVY
-# simulaton trial Panels
+# simulation trial Panels
 simulation_panel_color = 'medium_orchid'
 simulation_input_color = 'purple'
 simulation_output_color = 'blue'
