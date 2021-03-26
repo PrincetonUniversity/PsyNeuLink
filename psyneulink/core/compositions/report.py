@@ -1302,8 +1302,8 @@ class Report:
 
         elif content == 'execute_end':
 
-            # MODIFIED 3/26/21 OLD:
-            outer_comp = self._execution_stack.pop()
+            # # MODIFIED 3/26/21 OLD:
+            # outer_comp = self._execution_stack.pop()
             # # MODIFIED 3/26/21 NEW:
             if not simulation_mode:
                 outer_comp = self._execution_stack.pop()
