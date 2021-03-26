@@ -164,32 +164,43 @@ RUN_REPORT = 'run_report'
 PROGRESS_REPORT = 'progress_report'
 
 # rich colors: https://rich.readthedocs.io/en/stable/appendix/colors.html?highlight=colors
+# rich box borders: https://rich.readthedocs.io/en/stable/appendix/box.html#appendix-box
 # rich console report styles
+
 # node
 node_panel_color = 'orange1'
 # node_panel_box = box.SIMPLE
 node_panel_box = box.ROUNDED
+
 # time_step
+# time_step_panel_color = 'dodger_blue1'
 time_step_panel_color = 'dodger_blue1'
 time_step_panel_box = box.SQUARE
+
+# composition execution
+execution_panel_color = 'dodger_blue3'
+execution_input_color = 'green'
+execution_output_color = 'red'
+execution_panel_box = box.DOUBLE
+
 # trial
-trial_panel_color = 'dodger_blue3'
-trial_input_color = 'green'
-trial_output_color = 'red'
-trial_panel_box = box.HEAVY
+default_panel_color = 'dodger_blue3'
+default_input_color = 'green'
+default_output_color = 'red'
+default_panel_box = box.HEAVY
+
+# simulation trial Panels
+simulation_panel_color = 'medium_orchid'
+simulation_input_color = 'purple'
+simulation_output_color = 'blue'
+simulation_panel_box = box.ROUNDED
+
 # controller simulation outer Panel
 controller_panel_color = 'purple'
 controller_input_color = 'purple'
 controller_output_color = 'blue'
 controller_panel_box = box.HEAVY
-# simulation trial Panels
-simulation_panel_color = 'medium_orchid'
-simulation_input_color = 'purple'
-simulation_output_color = 'blue'
-simulation_panel_box = box.HEAVY
 
-
-"medium_orchid"
 
 def _get_sim_number(context):
     try:
@@ -792,7 +803,7 @@ class Report:
             self._depth_indent_i = self._depth_str_i = ''
             if run_mode is SIMULATION or self._execution_stack_depth:
                 self._depth_indent_i = self.depth_indent_factor * self._execution_stack_depth * ' '
-                self._depth_str_i = f' (depth: {self._execution_stack_depth})'
+                self._depth_str_i = f' (depth: {self._execution_stack_depth-1})'
 
             id = self._rich_progress.add_task(f"[red]{self._depth_indent_i}{comp.name}: "
                                               f"{run_mode}ing {self._depth_str_i}...",
@@ -867,7 +878,7 @@ class Report:
             self._depth_indent = self._depth_str = ''
             if simulation_mode or self._execution_stack_depth:
                 self._depth_indent = self.depth_indent_factor * self._execution_stack_depth * ' '
-                self._depth_str = f' (depth: {self._execution_stack_depth})'
+                self._depth_str = f' (depth: {self._execution_stack_depth-1})'
             update = f'{self._depth_indent}{caller.name}: ' \
                      f'{run_mode}ed {trial_num+1}{num_trials_str} trials{self._depth_str}'
 
@@ -879,6 +890,7 @@ class Report:
 
         if self._report_progress is not ReportProgress.OFF:
             self._print_and_record_reports(PROGRESS_REPORT, context, outer_comp=caller)
+        assert True
 
 
     def report_output(self,
@@ -1051,6 +1063,11 @@ class Report:
             if simulation_mode or self._execution_stack_depth:
                 depth_indent = self.depth_indent_factor * self._execution_stack_depth
 
+        trial_panel_color = default_panel_color
+        if self._simulating:
+            trial_panel_color = simulation_panel_color
+
+
         # Construct output report -----------------------------------------------------------------------------
 
         if content == 'run_start':
@@ -1144,7 +1161,7 @@ class Report:
                 title = f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] within {caller.name}'
                 nested_comp_run_report = Padding.indent(Panel(RenderGroup(*(self.output_reports[node][DEFAULT][
                                                                                 -1].run_report)),
-                                                              box=trial_panel_box,
+                                                              box=execution_panel_box,
                                                               border_style=trial_panel_color,
                                                               title=title,
                                                               padding=self.padding_lines,
@@ -1204,7 +1221,8 @@ class Report:
                 output_values = []
                 for port in caller.output_CIM.output_ports:
                     output_values.append(port.parameters.value._get(context))
-                output_report.trial_report.append(f"\n[bold {trial_output_color}]{self._padding_indent_str}result:[/]"
+                output_report.trial_report.append(f"\n[bold {default_output_color}"
+                                                  f"]{self._padding_indent_str}result:[/]"
                                                   f" {[r.tolist() for r in output_values]}")
                 if self._simulating:
                     # If simulating, get header that was stored at the beginning of the simulation set
@@ -1212,7 +1230,7 @@ class Report:
                 else:
                     title = f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial {trial_num}[/] '
                 output_report.trial_report = Padding.indent(Panel(RenderGroup(*output_report.trial_report),
-                                                                  box=trial_panel_box,
+                                                                  box=default_panel_box,
                                                                   border_style=trial_panel_color,
                                                                   title=title,
                                                                   padding=self.padding_lines,
@@ -1247,12 +1265,8 @@ class Report:
 
                 ctlr_report = [f'[bold {controller_input_color}]{self._padding_indent_str}features:[/] {features}'
                                f'\n[bold {controller_input_color}]{self._padding_indent_str}outcome:[/] {outcome}']
-                # # MODIFIED 3/25/21 OLD:
-                # ctlr_report.extend(self.output_reports[output_report_owner][SIMULATION][report_num].run_report)
-                # MODIFIED 3/25/21 NEW:
                 if self._report_simulations is ReportSimulations.ON:
                     ctlr_report.extend(self.output_reports[output_report_owner][SIMULATION][report_num].run_report)
-                # MODIFIED 3/25/21 END
                 ctlr_report.append(f"\n[bold {controller_output_color}]{self._padding_indent_str}control allocation:[/]"
                                    f" {control_allocation}")
                 title = f'[bold{controller_panel_color}] {node.name} SIMULATION OF {node.composition.name}[/] ' \
@@ -1278,9 +1292,9 @@ class Report:
 
                 if trial_report_type is ReportOutput.FULL:
                     # For ReportOutput.TERSE, report is generated at beginning of run prior to execution
-                    title = f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] '
+                    title = f'[bold{trial_panel_color}]EXECUTION OF {caller.name}[/] '
                     output_report.run_report = Padding.indent(Panel(RenderGroup(*output_report.run_report),
-                                                                    box=trial_panel_box,
+                                                                    box=execution_panel_box,
                                                                     border_style=trial_panel_color,
                                                                     title=title,
                                                                     padding=self.padding_lines,
@@ -1299,7 +1313,7 @@ class Report:
                     # For ReportOutput.TERSE, report is generated at beginning of run prior to execution
                     title = f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] '
                     output_report.run_report = Padding.indent(Panel(RenderGroup(*output_report.run_report),
-                                                                    box=trial_panel_box,
+                                                                    box=execution_panel_box,
                                                                     border_style=trial_panel_color,
                                                                     title=title,
                                                                     padding=self.padding_lines,
