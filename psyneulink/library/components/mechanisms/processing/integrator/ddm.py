@@ -382,7 +382,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, is_same_function_spec, object_has_single_value, get_global_seed
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, is_same_function_spec, object_has_single_value, get_global_seed
 
 from psyneulink.core import llvm as pnlvm
 
@@ -1047,7 +1047,7 @@ class DDM(ProcessingMechanism):
             if self.initialization_status != ContextFlags.INITIALIZING:
                 logger.info('{0} {1} is at {2}'.format(type(self).__name__, self.name, result))
 
-            return convert_to_np_array([result[0], [result[1]]])
+            return convert_all_elements_to_np_array([result[0], result[1]])
 
         # EXECUTE ANALYTIC SOLUTION (TRIAL TIME SCALE) -----------------------------------------------------------
         else:
@@ -1101,8 +1101,7 @@ class DDM(ProcessingMechanism):
             builder.store(builder.load(builder.gep(mf_out, [ctx.int32_ty(0),
                                                             ctx.int32_ty(1)])),
                           builder.gep(mech_out, [ctx.int32_ty(0),
-                                                 ctx.int32_ty(1),
-                                                 ctx.int32_ty(0)]))
+                                                 ctx.int32_ty(1)]))
         elif isinstance(self.function, DriftDiffusionAnalytical):
             for res_idx, idx in enumerate((self.RESPONSE_TIME_INDEX,
                                            self.PROBABILITY_LOWER_THRESHOLD_INDEX,
@@ -1161,7 +1160,7 @@ class DDM(ProcessingMechanism):
         # (1) reset function, (2) update mechanism value, (3) update output ports
         if isinstance(self.function, IntegratorFunction):
             new_values = self.function.reset(*args, **kwargs, context=context)
-            self.parameters.value._set(convert_to_np_array(new_values), context)
+            self.parameters.value._set(convert_all_elements_to_np_array(new_values), context)
             self._update_output_ports(context=context)
 
     @handle_external_context()
@@ -1207,7 +1206,7 @@ class DDM(ProcessingMechanism):
             return ctx.bool_ty(1)
 
         # Extract scalar value from ptr
-        prev_val_ptr = builder.gep(prev_val_ptr, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(0)])
+        prev_val_ptr = builder.gep(prev_val_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
         prev_val = builder.load(prev_val_ptr)
 
         # Take abs of previous val

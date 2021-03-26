@@ -1810,7 +1810,7 @@ class TestModelBasedOptimizationControlMechanisms:
         # preprocess to ignore control allocations
         log_parsed = {}
         for key, value in log.items():
-            cleaned_key = re.sub(r'comp-sim-(\d).*', r'\1', key)
+            cleaned_key = re.sub(r'comp-sim.*num: (\d).*', r'\1', key)
             log_parsed[cleaned_key] = value
 
         # First round of simulations is only one trial.
