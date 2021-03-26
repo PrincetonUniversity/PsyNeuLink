@@ -1182,13 +1182,10 @@ class Report:
                                                          context=context
                                                          )
             if trial_report_type is ReportOutput.FULL:
-                # MODIFIED 3/25/21 OLD:
-                if content=='start_controller':
-                # # MODIFIED 3/25/21 NEW:
-                # if content=='start_controller' and self._report_simulations is ReportSimulations.ON:
-                # MODIFIED 3/25/21 END
-                    # skip controller, as its report is assigned after execution of simulations
-                    return
+                # FIX: TEST WITH AND WITHOUT THIS:
+                # if content=='controller_start':
+                #     return
+                # FIX END TEST
                 output_report.time_step_report.append(node_report)
 
             # For TERSE or USE_PREFS:
