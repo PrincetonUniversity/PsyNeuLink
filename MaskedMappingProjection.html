@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MaskedMappingProjection &mdash; PsyNeuLink 0.8.7.0+11.g0d56d0f documentation</title>
+  <title>MaskedMappingProjection &mdash; PsyNeuLink 0.8.7.1 documentation</title>
   
 
   
@@ -27,6 +27,7 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -95,7 +96,7 @@
               
               
                 <div class="version">
-                  0.8.7.0+11
+                  0.8.7.1
                 </div>
               
             
@@ -199,18 +200,18 @@
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
-<li><a class="reference internal" href="#masked-mappingprojection-overview"><span class="std std-ref">Overview</span></a></li>
-<li><a class="reference internal" href="#masked-mappingprojection-creation"><span class="std std-ref">Creating a MaskedMappingProjection</span></a></li>
-<li><a class="reference internal" href="#masked-mappingprojection-structure"><span class="std std-ref">Structure</span></a></li>
-<li><a class="reference internal" href="#masked-mappingprojection-execution"><span class="std std-ref">Execution</span></a></li>
-<li><a class="reference internal" href="#masked-mappingprojection-class-reference"><span class="std std-ref">Class Reference</span></a></li>
+<li><p><a class="reference internal" href="#masked-mappingprojection-overview"><span class="std std-ref">Overview</span></a></p></li>
+<li><p><a class="reference internal" href="#masked-mappingprojection-creation"><span class="std std-ref">Creating a MaskedMappingProjection</span></a></p></li>
+<li><p><a class="reference internal" href="#masked-mappingprojection-structure"><span class="std std-ref">Structure</span></a></p></li>
+<li><p><a class="reference internal" href="#masked-mappingprojection-execution"><span class="std std-ref">Execution</span></a></p></li>
+<li><p><a class="reference internal" href="#masked-mappingprojection-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
 </div>
 <div class="section" id="overview">
 <span id="masked-mappingprojection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A MaskedMappingProjection is a subclass of <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that applies a specified mask array
-(either additively, multiplicatively, or exponentially) to the MappingProjection’s <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a>
+(either additively, multiplicatively, or exponentially) to the MappingProjection’s <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a>
 each time the MappingProjection is executed.  The mask is assigned a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> and can thus be modulated
 by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>.</p>
 </div>
@@ -218,55 +219,61 @@ by a <a class="reference internal" href="ControlMechanism.html"><span class="doc
 <span id="masked-mappingprojection-creation"></span><h2>Creating a MaskedMappingProjection<a class="headerlink" href="#creating-a-maskedmappingprojection" title="Permalink to this headline">¶</a></h2>
 <p>A MaskedMappingProjection is created in the same way as a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, with the exception that its constructor
 includes <strong>mask</strong> and <strong>mask_operation</strong> arguments that can be used to configure the mask and how it is applied to the
-Projection’s <code class="xref any docutils literal"><span class="pre">matrix</span></code>.  The <strong>mask</strong> attribute must be an array that has the same
-shape as the <code class="xref any docutils literal"><span class="pre">matrix</span></code> attribute, and the <strong>mask_operation</strong> argument must be the
+Projection’s <code class="xref any docutils literal notranslate"><span class="pre">matrix</span></code>.  The <strong>mask</strong> attribute must be an array that has the same
+shape as the <code class="xref any docutils literal notranslate"><span class="pre">matrix</span></code> attribute, and the <strong>mask_operation</strong> argument must be the
 keyword <em>ADD</em>, <em>MULTIPLY</em>, or <em>EXPONENTIATE</em> (see <a class="reference internal" href="#masked-mappingprojection-execution"><span class="std std-ref">Execution</span></a> below).</p>
 </div>
 <div class="section" id="structure">
 <span id="masked-mappingprojection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<p>A MaskedMappingProjection is identical to a MappingProjection, with the addition of <a class="reference internal" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask"><code class="xref any py py-attr docutils literal"><span class="pre">mask</span></code></a> and <code class="xref any docutils literal"><span class="pre">mask_operation</span></code> attributes.</p>
+<p>A MaskedMappingProjection is identical to a MappingProjection, with the addition of <a class="reference internal" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mask</span></code></a> and <code class="xref any docutils literal notranslate"><span class="pre">mask_operation</span></code> attributes.</p>
 </div>
 <div class="section" id="execution">
 <span id="masked-mappingprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A MaskedMappingProjection executes in the same manner as a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, with the exception that,
-each time the Projection is executed, its <a class="reference internal" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask"><code class="xref any py py-attr docutils literal"><span class="pre">mask</span></code></a> is applied to its <code class="xref any docutils literal"><span class="pre">matrix</span></code> parameter as specified by its <code class="xref any docutils literal"><span class="pre">mask_operation</span></code> attribute, before generating the Projection’s <code class="xref any docutils literal"><span class="pre">value</span></code>.</p>
+each time the Projection is executed, its <a class="reference internal" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mask</span></code></a> is applied to its <code class="xref any docutils literal notranslate"><span class="pre">matrix</span></code> parameter as specified by its <code class="xref any docutils literal notranslate"><span class="pre">mask_operation</span></code> attribute, before generating the Projection’s <code class="xref any docutils literal notranslate"><span class="pre">value</span></code>.</p>
 </div>
 <div class="section" id="class-reference">
 <span id="masked-mappingprojection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py class">
 <dt id="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection">
-<em class="property">class </em><code class="descclassname">psyneulink.library.components.projections.pathway.maskedmappingprojection.</code><code class="descname">MaskedMappingProjection</code><span class="sig-paren">(</span><em>sender=None</em>, <em>receiver=None</em>, <em>matrix=None</em>, <em>mask=None</em>, <em>mask_operation=None</em>, <em>function=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclass of <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, the <code class="xref any docutils literal"><span class="pre">matrix</span></code> of which can be masked on each
+<em class="property">class </em><code class="sig-prename descclassname">psyneulink.library.components.projections.pathway.maskedmappingprojection.</code><code class="sig-name descname">MaskedMappingProjection</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mask</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mask_operation</span><span class="o">=</span><span class="default_value">MULTIPLY</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, the <code class="xref any docutils literal notranslate"><span class="pre">matrix</span></code> of which can be masked on each
 execution.  See <a class="reference internal" href="MappingProjection.html#mappingprojection-class-reference"><span class="std std-ref">MappingProjection</span></a> for additional arguments and attributes.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>mask</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>list</em><em>, </em><em>np.ndarray</em><em> or </em><em>np.matrix : default None</em>) – specifies a mask to be applied to the <code class="xref any docutils literal"><span class="pre">matrix</span></code> each time the Projection is
-executed, in a manner specified by the <strong>mask_operation</strong> argument.</li>
-<li><strong>mask_operation</strong> (<em>ADD</em><em>, </em><em>MULTIPLY</em><em>, or </em><em>EXPONENTIATE : default MULTIPLY</em>) – specifies the manner in which the <a class="reference internal" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask"><code class="xref any py py-attr docutils literal"><span class="pre">mask</span></code></a> is applied to the <code class="xref any docutils literal"><span class="pre">matrix</span></code> each time the Projection is executed.</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mask</strong> (<em>int</em><em>, </em><em>float</em><em>, </em><em>list</em><em>, </em><em>np.ndarray</em><em> or </em><em>np.matrix : default None</em>) – specifies a mask to be applied to the <code class="xref any docutils literal notranslate"><span class="pre">matrix</span></code> each time the Projection is
+executed, in a manner specified by the <strong>mask_operation</strong> argument.</p></li>
+<li><p><strong>mask_operation</strong> (<em>ADD</em><em>, </em><em>MULTIPLY</em><em>, or </em><em>EXPONENTIATE : default MULTIPLY</em>) – specifies the manner in which the <a class="reference internal" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mask</span></code></a> is applied to the <code class="xref any docutils literal notranslate"><span class="pre">matrix</span></code> each time the Projection is executed.</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
+</dd>
+</dl>
+<dl class="py attribute">
 <dt id="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask">
-<code class="descname">mask</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int, float, list, np.ndarray or np.matrix : default None</em> – mask applied to the <code class="xref any docutils literal"><span class="pre">matrix</span></code> each time the Projection is executed,
-in a manner specified by <code class="xref any docutils literal"><span class="pre">mask_operation</span></code>.</p>
+<code class="sig-name descname">mask</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask" title="Permalink to this definition">¶</a></dt>
+<dd><p>mask applied to the <code class="xref any docutils literal notranslate"><span class="pre">matrix</span></code> each time the Projection is executed,
+in a manner specified by <code class="xref any docutils literal notranslate"><span class="pre">mask_operation</span></code>.</p>
 <p>mask_operation : ADD, MULTIPLY, or EXPONENTIATE : default MULTIPLY
-determines the manner in which the <a class="reference internal" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask"><code class="xref any py py-attr docutils literal"><span class="pre">mask</span></code></a> is applied to the <code class="xref any docutils literal"><span class="pre">matrix</span></code> when the Projection is executed.</p>
+determines the manner in which the <a class="reference internal" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask" title="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection.mask"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mask</span></code></a> is applied to the <code class="xref any docutils literal notranslate"><span class="pre">matrix</span></code> when the Projection is executed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int, float, list, np.ndarray or np.matrix : default None</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection._validate_params">
-<code class="descname">_validate_params</code><span class="sig-paren">(</span><em>request_set</em>, <em>target_set=None</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection._validate_params" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjection._validate_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate <strong>mask</strong> argument</p>
 </dd></dl>
 
 </dd></dl>
+
+<dl class="py exception">
+<dt id="psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjectionError">
+<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.library.components.projections.pathway.maskedmappingprojection.</code><code class="sig-name descname">MaskedMappingProjectionError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.maskedmappingprojection.MaskedMappingProjectionError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </div>
 </div>
@@ -328,21 +335,12 @@ determines the manner in which the <a class="reference internal" href="#psyneuli
   
 
      
-       <script type="text/javascript">
-           var DOCUMENTATION_OPTIONS = {
-               URL_ROOT:'./',
-               VERSION:'0.8.7.0+11.g0d56d0f',
-               LANGUAGE:'None',
-               COLLAPSE_INDEX:false,
-               FILE_SUFFIX:'.html',
-               HAS_SOURCE:  true,
-               SOURCELINK_SUFFIX: '.txt'
-           };
-       </script>
-         <script type="text/javascript" src="_static/jquery.js"></script>
-         <script type="text/javascript" src="_static/underscore.js"></script>
-         <script type="text/javascript" src="_static/doctools.js"></script>
-         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/doctools.js"></script>
+         <script src="_static/language_data.js"></script>
+         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   
