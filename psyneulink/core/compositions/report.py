@@ -1184,12 +1184,17 @@ class Report:
                 assert False, 'Node not specified in call to Report report_output'
 
             if content == 'nested_comp':
+                outer_panel_color = execution_panel_color
+                outer_panel_box = execution_panel_box
+                if self._simulating:
+                    outer_panel_color = controller_panel_color
+                    outer_panel_box = controller_panel_box
                 # Assign last run_report for execution of nested_comp (node) as node_report
                 title = f'[bold{execution_panel_color}]EXECUTION OF {node.name}[/] within {caller.name}'
                 nested_comp_run_report = \
                     Padding.indent(Panel(RenderGroup(*(self.output_reports[node][DEFAULT][-1].run_report)),
-                                         box=execution_panel_box,
-                                         border_style=execution_panel_color,
+                                         box=outer_panel_box,
+                                         border_style=outer_panel_color,
                                          title=title,
                                          # style="black on white",
                                          padding=self.padding_lines,
