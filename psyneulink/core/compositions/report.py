@@ -1102,7 +1102,7 @@ class Report:
 
         # Construct output report -----------------------------------------------------------------------------
 
-        if content == 'run_start':
+        if content in {'run_start', 'execute_start'}:
             if simulation_mode:
                 # place controller on the stack for simulations
                 self._execution_stack.append(caller.controller)
@@ -1118,20 +1118,20 @@ class Report:
                     self._recorded_reports += report
             return
 
-        elif content == 'execute_start':
-            if simulation_mode:
-                self._execution_stack.append(caller.controller)
-            else:
-                self._execution_stack.append(caller)
-
-            if trial_report_type in {ReportOutput.TERSE, ReportOutput.USE_PREFS} and not self._simulating:
-                # Report execution at start of run, in accord with TERSE reporting at initiation of execution
-                report = f'[bold {trial_panel_color}]{self._depth_indent_i}Execution of {caller.name}:[/]'
-                self._rich_progress.console.print(report)
-                if self._record_reports:
-                    self._recorded_reports += report
-            return
-
+        # elif content == 'execute_start':
+        #     if simulation_mode:
+        #         self._execution_stack.append(caller.controller)
+        #     else:
+        #         self._execution_stack.append(caller)
+        #
+        #     if trial_report_type in {ReportOutput.TERSE, ReportOutput.USE_PREFS} and not self._simulating:
+        #         # Report execution at start of run, in accord with TERSE reporting at initiation of execution
+        #         report = f'[bold {trial_panel_color}]{self._depth_indent_i}Execution of {caller.name}:[/]'
+        #         self._rich_progress.console.print(report)
+        #         if self._record_reports:
+        #             self._recorded_reports += report
+        #     return
+        #
         elif content == 'trial_start':
 
             self._execution_stack.append(caller)
@@ -1214,10 +1214,8 @@ class Report:
                 # MODIFIED 3/26/21 END
 
             if trial_report_type is ReportOutput.FULL:
-                # FIX: 3/26/21 TEST WITH AND WITHOUT THIS:
-                # if content=='controller_start':
-                #     return
-                # FIX END TEST
+                if content=='controller_start':
+                    return
                 output_report.time_step_report.append(node_report)
 
             # For TERSE or USE_PREFS:
@@ -1314,7 +1312,7 @@ class Report:
                 # # TEST PRINT:
                 # self._rich_progress.console.print(ctlr_report)
 
-        elif content == 'execute_end':
+        elif content in {'execute_end', 'run_end'}:
 
             outer_comp = self._execution_stack.pop()
 
@@ -1332,24 +1330,24 @@ class Report:
                                                               self.padding_indent)
                 self._print_and_record_reports(RUN_REPORT, output_report, outer_comp)
 
-        elif content == 'run_end':
-
-            outer_comp = self._execution_stack.pop()
-
-            if len(self._execution_stack) == 0 and trial_report_type is not ReportOutput.OFF:
-
-                # if trial_report_type is not ReportOutput.TERSE:
-                if trial_report_type is ReportOutput.FULL:
-                    # For ReportOutput.TERSE, report is generated at beginning of run prior to execution
-                    title = f'[bold{execution_panel_color}]EXECUTION OF {node.name}[/] '
-                    output_report.run_report = Padding.indent(Panel(RenderGroup(*output_report.run_report),
-                                                                    box=execution_panel_box,
-                                                                    border_style=execution_panel_color,
-                                                                    title=title,
-                                                                    padding=self.padding_lines,
-                                                                    expand=False),
-                                                              self.padding_indent)
-                self._print_and_record_reports(RUN_REPORT, output_report, outer_comp)
+        # elif content == 'run_end':
+        #
+        #     outer_comp = self._execution_stack.pop()
+        #
+        #     if len(self._execution_stack) == 0 and trial_report_type is not ReportOutput.OFF:
+        #
+        #         # if trial_report_type is not ReportOutput.TERSE:
+        #         if trial_report_type is ReportOutput.FULL:
+        #             # For ReportOutput.TERSE, report is generated at beginning of run prior to execution
+        #             title = f'[bold{execution_panel_color}]EXECUTION OF {node.name}[/] '
+        #             output_report.run_report = Padding.indent(Panel(RenderGroup(*output_report.run_report),
+        #                                                             box=execution_panel_box,
+        #                                                             border_style=execution_panel_color,
+        #                                                             title=title,
+        #                                                             padding=self.padding_lines,
+        #                                                             expand=False),
+        #                                                       self.padding_indent)
+        #         self._print_and_record_reports(RUN_REPORT, output_report, outer_comp)
 
         else:
             assert False, f"Bad 'content' argument in call to Report.report_output() for {caller.name}: {content}."
@@ -1686,7 +1684,7 @@ class Report:
                                 qualification = ''
                             if function_params_string:
                                 function_params_string += '\n'
-                            function_params_string += f"\t{fct_param_name}: {param_value_str}{qualification}"
+                            function_params_string += f"    {fct_param_name}: {param_value_str}{qualification}"
                             if function_params:
                                 function_params.pop(function_params.index(fct_param_name))
 
@@ -1703,8 +1701,6 @@ class Report:
         # Generate report -------------------------------------------------------------------------------
 
         if params_string:
-            width = 100
-            expand = True
             node_report = RenderGroup(input_report,
                                       Panel(params_string,
                                             box=params_panel_box,
@@ -1713,15 +1709,13 @@ class Report:
                                             ),
                                       output_report)
         else:
-            width = None
-            expand = False
             node_report = f'{input_report}\n{output_report}'
 
         report = Panel(node_report,
                        box=node_panel_box,
                        border_style=node_panel_color,
-                       width=width,
-                       expand=expand,
+                       width=None,
+                       expand=False,
                        title=f'[{node_panel_color}]{node.name}',
                        highlight=True
                        )
@@ -1803,11 +1797,7 @@ class Report:
 
     @property
     def _simulating(self):
-        # from psyneulink.core.components.mechanisms.mechanism import Mechanism
-        # return any(isinstance(c, Mechanism) for c in self._execution_stack)
-        # # MODIFIED 3/26/21 OLD:
-        # from psyneulink.core.components.mechanisms.mechanism import Mechanism
-        # return any(isinstance(c, Mechanism) for c in self._execution_stack)
-        # MODIFIED 3/26/21 NEW:
-        return 'simulator' in self._context.execution_id
-        # MODIFIED 3/26/21 END
+        try:
+            return 'simulator' in self._context.execution_id
+        except TypeError:
+            return False
