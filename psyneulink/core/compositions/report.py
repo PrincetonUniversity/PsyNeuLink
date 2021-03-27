@@ -1272,13 +1272,6 @@ class Report:
 
             self._execution_stack.pop()
 
-            # MODIFIED 3/25/21 NEW:
-            # If call is from COMMAND_LINE, then only running an execution, in which case, print and record report
-            if context.source is ContextFlags.COMMAND_LINE:
-                self._print_and_record_reports(EXECUTE_REPORT, output_report, caller)
-                # self._print_and_record_reports(RUN_REPORT, context, output_report, caller)
-            # MODIFIED 3/25/21 END
-
         elif content == 'controller_end':
 
             # Only deal with ReportOutput.FULL;  ReportOutput.TERSE is handled above under content='controller_start'
