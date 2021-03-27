@@ -1301,7 +1301,6 @@ class Report:
                 self.output_reports[caller][DEFAULT][-1].run_report.append('')
                 self.output_reports[caller][DEFAULT][-1].run_report.append(ctlr_report)
 
-
                 # # TEST PRINT:
                 # self._rich_progress.console.print(ctlr_report)
 
