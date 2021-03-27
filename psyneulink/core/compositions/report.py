@@ -176,6 +176,7 @@ node_panel_color = 'dark_orange'
 # node_panel_box = box.SIMPLE
 node_panel_box = box.ROUNDED
 params_panel_color = 'orange1'
+params_panel_box = box.ROUNDED
 
 # DESIGN PATTERN:
 # <xxx>_color = (int, int, int)
@@ -1638,13 +1639,16 @@ class Report:
                     param_value = params[param_name]
                     if not params_string:
                         # Add header
-                        params_string = (f"params:")
+                        # params_string = (f"params:")
+                        params_string = ''
                     param_value_str = str(param_value).__str__().strip('[]')
                     if isinstance(qualification, str):
                         qualification = qualification
                     else:
                         qualification = ''
-                    params_string += f"\n\t{param_name}: {param_value_str}{qualification}"
+                    if params_string:
+                        params_string += '\n'
+                    params_string += f"{param_name}: {param_value_str}{qualification}"
                     if node_params:
                         node_params.pop(node_params.index(param_name))
                     # Don't include functions in params_string yet (to keep at bottom of report)
@@ -1663,18 +1667,23 @@ class Report:
                         qualification = param_is_specified(fct_param_name, function_params, param_type='func')
                         if qualification:
                             if not header_printed:
-                                function_params_string += f"\n\t{param_name}: {param_value.name.__str__().strip('[]')}"
+                                if params_string != '':
+                                    function_params_string += '\n'
+                                function_params_string += f"{param_name}: {param_value.name.__str__().strip('[]')}"
                                 header_printed = True
                             param_value = getattr(getattr(node,param_name).parameters,fct_param_name)._get(context)
                             param_value = np.squeeze(param_value)
                             param_value_str = str(param_value).__str__().strip('[]')
                             if not params_string:
-                                params_string = (f"params:")
+                                # params_string = (f"params:")
+                                params_string = ''
                             if isinstance(qualification, str):
                                 qualification = qualification
                             else:
                                 qualification = ''
-                            function_params_string += f"\n\t\t{fct_param_name}: {param_value_str}{qualification}"
+                            if function_params_string:
+                                function_params_string += '\n'
+                            function_params_string += f"\t{fct_param_name}: {param_value_str}{qualification}"
                             if function_params:
                                 function_params.pop(function_params.index(fct_param_name))
 
@@ -1693,7 +1702,10 @@ class Report:
             expand = True
             node_report = RenderGroup(input_report,
                                       Panel(params_string,
-                                            border_style=params_panel_color),
+                                            box=params_panel_box,
+                                            border_style=params_panel_color,
+                                            title='params'
+                                            ),
                                       output_report)
         else:
             width = None
