@@ -143,6 +143,7 @@ from rich import print, box
 from rich.console import Console, RenderGroup
 from rich.padding import Padding
 from rich.panel import Panel
+from rich.color import Color
 from rich.progress import Progress as RichProgress
 
 from psyneulink.core.globals.context import Context
@@ -177,31 +178,31 @@ node_panel_box = box.ROUNDED
 
 # time_step
 # time_step_panel_color = 'dodger_blue1'
-time_step_panel_color = 'dodger_blue1'
+time_step_panel_color = Color.from_rgb(0,135,255).name # 'dodger_blue1'
 time_step_panel_box = box.SQUARE
 
 # composition execution
-execution_panel_color = 'dodger_blue3'
-execution_input_color = 'green'
-execution_output_color = 'red'
+execution_panel_color = Color.from_rgb(0, 95, 215).name # 'dodger_blue3'
+execution_input_color = Color.from_rgb(0,255,0).name # 'green1' -DARKER: (0,135,0) = 'green4'
+execution_output_color = Color.from_rgb(255,0,0).name # 'red'
 execution_panel_box = box.DOUBLE
 
 # trial
-default_panel_color = 'dodger_blue3'
-default_input_color = 'green'
-default_output_color = 'red'
+default_panel_color = Color.from_rgb(0, 95, 215).name # 'dodger_blue3'
+default_input_color = Color.from_rgb(0,135,0).name # 'green'
+default_output_color = Color.from_rgb(255,0,0).name # 'red'
 default_panel_box = box.HEAVY
 
 # simulation trial Panels
-simulation_panel_color = 'medium_orchid'
-simulation_input_color = 'purple'
-simulation_output_color = 'blue'
+simulation_panel_color = Color.from_rgb(175,95,215).name # 'medium_orchid'
+simulation_input_color = Color.from_rgb(175,0,255).name # 'purple'
+simulation_output_color = Color.from_rgb(0,0,135).name # 'blue' BRIGHTER: (0,0,255)
 simulation_panel_box = box.ROUNDED
 
 # controller simulation outer Panel
-controller_panel_color = 'purple'
-controller_input_color = 'purple'
-controller_output_color = 'blue'
+controller_panel_color = Color.from_rgb(175,0,255).name # 'purple'
+controller_input_color = Color.from_rgb(175,0,255).name # 'purple'
+controller_output_color = Color.from_rgb(0,0,135).name # 'blue' BRIGHTER: (0,0,255)
 controller_panel_box = box.HEAVY
 
 
@@ -1119,7 +1120,7 @@ class Report:
             #  if FULL output, report trial number and Composition's input
             #  note:  header for Trial Panel is constructed under 'content is Trial' case below
             if trial_report_type is ReportOutput.FULL:
-                output_report.trial_report = [f'[bold {trial_panel_color}]{self._padding_indent_str}input:[/]'
+                output_report.trial_report = [f'[bold {default_input_color}]{self._padding_indent_str}input:[/]'
                                            f' {[i.tolist() for i in caller.get_input_values(context)]}']
                 # Push trial_header to stack in case there are intervening executions of nested comps or simulations
                 self._trial_header_stack.append(
