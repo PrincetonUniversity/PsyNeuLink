@@ -163,6 +163,9 @@ EXECUTE_REPORT = 'execute_report'
 RUN_REPORT = 'run_report'
 PROGRESS_REPORT = 'progress_report'
 
+trial_sep_str = f'===================='
+time_step_sep_str = f'---------'
+
 # rich colors: https://rich.readthedocs.io/en/stable/appendix/colors.html?highlight=colors
 # rich box borders: https://rich.readthedocs.io/en/stable/appendix/box.html#appendix-box
 # rich console report styles
@@ -1137,8 +1140,7 @@ class Report:
 
                 # print trial title and separator + input array to Composition
                 trial_header += f'[bold {trial_panel_color}]' \
-                                f'{depth_indent * " "}{caller.name}{self._sim_str} TRIAL {trial_num} ' \
-                                f'===================='
+                                f'{depth_indent * " "}{caller.name}{self._sim_str} TRIAL {trial_num}' + trial_sep_str
                 self._rich_progress.console.print(trial_header)
                 if self._record_reports:
                     self._recorded_reports += trial_header
@@ -1149,8 +1151,9 @@ class Report:
             elif nodes_to_report: # TERSE output
 
                 time_step_header = f'[{time_step_panel_color}]' \
-                                   f'{depth_indent * " "}Time Step {scheduler.get_clock(context).time.time_step} ' \
-                                   f'---------'
+                                   f'{depth_indent * " "}Time Step {scheduler.get_clock(context).time.time_step} ' + \
+                                   time_step_sep_str
+
                 self._rich_progress.console.print(time_step_header)
                 if self._record_reports:
                     self._recorded_reports += time_step_header
@@ -1162,14 +1165,14 @@ class Report:
             if content == 'nested_comp':
                 # Assign last run_report for execution of nested_comp (node) as node_report
                 title = f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] within {caller.name}'
-                nested_comp_run_report = Padding.indent(Panel(RenderGroup(*(self.output_reports[node][DEFAULT][
-                                                                                -1].run_report)),
-                                                              box=execution_panel_box,
-                                                              border_style=trial_panel_color,
-                                                              title=title,
-                                                              # padding=self.padding_lines,
-                                                              expand=False),
-                                                        self.padding_indent)
+                nested_comp_run_report = \
+                    Padding.indent(Panel(RenderGroup(*(self.output_reports[node][DEFAULT][-1].run_report)),
+                                         box=execution_panel_box,
+                                         border_style=trial_panel_color,
+                                         title=title,
+                                         padding=self.padding_lines,
+                                         expand=False),
+                                   self.padding_indent)
                 node_report = nested_comp_run_report
 
             else:
