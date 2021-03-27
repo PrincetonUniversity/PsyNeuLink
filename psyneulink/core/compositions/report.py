@@ -172,39 +172,54 @@ time_step_sep_str = f'---------'
 # rich console report styles
 
 # node
-node_panel_color = 'orange1'
+node_panel_color = 'dark_orange'
 # node_panel_box = box.SIMPLE
 node_panel_box = box.ROUNDED
+params_panel_color = 'orange1'
 
-# time_step
-# time_step_panel_color = 'dodger_blue1'
-time_step_panel_color = Color.from_rgb(0,135,255).name # 'dodger_blue1'
-time_step_panel_box = box.SQUARE
+# DESIGN PATTERN:
+# <xxx>_color = (int, int, int)
+# Make this a local function:
+# local_color = Color.from_rgb(*(<xxx>_color[0] += or -= based on depth or condition
+#                                <xxx>_color[1] += or -= based on depth or condition
+#                                <xxx>_color[2] += or -= based on depth or condition
+#                                )
+#                              )
+# Assign color in string as f'[{local_color}]<fill in text here>'
 
-# composition execution
-execution_panel_color = Color.from_rgb(0, 95, 215).name # 'dodger_blue3'
+# TIME_SETP Panel
+# default
+default_time_step_panel_color = Color.from_rgb(0,135,255).name # 'dodger_blue1'
+default_time_step_panel_box = box.SQUARE
+# simulation
+simulation_time_step_panel_color = Color.from_rgb(255,175,255).name # 'plum1'
+simulation_time_step_panel_box = box.SQUARE
+
+
+# TRIAL Panel:
+# default
+default_trial_panel_color = Color.from_rgb(0, 95, 215).name # 'dodger_blue2'
+default_trial_input_color = Color.from_rgb(0,135,0).name # 'green'
+default_trial_output_color = Color.from_rgb(255,0,0).name # 'red'
+default_trial_panel_box = box.HEAVY
+# simulation
+simulation_trial_panel_color = Color.from_rgb(175,95,215).name # 'medium_orchid'
+simulation_trial_input_color = Color.from_rgb(175,0,255).name # 'purple'
+simulation_trial_output_color = Color.from_rgb(0,0,135).name # 'blue' BRIGHTER: (0,0,255)
+simulation_trial_panel_box = box.ROUNDED
+
+
+# composition execution outer Panel
+execution_panel_color = Color.from_rgb(0, 55, 175).name # 'dodger_blue1'
 execution_input_color = Color.from_rgb(0,255,0).name # 'green1' -DARKER: (0,135,0) = 'green4'
 execution_output_color = Color.from_rgb(255,0,0).name # 'red'
 execution_panel_box = box.DOUBLE
-
-# trial
-default_panel_color = Color.from_rgb(0, 95, 215).name # 'dodger_blue3'
-default_input_color = Color.from_rgb(0,135,0).name # 'green'
-default_output_color = Color.from_rgb(255,0,0).name # 'red'
-default_panel_box = box.HEAVY
-
-# simulation trial Panels
-simulation_panel_color = Color.from_rgb(175,95,215).name # 'medium_orchid'
-simulation_input_color = Color.from_rgb(175,0,255).name # 'purple'
-simulation_output_color = Color.from_rgb(0,0,135).name # 'blue' BRIGHTER: (0,0,255)
-simulation_panel_box = box.ROUNDED
 
 # controller simulation outer Panel
 controller_panel_color = Color.from_rgb(175,0,255).name # 'purple'
 controller_input_color = Color.from_rgb(175,0,255).name # 'purple'
 controller_output_color = Color.from_rgb(0,0,135).name # 'blue' BRIGHTER: (0,0,255)
 controller_panel_box = box.HEAVY
-
 
 def _get_sim_number(context):
     try:
@@ -1075,10 +1090,14 @@ class Report:
             if simulation_mode or self._execution_stack_depth:
                 depth_indent = self.depth_indent_factor * self._execution_stack_depth
 
-        trial_panel_color = default_panel_color
+        # Assign colors and line styles based on default or simulation modes
+        trial_panel_color = default_trial_panel_color
+        time_step_panel_color = default_time_step_panel_color
+        time_step_panel_box = default_time_step_panel_box
         if self._simulating:
-            trial_panel_color = simulation_panel_color
-
+            trial_panel_color = simulation_trial_panel_color
+            time_step_panel_color = simulation_time_step_panel_color
+            time_step_box = simulation_time_step_panel_box
 
         # Construct output report -----------------------------------------------------------------------------
 
@@ -1120,7 +1139,7 @@ class Report:
             #  if FULL output, report trial number and Composition's input
             #  note:  header for Trial Panel is constructed under 'content is Trial' case below
             if trial_report_type is ReportOutput.FULL:
-                output_report.trial_report = [f'[bold {default_input_color}]{self._padding_indent_str}input:[/]'
+                output_report.trial_report = [f'[bold {default_trial_input_color}]{self._padding_indent_str}input:[/]'
                                            f' {[i.tolist() for i in caller.get_input_values(context)]}']
                 # Push trial_header to stack in case there are intervening executions of nested comps or simulations
                 self._trial_header_stack.append(
@@ -1165,12 +1184,13 @@ class Report:
 
             if content == 'nested_comp':
                 # Assign last run_report for execution of nested_comp (node) as node_report
-                title = f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] within {caller.name}'
+                title = f'[bold{execution_panel_color}]EXECUTION OF {node.name}[/] within {caller.name}'
                 nested_comp_run_report = \
                     Padding.indent(Panel(RenderGroup(*(self.output_reports[node][DEFAULT][-1].run_report)),
                                          box=execution_panel_box,
-                                         border_style=trial_panel_color,
+                                         border_style=execution_panel_color,
                                          title=title,
+                                         # style="black on white",
                                          padding=self.padding_lines,
                                          expand=False),
                                    self.padding_indent)
@@ -1224,7 +1244,7 @@ class Report:
                 output_values = []
                 for port in caller.output_CIM.output_ports:
                     output_values.append(port.parameters.value._get(context))
-                output_report.trial_report.append(f"\n[bold {default_output_color}"
+                output_report.trial_report.append(f"\n[bold {default_trial_output_color}"
                                                   f"]{self._padding_indent_str}result:[/]"
                                                   f" {[r.tolist() for r in output_values]}")
                 if self._simulating:
@@ -1233,7 +1253,7 @@ class Report:
                 else:
                     title = f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial {trial_num}[/] '
                 output_report.trial_report = Padding.indent(Panel(RenderGroup(*output_report.trial_report),
-                                                                  box=default_panel_box,
+                                                                  box=default_trial_panel_box,
                                                                   border_style=trial_panel_color,
                                                                   title=title,
                                                                   padding=self.padding_lines,
@@ -1296,10 +1316,10 @@ class Report:
 
                 if trial_report_type is ReportOutput.FULL:
                     # For ReportOutput.TERSE, report is generated at beginning of run prior to execution
-                    title = f'[bold{trial_panel_color}]EXECUTION OF {caller.name}[/] '
+                    title = f'[bold{execution_panel_color}]EXECUTION OF {caller.name}[/] '
                     output_report.run_report = Padding.indent(Panel(RenderGroup(*output_report.run_report),
                                                                     box=execution_panel_box,
-                                                                    border_style=trial_panel_color,
+                                                                    border_style=execution_panel_color,
                                                                     title=title,
                                                                     padding=self.padding_lines,
                                                                     expand=False),
@@ -1315,10 +1335,10 @@ class Report:
                 # if trial_report_type is not ReportOutput.TERSE:
                 if trial_report_type is ReportOutput.FULL:
                     # For ReportOutput.TERSE, report is generated at beginning of run prior to execution
-                    title = f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] '
+                    title = f'[bold{execution_panel_color}]EXECUTION OF {node.name}[/] '
                     output_report.run_report = Padding.indent(Panel(RenderGroup(*output_report.run_report),
                                                                     box=execution_panel_box,
-                                                                    border_style=trial_panel_color,
+                                                                    border_style=execution_panel_color,
                                                                     title=title,
                                                                     padding=self.padding_lines,
                                                                     expand=False),
@@ -1671,7 +1691,10 @@ class Report:
         if params_string:
             width = 100
             expand = True
-            node_report = RenderGroup(input_report,Panel(params_string), output_report)
+            node_report = RenderGroup(input_report,
+                                      Panel(params_string,
+                                            border_style=params_panel_color),
+                                      output_report)
         else:
             width = None
             expand = False
