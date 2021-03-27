@@ -759,6 +759,8 @@ class Report:
         if num_trials is None:
             assert False, "Report.start_progress() called with num_trials unspecified."
 
+        self._context = context
+
         # Generate space before beginning of output
         if self._use_rich and not self.output_reports:
             print()
@@ -786,11 +788,11 @@ class Report:
                        # progress reporting is ON
                        and self._report_progress is ReportProgress.ON
                        # current run is not a simulation (being run by a controller), or simulation reporting is ON
-                       # # MODIFIED 3/26/21 OLD:
-                       # and (not self._simulating or self._report_simulations is ReportSimulations.ON)
-                       # MODIFIED 3/26/21 NEW:
-                       and (not 'simulator' in context.execution_id or self._report_simulations is
-                            ReportSimulations.ON)
+                       # MODIFIED 3/26/21 OLD:
+                       and (not self._simulating or self._report_simulations is ReportSimulations.ON)
+                       # # MODIFIED 3/26/21 NEW:
+                       # and (not 'simulator' in context.execution_id or self._report_simulations is
+                       #      ReportSimulations.ON)
                        # MODIFIED 3/26/21 END
                        )
 
@@ -844,6 +846,8 @@ class Report:
         if self._report_progress is ReportProgress.OFF:
             return
 
+        self._context = context
+
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
         if simulation_mode:
             run_mode = SIMULATION
@@ -894,7 +898,7 @@ class Report:
                                   refresh=True)
 
         if self._report_progress is not ReportProgress.OFF:
-            self._print_and_record_reports(PROGRESS_REPORT, context, outer_comp=caller)
+            self._print_and_record_reports(PROGRESS_REPORT, outer_comp=caller)
         assert True
 
 
@@ -961,6 +965,7 @@ class Report:
         if report_output is ReportOutput.OFF:
             return
 
+        self._context = context
         # FIX: ASSIGN SCHEDULE IF IT IS NONE (i.e., FROM MECHANISM):  GET IT FROM LATEST COMP ON STACK
 
         # Determine report type and relevant parameters ----------------------------------------------------------------
@@ -1197,7 +1202,6 @@ class Report:
                                                          report_params=report_params,
                                                          trial_num=trial_num,
                                                          is_controller=is_controller,
-                                                         context=context
                                                          )
             if trial_report_type is ReportOutput.FULL:
                 # FIX: TEST WITH AND WITHOUT THIS:
@@ -1263,7 +1267,7 @@ class Report:
             # MODIFIED 3/25/21 NEW:
             # If call is from COMMAND_LINE, then only running an execution, in which case, print and record report
             if context.source is ContextFlags.COMMAND_LINE:
-                self._print_and_record_reports(EXECUTE_REPORT, context, output_report, caller)
+                self._print_and_record_reports(EXECUTE_REPORT, output_report, caller)
                 # self._print_and_record_reports(RUN_REPORT, context, output_report, caller)
             # MODIFIED 3/25/21 END
 
@@ -1325,7 +1329,7 @@ class Report:
                                                                     padding=self.padding_lines,
                                                                     expand=False),
                                                               self.padding_indent)
-                self._print_and_record_reports(RUN_REPORT, context, output_report, outer_comp)
+                self._print_and_record_reports(RUN_REPORT, output_report, outer_comp)
 
         elif content == 'run_end':
 
@@ -1353,7 +1357,7 @@ class Report:
                                                                     padding=self.padding_lines,
                                                                     expand=False),
                                                               self.padding_indent)
-                self._print_and_record_reports(RUN_REPORT, context, output_report, outer_comp)
+                self._print_and_record_reports(RUN_REPORT, output_report, outer_comp)
 
         else:
             assert False, f"Bad 'content' argument in call to Report.report_output() for {caller.name}: {content}."
@@ -1367,8 +1371,8 @@ class Report:
                               report_output=ReportOutput.USE_PREFS,
                               report_params:ReportParams=ReportParams.OFF,
                               trial_num:Optional[int]=None,
-                              is_controller=False,
-                              context:Context=None) -> Panel:
+                              is_controller=False
+                              ) -> Panel:
         """
         Generates formatted output report for the `node <Composition_Nodes>` of a `Composition` or a `Mechanism`.
         Called by `report_output <Report.report_output>` for execution of a Composition, and directly by the `execute
@@ -1410,6 +1414,8 @@ class Report:
         context : Context : default None
             context of current execution.
         """
+
+        context = self._context
 
         indent = '  '
         if is_controller:
@@ -1722,7 +1728,6 @@ class Report:
 
     def _print_and_record_reports(self,
                                   report_type:str,
-                                  context:Context,
                                   output_report:OutputReport=None,
                                   outer_comp=None):
         """
@@ -1792,5 +1797,11 @@ class Report:
 
     @property
     def _simulating(self):
-        from psyneulink.core.components.mechanisms.mechanism import Mechanism
-        return any(isinstance(c, Mechanism) for c in self._execution_stack)
+        # from psyneulink.core.components.mechanisms.mechanism import Mechanism
+        # return any(isinstance(c, Mechanism) for c in self._execution_stack)
+        # # MODIFIED 3/26/21 OLD:
+        # from psyneulink.core.components.mechanisms.mechanism import Mechanism
+        # return any(isinstance(c, Mechanism) for c in self._execution_stack)
+        # MODIFIED 3/26/21 NEW:
+        return 'simulator' in self._context.execution_id
+        # MODIFIED 3/26/21 END
