@@ -9567,6 +9567,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context=context
                 )
 
+            # MODIFIED 3/26/21 OLD: MOVED FROM BELOW
+            # Reset context flags
+            context.execution_phase = ContextFlags.PROCESSING
+            self.output_CIM.execute(context=context)
+            context.execution_phase = ContextFlags.IDLE
+
+            # Assign output_values
+            output_values = []
+            for port in self.output_CIM.output_ports:
+                output_values.append(port.parameters.value._get(context))
+            # MODIFIED 3/26/21 END
+
             # Animate output_CIM
             # FIX: NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THIS -
             #      COORDINATE WITH REFACTORING OF PROCESSING/CONTROL CONTEXT
@@ -9622,15 +9634,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         self.rich_diverted_reports = report._rich_diverted_reports
                 return _comp_ex.extract_node_output(self.output_CIM)
 
-            # Reset context flags
-            context.execution_phase = ContextFlags.PROCESSING
-            self.output_CIM.execute(context=context)
-            context.execution_phase = ContextFlags.IDLE
-
-            # Assign output_values
-            output_values = []
-            for port in self.output_CIM.output_ports:
-                output_values.append(port.parameters.value._get(context))
+            # MODIFIED 3/26/21 OLD: MOVED TO ABOVE SO RESULTS WILL SHOW IN OUTPUT REPORT
+            # # Reset context flags
+            # context.execution_phase = ContextFlags.PROCESSING
+            # self.output_CIM.execute(context=context)
+            # context.execution_phase = ContextFlags.IDLE
+            #
+            # # Assign output_values
+            # output_values = []
+            # for port in self.output_CIM.output_ports:
+            #     output_values.append(port.parameters.value._get(context))
+            # MODIFIED 3/26/21 END
 
             # UPDATE TIME and RETURN ***********************************************************************************
 
