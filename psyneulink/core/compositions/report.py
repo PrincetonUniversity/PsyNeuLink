@@ -1208,8 +1208,13 @@ class Report:
                                                          trial_num=trial_num,
                                                          is_controller=is_controller,
                                                          )
+                # MODIFIED 3/26/21 NEW: TEST PRINT
+                # if 'ib' in node.name:
+                #     print(node_report)
+                # MODIFIED 3/26/21 END
+
             if trial_report_type is ReportOutput.FULL:
-                # FIX: TEST WITH AND WITHOUT THIS:
+                # FIX: 3/26/21 TEST WITH AND WITHOUT THIS:
                 # if content=='controller_start':
                 #     return
                 # FIX END TEST
@@ -1414,7 +1419,7 @@ class Report:
 
         # Use TERSE format if that has been specified by report_output (i.e., in the arg of an execution method),
         #   or as the reportOutputPref for a node when USE_PREFS is in effect
-        node_pref = convert_to_list(node.reportOutputPref)
+        node_pref = convert_to_list(node.reportOutputPref).copy()
         # Get reportOutputPref if specified, and remove from node_pref (for param processing below)
         report_output_pref = [node_pref.pop(node_pref.index(pref))
                               for pref in node_pref if isinstance(pref, ReportOutput)]
@@ -1649,7 +1654,7 @@ class Report:
                     if params_string:
                         params_string += '\n'
                     params_string += f"{param_name}: {param_value_str}{qualification}"
-                    if node_params:
+                    if node_params and param_name in node_params:
                         node_params.pop(node_params.index(param_name))
                     # Don't include functions in params_string yet (to keep at bottom of report)
                     continue
@@ -1667,8 +1672,6 @@ class Report:
                         qualification = param_is_specified(fct_param_name, function_params, param_type='func')
                         if qualification:
                             if not header_printed:
-                                if params_string != '':
-                                    function_params_string += '\n'
                                 function_params_string += f"{param_name}: {param_value.name.__str__().strip('[]')}"
                                 header_printed = True
                             param_value = getattr(getattr(node,param_name).parameters,fct_param_name)._get(context)
@@ -1693,6 +1696,8 @@ class Report:
                 raise ReportError(f"Unrecognized param(s) specified in "
                                   f"reportOutputPref for '{node.name}': '{', '.join(function_params)}'.")
 
+            if params_string != '':
+                params_string += '\n'
             params_string += function_params_string
 
         # Generate report -------------------------------------------------------------------------------
