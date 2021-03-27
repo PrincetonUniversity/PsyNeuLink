@@ -554,9 +554,15 @@ class Report:
         True if there are any `nested compositions <Composition_Nested>`
         in `_execution_stack <Report._execution_stack>`.
 
+    _context : Context
+         current `context <Context>`, assigned in calls to start_output_report, report_output, and report_progress;
+         used by `_simulating <Report._simulating>` to determine whether current execution is nested under a
+         `simulation <OptimizationControlMechanism_Execution>` by a `controller <Composition.controller>`.
+
     _simulating : bool : default False
-        True if there are any `controllers <Composition_Controller>` in `_execution_stack <Report._execution_stack>`
-        (that is, current call is nested under a simulation of an outer Composition).
+        True if 'simulator' appears in the `execution_id <Context.execution_id>` of `_context <Report._context>`;
+        (that is, current execution is nested under a `simulation <OptimizationControlMechanism_Execution>` of an outer
+        Composition).
 
         .. technical_note::
            This is distinct from the state of context.runmode (and used to assign ``run_mode`` in several of the
@@ -784,16 +790,11 @@ class Report:
 
         if self._use_rich:
 
+            # visible determines whether progress reporting is displayed;
+            # - it is FALSE for ReportProgress.OFF and for simulations unless ReportSimulations.ON is set
             visible = (self._rich_console
-                       # progress reporting is ON
                        and self._report_progress is ReportProgress.ON
-                       # current run is not a simulation (being run by a controller), or simulation reporting is ON
-                       # MODIFIED 3/26/21 OLD:
                        and (not self._simulating or self._report_simulations is ReportSimulations.ON)
-                       # # MODIFIED 3/26/21 NEW:
-                       # and (not 'simulator' in context.execution_id or self._report_simulations is
-                       #      ReportSimulations.ON)
-                       # MODIFIED 3/26/21 END
                        )
 
             if comp.verbosePref or REPORT_REPORT:
@@ -885,7 +886,7 @@ class Report:
 
             # Construct update text
             self._depth_indent = self._depth_str = ''
-            if simulation_mode or self._execution_stack_depth:
+            if simulation_mode or self._execution_stack_depth>1:
                 self._depth_indent = self.depth_indent_factor * self._execution_stack_depth * ' '
                 self._depth_str = f' (depth: {self._execution_stack_depth-1})'
             update = f'{self._depth_indent}{caller.name}: ' \
@@ -1078,15 +1079,12 @@ class Report:
         # Construct output report -----------------------------------------------------------------------------
 
         if content == 'run_start':
-            # MODIFIED 3/26/21 OLD:
             if simulation_mode:
+                # place controller on the stack for simulations
                 self._execution_stack.append(caller.controller)
             else:
+                # place Composition or Mechanism on the stack otherwise
                 self._execution_stack.append(caller)
-            # # MODIFIED 3/26/21 NEW:  MOVE PUSH FOR CONTROLLER TO 'controller_start'
-            # if not simulation_mode:
-            #     self._execution_stack.append(caller)
-            # MODIFIED 3/26/21 END
 
             if trial_report_type in {ReportOutput.TERSE, ReportOutput.USE_PREFS} and not self._simulating:
                 # Report execution at start of run, in accord with TERSE reporting at initiation of execution
@@ -1096,17 +1094,11 @@ class Report:
                     self._recorded_reports += report
             return
 
-        # MODIFIED 3/25/21 NEW:
         elif content == 'execute_start':
-            # MODIFIED 3/26/21 OLD:
             if simulation_mode:
                 self._execution_stack.append(caller.controller)
             else:
                 self._execution_stack.append(caller)
-            # # MODIFIED 3/26/21 NEW:
-            # if not simulation_mode:
-            #     self._execution_stack.append(caller)
-            # MODIFIED 3/26/21 END
 
             if trial_report_type in {ReportOutput.TERSE, ReportOutput.USE_PREFS} and not self._simulating:
                 # Report execution at start of run, in accord with TERSE reporting at initiation of execution
@@ -1115,7 +1107,6 @@ class Report:
                 if self._record_reports:
                     self._recorded_reports += report
             return
-        # MODIFIED 3/25/21 END
 
         elif content == 'trial_start':
 
@@ -1168,17 +1159,6 @@ class Report:
             if not node:
                 assert False, 'Node not specified in call to Report report_output'
 
-            # # MODIFIED 3/25/21 NEW:
-            # if content == 'controller_start' and self._report_simulations is ReportSimulations.OFF:
-            #     content = 'node'
-            # # MODIFIED 3/26/21 NEWER:
-            # if content == 'controller_start':
-            #     self._execution_stack.append(caller.controller)
-            #     # If ReportSimulation.OFF, treat controllers as node rather than generating a full simulation report
-            #     if self._report_simulations is ReportSimulations.OFF:
-            #         content = 'node'
-            # MODIFIED 3/25/21 END
-
             if content == 'nested_comp':
                 # Assign last run_report for execution of nested_comp (node) as node_report
                 title = f'[bold{trial_panel_color}]EXECUTION OF {node.name}[/] within {caller.name}'
@@ -1187,7 +1167,7 @@ class Report:
                                                               box=execution_panel_box,
                                                               border_style=trial_panel_color,
                                                               title=title,
-                                                              padding=self.padding_lines,
+                                                              # padding=self.padding_lines,
                                                               expand=False),
                                                         self.padding_indent)
                 node_report = nested_comp_run_report
@@ -1273,10 +1253,6 @@ class Report:
 
         elif content == 'controller_end':
 
-            # # MODIFIED 3/26/21 NEW:
-            # self._execution_stack.pop()
-            # MODIFIED 3/26/21 END
-
             # Only deal with ReportOutput.FULL;  ReportOutput.TERSE is handled above under content='controller_start'
             if report_output in {ReportOutput.FULL, ReportOutput.USE_PREFS}:
             # if trial_report_type is ReportOutput.FULL and self._report_simulations is ReportSimulations.ON:
@@ -1310,12 +1286,7 @@ class Report:
 
         elif content == 'execute_end':
 
-            # MODIFIED 3/26/21 OLD:
             outer_comp = self._execution_stack.pop()
-            # # # MODIFIED 3/26/21 NEW:
-            # if not simulation_mode:
-            #     outer_comp = self._execution_stack.pop()
-            # MODIFIED 3/26/21 END
 
             if len(self._execution_stack) == 0 and trial_report_type is not ReportOutput.OFF:
 
@@ -1333,18 +1304,9 @@ class Report:
 
         elif content == 'run_end':
 
-            # MODIFIED 3/26/21 OLD:
             outer_comp = self._execution_stack.pop()
 
             if len(self._execution_stack) == 0 and trial_report_type is not ReportOutput.OFF:
-            # # MODIFIED 3/26/21 NEW:
-            # outer_comp = self._execution_stack[-1]
-            # # MODIFIED 3/26/21 NEWER:
-            # if not simulation_mode:
-            #     outer_comp = self._execution_stack.pop()
-            #
-            # if len(self._execution_stack) == 0 and trial_report_type is not ReportOutput.OFF:
-            # MODIFIED 3/26/21 END:
 
                 # if trial_report_type is not ReportOutput.TERSE:
                 if trial_report_type is ReportOutput.FULL:
