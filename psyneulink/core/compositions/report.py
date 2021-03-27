@@ -786,7 +786,12 @@ class Report:
                        # progress reporting is ON
                        and self._report_progress is ReportProgress.ON
                        # current run is not a simulation (being run by a controller), or simulation reporting is ON
-                       and (not self._simulating or self._report_simulations is ReportSimulations.ON)
+                       # # MODIFIED 3/26/21 OLD:
+                       # and (not self._simulating or self._report_simulations is ReportSimulations.ON)
+                       # MODIFIED 3/26/21 NEW:
+                       and (not 'simulator' in context.execution_id or self._report_simulations is
+                            ReportSimulations.ON)
+                       # MODIFIED 3/26/21 END
                        )
 
             if comp.verbosePref or REPORT_REPORT:
