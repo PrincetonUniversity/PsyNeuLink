@@ -256,6 +256,8 @@ class TestReport():
         # instantiate mechanisms and inner comp
         ia = pnl.TransferMechanism(name='ia')
         ib = pnl.TransferMechanism(name='ib')
+        ia.reportOutputPref=[pnl.INTERCEPT]
+        ib.reportOutputPref=[pnl.VALUE, pnl.VARIABLE]
         icomp = pnl.Composition(name='icomp', controller_mode=pnl.AFTER)
 
         # set up structure of inner comp
@@ -342,18 +344,18 @@ class TestReport():
                   report_to_devices=ReportDevices.DIVERT
                   )
         actual_output = ocomp.rich_diverted_reports
-        expected_output = '\noController simulation of ocomp before TRIAL 0\nocomp TRIAL 0 ====================\n Time Step 0 ---------\n    icomp TRIAL 0 ====================\n     Time Step 0 ---------\n      ia executed\n     Time Step 1 ---------\n      ib executed\n     Time Step 2 ---------\n      iController Objective Mechanism executed\n    iController simulation of icomp after TRIAL 0\n  icomp executed\n Time Step 1 ---------\n  oController Objective Mechanism executed\n'
+        expected_output = '\nExecution of ocomp:\n  oController simulation of ocomp before TRIAL 0\n  ocomp TRIAL 0====================\n    Time Step 0 ---------\n    Execution of icomp within ocomp:\n    icomp TRIAL 0====================\n      Time Step 0 ---------\n        ia executed\n      Time Step 1 ---------\n        ib executed\n      Time Step 2 ---------\n        iController Objective Mechanism executed\n    iController simulation of icomp after TRIAL 0\n    Time Step 1 ---------\n      oController Objective Mechanism executed\n'
         assert actual_output == expected_output
-        #
-        # ocomp.run(inputs={icomp:-2},
-        #           report_output=ReportOutput.OFF,
-        #           report_progress=ReportProgress.ON,
-        #           report_simulations=ReportSimulations.OFF,
-        #           report_to_devices=ReportDevices.DIVERT
-        #           )
-        # actual_output = ocomp.rich_diverted_reports
-        # expected_output = 'ocomp: Executed 1 of 1 trials\n        icomp: Executed 1 of 1 trials (depth: 2)\n        icomp: Executed 1 of 1 trials (depth: 2)\n    icomp: Executed 1 of 1 trials (depth: 1)\n'
-        # assert actual_output == expected_output
+
+        ocomp.run(inputs={icomp:-2},
+                  report_output=ReportOutput.OFF,
+                  report_progress=ReportProgress.ON,
+                  report_simulations=ReportSimulations.OFF,
+                  report_to_devices=ReportDevices.DIVERT
+                  )
+        actual_output = ocomp.rich_diverted_reports
+        expected_output = 'ocomp: Executed 1 of 1 trials\n        icomp: Executed 1 of 1 trials (depth: 2)\n        icomp: Executed 1 of 1 trials (depth: 2)\n    icomp: Executed 1 of 1 trials (depth: 1)\n'
+        assert actual_output == expected_output
         #
         # ocomp.run(inputs={icomp:-2},
         #           report_output=ReportOutput.ON,

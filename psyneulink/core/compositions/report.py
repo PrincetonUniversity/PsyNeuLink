@@ -920,8 +920,6 @@ class Report:
 
         if self._report_progress is not ReportProgress.OFF:
             self._print_and_record_reports(PROGRESS_REPORT, outer_comp=caller)
-        assert True
-
 
     def report_output(self,
                       caller,
@@ -1772,7 +1770,8 @@ class Report:
                         self._recorded_reports += capture.get()
 
         # Record progress after execution of outer-most Composition
-        if len(self._execution_stack)==0:
+        if ((self._report_output is not ReportOutput.OFF and len(self._execution_stack)==0)
+                or (self._rich_progress.tasks[0].completed and not self._simulating)):
             if report_type is PROGRESS_REPORT:
                 # add progress report to any already recorded for output
                 progress_reports = '\n'.join([t.description for t in self._rich_progress.tasks])
