@@ -849,8 +849,8 @@ class Report:
 
     def report_progress(self, caller, report_num:int, context:Context):
         """
-        Report progress of executions in call to `run <Composition.run>` or `learn <Composition.learn>` method of
-        a `Composition`, and record reports if specified.
+        Report progress of executions in call to `execute <Composition.execute>` method of a `Composition`,
+        and record reports if specified.
 
         Arguments
         ---------
@@ -964,8 +964,8 @@ class Report:
             method.
 
         content : str
-            specifies content of current element of report;  must be: 'trial_start', 'time_step_init', 'node',
-            'time_step', 'trial_end', 'controller_start', 'controller_end', 'run_start, or 'run_end'.
+            specifies content of current element of report;  must be: 'trial_start', 'time_step_start', 'node',
+            'time_step_end', 'trial_end', 'controller_start', 'controller_end', 'run_start, or 'run_end'.
 
         context : Context
             context of current execution.
@@ -1163,7 +1163,7 @@ class Report:
                 if self._record_reports:
                     self._recorded_reports += trial_header
 
-        elif content == 'time_step_init':
+        elif content == 'time_step_start':
             if trial_report_type is ReportOutput.FULL:
                 output_report.time_step_report = [] # Contains rich.Panel for each node executed in time_step
             elif nodes_to_report: # TERSE output
@@ -1231,7 +1231,7 @@ class Report:
                         self._recording_console.print(node_report)
                     self._recorded_reports += capture.get()
 
-        elif content == 'time_step':
+        elif content == 'time_step_end':
             if nodes_to_report and trial_report_type is ReportOutput.FULL:
                 output_report.trial_report.append('')
                 title = f'[bold {time_step_panel_color}]\nTime Step {scheduler.get_clock(context).time.time_step}[/]'
@@ -1770,8 +1770,15 @@ class Report:
                         self._recorded_reports += capture.get()
 
         # Record progress after execution of outer-most Composition
-        if ((self._report_output is not ReportOutput.OFF and len(self._execution_stack)==0)
-                or (self._rich_progress.tasks[0].completed and not self._simulating)):
+        # MODIFIED 3/28/21 OLD:
+        # if len(self._execution_stack)==0:
+        # # MODIFIED 3/28/21 NEW:
+        if self._report_output is not ReportOutput.OFF and len(self._execution_stack)==0:
+        # # MODIFIED 3/28/21 NEWER:
+        # if ((self._report_output is not ReportOutput.OFF and len(self._execution_stack)==0)
+        #         or (self._rich_progress.tasks[0].completed and not self._simulating)):
+        # MODIFIED 3/28/21 END
+
             if report_type is PROGRESS_REPORT:
                 # add progress report to any already recorded for output
                 progress_reports = '\n'.join([t.description for t in self._rich_progress.tasks])

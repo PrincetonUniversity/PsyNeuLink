@@ -9316,7 +9316,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                      execution_scheduler,
                                      report_output,
                                      report_params,
-                                     'time_step_init',
+                                     'time_step_start',
                                      context,
                                      nodes_to_report=True)
 
@@ -9513,7 +9513,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                      execution_scheduler,
                                      report_output,
                                      report_params,
-                                     'time_step',
+                                     'time_step_end',
                                      context,
                                      nodes_to_report=nodes_to_report)
 
@@ -9586,6 +9586,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                  report_params,
                                  'trial_end',
                                  context)
+            # FIX: 3/28/21 ??MOVE TO VERY END?
             report.report_progress(self, output_report, context)
 
             # EXECUTE CONTROLLER (if controller_mode == AFTER) *********************************************************
