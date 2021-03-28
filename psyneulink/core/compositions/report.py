@@ -980,9 +980,14 @@ class Report:
             specifies `node <Composition_Nodes>` for which output is being reported.
         """
 
-        # if report_num is None or report_output is ReportOutput.OFF:
+        # Quit if neither output nor progress reporting are in use
+        # - note: continue even if output reporting is not in use,
+        #         as progress reporting relies on updating _execution_stack
         if report_output is ReportOutput.OFF:
-            return
+            if self._report_progress is ReportProgress.ON and content in {'execute_end', 'run_end'}:
+                pass
+            else:
+                return
 
         self._context = context
         # FIX: ASSIGN SCHEDULE IF IT IS NONE (i.e., FROM MECHANISM):  GET IT FROM LATEST COMP ON STACK
@@ -1081,7 +1086,9 @@ class Report:
             else:
                 # Non-simulation (but potentially nested) execution
                 run_mode = DEFAULT
-            output_report = self.output_reports[output_report_owner][run_mode][report_num]
+
+            if report_output is not ReportOutput.OFF:
+                output_report = self.output_reports[output_report_owner][run_mode][report_num]
 
             # FIX: GENERALIZE THIS, PUT AS ATTRIBUTE ON Report, AND THEN REFERENCE THAT IN report_progress
             depth_indent = 0
