@@ -843,9 +843,40 @@ class Report:
                  ) -> None:
         reports = convert_to_list(reports)
 
+        outer_comp = None
+
+        content = None
+        if 'content' in kwargs:
+            content = kwargs['content']
+        context = None
+        if 'context' in kwargs:
+            context = kwargs['context']
+
+        simulation_mode = None
+        from psyneulink.core.compositions.composition import Composition
+        if isinstance(caller, Composition) or context.source == ContextFlags.COMPOSITION:
+            simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
+
+        if content in {'run_start', 'execute_start'}:
+            if simulation_mode:
+                # place controller on the stack for simulations
+                self._execution_stack.append(caller.controller)
+            else:
+                # place Composition or Mechanism on the stack otherwise
+                self._execution_stack.append(caller)
+
+        elif content == 'trial_start':
+            self._execution_stack.append(caller)
+
+        elif content in {'execute_end', 'run_end'}:
+            outer_comp = self._execution_stack.pop()
+
         # Call report_output
         if any(r in {EXECUTE_REPORT, CONTROLLER_REPORT, RUN_REPORT} for r in reports):
-            self.report_output(caller, **kwargs)
+            self.report_output(caller, **kwargs, outer_comp=outer_comp)
+
+        if content is 'trial_end':
+            self._execution_stack.pop()
 
         # Call report_progress
         if PROGRESS_REPORT in reports:
@@ -863,6 +894,7 @@ class Report:
                       context:Context,
                       nodes_to_report:bool=False,
                       node=None,
+                      outer_comp=None
                       ) -> None:
         """
         Report output of execution in call to `execute <Composition.execute>` method of a `Composition` or a
@@ -1033,12 +1065,12 @@ class Report:
         # Construct output report -----------------------------------------------------------------------------
 
         if content in {'run_start', 'execute_start'}:
-            if simulation_mode:
-                # place controller on the stack for simulations
-                self._execution_stack.append(caller.controller)
-            else:
-                # place Composition or Mechanism on the stack otherwise
-                self._execution_stack.append(caller)
+            # if simulation_mode:
+            #     # place controller on the stack for simulations
+            #     self._execution_stack.append(caller.controller)
+            # else:
+            #     # place Composition or Mechanism on the stack otherwise
+            #     self._execution_stack.append(caller)
 
             if trial_report_type in {ReportOutput.TERSE, ReportOutput.USE_PREFS} and not self._simulating:
                 # Report execution at start of run, in accord with TERSE reporting at initiation of execution
@@ -1064,7 +1096,7 @@ class Report:
         #
         elif content == 'trial_start':
 
-            self._execution_stack.append(caller)
+            # self._execution_stack.append(caller)
 
             output_report.trial_report = []
             #  if FULL output, report trial number and Composition's input
@@ -1204,7 +1236,7 @@ class Report:
                 output_report.run_report.append('')
                 output_report.run_report.append(output_report.trial_report)
 
-            self._execution_stack.pop()
+            # self._execution_stack.pop()
 
         elif content == 'controller_end':
 
@@ -1240,7 +1272,7 @@ class Report:
 
         elif content in {'execute_end', 'run_end'}:
 
-            outer_comp = self._execution_stack.pop()
+            # outer_comp = self._execution_stack.pop()
 
             if len(self._execution_stack) == 0 and trial_report_type is not ReportOutput.OFF:
 
