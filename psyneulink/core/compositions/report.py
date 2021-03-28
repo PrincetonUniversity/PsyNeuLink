@@ -161,6 +161,7 @@ SIMULATIONS = 'simulations'
 SIMULATING = 'simulating'
 REPORT_REPORT = False # USED FOR DEBUGGING
 EXECUTE_REPORT = 'execute_report'
+CONTROLLER_REPORT = 'controller_report'
 RUN_REPORT = 'run_report'
 PROGRESS_REPORT = 'progress_report'
 
@@ -841,10 +842,16 @@ class Report:
                  **kwargs
                  ) -> None:
         reports = convert_to_list(reports)
-        if any(r in {EXECUTE_REPORT, RUN_REPORT} for r in reports):
-            self.report_output(kwargs)
+
+        # Call report_output
+        if any(r in {EXECUTE_REPORT, CONTROLLER_REPORT, RUN_REPORT} for r in reports):
+            self.report_output(caller, **kwargs)
+
+        # Call report_progress
         if PROGRESS_REPORT in reports:
-            self.report_progress(kwargs)
+            # Just pass args relevant to report_progress()
+            progress_args = {k:v for k,v in kwargs.items() if k in {'caller', 'report_num', 'context'}}
+            self.report_progress(caller, **progress_args)
 
     def report_output(self,
                       caller,
@@ -855,7 +862,7 @@ class Report:
                       content:str,
                       context:Context,
                       nodes_to_report:bool=False,
-                      node=None
+                      node=None,
                       ) -> None:
         """
         Report output of execution in call to `execute <Composition.execute>` method of a `Composition` or a
