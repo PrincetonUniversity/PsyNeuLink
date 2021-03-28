@@ -789,7 +789,12 @@ class Report:
         else:
             run_mode = DEFAULT
 
-        if run_mode is SIMULATION and self._report_simulations is not ReportSimulations.ON:
+        # # MODIFIED 3/28/21 OLD:
+        # if run_mode is SIMULATION and self._report_simulations is not ReportSimulations.ON:
+        # MODIFIED 3/28/21 NEW:
+        #  FIX: THE FOLLOWING MAY SUPERCEDE STUFF THAT IS NOW REDUNDANT BELOW
+        if self._simulating and self._report_simulations is not ReportSimulations.ON:
+        # MODIFIED 3/28/21 END
             return
 
         if run_mode is SIMULATION:
@@ -857,26 +862,27 @@ class Report:
         if isinstance(caller, Composition) or context.source == ContextFlags.COMPOSITION:
             simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
 
-        if content in {'run_start', 'execute_start'}:
-            if simulation_mode:
-                # place controller on the stack for simulations
-                self._execution_stack.append(caller.controller)
-            else:
-                # place Composition or Mechanism on the stack otherwise
-                self._execution_stack.append(caller)
-
-        elif content == 'trial_start':
-            self._execution_stack.append(caller)
-
-        elif content in {'execute_end', 'run_end'}:
-            outer_comp = self._execution_stack.pop()
-
         # Call report_output
         if any(r in {EXECUTE_REPORT, CONTROLLER_REPORT, RUN_REPORT} for r in reports):
+
+            if content in {'run_start', 'execute_start'}:
+                if simulation_mode:
+                    # place controller on the stack for simulations
+                    self._execution_stack.append(caller.controller)
+                else:
+                    # place Composition or Mechanism on the stack otherwise
+                    self._execution_stack.append(caller)
+
+            elif content == 'trial_start':
+                self._execution_stack.append(caller)
+
+            elif content in {'execute_end', 'run_end'}:
+                outer_comp = self._execution_stack.pop()
+
             self.report_output(caller, **kwargs, outer_comp=outer_comp)
 
-        if content is 'trial_end':
-            self._execution_stack.pop()
+            if content is 'trial_end':
+                self._execution_stack.pop()
 
         # Call report_progress
         if PROGRESS_REPORT in reports:
@@ -1713,6 +1719,12 @@ class Report:
 
         self._context = context
 
+        # MODIFIED 3/28/21 NEW:
+        #  FIX: THE FOLLOWING MAY SUPERCEDE STUFF THAT IS NOW REDUNDANT BELOW
+        if self._report_simulations is ReportSimulations.OFF and self._simulating:
+            return
+        # MODIFIED 3/28/21 END
+
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
         if simulation_mode:
             run_mode = SIMULATION
@@ -1813,12 +1825,14 @@ class Report:
 
         # Record progress after execution of outer-most Composition
         # MODIFIED 3/28/21 OLD:
-        # if len(self._execution_stack)==0:
+        # if len(self._execution_stack)==1:
         # # MODIFIED 3/28/21 NEW:
-        if self._report_output is not ReportOutput.OFF and len(self._execution_stack)==0:
+        # if self._report_output is not ReportOutput.OFF and len(self._execution_stack)==0:
         # # MODIFIED 3/28/21 NEWER:
         # if ((self._report_output is not ReportOutput.OFF and len(self._execution_stack)==0)
         #         or (self._rich_progress.tasks[0].completed and not self._simulating)):
+        # # MODIFIED 3/28/21 NEWEST:
+        if (self._report_output is not ReportOutput.OFF or (len(self._execution_stack)<=1 and not self._simulating)):
         # MODIFIED 3/28/21 END
 
             if report_type is PROGRESS_REPORT:
