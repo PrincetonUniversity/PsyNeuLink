@@ -222,18 +222,6 @@ controller_input_color = Color.from_rgb(175,0,255).name # 'purple'
 controller_output_color = Color.from_rgb(0,0,135).name # 'blue' BRIGHTER: (0,0,255)
 controller_panel_box = box.HEAVY
 
-def _get_sim_number(context):
-    try:
-        context = context.execution_id
-    except (AttributeError, TypeError):
-        pass
-
-    try:
-        return int(re.search(r'num: (\d+)', context).group(1))
-    except (AttributeError, TypeError, ValueError):
-        return None
-
-
 class ReportOutput(Enum):
     """
     Options used in the **report_output** argument of a `Composition`\'s `execution methods
