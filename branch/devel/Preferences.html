@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Preferences &mdash; PsyNeuLink 0.8.7.1 documentation</title>
+  <title>Preferences &mdash; PsyNeuLink 0.8.7.1+1.g3abb6d34de documentation</title>
   
 
   
@@ -96,7 +96,7 @@
               
               
                 <div class="version">
-                  0.8.7.1
+                  0.8.7.1+1
                 </div>
               
             
@@ -271,8 +271,8 @@ Assigning <a class="reference internal" href="Report.html#psyneulink.core.compos
 </div>
 <p>This can be useful when there are many Components executed (e.g., as part of the <a class="reference internal" href="Composition.html#composition-execution"><span class="std std-ref">execution</span></a>
 of a complex <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
-<p>Assigning the <em>PARAMS</em> keyword with <code class="xref any docutils literal notranslate"><span class="pre">Report.FULL</span></code> produces a display of the Mechanism’s input and output as well as the
-value of all of its <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> (for brevity, not all are shown below):</p>
+<p>Assigning the <em>PARAMS</em> keyword with <a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput.FULL" title="psyneulink.core.compositions.report.ReportOutput.FULL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ReportOutput.FULL</span></code></a> produces a display of the Mechanism’s input and output as well
+as the value of all of its <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> (for brevity, not all are shown below):</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">reportOutputPref</span> <span class="o">=</span> <span class="p">[</span><span class="n">ReportOutput</span><span class="o">.</span><span class="n">FULL</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">PARAMS</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
 <span class="go">╭────────────────────────────────────────── My Mechanism ──────────────────────────────────────────╮</span>
