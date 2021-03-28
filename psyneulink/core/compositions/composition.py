@@ -8428,7 +8428,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     report_to_devices=report_to_devices,
                     context=context) as report:
 
-            output_report = report.start_output_report(self, num_trials, context)
+            output_report = report.start_report(self, num_trials, context)
 
             report.report_output(self,
                      output_report,
@@ -8915,7 +8915,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # If execute method is called directly, need to create Report object for reporting
             if not (context.source & ContextFlags.COMPOSITION) or output_report is None:
-                output_report = report.start_output_report(comp=self, num_trials=1, context=context)
+                output_report = report.start_report(comp=self, num_trials=1, context=context)
 
                 # Also, call report_output to generate initial line of report
                 if context.source is ContextFlags.COMMAND_LINE:

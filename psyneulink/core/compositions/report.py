@@ -563,7 +563,7 @@ class Report:
         in `_execution_stack <Report._execution_stack>`.
 
     _context : Context
-         current `context <Context>`, assigned in calls to start_output_report, report_output, and report_progress;
+         current `context <Context>`, assigned in calls to start_report, report_output, and report_progress;
          used by `_simulating <Report._simulating>` to determine whether current execution is nested under a
          `simulation <OptimizationControlMechanism_Execution>` by a `controller <Composition.controller>`.
 
@@ -669,7 +669,7 @@ class Report:
             cls.padding_lines = padding_lines
 
             # Instantiate rich progress context object
-            # - it is not started until the self.start_output_report() method is called
+            # - it is not started until the self.start_report() method is called
             # - auto_refresh is disabled to accommodate IDEs (such as PyCharm and Jupyter Notebooks)
             if cls._use_rich:
                 # Set up RECORDING
@@ -745,7 +745,7 @@ class Report:
             # bar will grow and grow and never be deallocated until the end of program.
             Report._destroy()
 
-    def start_output_report(self, comp, num_trials, context) -> int:
+    def start_report(self, comp, num_trials, context) -> int:
         """
         Initialize a OutputReport for Composition
 
@@ -835,79 +835,16 @@ class Report:
 
             return report_num
 
-    def report_progress(self, caller, report_num:int, context:Context):
-        """
-        Report progress of executions in call to `execute <Composition.execute>` method of a `Composition`,
-        and record reports if specified.
-
-        Arguments
-        ---------
-
-        caller : Composition or Mechanism
-
-        report_num : int
-            id of OutputReport for caller[run_mode] in self.output_reports to use for reporting.
-
-        context : Context
-            context providing information about run_mode (DEFAULT or SIMULATION).
-        """
-
-        if self._report_progress is ReportProgress.OFF:
-            return
-
-        self._context = context
-
-        simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
-        if simulation_mode:
-            run_mode = SIMULATION
-            # Return if (nested within) a simulation and not reporting simulations
-            if self._report_simulations is ReportSimulations.OFF:
-                return
-        else:
-            run_mode = DEFAULT
-
-        output_report = self.output_reports[caller][run_mode][report_num]
-        trial_num = self._rich_progress.tasks[output_report.rich_task_id].completed
-
-        # Useful for debugging:
-        if caller.verbosePref or REPORT_REPORT:
-            from pprint import pprint
-            pprint(f'{caller.name} {str(context.runmode)} REPORT')
-
-        # Not in simulation and have reached num_trials (if specified) (i.e. end of run or set of simulations)
-        if self.output_reports[caller][SIMULATING] and not simulation_mode:
-            # If was simulating previously, then have just exited, so:
-            #   (note: need to use transition and not explicit count of simulations,
-            #    since number of simulation trials being run is generally not known)
-                # - turn it off
-            self.output_reports[caller][SIMULATING] = False
-
-        # Update progress report
-        if self._use_rich:
-            if output_report.num_trials:
-                if simulation_mode:
-                    num_trials_str = ''
-                else:
-                    num_trials_str = f' of {output_report.num_trials}'
-            else:
-                num_trials_str = ''
-
-            # Construct update text
-            self._depth_indent = self._depth_str = ''
-            if simulation_mode or self._execution_stack_depth>1:
-                self._depth_indent = self.depth_indent_factor * self._execution_stack_depth * ' '
-                self._depth_str = f' (depth: {self._execution_stack_depth-1})'
-            update = f'{self._depth_indent}{caller.name}: ' \
-                     f'{run_mode}ed {trial_num+1}{num_trials_str} trials{self._depth_str}'
-
-            # Do update
-            self._rich_progress.update(output_report.rich_task_id,
-                                  description=update,
-                                  advance=1,
-                                  refresh=True)
-
-        if self._report_progress is not ReportProgress.OFF:
-            self._print_and_record_reports(PROGRESS_REPORT, outer_comp=caller)
+    def __call__(self,
+                 caller,
+                 reports:Union[str, list],
+                 **kwargs
+                 ) -> None:
+        reports = convert_to_list(reports)
+        if any(r in {EXECUTE_REPORT, RUN_REPORT} for r in reports):
+            self.report_output(kwargs)
+        if PROGRESS_REPORT in reports:
+            self.report_progress(kwargs)
 
     def report_output(self,
                       caller,
@@ -918,7 +855,8 @@ class Report:
                       content:str,
                       context:Context,
                       nodes_to_report:bool=False,
-                      node=None):
+                      node=None
+                      ) -> None:
         """
         Report output of execution in call to `execute <Composition.execute>` method of a `Composition` or a
         Mechanism <Mechanism_Base.execute>`.  Report.TERSE generates a line-by-line report of executions, but
@@ -980,7 +918,7 @@ class Report:
         # Get ReportOutputPref for node and whether it is a controller
         if node:
             node_pref = next((pref for pref in convert_to_list(node.reportOutputPref)
-                                         if isinstance(pref, ReportOutput)), None)
+                              if isinstance(pref, ReportOutput)), None)
             if hasattr(node, 'composition') and node.composition:
                 is_controller = True
             else:
@@ -1126,7 +1064,7 @@ class Report:
             #  note:  header for Trial Panel is constructed under 'content is Trial' case below
             if trial_report_type is ReportOutput.FULL:
                 output_report.trial_report = [f'[bold {default_trial_input_color}]{self._padding_indent_str}input:[/]'
-                                           f' {[i.tolist() for i in caller.get_input_values(context)]}']
+                                              f' {[i.tolist() for i in caller.get_input_values(context)]}']
                 # Push trial_header to stack in case there are intervening executions of nested comps or simulations
                 self._trial_header_stack.append(
                     f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial {trial_num}[/] ')
@@ -1711,10 +1649,87 @@ class Report:
 
         return Padding.indent(report, depth_indent)
 
+    def report_progress(self,
+                        caller,
+                        report_num:int,
+                        context:Context) -> None:
+        """
+        Report progress of executions in call to `execute <Composition.execute>` method of a `Composition`,
+        and record reports if specified.
+
+        Arguments
+        ---------
+
+        caller : Composition or Mechanism
+
+        report_num : int
+            id of OutputReport for caller[run_mode] in self.output_reports to use for reporting.
+
+        context : Context
+            context providing information about run_mode (DEFAULT or SIMULATION).
+        """
+
+        if self._report_progress is ReportProgress.OFF:
+            return
+
+        self._context = context
+
+        simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
+        if simulation_mode:
+            run_mode = SIMULATION
+            # Return if (nested within) a simulation and not reporting simulations
+            if self._report_simulations is ReportSimulations.OFF:
+                return
+        else:
+            run_mode = DEFAULT
+
+        output_report = self.output_reports[caller][run_mode][report_num]
+        trial_num = self._rich_progress.tasks[output_report.rich_task_id].completed
+
+        # Useful for debugging:
+        if caller.verbosePref or REPORT_REPORT:
+            from pprint import pprint
+            pprint(f'{caller.name} {str(context.runmode)} REPORT')
+
+        # Not in simulation and have reached num_trials (if specified) (i.e. end of run or set of simulations)
+        if self.output_reports[caller][SIMULATING] and not simulation_mode:
+            # If was simulating previously, then have just exited, so:
+            #   (note: need to use transition and not explicit count of simulations,
+            #    since number of simulation trials being run is generally not known)
+                # - turn it off
+            self.output_reports[caller][SIMULATING] = False
+
+        # Update progress report
+        if self._use_rich:
+            if output_report.num_trials:
+                if simulation_mode:
+                    num_trials_str = ''
+                else:
+                    num_trials_str = f' of {output_report.num_trials}'
+            else:
+                num_trials_str = ''
+
+            # Construct update text
+            self._depth_indent = self._depth_str = ''
+            if simulation_mode or self._execution_stack_depth>1:
+                self._depth_indent = self.depth_indent_factor * self._execution_stack_depth * ' '
+                self._depth_str = f' (depth: {self._execution_stack_depth-1})'
+            update = f'{self._depth_indent}{caller.name}: ' \
+                     f'{run_mode}ed {trial_num+1}{num_trials_str} trials{self._depth_str}'
+
+            # Do update
+            self._rich_progress.update(output_report.rich_task_id,
+                                  description=update,
+                                  advance=1,
+                                  refresh=True)
+
+        if self._report_progress is not ReportProgress.OFF:
+            self._print_and_record_reports(PROGRESS_REPORT, outer_comp=caller)
+
     def _print_and_record_reports(self,
                                   report_type:str,
                                   output_report:OutputReport=None,
-                                  outer_comp=None):
+                                  outer_comp=None) -> None:
         """
         Conveys output reporting to device specified in `_report_to_devices <Report._report_to_devices>`.
         Called by `report_output <Report.report_output>` and `report_progress <Report.report_progress>`
