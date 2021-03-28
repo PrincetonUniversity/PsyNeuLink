@@ -3348,8 +3348,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.log = CompositionLog(owner=self)
         self._terminal_backprop_sequences = {}
-        self.recorded_reports = None
-        self.rich_diverted_reports = None
 
         # Controller
         self.controller = None
@@ -8542,10 +8540,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                  context,
                                  node=self)
 
-            if report._recorded_reports:
-                self.recorded_reports = report._recorded_reports
-            if report._rich_diverted_reports:
-                self.rich_diverted_reports = report._rich_diverted_reports
+            self.recorded_reports = report._recorded_reports or None
+            self.rich_diverted_reports = report._rich_diverted_reports or None
 
             # Reset input spec for next trial
             self.parameters.input_specification._set(None, context)
@@ -8917,11 +8913,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # accommodation is written
             execution_scheduler._init_counts(context.execution_id, base_context.execution_id)
 
-            # FIX: Call Report with context and output_report handle this in there 3/3/21
             # If execute method is called directly, need to create Report object for reporting
             if not (context.source & ContextFlags.COMPOSITION) or output_report is None:
                 output_report = report.start_output_report(comp=self, num_trials=1, context=context)
-                # MODIFIED 3/25/21 NEW:
+
                 # Also, call report_output to generate initial line of report
                 if context.source is ContextFlags.COMMAND_LINE:
                     report.report_output(self,
@@ -8932,8 +8927,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                          content='execute_start',
                                          context=context
                                          )
-                # MODIFIED 3/25/21 END
-
 
             # ASSIGNMENTS **************************************************************************************************
 
@@ -9567,7 +9560,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context=context
                 )
 
-            # MODIFIED 3/26/21 OLD: MOVED FROM BELOW
             # Reset context flags
             context.execution_phase = ContextFlags.PROCESSING
             self.output_CIM.execute(context=context)
@@ -9577,7 +9569,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             output_values = []
             for port in self.output_CIM.output_ports:
                 output_values.append(port.parameters.value._get(context))
-            # MODIFIED 3/26/21 END
 
             # Animate output_CIM
             # FIX: NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THIS -
@@ -9610,7 +9601,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context=context
                 )
 
-            # # MODIFIED 3/25/21 NEW:
             # # If called directly, wrap up reporting
             if context.source is ContextFlags.COMMAND_LINE:
                 report.report_output(self,
@@ -9620,7 +9610,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                      report_params,
                                      'execute_end',
                                      context)
-            # MODIFIED 3/25/21 END
 
             # Extract result here
             if execution_mode:
@@ -9633,18 +9622,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if report._rich_diverted_reports:
                         self.rich_diverted_reports = report._rich_diverted_reports
                 return _comp_ex.extract_node_output(self.output_CIM)
-
-            # MODIFIED 3/26/21 OLD: MOVED TO ABOVE SO RESULTS WILL SHOW IN OUTPUT REPORT
-            # # Reset context flags
-            # context.execution_phase = ContextFlags.PROCESSING
-            # self.output_CIM.execute(context=context)
-            # context.execution_phase = ContextFlags.IDLE
-            #
-            # # Assign output_values
-            # output_values = []
-            # for port in self.output_CIM.output_ports:
-            #     output_values.append(port.parameters.value._get(context))
-            # MODIFIED 3/26/21 END
 
             # UPDATE TIME and RETURN ***********************************************************************************
 

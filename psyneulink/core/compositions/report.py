@@ -1020,22 +1020,21 @@ class Report:
                 if node_pref is ReportOutput.OFF:
                     return
         elif isinstance(caller, Composition):
-            # USE_PREFS is specified for report called by a Composition:
-            if report_output is ReportOutput.USE_PREFS:
-                # If report is for execution of a node, assign its report type using its reportOutputPref:
-                if node:
-                    # Get ReportOutput spec from reportOutputPref if there is one
-                    # If None was found, assign ReportOutput.FULL as default
-                    node_report_type = node_pref or ReportOutput.FULL
-                    # Return if it is OFF
-                    if node_report_type is ReportOutput.OFF:
-                        return
-                # else:
-                #     caller_pref = next((pref for pref in convert_to_list(caller.reportOutputPref)
-                #                         if isinstance(pref, ReportOutput)), None)
-                #     if caller_pref is ReportOutput.OFF:
-                #         return
-
+            # # USE_PREFS is specified for report called by a Composition:
+            # if report_output is ReportOutput.USE_PREFS:
+            #     # If report is for execution of a node, assign its report type using its reportOutputPref:
+            #     if node:
+            #         # Get ReportOutput spec from reportOutputPref if there is one
+            #         # If None was found, assign ReportOutput.FULL as default
+            #         node_report_type = node_pref or ReportOutput.FULL
+            #         # Return if it is OFF
+            #         if node_report_type is ReportOutput.OFF:
+            #             return
+            #     # else:
+            #     #     caller_pref = next((pref for pref in convert_to_list(caller.reportOutputPref)
+            #     #                         if isinstance(pref, ReportOutput)), None)
+            #     #     if caller_pref is ReportOutput.OFF:
+            #     #         return
             output_report_owner = caller
 
         if scheduler:
@@ -1213,10 +1212,9 @@ class Report:
                                                          trial_num=trial_num,
                                                          is_controller=is_controller,
                                                          )
-                # MODIFIED 3/26/21 NEW: TEST PRINT
+                # TEST PRINT
                 # if 'ib' in node.name:
                 #     print(node_report)
-                # MODIFIED 3/26/21 END
 
             if trial_report_type is ReportOutput.FULL:
                 if content=='controller_start':
@@ -1325,7 +1323,11 @@ class Report:
                                                                     padding=self.padding_lines,
                                                                     expand=False),
                                                               self.padding_indent)
+
                 self._print_and_record_reports(RUN_REPORT, output_report, outer_comp)
+
+                if self._report_progress is ReportProgress.ON:
+                    self._print_and_record_reports(PROGRESS_REPORT, output_report, outer_comp)
 
         # elif content == 'run_end':
         #
