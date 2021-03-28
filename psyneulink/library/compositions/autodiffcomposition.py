@@ -484,7 +484,7 @@ class AutodiffComposition(Composition):
                 report_simulations:ReportSimulations=ReportSimulations.OFF,
                 report_to_devices:ReportDevices=None,
                 report=None,
-                run_report=None,
+                output_report=None,
                 ):
         self._assign_execution_ids(context)
         context.composition = self
@@ -520,9 +520,9 @@ class AutodiffComposition(Composition):
             scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
             # MODIFIED 3/2/21 NEW:  FIX: CAUSES CRASH... NEEDS TO BE FIXED
-            # progress.report_output(self, run_report, scheduler, show_output, 'trial', context)
+            # progress.report_output(self, output_report, scheduler, show_output, 'trial', context)
             # MODIFIED 3/2/21 END
-            report.report_progress(self, run_report, context)
+            report.report_progress(self, output_report, context)
 
             return output
 

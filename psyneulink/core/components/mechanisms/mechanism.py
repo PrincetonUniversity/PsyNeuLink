@@ -2309,7 +2309,7 @@ class Mechanism_Base(Mechanism):
                 runtime_params=None,
                 report_output=None,
                 report_params=None,
-                run_report=None
+                output_report=None
                 ):
         """Carry out a single `execution <Mechanism_Execution>` of the Mechanism.
 
@@ -2545,7 +2545,7 @@ class Mechanism_Base(Mechanism):
                                                    if isinstance(pref, ReportParams)), ReportParams.OFF)
             with Report(self, context=context) as report:
                 report.report_output(caller=self,
-                                     report_num=run_report,
+                                     report_num=output_report,
                                      scheduler=None,
                                      report_output=report_output,
                                      report_params=report_params,
