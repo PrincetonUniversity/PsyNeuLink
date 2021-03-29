@@ -8920,7 +8920,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not (context.source & ContextFlags.COMPOSITION) or output_report is None:
                 output_report = report.start_report(comp=self, num_trials=1, context=context)
 
-                # Also, call report_output to generate initial line of report
+                # Also, call report to generate initial line of report
                 if context.source is ContextFlags.COMMAND_LINE:
                     report(self,
                            EXECUTE_REPORT,
