@@ -8302,6 +8302,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if results is None:
             results = []
 
+        self.rich_diverted_reports = None
+        self.recorded_reports = None
+
         self._assign_execution_ids(context)
 
         scheduler._init_counts(execution_id=context.execution_id)
@@ -8543,8 +8546,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    context=context,
                    node=self)
 
-            self.recorded_reports = report._recorded_reports or None
-            self.rich_diverted_reports = report._rich_diverted_reports or None
+            if report._recorded_reports:
+                self.recorded_reports = report._recorded_reports
+            if report._rich_diverted_reports:
+                self.rich_diverted_reports = report._rich_diverted_reports
 
             # Reset input spec for next trial
             self.parameters.input_specification._set(None, context)
