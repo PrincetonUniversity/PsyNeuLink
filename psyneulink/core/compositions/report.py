@@ -789,8 +789,6 @@ class Report:
         else:
             run_mode = DEFAULT
 
-        # # MODIFIED 3/28/21 OLD:
-        # if run_mode is SIMULATION and self._report_simulations is not ReportSimulations.ON:
         # MODIFIED 3/28/21 NEW:
         #  FIX: THE FOLLOWING MAY SUPERCEDE STUFF THAT IS NOW REDUNDANT BELOW
         if self._simulating and self._report_simulations is not ReportSimulations.ON:
@@ -960,11 +958,7 @@ class Report:
         # Determine report type and relevant parameters ----------------------------------------------------------------
 
         # Assign report_output as default for trial_report_type and node_report_type...
-        # # MODIFIED 3/29/21 OLD:
-        # trial_report_type = node_report_type = report_output
-        # MODIFIED 3/29/21 NEW:
         trial_report_type = node_report_type = report_output = self._report_output
-        # MODIFIED 3/29/21 END
 
         # Get ReportOutputPref for node and whether it is a controller
         if node:
@@ -982,20 +976,12 @@ class Report:
         if isinstance(caller, Mechanism):
             if context.source & ContextFlags.COMPOSITION:
                 output_report_owner = context.composition
-                # MODIFIED 3/29/21 OLD:
                 trial_report_type=report_output
-                # # MODIFIED 3/29/21 NEW:
-                # trial_report_type=self._report_output
-                # MODIFIED 3/29/21 END
             # FULL output reporting doesn't make sense for a Mechanism, since it includes trial info, so enforce TERSE
             else:
                 trial_report_type = None
             # If USE_PREFS is specified by user, then assign output format to Mechanism's reportOutputPref
-            # MODIFIED 3/29/21 OLD:
             if report_output is ReportOutput.USE_PREFS:
-            # # MODIFIED 3/29/21 NEW:
-            # if self._report_output is ReportOutput.USE_PREFS:
-            # MODIFIED 3/29/21 END
                 node_report_type = node_pref
                 if node_pref is ReportOutput.OFF:
                     return
@@ -1258,13 +1244,7 @@ class Report:
         elif content == 'controller_end':
 
             # Only deal with ReportOutput.FULL;  ReportOutput.TERSE is handled above under content='controller_start'
-            # MODIFIED 3/29/21 OLD:
             if report_output in {ReportOutput.FULL, ReportOutput.USE_PREFS}:
-            # # MODIFIED 3/29/21 NEW:
-            # if self._report_output in {ReportOutput.FULL, ReportOutput.USE_PREFS}:
-            # MODIFIED 3/29/21 END
-            # if trial_report_type is ReportOutput.FULL and self._report_simulations is ReportSimulations.ON:
-            # if trial_report_type is ReportOutput.FULL and self._report_simulations is ReportSimulations.ON:
 
                 features = [p.parameters.value.get(context).tolist() for p in node.input_ports if p.name != OUTCOME]
                 outcome = node.input_ports[OUTCOME].parameters.value.get(context).tolist()
@@ -1840,16 +1820,8 @@ class Report:
                         self._recorded_reports += capture.get()
 
         # Record progress after execution of outer-most Composition
-        # MODIFIED 3/28/21 OLD:
-        # if len(self._execution_stack)==1:
-        # # MODIFIED 3/28/21 NEW:
-        # if self._report_output is not ReportOutput.OFF and len(self._execution_stack)==0:
-        # # MODIFIED 3/28/21 NEWER:
-        # if ((self._report_output is not ReportOutput.OFF and len(self._execution_stack)==0)
-        #         or (self._rich_progress.tasks[0].completed and not self._simulating)):
-        # # MODIFIED 3/28/21 NEWEST:
-        if (self._report_output is not ReportOutput.OFF or (len(self._execution_stack)<=1 and not self._simulating)):
-        # MODIFIED 3/28/21 END
+        if (self._report_output is not ReportOutput.OFF
+                or (len(self._execution_stack)<=1 and not self._simulating)):
 
             if report_type is PROGRESS_REPORT:
                 # add progress report to any already recorded for output
