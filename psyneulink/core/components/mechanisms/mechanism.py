@@ -2534,6 +2534,8 @@ class Mechanism_Base(Mechanism):
 
         # REPORT EXECUTION
 
+        # Generate report for Mechanism if it is executed from the command line
+        #   or in a Composition while that is executing
         if (context.source == ContextFlags.COMMAND_LINE or
                 context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING)):
             from psyneulink.core.compositions.report import Report, ReportOutput, ReportParams, EXECUTE_REPORT
