@@ -2536,22 +2536,38 @@ class Mechanism_Base(Mechanism):
 
         if (context.source == ContextFlags.COMMAND_LINE or
                 context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING)):
-            from psyneulink.core.compositions.report import Report, ReportOutput, ReportParams
+            from psyneulink.core.compositions.report import Report, ReportOutput, ReportParams, EXECUTE_REPORT
             # Use report_output and report_params options passed to execute from Composition or command line;
             # otherwise try to get from Mechanism's reportOutputPref
             report_output = report_output or next((pref for pref in convert_to_list(self.prefs.reportOutputPref)
                                                    if isinstance(pref, ReportOutput)), ReportOutput.OFF)
             report_params = report_params or next((pref for pref in convert_to_list(self.prefs.reportOutputPref)
                                                    if isinstance(pref, ReportParams)), ReportParams.OFF)
-            with Report(self, context=context) as report:
-                report.report_output(caller=self,
-                                     report_num=output_report,
-                                     scheduler=None,
-                                     report_output=report_output,
-                                     report_params=report_params,
-                                     content='node',
-                                     context=context,
-                                     node=self)
+            # # MODIFIED 3/29/21 OLD:
+            # with Report(self, context=context) as report:
+            #     report.report_output(caller=self,
+            #                          report_num=output_report,
+            #                          scheduler=None,
+            #                          report_output=report_output,
+            #                          report_params=report_params,
+            #                          content='node',
+            #                          context=context,
+            #                          node=self)
+            # MODIFIED 3/29/21 NEW:
+            with Report(self,
+                        report_output=report_output,
+                        report_params=report_params,
+                        context=context) as report:
+                report(self,
+                       EXECUTE_REPORT,
+                       report_num=output_report,
+                       scheduler=None,
+                       # report_output=report_output,
+                       report_params=report_params,
+                       content='node',
+                       context=context,
+                       node=self)
+            # MODIFIED 3/29/21 END
 
         return value
 

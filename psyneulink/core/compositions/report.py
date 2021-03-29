@@ -140,10 +140,10 @@ from typing import Union, Optional
 
 import numpy as np
 from rich import print, box
+from rich.color import Color
 from rich.console import Console, RenderGroup
 from rich.padding import Padding
 from rich.panel import Panel
-from rich.color import Color
 from rich.progress import Progress as RichProgress
 
 from psyneulink.core.globals.context import Context
@@ -894,7 +894,7 @@ class Report:
                       caller,
                       report_num:int,
                       scheduler,
-                      report_output:ReportOutput,
+                      # report_output:Optional[ReportOutput]=None,
                       report_params:list,
                       content:str,
                       context:Context,
@@ -924,10 +924,10 @@ class Report:
             specifies Composition `Scheduler` used to determine the `TIME_STEP <TimeScale.TIME_STEP>` of the current
             execution.
 
-        report_output : ReportOutput
-            conveys `ReportOutput` option specified in the **report_output** argument of the call to a Composition's
-            `execution method <Composition_Execution_Method>` or a Mechanism's `execute <Mechanism_Base.execute>`
-            method.
+        # report_output : ReportOutput
+        #     conveys `ReportOutput` option specified in the **report_output** argument of the call to a Composition's
+        #     `execution method <Composition_Execution_Method>` or a Mechanism's `execute <Mechanism_Base.execute>`
+        #     method.
 
         report_params : [ReportParams]
             conveys `ReportParams` option(s) specified in the **report_params** argument of the call to a Composition's
@@ -943,22 +943,28 @@ class Report:
 
         nodes_to_report : bool : default False
             specifies whether there are any nodes to report in current execution;  used to determine
-            whether to generate a heading (if report_output = ReportOutput.TERSE mode) or `rich Panel
-            <https://rich.readthedocs.io/en/stable/panel.html>`_ (if report_output = ReportOutput.TERSE mode)
+            whether to generate a heading (if self._report_output = ReportOutput.TERSE mode) or `rich Panel
+            <https://rich.readthedocs.io/en/stable/panel.html>`_ (if self._report_output = ReportOutput.TERSE mode)
             in the output report.
 
         node : Composition or Mechanism : default None
             specifies `node <Composition_Nodes>` for which output is being reported.
         """
 
-        # if report_num is None or report_output is ReportOutput.OFF:
-        if report_output is ReportOutput.OFF:
+        if report_num is None or self._report_output is ReportOutput.OFF:
             return
 
         self._context = context
         # FIX: ASSIGN SCHEDULE IF IT IS NONE (i.e., FROM MECHANISM):  GET IT FROM LATEST COMP ON STACK
 
         # Determine report type and relevant parameters ----------------------------------------------------------------
+
+        # Assign report_output as default for trial_report_type and node_report_type...
+        # # MODIFIED 3/29/21 OLD:
+        # trial_report_type = node_report_type = report_output
+        # MODIFIED 3/29/21 NEW:
+        trial_report_type = node_report_type = report_output = self._report_output
+        # MODIFIED 3/29/21 END
 
         # Get ReportOutputPref for node and whether it is a controller
         if node:
@@ -969,9 +975,6 @@ class Report:
             else:
                 is_controller = False
 
-        # Assign report_output as default for trial_report_type and node_report_type...
-        trial_report_type = node_report_type = report_output
-
         # then try to get them from caller, based on whether it is a Mechanism or Composition
         from psyneulink.core.compositions.composition import Composition
         from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -979,12 +982,20 @@ class Report:
         if isinstance(caller, Mechanism):
             if context.source & ContextFlags.COMPOSITION:
                 output_report_owner = context.composition
+                # MODIFIED 3/29/21 OLD:
                 trial_report_type=report_output
+                # # MODIFIED 3/29/21 NEW:
+                # trial_report_type=self._report_output
+                # MODIFIED 3/29/21 END
             # FULL output reporting doesn't make sense for a Mechanism, since it includes trial info, so enforce TERSE
             else:
                 trial_report_type = None
             # If USE_PREFS is specified by user, then assign output format to Mechanism's reportOutputPref
+            # MODIFIED 3/29/21 OLD:
             if report_output is ReportOutput.USE_PREFS:
+            # # MODIFIED 3/29/21 NEW:
+            # if self._report_output is ReportOutput.USE_PREFS:
+            # MODIFIED 3/29/21 END
                 node_report_type = node_pref
                 if node_pref is ReportOutput.OFF:
                     return
@@ -1247,7 +1258,11 @@ class Report:
         elif content == 'controller_end':
 
             # Only deal with ReportOutput.FULL;  ReportOutput.TERSE is handled above under content='controller_start'
+            # MODIFIED 3/29/21 OLD:
             if report_output in {ReportOutput.FULL, ReportOutput.USE_PREFS}:
+            # # MODIFIED 3/29/21 NEW:
+            # if self._report_output in {ReportOutput.FULL, ReportOutput.USE_PREFS}:
+            # MODIFIED 3/29/21 END
             # if trial_report_type is ReportOutput.FULL and self._report_simulations is ReportSimulations.ON:
             # if trial_report_type is ReportOutput.FULL and self._report_simulations is ReportSimulations.ON:
 
