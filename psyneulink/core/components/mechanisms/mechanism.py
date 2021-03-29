@@ -2534,12 +2534,15 @@ class Mechanism_Base(Mechanism):
 
         # REPORT EXECUTION
 
-        # Generate report for Mechanism if it is executed from the command line
-        #   or in a Composition while that is executing
-        if (context.source == ContextFlags.COMMAND_LINE or
-                context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING)):
+        # Generate report for Mechanism if it is:
+        #   - executed on its own (i.e., from the command line, not in a Composition)
+        #   - or in a Composition while that is executing and has passed it an output_report
+        #     (the latter excludes CIMs [not reported] and controllers [reporting handled directly]
+        if ((context.source == ContextFlags.COMMAND_LINE and not context.composition) or
+                (context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING)
+                 and output_report is not None)):
             from psyneulink.core.compositions.report import Report, ReportOutput, ReportParams, EXECUTE_REPORT
-            # Use report_output and report_params options passed to execute from Composition or command line;
+            # Use any report_output and report_params options passed to execute from command line;
             # otherwise try to get from Mechanism's reportOutputPref
             report_output = report_output or next((pref for pref in convert_to_list(self.prefs.reportOutputPref)
                                                    if isinstance(pref, ReportOutput)), ReportOutput.OFF)

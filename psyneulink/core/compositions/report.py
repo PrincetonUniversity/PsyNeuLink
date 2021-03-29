@@ -949,7 +949,9 @@ class Report:
             specifies `node <Composition_Nodes>` for which output is being reported.
         """
 
-        if report_num is None or self._report_output is ReportOutput.OFF:
+        # if report_num is None or self._report_output is ReportOutput.OFF:
+        #     return
+        if self._report_output is ReportOutput.OFF:
             return
 
         self._context = context
