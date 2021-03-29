@@ -8537,6 +8537,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Report controller execution after executing simulations
             #    so it includes the results for ReportOutput.FULL
             report(self,
+                   # [RUN_REPORT, PROGRESS_REPORT],
                    RUN_REPORT,
                    report_num=output_report,
                    scheduler=scheduler,

@@ -141,11 +141,13 @@ class TestReport():
         b.reportOutputPref=ReportOutput.ON
         c.reportOutputPref=ReportOutput.FULL
 
-        comp.run(report_output=ReportOutput.TERSE, report_to_devices=ReportDevices.DIVERT)
+        comp.run(report_output=ReportOutput.TERSE,
+                 report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
         expected_output = '\'\\nExecution of COMP:\\n    COMP TRIAL 0====================\\n    Time Step 0 ---------\\n      a executed\\n    Time Step 1 ---------\\n      b executed\\n    Time Step 2 ---------\\n      c executed\\n\''
         assert repr(actual_output) == expected_output
 
+        # Test Composition.run()
         comp.run(report_output=ReportOutput.TERSE,
                  report_progress=ReportProgress.ON,
                  report_to_devices=ReportDevices.DIVERT)
@@ -162,7 +164,7 @@ class TestReport():
                  report_progress=ReportProgress.ON,
                  report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
-        expected_output = '\nExecution of COMP:\n  COMP TRIAL 0====================\n    Time Step 0 ---------\n    Time Step 1 ---------\n      b executed\n    Time Step 2 ---------\n╭───── c ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\nCOMP: Executed 1 of 1 trials\n'
+        expected_output = '\nExecution of COMP:\n    COMP TRIAL 0====================\n    Time Step 0 ---------\n    Time Step 1 ---------\n      b executed\n    Time Step 2 ---------\n╭───── c ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\nCOMP: Executed 1 of 1 trials\n'
         assert actual_output == expected_output
 
         comp.run(report_output=ReportOutput.FULL, report_to_devices=ReportDevices.DIVERT)
@@ -179,28 +181,30 @@ class TestReport():
 
         # Run these tests after ones calling run() above to avoid having to reset trial counter,
         # which increments after calls to execute()
-        comp.execute(report_output=ReportOutput.TERSE, report_to_devices=ReportDevices.DIVERT)
+        comp.execute(report_output=ReportOutput.TERSE,
+                     report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
-        expected_output = '\'\\nExecution of COMP:\\n  COMP TRIAL 0====================\\n    Time Step 0 ---------\\n      a executed\\n    Time Step 1 ---------\\n      b executed\\n    Time Step 2 ---------\\n      c executed\\n\''
+        expected_output = '\'\\nExecution of COMP:\\n    COMP TRIAL 0====================\\n    Time Step 0 ---------\\n      a executed\\n    Time Step 1 ---------\\n      b executed\\n    Time Step 2 ---------\\n      c executed\\n\''
         assert repr(actual_output) == expected_output
 
+        # Test Composition.execute()
         comp.execute(report_output=ReportOutput.TERSE,
                      report_progress=ReportProgress.ON,
                      report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
-        expected_output = '\'\\nExecution of COMP:\\n  COMP TRIAL 1====================\\n    Time Step 0 ---------\\n      a executed\\n    Time Step 1 ---------\\n      b executed\\n    Time Step 2 ---------\\n      c executed\\nCOMP: Executed 1 of 1 trials\\n\''
+        expected_output = '\'\\nExecution of COMP:\\n    COMP TRIAL 1====================\\n    Time Step 0 ---------\\n      a executed\\n    Time Step 1 ---------\\n      b executed\\n    Time Step 2 ---------\\n      c executed\\nCOMP: Executed 1 of 1 trials\\n\''
         assert repr(actual_output) == expected_output
 
         comp.execute(report_output=ReportOutput.USE_PREFS, report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
-        expected_output = '\'\\nExecution of COMP:\\n  COMP TRIAL 2====================\\n    Time Step 0 ---------\\n    Time Step 1 ---------\\n      b executed\\n    Time Step 2 ---------\\n╭───── c ─────╮\\n│ input: 0.0  │\\n│ output: 0.0 │\\n╰─────────────╯\\n\''
+        expected_output = '\'\\nExecution of COMP:\\n    COMP TRIAL 2====================\\n    Time Step 0 ---------\\n    Time Step 1 ---------\\n      b executed\\n    Time Step 2 ---------\\n╭───── c ─────╮\\n│ input: 0.0  │\\n│ output: 0.0 │\\n╰─────────────╯\\n\''
         assert repr(actual_output) == expected_output
 
         comp.execute(report_output=ReportOutput.USE_PREFS,
                      report_progress=ReportProgress.ON,
                      report_to_devices=ReportDevices.DIVERT)
         actual_output = comp.rich_diverted_reports
-        expected_output = '\nExecution of COMP:\n  COMP TRIAL 3====================\n    Time Step 0 ---------\n    Time Step 1 ---------\n      b executed\n    Time Step 2 ---------\n╭───── c ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\nCOMP: Executed 1 of 1 trials\n'
+        expected_output = '\nExecution of COMP:\n    COMP TRIAL 3====================\n    Time Step 0 ---------\n    Time Step 1 ---------\n      b executed\n    Time Step 2 ---------\n╭───── c ─────╮\n│ input: 0.0  │\n│ output: 0.0 │\n╰─────────────╯\nCOMP: Executed 1 of 1 trials\n'
         assert actual_output == expected_output
 
         comp.execute(report_output=ReportOutput.FULL, report_to_devices=ReportDevices.DIVERT)

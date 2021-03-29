@@ -1774,7 +1774,8 @@ class Report:
                                   advance=1,
                                   refresh=True)
 
-        if self._report_progress is not ReportProgress.OFF:
+        #  FIX: NEED COMMENT ON WHY THIS IS NEEDED
+        if self._report_output is ReportOutput.OFF or self._report_progress is ReportProgress.OFF:
             self._print_and_record_reports(PROGRESS_REPORT, outer_comp=caller)
 
     def _print_and_record_reports(self,
