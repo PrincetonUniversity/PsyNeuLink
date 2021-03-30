@@ -7455,10 +7455,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                animate=animate,
                                execution_mode=execution_mode,
                                skip_initialization=True,
-                               report_params=report._report_params,
-                               report_progress=report._report_progress,
-                               report_simulations=report._report_simulations,
-                               report_to_devices=report._report_to_devices
                                )
             context.remove_flag(ContextFlags.SIMULATION_MODE)
             context.execution_phase = ContextFlags.CONTROL
@@ -8437,7 +8433,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    EXECUTE_REPORT,
                    report_num=output_report,
                    scheduler=scheduler,
-                   report_params=report_params,
                    content='run_start',
                    context=context)
 
@@ -8476,9 +8471,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             runtime_params=runtime_params,
                                             skip_initialization=True,
                                             execution_mode=execution_mode,
-                                            report_params=report_params,
-                                            report_progress=report_progress,
-                                            report_simulations=report_simulations,
                                             report=report,
                                             output_report=output_report
                                             )
@@ -8526,7 +8518,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     _comp_ex=_comp_ex,
                     report=report,
                     report_num=output_report,
-                    report_params=report_params,
                     context=context
                 )
 
@@ -8537,7 +8528,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    RUN_REPORT,
                    report_num=output_report,
                    scheduler=scheduler,
-                   report_params=report_params,
                    content='run_end',
                    context=context,
                    node=self)
@@ -8737,7 +8727,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             _comp_ex=False,
                             report=None,
                             report_num=None,
-                            report_params=None,
                             context=None
                             ):
         execution_scheduler = context.composition.scheduler
@@ -8760,7 +8749,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        EXECUTE_REPORT,
                        report_num=report_num,
                        scheduler=execution_scheduler,
-                       report_params=report_params,
                        content='controller_start',
                        context=context,
                        node=self.controller)
@@ -8786,7 +8774,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        CONTROLLER_REPORT,
                        report_num=report_num,
                        scheduler=execution_scheduler,
-                       report_params=report_params,
                        content='controller_end',
                        context=context,
                        node=self.controller)
@@ -8925,7 +8912,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     report(self,
                            EXECUTE_REPORT,
                            report_num=output_report,
-                           report_params=report_params,
                            scheduler=execution_scheduler,
                            content='execute_start',
                            context=context
@@ -9176,7 +9162,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         _comp_ex=_comp_ex,
                         report=report,
                         report_num=output_report,
-                        report_params=report_params,
                         context=context
                     )
             elif self.controller_time_scale == TimeScale.TRIAL:
@@ -9186,7 +9171,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     _comp_ex=_comp_ex,
                     report=report,
                     report_num=output_report,
-                    report_params=report_params,
                     context=context
                 )
 
@@ -9198,7 +9182,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    EXECUTE_REPORT,
                    report_num=output_report,
                    scheduler=execution_scheduler,
-                   report_params=report_params,
                    content='trial_start',
                    context=context
                    )
@@ -9222,7 +9205,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     _comp_ex=_comp_ex,
                     report=report,
                     report_num=output_report,
-                    report_params=report_params,
                     context=context
                 )
 
@@ -9261,7 +9243,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             _comp_ex=_comp_ex,
                             report=report,
                             report_num=output_report,
-                            report_params=report_params,
                             context=context
                         )
                     next_pass_after += 1
@@ -9276,7 +9257,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             _comp_ex=_comp_ex,
                             report=report,
                             report_num=output_report,
-                            report_params=report_params,
                             context=context
                         )
                     next_pass_before += 1
@@ -9291,7 +9271,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         _comp_ex=_comp_ex,
                         report=report,
                         report_num=output_report,
-                        report_params=report_params,
                         context=context
                     )
 
@@ -9316,7 +9295,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        EXECUTE_REPORT,
                        report_num=output_report,
                        scheduler=execution_scheduler,
-                       report_params=report_params,
                        content='time_step_start',
                        context=context,
                        nodes_to_report=True)
@@ -9387,7 +9365,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     for port in node.input_ports:
                                         port._update(context=context)
                                 node.execute(context=mech_context,
-                                             report_params=report_params,
                                              output_report=output_report,
                                              runtime_params=execution_runtime_params,
                                              )
@@ -9452,8 +9429,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if len(node.parameter_CIM.afferents) == 0 else \
                             pnlvm.ExecutionMode.Python
                         ret = node.execute(context=context,
-                                           report_params=report_params,
-                                           report_progress=report_progress,
                                            execution_mode=nested_execution_mode)
 
                         # Get output info from nested execution
@@ -9471,7 +9446,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                EXECUTE_REPORT,
                                report_num=output_report,
                                scheduler=execution_scheduler,
-                               report_params=report_params,
                                content='nested_comp',
                                context=context,
                                node=node)
@@ -9511,7 +9485,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        EXECUTE_REPORT,
                        report_num=output_report,
                        scheduler=execution_scheduler,
-                       report_params=report_params,
                        content='time_step_end',
                        context=context,
                        nodes_to_report=nodes_to_report)
@@ -9523,7 +9496,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         _comp_ex=_comp_ex,
                         report=report,
                         report_num=output_report,
-                        report_params=report_params,
                         context=context
                     )
 
@@ -9553,7 +9525,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     _comp_ex=_comp_ex,
                     report=report,
                     report_num=output_report,
-                    report_params=report_params,
                     context=context
                 )
 
@@ -9580,7 +9551,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    [EXECUTE_REPORT, PROGRESS_REPORT],
                    report_num=output_report,
                    scheduler=execution_scheduler,
-                   report_params=report_params,
                    content='trial_end',
                    context=context)
             # # FIX: 3/28/21 ??MOVE TO VERY END?
@@ -9597,7 +9567,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     _comp_ex=_comp_ex,
                     report=report,
                     report_num=output_report,
-                    report_params=report_params,
                     context=context
                 )
 
@@ -9607,7 +9576,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        EXECUTE_REPORT,
                        report_num=output_report,
                        scheduler=execution_scheduler,
-                       report_params=report_params,
                        content='execute_end',
                        context=context)
 

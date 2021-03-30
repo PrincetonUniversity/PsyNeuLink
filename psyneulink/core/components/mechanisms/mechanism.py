@@ -2556,7 +2556,6 @@ class Mechanism_Base(Mechanism):
                        EXECUTE_REPORT,
                        report_num=output_report,
                        scheduler=None,
-                       report_params=report_params,
                        content='node',
                        context=context,
                        node=self)

@@ -856,6 +856,9 @@ class Report:
         if 'context' in kwargs:
             context = kwargs['context']
 
+        if not 'report_params' in kwargs:
+            kwargs['report_params']=self._report_params
+
         simulation_mode = None
         from psyneulink.core.compositions.composition import Composition
         if isinstance(caller, Composition) or context.source == ContextFlags.COMPOSITION:
@@ -1175,7 +1178,7 @@ class Report:
                                                          input_val=node.get_input_values(context),
                                                          output_val=node.output_port.parameters.value._get(context),
                                                          report_output=node_report_type,
-                                                         report_params=report_params,
+                                                         # report_params=report_params,
                                                          trial_num=trial_num,
                                                          is_controller=is_controller,
                                                          )
@@ -1302,7 +1305,7 @@ class Report:
                               input_val:Optional[np.ndarray]=None,
                               output_val:Optional[np.ndarray]=None,
                               report_output=ReportOutput.USE_PREFS,
-                              report_params:ReportParams=ReportParams.OFF,
+                              # report_params:ReportParams=ReportParams.OFF,
                               trial_num:Optional[int]=None,
                               is_controller=False
                               ) -> Panel:
@@ -1349,6 +1352,7 @@ class Report:
         """
 
         context = self._context
+        report_params = self._report_params
 
         indent = '  '
         if is_controller:
