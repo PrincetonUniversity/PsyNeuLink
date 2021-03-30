@@ -604,7 +604,16 @@ class BayesGLM(LearningFunction):
 
         # online update rules as per the given reference
         Lambda_n = (predictors.T @ predictors) + Lambda_prior
-        mu_n = np.linalg.inv(Lambda_n) @ ((predictors.T @ dependent_vars) + (Lambda_prior @ mu_prior))
+        # # MODIFIED 3/30/21 OLD:
+        # mu_n = np.linalg.inv(Lambda_n) @ ((predictors.T @ dependent_vars) + (Lambda_prior @ mu_prior))
+        # MODIFIED 3/30/21 NEW:
+        try:
+            Lambda_n_inv = np.linalg.inv(Lambda_n)
+        except np.linalg.LinAlgError:
+            Lambda_n_inv = Lambda_n
+        mu_n = Lambda_n_inv @ ((predictors.T @ dependent_vars) + (Lambda_prior @ mu_prior))
+        # MODIFIED 3/30/21 END
+
         gamma_shape_n = gamma_shape_prior + dependent_vars.shape[1]
         gamma_size_n = gamma_size_prior + (dependent_vars.T @ dependent_vars) \
             + (mu_prior.T @ Lambda_prior @ mu_prior) \
@@ -630,7 +639,15 @@ class BayesGLM(LearningFunction):
         random_state = self._get_current_parameter_value('random_state', context)
 
         phi = random_state.gamma(gamma_shape_n / 2, gamma_size_n / 2)
-        return random_state.multivariate_normal(mu_n.reshape(-1,), phi * np.linalg.inv(Lambda_n))
+        # # MODIFIED 3/30/21 OLD:
+        # return random_state.multivariate_normal(mu_n.reshape(-1,), phi * np.linalg.inv(Lambda_n))
+        # MODIFIED 3/30/21 NEW:
+        try:
+            Lambda_n_inv = np.linalg.inv(Lambda_n)
+        except np.linalg.LinAlgError:
+            Lambda_n_inv = Lambda_n
+        return random_state.multivariate_normal(mu_n.reshape(-1,), phi * Lambda_n_inv)
+        # MODIFIED 3/30/21 END
 
 
 class Kohonen(LearningFunction):  # -------------------------------------------------------------------------------
