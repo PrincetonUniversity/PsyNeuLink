@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.8.7.1+2.gf5f5a01503 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.8.7.1+3.gc44a230e4f documentation</title>
   
 
   
@@ -96,7 +96,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+2
+                  0.8.7.1+3
                 </div>
               
             
@@ -4078,7 +4078,7 @@ details and <a class="reference internal" href="Report.html#psyneulink.core.comp
 
 <dl class="py method">
 <dt id="psyneulink.core.compositions.composition.Composition.execute">
-<code class="sig-name descname">execute</code><span class="sig-paren">(</span><em class="sig-param">inputs=None</em>, <em class="sig-param">scheduler=None</em>, <em class="sig-param">termination_processing=None</em>, <em class="sig-param">call_before_time_step=None</em>, <em class="sig-param">call_before_pass=None</em>, <em class="sig-param">call_after_time_step=None</em>, <em class="sig-param">call_after_pass=None</em>, <em class="sig-param">reset_stateful_functions_to=None</em>, <em class="sig-param">context=None</em>, <em class="sig-param">base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em>, <em class="sig-param">clamp_input='soft_clamp'</em>, <em class="sig-param">runtime_params=None</em>, <em class="sig-param">skip_initialization=False</em>, <em class="sig-param">execution_mode=&lt;ExecutionMode.Python: 0&gt;</em>, <em class="sig-param">report_output=&lt;ReportOutput.OFF: 0&gt;</em>, <em class="sig-param">report_params=&lt;ReportParams.OFF: 0&gt;</em>, <em class="sig-param">report_progress=&lt;ReportProgress.OFF: 0&gt;</em>, <em class="sig-param">report_simulations=&lt;ReportSimulations.OFF: 0&gt;</em>, <em class="sig-param">report_to_devices=None</em>, <em class="sig-param">report=None</em>, <em class="sig-param">output_report=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.execute" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">execute</code><span class="sig-paren">(</span><em class="sig-param">inputs=None</em>, <em class="sig-param">scheduler=None</em>, <em class="sig-param">termination_processing=None</em>, <em class="sig-param">call_before_time_step=None</em>, <em class="sig-param">call_before_pass=None</em>, <em class="sig-param">call_after_time_step=None</em>, <em class="sig-param">call_after_pass=None</em>, <em class="sig-param">reset_stateful_functions_to=None</em>, <em class="sig-param">context=None</em>, <em class="sig-param">base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em>, <em class="sig-param">clamp_input='soft_clamp'</em>, <em class="sig-param">runtime_params=None</em>, <em class="sig-param">skip_initialization=False</em>, <em class="sig-param">execution_mode=&lt;ExecutionMode.Python: 0&gt;</em>, <em class="sig-param">report_output=&lt;ReportOutput.OFF: 0&gt;</em>, <em class="sig-param">report_params=&lt;ReportParams.OFF: 0&gt;</em>, <em class="sig-param">report_progress=&lt;ReportProgress.OFF: 0&gt;</em>, <em class="sig-param">report_simulations=&lt;ReportSimulations.OFF: 0&gt;</em>, <em class="sig-param">report_to_devices=None</em>, <em class="sig-param">report=None</em>, <em class="sig-param">report_num=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Passes inputs to any <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> receiving inputs directly from the user (via the “inputs”
 argument) then coordinates with the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> to execute sets of Nodes that are eligible to execute until
 <a class="reference internal" href="Scheduler.html#scheduler-termination-conditions"><span class="std std-ref">termination conditions</span></a> are met.</p>
