@@ -746,7 +746,7 @@ class Report:
             # bar will grow and grow and never be deallocated until the end of program.
             Report._destroy()
 
-    def start_report(self, comp, num_trials, context) -> int:
+    def start_report(self, comp, num_trials, context) -> Optional[int]:
         """
         Initialize a OutputReport for Composition
 
@@ -765,8 +765,9 @@ class Report:
         Returns
         -------
 
-        OutputReport id : int
-            id is stored in `output_reports <Report.output_reports>`.
+        OutputReport id : int or None
+            returns id (also stored in `output_reports <Report.output_reports>`) if a report will be generated;
+            returns None otherwise (e.g., for simulation with ReportSimulations.OFF
         """
 
         if not comp:
@@ -949,8 +950,6 @@ class Report:
             specifies `node <Composition_Nodes>` for which output is being reported.
         """
 
-        # if report_num is None or self._report_output is ReportOutput.OFF:
-        #     return
         if self._report_output is ReportOutput.OFF:
             return
 
@@ -1275,8 +1274,6 @@ class Report:
 
         elif content in {'execute_end', 'run_end'}:
 
-            # outer_comp = self._execution_stack.pop()
-
             if len(self._execution_stack) == 0 and trial_report_type is not ReportOutput.OFF:
 
                 if trial_report_type is ReportOutput.FULL:
@@ -1294,25 +1291,6 @@ class Report:
 
                 if self._report_progress is ReportProgress.ON:
                     self._print_and_record_reports(PROGRESS_REPORT, output_report, outer_comp)
-
-        # elif content == 'run_end':
-        #
-        #     outer_comp = self._execution_stack.pop()
-        #
-        #     if len(self._execution_stack) == 0 and trial_report_type is not ReportOutput.OFF:
-        #
-        #         # if trial_report_type is not ReportOutput.TERSE:
-        #         if trial_report_type is ReportOutput.FULL:
-        #             # For ReportOutput.TERSE, report is generated at beginning of run prior to execution
-        #             title = f'[bold{execution_panel_color}]EXECUTION OF {node.name}[/] '
-        #             output_report.run_report = Padding.indent(Panel(RenderGroup(*output_report.run_report),
-        #                                                             box=execution_panel_box,
-        #                                                             border_style=execution_panel_color,
-        #                                                             title=title,
-        #                                                             padding=self.padding_lines,
-        #                                                             expand=False),
-        #                                                       self.padding_indent)
-        #         self._print_and_record_reports(RUN_REPORT, output_report, outer_comp)
 
         else:
             assert False, f"Bad 'content' argument in call to Report.report_output() for {caller.name}: {content}."
