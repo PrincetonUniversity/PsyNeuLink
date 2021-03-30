@@ -145,7 +145,7 @@ from psyneulink.library.components.mechanisms.processing.objective.comparatormec
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.compositions.report \
-    import ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices
+    import ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices, EXECUTE_REPORT
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import SOFT_CLAMP
 from psyneulink.core.scheduling.scheduler import Scheduler
@@ -484,7 +484,7 @@ class AutodiffComposition(Composition):
                 report_simulations:ReportSimulations=ReportSimulations.OFF,
                 report_to_devices:ReportDevices=None,
                 report=None,
-                output_report=None,
+                report_num=None,
                 ):
         self._assign_execution_ids(context)
         context.composition = self
@@ -519,10 +519,7 @@ class AutodiffComposition(Composition):
 
             scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
-            # MODIFIED 3/2/21 NEW:  FIX: CAUSES CRASH... NEEDS TO BE FIXED
-            # progress.report_output(self, output_report, scheduler, show_output, 'trial', context)
-            # MODIFIED 3/2/21 END
-            report.report_progress(self, output_report, context)
+            report(self, EXECUTE_REPORT, report_num=report_num, scheduler=scheduler, content='trial', context=context)
 
             return output
 
@@ -539,10 +536,6 @@ class AutodiffComposition(Composition):
                                                         clamp_input=clamp_input,
                                                         runtime_params=runtime_params,
                                                         execution_mode=execution_mode,
-                                                        report_progress=report_progress,
-                                                        report_output=report_output,
-                                                        report_simulations=False,
-                                                        report_to_devices=None,
                                                         report=None,
                                                         )
 

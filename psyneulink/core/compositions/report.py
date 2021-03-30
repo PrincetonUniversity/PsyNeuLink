@@ -179,15 +179,19 @@ node_panel_box = box.ROUNDED
 params_panel_color = 'orange1'
 params_panel_box = box.ROUNDED
 
+# IMPLEMENTATION NOTE:
+# Use of RGB tuples for colors is to provide support for automatic spectral coloring
+# (e.g., assignment of root color based on condition, and progressive change of hue with depth of nesting) - TBI
 # DESIGN PATTERN:
 # <xxx>_color = (int, int, int)
-# Make this a local function:
+# Implement the following in a local function:
 # local_color = Color.from_rgb(*(<xxx>_color[0] += or -= based on depth or condition
 #                                <xxx>_color[1] += or -= based on depth or condition
 #                                <xxx>_color[2] += or -= based on depth or condition
 #                                )
 #                              )
 # Assign color in string as f'[{local_color}]<fill in text here>'
+# Then replace assignments below with just RGB tuples
 
 # TIME_SETP Panel
 # default
@@ -559,6 +563,13 @@ class Report:
         depth of nesting of executions, including `nested compositions <Composition_Nested>` and any `controllers
         <Composition_Controller>` currently executing `simulations <OptimizationControlMechanism_Execution>`.
 
+    _outermost_comp : Composition
+        the Composition that instantiated the Report in the outermost context of execution, and on which
+        output and progress reports are stored by `_print_and_record_reports <Report._print_and_record_reports>`
+        in the Compositon's `rich_diverted_reports <Composition.rich_diverted_reports>` and `recorded_reports
+        <Composition.recorded_reports>` attributes if the `rich_divert <Report.rich_divert>`
+        and/or `record_reports <Report.record_reports>` are set, respectively.
+
     _nested_comps : bool : default False
         True if there are any `nested compositions <Composition_Nested>`
         in `_execution_stack <Report._execution_stack>`.
@@ -661,6 +672,7 @@ class Report:
                              and (cls._rich_console or cls._rich_divert or cls._record_reports))
             cls._use_pnl_view = ReportDevices.PNL_VIEW in cls._report_to_devices
 
+            cls._outermost_comp = caller
             cls._execution_stack = []
             cls._trial_header_stack = []
 
@@ -790,10 +802,7 @@ class Report:
         else:
             run_mode = DEFAULT
 
-        # MODIFIED 3/28/21 NEW:
-        #  FIX: THE FOLLOWING MAY SUPERCEDE STUFF THAT IS NOW REDUNDANT BELOW
         if self._simulating and self._report_simulations is not ReportSimulations.ON:
-        # MODIFIED 3/28/21 END
             return
 
         if run_mode is SIMULATION:
@@ -847,8 +856,6 @@ class Report:
                  ) -> None:
         reports = convert_to_list(reports)
 
-        outer_comp = None
-
         content = None
         if 'content' in kwargs:
             content = kwargs['content']
@@ -876,9 +883,9 @@ class Report:
                 self._execution_stack.append(caller)
 
             elif content in {'execute_end', 'run_end'}:
-                outer_comp = self._execution_stack.pop()
+                self._execution_stack.pop()
 
-            self.report_output(caller, **kwargs, outer_comp=outer_comp)
+            self.report_output(caller, **kwargs)
 
             if content is 'trial_end':
                 self._execution_stack.pop()
@@ -897,7 +904,6 @@ class Report:
                       context:Context,
                       nodes_to_report:bool=False,
                       node=None,
-                      outer_comp=None
                       ) -> None:
         """
         Report output of execution in call to `execute <Composition.execute>` method of a `Composition` or a
@@ -942,7 +948,6 @@ class Report:
             return
 
         self._context = context
-        # FIX: ASSIGN SCHEDULE IF IT IS NONE (i.e., FROM MECHANISM):  GET IT FROM LATEST COMP ON STACK
 
         # Determine report type and relevant parameters ----------------------------------------------------------------
 
@@ -994,8 +999,6 @@ class Report:
             # Track simulation count within each simulation set:
             if content == 'trial_start':
 
-                # FIX: SHOULDN'T POPULATE sim_str IF self._simulating IS FALSE, BUT IT IS AND NOT DOING SO CRASHES
-                # if self._simulating:
                 if self.output_reports[caller][SIMULATING]:
                     if not simulation_mode:
                         # If was simulating previously but not now in SIMULATION_MODE, then have just exited,
@@ -1245,10 +1248,10 @@ class Report:
                                                                     expand=False),
                                                               self.padding_indent)
 
-                self._print_and_record_reports(RUN_REPORT, output_report, outer_comp)
+                self._print_and_record_reports(RUN_REPORT, output_report)
 
                 if self._report_progress is ReportProgress.ON:
-                    self._print_and_record_reports(PROGRESS_REPORT, output_report, outer_comp)
+                    self._print_and_record_reports(PROGRESS_REPORT, output_report)
 
         else:
             assert False, f"Bad 'content' argument in call to Report.report_output() for {caller.name}: {content}."
@@ -1651,18 +1654,12 @@ class Report:
 
         self._context = context
 
-        # MODIFIED 3/28/21 NEW:
-        #  FIX: THE FOLLOWING MAY SUPERCEDE STUFF THAT IS NOW REDUNDANT BELOW
-        if self._report_simulations is ReportSimulations.OFF and self._simulating:
+        # Return if (nested within) a simulation and not reporting simulations
+        if self._simulating and self._report_simulations is ReportSimulations.OFF:
             return
-        # MODIFIED 3/28/21 END
-
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
         if simulation_mode:
             run_mode = SIMULATION
-            # Return if (nested within) a simulation and not reporting simulations
-            if self._report_simulations is ReportSimulations.OFF:
-                return
         else:
             run_mode = DEFAULT
 
@@ -1706,14 +1703,14 @@ class Report:
                                   advance=1,
                                   refresh=True)
 
-        #  FIX: NEED COMMENT ON WHY THIS IS NEEDED
+        #  FIX: NEED COMMENT ON WHY THIS IS NEEDED:
+        #   WITHOUT THIS, WHEN RECORD_DEVICES IS ACTIVE,
+        #        EITHER PROGRESS REPORT IS MISSING OR IT IS DUPLICATED ABOVE THE OUTPUT REPORT
         if self._report_output is ReportOutput.OFF or self._report_progress is ReportProgress.OFF:
-            self._print_and_record_reports(PROGRESS_REPORT, outer_comp=caller)
+            self._print_and_record_reports(PROGRESS_REPORT)
+        assert True
 
-    def _print_and_record_reports(self,
-                                  report_type:str,
-                                  output_report:OutputReport=None,
-                                  outer_comp=None) -> None:
+    def _print_and_record_reports(self, report_type:str, output_report:OutputReport=None) -> None:
         """
         Conveys output reporting to device specified in `_report_to_devices <Report._report_to_devices>`.
         Called by `report_output <Report.report_output>` and `report_progress <Report.report_progress>`
@@ -1728,10 +1725,6 @@ class Report:
 
         output_report : OutputReport  : default None
             OutputReport for caller[run_mode] in self.output_reports to use for reporting.
-
-        outer_comp : Composition : default None
-            outermost Composition executed, used to store reports if it is being recorded or using rich_divert
-
         """
 
         # Print and record output report as they are created (progress reports are printed by _rich_progress.console)
@@ -1768,9 +1761,9 @@ class Report:
                 if self._record_reports:
                     self._recorded_reports += progress_reports + '\n'
             if self._rich_divert:
-                outer_comp.rich_diverted_reports = self._rich_diverted_reports
+                self._outermost_comp.rich_diverted_reports = self._rich_diverted_reports
             if self._record_reports:
-                outer_comp.recorded_reports = self._recorded_reports
+                self._outermost_comp.recorded_reports = self._recorded_reports
 
     @property
     def _execution_stack_depth(self):
