@@ -8532,11 +8532,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    context=context,
                    node=self)
 
-            # if report._recorded_reports:
-            #     self.recorded_reports = report._recorded_reports
-            # if report._rich_diverted_reports:
-            #     self.rich_diverted_reports = report._rich_diverted_reports
-
             # Reset input spec for next trial
             self.parameters.input_specification._set(None, context)
 
@@ -8998,12 +8993,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                PROGRESS_REPORT,
                                report_num=report_num,
                                context=context)
-                        # # If called from the command line, get report as only this trial is run
-                        # if context.source & ContextFlags.COMMAND_LINE:
-                        #     if report._recorded_reports:
-                        #         self.recorded_reports = report._recorded_reports
-                        #     if report._rich_diverted_reports:
-                        #         self.rich_diverted_reports = report._rich_diverted_reports
 
                         self._propagate_most_recent_context(context)
                         return _comp_ex.extract_node_output(self.output_CIM)
@@ -9587,11 +9576,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        PROGRESS_REPORT,
                        report_num=report_num,
                        context=context)
-                # if context.source & ContextFlags.COMMAND_LINE:
-                #     if report._recorded_reports:
-                #         self.recorded_reports = report._recorded_reports
-                #     if report._rich_diverted_reports:
-                #         self.rich_diverted_reports = report._rich_diverted_reports
                 return _comp_ex.extract_node_output(self.output_CIM)
 
             # UPDATE TIME and RETURN ***********************************************************************************
