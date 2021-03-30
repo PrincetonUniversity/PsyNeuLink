@@ -975,21 +975,6 @@ class Report:
                 if node_pref is ReportOutput.OFF:
                     return
         elif isinstance(caller, Composition):
-            # # USE_PREFS is specified for report called by a Composition:
-            # if report_output is ReportOutput.USE_PREFS:
-            #     # If report is for execution of a node, assign its report type using its reportOutputPref:
-            #     if node:
-            #         # Get ReportOutput spec from reportOutputPref if there is one
-            #         # If None was found, assign ReportOutput.FULL as default
-            #         node_report_type = node_pref or ReportOutput.FULL
-            #         # Return if it is OFF
-            #         if node_report_type is ReportOutput.OFF:
-            #             return
-            #     # else:
-            #     #     caller_pref = next((pref for pref in convert_to_list(caller.reportOutputPref)
-            #     #                         if isinstance(pref, ReportOutput)), None)
-            #     #     if caller_pref is ReportOutput.OFF:
-            #     #         return
             output_report_owner = caller
 
         if scheduler:
@@ -1072,20 +1057,6 @@ class Report:
                     self._recorded_reports += report
             return
 
-        # elif content == 'execute_start':
-        #     if simulation_mode:
-        #         self._execution_stack.append(caller.controller)
-        #     else:
-        #         self._execution_stack.append(caller)
-        #
-        #     if trial_report_type in {ReportOutput.TERSE, ReportOutput.USE_PREFS} and not self._simulating:
-        #         # Report execution at start of run, in accord with TERSE reporting at initiation of execution
-        #         report = f'[bold {trial_panel_color}]{self._depth_indent_i}Execution of {caller.name}:[/]'
-        #         self._rich_progress.console.print(report)
-        #         if self._record_reports:
-        #             self._recorded_reports += report
-        #     return
-        #
         elif content == 'trial_start':
 
             # self._execution_stack.append(caller)
