@@ -856,9 +856,6 @@ class Report:
         if 'context' in kwargs:
             context = kwargs['context']
 
-        if not 'report_params' in kwargs:
-            kwargs['report_params']=self._report_params
-
         simulation_mode = None
         from psyneulink.core.compositions.composition import Composition
         if isinstance(caller, Composition) or context.source == ContextFlags.COMPOSITION:
@@ -896,8 +893,6 @@ class Report:
                       caller,
                       report_num:int,
                       scheduler,
-                      # report_output:Optional[ReportOutput]=None,
-                      report_params:list,
                       content:str,
                       context:Context,
                       nodes_to_report:bool=False,
@@ -925,16 +920,6 @@ class Report:
         scheduler : Scheduler
             specifies Composition `Scheduler` used to determine the `TIME_STEP <TimeScale.TIME_STEP>` of the current
             execution.
-
-        # report_output : ReportOutput
-        #     conveys `ReportOutput` option specified in the **report_output** argument of the call to a Composition's
-        #     `execution method <Composition_Execution_Method>` or a Mechanism's `execute <Mechanism_Base.execute>`
-        #     method.
-
-        report_params : [ReportParams]
-            conveys `ReportParams` option(s) specified in the **report_params** argument of the call to a Composition's
-            `execution method <Composition_Execution_Method>` or a Mechanism's `execute <Mechanism_Base.execute>`
-            method.
 
         content : str
             specifies content of current element of report;  must be: 'trial_start', 'time_step_start', 'node',
