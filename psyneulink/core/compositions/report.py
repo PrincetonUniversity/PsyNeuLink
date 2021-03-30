@@ -179,15 +179,19 @@ node_panel_box = box.ROUNDED
 params_panel_color = 'orange1'
 params_panel_box = box.ROUNDED
 
+# IMPLEMENTATION NOTE:
+# Use of RGB tuples for colors is to provide support for automatic spectral coloring
+# (e.g., assignment of root color based on condition, and progressive change of hue with depth of nesting) - TBI
 # DESIGN PATTERN:
 # <xxx>_color = (int, int, int)
-# Make this a local function:
+# Implement the following in a local function:
 # local_color = Color.from_rgb(*(<xxx>_color[0] += or -= based on depth or condition
 #                                <xxx>_color[1] += or -= based on depth or condition
 #                                <xxx>_color[2] += or -= based on depth or condition
 #                                )
 #                              )
 # Assign color in string as f'[{local_color}]<fill in text here>'
+# Then replace assignments below with just RGB tuples
 
 # TIME_SETP Panel
 # default
