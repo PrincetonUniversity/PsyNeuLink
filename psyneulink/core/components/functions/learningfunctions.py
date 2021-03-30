@@ -495,8 +495,10 @@ class BayesGLM(LearningFunction):
         variable = self.defaults.variable
         if np.array(variable).dtype != object:
             variable = np.atleast_2d(variable)
+        # MODIFIED 3/30/21 NEW:
         else:
             variable = [np.atleast_1d(i).astype(float) for i in variable]
+        # MODIFIED 3/30/21 END
 
         n = len(variable[0])
 
@@ -593,7 +595,11 @@ class BayesGLM(LearningFunction):
             params,
             context,
         )
+        # # MODIFIED 3/30/21 OLD:
+        # predictors = variable[0]
+        # MODIFIED 3/30/21 NEW:
         predictors = variable[0].astype(float)
+        # MODIFIED 3/30/21 END
         dependent_vars = variable[1].astype(float)
 
         # online update rules as per the given reference
