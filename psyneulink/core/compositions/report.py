@@ -649,7 +649,7 @@ class Report:
             # Assign option properties
             cls._report_progress = report_progress
             cls._report_output = report_output
-            cls._report_params = convert_to_list(report_params)
+            cls._report_params = report_params
             cls._reporting_enabled = report_output is not ReportOutput.OFF or cls._report_progress
             cls._report_simulations = report_simulations
             cls._rich_console = ReportDevices.CONSOLE in cls._report_to_devices
