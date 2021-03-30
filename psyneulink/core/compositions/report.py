@@ -559,6 +559,13 @@ class Report:
         depth of nesting of executions, including `nested compositions <Composition_Nested>` and any `controllers
         <Composition_Controller>` currently executing `simulations <OptimizationControlMechanism_Execution>`.
 
+    _outermost_composition : Composition
+        popped from `_execution_stack <Report._execution_stack>` at end of each `TRIAL <TimeScale.TRIAL>`
+        and used by `_print_and_record_reports <Report._print_and_record_reports>` to add report for that
+        `TRIAL <TimeScale.TRIAL>` to Composition's `rich_diverted_reports <Composition.rich_diverted_reports>`
+        and `recorded_reports <Composition.recorded_reports>` attributes if the `rich_divert <Report.rich_divert>`
+        and/or `record_reports <Report.record_reports>` is set, respectively.
+
     _nested_comps : bool : default False
         True if there are any `nested compositions <Composition_Nested>`
         in `_execution_stack <Report._execution_stack>`.
@@ -844,8 +851,6 @@ class Report:
                  ) -> None:
         reports = convert_to_list(reports)
 
-        outermost_comp = None
-
         content = None
         if 'content' in kwargs:
             content = kwargs['content']
@@ -873,12 +878,14 @@ class Report:
                 self._execution_stack.append(caller)
 
             elif content in {'execute_end', 'run_end'}:
-                outermost_comp = self._execution_stack.pop()
-
-            self.report_output(caller, **kwargs, outermost_comp=outermost_comp)
-
-            if content is 'trial_end':
                 self._execution_stack.pop()
+
+            self.report_output(caller, **kwargs)
+
+            # Cache outermost_composition at the end of each trial;
+            #   used by _print_and_record_reports to record reports
+            if content is 'trial_end':
+                self._outermost_comp = self._execution_stack.pop()
 
         # Call report_progress
         if PROGRESS_REPORT in reports:
@@ -894,7 +901,6 @@ class Report:
                       context:Context,
                       nodes_to_report:bool=False,
                       node=None,
-                      outermost_comp=None
                       ) -> None:
         """
         Report output of execution in call to `execute <Composition.execute>` method of a `Composition` or a
@@ -1239,10 +1245,10 @@ class Report:
                                                                     expand=False),
                                                               self.padding_indent)
 
-                self._print_and_record_reports(RUN_REPORT, output_report, outermost_comp)
+                self._print_and_record_reports(RUN_REPORT, output_report)
 
                 if self._report_progress is ReportProgress.ON:
-                    self._print_and_record_reports(PROGRESS_REPORT, output_report, outermost_comp)
+                    self._print_and_record_reports(PROGRESS_REPORT, output_report)
 
         else:
             assert False, f"Bad 'content' argument in call to Report.report_output() for {caller.name}: {content}."
@@ -1698,12 +1704,10 @@ class Report:
         #   WITHOUT THIS, WHEN RECORD_DEVICES IS ACTIVE,
         #        EITHER PROGRESS REPORT IS MISSING OR IT IS DUPLICATED ABOVE THE OUTPUT REPORT
         if self._report_output is ReportOutput.OFF or self._report_progress is ReportProgress.OFF:
-            self._print_and_record_reports(PROGRESS_REPORT, outermost_comp=caller)
+            self._print_and_record_reports(PROGRESS_REPORT)
+        assert True
 
-    def _print_and_record_reports(self,
-                                  report_type:str,
-                                  output_report:OutputReport=None,
-                                  outermost_comp=None) -> None:
+    def _print_and_record_reports(self, report_type:str, output_report:OutputReport=None) -> None:
         """
         Conveys output reporting to device specified in `_report_to_devices <Report._report_to_devices>`.
         Called by `report_output <Report.report_output>` and `report_progress <Report.report_progress>`
@@ -1718,10 +1722,6 @@ class Report:
 
         output_report : OutputReport  : default None
             OutputReport for caller[run_mode] in self.output_reports to use for reporting.
-
-        outermost_comp : Composition : default None
-            outermost Composition executed, used to store reports if it is being recorded or using rich_divert
-
         """
 
         # Print and record output report as they are created (progress reports are printed by _rich_progress.console)
@@ -1758,9 +1758,9 @@ class Report:
                 if self._record_reports:
                     self._recorded_reports += progress_reports + '\n'
             if self._rich_divert:
-                outermost_comp.rich_diverted_reports = self._rich_diverted_reports
+                self._outermost_comp.rich_diverted_reports = self._rich_diverted_reports
             if self._record_reports:
-                outermost_comp.recorded_reports = self._recorded_reports
+                self._outermost_comp.recorded_reports = self._recorded_reports
 
     @property
     def _execution_stack_depth(self):
