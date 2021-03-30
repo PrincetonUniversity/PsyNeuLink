@@ -597,7 +597,7 @@ class BayesGLM(LearningFunction):
         )
         # # MODIFIED 3/30/21 OLD:
         # predictors = variable[0]
-        # MODIFIED 3/30/21 NEW:
+        # MODIFIED 3/30/21 NEW:  HANDLE FAILURE OF CALL TO np.linalginv IF NOT AN ARRAY OF FLOATS
         predictors = variable[0].astype(float)
         # MODIFIED 3/30/21 END
         dependent_vars = variable[1].astype(float)
@@ -606,7 +606,7 @@ class BayesGLM(LearningFunction):
         Lambda_n = (predictors.T @ predictors) + Lambda_prior
         # # MODIFIED 3/30/21 OLD:
         # mu_n = np.linalg.inv(Lambda_n) @ ((predictors.T @ dependent_vars) + (Lambda_prior @ mu_prior))
-        # MODIFIED 3/30/21 NEW:
+        # MODIFIED 3/30/21 NEW: HANDLE SINGLUAR MATRIX ERROR
         try:
             Lambda_n_inv = np.linalg.inv(Lambda_n)
         except np.linalg.LinAlgError:
@@ -641,7 +641,7 @@ class BayesGLM(LearningFunction):
         phi = random_state.gamma(gamma_shape_n / 2, gamma_size_n / 2)
         # # MODIFIED 3/30/21 OLD:
         # return random_state.multivariate_normal(mu_n.reshape(-1,), phi * np.linalg.inv(Lambda_n))
-        # MODIFIED 3/30/21 NEW:
+        # MODIFIED 3/30/21 NEW: HANDLE SINGULAR MATRIX ERROR
         try:
             Lambda_n_inv = np.linalg.inv(Lambda_n)
         except np.linalg.LinAlgError:
