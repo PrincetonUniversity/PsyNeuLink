@@ -1134,7 +1134,6 @@ class Report:
                                                          input_val=node.get_input_values(context),
                                                          output_val=node.output_port.parameters.value._get(context),
                                                          report_output=node_report_type,
-                                                         # report_params=report_params,
                                                          trial_num=trial_num,
                                                          is_controller=is_controller,
                                                          )
@@ -1261,7 +1260,6 @@ class Report:
                               input_val:Optional[np.ndarray]=None,
                               output_val:Optional[np.ndarray]=None,
                               report_output=ReportOutput.USE_PREFS,
-                              # report_params:ReportParams=ReportParams.OFF,
                               trial_num:Optional[int]=None,
                               is_controller=False
                               ) -> Panel:
@@ -1308,7 +1306,6 @@ class Report:
         """
 
         context = self._context
-        report_params = self._report_params
 
         indent = '  '
         if is_controller:
@@ -1364,7 +1361,7 @@ class Report:
         # Render params if specified -------------------------------------------------------------------------------
 
         from psyneulink.core.components.shellclasses import Function
-        report_params = convert_to_list(report_params)
+        report_params = convert_to_list(self._report_params)
         params = {p.name: p._get(context) for p in node.parameters}
         try:
             # Check for PARAMS keyword (or 'parameters') and remove from node_prefs if there
