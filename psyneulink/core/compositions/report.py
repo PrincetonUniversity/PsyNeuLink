@@ -563,12 +563,12 @@ class Report:
         depth of nesting of executions, including `nested compositions <Composition_Nested>` and any `controllers
         <Composition_Controller>` currently executing `simulations <OptimizationControlMechanism_Execution>`.
 
-    _outermost_composition : Composition
-        popped from `_execution_stack <Report._execution_stack>` at end of each `TRIAL <TimeScale.TRIAL>`
-        and used by `_print_and_record_reports <Report._print_and_record_reports>` to add report for that
-        `TRIAL <TimeScale.TRIAL>` to Composition's `rich_diverted_reports <Composition.rich_diverted_reports>`
-        and `recorded_reports <Composition.recorded_reports>` attributes if the `rich_divert <Report.rich_divert>`
-        and/or `record_reports <Report.record_reports>` is set, respectively.
+    _outermost_comp : Composition
+        the Composition that instantiated the Report in the outermost context of execution, and on which
+        output and progress reports are stored by `_print_and_record_reports <Report._print_and_record_reports>`
+        in the Compositon's `rich_diverted_reports <Composition.rich_diverted_reports>` and `recorded_reports
+        <Composition.recorded_reports>` attributes if the `rich_divert <Report.rich_divert>`
+        and/or `record_reports <Report.record_reports>` are set, respectively.
 
     _nested_comps : bool : default False
         True if there are any `nested compositions <Composition_Nested>`
@@ -672,6 +672,7 @@ class Report:
                              and (cls._rich_console or cls._rich_divert or cls._record_reports))
             cls._use_pnl_view = ReportDevices.PNL_VIEW in cls._report_to_devices
 
+            cls._outermost_comp = caller
             cls._execution_stack = []
             cls._trial_header_stack = []
 
@@ -886,10 +887,8 @@ class Report:
 
             self.report_output(caller, **kwargs)
 
-            # Cache outermost_composition at the end of each trial;
-            #   used by _print_and_record_reports to record reports
             if content is 'trial_end':
-                self._outermost_comp = self._execution_stack.pop()
+                self._execution_stack.pop()
 
         # Call report_progress
         if PROGRESS_REPORT in reports:
