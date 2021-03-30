@@ -22,23 +22,23 @@ Functions that parameterize a function.
 
 """
 
+import types
 from collections import namedtuple
 
 import numpy as np
 import typecheck as tc
-import types
 
+from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import Function_Base, FunctionError, is_function_type
 from psyneulink.core.components.functions.transferfunctions import Logistic
-from psyneulink.core.components.component import ComponentError
+from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_FUNCTION, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
     KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, MATRIX, \
     MSE, SSE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.utilities import is_numeric, scalar_distance, get_global_seed, convert_to_np_array
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.utilities import is_numeric, scalar_distance, get_global_seed, convert_to_np_array
 
 __all__ = ['LearningFunction', 'Kohonen', 'Hebbian', 'ContrastiveHebbian',
            'Reinforcement', 'BayesGLM', 'BackPropagation', 'TDLearning',
@@ -495,6 +495,8 @@ class BayesGLM(LearningFunction):
         variable = self.defaults.variable
         if np.array(variable).dtype != object:
             variable = np.atleast_2d(variable)
+        else:
+            variable = [np.atleast_1d(i).astype(float) for i in variable]
 
         n = len(variable[0])
 
@@ -591,7 +593,7 @@ class BayesGLM(LearningFunction):
             params,
             context,
         )
-        predictors = variable[0]
+        predictors = variable[0].astype(float)
         dependent_vars = variable[1].astype(float)
 
         # online update rules as per the given reference

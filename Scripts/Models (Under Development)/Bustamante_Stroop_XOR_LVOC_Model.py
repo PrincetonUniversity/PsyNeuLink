@@ -17,19 +17,12 @@ Implements a model of the `Stroop XOR task
 using a version of the `Learned Value of Control Model
 <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006043&rev=2>`_
 """
-import importlib
 
 import numpy as np
+
 import psyneulink as pnl
-import timeit
-
-import psyneulink.core.components.functions.learningfunctions
-import psyneulink.core.components.functions.optimizationfunctions
-import psyneulink.core.components.functions.transferfunctions
-
 # from build_input import xor_dict
 from build_stimuli_VZ import xor_dict
-import csv
 
 np.random.seed(0)
 
@@ -118,7 +111,7 @@ lvoc = pnl.OptimizationControlMechanism(
     control_signals=pnl.ControlSignal(
         modulates=[(pnl.SLOPE, color_task), ('color_control', word_task)],
         # function=pnl.ReLU,
-        function=pnl.Logistic,
+        transfer_function=pnl.Logistic,
         cost_options=[pnl.CostFunctions.INTENSITY, pnl.CostFunctions.ADJUSTMENT],
         intensity_cost_function=pnl.Exponential(rate=0.25, bias=-3),
         adjustment_cost_function=pnl.Exponential(rate=0.25, bias=-3),
