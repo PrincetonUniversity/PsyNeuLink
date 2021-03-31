@@ -168,7 +168,7 @@ __all__ = ['Report', 'ReportOutput', 'ReportParams', 'ReportProgress', 'ReportDe
            'ReportLearning', 'CONSOLE', 'CONTROLLED', 'LOGGED', 'MODULATED', 'MONITORED', 'RECORD', 'DIVERT',
            'PNL_VIEW', ]
 
-# Used to specify run_mode used in Report.start_report() and Report.report_output()
+# Used to specify self._run_mode
 DEFAULT = 'Execut'
 LEARNING = 'Train'
 SIMULATION = 'Simulat'
@@ -642,12 +642,11 @@ class Report:
         <OptimizationControlMechanism_Execution>` of an outer Composition).
 
         .. technical_note::
-           This is distinct from the state of context.runmode (and used to assign ``run_mode`` in several of the
-           methods on Report), which identifies whether the inner-most Composition is currently executing a simulation;
-           note that context.runmode is only set to ContextFlags.SIMULATION_MODE once a controller has begun calling
-           for simulations, and that it itself is called with context.runmode set to ContextFlags.DEFAULT_MODE; under
-           that condition, _simulating may be True, while the ``run_mode`` variable set in a method may be
-           SIMULATION.
+           This is distinct from the state of context.runmode (and used to assign `_run_mode <Report._run_mode>`, which
+           identifies whether the inner-most Composition is currently executing a simulation; note that context.runmode
+           is only set to ContextFlags.SIMULATION_MODE once a controller has begun calling for simulations, and that it
+           itself is called with context.runmode set to ContextFlags.DEFAULT_MODE; under that condition, _simulating
+           may be True, while the `_run_mode <Report._run_mode>` property may be SIMULATION.
 
     _sim_str : str : default ''
         string added to `_trial_header <Report._trial_header>` when context.runmode = ContextFlags.SIMULATION_MODE
@@ -829,7 +828,7 @@ class Report:
             `indeterminate progress bar <https://rich.readthedocs.io/en/stable/progress.html#indeterminate-progress>'_.
 
         context : Context
-            context providing information about run_mode (DEFAULT or SIMULATION)
+            context providing information about _run_mode (DEFAULT, LEARNING, or SIMULATION)
 
         Returns
         -------
@@ -852,14 +851,6 @@ class Report:
 
         if comp not in self.output_reports:
             self.output_reports.update({comp:{DEFAULT:[], SIMULATION:[], SIMULATING:False}})
-
-        # # Used for accessing progress report and reporting results
-        # if context.runmode & ContextFlags.SIMULATION_MODE:
-        #     run_mode = SIMULATION
-        # # elif context.runmode & ContextFlags.LEARNING_MODE:
-        # #     run_mode = LEARNING
-        # else:
-        #     run_mode = DEFAULT
 
         if self._simulating and self._report_simulations is not ReportSimulations.ON:
             return
@@ -1050,8 +1041,7 @@ class Report:
 
         self._sim_str = ''
 
-        # Determine run_mode and assign relevant header info
-        # if call is from a Composition or a Mechanism being executed by one
+        # Assign relevant header info if call is from a Composition or a Mechanism being executed by one
         if isinstance(caller, Composition) or context.source == ContextFlags.COMPOSITION:
 
             simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
@@ -1081,12 +1071,6 @@ class Report:
                         sim_num = self.output_reports[caller][SIMULATION][report_num].sim_num
                         self._sim_str = f' SIMULATION {sim_num}'
 
-            # if simulation_mode:  # Actual simulation execution
-            #     run_mode = SIMULATION
-            # # elif learning_mode:
-            # #     run_mode = LEARNING
-            # else:  # non-simulation execution (but potentially nested within one, if self._simulating is True)
-            #     run_mode = DEFAULT
             output_report = self.output_reports[output_report_owner][self._run_mode][report_num]
 
             # FIX: GENERALIZE THIS, PUT AS ATTRIBUTE ON Report, AND THEN REFERENCE THAT IN report_progress
@@ -1704,10 +1688,10 @@ class Report:
         caller : Composition or Mechanism
 
         report_num : int
-            id of OutputReport for caller[run_mode] in self.output_reports to use for reporting.
+            id of OutputReport for caller[_run_mode] in self.output_reports to use for reporting.
 
         context : Context
-            context providing information about run_mode (DEFAULT or SIMULATION).
+            context providing information about _run_mode (DEFAULT, LEARNING or SIMULATION).
         """
 
         if self._report_progress is ReportProgress.OFF:
@@ -1719,10 +1703,6 @@ class Report:
         if self._simulating and self._report_simulations is ReportSimulations.OFF:
             return
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
-        # if simulation_mode:
-        #     run_mode = SIMULATION
-        # else:
-        #     run_mode = DEFAULT
 
         output_report = self.output_reports[caller][self._run_mode][report_num]
         trial_num = self._rich_progress.tasks[output_report.rich_task_id].completed
@@ -1785,7 +1765,7 @@ class Report:
         context : Context
 
         output_report : OutputReport  : default None
-            OutputReport for caller[run_mode] in self.output_reports to use for reporting.
+            OutputReport for caller[_run_mode] in self.output_reports to use for reporting.
         """
 
         # Print and record output report as they are created (progress reports are printed by _rich_progress.console)
