@@ -161,7 +161,9 @@ SIMULATIONS = 'simulations'
 SIMULATING = 'simulating'
 REPORT_REPORT = False # USED FOR DEBUGGING
 EXECUTE_REPORT = 'execute_report'
+MECHANISM_REPORT = 'mechanism_report'
 CONTROLLER_REPORT = 'controller_report'
+LEARN_REPORT = 'learn_report'
 RUN_REPORT = 'run_report'
 PROGRESS_REPORT = 'progress_report'
 
@@ -869,7 +871,7 @@ class Report:
             simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
 
         # Call report_output
-        if any(r in {EXECUTE_REPORT, CONTROLLER_REPORT, RUN_REPORT} for r in reports):
+        if any(r in {EXECUTE_REPORT, MECHANISM_REPORT, CONTROLLER_REPORT, LEARN_REPORT, RUN_REPORT} for r in reports):
 
             if content in {'run_start', 'execute_start'}:
                 if simulation_mode:

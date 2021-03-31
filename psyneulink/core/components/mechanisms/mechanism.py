@@ -2542,7 +2542,7 @@ class Mechanism_Base(Mechanism):
                 (context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING)
                  and report_num is not None)):
 
-            from psyneulink.core.compositions.report import Report, ReportOutput, ReportParams, EXECUTE_REPORT
+            from psyneulink.core.compositions.report import Report, ReportOutput, ReportParams, MECHANISM_REPORT
             # Use any report_output and report_params options passed to execute from command line;
             # otherwise try to get from Mechanism's reportOutputPref
             report_output = report_output or next((pref for pref in convert_to_list(self.prefs.reportOutputPref)
@@ -2554,7 +2554,7 @@ class Mechanism_Base(Mechanism):
                         report_params=report_params,
                         context=context) as report:
                 report(self,
-                       EXECUTE_REPORT,
+                       MECHANISM_REPORT,
                        report_num=report_num,
                        scheduler=None,
                        content='node',
