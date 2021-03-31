@@ -502,6 +502,9 @@ class AutodiffComposition(Composition):
             autodiff_inputs = self._infer_input_nodes(inputs)
             autodiff_targets = self._infer_output_nodes(inputs)
 
+            report(self, LEARN_REPORT, report_num=report_num, scheduler=scheduler, content='trial_start',
+                   context=context)
+
             self._build_pytorch_representation(context)
             output = self.autodiff_training(autodiff_inputs,
                                             autodiff_targets,
@@ -519,7 +522,7 @@ class AutodiffComposition(Composition):
 
             scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
-            report(self, LEARN_REPORT, report_num=report_num, scheduler=scheduler, content='trial', context=context)
+            report(self, LEARN_REPORT, report_num=report_num, scheduler=scheduler, content='trial_end', context=context)
 
             return output
 
@@ -536,7 +539,7 @@ class AutodiffComposition(Composition):
                                                         clamp_input=clamp_input,
                                                         runtime_params=runtime_params,
                                                         execution_mode=execution_mode,
-                                                        report=None,
+                                                        report=report,
                                                         )
 
     def _get_state_struct_type(self, ctx):
