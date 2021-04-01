@@ -145,7 +145,8 @@ from psyneulink.library.components.mechanisms.processing.objective.comparatormec
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.compositions.report \
-    import ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices, LEARN_REPORT
+    import ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices, \
+    EXECUTE_REPORT, LEARN_REPORT, PROGRESS_REPORT
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import SOFT_CLAMP
 from psyneulink.core.scheduling.scheduler import Scheduler
@@ -502,7 +503,12 @@ class AutodiffComposition(Composition):
             autodiff_inputs = self._infer_input_nodes(inputs)
             autodiff_targets = self._infer_output_nodes(inputs)
 
-            report(self, LEARN_REPORT, report_num=report_num, scheduler=scheduler, content='trial_start',
+            report(self,
+                   # LEARN_REPORT,
+                   EXECUTE_REPORT,
+                   report_num=report_num,
+                   scheduler=scheduler,
+                   content='trial_start',
                    context=context)
 
             self._build_pytorch_representation(context)
@@ -522,7 +528,13 @@ class AutodiffComposition(Composition):
 
             scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
-            report(self, LEARN_REPORT, report_num=report_num, scheduler=scheduler, content='trial_end', context=context)
+            report(self,
+                   # [LEARN_REPORT, PROGRESS_REPORT],
+                   [EXECUTE_REPORT, PROGRESS_REPORT],
+                   report_num=report_num,
+                   scheduler=scheduler,
+                   content='trial_end',
+                   context=context)
 
             return output
 

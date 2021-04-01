@@ -950,6 +950,8 @@ class Report:
             progress_args = {k:v for k,v in kwargs.items() if k in {'caller', 'report_num', 'context'}}
             self.report_progress(caller, **progress_args)
 
+        assert True
+
     def report_output(self,
                       caller,
                       report_num:int,

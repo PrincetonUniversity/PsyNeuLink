@@ -8521,10 +8521,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context=context
                 )
 
-            # Report controller execution after executing simulations
-            #    so it includes the results for ReportOutput.FULL
             report(self,
-                   # [RUN_REPORT, PROGRESS_REPORT],
                    RUN_REPORT,
                    report_num=report_num,
                    scheduler=scheduler,
