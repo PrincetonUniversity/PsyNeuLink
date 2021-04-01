@@ -1732,7 +1732,6 @@ class Report:
 
         # Update progress report
         if self._use_rich:
-
             if content == 'run_end':
                 # If it is the end of a run, and num_trials was not known (and so rich progress was "indeterminate"),
                 #    close out progress bar
