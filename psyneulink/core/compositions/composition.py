@@ -8522,7 +8522,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 )
 
             report(self,
-                   RUN_REPORT,
+                   [RUN_REPORT, PROGRESS_REPORT],
                    report_num=report_num,
                    scheduler=scheduler,
                    content='run_end',

@@ -938,19 +938,6 @@ class Report:
 
             elif content in {'execute_end', 'run_end'}:
                 self._execution_stack.pop()
-                try:
-                    output_report = self.output_reports[caller][self._run_mode][kwargs['report_num']]
-                    if not output_report.num_trials:
-                        task_id = self.output_reports[caller][self._run_mode][kwargs['report_num']].rich_task_id
-                        self._rich_progress.start_task(task_id)
-                        self._rich_progress.update(task_id,
-                                                   # description='DONE',
-                                                   total=1,
-                                                   advance=1,
-                                                   refresh=True)
-                except:
-                    pass
-                    # if self._rich_progress[task_id]
 
             self.report_output(caller, **kwargs)
 
@@ -960,7 +947,7 @@ class Report:
         # Call report_progress
         if PROGRESS_REPORT in reports:
             # Just pass args relevant to report_progress()
-            progress_args = {k:v for k,v in kwargs.items() if k in {'caller', 'report_num', 'context'}}
+            progress_args = {k:v for k,v in kwargs.items() if k in {'caller', 'report_num', 'content', 'context'}}
             self.report_progress(caller, **progress_args)
 
         assert True
@@ -1154,9 +1141,9 @@ class Report:
                         trial_header += f'{self._depth_indent_i}[bold {trial_panel_color}]Execution of {caller.name} ' \
                                         f'within {previous_caller.name}:[/]\n'
 
-                # print trial title and separator + input array to Composition
+                # print trial title + number and separator
                 trial_header += f'[bold {trial_panel_color}]' \
-                                f'{depth_indent * " "}{caller.name}{self._mode_str} TRIAL {trial_num}' + trial_sep_str
+                                f'{depth_indent * " "}{caller.name}{self._mode_str} TRIAL {trial_num} ' + trial_sep_str
                 self._rich_progress.console.print(trial_header)
                 if self._record_reports:
                     self._recorded_reports += trial_header
@@ -1699,6 +1686,7 @@ class Report:
     def report_progress(self,
                         caller,
                         report_num:int,
+                        content:str,
                         context:Context) -> None:
         """
         Report progress of executions in call to `execute <Composition.execute>` method of a `Composition`,
@@ -1744,6 +1732,16 @@ class Report:
 
         # Update progress report
         if self._use_rich:
+
+            if content == 'run_end':
+                # If it is the end of a run, and num_trials was not known (and so rich progress was "indeterminate"),
+                #    close out progress bar
+                if not output_report.num_trials:
+                    rich_task_id = self.output_reports[caller][self._run_mode][report_num].rich_task_id
+                    self._rich_progress.start_task(rich_task_id)
+                    self._rich_progress.update(rich_task_id, total=1, advance=1, refresh=True)
+                return
+
             if output_report.num_trials:
                 if simulation_mode:
                     num_trials_str = ''
