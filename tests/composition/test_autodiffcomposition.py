@@ -279,7 +279,7 @@ class TestMiscTrainingFunctionality:
 
         xor.learn(inputs={"inputs": {xor_in:xor_inputs},
                           "targets": {xor_out:xor_targets},
-                          "epochs": 10}, execution_mode=autodiff_mode, report_output=ReportOutput.ON)
+                          "epochs": 10}, execution_mode=autodiff_mode)
         xor.learn(inputs={"inputs": {xor_in: xor_inputs},
                           "targets": {xor_out: xor_targets},
                           "epochs": 10}, execution_mode=autodiff_mode)

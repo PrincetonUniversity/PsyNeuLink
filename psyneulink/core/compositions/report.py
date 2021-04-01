@@ -648,9 +648,10 @@ class Report:
            itself is called with context.runmode set to ContextFlags.DEFAULT_MODE; under that condition, _simulating
            may be True, while the `_run_mode <Report._run_mode>` property may be SIMULATION.
 
-    _sim_str : str : default ''
-        string added to `_trial_header <Report._trial_header>` when context.runmode = ContextFlags.SIMULATION_MODE
-        and `_simulating <Report._simulating>` is True.
+    _mode_str : str : default ''
+        string added to `_trial_header <Report._trial_header>` when context.runmode = ContextFlags.LEARNING_MODE
+        or ContextFlags.SIMULATION_MODE and `_learning <Report._learning>` or `_simulating <Report._simulating>`
+        is True, respectively.
 
     _trial_header_stack : str
         header information for `TRIAL <TimeScale.TRIAL>` when report_out=ReportOutput.FULL;  constructed in
@@ -850,7 +851,10 @@ class Report:
             print()
 
         if comp not in self.output_reports:
-            self.output_reports.update({comp:{DEFAULT:[], SIMULATION:[], SIMULATING:False}})
+            self.output_reports.update({comp:{DEFAULT:[],
+                                              LEARNING:[],
+                                              SIMULATION:[],
+                                              SIMULATING:False}})
 
         if self._simulating and self._report_simulations is not ReportSimulations.ON:
             return
@@ -1039,7 +1043,7 @@ class Report:
         else:
             trial_num = None
 
-        self._sim_str = ''
+        self._mode_str = ''
 
         # Assign relevant header info if call is from a Composition or a Mechanism being executed by one
         if isinstance(caller, Composition) or context.source == ContextFlags.COMPOSITION:
@@ -1053,14 +1057,17 @@ class Report:
             # Track simulation count within each simulation set:
             if content == 'trial_start':
 
-                if self.output_reports[caller][SIMULATING]:
+                if self._run_mode == LEARNING:
+                    self._mode_str = f' TRAINING'
+
+                elif self.output_reports[caller][SIMULATING]:
                     if not simulation_mode:
                         # If was simulating previously but not now in SIMULATION_MODE, then have just exited,
                         #   so reset sim_num
                         #   (note: need to use transition and not explicit count of simulations,
                         #    since number of simulation trials being run is generally not known)
                         self.output_reports[caller][SIMULATION][report_num].sim_num = None
-                        self._sim_str = ''
+                        self._mode_str = ''
                     else:
                         if self.output_reports[caller][SIMULATION][report_num].sim_num is None:
                             # This is the first simulation, so set to 0
@@ -1069,7 +1076,7 @@ class Report:
                             # This is a new simulation, so increment number
                             self.output_reports[caller][SIMULATION][report_num].sim_num += 1
                         sim_num = self.output_reports[caller][SIMULATION][report_num].sim_num
-                        self._sim_str = f' SIMULATION {sim_num}'
+                        self._mode_str = f' SIMULATION {sim_num}'
 
             output_report = self.output_reports[output_report_owner][self._run_mode][report_num]
 
@@ -1117,7 +1124,7 @@ class Report:
                                               f' {[i.tolist() for i in caller.get_input_values(context)]}']
                 # Push trial_header to stack in case there are intervening executions of nested comps or simulations
                 self._trial_header_stack.append(
-                    f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial {trial_num}[/] ')
+                    f'[bold{trial_panel_color}] {caller.name}{self._mode_str}: Trial {trial_num}[/] ')
 
             else: # TERSE or USE_PREFS
 
@@ -1134,7 +1141,7 @@ class Report:
 
                 # print trial title and separator + input array to Composition
                 trial_header += f'[bold {trial_panel_color}]' \
-                                f'{depth_indent * " "}{caller.name}{self._sim_str} TRIAL {trial_num}' + trial_sep_str
+                                f'{depth_indent * " "}{caller.name}{self._mode_str} TRIAL {trial_num}' + trial_sep_str
                 self._rich_progress.console.print(trial_header)
                 if self._record_reports:
                     self._recorded_reports += trial_header
@@ -1231,7 +1238,7 @@ class Report:
                     # If simulating, get header that was stored at the beginning of the simulation set
                     title = self._trial_header_stack.pop()
                 else:
-                    title = f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial {trial_num}[/] '
+                    title = f'[bold{trial_panel_color}] {caller.name}{self._mode_str}: Trial {trial_num}[/] '
                 output_report.trial_report = Padding.indent(Panel(RenderGroup(*output_report.trial_report),
                                                                   box=default_trial_panel_box,
                                                                   border_style=trial_panel_color,
@@ -1820,8 +1827,8 @@ class Report:
         # Used for accessing progress report and reporting results
         if self._context.runmode & ContextFlags.SIMULATION_MODE:
             return SIMULATION
-        # elif context.runmode & ContextFlags.LEARNING_MODE:
-        #   return LEARNING
+        elif self._context.runmode & ContextFlags.LEARNING_MODE:
+          return LEARNING
         else:
             return DEFAULT
 
