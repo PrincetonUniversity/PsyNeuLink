@@ -504,8 +504,8 @@ class AutodiffComposition(Composition):
             autodiff_targets = self._infer_output_nodes(inputs)
 
             report(self,
-                   # LEARN_REPORT,
-                   EXECUTE_REPORT,
+                   LEARN_REPORT,
+                   # EXECUTE_REPORT,
                    report_num=report_num,
                    scheduler=scheduler,
                    content='trial_start',
@@ -529,8 +529,8 @@ class AutodiffComposition(Composition):
             scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
             report(self,
-                   # [LEARN_REPORT, PROGRESS_REPORT],
-                   [EXECUTE_REPORT, PROGRESS_REPORT],
+                   [LEARN_REPORT],
+                   # [EXECUTE_REPORT, PROGRESS_REPORT],
                    report_num=report_num,
                    scheduler=scheduler,
                    content='trial_end',
