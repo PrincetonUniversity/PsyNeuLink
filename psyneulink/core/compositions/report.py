@@ -938,6 +938,19 @@ class Report:
 
             elif content in {'execute_end', 'run_end'}:
                 self._execution_stack.pop()
+                try:
+                    output_report = self.output_reports[caller][self._run_mode][kwargs['report_num']]
+                    if not output_report.num_trials:
+                        task_id = self.output_reports[caller][self._run_mode][kwargs['report_num']].rich_task_id
+                        self._rich_progress.start_task(task_id)
+                        self._rich_progress.update(task_id,
+                                                   # description='DONE',
+                                                   total=1,
+                                                   advance=1,
+                                                   refresh=True)
+                except:
+                    pass
+                    # if self._rich_progress[task_id]
 
             self.report_output(caller, **kwargs)
 
