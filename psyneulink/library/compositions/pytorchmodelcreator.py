@@ -8,7 +8,6 @@ from psyneulink.library.compositions.compiledloss import MSELoss
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.core.globals.keywords import TARGET_MECHANISM
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
-from psyneulink.core.scheduling.time import TimeScale
 from .pytorchcomponents import *
 
 try:
@@ -67,12 +66,9 @@ class PytorchModelCreator(torch.nn.Module):
 
         # Setup execution sets
         # 1) Remove all learning-specific nodes
-        self.execution_sets = [x - set(composition.get_nodes_by_role(NodeRole.LEARNING))
-                               for x in composition.scheduler.run(context=c)]
+        self.execution_sets = [x - set(composition.get_nodes_by_role(NodeRole.LEARNING)) for x in composition.scheduler.run(context=c)]
         # 2) Convert to pytorchcomponent representation
-        self.execution_sets = [{self.component_map[comp]
-                                for comp in s if comp in self.component_map}
-                               for s in self.execution_sets]
+        self.execution_sets = [{self.component_map[comp] for comp in s if comp in self.component_map} for s in self.execution_sets]
         # 3) Remove empty execution sets
         self.execution_sets = [x for x in self.execution_sets if len(x) > 0]
 
