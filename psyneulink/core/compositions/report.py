@@ -1746,6 +1746,10 @@ class Report:
                     num_trials_str = f' of {output_report.num_trials}'
             else:
                 num_trials_str = ''
+            if output_report.num_trials > 1 or trial_num+1 > 1:
+                s = 's'
+            else:
+                s = ''
 
             # Construct update text
             self._depth_indent = self._depth_str = ''
@@ -1753,7 +1757,7 @@ class Report:
                 self._depth_indent = self.depth_indent_factor * self._execution_stack_depth * ' '
                 self._depth_str = f' (depth: {self._execution_stack_depth-1})'
             update = f'{self._depth_indent}{caller.name}: ' \
-                     f'{self._run_mode}ed {trial_num+1}{num_trials_str} trials{self._depth_str}'
+                     f'{self._run_mode}ed {trial_num+1}{num_trials_str} trial{s}{self._depth_str}'
 
             # Do update
             self._rich_progress.update(output_report.rich_task_id,

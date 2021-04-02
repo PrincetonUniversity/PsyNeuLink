@@ -526,8 +526,6 @@ class AutodiffComposition(Composition):
             # FIX 5/28/20:
             context.execution_phase = execution_phase
 
-            scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
-
             report(self,
                    # [LEARN_REPORT],
                    [EXECUTE_REPORT, PROGRESS_REPORT],
@@ -535,6 +533,8 @@ class AutodiffComposition(Composition):
                    scheduler=scheduler,
                    content='trial_end',
                    context=context)
+
+            scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
             return output
 
