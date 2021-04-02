@@ -68,6 +68,18 @@ of a Composition's `controller <Composition_Controller>`), by specifying a `Repo
 
 .. _Report_To_Device:
 
+.. _Report_Learning:
+
+Learning
+--------
+
+Output and progress reporting can include execution during `learning <Composition_Learning>` `TRIALS <TimeScale.TRIAL>`
+by specifying a `ReportLearning` option in the **report_learning** argument of a Composition's `run
+<Composition.run>` or `learn <Composition.run>` methods.
+
+.. _Report_To_Device:
+
+
 Devices
 -------
 
@@ -153,15 +165,22 @@ from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = ['Report', 'ReportOutput', 'ReportParams', 'ReportProgress', 'ReportDevices', 'ReportSimulations',
-           'CONSOLE', 'CONTROLLED', 'LOGGED', 'MODULATED', 'MONITORED', 'RECORD', 'DIVERT', 'PNL_VIEW', ]
+           'ReportLearning', 'CONSOLE', 'CONTROLLED', 'LOGGED', 'MODULATED', 'MONITORED', 'RECORD', 'DIVERT',
+           'PNL_VIEW', ]
 
-SIMULATION = 'Simulat'
+# Used to specify self._run_mode
 DEFAULT = 'Execut'
+LEARNING = 'Train'
+SIMULATION = 'Simulat'
+
 SIMULATIONS = 'simulations'
 SIMULATING = 'simulating'
+TRAINING = 'training'
 REPORT_REPORT = False # USED FOR DEBUGGING
 EXECUTE_REPORT = 'execute_report'
+MECHANISM_REPORT = 'mechanism_report'
 CONTROLLER_REPORT = 'controller_report'
+LEARN_REPORT = 'learn_report'
 RUN_REPORT = 'run_report'
 PROGRESS_REPORT = 'progress_report'
 
@@ -213,6 +232,12 @@ simulation_trial_panel_color = Color.from_rgb(175,95,215).name # 'medium_orchid'
 simulation_trial_input_color = Color.from_rgb(175,0,255).name # 'purple'
 simulation_trial_output_color = Color.from_rgb(0,0,135).name # 'blue' BRIGHTER: (0,0,255)
 simulation_trial_panel_box = box.ROUNDED
+# learning
+# simulation
+learning_trial_panel_color = Color.from_rgb(95,175,95).name # 'dark_sea_green4'
+learning_trial_input_color = Color.from_rgb(0,135,0).name # 'green'
+learning_trial_output_color = Color.from_rgb(255,0,0).name # 'red'
+learning_trial_panel_box = box.ROUNDED
 
 
 # composition execution outer Panel
@@ -235,7 +260,7 @@ class ReportOutput(Enum):
 
     .. technical_note::
         Use of these options is expected in the **report_output** constructor for the `Report` object,
-        and are used as the values of its `report_output <Report.report_output>` attribute.
+        and are used as the values of its `_report_output <Report._report_output>` attribute.
 
     Attributes
     ----------
@@ -276,7 +301,7 @@ class ReportParams(Enum):
 
     .. technical_note::
         Use of these options is expected in the **report_output** constructor for the `Report` object,
-        and are used as the values of its `report_params <Report.report_params>` attribute.
+        and are used as the values of its `_report_params <Report._report_params>` attribute.
 
     Attributes
     ----------
@@ -333,7 +358,7 @@ class ReportProgress(Enum):
 
     .. technical_note::
         Use of these options is expected in the **report_progress** constructor for the `Report` object,
-        and are used as the values of its `report_progress <Report.report_output>` attribute.
+        and are used as the values of its `_report_progress <Report._report_progress>` attribute.
 
     Attributes
     ----------
@@ -358,7 +383,7 @@ class ReportSimulations(Enum):
 
     .. technical_note::
         Use of these options is expected in the **report_progress** constructor for the `Report` object,
-        and are used as the values of its `report_progress <Report.report_output>` attribute.
+        and are used as the values of its `_report_simulations <Report._report_simulations>` attribute.
 
     Attributes
     ----------
@@ -368,6 +393,31 @@ class ReportSimulations(Enum):
 
     ON
         enable output and progress reporting of simulations.
+    """
+
+    OFF = 0
+    ON = 1
+
+
+class ReportLearning(Enum):
+    """
+    Options used in the **report_learning** argument of a `Composition`\'s `run <Composition.run>` and `learn
+    <Composition.learn>` methods, to specify whether `learning <Composition_Learning>` `TRIALS
+    <TimeScale.TRIAL>` are included in output and progress reporting (see `Report_Learning` for additional
+    information).
+
+    .. technical_note::
+        Use of these options is expected in the **report_progress** constructor for the `Report` object,
+        and are used as the values of its `_report_learning <Report._report_learning>` attribute.
+
+    Attributes
+    ----------
+
+    OFF
+        suppress output and progress during `learning <Composition_Learning>`.
+
+    ON
+        enable output and progress reporting during `learning <Composition_Learning>`.
     """
 
     OFF = 0
@@ -579,22 +629,29 @@ class Report:
          used by `_simulating <Report._simulating>` to determine whether current execution is nested under a
          `simulation <OptimizationControlMechanism_Execution>` by a `controller <Composition.controller>`.
 
+    _learning : bool : default False
+        True if 'LEARNING_MODE <ContextFlags.LEARNING_MODE>` appears in the `runmode <Context.runmode>` attribute of
+        `_context <Report._context>`.
+
+    _learn_str : str : default ''
+        string added to `_trial_header <Report._trial_header>` when context.runmode = `ContextFlags.LEARNING_MODE`.
+
     _simulating : bool : default False
-        True if 'simulator' appears in the `execution_id <Context.execution_id>` of `_context <Report._context>`;
-        (that is, current execution is nested under a `simulation <OptimizationControlMechanism_Execution>` of an outer
-        Composition).
+        True if 'simulator' appears in the `execution_id <Context.execution_id>` attribute of `_context
+        <Report._context>`; (that is, current execution is nested under a `simulation
+        <OptimizationControlMechanism_Execution>` of an outer Composition).
 
         .. technical_note::
-           This is distinct from the state of context.runmode (and used to assign ``run_mode`` in several of the
-           methods on Report), which identifies whether the inner-most Composition is currently executing a simulation;
-           note that context.runmode is only set to ContextFlags.SIMULATION_MODE once a controller has begun calling
-           for simulations, and that it itself is called with context.runmode set to ContextFlags.DEFAULT_MODE; under
-           that condition, _simulating may be True, while the ``run_mode`` variable set in a method may be
-           SIMULATION.
+           This is distinct from the state of context.runmode (and used to assign `_run_mode <Report._run_mode>`, which
+           identifies whether the inner-most Composition is currently executing a simulation; note that context.runmode
+           is only set to ContextFlags.SIMULATION_MODE once a controller has begun calling for simulations, and that it
+           itself is called with context.runmode set to ContextFlags.DEFAULT_MODE; under that condition, _simulating
+           may be True, while the `_run_mode <Report._run_mode>` property may be SIMULATION.
 
-    _sim_str : str : default ''
-        string added to `_trial_header <Report._trial_header>` when context.runmode = ContextFlags.SIMULATION_MODE
-        and `_simulating <Report._simulating>` is True.
+    _mode_str : str : default ''
+        string added to `_trial_header <Report._trial_header>` when context.runmode = ContextFlags.LEARNING_MODE
+        or ContextFlags.SIMULATION_MODE and `_learning <Report._learning>` or `_simulating <Report._simulating>`
+        is True, respectively.
 
     _trial_header_stack : str
         header information for `TRIAL <TimeScale.TRIAL>` when report_out=ReportOutput.FULL;  constructed in
@@ -772,7 +829,7 @@ class Report:
             `indeterminate progress bar <https://rich.readthedocs.io/en/stable/progress.html#indeterminate-progress>'_.
 
         context : Context
-            context providing information about run_mode (DEFAULT or SIMULATION)
+            context providing information about _run_mode (DEFAULT, LEARNING, or SIMULATION)
 
         Returns
         -------
@@ -794,21 +851,18 @@ class Report:
             print()
 
         if comp not in self.output_reports:
-            self.output_reports.update({comp:{DEFAULT:[], SIMULATION:[], SIMULATING:False}})
-
-        # Used for accessing progress report and reporting results
-        if context.runmode & ContextFlags.SIMULATION_MODE:
-            run_mode = SIMULATION
-        else:
-            run_mode = DEFAULT
+            self.output_reports.update({comp:{DEFAULT:[],
+                                              LEARNING:[],
+                                              SIMULATION:[],
+                                              SIMULATING:False}})
 
         if self._simulating and self._report_simulations is not ReportSimulations.ON:
             return
 
-        if run_mode is SIMULATION:
+        if self._run_mode is SIMULATION:
             # If already simulating, return existing report for those simulations
             if self.output_reports[comp][SIMULATING]:
-                return len(self.output_reports[comp][run_mode]) - 1
+                return len(self.output_reports[comp][self._run_mode]) - 1
 
         if self._use_rich:
 
@@ -831,21 +885,21 @@ class Report:
                 start = True
 
             self._depth_indent_i = self._depth_str_i = ''
-            if run_mode is SIMULATION or self._execution_stack_depth:
+            if self._run_mode is SIMULATION or self._execution_stack_depth:
                 self._depth_indent_i = self.depth_indent_factor * self._execution_stack_depth * ' '
                 self._depth_str_i = f' (depth: {self._execution_stack_depth-1})'
 
             id = self._rich_progress.add_task(f"[red]{self._depth_indent_i}{comp.name}: "
-                                              f"{run_mode}ing {self._depth_str_i}...",
+                                              f"{self._run_mode}ing {self._depth_str_i}...",
                                               total=num_trials,
                                               start=start,
                                               visible=visible
                                               )
 
-            self.output_reports[comp][run_mode].append(OutputReport(id, num_trials))
-            report_num = len(self.output_reports[comp][run_mode]) - 1
+            self.output_reports[comp][self._run_mode].append(OutputReport(id, num_trials))
+            report_num = len(self.output_reports[comp][self._run_mode]) - 1
 
-            self.output_reports[comp][SIMULATING] = run_mode is SIMULATION
+            self.output_reports[comp][SIMULATING] = self._run_mode is SIMULATION
 
             return report_num
 
@@ -869,7 +923,7 @@ class Report:
             simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
 
         # Call report_output
-        if any(r in {EXECUTE_REPORT, CONTROLLER_REPORT, RUN_REPORT} for r in reports):
+        if any(r in {EXECUTE_REPORT, MECHANISM_REPORT, CONTROLLER_REPORT, LEARN_REPORT, RUN_REPORT} for r in reports):
 
             if content in {'run_start', 'execute_start'}:
                 if simulation_mode:
@@ -893,8 +947,10 @@ class Report:
         # Call report_progress
         if PROGRESS_REPORT in reports:
             # Just pass args relevant to report_progress()
-            progress_args = {k:v for k,v in kwargs.items() if k in {'caller', 'report_num', 'context'}}
+            progress_args = {k:v for k,v in kwargs.items() if k in {'caller', 'report_num', 'content', 'context'}}
             self.report_progress(caller, **progress_args)
+
+        assert True
 
     def report_output(self,
                       caller,
@@ -966,8 +1022,10 @@ class Report:
         # then try to get them from caller, based on whether it is a Mechanism or Composition
         from psyneulink.core.compositions.composition import Composition
         from psyneulink.core.components.mechanisms.mechanism import Mechanism
+
         # Report is called for by a Mechanism
         if isinstance(caller, Mechanism):
+
             if context.source & ContextFlags.COMPOSITION:
                 output_report_owner = context.composition
                 trial_report_type=report_output
@@ -987,26 +1045,31 @@ class Report:
         else:
             trial_num = None
 
-        self._sim_str = ''
+        self._mode_str = ''
 
-        # Determine run_mode and assign relevant header info
-        # if call is from a Composition or a Mechanism being executed by one
+        # Assign relevant header info if call is from a Composition or a Mechanism being executed by one
         if isinstance(caller, Composition) or context.source == ContextFlags.COMPOSITION:
+
             simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
+            learning_mode = context.runmode & ContextFlags.LEARNING_MODE
+
             if (simulation_mode or self._simulating) and self._report_simulations is ReportSimulations.OFF:
                 return
 
             # Track simulation count within each simulation set:
             if content == 'trial_start':
 
-                if self.output_reports[caller][SIMULATING]:
+                if self._run_mode == LEARNING:
+                    self._mode_str = f' TRAINING'
+
+                elif self.output_reports[caller][SIMULATING]:
                     if not simulation_mode:
                         # If was simulating previously but not now in SIMULATION_MODE, then have just exited,
                         #   so reset sim_num
                         #   (note: need to use transition and not explicit count of simulations,
                         #    since number of simulation trials being run is generally not known)
                         self.output_reports[caller][SIMULATION][report_num].sim_num = None
-                        self._sim_str = ''
+                        self._mode_str = ''
                     else:
                         if self.output_reports[caller][SIMULATION][report_num].sim_num is None:
                             # This is the first simulation, so set to 0
@@ -1015,18 +1078,9 @@ class Report:
                             # This is a new simulation, so increment number
                             self.output_reports[caller][SIMULATION][report_num].sim_num += 1
                         sim_num = self.output_reports[caller][SIMULATION][report_num].sim_num
-                        self._sim_str = f' SIMULATION {sim_num}'
+                        self._mode_str = f' SIMULATION {sim_num}'
 
-            if simulation_mode:
-                # Actual simulation execution
-                run_mode = SIMULATION
-            elif self._simulating:
-                # Composition or controller executing in simulation happens in DEFAULT_MODE
-                run_mode = DEFAULT
-            else:
-                # Non-simulation (but potentially nested) execution
-                run_mode = DEFAULT
-            output_report = self.output_reports[output_report_owner][run_mode][report_num]
+            output_report = self.output_reports[output_report_owner][self._run_mode][report_num]
 
             # FIX: GENERALIZE THIS, PUT AS ATTRIBUTE ON Report, AND THEN REFERENCE THAT IN report_progress
             depth_indent = 0
@@ -1066,13 +1120,13 @@ class Report:
 
             output_report.trial_report = []
             #  if FULL output, report trial number and Composition's input
-            #  note:  header for Trial Panel is constructed under 'content is Trial' case below
+            #  note:  header for Trial Panel is constructed under 'content == 'trial_end' below
             if trial_report_type is ReportOutput.FULL:
                 output_report.trial_report = [f'[bold {default_trial_input_color}]{self._padding_indent_str}input:[/]'
                                               f' {[i.tolist() for i in caller.get_input_values(context)]}']
                 # Push trial_header to stack in case there are intervening executions of nested comps or simulations
                 self._trial_header_stack.append(
-                    f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial {trial_num}[/] ')
+                    f'[bold{trial_panel_color}] {caller.name}{self._mode_str}: Trial {trial_num}[/] ')
 
             else: # TERSE or USE_PREFS
 
@@ -1087,9 +1141,9 @@ class Report:
                         trial_header += f'{self._depth_indent_i}[bold {trial_panel_color}]Execution of {caller.name} ' \
                                         f'within {previous_caller.name}:[/]\n'
 
-                # print trial title and separator + input array to Composition
+                # print trial title + number and separator
                 trial_header += f'[bold {trial_panel_color}]' \
-                                f'{depth_indent * " "}{caller.name}{self._sim_str} TRIAL {trial_num}' + trial_sep_str
+                                f'{depth_indent * " "}{caller.name}{self._mode_str} TRIAL {trial_num} ' + trial_sep_str
                 self._rich_progress.console.print(trial_header)
                 if self._record_reports:
                     self._recorded_reports += trial_header
@@ -1186,7 +1240,7 @@ class Report:
                     # If simulating, get header that was stored at the beginning of the simulation set
                     title = self._trial_header_stack.pop()
                 else:
-                    title = f'[bold{trial_panel_color}] {caller.name}{self._sim_str}: Trial {trial_num}[/] '
+                    title = f'[bold{trial_panel_color}] {caller.name}{self._mode_str}: Trial {trial_num}[/] '
                 output_report.trial_report = Padding.indent(Panel(RenderGroup(*output_report.trial_report),
                                                                   box=default_trial_panel_box,
                                                                   border_style=trial_panel_color,
@@ -1254,7 +1308,7 @@ class Report:
                     self._print_and_record_reports(PROGRESS_REPORT, output_report)
 
         else:
-            assert False, f"Bad 'content' argument in call to Report.report_output() for {caller.name}: {content}."
+            assert False, f"Bad 'content' argument in call to Report.report_output() for {caller.name}: '{content}'."
 
         return
 
@@ -1336,14 +1390,13 @@ class Report:
 
         # Render input --------------------------------------------------------------------------------------------
 
-        if input_val is None:
-            input_val = node.get_input_values(context)
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #      if you want more specific output, you can add conditional tests here
         try:
             input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
+            # input_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in input_val]))
         except TypeError:
-            input_string = input_val
+            input_string = node.parameters.variable.get(context)
 
         input_report = f"input: {input_string}"
 
@@ -1354,7 +1407,6 @@ class Report:
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #   if you want more specific output, you can add conditional tests here
         try:
-            # output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output_val]))
             output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output_val]))
         except TypeError:
             output_string = output
@@ -1632,6 +1684,7 @@ class Report:
     def report_progress(self,
                         caller,
                         report_num:int,
+                        content:str,
                         context:Context) -> None:
         """
         Report progress of executions in call to `execute <Composition.execute>` method of a `Composition`,
@@ -1643,10 +1696,10 @@ class Report:
         caller : Composition or Mechanism
 
         report_num : int
-            id of OutputReport for caller[run_mode] in self.output_reports to use for reporting.
+            id of OutputReport for caller[_run_mode] in self.output_reports to use for reporting.
 
         context : Context
-            context providing information about run_mode (DEFAULT or SIMULATION).
+            context providing information about _run_mode (DEFAULT, LEARNING or SIMULATION).
         """
 
         if self._report_progress is ReportProgress.OFF:
@@ -1658,12 +1711,8 @@ class Report:
         if self._simulating and self._report_simulations is ReportSimulations.OFF:
             return
         simulation_mode = context.runmode & ContextFlags.SIMULATION_MODE
-        if simulation_mode:
-            run_mode = SIMULATION
-        else:
-            run_mode = DEFAULT
 
-        output_report = self.output_reports[caller][run_mode][report_num]
+        output_report = self.output_reports[caller][self._run_mode][report_num]
         trial_num = self._rich_progress.tasks[output_report.rich_task_id].completed
 
         # Useful for debugging:
@@ -1681,6 +1730,15 @@ class Report:
 
         # Update progress report
         if self._use_rich:
+            if content == 'run_end':
+                # If it is the end of a run, and num_trials was not known (and so rich progress was "indeterminate"),
+                #    close out progress bar
+                if not output_report.num_trials:
+                    rich_task_id = self.output_reports[caller][self._run_mode][report_num].rich_task_id
+                    self._rich_progress.start_task(rich_task_id)
+                    self._rich_progress.update(rich_task_id, total=1, advance=1, refresh=True)
+                return
+
             if output_report.num_trials:
                 if simulation_mode:
                     num_trials_str = ''
@@ -1689,13 +1747,21 @@ class Report:
             else:
                 num_trials_str = ''
 
+            # The following disallows the plural in the construction: "1 of 1 trial"
+            if output_report.num_trials > 1 or trial_num + 1 > 1:
+            # # The following allows the plural in the construction: "1 of 1 trials"
+            # if output_report.num_trials > 1 or trial_num+1 > 1 or num_trials_str:
+                s = 's'
+            else:
+                s = ''
+
             # Construct update text
             self._depth_indent = self._depth_str = ''
             if simulation_mode or self._execution_stack_depth>1:
                 self._depth_indent = self.depth_indent_factor * self._execution_stack_depth * ' '
                 self._depth_str = f' (depth: {self._execution_stack_depth-1})'
             update = f'{self._depth_indent}{caller.name}: ' \
-                     f'{run_mode}ed {trial_num+1}{num_trials_str} trials{self._depth_str}'
+                     f'{self._run_mode}ed {trial_num+1}{num_trials_str} trial{s}{self._depth_str}'
 
             # Do update
             self._rich_progress.update(output_report.rich_task_id,
@@ -1724,7 +1790,7 @@ class Report:
         context : Context
 
         output_report : OutputReport  : default None
-            OutputReport for caller[run_mode] in self.output_reports to use for reporting.
+            OutputReport for caller[_run_mode] in self.output_reports to use for reporting.
         """
 
         # Print and record output report as they are created (progress reports are printed by _rich_progress.console)
@@ -1773,6 +1839,23 @@ class Report:
     def _nested(self):
         from psyneulink.core.compositions.composition import Composition
         return any(isinstance(c, Composition) for c in self._execution_stack)
+
+    @property
+    def _run_mode(self):
+        # Used for accessing progress report and reporting results
+        if self._context.runmode & ContextFlags.SIMULATION_MODE:
+            return SIMULATION
+        elif self._context.runmode & ContextFlags.LEARNING_MODE:
+            return LEARNING
+        else:
+            return DEFAULT
+
+    @property
+    def _learning(self):
+        try:
+            return self._context.runmode is ContextFlags.LEARNING_MODE
+        except TypeError:
+            return False
 
     @property
     def _simulating(self):

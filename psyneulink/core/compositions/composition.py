@@ -8521,11 +8521,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context=context
                 )
 
-            # Report controller execution after executing simulations
-            #    so it includes the results for ReportOutput.FULL
             report(self,
-                   # [RUN_REPORT, PROGRESS_REPORT],
-                   RUN_REPORT,
+                   [RUN_REPORT, PROGRESS_REPORT],
                    report_num=report_num,
                    scheduler=scheduler,
                    content='run_end',
@@ -8992,6 +8989,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         report(self,
                                PROGRESS_REPORT,
                                report_num=report_num,
+                               content='trial_end',
                                context=context)
 
                         self._propagate_most_recent_context(context)
@@ -9575,6 +9573,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 report(self,
                        PROGRESS_REPORT,
                        report_num=report_num,
+                       content='trial_end',
                        context=context)
                 return _comp_ex.extract_node_output(self.output_CIM)
 
