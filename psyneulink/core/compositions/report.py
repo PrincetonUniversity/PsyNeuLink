@@ -1747,9 +1747,9 @@ class Report:
             else:
                 num_trials_str = ''
 
-            # This disallows the plural in following construction: "1 of 1 trial"
+            # The following disallows the plural in the construction: "1 of 1 trial"
             if output_report.num_trials > 1 or trial_num+1 > 1:
-            # # This allows the plural in following construction: "1 of 1 trials"
+            # # The following allows the plural in the construction: "1 of 1 trials"
             # if output_report.num_trials > 1 or trial_num+1 > 1 or num_trials_str:
                 s = 's'
             else:
