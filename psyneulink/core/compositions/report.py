@@ -1838,7 +1838,7 @@ class Report:
         if self._context.runmode & ContextFlags.SIMULATION_MODE:
             return SIMULATION
         elif self._context.runmode & ContextFlags.LEARNING_MODE:
-          return LEARNING
+            return LEARNING
         else:
             return DEFAULT
 
