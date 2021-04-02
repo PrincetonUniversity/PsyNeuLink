@@ -1120,7 +1120,7 @@ class Report:
 
             output_report.trial_report = []
             #  if FULL output, report trial number and Composition's input
-            #  note:  header for Trial Panel is constructed under 'content is Trial' case below
+            #  note:  header for Trial Panel is constructed under 'content == 'trial_end' below
             if trial_report_type is ReportOutput.FULL:
                 output_report.trial_report = [f'[bold {default_trial_input_color}]{self._padding_indent_str}input:[/]'
                                               f' {[i.tolist() for i in caller.get_input_values(context)]}']
@@ -1390,14 +1390,13 @@ class Report:
 
         # Render input --------------------------------------------------------------------------------------------
 
-        if input_val is None:
-            input_val = node.get_input_values(context)
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #      if you want more specific output, you can add conditional tests here
         try:
             input_string = [float("{:0.3}".format(float(i))) for i in input_val].__str__().strip("[]")
+            # input_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in input_val]))
         except TypeError:
-            input_string = input_val
+            input_string = node.parameters.variable.get(context)
 
         input_report = f"input: {input_string}"
 
@@ -1408,7 +1407,6 @@ class Report:
         # FIX: kmantel: previous version would fail on anything but iterables of things that can be cast to floats
         #   if you want more specific output, you can add conditional tests here
         try:
-            # output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output_val]))
             output_string = re.sub(r'[\[,\],\n]', '', str([float("{:0.3}".format(float(i))) for i in output_val]))
         except TypeError:
             output_string = output
