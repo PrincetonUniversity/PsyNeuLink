@@ -146,7 +146,7 @@ from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.compositions.report \
     import ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices, \
-    LEARN_REPORT
+    LEARN_REPORT, EXECUTE_REPORT, PROGRESS_REPORT
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import SOFT_CLAMP
 from psyneulink.core.scheduling.scheduler import Scheduler
@@ -529,8 +529,8 @@ class AutodiffComposition(Composition):
             scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
             report(self,
-                   [LEARN_REPORT],
-                   # [EXECUTE_REPORT, PROGRESS_REPORT],
+                   # [LEARN_REPORT],
+                   [EXECUTE_REPORT, PROGRESS_REPORT],
                    report_num=report_num,
                    scheduler=scheduler,
                    content='trial_end',
