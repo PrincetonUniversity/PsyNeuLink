@@ -69,7 +69,6 @@ class PytorchModelCreator(torch.nn.Module):
         # 1) Remove all learning-specific nodes
         self.execution_sets = [x - set(composition.get_nodes_by_role(NodeRole.LEARNING))
                                for x in composition.scheduler.run(context=c)]
-        composition.scheduler._reset_counts_total(TimeScale.TRIAL, context.execution_id)
         # 2) Convert to pytorchcomponent representation
         self.execution_sets = [{self.component_map[comp]
                                 for comp in s if comp in self.component_map}

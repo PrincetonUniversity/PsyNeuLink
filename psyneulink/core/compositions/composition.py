@@ -8989,6 +8989,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         report(self,
                                PROGRESS_REPORT,
                                report_num=report_num,
+                               content='trial_end',
                                context=context)
 
                         self._propagate_most_recent_context(context)
@@ -9572,6 +9573,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 report(self,
                        PROGRESS_REPORT,
                        report_num=report_num,
+                       content='trial_end',
                        context=context)
                 return _comp_ex.extract_node_output(self.output_CIM)
 
