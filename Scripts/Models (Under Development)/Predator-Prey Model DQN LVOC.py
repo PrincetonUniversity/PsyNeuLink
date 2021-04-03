@@ -160,7 +160,7 @@ agent_comp.add_projections([a,b,c])
 # **************************************  CONOTROL APPARATUS ***********************************************************
 
 ocm = OptimizationControlMechanism(name='EVC',
-                                   features=trial_type_input_mech,
+                                   state_features=trial_type_input_mech,
                                    feature_function=FEATURE_FUNCTION,
                                    agent_rep=RegressionCFA(
                                            update_weights=BayesGLM(mu_0=0.5, sigma_0=0.1),

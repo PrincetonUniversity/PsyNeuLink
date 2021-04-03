@@ -308,7 +308,7 @@ class UserDefinedFunction(Function_Base):
 
     **NumPy Support for Compiled User Defined Functions**
 
-    Compiled User Defined Functions also provide access to limited compiled NumPy functionality; The supported features are listed as follows:
+    Compiled User Defined Functions also provide access to limited compiled NumPy functionality; The supported state_features are listed as follows:
 
     * *Data Types* -- Numpy Arrays and Matrices are supported, as long as their dimensionality is less than 3. In addition, the elementwise multiplication and addition of NumPy arrays and matrices is fully supported
 

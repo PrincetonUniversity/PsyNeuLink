@@ -45,7 +45,7 @@ calls the gym-forager agent with a specified action and returns the reward assoc
     and provided as the input to its `update_weights <RegressorCFA.update_weights>`, are represented in the
     `vector <PredictionVector.vector>` attribute of a `PredictionVector` assigned to the RegressorCFA`s
     `prediction_vector <RegressorCFA.prediction_vector>` attribute.  The  `feature_values
-    <OptimizationControlMechanism.feature_values>` are assigned to the features field of the
+    <OptimizationControlMechanism.feature_values>` are assigned to the state_features field of the
     `prediction_vector <RegressorCFA.prediction_vector>`, and the `control_allocation
     <ControlMechanism_control_allocation>` is assigned to the control_allocation field of the `prediction_vector
     <RegressorCFA.prediction_vector>`.  The `prediction_vector <RegressorCFA.prediction_vector>` may also contain

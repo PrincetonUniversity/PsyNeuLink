@@ -44,7 +44,7 @@ The `feature_values <OptimiziationControlMechanism.feature_values>` and `control
 as the input to its `update_weights <RegressorCFA.update_weights>`, are represented in the `vector
 <PredictionVector.vector>` attribute of a `PredictionVector` assigned to the RegressorCFA`s `prediction_vector
 <RegressorCFA.prediction_vector>` attribute.  The  `feature_values <OptimizationControlMechanism.feature_values>` are
-assigned to the features field of the `prediction_vector <RegressorCFA.prediction_vector>`, and the `control_allocation
+assigned to the state_features field of the `prediction_vector <RegressorCFA.prediction_vector>`, and the `control_allocation
 <ControlMechanism_control_allocation>` is assigned to the control_allocation field of the `prediction_vector
 <RegressorCFA.prediction_vector>`.  The `prediction_vector <RegressorCFA.prediction_vector>` may also contain fields
 for the `costs ControlMechanism.costs` associated with the `control_allocation <ControlMechanism.control_allocation>`
@@ -387,7 +387,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         ---------
 
         feature_values : 2d nparray
-            arrays of features to assign as the `PV.F` term of `terms <PredictionVector.terms>`.
+            arrays of state_features to assign as the `PV.F` term of `terms <PredictionVector.terms>`.
 
         control_signals : List[ControlSignal]
             list containing the `ControlSignals <ControlSignal>` of an `OptimizationControlMechanism`;  the `variable
@@ -620,7 +620,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             terms = self.specified_terms
             computed_terms = {}
 
-            # No need to calculate features, so just get values
+            # No need to calculate state_features, so just get values
             computed_terms[PV.F] = f = self.terms[PV.F.value]
 
             # Compute value of each control_signal from its variable

@@ -2988,7 +2988,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition.retain_old_simulation_data>` for additional details).
 
     show_graph_attributes : dict : None
-        specifies features of how the Composition is displayed when its `show_graph <ShowGraph.show_graph>` method
+        specifies state_features of how the Composition is displayed when its `show_graph <ShowGraph.show_graph>` method
         is called or **animate** is specified in a call to its `run <Composition.run>` method  (see `ShowGraph` for
         list of attributes and their values).
 
@@ -7203,7 +7203,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _build_predicted_inputs_dict(self, predicted_input):
         inputs = {}
-        # ASSUMPTION: input_ports[0] is NOT a feature and input_ports[1:] are features
+        # ASSUMPTION: input_ports[0] is NOT a feature and input_ports[1:] are state_features
         # If this is not a good assumption, we need another way to look up the feature InputPorts
         # of the OCM and know which InputPort maps to which predicted_input value
 
@@ -10076,7 +10076,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return self.parameters.simulation_results.get(self.default_execution_id)
 
     #  For now, external_input_ports == input_ports and external_input_values == input_values
-    #  They could be different in the future depending on new features (ex. if we introduce recurrent compositions)
+    #  They could be different in the future depending on new state_features (ex. if we introduce recurrent compositions)
     #  Useful to have this property for treating Compositions the same as Mechanisms in run & execute
     @property
     def external_input_ports(self):

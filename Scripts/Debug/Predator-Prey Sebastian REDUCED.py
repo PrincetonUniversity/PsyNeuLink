@@ -61,7 +61,7 @@ agent_comp.add_node(action_mech, required_roles=[NodeRole.OUTPUT])
 # **************************************  CONOTROL APPARATUS ***********************************************************
 
 ocm = OptimizationControlMechanism(name='EVC',
-                                   features=[trial_type_input_mech],
+                                   state_features=[trial_type_input_mech],
                                    # feature_function=FEATURE_FUNCTION,
                                    agent_rep=RegressionCFA(
                                            name='RegressionCFA',

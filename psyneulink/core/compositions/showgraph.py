@@ -42,7 +42,7 @@ a Composition's `controller <Composition_Controller>`;  and **show_learning** de
 `learning compnents <Composition_Learning_Components>`.  These are listed as the arguments for the show_graph
 <ShowGraph.show_graph>` method below.
 
-*Display attributes* -- features (such as the colors and shapes) in which different types of nodes are displayed can
+*Display attributes* -- state_features (such as the colors and shapes) in which different types of nodes are displayed can
 be modified by assigning a dictionary of attribute:values pairs to the **show_graph_configuration** argument of the
 Composition's constructor.  These are listed as the arguments for the ShowGraph object (used to display the graph)
 in the `class reference <ShowGraph_Class_Reference>` below.

@@ -47,7 +47,7 @@ comp.add_linear_processing_pathway(task_execution_pathway)
 comp.add_controller(
     controller=pnl.OptimizationControlMechanism(
         agent_rep=comp,
-        features=[Input.input_port, reward.input_port],
+        state_features=[Input.input_port, reward.input_port],
         feature_function=pnl.AdaptiveIntegrator(rate=0.5),
         objective_mechanism=pnl.ObjectiveMechanism(
             function=pnl.LinearCombination(operation=pnl.PRODUCT),

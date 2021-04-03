@@ -32,7 +32,7 @@ executed.  Similarly, its output is generally conveyed to another Mechanism or u
 The ProcessingMechanism is the simplest mechanism in PsyNeuLink. It does not have any extra arguments or
 specialized validation. Almost any PsyNeuLink Function, including the `UserDefinedFunction`, may be the function of a
 ProcessingMechanism. Currently, the only exception is `BackPropagation`. Subtypes of
-ProcessingMechanism have more specialized features, and often have restrictions on which Functions are allowed.
+ProcessingMechanism have more specialized state_features, and often have restrictions on which Functions are allowed.
 
 The output of a ProcessingMechanism may also be used by a `ModulatoryMechanism <ModulatoryMechanism>` to modify the
 parameters of other components (or its own parameters). ProcessingMechanisms are always executed before all

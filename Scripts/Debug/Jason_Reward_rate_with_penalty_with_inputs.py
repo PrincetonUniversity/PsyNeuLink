@@ -200,11 +200,11 @@ def get_stroop_model(unit_noise_std=.01, dec_noise_std=.1):
     model.add_nodes([reward_rate, punish_rate])
 
     controller = pnl.OptimizationControlMechanism(agent_rep=model,
-                                                  features=[inp_clr.input_port,
-                                                            inp_wrd.input_port,
-                                                            inp_task.input_port,
-                                                            reward.input_port,
-                                                            punish.input_port],
+                                                  state_features=[inp_clr.input_port,
+                                                                  inp_wrd.input_port,
+                                                                  inp_task.input_port,
+                                                                  reward.input_port,
+                                                                  punish.input_port],
                                                   feature_function=pnl.AdaptiveIntegrator(rate=0.1),
                                                   objective_mechanism=objective_mech,
                                                   function=pnl.GridSearch(),
