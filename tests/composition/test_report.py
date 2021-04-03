@@ -556,6 +556,10 @@ class TestReport():
         assert actual_output == expected_output
 
     @pytest.mark.skipif(sys.platform == 'win32', reason="<Incompatible UDF-8 formatting of rich Console output>")
+    def test_nested_comps_with_use_prefs(self):
+        pass
+
+    @pytest.mark.skipif(sys.platform == 'win32', reason="<Incompatible UDF-8 formatting of rich Console output>")
     def test_autodiff_report(self):
         xor_in = pnl.TransferMechanism(name='xor_in',
                                        default_variable=np.zeros(2))
