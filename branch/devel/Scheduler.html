@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,9 +195,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.core.scheduling.scheduler">
+  <section id="module-psyneulink.core.scheduling.scheduler">
 <span id="scheduler"></span><h1>Scheduler<a class="headerlink" href="#module-psyneulink.core.scheduling.scheduler" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="overview">
+<section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A Scheduler is used to generate the order in which the <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> are
 executed. By default, a Scheduler executes Components in an order determined by the pattern of <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> among the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> in the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, with each Mechanism executed once
@@ -214,8 +215,8 @@ Conditions, and assigned to a Scheduler for execution.  However, in some circums
 can also be assigned for execution (e.g., during <code class="xref any docutils literal notranslate"><span class="pre">learning</span></code> to insure that
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> are updated in the proper order).</p>
 </div>
-</div>
-<div class="section" id="creating-a-scheduler">
+</section>
+<section id="creating-a-scheduler">
 <span id="scheduler-creation"></span><h2>Creating a Scheduler<a class="headerlink" href="#creating-a-scheduler" title="Permalink to this headline">¶</a></h2>
 <p>A Scheduler can be created explicitly using its constructor.  However, more commonly it is created automatically
 for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> when it is created.  When creating a Scheduler explicitly, the set of <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> to be executed and their order must be specified in the Scheduler’s constructor using one the following:</p>
@@ -234,8 +235,8 @@ used as the default order of executions, subject to any <a class="reference inte
 <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>) in the <strong>conditions</strong> argument of its constructor.  Individual Conditions and/or
 ConditionSets can also be added after the  Scheduler has been created, using its <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet.add_condition" title="psyneulink.core.scheduling.condition.ConditionSet.add_condition"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_condition</span></code></a> and
 <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet.add_condition_set" title="psyneulink.core.scheduling.condition.ConditionSet.add_condition_set"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_condition_set</span></code></a> methods, respectively.</p>
-</div>
-<div class="section" id="algorithm">
+</section>
+<section id="algorithm">
 <span id="scheduler-algorithm"></span><h2>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this headline">¶</a></h2>
 <p id="consideration-set">When a Scheduler is created, it constructs a <a class="reference internal" href="#psyneulink.core.scheduling.scheduler.Scheduler.consideration_queue" title="psyneulink.core.scheduling.scheduler.Scheduler.consideration_queue"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">consideration_queue</span></code></a>:  a list of <a class="reference internal" href="#consideration-set"><span class="std std-ref">consideration_sets</span></a>
 that defines the order in which <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> are eligible to be executed.  This is based on the pattern of
@@ -278,8 +279,8 @@ while TimeScale.TRIAL termination conditions are not satisfied:
         increment time counters
 </pre></div>
 </div>
-</div>
-<div class="section" id="execution">
+</section>
+<section id="execution">
 <span id="scheduler-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When a Scheduler is run, it provides a set of Components that should be run next, based on their dependencies in the
 Composition or graph specification dictionary, and any <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>, specified in the Scheduler’s
@@ -326,7 +327,7 @@ for a particular Component or set of Components is met).  When the Scheduler ter
 the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> begins processing the next input specified in the call to its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>
 method. Thus, a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> is defined as the scope of processing associated with a given input to the
 Composition.</p>
-<div class="section" id="termination-conditions">
+<section id="termination-conditions">
 <span id="scheduler-termination-conditions"></span><h3><em>Termination Conditions</em><a class="headerlink" href="#termination-conditions" title="Permalink to this headline">¶</a></h3>
 <p>Termination conditions are <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that specify when the open-ended units of time - <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> and <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> - have ended.  By default, the termination condition for a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> is
 <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.AllHaveRun" title="psyneulink.core.scheduling.condition.AllHaveRun"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AllHaveRun</span></code></a>, which is satisfied when all Components have run at least once within the trial, and the termination
@@ -425,7 +426,7 @@ running a Composition, by passing a dictionary mapping <a class="reference inter
 </div>
 </li>
 </ul>
-<div class="section" id="class-reference">
+<section id="class-reference">
 <h4>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h4>
 <dl class="py class">
 <dt id="psyneulink.core.scheduling.scheduler.Scheduler">
@@ -589,10 +590,10 @@ terminate the execution of the specified <a class="reference internal" href="Tim
 <em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.scheduling.scheduler.</code><code class="sig-name descname">SchedulerError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.SchedulerError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</div>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
+</section>
 
 
              </article>

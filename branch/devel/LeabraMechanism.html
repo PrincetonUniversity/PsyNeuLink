@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LeabraMechanism &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>LeabraMechanism &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -98,7 +99,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -204,9 +205,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.library.components.mechanisms.processing.leabramechanism">
+  <section id="module-psyneulink.library.components.mechanisms.processing.leabramechanism">
 <span id="leabramechanism"></span><h1>LeabraMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.leabramechanism" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="contents">
+<section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -217,8 +218,8 @@
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">LeabraMechanism_Class_Reference</span></code></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="leabramechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A LeabraMechanism is a subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that wraps a leabra network. Leabra is an artificial neural
 network algorithm (<a class="reference external" href="ftp://grey.colorado.edu/pub/oreilly/thesis/oreilly_thesis.all.pdf">O’Reilly, 1996</a>). For more
@@ -229,8 +230,8 @@ info about leabra, please see <a class="reference external" href="https://grey.c
 at Github. While the LeabraMechanism should always match the output of an equivalent network in the leabra package,
 the leabra package itself is still in development, so it is not guaranteed to be correct yet.</p>
 </div>
-</div>
-<div class="section" id="creating-a-leabramechanism">
+</section>
+<section id="creating-a-leabramechanism">
 <span id="leabramechanism-creation"></span><h2>Creating a LeabraMechanism<a class="headerlink" href="#creating-a-leabramechanism" title="Permalink to this headline">¶</a></h2>
 <p>A LeabraMechanism can be created in two ways. Users can specify the size of the input layer (<strong>input_size</strong>), size
 of the output layer (<strong>output_size</strong>), number of hidden layers (<strong>hidden_layers</strong>), and sizes of the hidden layers
@@ -240,8 +241,8 @@ of the output layer (<strong>output_size</strong>), number of hidden layers (<st
 This option requires users to be familiar with the leabra package, but allows more flexibility in specifying parameters.
 In the former method of creating a LeabraMechanism, the <strong>training_flag</strong> argument specifies whether the network should
 be learning (updating its weights) or not.</p>
-</div>
-<div class="section" id="structure">
+</section>
+<section id="structure">
 <span id="leabramechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>The LeabraMechanism has an attribute <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">training_flag</span></code></a> which can be set to True/False to
 determine whether the network is currently learning. The <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag" title="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraMechanism.training_flag"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">training_flag</span></code></a> can also be
@@ -275,15 +276,15 @@ LeabraMechanism. Here is an example of how to do this. In the example, T2 passes
 </pre></div>
 </div>
 </div>
-</div>
-<div class="section" id="execution">
+</section>
+<section id="execution">
 <span id="leabramechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>The LeabraMechanism passes input and training data to the leabra Network it wraps, and the LeabraMechanism passes its
 leabra Network’s output (after one “trial”, default 200 cycles in PsyNeuLink) to its primary <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>. For details
 on Leabra, see <a class="reference external" href="https://grey.colorado.edu/emergent/index.php/Leabra">O’Reilly and Munakata, 2016</a> and the
 <a class="reference external" href="https://github.com/benureau/leabra">leabra Python package on Github</a>.</p>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="leabramechanism-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py exception">
 <dt id="psyneulink.library.components.mechanisms.processing.leabramechanism.LeabraError">
@@ -552,8 +553,8 @@ please see the <code class="xref any docutils literal notranslate"><span class="
 </dl>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

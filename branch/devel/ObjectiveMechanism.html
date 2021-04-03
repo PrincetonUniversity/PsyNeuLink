@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,9 +195,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.core.components.mechanisms.processing.objectivemechanism">
+  <section id="module-psyneulink.core.components.mechanisms.processing.objectivemechanism">
 <span id="objectivemechanism"></span><h1>ObjectiveMechanism<a class="headerlink" href="#module-psyneulink.core.components.mechanisms.processing.objectivemechanism" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="contents">
+<section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -222,23 +223,23 @@
 <li><p><a class="reference internal" href="#objectivemechanism-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="objectivemechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An ObjectiveMechanism is a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that monitors the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>
 of one or more other ProcessingMechanisms specified in its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">monitor</span></code></a> attribute,
 and evaluates them using its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>. The result of the evaluation is placed in the
 ObjectiveMechanism’s <em>OUTCOME</em> (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>) OutputPort.  ObjectiveMechanisms are typically used
 closely with (and often created automatically by) <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanisms</span></a>.</p>
-</div>
-<div class="section" id="creating-an-objectivemechanism">
+</section>
+<section id="creating-an-objectivemechanism">
 <span id="objectivemechanism-creation"></span><h2>Creating an ObjectiveMechanism<a class="headerlink" href="#creating-an-objectivemechanism" title="Permalink to this headline">¶</a></h2>
 <p>ObjectiveMechanisms are often created automatically when other PsyNeuLink components are created (in particular,
 ModulatoryMechanisms, such as <a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">LearningMechanisms</span></a> and
 <a class="reference internal" href="ControlMechanism.html#controlmechanism-creation"><span class="std std-ref">ControlMechanisms</span></a>).  An ObjectiveMechanism can also be created directly by calling its
 constructor.  The primary attribute used to define an ObjectiveMechanism is its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">monitor</span></code></a>
 attribute, that is specified using the corresponding argument of its constructor as described below.</p>
-<div class="section" id="monitor">
+<section id="monitor">
 <span id="objectivemechanism-monitor"></span><h3><em>Monitor</em><a class="headerlink" href="#monitor" title="Permalink to this headline">¶</a></h3>
 <p>The <strong>monitor</strong> argument of an ObjectiveMechanism’s constructor specifies the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a> it monitors.
 This takes the place of the <strong>input_ports</strong> argument used by most other forms of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, and is used
@@ -262,11 +263,11 @@ specified for that InputPort.</p>
 When an ObjectiveMechanism is created by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, these may pass a set of OutputPorts to be monitored to
 the ObjectiveMechanism.  A ControlMechanism passes OutputPort specifications listed in its <strong>objective_mechanism</strong>
 argument (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-objectivemechanism"><span class="std std-ref">Objective Mechanism</span></a>).</p>
-</div>
-</div>
-<div class="section" id="structure">
+</section>
+</section>
+<section id="structure">
 <span id="objectivemechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="input">
+<section id="input">
 <span id="objectivemechanism-input"></span><h3><em>Input</em><a class="headerlink" href="#input" title="Permalink to this headline">¶</a></h3>
 <p>An ObjectiveMechanism has one <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> for each of the OutputPorts specified in its
 <strong>monitor</strong> argument (see <a class="reference internal" href="#objectivemechanism-monitor"><span class="std std-ref">Monitor</span></a>). Each InputPort receives a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the
@@ -281,8 +282,8 @@ transform the <a class="reference internal" href="OutputPort.html#psyneulink.cor
 constructor, it is assigned to the corresponding InputPort.  If the ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> implements a weights and/or exponents attribute, the values specified is assigned to
 the corresponding attribute, and applied to the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the InputPort before it is combined
 with that of the other InputPorts to generate the ObjectiveMechanism’s <a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">output</span></a>.</p>
-</div>
-<div class="section" id="function">
+</section>
+<section id="function">
 <span id="objectivemechanism-function"></span><h3><em>Function</em><a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
 <p>The ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> uses the values of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> to compute an <a class="reference external" href="https://en.wikipedia.org/wiki/Loss_function">objective (or “loss”) function</a>, that is assigned as the value of its <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">OutputPort</span></a>.  By default, it uses a <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearCombination</span></code></a> function to sum the values of the values of
 the items in its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>. However, by assigning values to the ‘weight
@@ -291,14 +292,14 @@ it can be configured to calculate differences, ratios,  etc. (see <a class="refe
 be replaced with any <code class="xref any docutils literal notranslate"><span class="pre">CombinationFunction</span></code>, or any python function that takes an 2d array as its input (with a number
 of items in axis 0 equal to the number of the ObjectiveMechanism’s InputPorts), and generates a 1d array as its result.
 If it implements <code class="xref std std-keyword docutils literal notranslate"><span class="pre">weight</span></code> and/or <code class="xref std std-keyword docutils literal notranslate"><span class="pre">exponent</span></code> attributes, those are assigned from <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.weight" title="psyneulink.core.components.ports.inputport.InputPort.weight"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">weight</span></code></a> and <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.exponent" title="psyneulink.core.components.ports.inputport.InputPort.exponent"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">exponent</span></code></a> attributes of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> (also listed in the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor_weights_and_exponents" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor_weights_and_exponents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">monitor_weights_and_exponents</span></code></a> attribute);  otherwise, they are ignored.</p>
-</div>
-<div class="section" id="output">
+</section>
+<section id="output">
 <span id="objectivemechanism-output"></span><h3><em>Output</em><a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
 <p>The <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> of an Objective mechanism is a 1d array, named <em>OUTCOME</em>, that is the
 result of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> (as described above).</p>
-</div>
-</div>
-<div class="section" id="execution">
+</section>
+</section>
+<section id="execution">
 <span id="objectivemechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When an ObjectiveMechanism is executed, it updates its input_ports with the values of the OutputPorts listed in
 its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">monitor</span></code></a> attribute, and then uses its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>
@@ -422,8 +423,8 @@ is using the default value (1);  whenever a weight and/or exponent parameter is 
 every item of the function’s variable.  However, the <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination.exponents" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.exponents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">exponents</span></code></a> did not need to be
 specified, as it is not used.  However it, and the <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination.operation" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination.operation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">operation</span></code></a> parameters of
 <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearCombination</span></code></a> can also be used to multiply and divide quantities.</p>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="objectivemechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism">
@@ -623,8 +624,8 @@ If any one value has been assigned, assign default value (1) to all other elemen
 <em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.components.mechanisms.processing.objectivemechanism.</code><code class="sig-name descname">ObjectiveMechanismError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanismError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

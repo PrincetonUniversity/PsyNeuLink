@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Log &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>Log &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,9 +195,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.core.globals.log">
+  <section id="module-psyneulink.core.globals.log">
 <span id="log"></span><h1>Log<a class="headerlink" href="#module-psyneulink.core.globals.log" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="overview">
+<section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A Log object is used to record the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of PsyNeuLink Components during their “life cycle” (i.e.,
 when they are created, validated, and/or executed).  Every Component has a Log object, assigned to its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a> attribute when the Component is created, that can be used to record its value and/or that of other
@@ -208,14 +209,14 @@ they are most easily specified using the Log’s <a class="reference internal" h
 items to be logged, respectively. Entries can also be made by the user programmatically, using the <code class="xref any docutils literal notranslate"><span class="pre">log_values</span></code> method. Logging can be useful not only for observing the behavior of a Component in a model, but also
 in debugging the model during construction. The entries of a Log can be displayed in a “human readable” table using
 its <a class="reference internal" href="#psyneulink.core.globals.log.Log.print_entries" title="psyneulink.core.globals.log.Log.print_entries"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">print_entries</span></code></a> method, and returned in CSV and numpy array formats using its and <a class="reference internal" href="#psyneulink.core.globals.log.Log.nparray" title="psyneulink.core.globals.log.Log.nparray"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">nparray</span></code></a>, <a class="reference internal" href="#psyneulink.core.globals.log.Log.nparray_dictionary" title="psyneulink.core.globals.log.Log.nparray_dictionary"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">nparray_dictionary</span></code></a> and <a class="reference internal" href="#psyneulink.core.globals.log.Log.csv" title="psyneulink.core.globals.log.Log.csv"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">csv</span></code></a>  methods.</p>
-</div>
-<div class="section" id="creating-logs-and-entries">
+</section>
+<section id="creating-logs-and-entries">
 <span id="log-creation"></span><h2>Creating Logs and Entries<a class="headerlink" href="#creating-logs-and-entries" title="Permalink to this headline">¶</a></h2>
 <p>A log object is automatically created for and assigned to a Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a> attribute when the
 Component is created.  An entry is automatically created and added to the Log’s <a class="reference internal" href="#psyneulink.core.globals.log.Log.entries" title="psyneulink.core.globals.log.Log.entries"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">entries</span></code></a> attribute
 when its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> or that of a Component that belongs to it is recorded in the Log.</p>
-</div>
-<div class="section" id="structure">
+</section>
+<section id="structure">
 <span id="log-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A Log is composed of <a class="reference internal" href="#psyneulink.core.globals.log.Log.entries" title="psyneulink.core.globals.log.Log.entries"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">entries</span></code></a>, each of which is a dictionary that maintains a record of the logged
 values of a Component.  The key for each entry is a string that is the name of the Component, and its value is a list
@@ -263,7 +264,7 @@ programmatically (“manually”).  Components can be specified by their names o
 <li><p><a class="reference internal" href="#psyneulink.core.globals.log.Log.csv" title="psyneulink.core.globals.log.Log.csv"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">csv</span></code></a> – returns a CSV-formatted string with the <a class="reference internal" href="#psyneulink.core.globals.log.Log.entries" title="psyneulink.core.globals.log.Log.entries"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">entries</span></code></a> in the Log.</p></li>
 </ul>
 </div></blockquote>
-<div class="section" id="loggable-items">
+<section id="loggable-items">
 <span id="log-loggable-items"></span><h3><em>Loggable Items</em><a class="headerlink" href="#loggable-items" title="Permalink to this headline">¶</a></h3>
 <p>Although every Component is assigned its own Log, that records the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of that Component,
 the Logs for <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> and <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a> also  provide access to and control
@@ -287,8 +288,8 @@ the Logs of their <a class="reference internal" href="Port.html"><span class="do
 </ul>
 </li>
 </ul>
-</div>
-<div class="section" id="logging-conditions">
+</section>
+<section id="logging-conditions">
 <span id="log-conditions"></span><h3><em>Logging Conditions</em><a class="headerlink" href="#logging-conditions" title="Permalink to this headline">¶</a></h3>
 <p>Configuring a Component to be logged is done using a condition, that specifies a <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogCondition</span></code></a> under which its
 <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> should be entered in its Log.  These can be specified in the <a class="reference internal" href="#psyneulink.core.globals.log.Log.set_log_conditions" title="psyneulink.core.globals.log.Log.set_log_conditions"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">set_log_conditions</span></code></a> method of a Log, or directly by specifying a <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogCondition</span></code></a> for the value a Component’s
@@ -323,9 +324,9 @@ requires that it be assigned in the <strong>prefs</strong> argument of the Compo
 <p><a class="reference internal" href="#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">LogCondition.TRIAL</span></code></a> logs the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of a Component at the end of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>.
 To log its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> at the start of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>, use its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log_values" title="psyneulink.core.components.component.Component.log_values"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">log_values</span></code></a> method in the <strong>call_before_trial</strong> argument of the System’s <code class="xref any docutils literal notranslate"><span class="pre">run</span></code> method.</p>
 </div>
-</div>
-</div>
-<div class="section" id="execution">
+</section>
+</section>
+<section id="execution">
 <span id="log-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>The value of a Component is recorded to a Log when the condition assigned to its <code class="xref any docutils literal notranslate"><span class="pre">logPref</span></code> is met.
 This is specified as a <a class="reference internal" href="#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogCondition</span></code></a> or a boolean combination of them (see <a class="reference internal" href="#log-conditions"><span class="std std-ref">Logging Conditions</span></a>).  The default LogCondition
@@ -418,8 +419,8 @@ reported.</p>
  <span class="p">[[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]]</span> <span class="p">[[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]]]]</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="log-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.core.globals.log.Log">
@@ -868,8 +869,8 @@ with the exception of TRIAL and RUN, which are bit-shifted to follow the Context
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

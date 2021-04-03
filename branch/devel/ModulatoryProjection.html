@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ModulatoryProjection &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>ModulatoryProjection &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,7 +195,7 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="modulatoryprojection">
+  <section id="modulatoryprojection">
 <h1>ModulatoryProjection<a class="headerlink" href="#modulatoryprojection" title="Permalink to this headline">¶</a></h1>
 <div class="subclasses docutils container" id="modulatoryprojection-subtypes">
 <p><em>Subclasses</em></p>
@@ -206,7 +207,7 @@
 </ul>
 </div>
 </div>
-<span class="target" id="module-psyneulink.core.components.projections.modulatory.modulatoryprojection"></span><div class="section" id="contents">
+<span class="target" id="module-psyneulink.core.components.projections.modulatory.modulatoryprojection"></span><section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -217,8 +218,8 @@
 <li><p><a class="reference internal" href="#modulatoryprojection-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="modulatoryprojection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A ModulatoryProjection is a subclass of <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> that takes the value of a
 <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> belonging to a <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a>, and uses that to
@@ -253,22 +254,22 @@ to the <a class="reference internal" href="InputPort.html"><span class="doc">Inp
 </li>
 </ul>
 <p>See <a class="reference internal" href="ModulatoryMechanism.html#modulatorymechanism-naming"><span class="std std-ref">ModulatoryMechanism</span></a> for conventions used for the names of Modulatory components.</p>
-</div>
-<div class="section" id="creating-a-modulatoryprojection">
+</section>
+<section id="creating-a-modulatoryprojection">
 <span id="modulatoryprojection-creation"></span><h2>Creating a ModulatoryProjection<a class="headerlink" href="#creating-a-modulatoryprojection" title="Permalink to this headline">¶</a></h2>
 <p>A ModulatoryProjection is a base class, and cannot be instantiated directly.  However, the three types of
 ModulatoryProjections listed above can be created directly, by calling the constructor for the desired type.
 More commonly, however, ModulatoryProjections are either specified in the context of the Ports to or from
 which they project (<a class="reference internal" href="Port.html#port-projections"><span class="std std-ref">Projections</span></a> in Port, and <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Specifying a Projection</span></a>), or are <a class="reference internal" href="Projection.html#projection-automatic-creation"><span class="std std-ref">created automatically</span></a>, the details of which are described in the documentation for each type of
 ModulatoryProjection.</p>
-</div>
-<div class="section" id="structure">
+</section>
+<section id="structure">
 <span id="modulatoryprojection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A ModulatoryProjection has the same basic structure as a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, augmented by type-specific
 attributes and methods described under each type of ModulatoryProjection.  The ModulatoryProjections received by a
 <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> are listed in the Port’s <a class="reference internal" href="Mechanism.html#id13" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.mod_afferents"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> attribute.</p>
-</div>
-<div class="section" id="execution">
+</section>
+<section id="execution">
 <span id="modulatoryprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A ModulatoryProjection, like any Projection, cannot be executed directly.  It is executed when the <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> to
 which it projects — its <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a> — is updated;  that occurs when the Port’s owner
@@ -282,8 +283,8 @@ the <a class="reference internal" href="Port.html#psyneulink.core.components.por
 are not applied until the Port is updated which, in turn, does not occur until the Mechanism to which the Port
 belongs is next executed; see <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a> for an explanation of “lazy” updating).</p>
 </div>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="modulatoryprojection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.core.components.projections.modulatory.modulatoryprojection.ModulatoryProjection_Base">
@@ -314,8 +315,8 @@ ModulatoryProjection with the same base name (see <a class="reference internal" 
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

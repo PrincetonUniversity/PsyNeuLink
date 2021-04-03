@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,9 +195,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism">
+  <section id="module-psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism">
 <span id="optimizationcontrolmechanism"></span><h1>OptimizationControlMechanism<a class="headerlink" href="#module-psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="overview">
+<section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An OptimizationControlMechanism is a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that uses an <a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OptimizationFunction</span></code></a> to find
 an optimal <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_allocation</span></code></a> for a given <a class="reference internal" href="#optimizationcontrolmechanism-state"><span class="std std-ref">state</span></a>. The <a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OptimizationFunction</span></code></a> uses the OptimizationControlMechanism’s
@@ -237,8 +238,8 @@ then used to predict the <a class="reference internal" href="ControlMechanism.ht
 OptimizationControlMechanism belongs (and for which it is the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a>). On each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>, that Composition itself is used to simulate processing on the upcoming trial, based on the current
 or (expected) <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">feature_values</span></code></a> for that trial, in order to find the
 &lt;ControlMechanism.control_allocation&gt;` that yields the best net_outcome &lt;ControlMechanism.net_outcome&gt;` for that trial.</p>
-</div>
-<div class="section" id="creating-an-optimizationcontrolmechanism">
+</section>
+<section id="creating-an-optimizationcontrolmechanism">
 <span id="optimizationcontrolmechanism-creation"></span><h2>Creating an OptimizationControlMechanism<a class="headerlink" href="#creating-an-optimizationcontrolmechanism" title="Permalink to this headline">¶</a></h2>
 <p>An OptimizationControlMechanism is created in the same was as any <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>.
 The following arguments of its constructor are specific to the OptimizationControlMechanism:</p>
@@ -274,14 +275,14 @@ optimization.  If that Composition already has a <a class="reference internal" h
 the OptimizationControlMechanism is disabled. If another Composition is specified, it must conform to the
 specifications for an <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">agent_rep</span></code></a> as described <a class="reference internal" href="#optimizationcontrolmechanism-agent-rep"><span class="std std-ref">below</span></a>.</p></li>
 </ul>
-</div>
-<div class="section" id="structure">
+</section>
+<section id="structure">
 <span id="optimizationcontrolmechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>In addition to the standard Components associated with a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, including a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>
 to its <em>OUTCOME</em> InputPort from its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_mechanism</span></code></a>, and a
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> used to carry out the optimization process, it has several
 other constiuents, as described below.</p>
-<div class="section" id="objectivemechanism">
+<section id="objectivemechanism">
 <span id="optimizationcontrolmechanism-objectivemechanism"></span><h3><em>ObjectiveMechanism</em><a class="headerlink" href="#objectivemechanism" title="Permalink to this headline">¶</a></h3>
 <p>Like any <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, an OptimizationControlMechanism may be assigned an <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_mechanism</span></code></a> that is used to evaluate the outcome of processing for a given trial (see
 <code class="xref any docutils literal notranslate"><span class="pre">ControlMechanism_Objective_ObjectiveMechanism).</span> <span class="pre">This</span> <span class="pre">passes</span> <span class="pre">the</span> <span class="pre">result</span> <span class="pre">to</span> <span class="pre">the</span> <span class="pre">OptimizationControlMechanism,</span> <span class="pre">which</span> <span class="pre">it</span>
@@ -299,8 +300,8 @@ without taking into account the <a class="reference internal" href="ControlMecha
 <a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_function</span></code></a> parameter of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, takes the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.costs" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.costs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">costs</span></code></a> of the OptimizationControlMechanism’s <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_signals</span></code></a>
 into account when calculating the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a> that it returns as its result.</p>
 </div>
-</div>
-<div class="section" id="features">
+</section>
+<section id="features">
 <span id="optimizationcontrolmechanism-features"></span><h3><em>Features</em><a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h3>
 <p>In addition to its <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> (which typically receives a projection from the
 <em>OUTCOME</em> OutputPort of the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_mechanism</span></code></a>,
@@ -327,14 +328,14 @@ constructor (see <a class="reference internal" href="#optimizationcontrolmechani
 OutputPort(s) to the InputPort of the OptimizationControlMechanism for that feature.</p></li>
 </ul>
 <p>The current <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the InputPorts for the features are listed in the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">feature_values</span></code></a> attribute.</p>
-</div>
-<div class="section" id="state">
+</section>
+<section id="state">
 <span id="optimizationcontrolmechanism-state"></span><h3><em>State</em><a class="headerlink" href="#state" title="Permalink to this headline">¶</a></h3>
 <p>The state of the Composition (or part of one) controlled by an OptimizationControlMechanism is defined by a combination
 of <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.feature_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">feature_values</span></code></a> (see <a class="reference internal" href="#optimizationcontrolmechanism-features"><span class="std std-ref">above</span></a>)
 and a <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_allocation</span></code></a>.</p>
-</div>
-<div class="section" id="agent-representation">
+</section>
+<section id="agent-representation">
 <span id="optimizationcontrolmechanism-agent-rep"></span><h3><em>Agent Representation</em><a class="headerlink" href="#agent-representation" title="Permalink to this headline">¶</a></h3>
 <p>The defining feature of an OptimizationControlMechanism is its agent representation, specified in the <strong>agent_rep</strong>
 argument of its constructor and assigned to its <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">agent_rep</span></code></a> attribute.  This
@@ -358,8 +359,8 @@ values that corresopnd to the shape of the <a class="reference internal" href="#
 <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_allocation</span></code></a> and <code class="xref any docutils literal notranslate"><span class="pre">net_outcome</span></code> attributes of the OptimizationControlMechanism. respectively.</p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="function">
+</section>
+<section id="function">
 <span id="optimizationcontrolmechanism-function"></span><h3><em>Function</em><a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
 <p>The <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of an OptimizationControlMechanism is used to find the
 <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_allocation</span></code></a> that optimizes the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a> for the current (or expected) <a class="reference internal" href="#optimizationcontrolmechanism-state"><span class="std std-ref">features</span></a>.
@@ -385,9 +386,9 @@ which evaluates the <a class="reference internal" href="ControlMechanism.html#ps
 <code class="xref any docutils literal notranslate"><span class="pre">control_allocation_search_space</span></code> as its
 <a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">search_space</span></code></a>, and returns the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_allocation</span></code></a> that yields the greatest <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a>,
 thus implementing a computation of <a class="reference internal" href="#optimizationcontrolmechanism-evc"><span class="std std-ref">EVC</span></a>.</p>
-</div>
-</div>
-<div class="section" id="execution">
+</section>
+</section>
+<section id="execution">
 <span id="optimizationcontrolmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When an OptimizationControlMechanism is executed, it carries out the following steps:</p>
 <blockquote>
@@ -419,8 +420,8 @@ next executed.</p></li>
 </li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="optimizationcontrolmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism">
@@ -674,8 +675,8 @@ constructor string</p>
 <em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.</code><code class="sig-name descname">OptimizationControlMechanismError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanismError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,9 +195,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.core.components.mechanisms.processing.transfermechanism">
+  <section id="module-psyneulink.core.components.mechanisms.processing.transfermechanism">
 <span id="transfermechanism"></span><h1>TransferMechanism<a class="headerlink" href="#module-psyneulink.core.components.mechanisms.processing.transfermechanism" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="contents">
+<section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -223,8 +224,8 @@
 <li><p><a class="reference internal" href="#transfermechanism-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="transfermechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A TransferMechanism is a subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that adds the ability to integrate its input.</p>
 <p>Like a ProcessingMechanism, it transforms its input using a simple mathematical function, that maintains the form
@@ -235,8 +236,8 @@ following PsyNeuLink <a class="reference internal" href="Function.html"><span cl
 (integrated) manner of execution. When <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> is set to True, the
 mechanism’s input is first transformed by its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a> (
 <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AdaptiveIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AdaptiveIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AdaptiveIntegrator</span></code></a>). That result is then transformed by the mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
-</div>
-<div class="section" id="creating-a-transfermechanism">
+</section>
+<section id="creating-a-transfermechanism">
 <span id="transfermechanism-creation"></span><h2>Creating a TransferMechanism<a class="headerlink" href="#creating-a-transfermechanism" title="Permalink to this headline">¶</a></h2>
 <p>A TransferMechanism is created by calling its constructor.</p>
 <p>Its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is specified in the <strong>function</strong> argument, which can be the name of a
@@ -310,17 +311,17 @@ before setting it as the mechanism’s value. If <a class="reference internal" h
 <strong>noise</strong> is assigned to the TransferMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>
 (as its <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.noise" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> parameter – in the same manner as <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integration_rate</span></code></a> and <code class="xref any docutils literal notranslate"><span class="pre">initial_value</span></code>), whereas <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">clip</span></code></a> modifies the value returned by the mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>
 before setting it as the TransferMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>.</p>
-</div>
-<div class="section" id="structure">
+</section>
+<section id="structure">
 <span id="transfermechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="inputports">
+<section id="inputports">
 <span id="transfermechanism-inputports"></span><h3><em>InputPorts</em><a class="headerlink" href="#inputports" title="Permalink to this headline">¶</a></h3>
 <p>By default, a TransferMechanism has a single <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>;  however, more than one can be specified
 using the <strong>default_variable</strong> or <strong>size</strong> arguments of its constructor (see <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>).  The <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of each InputPort is used as a separate item of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>, and transformed independently by its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.
 Like any InputPorts, the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of any or all of the TransferMechanism’s InputPorts can be
 modulated by one or more <a class="reference internal" href="GatingSignal.html#gatingsignal-modulation"><span class="std std-ref">GatingSignals</span></a> prior to transformation by its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
-</div>
-<div class="section" id="function">
+</section>
+<section id="function">
 <span id="transfermechanism-function"></span><h3><em>Function</em><a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
 <p><em>Function</em>.  The default function for a TransferMechanism is <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a>.  A custom function can be specified in the
 <strong>function</strong> argument of the constructor.  This can be any PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> that is a subtype of
@@ -335,8 +336,8 @@ is:</p>
 <li><p>assigned as the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the TransferMechanism’s corresponding <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="outputports">
+</section>
+<section id="outputports">
 <span id="transfermechanism-outputports"></span><h3><em>OutputPorts</em><a class="headerlink" href="#outputports" title="Permalink to this headline">¶</a></h3>
 <p>By default, or if the <strong>output_ports</strong> argument is specified using the keyword <em>RESULTS</em>, a TransferMechanism generates
 one <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> for each item in the outer dimension (axis 0) of its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> (each of which is
@@ -359,9 +360,9 @@ explicitly specified for each and every item of the Mechanism’s <a class="refe
 to each InputPort) for which an OutputPort is needed.</p>
 </div>
 </div></blockquote>
-</div>
-</div>
-<div class="section" id="execution">
+</section>
+</section>
+<section id="execution">
 <span id="transfermechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When a TransferMechanism is executed, it transforms its input using its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> and
 the following parameters (in addition to any specified for the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>):</p>
@@ -390,7 +391,7 @@ lower and upper values specified by clip.</p></li>
 <p>After each execution, the TransferMechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> – applied to the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of each of its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> – generates a corresponding set of
 values, each of which is assigned as an item of the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> attribute, and the
 <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the corresponding <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> in its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ouput_ports</span></code></a>.</p>
-<div class="section" id="integration">
+<section id="integration">
 <span id="transfermechanism-integration"></span><h3><em>Integration</em><a class="headerlink" href="#integration" title="Permalink to this headline">¶</a></h3>
 <p>If <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> is False (the default), then the TransferMechanism updates its
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> and the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a>
@@ -424,8 +425,8 @@ attribute is set to False, even if <strong>termination_threshold</strong> is spe
 <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.num_executions_before_finished" title="psyneulink.core.components.component.Component.num_executions_before_finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">num_executions_before_finished</span></code></a> attribute remains equal to 1,
 since the <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a> is executed exactly once per call to the
 <a class="reference internal" href="Component.html#component-execution"><span class="std std-ref">execute method</span></a> (and no termination condition has been specified).</p>
-</div>
-<div class="section" id="termination">
+</section>
+<section id="termination">
 <span id="transfermechanism-termination"></span><h3><em>Termination</em><a class="headerlink" href="#termination" title="Permalink to this headline">¶</a></h3>
 <p>If <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_mode</span></code></a> is True, and a <strong>termination_threshold</strong> is specified, then the
 TransferMechanism continues to execute, integrating its current input until its termination condition is met, or the
@@ -622,8 +623,8 @@ only executed in pass 4, since it depends on the termination of <code class="doc
 <code class="docutils literal notranslate"><span class="pre">attention</span></code> executes 3 times in pass 0 as it did in trial 0;  however, <code class="docutils literal notranslate"><span class="pre">decision</span></code> executes only 3 times
 since it begins closer to its threshold in that trial.</p>
 </div></blockquote>
-</div>
-<div class="section" id="reinitialization">
+</section>
+<section id="reinitialization">
 <span id="transfermechanism-reinitialization"></span><h3><em>Reinitialization</em><a class="headerlink" href="#reinitialization" title="Permalink to this headline">¶</a></h3>
 <p>In some cases, it may be useful to reset the accumulation of a Mechanism back to its original starting point, or a new
 starting point. This is done using the <code class="xref any docutils literal notranslate"><span class="pre">reset</span></code> method on the
@@ -703,9 +704,9 @@ mechanism’s value or any of its OutputPort values will be used or checked <em>
 This may be true if, for example, the mechanism is <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">recurrent</span></a>, the mechanism is
 responsible for <code class="xref any docutils literal notranslate"><span class="pre">modulating</span> <span class="pre">&lt;ModulatorySignal_Modulation</span></code> other components, or if a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> condition depends on
 the mechanism’s activity.)</p>
-</div>
-</div>
-<div class="section" id="class-reference">
+</section>
+</section>
+<section id="class-reference">
 <span id="transfermechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py exception">
 <dt id="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferError">
@@ -1135,8 +1136,8 @@ Function associated with this Component</p>
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

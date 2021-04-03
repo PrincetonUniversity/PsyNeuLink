@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,9 +195,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.core.scheduling.condition">
+  <section id="module-psyneulink.core.scheduling.condition">
 <span id="condition"></span><h1>Condition<a class="headerlink" href="#module-psyneulink.core.scheduling.condition" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="overview">
+<section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p><a class="reference internal" href="#"><span class="doc">Conditions</span></a> are used to specify when <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> are allowed to execute.  Conditions
 can be used to specify a variety of required conditions for execution, including the state of the Component
@@ -213,10 +214,10 @@ associated with a Condition.  Most commonly, these are <a class="reference inter
 <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> can be included in the specification to a Scheduler (e.g., for
 <code class="xref any docutils literal notranslate"><span class="pre">learning</span></code>) in which case these can also be assigned Conditions.</p>
 </div>
-</div>
-<div class="section" id="creating-conditions">
+</section>
+<section id="creating-conditions">
 <span id="condition-creation"></span><h2>Creating Conditions<a class="headerlink" href="#creating-conditions" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="pre-specified-conditions">
+<section id="pre-specified-conditions">
 <span id="condition-pre-specified"></span><h3><em>Pre-specified Conditions</em><a class="headerlink" href="#pre-specified-conditions" title="Permalink to this headline">¶</a></h3>
 <p><a class="reference internal" href="#condition-pre-specified-list"><span class="std std-ref">Pre-specified Conditions</span></a> can be instantiated and added to a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> at any time,
 and take effect immediately for the execution of that Scheduler. Most pre-specified Conditions have one or more
@@ -233,8 +234,8 @@ context and assigned automatically, as in the following example:</p>
 </pre></div>
 </div>
 <p>Here, <code class="xref any docutils literal notranslate"><span class="pre">EveryNCalls(A,</span> <span class="pre">2)</span></code> for example, is assigned the <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Concatenate.owner" title="psyneulink.core.components.functions.combinationfunctions.Concatenate.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> <code class="xref any docutils literal notranslate"><span class="pre">B</span></code>.</p>
-</div>
-<div class="section" id="custom-conditions">
+</section>
+<section id="custom-conditions">
 <span id="condition-custom"></span><h3><em>Custom Conditions</em><a class="headerlink" href="#custom-conditions" title="Permalink to this headline">¶</a></h3>
 <p>Custom Conditions can be created by calling the constructor for the base class (<a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Condition()</span></code></a>) or one of the
 <a class="reference internal" href="#conditions-generic"><span class="std std-ref">generic classes</span></a>,  and assigning a function to the <strong>func</strong> argument and any arguments it
@@ -260,9 +261,9 @@ a <a class="reference internal" href="TransferMechanism.html"><span class="doc">
 the standard <a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Condition()</span></code></a> with <code class="xref any docutils literal notranslate"><span class="pre">mech_A</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">epsilon</span></code> as its arguments, and <a class="reference internal" href="#conditions-composite"><span class="std std-ref">composite Condition</span></a>
 <a class="reference internal" href="#psyneulink.core.scheduling.condition.NWhen" title="psyneulink.core.scheduling.condition.NWhen"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NWhen</span></code></a> (which is satisfied the first N times after its condition becomes true),  The Condition is assigned to <code class="xref any docutils literal notranslate"><span class="pre">mech_B</span></code>,
 thus scheduling it to execute one time when all of the elements of <code class="xref any docutils literal notranslate"><span class="pre">mech_A</span></code> have changed by less than <code class="xref any docutils literal notranslate"><span class="pre">epsilon</span></code>.</p>
-</div>
-</div>
-<div class="section" id="structure">
+</section>
+</section>
+<section id="structure">
 <span id="condition-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> associates every Component with a Condition.  If a Component has not been explicitly assigned a
 Condition, it is assigned a Condition that causes it to be executed whenever it is <a class="reference internal" href="Scheduler.html#scheduler-algorithm"><span class="std std-ref">under consideration</span></a>
@@ -282,7 +283,7 @@ evaluates to <code class="xref any docutils literal notranslate"><span class="pr
 <li><p><a class="reference internal" href="#conditions-convenience"><span class="std std-ref">Convenience</span></a> - based on other Conditions, condensed for convenience</p></li>
 </ul>
 </div></blockquote>
-<div class="section" id="list-of-pre-specified-conditions">
+<section id="list-of-pre-specified-conditions">
 <span id="condition-pre-specified-list"></span><h3><em>List of Pre-specified Conditions</em><a class="headerlink" href="#list-of-pre-specified-conditions" title="Permalink to this headline">¶</a></h3>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -402,17 +403,17 @@ satisfied at the beginning of a <a class="reference internal" href="Log.html#psy
 satisfied on <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> 0 of the specified <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> counted using ‘TimeScale`</p></li>
 </ul>
 </div></blockquote>
-</div>
-</div>
-<div class="section" id="execution">
+</section>
+</section>
+<section id="execution">
 <h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> <code class="xref any docutils literal notranslate"><span class="pre">runs</span></code>, it makes a sequential <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PASS</span></code></a> through its <a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler.consideration_queue" title="psyneulink.core.scheduling.scheduler.Scheduler.consideration_queue"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">consideration_queue</span></code></a>,
 evaluating each <a class="reference internal" href="Scheduler.html#consideration-set"><span class="std std-ref">consideration_set</span></a> in the queue to determine which Components should be assigned
 to execute. It evaluates the Components in each set by calling the <a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition.is_satisfied" title="psyneulink.core.scheduling.condition.Condition.is_satisfied"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_satisfied</span></code></a> method of the Condition associated
 with each of those Components.  If it returns <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, then the Component is assigned to the execution set for the
 <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> of execution generated by that <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PASS</span></code></a>.  Otherwise, the Component is not executed.</p>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="condition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.core.scheduling.condition.AfterCall">
@@ -1359,8 +1360,8 @@ specifies keyword arguments to pass to <code class="xref any docutils literal no
 </div></blockquote>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

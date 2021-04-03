@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ProcessingMechanism &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>ProcessingMechanism &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,7 +195,7 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="processingmechanism">
+  <section id="processingmechanism">
 <h1>ProcessingMechanism<a class="headerlink" href="#processingmechanism" title="Permalink to this headline">¶</a></h1>
 <div class="subclasses docutils container" id="processingmechanism-subtypes">
 <p><em>Subclasses</em></p>
@@ -206,7 +207,7 @@
 </ul>
 </div>
 </div>
-<span class="target" id="module-psyneulink.core.components.mechanisms.processing.processingmechanism"></span><div class="section" id="contents">
+<span class="target" id="module-psyneulink.core.components.mechanisms.processing.processingmechanism"></span><section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -217,8 +218,8 @@
 <li><p><a class="reference internal" href="#processingmechanism-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="processingmechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A ProcessingMechanism is a type of <code class="xref any docutils literal notranslate"><span class="pre">Mechanism</span></code> that transforms its input in some way.  A ProcessingMechanism always
 receives its input either from another Mechanism, or from the input to a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> when it is
@@ -231,8 +232,8 @@ ProcessingMechanism have more specialized features, and often have restrictions 
 parameters of other components (or its own parameters). ProcessingMechanisms are always executed before all
 ModulatoryMechanisms in the Composition to which they belong, so that any modifications made by the ModulatoryMechanism
 are available to all ProcessingMechanisms in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>.</p>
-</div>
-<div class="section" id="creating-a-processingmechanism">
+</section>
+<section id="creating-a-processingmechanism">
 <span id="processingmechanism-creation"></span><h2>Creating a ProcessingMechanism<a class="headerlink" href="#creating-a-processingmechanism" title="Permalink to this headline">¶</a></h2>
 <p>A ProcessingMechanism is created by calling its constructor.</p>
 <p>Its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is specified in the <strong>function</strong> argument, which may be the name of a
@@ -247,19 +248,19 @@ for the Function’s parameters:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_logistic_processing_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">(</span><span class="n">gain</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">))</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="structure">
+</section>
+<section id="structure">
 <span id="processingmechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A ProcessingMechanism has the same structure as a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, with the addition of several
 <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">StandardOutputPorts</span></a> to its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports" title="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a> attribute.</p>
 <p>See documentation for individual subtypes of ProcessingMechanism for more specific information about their structure.</p>
-</div>
-<div class="section" id="execution">
+</section>
+<section id="execution">
 <span id="processingmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>The execution of a ProcessingMechanism follows the same sequence of actions as a standard <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>
 (see <a class="reference internal" href="Mechanism.html#mechanism-execution"><span class="std std-ref">Execution</span></a>).</p>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="processingmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism">
@@ -315,8 +316,8 @@ list to include additional <a class="reference internal" href="OutputPort.html#o
 <em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.components.mechanisms.processing.processingmechanism.</code><code class="sig-name descname">ProcessingMechanismError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanismError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

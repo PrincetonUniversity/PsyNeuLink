@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>JSON &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>JSON &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,9 +195,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.core.globals.json">
+  <section id="module-psyneulink.core.globals.json">
 <span id="json"></span><h1>JSON<a class="headerlink" href="#module-psyneulink.core.globals.json" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="contents">
+<section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -205,8 +206,8 @@
 <li><p><a class="reference internal" href="#json-model-specification"><span class="std std-ref">JSON Model Specification</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="json-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>The developers of PsyNeuLink are collaborating with the scientific community, as part of the <a class="reference external" href="https://openneuro.org">OpenNeuro effort</a>, to create a standard, JSON-based format for the description and exchange of computational
 models of brain and psychological function across different simulation environments. As part of this effort,
@@ -228,16 +229,16 @@ introduce a security risk to the system on which the Python interpreter is runni
 exec, which has the potential to execute non-PsyNeuLink-related code embedded in the file.  Therefore,
 <a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal notranslate"><span class="pre">generate_script_from_json</span></code></a> should be used to read only files of known and secure origin.</p>
 </div>
-</div>
-<div class="section" id="model-examples">
+</section>
+<section id="model-examples">
 <span id="json-examples"></span><h2>Model Examples<a class="headerlink" href="#model-examples" title="Permalink to this headline">¶</a></h2>
 <p>Below is an example of a script that implements a PsyNeuLink model of the Stroop model with conflict monitoring,
 and its output in JSON. Running <a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal notranslate"><span class="pre">generate_script_from_json</span></code></a> on the output will produce another PsyNeuLink script
 that will give the same results when run on the same input as the original.</p>
 <p><a class="reference download internal" download="" href="_downloads/e7e2e60cae3569827e0d524112cca318/stroop_conflict_monitoring.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">stroop_conflict_monitoring.py</span></code></a></p>
 <p><a class="reference download internal" download="" href="_downloads/7d77f154d0721bc7fa4f6f4c61499b62/stroop_conflict_monitoring.json"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">stroop_conflict_monitoring.json</span></code></a></p>
-</div>
-<div class="section" id="json-model-specification">
+</section>
+<section id="json-model-specification">
 <span id="id1"></span><h2>JSON Model Specification<a class="headerlink" href="#json-model-specification" title="Permalink to this headline">¶</a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -411,8 +412,8 @@ and associated objects.</p></li>
 </dl>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

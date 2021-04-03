@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -98,7 +99,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -206,9 +207,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism">
+  <section id="module-psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism">
 <span id="predictionerrormechanism"></span><h1>PredictionErrorMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="contents">
+<section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -220,14 +221,14 @@
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">PredictionErrorMechanism_Class_Reference</span></code></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="predictionerrormechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A PredictionErrorMechanism is a subclass of <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> that receives two inputs (a sample and a target),
 and calculates the temporal difference prediction error as found in <a class="reference external" href="http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf">Montague, Dayan, and Sejnowski (1996)</a> using its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, and places the delta values (the difference between the actual and predicted
 reward) in its <em>OUTCOME</em> <code class="xref any docutils literal notranslate"><span class="pre">OutputPort</span></code>.</p>
-</div>
-<div class="section" id="creating-a-predictionerrormechanism">
+</section>
+<section id="creating-a-predictionerrormechanism">
 <span id="predictionerrormechanism-creation"></span><h2>Creating a PredictionErrorMechanism<a class="headerlink" href="#creating-a-predictionerrormechanism" title="Permalink to this headline">¶</a></h2>
 <p>A PredictionErrorMechanism is usually created automatically when a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>
 <a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">is created</span></a> using the <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.TDLearning" title="psyneulink.core.components.functions.learningfunctions.TDLearning"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TDLearning</span></code></a> function).
@@ -264,8 +265,8 @@ same length. If a projection other than a <code class="xref any docutils literal
 needed, this can be specified using the <em>PROJECTION</em> entry of a <a class="reference internal" href="Port.html#port-specification"><span class="std std-ref">Port
 specification dictionary</span></a> for the InputPort in the
 <strong>input_ports</strong> argument.</p>
-</div>
-<div class="section" id="structure">
+</section>
+<section id="structure">
 <span id="predictionerrormechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A PredictionErrorMechanism has two <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a>, each of which receives a
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from a corresponding OutputPort specified in the
@@ -282,8 +283,8 @@ default, it uses a <a class="reference internal" href="CombinationFunctions.html
 is replaced with one that takes two arrays with the same format as its inputs
 and generates a similar array as its result. The result is assigned as the
 value of the PredictionErrorMechanism’s <em>OUTCOME</em> (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>) OutputPort.</p>
-</div>
-<div class="section" id="execution">
+</section>
+<section id="execution">
 <span id="predictionerrormechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When a PredictionErrorMechanism is executed, it updates its input_ports with
 the values of the OutputPorts specified in its <strong>sample</strong> and <strong>target</strong>
@@ -321,8 +322,8 @@ length 5, that will match the length of the <em>TARGET</em> InputPort.</p>
 PsyNeuLink requires the values of <em>SAMPLE</em> and <em>TARGET</em> to be provided as an
 array representing a full time series as an experiment. See
 <code class="xref any docutils literal notranslate"><span class="pre">MontagueDayanSejnowski.py</span></code> in the Scripts folder for an example.</p>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism">
@@ -411,8 +412,8 @@ Function associated with this Component</p>
 <em class="property">exception </em><code class="sig-prename descclassname">psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.</code><code class="sig-name descname">PredictionErrorMechanismError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanismError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

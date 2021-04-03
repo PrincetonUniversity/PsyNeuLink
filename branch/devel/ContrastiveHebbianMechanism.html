@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ContrastiveHebbianMechanism &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>ContrastiveHebbianMechanism &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -98,7 +99,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -206,9 +207,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism">
+  <section id="module-psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism">
 <span id="contrastivehebbianmechanism"></span><h1>ContrastiveHebbianMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="contents">
+<section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -244,8 +245,8 @@
 <li><p><a class="reference internal" href="#contrastivehebbian-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="contrastivehebbian-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A ContrastiveHebbianMechanism is a subclass of <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> that is customized for use with the
 Contrastive Hebbian learning rule.  See the following references for a description of the learning rule,
@@ -262,32 +263,32 @@ adaptation. Psychological review, 115(2), 518</a></p>
 </div></blockquote>
 <p>The features and operation of a ContrastiveHebbianMechanism that differ from those of a RecurrentTransferMechanism are
 described below.</p>
-</div>
-<div class="section" id="creating-a-contrastivehebbianmechanism">
+</section>
+<section id="creating-a-contrastivehebbianmechanism">
 <span id="contrastivehebbian-creation"></span><h2>Creating a ContrastiveHebbianMechanism<a class="headerlink" href="#creating-a-contrastivehebbianmechanism" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="size">
+<section id="size">
 <span id="contrastivehebbian-size"></span><h3><em>Size</em><a class="headerlink" href="#size" title="Permalink to this headline">¶</a></h3>
 <p>The <strong>input_size</strong> argument of the constructor must always be specified (this is comparable to specifying the
 <strong>size</strong> or <em>default_variable*</em> arguments of other types of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>).  If it is specified on its own,
 it determines the total number of processing units.  If either the <strong>hidden_size</strong> and/or <strong>target_size</strong> arguments
 are specified, then those units are treated as distinct from the input units (see <a class="reference internal" href="#contrastivehebbian-execution"><span class="std std-ref">Execution</span></a> for
 details).</p>
-</div>
-<div class="section" id="phases">
+</section>
+<section id="phases">
 <span id="contrastivehebbian-phases"></span><h3><em>Phases</em><a class="headerlink" href="#phases" title="Permalink to this headline">¶</a></h3>
 <p>A ContrastiveHebbianMechanism <a class="reference internal" href="#contrastivehebbian-execution"><span class="std std-ref">executes in two phases</span></a>, and has
 <strong>minus_phase_termination_condition</strong> and <strong>plus_phase_termination_condition</strong> arguments, and corresponding
 <strong>minus_phase_termination_threshold</strong> and <strong>plus_phase_termination_threshold</strong> arguments, that determine when the
 respective phases of execution are terminated.  Other parameters can also be configured that influence processing (see
 <a class="reference internal" href="#contrastivehebbian-execution"><span class="std std-ref">Execution</span></a>).</p>
-</div>
-<div class="section" id="oututports">
+</section>
+<section id="oututports">
 <span id="contrastivehebbian-outputports"></span><h3><em>OututPorts</em><a class="headerlink" href="#oututports" title="Permalink to this headline">¶</a></h3>
 <p>The Mechanism is automatically assigned three of its five <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a>: <em>OUTPUT_ACTIVITY</em>, <em>CURRENT_ACTIVITY</em>,
 and <em>ACTIVITY_DIFFERENT</em> (see <a class="reference internal" href="#contrastivehebbian-output"><span class="std std-ref">below</span></a>). Additional OutputPorts can be specified
 in the <strong>additional_output_ports</strong> argument of the constructor.</p>
-</div>
-<div class="section" id="learning">
+</section>
+<section id="learning">
 <span id="contrastivehebbian-learning"></span><h3><em>Learning</em><a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
 <p>A ContrastiveHebbianMechanism can be configured for learning either by specifying <strong>enable_learning</strong> as <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> or using
 the <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.configure_learning" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.configure_learning"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">configure_learning</span></code></a> method, with the following differences from a
@@ -295,8 +296,8 @@ standard <a class="reference internal" href="RecurrentTransferMechanism.html#rec
 <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContrastiveHebbian</span></code></a> as its <code class="xref any docutils literal notranslate"><span class="pre">learning_function</span></code>; its <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.learning_condition" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.learning_condition"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_condition</span></code></a> is automatically assigned as <em>CONVERGENCE</em>; and it is assigned a
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from its <em>ACTIVITY_DIFFERENCE</em> (rather than its <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>)
 <a class="reference internal" href="#contrastivehebbian-output"><span class="std std-ref">OutputPort</span></a> to the <em>ACTIVATION_INPUT</em> of its <code class="xref any docutils literal notranslate"><span class="pre">learning_mechanism</span></code>.</p>
-</div>
-<div class="section" id="simple-hebbian-mode">
+</section>
+<section id="simple-hebbian-mode">
 <span id="contrastivehebbian-simple-hebbian"></span><h3><em>SIMPLE_HEBBIAN mode</em><a class="headerlink" href="#simple-hebbian-mode" title="Permalink to this headline">¶</a></h3>
 <p>This replicates the function of a standard RecurrentTransferMechanism using Hebbian Learning (e.g., for validation or
 ease in comparing processing outcomes).  It is configured by specifying the <strong>mode</strong> argument as <em>SIMPLE_HEBBIAN</em>,
@@ -309,11 +310,11 @@ which automatically makes the following assignments:</p>
 </div>
 <p>These assignments override any others made in the constructor, and the <strong>hidden_size</strong> and <strong>target_size</strong> arguments
 are ignored.</p>
-</div>
-</div>
-<div class="section" id="structure">
+</section>
+</section>
+<section id="structure">
 <span id="contrastivehebbian-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="input">
+<section id="input">
 <span id="contrastivehebbian-input"></span><h3><em>Input</em><a class="headerlink" href="#input" title="Permalink to this headline">¶</a></h3>
 <p>A ContrastiveHebbianMechanism always has two, and possibly three <a class="reference internal" href="InputPort.html"><span class="doc">InputPorts</span></a>:</p>
 <blockquote>
@@ -376,8 +377,8 @@ that are not within the <em>input_field</em> and/or <em>target_field</em>;</p></
 otherwise, the same as <em>input_field</em>.</p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="functions">
+</section>
+<section id="functions">
 <span id="contrastivehebbian-functions"></span><h3><em>Functions</em><a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h3>
 <p>In addition to its primary <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, if either the
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_condition" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_termination_condition"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">minus_phase_termination_condition</span></code></a> or
@@ -386,8 +387,8 @@ is specified as <em>CONVERGENCE</em>, then its <code class="xref any docutils li
 <a class="reference internal" href="#contrastivehebbian-execution"><span class="std std-ref">phase of execution</span></a> is complete. Its <code class="xref any docutils literal notranslate"><span class="pre">learning_function</span></code> is automatically assigned as <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContrastiveHebbian</span></code></a>, but this can be
 replaced by any function that takes two 1d arrays (“activity ports”) and compares them to determine the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a>  of the Mechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">recurrent_projection</span></code></a>.  If <strong>mode</strong> is specified as <a class="reference internal" href="#contrastivehebbian-simple-hebbian"><span class="std std-ref">SIMPLE_HEBBIAN</span></a>), the default <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.Hebbian" title="psyneulink.core.components.functions.learningfunctions.Hebbian"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Hebbian</span></code></a>,
 but can be replaced by any function that takes and returns a 1d array.</p>
-</div>
-<div class="section" id="output">
+</section>
+<section id="output">
 <span id="contrastivehebbian-output"></span><h3><em>Output</em><a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
 <p>A ContrastiveHebbianMechanism is automatically assigned three <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>:</p>
 <ul class="simple">
@@ -408,11 +409,11 @@ is assigned from the <em>ACTIVITY_DIFFERENCE</em> <a class="reference internal" 
 </ul>
 <p>These also appear in the ContrastiveHebbianMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a>, along with two others – <em>MINUS_PHASE_ACTIVITY</em> and
 <em>PLUS_PHASE_ACTIVITY</em> – that it can be assigned, in addition to the <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a> of a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>.</p>
-</div>
-</div>
-<div class="section" id="execution">
+</section>
+</section>
+<section id="execution">
 <span id="contrastivehebbian-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="processing">
+<section id="processing">
 <span id="contrastivehebbian-processing"></span><h3><em>Processing</em><a class="headerlink" href="#processing" title="Permalink to this headline">¶</a></h3>
 <p>A ContrastiveHebbianMechanism always executes in two sequential phases, that together constitute a <em>trial of execution:</em></p>
 <ul class="simple" id="contrastivehebbian-minus-phase">
@@ -464,17 +465,17 @@ it is assigned the value of the <a class="reference internal" href="#contrastive
 <li><p>the difference between <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.plus_phase_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">plus_phase_activity</span></code></a> and
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_activity" title="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.minus_phase_activity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">minus_phase_activity</span></code></a> is assigned as the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the <em>ACTIVITY_DIFFERENCE</em> <a class="reference internal" href="#contrastivehebbian-output"><span class="std std-ref">OutputPort</span></a>.</p></li>
 </ul>
-</div>
-<div class="section" id="contrastivehebbian-learning-execution">
+</section>
+<section id="contrastivehebbian-learning-execution">
 <span id="id3"></span><h3><em>Learning</em><a class="headerlink" href="#contrastivehebbian-learning-execution" title="Permalink to this headline">¶</a></h3>
 <p>If a ContrastiveHebbianMechanism is <a class="reference internal" href="#contrastivehebbian-learning"><span class="std std-ref">configured for learning</span></a>, at the end of each
 <a class="reference internal" href="#contrastivehebbian-processing"><span class="std std-ref">trial of execution</span></a> the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of its <em>ACTIVITY_DIFFERENCE</em>
 <a class="reference internal" href="#contrastivehebbian-output"><span class="std std-ref">OutputPort</span></a> is passed to its <code class="xref any docutils literal notranslate"><span class="pre">learning_mechanism</span></code>.  If the Mechanism is part of a <code class="xref any docutils literal notranslate"><span class="pre">System</span></code>, then the
 <code class="xref any docutils literal notranslate"><span class="pre">learning_mechanism</span></code> is executed during the <code class="xref any docutils literal notranslate"><span class="pre">execution</span> <span class="pre">phase</span></code> of the System’s execution.  Note that this is distinct from the behavior of supervised learning
 algorithms (such as <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.Reinforcement" title="psyneulink.core.components.functions.learningfunctions.Reinforcement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Reinforcement</span></code></a> and <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="psyneulink.core.components.functions.learningfunctions.BackPropagation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BackPropagation</span></code></a>), that are executed during the <code class="xref any docutils literal notranslate"><span class="pre">learning</span> <span class="pre">phase</span></code> of a System’s execution</p>
-</div>
-</div>
-<div class="section" id="class-reference">
+</section>
+</section>
+<section id="class-reference">
 <span id="contrastivehebbian-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py exception">
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianError">
@@ -1023,8 +1024,8 @@ variable (float): set to self.value (= self.input_value)
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

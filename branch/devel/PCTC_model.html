@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Proactive Control &amp; Task Control: A Stroop Model (Kalanthroff et al., 2018) &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>Proactive Control &amp; Task Control: A Stroop Model (Kalanthroff et al., 2018) &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,10 +195,10 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="proactive-control-task-control-a-stroop-model-kalanthroff-et-al-2018">
+  <section id="proactive-control-task-control-a-stroop-model-kalanthroff-et-al-2018">
 <h1>Proactive Control &amp; Task Control: A Stroop Model (Kalanthroff et al., 2018)<a class="headerlink" href="#proactive-control-task-control-a-stroop-model-kalanthroff-et-al-2018" title="Permalink to this headline">¶</a></h1>
 <p><a class="reference external" href="https://www.ncbi.nlm.nih.gov/m/pubmed/25257710/">“Task Conflict and Proactive Control: A Computational Theory of the Stroop Task”</a></p>
-<div class="section" id="overview">
+<section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>Reaction times are usually faster on congruent trials than neutral trials. This finding
 has been refered to as the facilitation effect. Recenty Goldfarb and Henik (2007) showed that when proactive control
@@ -212,12 +213,12 @@ reverse facilitation effect, under low proactive control.</p>
 task conflict exists. The activation of each unit in every layers of the neural network model is plotted for low
 proactive activation. The PsyNeuLink model is identical to the plot of Figure 6b generated with MATLAB (see both Figures
 below). On the left the PsyNeuLink Figure is plotted. On the right the MATLAB figure is plotted.</p>
-<div class="figure align-left" id="pctc-0-025-pnl-fig" style="width: 45%">
-<img alt="Kalanthroff et al., 2018 plot produced by PsyNeuLink" src="_images/PCTC_0_025_PNL.svg" /></div>
-<div class="figure align-right" id="pctc-0-025-matlab-figure-fig" style="width: 45%">
-<img alt="Kalanthroff et al., 2018 plot produced by MATLAB" src="_images/PCTC_0_025_MATLAB_FIGURE.svg" /></div>
-</div>
-<div class="section" id="the-model">
+<figure class="align-left" id="pctc-0-025-pnl-fig" style="width: 45%">
+<img alt="Kalanthroff et al., 2018 plot produced by PsyNeuLink" src="_images/PCTC_0_025_PNL.svg" /></figure>
+<figure class="align-right" id="pctc-0-025-matlab-figure-fig" style="width: 45%">
+<img alt="Kalanthroff et al., 2018 plot produced by MATLAB" src="_images/PCTC_0_025_MATLAB_FIGURE.svg" /></figure>
+</section>
+<section id="the-model">
 <h2>The Model<a class="headerlink" href="#the-model" title="Permalink to this headline">¶</a></h2>
 <p>The model is built as the bidirectional Stroop model by Cohen &amp; Huston (1994): stimulus information in two hidden
 layers (color &amp; word), and task information (color naming or word reading) are connected with each other with
@@ -227,9 +228,9 @@ Conflict is computed on the OutPort of the task layer, and projected from the ta
 If task conflict exists, prevents the response layer from a fast response.
 The conflict projection is the main difference from the Kalanthroff et al., (2018) model to the Cohen &amp; Huston (1994)
 model. A graph of the model is shown below.</p>
-<div class="figure align-center" id="kalanthroff2016-system-graph" style="width: 75%">
-<img alt="Kalanthroff System Graph" src="_images/PCTC_Graph.svg" /></div>
-<div class="section" id="network-system">
+<figure class="align-center" id="kalanthroff2016-system-graph" style="width: 75%">
+<img alt="Kalanthroff System Graph" src="_images/PCTC_Graph.svg" /></figure>
+<section id="network-system">
 <h3>Network System<a class="headerlink" href="#network-system" title="Permalink to this headline">¶</a></h3>
 <p><strong>COLOR INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>size</strong>=2 (one unit for the input of one color, respectively
 here blue &amp; green), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function with <strong>slope</strong>=1.0 and <strong>intercept</strong>=0.0.</p>
@@ -278,9 +279,9 @@ The <em>WORD HIDDEN LAYER</em> with a numpy array with a value of 2.5 on the dia
 elements.
 The <em>TASK LAYER</em> with a numpy array with a value of length 2 with both elements set to -1. The second OutputPort
 of the <em>TASK LAYER</em> is specified as the sender and the <em>RESPONSE LAYER</em> is specified as the receiver.</p>
-</div>
-</div>
-<div class="section" id="execution">
+</section>
+</section>
+<section id="execution">
 <h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>All units are set to zero at the beginning of the simulation. Each simulation run starts with a settling
 period of 500 time steps. Then the stimulus is presented for the remaining duration of the trial.
@@ -289,8 +290,8 @@ The activations of all units are updated on each time step until one of the resp
 which is set to 0.7. The <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a> function is used to record the output values of the two hidden layers, the task layer,
 and the response layer. These values are used to produce the plot of the Figure.</p>
 <p>Script: <a class="reference download internal" download="" href="_downloads/11ac9c80f617b4258b7c7c95505a6a38/Kalanthroff_PCTC_2018.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Kalanthroff_PCTC_2018.py</span></code></a></p>
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

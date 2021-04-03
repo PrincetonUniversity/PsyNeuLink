@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Conflict Monitoring and Cognitive Control (Botvinick et al., 2001) &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>Conflict Monitoring and Cognitive Control (Botvinick et al., 2001) &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,29 +195,29 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="conflict-monitoring-and-cognitive-control-botvinick-et-al-2001">
+  <section id="conflict-monitoring-and-cognitive-control-botvinick-et-al-2001">
 <h1>Conflict Monitoring and Cognitive Control (Botvinick et al., 2001)<a class="headerlink" href="#conflict-monitoring-and-cognitive-control-botvinick-et-al-2001" title="Permalink to this headline">¶</a></h1>
 <p><a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/11488380">“Conflict Monitoring and Cognitive Control”</a></p>
-<div class="section" id="overview">
+<section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>This implements a model concerning the role of the <a class="reference external" href="https://en.wikipedia.org/wiki/Anterior_cingulate_cortex">anterior cingulate cortex (ACC)</a> in situations calling for their
 involvement. The demand for control is evaluated by monitoring for conflicts in information processing.
 The model is supported by data concerning the anterior cingulate cortex, a brain area involved in cognitive control,
 which also appears to respond to the occurrence of conflict.
 This script implements the system and plot from Figure 1 of the conflict monitoring and cognitive control paper.</p>
-<div class="figure align-left" id="conflict-pnl-fig" style="width: 45%">
-<img alt="Botvinick et al., 2001 plot produced by PsyNeuLink" src="_images/conflict_PNL.svg" /></div>
-<div class="figure align-right" id="conflict-monitoring-matlab-fig" style="width: 45%">
-<img alt="Botvinick et al., 2001 plot produced by MATLAB" src="_images/conflict_monitoring_MATLAB.svg" /></div>
-</div>
-<div class="section" id="the-model">
+<figure class="align-left" id="conflict-pnl-fig" style="width: 45%">
+<img alt="Botvinick et al., 2001 plot produced by PsyNeuLink" src="_images/conflict_PNL.svg" /></figure>
+<figure class="align-right" id="conflict-monitoring-matlab-fig" style="width: 45%">
+<img alt="Botvinick et al., 2001 plot produced by MATLAB" src="_images/conflict_monitoring_MATLAB.svg" /></figure>
+</section>
+<section id="the-model">
 <h2>The Model<a class="headerlink" href="#the-model" title="Permalink to this headline">¶</a></h2>
 <p>The model is built as the bidirectional Stroop model by Cohen &amp; Huston (1994): stimulus information in two hidden
 layers (color, word &amp; neutral), and task information (color naming or word reading) are connected with each other in a
 bidirectional way. The response layer receives inputs from both hidden layers. A graph of the model is shown below.</p>
-<div class="figure align-center" id="conflict-monitoring-graph" style="width: 75%">
-<img alt="Botvinick System Graph" src="_images/conflict_monitoring.svg" /></div>
-<div class="section" id="network-system">
+<figure class="align-center" id="conflict-monitoring-graph" style="width: 75%">
+<img alt="Botvinick System Graph" src="_images/conflict_monitoring.svg" /></figure>
+<section id="network-system">
 <h3>Network System<a class="headerlink" href="#network-system" title="Permalink to this headline">¶</a></h3>
 <p><strong>COLOR INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <strong>size</strong> = 3 (one unit for the input of one color, respectively
 here blue &amp; green), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function with <strong>slope</strong> = 1.0 and <strong>intercept</strong> = 0.0.</p>
@@ -253,9 +254,9 @@ the <em>COLOR HIDDEN LAYER</em> with a numpy array with a value of 1.5 on the di
 elements.
 The <em>WORD HIDDEN LAYER</em> with a numpy array with a value of 2.5 on the diagonal elements and 0.0 on the off-diagonal
 elements.</p>
-</div>
-</div>
-<div class="section" id="execution">
+</section>
+</section>
+<section id="execution">
 <h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>All units are set to zero at the beginning of the simulation. Each simulation run starts with a settling
 period of 500 time steps. Then the stimulus is presented for 1000 time steps and is presented by setting the input
@@ -263,15 +264,15 @@ units to 1.0 for a given trial. Conflict is computed on the <a class="reference 
 conflict over one trial for each of the three conditions.
 The <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a> function is used to record the output values of <em>RESPONSE LAYER</em>. These values are used to produce
 the plot of the Figure.</p>
-</div>
-<div class="section" id="please-note">
+</section>
+<section id="please-note">
 <h2>Please note:<a class="headerlink" href="#please-note" title="Permalink to this headline">¶</a></h2>
 <p>Note that this script implements a slightly different Figure than in the original Figure in the paper.
 However, this implementation is identical with a plot we created with an old MATLAB code which was used for the
 conflict monitoring simulations.</p>
 <p>Script: <code class="xref download docutils literal notranslate"><span class="pre">Botvinick_conflict_monitoring_model.py</span></code></p>
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

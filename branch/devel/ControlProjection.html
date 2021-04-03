@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlProjection &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>ControlProjection &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,9 +195,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.core.components.projections.modulatory.controlprojection">
+  <section id="module-psyneulink.core.components.projections.modulatory.controlprojection">
 <span id="controlprojection"></span><h1>ControlProjection<a class="headerlink" href="#module-psyneulink.core.components.projections.modulatory.controlprojection" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="contents">
+<section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -213,16 +214,16 @@
 <li><p><a class="reference internal" href="#controlprojection-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="controlprojection-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A ControlProjection is a type of <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that projects to the <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> of a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>. It takes the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of a
 <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> and uses it to  modify the value of the parameter associated
 with the ParameterPort to which it projects.  All of the ControlProjections in a Composition, along with its other
 <a class="reference internal" href="ControlMechanism.html"><span class="doc">control components</span></a>, can be displayed using the Composition’s <code class="xref any docutils literal notranslate"><span class="pre">show_graph</span></code>
 method with its <strong>show_control</strong> argument assigned as <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p>
-</div>
-<div class="section" id="creating-a-controlprojection">
+</section>
+<section id="creating-a-controlprojection">
 <span id="controlprojection-creation"></span><h2>Creating a ControlProjection<a class="headerlink" href="#creating-a-controlprojection" title="Permalink to this headline">¶</a></h2>
 <p>A ControlProjection can be created using any of the standard ways to <a class="reference internal" href="Projection.html#projection-creation"><span class="std std-ref">create a Projection</span></a>,
 or by including it in a <a class="reference internal" href="ParameterPort.html#parameterport-tuple-specification"><span class="std std-ref">tuple</span></a> that specifies a parameter for a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>, or the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of either of these.  If a ControlProjection
@@ -233,7 +234,7 @@ as the ControlProjection’s <a class="reference internal" href="#psyneulink.cor
 is part of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, then the ControlProjection’s <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> is assigned to a
 <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> of the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a>.  Otherwise, its initialization is
 <a class="reference internal" href="#controlprojection-deferred-initialization"><span class="std std-ref">deferred</span></a>.</p>
-<div class="section" id="deferred-initialization">
+<section id="deferred-initialization">
 <span id="controlprojection-deferred-initialization"></span><h3><em>Deferred Initialization</em><a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
 <p>When a ControlProjection is created, its full initialization is <a class="reference internal" href="Component.html#component-deferred-init"><span class="std std-ref">deferred</span></a> until its <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.receiver" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a> have been fully specified.  This allows
 a ControlProjection to be created before its <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.receiver" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a> have been created (e.g., before them in a script), by calling its constructor without
@@ -242,9 +243,9 @@ initialization must be completed by a call to its <code class="xref any docutils
 ControlProjection is included in a <a class="reference internal" href="ParameterPort.html#parameterport-tuple-specification"><span class="std std-ref">tuple specification</span></a> for the parameter of a
 <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, when the <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>
 is created for the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> to which the parameter’s owner belongs (see <a class="reference internal" href="ControlMechanism.html#controlmechanism-creation"><span class="std std-ref">Creating a ControlMechanism</span></a>).</p>
-</div>
-</div>
-<div class="section" id="structure">
+</section>
+</section>
+<section id="structure">
 <span id="controlprojection-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> of a ControlProjection is a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> of a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>. The <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> is used by the
 ControlProjection as its <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.variable" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>;  this is also assigned to its <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.control_signal" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.control_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_signal</span></code></a> attribute, and serves as the input to the ControlProjection’s <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.function" title="psyneulink.core.components.projections.projection.Projection_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  The default <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.function" title="psyneulink.core.components.projections.projection.Projection_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> for a ControlProjection is an identity
@@ -253,8 +254,8 @@ function (<a class="reference internal" href="TransferFunctions.html#psyneulink.
 modifying the value of the parameter that it controls. Its <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.receiver" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a> is the
 <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> for the parameter of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or its <code class="xref any docutils literal notranslate"><span class="pre">function</span> <span class="pre">Mechanism_Base.function&gt;</span></code> that is
 controlled by the ControlProjection.</p>
-</div>
-<div class="section" id="execution">
+</section>
+<section id="execution">
 <span id="controlprojection-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A ControlProjection cannot be executed directly.  It is executed when the <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> to which it projects is
 updated.  Note that this only occurs when the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> belongs is executed
@@ -269,8 +270,8 @@ how this applies to a ParameterPort).</p>
 <p>The changes to a parameter in response to the execution of a ControlProjection are not applied until the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that receives the ControlProjection are next executed; see <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a>
 for an explanation of “lazy” updating).</p>
 </div>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="controlprojection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection">
@@ -405,8 +406,8 @@ otherwise, passes control to Projection_Base._instantiate_receiver for validatio
 <em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.components.projections.modulatory.controlprojection.</code><code class="sig-name descname">ControlProjectionError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjectionError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

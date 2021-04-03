@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -98,7 +99,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -200,9 +201,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.library.compositions.autodiffcomposition">
+  <section id="module-psyneulink.library.compositions.autodiffcomposition">
 <span id="autodiffcomposition"></span><h1>AutodiffComposition<a class="headerlink" href="#module-psyneulink.library.compositions.autodiffcomposition" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="contents">
+<section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -219,8 +220,8 @@
 <li><p><a class="reference internal" href="#autodiffcomposition-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="autodiffcomposition-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -231,8 +232,8 @@ with <a class="reference external" href="https://pytorch.org/">PyTorch</a>, a po
 than using the <a class="reference internal" href="Composition.html#composition-learning-standard"><span class="std std-ref">standard implementation of learning</span></a> in a Composition, using its
 <a class="reference internal" href="Composition.html#composition-learning-methods"><span class="std std-ref">learning methods</span></a>. An AutodiffComposition is configured and run similarly to a standard
 Composition, with some exceptions that are described below.</p>
-</div>
-<div class="section" id="creating-an-autodiffcomposition">
+</section>
+<section id="creating-an-autodiffcomposition">
 <span id="autodiffcomposition-creation"></span><h2>Creating an AutodiffComposition<a class="headerlink" href="#creating-an-autodiffcomposition" title="Permalink to this headline">¶</a></h2>
 <p>An AutodiffComposition can be created by calling its constructor, and then adding <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> using the
 standard <a class="reference internal" href="Composition.html#composition-creation"><span class="std std-ref">Composition methods</span></a> for doing so.  The constructor also includes an number of
@@ -248,8 +249,8 @@ functionality.</p>
 <p>When comparing models built in PyTorch to those using AutodiffComposition,
 the <code class="xref any docutils literal notranslate"><span class="pre">bias</span></code> parameter of PyTorch modules should be set to <code class="xref any docutils literal notranslate"><span class="pre">False</span></code>, as AutodiffComposition does not currently support trainable biases.</p>
 </div>
-</div>
-<div class="section" id="execution">
+</section>
+<section id="execution">
 <span id="autodiffcomposition-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>An AutodiffComposition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>, <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.execute" title="psyneulink.core.compositions.composition.Composition.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a>, and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> methods are the same as for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 <p>The following is an example showing how to create a
@@ -276,7 +277,7 @@ simple AutodiffComposition, specify its inputs and targets, and run it with lear
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_autodiff</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">input_dict</span><span class="p">[</span><span class="s1">&#39;inputs&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
-<div class="section" id="logging">
+<section id="logging">
 <span id="autodiffcomposition-logging"></span><h3>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
 <p>Logging in AutodiffCompositions follows the same procedure as <a class="reference internal" href="Log.html"><span class="doc">logging in a Composition</span></a>. However, since an AutodiffComposition internally converts all of its mechanisms to an equivalent PyTorch model,
 then its inner components are not actually executed. This means that there is limited support for logging parameters of components inside an AutodiffComposition;
@@ -285,8 +286,8 @@ Currently, the only supported parameters are:</p>
 <li><p>the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of Projections</p></li>
 <li><p>the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> parameter of its inner components</p></li>
 </ol>
-</div>
-<div class="section" id="nested-execution">
+</section>
+<section id="nested-execution">
 <span id="autodiffcomposition-nested-execution"></span><h3>Nested Execution<a class="headerlink" href="#nested-execution" title="Permalink to this headline">¶</a></h3>
 <p>Like any other <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, an AutodiffComposition may be <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested inside another</span></a>.</p>
 <p>The following shows how the AutodiffComposition created in the previous example can be nested and run inside another
@@ -300,9 +301,9 @@ Composition:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">result1</span> <span class="o">=</span> <span class="n">my_outer_composition</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">training_input</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-</div>
-<div class="section" id="class-reference">
+</section>
+</section>
+<section id="class-reference">
 <span id="autodiffcomposition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition">
@@ -475,8 +476,8 @@ details and <a class="reference internal" href="Report.html#psyneulink.core.comp
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

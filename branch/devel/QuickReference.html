@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Quick Reference &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>Quick Reference &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -98,7 +99,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -196,9 +197,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="quick-reference">
+  <section id="quick-reference">
 <h1>Quick Reference<a class="headerlink" href="#quick-reference" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="sections">
+<section id="sections">
 <h2>Sections<a class="headerlink" href="#sections" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -219,8 +220,8 @@
 <li><p><a class="reference internal" href="#quick-reference-preferences"><span class="std std-ref">Preferences</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="conventions">
+</section>
+<section id="conventions">
 <span id="id1"></span><h2>Conventions<a class="headerlink" href="#conventions" title="Permalink to this headline">¶</a></h2>
 <p>The following conventions are used for the names of PsyNeuLink objects and their documentation:</p>
 <blockquote>
@@ -248,29 +249,29 @@ documentation.</p></li>
 </ul>
 </div></blockquote>
 <p>See <code class="xref any docutils literal notranslate"><span class="pre">Naming</span></code> for conventions for default and user-assigned names of instances.</p>
-</div>
-<div class="section" id="repository-organization">
+</section>
+<section id="repository-organization">
 <span id="id2"></span><h2>Repository Organization<a class="headerlink" href="#repository-organization" title="Permalink to this headline">¶</a></h2>
 <p>The PsyNeuLink “repo” is organized into two major sections:</p>
-<div class="section" id="core">
+<section id="core">
 <h3><a class="reference internal" href="Core.html"><span class="doc">Core</span></a><a class="headerlink" href="#core" title="Permalink to this headline">¶</a></h3>
 <p>This contains the basic PsyNeuLink objects (described in the next section) that are used to build models and run
 simulations, and is divided into three subsections:  <a class="reference internal" href="#quick-reference-components"><span class="std std-ref">Components</span></a> (the basic building
 blocks of PsyNeuLink models), <a class="reference internal" href="#quick-reference-compositions"><span class="std std-ref">Compositions</span></a> (objects used to combine Components into
 models), and <a class="reference internal" href="#quick-reference-scheduling"><span class="std std-ref">Scheduling</span></a> (used to control execution of the Components within a
 Composition).</p>
-</div>
-<div class="section" id="library">
+</section>
+<section id="library">
 <h3><a class="reference internal" href="Library.html"><span class="doc">Library</span></a><a class="headerlink" href="#library" title="Permalink to this headline">¶</a></h3>
 <p>This contains extensions based on the Core objects (under <a class="reference internal" href="Compositions.html"><span class="doc">Compositions</span></a> and <a class="reference internal" href="Components.html"><span class="doc">Components</span></a>), and
 PsyNeuLink implementations of published models (under <a class="reference internal" href="Models.html"><span class="doc">Models</span></a>).  The Library is meant to be extended, and used both
 to compare different models that address similar neural mechanisms and/or psychological functions, and to integrate
 these into higher level models of system-level function.</p>
-</div>
-</div>
-<div class="section" id="psyneulink-objects">
+</section>
+</section>
+<section id="psyneulink-objects">
 <span id="id3"></span><h2>PsyNeuLink Objects<a class="headerlink" href="#psyneulink-objects" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="overview">
+<section id="overview">
 <span id="quick-reference-overview"></span><h3>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h3>
 <p>The two primary types of objects in PsyNeuLink are <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> (basic building blocks) and <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> (combinations of Components that implement a model).  There are four primary types of Components:
 <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> are the basic units of computation in PsyNeuLink – every other type of Component in PsyNeuLink
@@ -289,8 +290,8 @@ Compositions, that receive and/or send Projections to Mechanisms and/or other ne
 Composition constitutes a model, that can be executed using its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method.</p>
 <p>The sections that follow provide a description of the Component types, Composition, and other basic objects in
 PsyNeuLink.</p>
-</div>
-<div class="section" id="components">
+</section>
+<section id="components">
 <span id="quick-reference-components"></span><h3><a class="reference internal" href="Component.html"><span class="doc">Components</span></a><a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h3>
 <p>Components are objects that perform a specific function. Every Component has the following core attributes:</p>
 <ul class="simple">
@@ -431,8 +432,8 @@ function, and thereby the Port’s <a class="reference internal" href="Port.html
 </dl>
 </li>
 </ul>
-</div>
-<div class="section" id="compositions">
+</section>
+<section id="compositions">
 <span id="quick-reference-compositions"></span><h3><a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a><a class="headerlink" href="#compositions" title="Permalink to this headline">¶</a></h3>
 <p>A Composition is made up of one more Mechanisms and/or nested Compositions, connected by Projections.  A Composition
 is created by first calling its constructor and then using its <a class="reference internal" href="Composition.html#composition-creation"><span class="std std-ref">add methods</span></a> to add Components.
@@ -441,16 +442,18 @@ node and each <a class="reference internal" href="Projection.html"><span class="
 the ones to which it projects)when it is executed using its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method, that may be modified by
 <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> assigned to the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.scheduler" title="psyneulink.core.compositions.composition.Composition.scheduler"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">scheduler</span></code></a> (see
 <a class="reference internal" href="#quick-reference-scheduling"><span class="std std-ref">below</span></a>.  The graph can be displayed using the Composition’s <code class="xref any docutils literal notranslate"><span class="pre">show_graph</span></code> method, an example of which is shown in the following figure:</p>
-<div class="figure align-default" id="id4">
+<figure class="align-default" id="id4">
 <span id="quick-reference-compositions-figure"></span><a class="reference internal image-reference" href="_images/QuickReference_Composition_fig.svg"><img alt="_images/QuickReference_Composition_fig.svg" src="_images/QuickReference_Composition_fig.svg" width="75%" /></a>
-<p class="caption"><span class="caption-text"><strong>Composition.</strong> Example of a PsyNeuLink Composition that contains various types of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>
+<figcaption>
+<p><span class="caption-text"><strong>Composition.</strong> Example of a PsyNeuLink Composition that contains various types of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>
 (shown as ovals, which each type shown in parentheses belown the Mechanism’s name) and <a class="reference internal" href="Projections.html"><span class="doc">Projections</span></a>
 between them (shown as arrows);  see <a class="reference internal" href="BasicsAndPrimer.html#basicsandprimer-elaborate-configurations"><span class="std std-ref">Basics And Primer</span></a> for a more
 complete description of the model implemented by this Composition).</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
-</div>
-</div>
-</div>
-<div class="section" id="scheduling">
+</figcaption>
+</figure>
+</section>
+</section>
+<section id="scheduling">
 <span id="quick-reference-scheduling"></span><h2><a class="reference internal" href="Scheduler.html"><span class="doc">Scheduling</span></a><a class="headerlink" href="#scheduling" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink Mechanisms can be executed on their own.  However, usually they are executed as part of a Composition to
 which they belong, when that is executed using its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method.  When a Composition is <code class="xref any docutils literal notranslate"><span class="pre">run</span></code>, its Components are executed under the control of its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.scheduler" title="psyneulink.core.compositions.composition.Composition.scheduler"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">scheduler</span></code></a>.  This
@@ -465,8 +468,8 @@ that is logically possible.</p>
 <p>A Composition continues to execute <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PASS</span></code></a>es until its <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> <a class="reference internal" href="Scheduler.html#scheduler-termination-conditions"><span class="std std-ref">termination Condition</span></a> is met, which constitutes a <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> of executions.  This is associated with a
 single input to the Composition. Multiple <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.TRIAL" title="psyneulink.core.globals.log.LogCondition.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> s (corresponding to a sequences of inputs) can be executed using a
 Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method.</p>
-</div>
-<div class="section" id="logging">
+</section>
+<section id="logging">
 <span id="quick-reference-logging"></span><h2>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink supports logging of any attribute of any <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> or <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> under various specified
 conditions.  <a class="reference internal" href="Log.html"><span class="doc">Logs</span></a> are dictionaries, with an entry for each Component being logged.  The key for each entry is
@@ -474,16 +477,16 @@ the name of the Component, and the value is a record of the Component’s <a cla
 conditions specified by its <code class="xref any docutils literal notranslate"><span class="pre">logPref</span></code> attribute, specified as a <code class="xref any docutils literal notranslate"><span class="pre">LogLevel</span></code>; each record is a
 tuple, the first item of which is a time stamp (the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> of the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>), the second a string indicating the
 context in which the value was recorded, and the third the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> itself.</p>
-</div>
-<div class="section" id="graphic-display">
+</section>
+<section id="graphic-display">
 <span id="quick-reference-graphic-displays"></span><h2>Graphic Display<a class="headerlink" href="#graphic-display" title="Permalink to this headline">¶</a></h2>
 <p>At the moment, PsyNeuLink has limited support for graphic displays:  the graph of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> can be displayed
 using its <code class="xref any docutils literal notranslate"><span class="pre">show_graph</span></code> method.  This can be used to display just the processing components
 (i.e., <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> and <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>), or to include
 <a class="reference internal" href="LearningMechanism.html"><span class="doc">learning</span></a> and/or <a class="reference internal" href="ControlMechanism.html"><span class="doc">control</span></a> components.  A future release will include
 a more complete and interacdtive graphical user interface.</p>
-</div>
-<div class="section" id="preferences">
+</section>
+<section id="preferences">
 <span id="quick-reference-preferences"></span><h2>Preferences<a class="headerlink" href="#preferences" title="Permalink to this headline">¶</a></h2>
 <p>PsyNeuLink supports a hierarchical system of <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a> for all Components and Compositions.  Every object has its
 own set of preferences, as does every class of object.  Any preference for an object can be assigned its own value, or
@@ -492,8 +495,8 @@ its own preference for reporting, or use the default value for <a class="referen
 <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, or <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>.  There are preferences for reporting (i.e., which results of
 processing are printed to the console during execution), logging, levels of warnings, and validation (useful for
 debugging, but suppressible for efficiency of execution).</p>
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

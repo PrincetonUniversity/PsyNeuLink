@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutoAssociativeProjection &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>AutoAssociativeProjection &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,9 +195,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.library.components.projections.pathway.autoassociativeprojection">
+  <section id="module-psyneulink.library.components.projections.pathway.autoassociativeprojection">
 <span id="autoassociativeprojection"></span><h1>AutoAssociativeProjection<a class="headerlink" href="#module-psyneulink.library.components.projections.pathway.autoassociativeprojection" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="contents">
+<section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -213,8 +214,8 @@
 <li><p><a class="reference internal" href="#autoassociative-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="autoassociative-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An AutoAssociativeProjection is a subclass of <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that acts as the recurrent projection for a
 <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>. The primary difference between an AutoAssociativeProjection and a basic MappingProjection
@@ -225,20 +226,20 @@ this allows for a <a class="reference internal" href="ControlMechanism.html"><sp
 <p>AutoAssociativeProjection represents connections between nodes in a single-layer recurrent network. It multiplies
 the output of the <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> by a matrix, then presents the product as input to the
 <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>.</p>
-</div>
-<div class="section" id="creating-an-autoassociativeprojection">
+</section>
+<section id="creating-an-autoassociativeprojection">
 <span id="autoassociative-creation"></span><h2>Creating an AutoAssociativeProjection<a class="headerlink" href="#creating-an-autoassociativeprojection" title="Permalink to this headline">¶</a></h2>
 <p>An AutoAssociativeProjection is created automatically by a RecurrentTransferMechanism (or its subclasses), and is
 stored as the <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">recurrent_projection</span></code></a> parameter of the
 RecurrentTransferMechanism. It is not recommended to create an AutoAssociativeProjection on its own, because during
 execution an AutoAssociativeProjection references parameters owned by its RecurrentTransferMechanism (see
 <a class="reference internal" href="#autoassociative-execution"><span class="std std-ref">Execution</span></a> below).</p>
-</div>
-<div class="section" id="auto-associative-structure">
+</section>
+<section id="auto-associative-structure">
 <span id="autoassociative-structure"></span><h2>Auto Associative Structure<a class="headerlink" href="#auto-associative-structure" title="Permalink to this headline">¶</a></h2>
 <p>In structure, the AutoAssociativeProjection is almost identical to a MappingProjection: the only additional attributes
 are <code class="xref any docutils literal notranslate"><span class="pre">auto</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">hetero</span></code>.</p>
-<div class="section" id="configurable-attributes">
+<section id="configurable-attributes">
 <span id="autoassociative-configurable-attributes"></span><h3><em>Configurable Attributes</em><a class="headerlink" href="#configurable-attributes" title="Permalink to this headline">¶</a></h3>
 <p>Due to its specialized nature, most parameters of the AutoAssociativeProjection are not configurable: the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is
 determined by the format of the output of the RecurrentTransferMechanism, the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is always LinearMatrix, and so
@@ -250,9 +251,9 @@ the <strong>matrix</strong>, <strong>auto</strong>, and/or <strong>hetero</stron
 diagonal entries (representing the strength of the connection from each node to itself) and <strong>hetero</strong> determines
 the off-diagonal entries (representing connections between nodes).</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="execution">
+</section>
+</section>
+<section id="execution">
 <span id="autoassociative-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>An AutoAssociativeProjection uses its <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter to transform the value of
 its <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a>, and provide the result as input for its
@@ -265,8 +266,8 @@ its <a class="reference internal" href="#psyneulink.library.components.projectio
 counterparts on the RecurrentTransferMechanism as well.) The reason for putting the <code class="xref any docutils literal notranslate"><span class="pre">auto</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">hetero</span></code> parameters on the
 RecurrentTransferMechanism is that this allows them to be modified by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>.</p>
 </div>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="autoassociative-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py exception">
 <dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeError">
@@ -343,8 +344,8 @@ in the case of an AutoAssociativeProjection.</p>
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

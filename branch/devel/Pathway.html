@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Pathway &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>Pathway &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,17 +195,17 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.core.compositions.pathway">
+  <section id="module-psyneulink.core.compositions.pathway">
 <span id="pathway"></span><h1>Pathway<a class="headerlink" href="#module-psyneulink.core.compositions.pathway" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="related">
+<section id="related">
 <h2>Related<a class="headerlink" href="#related" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRoles</span></code></a></p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.compositions.pathway.PathwayRole" title="psyneulink.core.compositions.pathway.PathwayRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PathwayRoles</span></code></a></p></li>
 <li><p><a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a></p></li>
 </ul>
-</div>
-<div class="section" id="contents">
+</section>
+<section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -225,27 +226,27 @@
 <li><p><a class="reference internal" href="#pathway-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="pathway-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A Pathway is a sequence of <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>. Generally, Pathways are assigned
 to <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a>, but a Pathway object can be created on its and used as a template for specifying a
 Pathway for a Composition, as described below.  See <a class="reference internal" href="Composition.html#composition-pathways"><span class="std std-ref">Pathways</span></a> for additional information about
 Pathways in Compositions.</p>
-</div>
-<div class="section" id="creating-a-pathway">
+</section>
+<section id="creating-a-pathway">
 <span id="pathway-creation"></span><h2>Creating a Pathway<a class="headerlink" href="#creating-a-pathway" title="Permalink to this headline">¶</a></h2>
 <p>Pathway objects are created in one of two ways, either using the constructor to create a <a class="reference internal" href="#pathway-template"><span class="std std-ref">template</span></a>,
 or automatically when a Pathway is <a class="reference internal" href="#pathway-assignment-to-composition"><span class="std std-ref">assigned to a Composition</span></a>.</p>
-<div class="section" id="pathway-as-a-template">
+<section id="pathway-as-a-template">
 <span id="pathway-template"></span><h3><em>Pathway as a Template</em><a class="headerlink" href="#pathway-as-a-template" title="Permalink to this headline">¶</a></h3>
 <p>A Pathway created on its own, using its constructor, is a <strong>template</strong>, that can be used to <a class="reference internal" href="#pathway-specification"><span class="std std-ref">specifiy a Pathway</span></a> for one or more Compositions, as described <a class="reference internal" href="#pathway-assignment-to-composition"><span class="std std-ref">below</span></a>;
 however, it cannot be executed on its own.  When a Pathway object is used to assign a Pathway to a Composition,
 its <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.pathway" title="psyneulink.core.compositions.pathway.Pathway.pathway"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">pathway</span></code></a> attribute, and its <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.name" title="psyneulink.core.compositions.pathway.Pathway.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> if that is not otherwise specified (see
 <a class="reference internal" href="#pathway-name"><span class="std std-ref">below</span></a>), are used as the specification to create a new Pathway that is assigned to the Composition,
 and the template remains unassigned.</p>
-</div>
-<div class="section" id="assigning-pathways-to-a-composition">
+</section>
+<section id="assigning-pathways-to-a-composition">
 <span id="pathway-assignment-to-composition"></span><h3><em>Assigning Pathways to a Composition</em><a class="headerlink" href="#assigning-pathways-to-a-composition" title="Permalink to this headline">¶</a></h3>
 <p>Pathways can be assigned to a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> using the <strong>pathways</strong> argument of the Composition’s constructor, or one of
 its <a class="reference internal" href="Composition.html#composition-pathway-addition-methods"><span class="std std-ref">Pathway addition methods</span></a>.  A Pathway object can be used, along with any
@@ -253,15 +254,15 @@ other form of <a class="reference internal" href="#pathway-specification"><span 
 is not assigned to the Composition; rather, it serves as a <a class="reference internal" href="#pathway-template"><span class="std std-ref">template</span></a> for a new Pathway object
 that is automatically created and assigned to the Composition.  The Composition’s <a class="reference internal" href="Composition.html#composition-pathway-addition-methods"><span class="std std-ref">Pathway addition methods</span></a> return a Pathway object for each Pathway created and assigned to theComposition.
 All of the Pathways assigned to a Composition are listed in its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.pathways" title="psyneulink.core.compositions.composition.Composition.pathways"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">pathways</span></code></a> attribute.</p>
-</div>
-<div class="section" id="pathway-name">
+</section>
+<section id="pathway-name">
 <span id="id1"></span><h3><em>Pathway Name</em><a class="headerlink" href="#pathway-name" title="Permalink to this headline">¶</a></h3>
 <p>If the <strong>name</strong> argument of the Pathway’s constructor is used to assign it a name, this is used as the name of the
 Pathway created when it is assigned to a Composition in its constructor, or using its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_pathways" title="psyneulink.core.compositions.composition.Composition.add_pathways"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_pathways</span></code></a> method.  This is also the case if one of the Composition’s other <code class="xref any docutils literal notranslate"><span class="pre">Pathway</span> <span class="pre">addition</span> <span class="pre">methods</span></code> is used, as long as the <strong>name</strong> argument of those methods is not specified.
 However, if the <strong>name</strong> argument is specified in those methods, or <a class="reference internal" href="#pathway-specification-dictionary"><span class="std std-ref">Pathway specification dictionary</span></a> is used to specify the Pathway’s name, that takes precedence over, and replaces
 one specified in the Pathway <a class="reference internal" href="#pathway-template"><span class="std std-ref">template's</span></a> <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.name" title="psyneulink.core.compositions.pathway.Pathway.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> attribute.</p>
-</div>
-<div class="section" id="pathway-specification">
+</section>
+<section id="pathway-specification">
 <span id="id2"></span><h3><em>Pathway Specification</em><a class="headerlink" href="#pathway-specification" title="Permalink to this headline">¶</a></h3>
 <p>The following formats can be used to specify a Pathway in the <strong>pathway</strong> argument of the constructor for the
 Pathway, the <strong>pathways</strong> argument of a the constructor for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, or the corresponding argument
@@ -313,9 +314,9 @@ Nodes, then it is treated as a single Pathway (i.e., the list form of <a class="
 </div></blockquote>
 </div>
 </div></blockquote>
-</div>
-</div>
-<div class="section" id="structure">
+</section>
+</section>
+<section id="structure">
 <span id="pathway-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p id="pathway-attribute">A Pathway has the following primary attributes:</p>
 <ul class="simple">
@@ -337,14 +338,14 @@ to a Composition (i.e., it is a <a class="reference internal" href="#pathway-tem
 <li><p><a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.learning_function" title="psyneulink.core.compositions.pathway.Pathway.learning_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_function</span></code></a> - the LearningFunction assigned to the Pathway if it is a
 <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a> that belongs to a Composition; otherwise it is None.</p></li>
 </ul>
-</div>
-<div class="section" id="execution">
+</section>
+<section id="execution">
 <span id="pathway-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A Pathway cannot be executed on its own.  Its Components are executed when the Composition to which it belongs is
 executed, by default in the order in which they appear in the <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.pathway" title="psyneulink.core.compositions.pathway.Pathway.pathway"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">pathway</span></code></a> attribute;  however, this
 can be modified by <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> added to the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.scheduler" title="psyneulink.core.compositions.composition.Composition.scheduler"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">scheduler</span></code></a>.</p>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="pathway-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.core.compositions.pathway.Pathway">
@@ -554,8 +555,8 @@ See <code class="xref any docutils literal notranslate"><span class="pre">note</
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

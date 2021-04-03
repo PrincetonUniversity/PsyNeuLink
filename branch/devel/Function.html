@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Function &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>Function &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,7 +195,7 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="function">
+  <section id="function">
 <h1>Function<a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 </div>
@@ -208,7 +209,7 @@
 </ul>
 </dd>
 </dl>
-<div class="section" id="overview">
+<section id="overview">
 <span id="function-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A Function is a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> that “packages” a function for use by other Components.
 Every Component in PsyNeuLink is assigned a Function; when that Component is executed, its
@@ -231,8 +232,8 @@ PsyNeuLink Components (e.g., <a class="reference internal" href="ModulatoryMecha
 replaced with other PsyNeuLink Functions, or with user-written custom functions so long as they adhere to certain
 standards (the PsyNeuLink <code class="xref any docutils literal notranslate"><span class="pre">Function</span> <span class="pre">API</span></code>).</p></li>
 </ul>
-</div>
-<div class="section" id="creating-a-function">
+</section>
+<section id="creating-a-function">
 <span id="function-creation"></span><h2>Creating a Function<a class="headerlink" href="#creating-a-function" title="Permalink to this headline">¶</a></h2>
 <p>A Function can be created directly by calling its constructor.  Functions are also created automatically whenever
 any other type of PsyNeuLink Component is created (and its <code class="xref std std-keyword docutils literal notranslate"><span class="pre">function</span></code> is not otherwise specified). The
@@ -241,10 +242,10 @@ its <a class="reference internal" href="Functions.html#psyneulink.core.component
 input to the <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, and assign its default value.  The arguments for each parameter can
 be used to specify the default value for that parameter; the values can later be modified in various ways as described
 below.</p>
-</div>
-<div class="section" id="structure">
+</section>
+<section id="structure">
 <span id="function-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="core-attributes">
+<section id="core-attributes">
 <span id="function-core-attributes"></span><h3><em>Core Attributes</em><a class="headerlink" href="#core-attributes" title="Permalink to this headline">¶</a></h3>
 <p>Every Function has the following core attributes:</p>
 <ul class="simple">
@@ -255,8 +256,8 @@ below.</p>
 callable object (that is, a python function or method of some kind). Unlike other PsyNeuLink <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>, it <em>cannot</em> be (another) Function object (it can’t be “turtles” all the way down!).</p></li>
 </ul>
 <p>A Function also has an attribute for each of the parameters of its <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
-</div>
-<div class="section" id="owner">
+</section>
+<section id="owner">
 <h3><em>Owner</em><a class="headerlink" href="#owner" title="Permalink to this headline">¶</a></h3>
 <p>If a Function has been assigned to another <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>, then it also has an <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> attribute
 that refers to that Component.  The Function itself is assigned as the Component’s
@@ -264,17 +265,17 @@ that refers to that Component.  The Function itself is assigned as the Component
 as an attribute of the <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a>, and those are each associated with with a
 <a class="reference internal" href="ParameterPort.html"><span class="doc">parameterPort</span></a> of the <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a>.  Projections to those parameterPorts can be
 used by <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to modify the Function’s parameters.</p>
-</div>
-<div class="section" id="modulatory-parameters">
+</section>
+<section id="modulatory-parameters">
 <span id="function-modulatory-params"></span><h3><em>Modulatory Parameters</em><a class="headerlink" href="#modulatory-parameters" title="Permalink to this headline">¶</a></h3>
 <p>Some classes of Functions also implement a pair of modulatory parameters: <code class="xref any docutils literal notranslate"><span class="pre">multiplicative_param</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">additive_param</span></code>.
 Each of these is assigned the name of one of the function’s parameters. These are used by <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> to modulate the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> and thereby its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> and <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-detail-figure"><span class="std std-ref">figure</span></a> for additional
 details). For example, a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> typically uses the <code class="xref any docutils literal notranslate"><span class="pre">multiplicative_param</span></code> to modulate the value of a parameter
 of a Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, whereas a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> uses the <code class="xref any docutils literal notranslate"><span class="pre">additive_param</span></code> to increment
 the <code class="xref any docutils literal notranslate"><span class="pre">value</span></code> of the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.</p>
-</div>
-</div>
-<div class="section" id="execution">
+</section>
+</section>
+<section id="execution">
 <span id="function-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>Functions are executable objects that can be called directly.  More commonly, however, they are called when
 their <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.owner" title="psyneulink.core.components.functions.function.Function_Base.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> is executed.  The parameters
@@ -283,8 +284,8 @@ of the <a class="reference internal" href="Functions.html#psyneulink.core.compon
 call to the <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.function" title="psyneulink.core.components.functions.function.Function_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
 <p>For <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>, this can also be done by specifying <a class="reference internal" href="Composition.html#composition-runtime-params"><span class="std std-ref">runtime_params</span></a> in the
 <code class="xref any docutils literal notranslate"><span class="pre">Run</span></code> method of their <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.core.components.functions.function.ArgumentTherapy">
@@ -543,8 +544,8 @@ constructor string</p>
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

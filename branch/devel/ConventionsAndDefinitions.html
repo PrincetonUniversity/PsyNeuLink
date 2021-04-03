@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Conventions and Definitions &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>Conventions and Definitions &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,7 +195,7 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="conventions-and-definitions">
+  <section id="conventions-and-definitions">
 <h1>Conventions and Definitions<a class="headerlink" href="#conventions-and-definitions" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><p><a class="reference internal" href="QuickReference.html#conventions"><span class="std std-ref">Conventions</span></a></p></li>
@@ -209,7 +210,7 @@
 </li>
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">Component_Hierarchy</span></code></p></li>
 </ul>
-<div class="section" id="conventions">
+<section id="conventions">
 <span id="id1"></span><h2>Conventions<a class="headerlink" href="#conventions" title="Permalink to this headline">¶</a></h2>
 <p>The following conventions are used for the names of PsyNeuLink objects and their documentation:</p>
 <blockquote>
@@ -236,12 +237,12 @@ appear in a <code class="xref any docutils literal notranslate"><span class="pre
 </li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="definitions">
+</section>
+<section id="definitions">
 <span id="id2"></span><h2>Definitions<a class="headerlink" href="#definitions" title="Permalink to this headline">¶</a></h2>
 <p>The two primary types of objects in PsyNeuLink are Components (basic building blocks)
 and Compositions (combinations of Components that implement a model).</p>
-<div class="section" id="components">
+<section id="components">
 <span id="definitions-components"></span><h3><a class="reference internal" href="Component.html"><span class="doc">Components</span></a><a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h3>
 <p>Components are objects that perform a specific function. Every Component has a:</p>
 <ul class="simple">
@@ -368,8 +369,8 @@ library of standard Functions (e.g. for linear, non-linear, and matrix transform
 comparison), as well as a standard Application Programmers Interface (API) that can be used to “wrap” any function
 that can be written in or called from Python.</p></li>
 </ul>
-</div>
-<div class="section" id="compositions">
+</section>
+<section id="compositions">
 <span id="definitions-compositions"></span><h3>Compositions<a class="headerlink" href="#compositions" title="Permalink to this headline">¶</a></h3>
 <p>Compositions are combinations of Components that make up a PsyNeuLink model.  There are two types of Compositions:
 Processes and Systems.</p>
@@ -379,15 +380,17 @@ Projections.  A Process may have recurrent Projections, but it does not have any
 which each node is a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> and each edge is a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>.  Systems are generally constructed from Processes,
 but they can also be constructed directly from Mechanisms and Projections.</p>
 <p id="definitions-compositions-figure"><strong>PsyNeuLink Compositions</strong></p>
-<div class="figure align-default" id="id3">
+<figure class="align-default" id="id3">
 <a class="reference internal image-reference" href="_images/System_simple_fig.jpg"><img alt="Overview of major PsyNeuLink Components" src="_images/System_simple_fig.jpg" style="width: 498.0px; height: 571.5px;" /></a>
-<p class="caption"><span class="caption-text">Two <code class="xref any docutils literal notranslate"><span class="pre">Processes</span></code> are shown, both belonging to the same <code class="xref any docutils literal notranslate"><span class="pre">System</span></code>.  Each Process has a
+<figcaption>
+<p><span class="caption-text">Two <code class="xref any docutils literal notranslate"><span class="pre">Processes</span></code> are shown, both belonging to the same <code class="xref any docutils literal notranslate"><span class="pre">System</span></code>.  Each Process has a
 series of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> linked by <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>,
 that converge on a common final ProcessingMechanism (see <code class="xref any docutils literal notranslate"><span class="pre">figure</span> <span class="pre">in</span> <span class="pre">System</span></code> for a more
 complete example, that includes Components responsible for learning, control and gating).</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
-</div>
-</div>
-<div class="section" id="execution">
+</figcaption>
+</figure>
+</section>
+<section id="execution">
 <span id="definitions-execution"></span><h3>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h3>
 <p>PsyNeuLink Mechanisms can be executed on their own.  However, usually, they are executed when a Composition to which
 they belong is run.  Compositions are run iteratively in <code class="xref any docutils literal notranslate"><span class="pre">rounds</span> <span class="pre">of</span> <span class="pre">execution</span></code>, in which each Mechanism in the
@@ -403,9 +406,9 @@ scales of operation, composing heterogeneous Components into a single integrated
 flexibility to commit each Component of their model to a form of processing and/or level of analysis that is
 appropriate for that Component, while providing the opportunity to test and explore how they interact with one
 another in a single system.</p>
-</div>
-</div>
-</div>
+</section>
+</section>
+</section>
 
 
              </article>

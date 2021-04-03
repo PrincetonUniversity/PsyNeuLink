@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Compilation &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>Compilation &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,12 +195,12 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="compilation">
+  <section id="compilation">
 <h1>Compilation<a class="headerlink" href="#compilation" title="Permalink to this headline">¶</a></h1>
 <p>PsyNeulink includes a runtime compiler to improve performance of executed models.
 This section describes the overview of the compiler design and its use.
 The performance improvements varies, but it has been observed to be between one and three orders of magnitude depending on the model.</p>
-<div class="section" id="overview">
+<section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>The PsyNeuLink runtime compiler works in several steps when invoked via <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> or <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.execute" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a>:
 <em>Compilation</em>:</p>
@@ -220,8 +221,8 @@ The performance improvements varies, but it has been observed to be between one 
 </ol>
 </dd>
 </dl>
-</div>
-<div class="section" id="use">
+</section>
+<section id="use">
 <h2>Use<a class="headerlink" href="#use" title="Permalink to this headline">¶</a></h2>
 <p>Compiled form of a model can be invoked by passing one of the following values to the <code class="xref any docutils literal notranslate"><span class="pre">bin_execute</span></code> parameter of <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Composition.run</span></code></a>, or <code class="xref any docutils literal notranslate"><span class="pre">Composition.exec</span></code>:</p>
 <blockquote>
@@ -235,8 +236,8 @@ The performance improvements varies, but it has been observed to be between one 
 </div></blockquote>
 <p>Note that data other than <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Composition.run</span></code></a> outputs are not synchronized between Python and compiled execution.</p>
 <p>It is possible to invoke compiled version of <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> s and <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> s. This functionality is provided for testing purposes only, because of the lack of data synchronization it is not recommended for general use.</p>
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

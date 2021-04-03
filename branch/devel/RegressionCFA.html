@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>RegressionCFA &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>RegressionCFA &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -98,7 +99,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -202,11 +203,11 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="regressioncfa">
+  <section id="regressioncfa">
 <h1>RegressionCFA<a class="headerlink" href="#regressioncfa" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 </div>
-<span class="target" id="module-psyneulink.library.compositions.regressioncfa"></span><div class="section" id="contents">
+<span class="target" id="module-psyneulink.library.compositions.regressioncfa"></span><section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -214,8 +215,8 @@
 <li><p><a class="reference internal" href="#regressioncfa-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="regressioncfa-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A <a class="reference internal" href="#"><span class="doc">RegressionCFA</span></a> is a subclass of <a class="reference internal" href="CompositionFunctionApproximator.html"><span class="doc">CompositionFunctionApproximator</span></a> that parameterizes a set of <a class="reference internal" href="#psyneulink.library.compositions.regressioncfa.RegressionCFA.regression_weights" title="psyneulink.library.compositions.regressioncfa.RegressionCFA.regression_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">regression_weights</span></code></a> over trials to predict the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a> for a
 <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> (or part of one) controlled by an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>.  The <a class="reference internal" href="#psyneulink.library.compositions.regressioncfa.RegressionCFA.regression_weights" title="psyneulink.library.compositions.regressioncfa.RegressionCFA.regression_weights"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">regression_weights</span></code></a> are updated by its <code class="xref any docutils literal notranslate"><span class="pre">update_weights</span></code> <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.LearningFunction" title="psyneulink.core.components.functions.learningfunctions.LearningFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LearningFunction</span></code></a>
@@ -229,8 +230,8 @@ for the <code class="xref any docutils literal notranslate"><span class="pre">co
 and for interactions among those terms.</p>
 <p>The <code class="xref any docutils literal notranslate"><span class="pre">regression_weights</span></code> returned by the <code class="xref any docutils literal notranslate"><span class="pre">update_weights</span></code> are used by the RegressorCFA’s <code class="xref any docutils literal notranslate"><span class="pre">evaluate</span></code> method to predict
 the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a> from the <code class="xref any docutils literal notranslate"><span class="pre">prediction_vector</span></code>.</p>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="regressioncfa-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.library.compositions.regressioncfa.PV">
@@ -598,8 +599,8 @@ Values of entries are nd arrays.</p>
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

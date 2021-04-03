@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Learning Mechanism &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>Learning Mechanism &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,9 +195,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism">
+  <section id="module-psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism">
 <span id="learning-mechanism"></span><h1>Learning Mechanism<a class="headerlink" href="#module-psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="contents">
+<section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -224,8 +225,8 @@
 <li><p><a class="reference internal" href="#learningmechanism-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="learningmechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A LearningMechanism is a <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a> that modifies the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a>
 parameter of one or more <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>.  Its function takes one or more <a class="reference internal" href="#learningmechanism-input-error-signal"><span class="std std-ref">error_signals</span></a> (usually the output of a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> or one or more other
@@ -237,7 +238,7 @@ LearningMechanism can be used to train multiple MappingProjections, by assigning
 All of the MappingProjection(s) modified by a LearningMechanism must project from one <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> to another in the same <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>. The learning components of a Composition can be
 displayed using the System’s <code class="xref any docutils literal notranslate"><span class="pre">show_graph</span></code> method with its <strong>show_learning</strong> argument assigned
 <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> or <em>ALL</em>.</p>
-<div class="section" id="a-note-about-the-implementation-of-learning">
+<section id="a-note-about-the-implementation-of-learning">
 <h3><em>A Note about the Implementation of Learning</em><a class="headerlink" href="#a-note-about-the-implementation-of-learning" title="Permalink to this headline">¶</a></h3>
 <p>The implementation of learning in PsyNeuLink was designed for exposition rather than efficiency. Unlike its
 implementation in most other environments – where the learning algorithm is tightly integrated with the
@@ -249,13 +250,13 @@ constituent computations, making it clearer to students what these are and how t
 individually accessible for reconfiguration. However, it comes at the cost of efficiency.  For efficient execution of
 supervised forms of learning (e.g., reinforcement learning and backpropagation), the <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a> can be used,
 which allows the model to be specified using PsyNeuLink, but actually executes learning using <code class="xref any docutils literal notranslate"><span class="pre">PyTorch</span></code>.</p>
-</div>
-</div>
-<div class="section" id="creating-a-learningmechanism">
+</section>
+</section>
+<section id="creating-a-learningmechanism">
 <span id="learningmechanism-creation"></span><h2>Creating a LearningMechanism<a class="headerlink" href="#creating-a-learningmechanism" title="Permalink to this headline">¶</a></h2>
 <p>A LearningMechanism can be created in any of the ways used to <a class="reference internal" href="Mechanism.html#mechanism-creation"><span class="std std-ref">create Mechanisms</span></a>.
 More commonly, however, LearningMechanisms are created automatically.</p>
-<div class="section" id="automatic-creation">
+<section id="automatic-creation">
 <h3><em>Automatic Creation</em><a class="headerlink" href="#automatic-creation" title="Permalink to this headline">¶</a></h3>
 <p>A LearningMechanism is created automatically when a Composition’s <a class="reference internal" href="Composition.html#composition-learning-methods"><span class="std std-ref">learning method</span></a> is
 called.  In that case, a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a>, <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>, a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> (in the case of <code class="xref any docutils literal notranslate"><span class="pre">supervised</span>
@@ -265,8 +266,8 @@ A LearningMechanism is also created automatically when either the <a class="refe
 <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> is created without specifying its <a class="reference internal" href="LearningProjection.html#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.sender" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> attribute. However, this
 is not advised, and should only used in special circumstances, as properly configuring learning generally requires
 the instantiation of several other closely related Components, as described below.</p>
-</div>
-<div class="section" id="explicit-creation">
+</section>
+<section id="explicit-creation">
 <span id="learningmechanism-explicit-creation"></span><h3><em>Explicit Creation</em><a class="headerlink" href="#explicit-creation" title="Permalink to this headline">¶</a></h3>
 <p>If a LearningMechanism is created explicitly (using its constructor), then its <strong>variable</strong> and <strong>error_sources</strong>
 arguments must be specified.  The <strong>variable</strong> must have at leaset three items that are compatible (in number and type)
@@ -277,15 +278,15 @@ item in <strong>error_sources</strong> must be one of the following: a <a class=
 create these, as well as <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> from these to specified MappingProjections.  These
 are specified in the <strong>learning_signals</strong> argument of the LearningMechanism’s constructor, using any of the forms
 allowed for <a class="reference internal" href="LearningSignal.html#learningsignal-specification"><span class="std std-ref">specifying a LearningSignal</span></a>.</p>
-</div>
-</div>
-<div class="section" id="structure">
+</section>
+</section>
+<section id="structure">
 <span id="learningmechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A LearningMechanism has three types of <a class="reference internal" href="InputPort.html"><span class="doc">InputPorts</span></a>, a learning <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>,
 and two types of <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>. These are used, respectively, to receive, compute, and transmit the
 information needed to modify the MappingProjection(s) for which the LearningMechanism is responsible.  In addition,
 it has several attributes that govern and provide access to its operation.  These are described below.</p>
-<div class="section" id="inputports">
+<section id="inputports">
 <span id="learningmechanism-inputports"></span><h3><em>InputPorts</em><a class="headerlink" href="#inputports" title="Permalink to this headline">¶</a></h3>
 <p>These receive the information required by the LearningMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  They are
 listed in the LearningMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.input_ports" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> attribute.  They have the following
@@ -328,8 +329,8 @@ item (i.e., following the <a class="reference internal" href="InputPort.html#psy
 LearningMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.input_source" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.input_source"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_source</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.output_source" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.output_source"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_source</span></code></a>,
 and <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_sources" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_sources"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_sources</span></code></a> attributes, respectively (see
 <a class="reference internal" href="#learningmechanism-additional-attributes"><span class="std std-ref">Additional Attributes</span></a> for additional details).</p>
-</div>
-<div class="section" id="learning-function">
+</section>
+<section id="learning-function">
 <span id="learningmechanism-function"></span><h3><em>Learning Function</em><a class="headerlink" href="#learning-function" title="Permalink to this headline">¶</a></h3>
 <p>The <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a LearningMechanism uses the values received by the Mechanism’s
 InputPorts (described <a class="reference internal" href="#learningmechanism-inputports"><span class="std std-ref">above</span></a>) to calculate the value of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_signal</span></code></a> attributes.</p>
@@ -363,8 +364,8 @@ assigned any other PsyNeuLink <a class="reference internal" href="LearningFuncti
 input a list or np.array containing three lists or 1d np.arrays of numeric values, and returns two lists or 1d
 np.arrays.  The two values it returns are assigned to the LearningMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a> and <code class="xref any docutils literal notranslate"><span class="pre">error_signal</span></code> attributes, respectively,
 as well as to its two OutputPorts, as described below.</p>
-</div>
-<div class="section" id="outputports">
+</section>
+<section id="outputports">
 <span id="learningmechanism-outputports"></span><h3><em>OutputPorts</em><a class="headerlink" href="#outputports" title="Permalink to this headline">¶</a></h3>
 <p>By default, a LearningMechanism has two <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>, the first of which is named <em>ERROR_SIGNAL</em> and
 is assigned the value of the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_signal</span></code></a> returned by the LearningMechanism’s
@@ -412,8 +413,8 @@ are <a class="reference internal" href="OutputPort.html"><span class="doc">Outpu
 attribute, after the <em>ERROR_SIGNAL</em> OutputPort.  All of the LearningMechanism’s LearningProjections (that is, those
 belonging to all of its LearningSignals) are listed in its <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_projections" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_projections"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_projections</span></code></a> attribute.</p>
 </div></blockquote>
-</div>
-<div class="section" id="additional-attributes">
+</section>
+<section id="additional-attributes">
 <span id="learningmechanism-additional-attributes"></span><h3><em>Additional Attributes</em><a class="headerlink" href="#additional-attributes" title="Permalink to this headline">¶</a></h3>
 <p>In addition to its <a class="reference internal" href="#learningmechanism-inputports"><span class="std std-ref">InputPorts</span></a>, <a class="reference internal" href="#learningmechanism-function"><span class="std std-ref">function</span></a> and
 <a class="reference internal" href="#learningmechanism-outputports"><span class="std std-ref">OutputPorts</span></a>, a LearningMechanism has the following attributes that
@@ -474,8 +475,8 @@ Those have a direct multiplicative effect on the <a class="reference internal" h
 LearningSignal and/or it LearningProjections (see <a class="reference internal" href="LearningSignal.html#learningsignal-learning-rate"><span class="std std-ref">LearningSignal learning_rate</span></a>
 for additional details).</p></li>
 </ul>
-</div>
-<div class="section" id="learning-configurations">
+</section>
+<section id="learning-configurations">
 <span id="learningmechanism-learning-configurations"></span><h3><em>Learning Configurations</em><a class="headerlink" href="#learning-configurations" title="Permalink to this headline">¶</a></h3>
 <p>When learning is enabled for a <a class="reference internal" href="RecurrentTransferMechanism.html#recurrenttransfermechanism-learning"><span class="std std-ref">RecurrentTransferMechanism</span></a> (for <a class="reference internal" href="Composition.html#composition-learning-unsupervised"><span class="std std-ref">unsupervised
 learning</span></a>) or using the <a class="reference internal" href="Composition.html#composition-learning-methods"><span class="std std-ref">learning method</span></a> of a
@@ -483,7 +484,7 @@ Composition, all of the Components required for learning are created automatical
 generated depend on the type of learning specified and the configuration of the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, as
 described below. All of the learning Components of a Composition can be displayed using its <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method with
 the <strong>show_learning</strong> argument assigned <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> or <em>ALL</em>.</p>
-<div class="section" id="single-layer-learning">
+<section id="single-layer-learning">
 <span id="learningmechanism-single-layer-learning"></span><h4>Single layer learning<a class="headerlink" href="#single-layer-learning" title="Permalink to this headline">¶</a></h4>
 <p>This configuration occurs when <a class="reference internal" href="Composition.html#composition-learning-unsupervised"><span class="std std-ref">unsupervised learning</span></a> is used, or <a class="reference internal" href="Composition.html#composition-learning-supervised"><span class="std std-ref">supervised
 learning</span></a> is used for a pathway in a Composition with only two Mechanisms (i.e.,
@@ -508,19 +509,21 @@ LearningMechanism’s <em>ERROR_SIGNAL</em> <a class="reference internal" href="
 is created or assigned to the LearningMechanism’s <em>ERROR_SIGNAL</em> <a class="reference internal" href="#learningmechanism-output-error-signal"><span class="std std-ref">OutputPort</span></a>.</p>
 <blockquote id="learningmechanism-single-layer-learning-figure-svg">
 <div><p><strong>Components for Single Layer Learning</strong></p>
-<div class="figure align-default" id="id1">
+<figure class="align-default" id="id1">
 <a class="reference internal image-reference" href="_images/LearningMechanism_Single_Layer_Learning_fig.svg"><img alt="Schematic of Mechanisms and Projections involved in learning for a single MappingProjection" src="_images/LearningMechanism_Single_Layer_Learning_fig.svg" /></a>
-<p class="caption"><span class="caption-text">Components generated by a call to a <a class="reference internal" href="Composition.html#composition-learning-methods"><span class="std std-ref">learning method</span></a> of a Composition
+<figcaption>
+<p><span class="caption-text">Components generated by a call to a <a class="reference internal" href="Composition.html#composition-learning-methods"><span class="std std-ref">learning method</span></a> of a Composition
 (e.g., <code class="docutils literal notranslate"><span class="pre">add_backpropagaption_learning_pathway(pathway=[X,</span> <span class="pre">Y]</span></code>), labeled by type of Component (in <strong>bold</strong>,
 camelCase), NodeRole(s) assigned (<em>italics</em>), learning component type used as key in dictionary returned by
 the learning method (<em>UPPER_CASE</em> italics, outside of object) and, where relevant, the name of the attribute
 of the LearningMechanism with which it is associated (<em>italicized</em> lower case, outside of object). The
 ComparatorMechanism and LearningMechanism are shown with their InputPorts, OutputPorts and functions
 diagrammed.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
-</div>
+</figcaption>
+</figure>
 </div></blockquote>
-</div>
-<div class="section" id="multilayer-learning">
+</section>
+<section id="multilayer-learning">
 <span id="learningmechanism-multilayer-learning"></span><h4>Multilayer learning<a class="headerlink" href="#multilayer-learning" title="Permalink to this headline">¶</a></h4>
 <p>This refers to learning in a pathway that has three or more Mechanisms in a sequence, and therefore two or more
 MappingProjections that are being learned.  The learning components for such a configuration are created
@@ -554,9 +557,10 @@ sequence, the following additional MappingProjections are created for learning (
 the sequence, then <em>no</em> Projection is created or assigned to its LearningMechanism’s <em>ERROR_SIGNAL</em> <a class="reference internal" href="#learningmechanism-output-error-signal"><span class="std std-ref">OutputPort</span></a>.</p>
 <blockquote id="learningmechanism-multilayer-learning-figure">
 <div><p><strong>Components for Multilayer Learning</strong></p>
-<div class="figure align-default" id="id2">
+<figure class="align-default" id="id2">
 <a class="reference internal image-reference" href="_images/LearningMechanism_Multilayer_Learning_fig.svg"><img alt="Schematic of Mechanisms and Projections involved in learning for a sequence of MappingProjections" src="_images/LearningMechanism_Multilayer_Learning_fig.svg" /></a>
-<p class="caption"><span class="caption-text">Components generated by a call to a <a class="reference internal" href="Composition.html#composition-learning-methods"><span class="std std-ref">learning method</span></a> of a Composition for a
+<figcaption>
+<p><span class="caption-text">Components generated by a call to a <a class="reference internal" href="Composition.html#composition-learning-methods"><span class="std std-ref">learning method</span></a> of a Composition for a
 sequence with three ProcessingMechanisms (and therefore two MappingProjections to be learned; e.g.,
 <code class="docutils literal notranslate"><span class="pre">add_backpropagaption_learning_pathway(pathway=[X,</span> <span class="pre">Y,</span> <span class="pre">Z]</span></code>).  Components are labeled by: type of Component (in
 <strong>bold</strong>, camelCase); NodeRole(s) assigned (<em>italics</em>) to it; name of learning component type (used as key in
@@ -564,7 +568,8 @@ dictionary returned by the learning method; <em>UPPER_CASE</em> italics, outside
 the name of the attribute of the LearningMechanism with which it is associated (<em>italicized</em> lower case,
 outside of object). The ComparatorMechanism and LearningMechanism are shown with their InputPorts, OutputPorts
 and functions diagrammed.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
-</div>
+</figcaption>
+</figure>
 </div></blockquote>
 <p id="learningmechanism-targets"><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TARGET" title="psyneulink.core.compositions.composition.NodeRole.TARGET"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TARGET</span></code></a> and <code class="xref any docutils literal notranslate"><span class="pre">OBJECTIVE</span></code> Mechanisms**.  When <a class="reference internal" href="Composition.html#composition-learning-supervised"><span class="std std-ref">supervised learning</span></a> is
 implemented using one of a Composition’s <a class="reference internal" href="Composition.html#composition-learning-methods"><span class="std std-ref">learning methods</span></a>, it automatically creates a
@@ -573,10 +578,10 @@ receives the target stimulus specifed in the <strong>inputs</strong> argument of
 method; and a <code class="xref any docutils literal notranslate"><span class="pre">OBJECTIVE_MECHANISM</span></code>, that computes the error_signal for the sequence.  The output of the
 <code class="xref any docutils literal notranslate"><span class="pre">OBJECTIVE_MECHANISM</span></code> is the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_sources" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_sources"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_source</span></code></a> for the last MappingProjection in the
 learning pathway.  If a multilayer learning pathway is implemented explicitly, it must include these Components.</p>
-</div>
-</div>
-</div>
-<div class="section" id="execution">
+</section>
+</section>
+</section>
+<section id="execution">
 <span id="learningmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>LearningMechanisms that implement <a class="reference internal" href="Composition.html#composition-learning-unsupervised"><span class="std std-ref">unsupervised learning</span></a>
 (<a class="reference internal" href="AutoAssociativeLearningMechanism.html"><span class="doc">AutoassociativeLearningMechanisms</span></a>) execute when the <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>
@@ -600,8 +605,8 @@ ParameterPort, thus incrementing the weights by an amount specified by the Learn
 <p>A LearningMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> also computes an <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_signal</span></code></a> that is assigned as the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of its <em>ERROR_SIGNAL</em>
 <a class="reference internal" href="#learningmechanism-output-error-signal"><span class="std std-ref">OutputPort</span></a>;  in a <a class="reference internal" href="#learningmechanism-multilayer-learning"><span class="std std-ref">multilayer learning configuration</span></a>, that value is provided to the <em>ERROR_SIGNAL</em> <a class="reference internal" href="#learningmechanism-input-error-signal"><span class="std std-ref">InputPort(s)</span></a> of the LearningMechanism(s) for the preceding MappingProjection(s)
 being learned in the sequence.</p>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="learningmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py attribute">
 <dt id="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.DefaultTrainingMechanism">
@@ -980,8 +985,8 @@ Sum the learning_signal and error_signal values received from each execution</p>
 <em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.</code><code class="sig-name descname">LearningMechanismError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanismError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

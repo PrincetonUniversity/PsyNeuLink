@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DDM &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>DDM &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -98,7 +99,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -206,9 +207,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.library.components.mechanisms.processing.integrator.ddm">
+  <section id="module-psyneulink.library.components.mechanisms.processing.integrator.ddm">
 <span id="ddm"></span><h1>DDM<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.integrator.ddm" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="contents">
+<section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -241,8 +242,8 @@
 <li><p><a class="reference internal" href="#ddm-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="ddm-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>The DDM Mechanism implements the “Drift Diffusion Model” (also know as the Diffusion Decision, Accumulation to Bound,
 Linear IntegratorFunction, and <a class="reference external" href="https://en.wikipedia.org/wiki/First-hitting-time_model">First Passage Time Model</a>
@@ -251,8 +252,8 @@ of the <a class="reference external" href="https://en.wikipedia.org/wiki/Sequent
 that is the statistically optimal procedure for <a class="reference external" href="https://en.wikipedia.org/wiki/Two-alternative_forced_choice">two alternative forced choice (TAFC) decision making</a> (see <a class="reference external" href="https://en.wikipedia.org/wiki/Two-alternative_forced_choice#Drift-diffusion_model">drift-diffusion model</a> in partciular).</p>
 <p>The DDM Mechanism may be constructed with a choice of several functions that fall into to general categories: analytic
 solutions and path integration (see <a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Function Types</span></a> below for more about these options.)</p>
-</div>
-<div class="section" id="creating-a-ddm-mechanism">
+</section>
+<section id="creating-a-ddm-mechanism">
 <span id="ddm-creation"></span><h2>Creating a DDM Mechanism<a class="headerlink" href="#creating-a-ddm-mechanism" title="Permalink to this headline">¶</a></h2>
 <p>A DDM Mechanism can be instantiated directly by calling its constructor, or by using the <a class="reference internal" href="Mechanism.html#module-psyneulink.core.components.mechanisms.mechanism" title="psyneulink.core.components.mechanisms.mechanism"><code class="xref any py py-mod docutils literal notranslate"><span class="pre">mechanism</span></code></a> command and
 specifying DDM as its <strong>mech_spec</strong> argument.  The model implementation is selected using the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>
@@ -265,11 +266,11 @@ argument. The function selection can be simply the name of a DDM function:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_DDM</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">DriftDiffusionAnalytical</span><span class="p">(</span><span class="n">drift_rate</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">1.0</span><span class="p">))</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="structure">
+</section>
+<section id="structure">
 <span id="ddm-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>The DDM Mechanism implements a general form of the decision process.</p>
-<div class="section" id="input">
+<section id="input">
 <span id="ddm-input"></span><h3><em>Input</em><a class="headerlink" href="#input" title="Permalink to this headline">¶</a></h3>
 <p>The input to the <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> of a DDM Mechanism is always a scalar, irrespective of <a class="reference internal" href="#ddm-modes"><span class="std std-ref">type of function</span></a> that is used.  Accordingly, the default <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> for a DDM takes a single scalar value as its input,
 that represents the stimulus for the decision process.  However, this can be configured using the <strong>input_format</strong>
@@ -279,8 +280,8 @@ argument of the DDM’s consructor, to accomodate use of the DDM with other Mech
 and to use <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Reduce" title="psyneulink.core.components.functions.combinationfunctions.Reduce"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Reduce</span></code></a> as its Function, which subtracts the 2nd element of the vector from the 1st, and provides this as
 the input to the DDM’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  If <em>ARRAY</em> is specified, two  <code class="xref any docutils literal notranslate"><span class="pre">Standard</span> <span class="pre">OutputPorts</span></code> are added to the DDM, that allow the result of the decision process to be represented
 as an array corresponding to the input array (see <a class="reference internal" href="#ddm-custom-outputports"><span class="std std-ref">below</span></a>).</p>
-</div>
-<div class="section" id="output">
+</section>
+<section id="output">
 <span id="ddm-output"></span><h3><em>Output</em><a class="headerlink" href="#output" title="Permalink to this headline">¶</a></h3>
 <p>The DDM Mechanism can generate two different types of results depending on which function is selected. When a
 function representing an analytic solution is selected, the mechanism generates a single estimation for the process.
@@ -298,10 +299,10 @@ can include any of the OutputPorts <code class="xref any docutils literal notran
 that are available if the <em>ARRAY</em> option is specified in its <strong>input_format</strong> argument (see <a class="reference internal" href="#ddm-input"><span class="std std-ref">Input</span></a>).  All of
 these <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a> are listed in the DDM’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.standard_output_ports" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a> attribute. As with any Mechanism, <a class="reference internal" href="OutputPort.html#outputport-customization"><span class="std std-ref">customized OutputPorts</span></a>
 can also be created and assigned.</p>
-</div>
-<div class="section" id="ddm-function-types">
+</section>
+<section id="ddm-function-types">
 <span id="ddm-modes"></span><h3><em>DDM Function Types</em><a class="headerlink" href="#ddm-function-types" title="Permalink to this headline">¶</a></h3>
-<div class="section" id="analytic-solutions">
+<section id="analytic-solutions">
 <span id="ddm-analytic-mode"></span><h4>Analytic Solutions<a class="headerlink" href="#analytic-solutions" title="Permalink to this headline">¶</a></h4>
 <p>The Drift Diffusion Model <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> that calculate analytic solutions
 [Bogacz et al (2006), Srivastava et al. (2016)] is <a class="reference internal" href="DistributionFunctions.html#driftdiffusionanalytical"><span class="std std-ref">DriftDiffusionAnalytical</span></a>
@@ -328,8 +329,8 @@ correct responses  (<a class="reference internal" href="#ddm-rt-correct-mean"><s
 <span class="gp">... </span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="path-integration">
+</section>
+<section id="path-integration">
 <span id="ddm-integration-mode"></span><h4>Path Integration<a class="headerlink" href="#path-integration" title="Permalink to this headline">¶</a></h4>
 <p>The Drift Diffusion Model <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> that calculates a path integration is <a class="reference internal" href="IntegratorFunctions.html#driftdiffusionintegrator"><span class="std std-ref">DriftDiffusionIntegrator</span></a>. The DDM Mechanism uses the <a class="reference external" href="https://en.wikipedia.org/wiki/Euler_method">Euler method</a> to
 carry out numerical step-wise integration of the decision process (see <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a> below).  In this
@@ -346,10 +347,10 @@ mode, only the <a class="reference internal" href="#ddm-decision-variable"><span
 <span class="gp">... </span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-</div>
-</div>
-<div class="section" id="execution">
+</section>
+</section>
+</section>
+<section id="execution">
 <span id="ddm-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When a DDM Mechanism is executed, it computes the decision process either <a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytically</span></a>  or by
 <a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">numerical step-wise integration</span></a> of its path.  The method used is determined by its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> (see <a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Function Types</span></a>). The DDM’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> always returns values for the <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a>, and assigns these as the first two items of its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.value" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> attribute, irrespective of its function.</p>
@@ -372,8 +373,8 @@ ISSN 0022-2496,
 <a class="reference external" href="https://doi.org/10.1016/j.jmp.2016.03.005">https://doi.org/10.1016/j.jmp.2016.03.005</a>.
 (<a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0022249616000341">http://www.sciencedirect.com/science/article/pii/S0022249616000341</a>)</p></li>
 </ul>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="ddm-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM">
@@ -824,8 +825,8 @@ execution of one or more other Components on a Component.</p>
 <em class="property">exception </em><code class="sig-prename descclassname">psyneulink.library.components.mechanisms.processing.integrator.ddm.</code><code class="sig-name descname">DDMError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDMError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

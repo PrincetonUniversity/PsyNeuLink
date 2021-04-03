@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutoAssociativeLearningMechanism &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>AutoAssociativeLearningMechanism &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -98,7 +99,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -206,9 +207,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism">
+  <section id="module-psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism">
 <span id="autoassociativelearningmechanism"></span><h1>AutoAssociativeLearningMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="contents">
+<section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -219,19 +220,19 @@
 <li><p><a class="reference internal" href="#autoassociativelearningmechanism-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="autoassociativelearningmechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An AutoAssociativeLearningMechanism is a subclass of <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, modified for use with a
 <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> to train its <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">recurrent_projection</span></code></a>.</p>
-</div>
-<div class="section" id="creating-an-autoassociativelearningmechanism">
+</section>
+<section id="creating-an-autoassociativelearningmechanism">
 <span id="autoassociativelearningmechanism-creation"></span><h2>Creating an AutoAssociativeLearningMechanism<a class="headerlink" href="#creating-an-autoassociativelearningmechanism" title="Permalink to this headline">¶</a></h2>
 <p>An AutoAssociativeLearningMechanism can be created directly by calling its constructor, but most commonly it is created
 automatically when a RecurrentTransferMechanism is <a class="reference internal" href="RecurrentTransferMechanism.html#recurrenttransfermechanism-learning"><span class="std std-ref">configured for learning</span></a>,
 (identified in its <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.activity_source" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.activity_source"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activity_source</span></code></a> attribute).</p>
-</div>
-<div class="section" id="structure">
+</section>
+<section id="structure">
 <span id="autoassociativelearningmechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>An AutoAssociativeLearningMechanism is identical to a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> in all respects except the following:</p>
 <blockquote>
@@ -256,8 +257,8 @@ the entire weight change matrix (see <a class="reference internal" href="#psyneu
 additional details).</p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="execution">
+</section>
+<section id="execution">
 <span id="autoassociativelearningmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>An AutoAssociativeLearningMechanism executes in the same manner as standard <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, with two exceptions:
 * 1) its execution can be enabled or disabled by setting the <a href="#id1"><span class="problematic" id="id2">`</span></a>learning_enabled</p>
@@ -270,8 +271,8 @@ associated (identified in its <a class="reference internal" href="#psyneulink.li
 different from the behavior of supervised learning algorithms (such as <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.Reinforcement" title="psyneulink.core.components.functions.learningfunctions.Reinforcement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Reinforcement</span></code></a> and <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="psyneulink.core.components.functions.learningfunctions.BackPropagation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BackPropagation</span></code></a>),
 that are executed during the <code class="xref any docutils literal notranslate"><span class="pre">learning</span> <span class="pre">phase</span></code> of a System’s execution</p></li>
 </ul>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="autoassociativelearningmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism">
@@ -505,8 +506,8 @@ This insures that weights are updated within the same trial in which they have b
 <dd><p>alias of <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism</span></code></a></p>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

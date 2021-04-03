@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>EpisodicMemoryMechanism &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>EpisodicMemoryMechanism &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -98,7 +99,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -206,9 +207,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism">
+  <section id="module-psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism">
 <span id="episodicmemorymechanism"></span><h1>EpisodicMemoryMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="contents">
+<section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -219,18 +220,18 @@
 <li><p><a class="reference internal" href="#episodicmemorymechanism-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="episodicmemorymechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An EpisodicMemoryMechanism is an <a class="reference internal" href="IntegratorMechanism.html"><span class="doc">IntegratorMechanism</span></a> that can store and retrieve content-associate pairs.
 Only the content is used for determining which pairs are retrieved</p>
-</div>
-<div class="section" id="creating-a-transfermechanism">
+</section>
+<section id="creating-a-transfermechanism">
 <span id="episodicmemorymechanism-creation"></span><h2>Creating a TransferMechanism<a class="headerlink" href="#creating-a-transfermechanism" title="Permalink to this headline">¶</a></h2>
 <p>An EpisodicMemoryMechanism is created by calling its constructor with <strong>content_size</strong> and, optionally, <strong>assoc_size</strong>,
 that define the shapes of the items stored in its memory.</p>
-</div>
-<div class="section" id="structure">
+</section>
+<section id="structure">
 <span id="episodicmemorymechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>An EpisodicMemoryMechanism has at least one <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>, its <em>CONTENT_INPUT</em> and,
 optionally, an <em>ASSOC_INPUT</em> InputPort (if its <em>assoc_size</em> is specified and is not 0) that represent
@@ -249,8 +250,8 @@ assoc with which it is associated in the <a class="reference internal" href="#ps
 <a class="reference internal" href="#id0" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.memory"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">memory</span></code></a> attribute.</p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="execution">
+</section>
+<section id="execution">
 <span id="episodicmemorymechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When an EpisodicMemoryMechanism is executed, its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function" title="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> carries out
 the following operations:</p>
@@ -274,8 +275,8 @@ may be different than the <a class="reference internal" href="InputPort.html#psy
 <p>If no retrieval is made, appropriately shaped zero-valued arrays are assigned as the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the <em>CONTENT_OUTPUT</em> and, if specified, <em>ASSOC_OUTPUT</em> OutputPorts.</p>
 </div>
 </div></blockquote>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="episodicmemorymechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism.EpisodicMemoryMechanism">
@@ -344,8 +345,8 @@ Function associated with this Component</p>
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

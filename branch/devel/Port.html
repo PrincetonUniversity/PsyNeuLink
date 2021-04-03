@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Port &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>Port &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,7 +195,7 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="port">
+  <section id="port">
 <h1>Port<a class="headerlink" href="#port" title="Permalink to this headline">¶</a></h1>
 <div class="subclasses docutils container" id="port-subtypes">
 <p><em>Subclasses</em></p>
@@ -207,7 +208,7 @@
 </ul>
 </div>
 </div>
-<span class="target" id="module-psyneulink.core.components.ports.port"></span><div class="section" id="contents">
+<span class="target" id="module-psyneulink.core.components.ports.port"></span><section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -236,8 +237,8 @@
 <li><p><a class="reference internal" href="#port-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="port-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A Port provides an interface to one or more <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>, and receives the <a class="reference internal" href="Projection.html"><span class="doc">value(s)</span></a>
 provided by them.  The value of a Port can be modulated by a <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>. There are
@@ -307,8 +308,8 @@ or parameter specification</p></td>
 </tr>
 </tbody>
 </table>
-</div>
-<div class="section" id="creating-a-port">
+</section>
+<section id="creating-a-port">
 <span id="port-creation"></span><h2>Creating a Port<a class="headerlink" href="#creating-a-port" title="Permalink to this headline">¶</a></h2>
 <p>In general, Ports are created automatically by the objects to which they belong (their <a class="reference internal" href="#port-strucure-owner"><span class="std std-ref">owner</span></a>),
 or by specifying the Port in the constructor for its owner.  For example, unless otherwise specified, when a
@@ -323,7 +324,7 @@ however, this should be done with caution as the Port must be compatible with ot
 its OutputPorts) and its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> (for example, see <a class="reference internal" href="Mechanism.html#mechanism-add-inputports-note"><span class="std std-ref">note</span></a>
 regarding InputPorts). Parameter Ports <strong>cannot</strong> on their own; they are always and only created when the Component
 to which a parameter belongs is created.</p>
-<div class="section" id="specifying-a-port">
+<section id="specifying-a-port">
 <span id="port-specification"></span><h3><em>Specifying a Port</em><a class="headerlink" href="#specifying-a-port" title="Permalink to this headline">¶</a></h3>
 <p>A Port can be specified using any of the following:</p>
 <blockquote>
@@ -449,8 +450,8 @@ details and compatibility requirements.</p></li>
 </ul>
 </div></blockquote>
 </div></blockquote>
-</div>
-<div class="section" id="projections">
+</section>
+<section id="projections">
 <span id="port-projections"></span><h3><em>Projections</em><a class="headerlink" href="#projections" title="Permalink to this headline">¶</a></h3>
 <p>When a Port is created, it can be assigned one or more <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>, in either the <strong>projections</strong>
 argument of its constructor, or a <em>PROJECTIONS</em> entry of a <a class="reference internal" href="#port-specification-dictionary"><span class="std std-ref">Port specification dictionary</span></a> (or a dictionary assigned to the <strong>params</strong> argument of the Port’s constructor).
@@ -508,19 +509,19 @@ Projection, the type of Projection created is inferred from the Port and the typ
 as illustrated in the <a class="reference internal" href="#port-projections-examples"><span class="std std-ref">examples</span></a> below.  Note that the Port must be <a class="reference internal" href="#port-creation"><span class="std std-ref">assigned to an
 owner</span></a> in order to be functional, irrespective of whether any <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> have been
 assigned to it.</p>
-</div>
-<div class="section" id="deferred-initialization">
+</section>
+<section id="deferred-initialization">
 <span id="port-deferred-initialization"></span><h3><em>Deferred Initialization</em><a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
 <p>If a Port is created on its own, and its <a class="reference internal" href="#port-strucure-owner"><span class="std std-ref">owner</span></a> Mechanism is specified, it is assigned to that
 Mechanism; if its owner not specified, then its initialization is <a class="reference internal" href="#port-deferred-initialization"><span class="std std-ref">deferred</span></a>.
 Its initialization is completed automatically when it is assigned to an owner <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> using the
 owner’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_ports</span></code></a> method.  If the Port is not assigned to an owner, it will not be
 functional (i.e., used during the execution of <a class="reference internal" href="Mechanism.html#mechanism-execution"><span class="std std-ref">Mechanisms</span></a> and/or <a class="reference internal" href="Composition.html#composition-execution"><span class="std std-ref">Compositions</span></a>, irrespective of whether it has any <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> assigned to it.</p>
-</div>
-</div>
-<div class="section" id="structure">
+</section>
+</section>
+<section id="structure">
 <span id="port-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="owner">
+<section id="owner">
 <span id="port-strucure-owner"></span><h3><em>Owner</em><a class="headerlink" href="#owner" title="Permalink to this headline">¶</a></h3>
 <p>Every Port has an <a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.owner" title="psyneulink.core.components.ports.port.Port_Base.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a>.  For <a class="reference internal" href="InputPort.html"><span class="doc">InputPorts</span></a> and <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>, the
 owner must be a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.  For <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPorts</span></a> it can be a Mechanism or a
@@ -530,14 +531,14 @@ assigned automatically to that Component.  It is also assigned automatically whe
 specified explicitly in the <strong>owner</strong> argument of the constructor for the Port (in which case it is immediately
 assigned to the specified Mechanism).  If the <strong>owner</strong> argument is not specified, the Port’s initialization is
 <a class="reference internal" href="#port-deferred-initialization"><span class="std std-ref">deferred</span></a> until it has been assigned to an owner using the owner’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.add_ports"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_ports</span></code></a> method.</p>
-</div>
-<div class="section" id="port-structure-projections">
+</section>
+<section id="port-structure-projections">
 <span id="id1"></span><h3><em>Projections</em><a class="headerlink" href="#port-structure-projections" title="Permalink to this headline">¶</a></h3>
 <p>Every Port has attributes that lists the <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> it sends and/or receives.  These depend on the
 type of Port, listed below (and shown in the <a class="reference internal" href="#port-projections-table"><span class="std std-ref">table</span></a>):</p>
 <p>In addition to these attributes, all of the Projections sent and received by a Port are listed in its <a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.projections" title="psyneulink.core.components.ports.port.Port_Base.projections"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">projections</span></code></a> attribute.</p>
-</div>
-<div class="section" id="variable-function-and-value">
+</section>
+<section id="variable-function-and-value">
 <span id="port-structure-variable-function-value"></span><h3><em>Variable, Function and Value</em><a class="headerlink" href="#variable-function-and-value" title="Permalink to this headline">¶</a></h3>
 <p>In addition, like all PsyNeuLink Components, it also has the three following core attributes:</p>
 <blockquote>
@@ -566,8 +567,8 @@ owner or its <a class="reference internal" href="Component.html#psyneulink.core.
 the Projections listed in its <code class="xref any docutils literal notranslate"><span class="pre">efferents</span></code> attribute.</p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="modulation">
+</section>
+<section id="modulation">
 <span id="port-modulation"></span><h3><em>Modulation</em><a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h3>
 <p>Every type of Port has a <a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.mod_afferents" title="psyneulink.core.components.ports.port.Port_Base.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> attribute, that lists the <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> it receives.  Each ModulatoryProjection comes from a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a>
 that specifies how it should modulate the Port’s <a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> when the Port is updated (see
@@ -579,9 +580,9 @@ Port uses it <a class="reference internal" href="#psyneulink.core.components.por
 ModulatorySignal can also be configured to override the Port’s <a class="reference internal" href="#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> (i.e., assign it directly),
 or to disable modulation, using either the keyword <em>OVERRIDE</em> or <em>DSIABLE</em>, respectively, to specify the value for its
 <a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation" title="psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulation</span></code></a> attribute (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> for a more detailed discussion).</p>
-</div>
-</div>
-<div class="section" id="execution">
+</section>
+</section>
+<section id="execution">
 <span id="port-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>Ports cannot be executed.  They are updated when the Component to which they belong is executed.  InputPorts and
 ParameterPorts belonging to a Mechanism are updated before the Mechanism’s function is called.  OutputPorts are
@@ -838,8 +839,8 @@ when it was created, as shown by printing the <a class="reference internal" href
 input_ports[0]), but rather its second InputPort (input_ports[1]). This is differs from specifying the InputPort
 as part of the constructor for the Mechanism, which suppresses generation of the default InputPort,
 as in the first example above (see <a class="reference internal" href="Mechanism.html#mechanism-default-port-suppression-note"><span class="std std-ref">note</span></a>).</p>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="port-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.core.components.ports.port.Port_Base">
@@ -854,7 +855,7 @@ by calling the constructor for a <a class="reference internal" href="#port-subty
 a Port</span></a>.</p>
 </div>
 <div class="technical-note docutils container">
-<div class="section" id="portregistry">
+<section id="portregistry">
 <h3>PortRegistry<a class="headerlink" href="#portregistry" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>Used by .__init__.py to assign default Projection types to each Port subclass</p>
@@ -867,7 +868,7 @@ used for instances of a Port type by different owners without adding index suffi
 owners, while still indexing multiple uses of the same base name within an owner</p>
 </div>
 </div></blockquote>
-</div>
+</section>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1332,8 +1333,8 @@ Used primarily during validation, when the function may not have been fully inst
 <em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.components.ports.port.</code><code class="sig-name descname">PortError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.PortError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

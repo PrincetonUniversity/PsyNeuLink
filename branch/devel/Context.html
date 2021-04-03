@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Context &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>Context &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,9 +195,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.core.globals.context">
+  <section id="module-psyneulink.core.globals.context">
 <span id="context"></span><h1>Context<a class="headerlink" href="#module-psyneulink.core.globals.context" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="overview">
+<section id="overview">
 <span id="context-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>The Context class is used to pass information about execution and state.  It is generally
 created at runtime, and updated under various operating conditions. Its primary
@@ -211,14 +212,14 @@ attribute is <a class="reference internal" href="#psyneulink.core.globals.contex
 <p>Each field can be addressed using the corresponding property of the class; only one source
 flag may be set, but in some cases multiple execution_phase flags may be set
 (although see individual property documentation for exceptions).</p>
-</div>
-<div class="section" id="context-and-logging">
+</section>
+<section id="context-and-logging">
 <h2>Context and Logging<a class="headerlink" href="#context-and-logging" title="Permalink to this headline">¶</a></h2>
 <p>The <a class="reference internal" href="#psyneulink.core.globals.context.Context.flags" title="psyneulink.core.globals.context.Context.flags"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">flags</span></code></a> attribute is used by <a class="reference internal" href="Log.html"><span class="doc">Log</span></a> to identify conditions for logging (see).  Accordingly, the
 <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogCondition</span></code></a>(s) used to specify such conditions in the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.Log.set_log_conditions" title="psyneulink.core.globals.log.Log.set_log_conditions"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">set_log_conditions</span></code></a> method of Log
 are a subset of (and are aliased to) the flags in <a class="reference internal" href="#psyneulink.core.globals.context.ContextFlags" title="psyneulink.core.globals.context.ContextFlags"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ContextFlags</span></code></a>.</p>
-</div>
-<div class="section" id="additional-attributes">
+</section>
+<section id="additional-attributes">
 <span id="context-additional-attributes"></span><h2>Additional Attributes<a class="headerlink" href="#additional-attributes" title="Permalink to this headline">¶</a></h2>
 <p>In addition to <a class="reference internal" href="#psyneulink.core.globals.context.Context.flags" title="psyneulink.core.globals.context.Context.flags"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">flags</span></code></a>, <a class="reference internal" href="#psyneulink.core.globals.context.Context.execution_phase" title="psyneulink.core.globals.context.Context.execution_phase"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execution_phase</span></code></a>, and
 <a class="reference internal" href="#psyneulink.core.globals.context.Context.source" title="psyneulink.core.globals.context.Context.source"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">source</span></code></a>, Context has four other attributes that record information
@@ -247,8 +248,8 @@ references it, but it is possible that future uses will involve other messages.<
 information as the string returned by the <a class="reference internal" href="#psyneulink.core.globals.context.Context.flags_string" title="psyneulink.core.globals.context.Context.flags_string"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">flags_string</span></code></a> method of Context.</p>
 </div>
 </div></blockquote>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="context-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.core.globals.context.Context">
@@ -557,8 +558,8 @@ Context is not specified</p></li>
 </dl>
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

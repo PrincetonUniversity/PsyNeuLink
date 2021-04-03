@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GatingSignal &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>GatingSignal &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,9 +195,9 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.core.components.ports.modulatorysignals.gatingsignal">
+  <section id="module-psyneulink.core.components.ports.modulatorysignals.gatingsignal">
 <span id="gatingsignal"></span><h1>GatingSignal<a class="headerlink" href="#module-psyneulink.core.components.ports.modulatorysignals.gatingsignal" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="contents">
+<section id="contents">
 <h2>Contents:<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
@@ -221,23 +222,23 @@
 <li><p><a class="reference internal" href="#gatingsignal-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="gating-signal-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>A GatingSignal is a type of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> that is specialized for use with a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a>
 and one or more <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>, to modify the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>(s) of the
 <a class="reference internal" href="InputPort.html"><span class="doc">InputPort(s)</span></a> and/or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort(s)</span></a> to which they project. A GatingSignal receives the
 value from the <a class="reference internal" href="GatingMechanism.html#id0" title="psyneulink.core.components.mechanisms.modulatory.gating.gatingmechanism.GatingMechanism.gating_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gating_allocation</span></code></a> of the GatingMechanism to which it belongs,
 and assigns that as the value of its <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.gating_signal" title="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.gating_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gating_signal</span></code></a> to its <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a>, each of which projects to an InputPort or OutputPort and is used to modulate the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of that Port.</p>
-</div>
-<div class="section" id="creating-a-gatingsignal">
+</section>
+<section id="creating-a-gatingsignal">
 <span id="gatingsignal-creation"></span><h2>Creating a GatingSignal<a class="headerlink" href="#creating-a-gatingsignal" title="Permalink to this headline">¶</a></h2>
 <p>A GatingSignal is created automatically whenever an <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> or <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> is
 specified for gating.  This can be done either in the <strong>gate</strong> argument of the constructor for a <a class="reference internal" href="GatingMechanism.html#gatingmechanism-gatingsignals"><span class="std std-ref">GatingMechanism</span></a>, or in the <a class="reference internal" href="Port.html#port-projections"><span class="std std-ref">specification of projections</span></a> to the InputPort or
 OutputPort.  Although a GatingSignal can be created directly using its constructor (or any of the other ways for
 <code class="xref any docutils literal notranslate"><span class="pre">creating</span> <span class="pre">an</span> <span class="pre">OutputPort</span></code>), this is usually not necessary nor is it advisable, as a GatingSignal
 has dedicated components and requirements for configuration that must be met for it to function properly.</p>
-<div class="section" id="specifying-gatingsignals">
+<section id="specifying-gatingsignals">
 <span id="gatingsignal-specification"></span><h3><em>Specifying GatingSignals</em><a class="headerlink" href="#specifying-gatingsignals" title="Permalink to this headline">¶</a></h3>
 <p>When a GatingSignal is specified in the <strong>gate</strong> argument of the constructor for a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a>, the
 InputPort(s) and/or OutputPort(s) it gates must be specified. This can take any of the following forms:</p>
@@ -295,13 +296,13 @@ format, which is simpler to use than a specification dictionary (see below), but
 <a class="reference internal" href="#gatingsignal-structure"><span class="std std-ref">parameters</span></a> for the GatingSignal.</p></li>
 </ul>
 </div></blockquote>
-</div>
-</div>
-<div class="section" id="structure">
+</section>
+</section>
+<section id="structure">
 <span id="gatingsignal-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>A GatingSignal is owned by a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a>, and associated with one or more <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>,
 each of which projects to the InputPort or OutputPort that it gates.</p>
-<div class="section" id="projections">
+<section id="projections">
 <span id="gatingsignal-projections"></span><h3><em>Projections</em><a class="headerlink" href="#projections" title="Permalink to this headline">¶</a></h3>
 <p>When a GatingSignal is created, it can be assigned one or more <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>, using either
 the <strong>projections</strong> argument of its constructor, or in an entry of a dictionary assigned to the <strong>params</strong> argument
@@ -315,8 +316,8 @@ the same <a class="reference internal" href="LearningMechanism.html"><span class
 belongs), and use the same form of <a class="reference internal" href="#gatingsignal-modulation"><span class="std std-ref">modulation</span></a>.  This can be useful for implementing
 broadly projecting modulatory effects.</p>
 </div>
-</div>
-<div class="section" id="modulation">
+</section>
+<section id="modulation">
 <span id="gatingsignal-modulation"></span><h3><em>Modulation</em><a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h3>
 <p>Each GatingSignal has a <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.modulation" title="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.modulation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulation</span></code></a> attribute that determines how the GatingSignal’s
 <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.value" title="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> (i.e., its <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.gating_signal" title="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.gating_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gating_signal</span></code></a>) is used by the Ports to which it
@@ -328,9 +329,9 @@ If it is not specified, its default is the value of the <a class="reference inte
 GatingMechanism to which the GatingSignal belongs (which is the same for all of the GatingSignals belonging to that
 GatingMechanism).  The value of the <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.modulation" title="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.modulation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulation</span></code></a> attribute of a GatingSignal is used by all
 of the <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> that project from that GatingSignal.</p>
-</div>
-</div>
-<div class="section" id="execution">
+</section>
+</section>
+<section id="execution">
 <span id="gatingsignal-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A GatingSignal cannot be executed directly.  It is executed whenever the <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> to which it belongs is
 executed.  When this occurs, the GatingMechanism provides the GatingSignal with one of the values from its
@@ -420,8 +421,8 @@ created directly and then assigned to <code class="docutils literal notranslate"
 <span class="gp">... </span>                                                          <span class="n">my_gating_signal_B</span><span class="p">])</span>
 </pre></div>
 </div>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="gatingsignal-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal">
@@ -551,8 +552,8 @@ of the Port(s) to which the GatingSignal’s <a class="reference internal" href=
 <em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.components.ports.modulatorysignals.gatingsignal.</code><code class="sig-name descname">GatingSignalError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignalError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>

@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0.8.7.1+9.g6853022d4c documentation</title>
+  <title>Component &mdash; PsyNeuLink 0.8.7.1+10.g054a7a3211 documentation</title>
   
 
   
@@ -96,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+9
+                  0.8.7.1+10
                 </div>
               
             
@@ -194,7 +195,7 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="component">
+  <section id="component">
 <h1>Component<a class="headerlink" href="#component" title="Permalink to this headline">¶</a></h1>
 <div class="subclasses docutils container">
 <p><em>Subclasses</em></p>
@@ -221,7 +222,7 @@
 </ul>
 </div>
 </div>
-<span class="target" id="module-psyneulink.core.components.component"></span><div class="section" id="contents">
+<span class="target" id="module-psyneulink.core.components.component"></span><section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="#component-overview"><span class="std std-ref">Overview</span></a></p></li>
@@ -262,13 +263,13 @@
 </li>
 <li><p><a class="reference internal" href="#component-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="component-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>Component is the base class for all of the objects used to create <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> in PsyNeuLink.
 It defines a common set of attributes possessed, and methods used by all Component objects.</p>
-</div>
-<div class="section" id="creating-a-component">
+</section>
+<section id="creating-a-component">
 <span id="component-creation"></span><h2>Creating a Component<a class="headerlink" href="#creating-a-component" title="Permalink to this headline">¶</a></h2>
 <p>A Component is never created by calling the constructor for the Component base class.  However, its <code class="docutils literal notranslate"><span class="pre">__init__()</span></code>
 method is always called when a Component subclass is instantiated; that, in turn, calls a standard set of methods
@@ -277,7 +278,7 @@ method is always called when a Component subclass is instantiated; that, in turn
 as additional parameters and attributes that may be specific to particular Components, many of which can be modified
 by the user, and some of which provide useful information about the Component (see <a class="reference internal" href="#user-modifiable-parameters"><span class="std std-ref">Parameters</span></a>
 and <code class="xref any docutils literal notranslate"><span class="pre">Informational</span> <span class="pre">Attributes</span></code> below).</p>
-<div class="section" id="deferred-initialization">
+<section id="deferred-initialization">
 <span id="component-deferred-init"></span><h3><em>Deferred Initialization</em><a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
 <p>If information necessary to complete initialization is not specified in the constructor (e.g, the <strong>owner</strong> for a
 <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.owner" title="psyneulink.core.components.ports.port.Port_Base.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Port</span></code></a>, or the <strong>sender</strong> or <strong>receiver</strong> for a <a class="reference internal" href="Projection.html#projection-structure"><span class="std std-ref">Projection</span></a>), then its
@@ -287,11 +288,11 @@ available (e.g., at the beginning of a script). However, for the Component to be
 be completed by a call to it <code class="xref any docutils literal notranslate"><span class="pre">deferred_init</span></code> method.  This is usually done automatically when the Component is
 assigned to another Component to which it belongs (e.g., assigning a Port to a Mechanism) or to a Composition (e.g.,
 a Projection to the <code class="xref any docutils literal notranslate"><span class="pre">pathway</span></code>) of a <code class="xref any docutils literal notranslate"><span class="pre">Process</span></code>), as appropriate.</p>
-</div>
-</div>
-<div class="section" id="component-structure">
+</section>
+</section>
+<section id="component-structure">
 <span id="id1"></span><h2>Component Structure<a class="headerlink" href="#component-structure" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="core-structural-attributes">
+<section id="core-structural-attributes">
 <span id="component-structural-attributes"></span><h3><em>Core Structural Attributes</em><a class="headerlink" href="#core-structural-attributes" title="Permalink to this headline">¶</a></h3>
 <p>Every Component has the following set of core structural attributes. These attributes are not meant to be changed by the
 user once the component is constructed, with the one exception of <a class="reference internal" href="#component-prefs"><span class="std std-ref">prefs</span></a>.</p>
@@ -392,8 +393,8 @@ it was created.  If it was not specified, a default is assigned using <code clas
 Each individual preference is accessible as an attribute of the Component, the name of which is the name of the
 preference (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a> for details).</p></li>
 </ul>
-</div>
-<div class="section" id="parameters">
+</section>
+<section id="parameters">
 <span id="user-modifiable-parameters"></span><h3><em>Parameters</em><a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h3>
 <p id="component-parameters">A Component defines its <a class="reference internal" href="Parameters.html"><span class="doc">parameters</span></a> in its <em>parameters</em> attribute, which contains a collection of
 <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> objects, each of which stores a Parameter’s values, <a class="reference internal" href="#psyneulink.core.components.component.Component.defaults" title="psyneulink.core.components.component.Component.defaults"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default</span> <span class="pre">values</span></code></a>, and various
@@ -449,12 +450,12 @@ parameter can be specified).</p>
 <li><p><strong>reset_params</strong> - reset the value of all parameters to a set of default values as specified in its <strong>mode</strong>
 argument, using a value of <code class="xref any docutils literal notranslate"><span class="pre">ResetMode</span></code>.</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="execution">
+</section>
+</section>
+<section id="execution">
 <span id="component-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A Component is executed when its <a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method is called, which in turn calls its <a class="reference internal" href="#component-function"><span class="std std-ref">function</span></a>.</p>
-<div class="section" id="lazy-updating">
+<section id="lazy-updating">
 <span id="component-lazy-updating"></span><h3><em>Lazy Updating</em><a class="headerlink" href="#lazy-updating" title="Permalink to this headline">¶</a></h3>
 <p>In general, only <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> are executed from the command line (i.e., from the console or in a
 script).  <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> can also be executed, although this is usually just for the purposes of demonstration
@@ -470,8 +471,8 @@ time the MappingProjection is executed (i.e., in the next <a class="reference in
 <a class="reference internal" href="#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of Components during execution, it is important to carefully consider the state of
 execution of the Components to which they belong or on which they depend for execution.</p>
 <p>The following attributes and methods control and provide information about the execution of a Component:</p>
-</div>
-<div class="section" id="initialization">
+</section>
+<section id="initialization">
 <span id="component-execution-initialization"></span><h3><em>Initialization</em><a class="headerlink" href="#initialization" title="Permalink to this headline">¶</a></h3>
 <ul id="component-reset-stateful-function-when">
 <li><p><strong>reset_stateful_function_when</strong> – a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> that determines when the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a>
@@ -486,8 +487,8 @@ Mechanisms (see <a class="reference internal" href="Composition.html#composition
 </div>
 </li>
 </ul>
-</div>
-<div class="section" id="termination">
+</section>
+<section id="termination">
 <span id="component-execution-termination"></span><h3><em>Termination</em><a class="headerlink" href="#termination" title="Permalink to this headline">¶</a></h3>
 <ul class="simple" id="component-is-finished">
 <li><p><strong>is_finished()</strong> – method that determines whether execution of the Component is complete for a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>;  it is only used if <a class="reference internal" href="#component-execute-until-finished"><span class="std std-ref">execute_until_finished</span></a> is True.</p></li>
@@ -510,8 +511,8 @@ to True. Note that this is distinct from the <a class="reference internal" href=
 If it is exceeded, a warning message is generated.  Note that this only pertains to <a class="reference internal" href="#component-num-executions-before-finished"><span class="std std-ref">num_executions_before_finished</span></a>, and not its <a class="reference internal" href="#component-execution-count"><span class="std std-ref">execution_count</span></a>, which can be
 unlimited.</p></li>
 </ul>
-</div>
-<div class="section" id="count-and-time">
+</section>
+<section id="count-and-time">
 <span id="component-execution-count-and-time"></span><h3><em>Count and Time</em><a class="headerlink" href="#count-and-time" title="Permalink to this headline">¶</a></h3>
 <ul class="simple" id="component-execution-count">
 <li><p><strong>execution_count</strong> – maintains a record of the number of times a Component has executed since it was constructed,
@@ -531,9 +532,9 @@ is the distinct from the <a class="reference internal" href="#component-executio
 <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>’s current <code class="xref any docutils literal notranslate"><span class="pre">scheduler</span> <span class="pre">&lt;Composition.scheduler</span></code>, and is stored as a <code class="xref any docutils literal notranslate"><span class="pre">time</span></code> tuple of values indicating the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TimeScale.TRIAL</span></code></a>,  <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TimeScale.PASS</span></code></a>, and <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TimeScale.TIME_STEP</span></code></a> of the
 last execution.</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="class-reference">
+</section>
+</section>
+<section id="class-reference">
 <span id="component-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.core.components.component.Component">
@@ -1225,8 +1226,8 @@ constructor string</p>
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>
