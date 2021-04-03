@@ -1204,7 +1204,7 @@ class Report:
                 output_report.time_step_report.append(node_report)
 
             # For TERSE or USE_PREFS:
-            else:
+            elif trial_report_type is ReportOutput.TERSE or node.reportOutputPref is not ReportOutput.OFF:
                 # Execution of nested Composition is reported before execution
                 if content == 'nested_comp':
                     return
@@ -1260,7 +1260,7 @@ class Report:
         elif content == 'controller_end':
 
             # Only deal with ReportOutput.FULL;  ReportOutput.TERSE is handled above under content='controller_start'
-            if report_output in {ReportOutput.FULL, ReportOutput.USE_PREFS}:
+            if report_output in {ReportOutput.FULL}:
 
                 features = [p.parameters.value.get(context).tolist() for p in node.input_ports if p.name != OUTCOME]
                 outcome = node.input_ports[OUTCOME].parameters.value.get(context).tolist()
@@ -1309,6 +1309,8 @@ class Report:
 
         else:
             assert False, f"Bad 'content' argument in call to Report.report_output() for {caller.name}: '{content}'."
+
+        assert True
 
         return
 
@@ -1675,9 +1677,9 @@ class Report:
                        highlight=True
                        )
 
-        # Don't indent for nodes in Panels (Composition.controller is not in a Panel)
-        if not is_controller:
-            depth_indent = 0
+        # Don't indent for nodes inside Panels (except Composition.controller, which is never in a Panel)
+        if report_output is ReportOutput.FULL and not is_controller:
+                depth_indent = 0
 
         return Padding.indent(report, depth_indent)
 
