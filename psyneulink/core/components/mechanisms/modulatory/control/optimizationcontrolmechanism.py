@@ -454,7 +454,7 @@ class OptimizationControlMechanism(ControlMechanism):
         terminal_objective_mechanism=False   \
         features=None,                       \
         feature_function=None,               \
-        function=GridSearch,                       \
+        function=GridSearch,                 \
         agent_rep=None,                      \
         search_function=None,                \
         search_termination_function=None,    \

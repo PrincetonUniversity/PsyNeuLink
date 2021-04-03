@@ -1260,7 +1260,7 @@ class Report:
         elif content == 'controller_end':
 
             # Only deal with ReportOutput.FULL;  ReportOutput.TERSE is handled above under content='controller_start'
-            if report_output in {ReportOutput.FULL, ReportOutput.USE_PREFS}:
+            if report_output in {ReportOutput.FULL}:
 
                 features = [p.parameters.value.get(context).tolist() for p in node.input_ports if p.name != OUTCOME]
                 outcome = node.input_ports[OUTCOME].parameters.value.get(context).tolist()
@@ -1309,6 +1309,8 @@ class Report:
 
         else:
             assert False, f"Bad 'content' argument in call to Report.report_output() for {caller.name}: '{content}'."
+
+        assert True
 
         return
 
