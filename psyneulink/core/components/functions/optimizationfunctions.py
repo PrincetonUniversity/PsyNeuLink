@@ -49,16 +49,17 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import call_with_pruned_args, get_global_seed
 
-__all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess',
-           'ParamEstimationFunction',
-           'OBJECTIVE_FUNCTION', 'SEARCH_FUNCTION', 'SEARCH_SPACE', 'SEARCH_TERMINATION_FUNCTION',
-           'DIRECTION', 'ASCENT', 'DESCENT', 'MAXIMIZE', 'MINIMIZE']
+__all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess', 'ParamEstimationFunction',
+           'ASCENT', 'DESCENT', 'DIRECTION', 'MAXIMIZE', 'MINIMIZE', 'OBJECTIVE_FUNCTION',
+           'SEARCH_FUNCTION', 'SEARCH_SPACE', 'SEARCH_TERMINATION_FUNCTION', 'SIMULATION_PROGRESS'
+           ]
 
 OBJECTIVE_FUNCTION = 'objective_function'
 SEARCH_FUNCTION = 'search_function'
 SEARCH_SPACE = 'search_space'
 SEARCH_TERMINATION_FUNCTION = 'search_termination_function'
 DIRECTION = 'direction'
+SIMULATION_PROGRESS = 'simulation_progress'
 
 class OptimizationFunctionError(Exception):
     def __init__(self, error_value):
@@ -523,7 +524,7 @@ class OptimizationFunction(Function_Base):
         # Set up progress bar
         _show_progress = False
         from psyneulink.core.compositions.report import ReportOutput
-        if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is not ReportOutput.OFF:
+        if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is SIMULATION_PROGRESS:
             _show_progress = True
             _progress_bar_char = '.'
             _progress_bar_rate_str = ""
@@ -1691,7 +1692,7 @@ class GridSearch(OptimizationFunction):
             # Set up progress bar
             _show_progress = False
             from psyneulink.core.compositions.report import ReportOutput
-            if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is not ReportOutput.OFF:
+            if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is SIMULATION_PROGRESS:
                 _show_progress = True
                 _progress_bar_char = '.'
                 _progress_bar_rate_str = ""
