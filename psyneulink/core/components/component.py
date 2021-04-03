@@ -1339,7 +1339,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "variable", "value", "saved_values", "saved_samples",
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
-                     "monitor_for_control", "feature_values", "simulation_ids",
+                     "monitor_for_control", "state_feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict",
                      "modulated_mechanisms", "grid",
                      "activation_derivative_fct", "input_specification",

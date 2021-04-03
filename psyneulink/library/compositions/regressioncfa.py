@@ -28,22 +28,22 @@ A `RegressionCFA` is a subclass of `CompositionFunctionApproximator` that parame
 <RegressionCFA.regression_weights>` are updated by its `update_weights <RegressorCFA.update_weights>` `LearningFunction`
 assigned as its `adapt <CompositionFunctionApproximator.adapt>` method, which is called by the `evaluate
 <CompositionFunctionApproximator.evaluate>` method to predict the `net_outcome <ControlMechanism.net_outcome>` for a
-`Composition` (or part of one) controlled by an `OptimiziationControlMechanism`, based on a set of `feature_values
-<OptimizationControlMechanism.feature_values>`, a `control_allocation  <ControlMechanism.control_allocation>`,
+`Composition` (or part of one) controlled by an `OptimiziationControlMechanism`, based on a set of `state_feature_values
+<OptimizationControlMechanism.state_feature_values>`, a `control_allocation  <ControlMechanism.control_allocation>`,
 and the `net_outcome <ControlMechanism.net_outcome>` they produced, passed to it from an `OptimizationControlMechanism`.
 
 COMMENT:
 Its `evaluate <CompositionFunctionApproximator.evaluate>` method calls its `update_weights
 <RegressionCFA.regresssion_function>` to generate and return a predicted `net_outcome
-<ControlMechanism.net_outcome>` for a given set of `feature_values <OptimizationControlMechanism.feature_values>`
+<ControlMechanism.net_outcome>` for a given set of `state_feature_values <OptimizationControlMechanism.state_feature_values>`
 and a `control_allocation <ControlMechanism.control_allocation>` provided by an `OptimizationControlMechanism`.
 COMMENT
 
-The `feature_values <OptimiziationControlMechanism.feature_values>` and `control_allocation
+The `state_feature_values <OptimiziationControlMechanism.state_feature_values>` and `control_allocation
 <ControlMechanism.control_allocation>` passed to the RegressorCFA's `adapt <RegressorCFA.adapt>` method, and provided
 as the input to its `update_weights <RegressorCFA.update_weights>`, are represented in the `vector
 <PredictionVector.vector>` attribute of a `PredictionVector` assigned to the RegressorCFA`s `prediction_vector
-<RegressorCFA.prediction_vector>` attribute.  The  `feature_values <OptimizationControlMechanism.feature_values>` are
+<RegressorCFA.prediction_vector>` attribute.  The  `state_feature_values <OptimizationControlMechanism.state_feature_values>` are
 assigned to the state_features field of the `prediction_vector <RegressorCFA.prediction_vector>`, and the `control_allocation
 <ControlMechanism_control_allocation>` is assigned to the control_allocation field of the `prediction_vector
 <RegressorCFA.prediction_vector>`.  The `prediction_vector <RegressorCFA.prediction_vector>` may also contain fields
@@ -57,11 +57,11 @@ the `net_outcome <ControlMechanism.net_outcome>` from the `prediction_vector <Re
 
 COMMENT:
 .. note::
-  The RegressionCFA's `update_weights <RegressionCFA.update_weights>` is provided the `feature_values
-  <OptimizationControlMechanism.feature_values>` and `net_outcome <ControlMechanism.net_outcome>` from the
+  The RegressionCFA's `update_weights <RegressionCFA.update_weights>` is provided the `state_feature_values
+  <OptimizationControlMechanism.state_feature_values>` and `net_outcome <ControlMechanism.net_outcome>` from the
   *previous* trial to update its parameters.  Those are then used to determine the `control_allocation
   <ControlMechanism.control_allocation>` predicted to yield the greatest `EVC <OptimizationControlMechanism_EVC>`
-  based on the `feature_values <OptimizationControlMechanism.feature_values>` for the current trial.
+  based on the `state_feature_values <OptimizationControlMechanism.state_feature_values>` for the current trial.
 COMMENT
 
 
@@ -101,25 +101,25 @@ class PV(Enum):
     ----------
 
     F
-        Main effect of `feature_values <OptimizationControlMechanism_Feature_values>`.
+        Main effect of `state_feature_values <OptimizationControlMechanism_Feature_values>`.
     C
         Main effect of `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>`.
     FF
-        Interaction among `feature_values <OptimizationControlMechanism_Feature_values>`.
+        Interaction among `state_feature_values <OptimizationControlMechanism_Feature_values>`.
     CC
         Interaction among `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>`.
     FC
-        Interaction between `feature_values <OptimizationControlMechanism_Feature_values>` and
+        Interaction between `state_feature_values <OptimizationControlMechanism_Feature_values>` and
         `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>`.
     FFC
-        Interaction between interactions of `feature_values
+        Interaction between interactions of `state_feature_values
         <OptimizationControlMechanism_Feature_values>` and `values <ControlSignal.value>` of
         `control_signals <ControlMechanism.control_signals>`.
     FCC
-        Interaction between `feature_values <OptimizationControlMechanism_Feature_values>` and
+        Interaction between `state_feature_values <OptimizationControlMechanism_Feature_values>` and
         interactions among `values <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>`.
     FFCC
-        Interaction between interactions of `feature_values
+        Interaction between interactions of `state_feature_values
         <OptimizationControlMechanism_Feature_values>` and interactions among `values
         <ControlSignal.value>` of `control_signals <ControlMechanism.control_signals>`.
     COST
@@ -168,7 +168,7 @@ class RegressionCFA(CompositionFunctionApproximator):
     update_weights : LearningFunction, function or method : default BayesGLM
         parameterizes the `regression_weights <RegressionCFA.regression_weights>` used by the `evaluate
         <RegressionCFA.evaluate>` method to improve its prediction of `net_outcome <ControlMechanism.net_outcome>`
-        from a given set of `feature_values <OptimiziationControlMechanism.feature_values>` and a
+        from a given set of `state_feature_values <OptimiziationControlMechanism.state_feature_values>` and a
         `control_allocation <ControlMechanism.control_allocation>` provided by an `OptimiziationControlMechanism`.
         It must take a 2d array as its first argument, the first item of which is an array the same length of the
         `vector <PredictionVector.prediction_vector>` attribute of its `prediction_vector
@@ -187,7 +187,7 @@ class RegressionCFA(CompositionFunctionApproximator):
     update_weights : LearningFunction, function or method
         parameterizes the `regression_weights <RegressionCFA.regression_weights>` used by the `evaluate
         <RegressionCFA.evaluate>` method to improve prediction of `net_outcome <ControlMechanism.net_outcome>`
-        from a given set of `feature_values <OptimiziationControlMechanism.feature_values>` and a
+        from a given set of `state_feature_values <OptimiziationControlMechanism.state_feature_values>` and a
         `control_allocation <ControlMechanism.control_allocation>` provided by an `OptimiziationControlMechanism`;
         its result is assigned as the value of the `regression_weights <RegressorCFA.regression_weights>` attribute.
 
@@ -301,7 +301,7 @@ class RegressionCFA(CompositionFunctionApproximator):
 
     def adapt(self, feature_values, control_allocation, net_outcome, context=None):
         """Update `regression_weights <RegressorCFA.regression_weights>` so as to improve prediction of
-        **net_outcome** from **feature_values** and **control_allocation**.
+        **net_outcome** from **state_feature_values** and **control_allocation**.
         """
         prediction_vector = self.parameters.prediction_vector._get(context)
         previous_state = self.parameters.previous_state._get(context)
@@ -309,7 +309,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         if previous_state is not None:
             # Update regression_weights
             regression_weights = self.update_weights([previous_state, net_outcome], context=context)
-            # Update vector with current feature_values and control_allocation and store for next trial
+            # Update vector with current state_feature_values and control_allocation and store for next trial
             prediction_vector.update_vector(control_allocation, feature_values, context)
             previous_state = prediction_vector.vector
         else:
@@ -328,13 +328,13 @@ class RegressionCFA(CompositionFunctionApproximator):
         )
 
     # FIX: RENAME AS _EXECUTE_AS_REP ONCE SAME IS DONE FOR COMPOSITION
-    # def evaluate(self, control_allocation, num_samples, reset_stateful_functions_to, feature_values, context):
+    # def evaluate(self, control_allocation, num_samples, reset_stateful_functions_to, state_feature_values, context):
     def evaluate(self, feature_values, control_allocation, num_estimates, context):
         """Update prediction_vector <RegressorCFA.prediction_vector>`,
         then multiply by regression_weights.
 
         Uses the current values of `regression_weights <RegressorCFA.regression_weights>` together with
-        values of **control_allocation** and **feature_values** arguments to generate predicted `net_outcome
+        values of **control_allocation** and **state_feature_values** arguments to generate predicted `net_outcome
         <OptimiziationControlMechanism.net_outcome>`.
 
         .. note::
@@ -463,7 +463,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                 return list([s for s in powerset(x) if len(s)>1])
 
             def error_for_too_few_terms(term):
-                spec_type = {'FF':'feature_values', 'CC':'control_signals'}
+                spec_type = {'FF':'state_feature_values', 'CC':'control_signals'}
                 raise RegressionCFAError("Specification of {} for {} arg of {} "
                                                 "requires at least two {} be specified".
                                                 format('PV.' + term, repr(PREDICTION_TERMS), self.name, spec_type(term)))
@@ -490,7 +490,7 @@ class RegressionCFA(CompositionFunctionApproximator):
 
             # Feature_values
             self.terms[F] = f = feature_values
-            self.num[F] = len(f)  # feature_values are arrays
+            self.num[F] = len(f)  # state_feature_values are arrays
             self.num_elems[F] = len(f.reshape(-1)) # num of total elements assigned to vector
             self.labels[F] = ['f' + str(i) for i in range(0, len(f))]
 
@@ -588,7 +588,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             <RegressorCFA.prediction_vector>`.
 
             Updates `vector <PredictionVector.vector>` with current values of variable and, optionally,
-            and feature_values.
+            and state_feature_values.
 
             """
 

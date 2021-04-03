@@ -239,7 +239,7 @@ for i in range(num_subj):
     print('--------------------')
     print('ControlSignal variables: ', [sig.parameters.variable.get(i) for sig in lvoc.control_signals])
     print('ControlSignal values: ', [sig.parameters.value.get(i) for sig in lvoc.control_signals])
-    # print('state_features: ', lvoc.feature_values)
+    # print('state_features: ', lvoc.state_feature_values)
     # print('lvoc: ', lvoc.evaluation_function([sig.parameters.variable.get(i) for sig in lvoc.control_signals], context=i))
     # print('time: ', duration)
     print('--------------------')
