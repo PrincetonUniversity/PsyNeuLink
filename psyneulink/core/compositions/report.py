@@ -1204,7 +1204,7 @@ class Report:
                 output_report.time_step_report.append(node_report)
 
             # For TERSE or USE_PREFS:
-            else:
+            elif trial_report_type is ReportOutput.TERSE or node.reportOutputPref is not ReportOutput.OFF:
                 # Execution of nested Composition is reported before execution
                 if content == 'nested_comp':
                     return
@@ -1677,9 +1677,9 @@ class Report:
                        highlight=True
                        )
 
-        # Don't indent for nodes in Panels (Composition.controller is not in a Panel)
-        if not is_controller:
-            depth_indent = 0
+        # Don't indent for nodes inside Panels (except Composition.controller, which is never in a Panel)
+        if report_output is ReportOutput.FULL and not is_controller:
+                depth_indent = 0
 
         return Padding.indent(report, depth_indent)
 
