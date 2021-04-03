@@ -32,7 +32,7 @@ comp.add_linear_processing_pathway(task_execution_pathway)
 comp.add_model_based_optimizer(optimizer=OptimizationControlMechanism(name='OCM',
                                                                       agent_rep=comp,
                                                                       state_features=[Input.input_port, reward.input_port],
-                                                                      feature_function=AdaptiveIntegrator(rate=0.5),
+                                                                      state_feature_function=AdaptiveIntegrator(rate=0.5),
                                                                       objective_mechanism=ObjectiveMechanism(
                                                                               name='OCM Objective Mechanism',
                                                                               function=LinearCombination(operation=PRODUCT),

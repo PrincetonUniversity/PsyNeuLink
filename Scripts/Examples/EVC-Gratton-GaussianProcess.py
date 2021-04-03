@@ -52,7 +52,7 @@ task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
 comp.add_linear_processing_pathway(task_execution_pathway)
 
 ocm = pnl.OptimizationControlMechanism(state_features=[Input, Reward],
-                                       feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+                                       state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                                        agent_rep=comp,
                                        # function=pnl.GaussianProcessOptimization,
                                        function=pnl.GridSearch,

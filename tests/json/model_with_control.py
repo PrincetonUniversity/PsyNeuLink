@@ -48,7 +48,7 @@ comp.add_controller(
     controller=pnl.OptimizationControlMechanism(
         agent_rep=comp,
         state_features=[Input.input_port, reward.input_port],
-        feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+        state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
         objective_mechanism=pnl.ObjectiveMechanism(
             function=pnl.LinearCombination(operation=pnl.PRODUCT),
             monitor=[
