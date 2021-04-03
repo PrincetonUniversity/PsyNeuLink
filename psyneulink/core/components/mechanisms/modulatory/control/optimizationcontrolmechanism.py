@@ -783,7 +783,7 @@ class OptimizationControlMechanism(ControlMechanism):
         """Instantiate input_ports for Projections from state_features and objective_mechanism.
 
         Inserts InputPort specification for Projection from ObjectiveMechanism as first item in list of
-        InputPort specifications generated in _parse_feature_specs from the **state_features** and
+        InputPort specifications generated in _parse_state_feature_specs from the **state_features** and
         **state_feature_function** arguments of the OptimizationControlMechanism constructor.
         """
 
@@ -793,7 +793,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # If any state_features were specified (assigned to self.input_ports in __init__):
         if self.input_ports:
             input_ports = _parse_shadow_inputs(self, self.input_ports)
-            input_ports = self._parse_feature_specs(input_ports, self.feature_function)
+            input_ports = self._parse_state_feature_specs(input_ports, self.feature_function)
             # Insert primary InputPort for outcome from ObjectiveMechanism;
             #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
             input_ports.insert(0, outcome_input_port),
@@ -1348,12 +1348,12 @@ class OptimizationControlMechanism(ControlMechanism):
         """
 
         if features:
-            features = self._parse_feature_specs(features=features,
-                                                 context=context)
+            features = self._parse_state_feature_specs(features=features,
+                                                       context=context)
         self.add_ports(InputPort, features)
 
     @tc.typecheck
-    def _parse_feature_specs(self, input_ports, feature_function, context=None):
+    def _parse_state_feature_specs(self, input_ports, feature_function, context=None):
         """Parse entries of state_features into InputPort spec dictionaries
         Set INTERNAL_ONLY entry of params dict of InputPort spec dictionary to True
             (so that inputs to Composition are not required if the specified state is on an INPUT Mechanism)
