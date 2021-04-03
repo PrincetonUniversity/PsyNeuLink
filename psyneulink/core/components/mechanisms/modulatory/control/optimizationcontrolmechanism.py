@@ -247,8 +247,9 @@ The current `value <InputPort.value>` of the InputPorts for the state_features a
 ^^^^^^^
 
 The state of the Composition (or part of one) controlled by an OptimizationControlMechanism is defined by a combination
-of `feature_values <OptimizationControlMechanism.feature_values>` (see `above <OptimizationControlMechanism_Features>`)
-and a `control_allocation <ControlMechanism.control_allocation>`.
+of `state_feature_values <OptimizationControlMechanism.state_feature_values>` for its state_features <state_features
+<Composition.state_features>` (see `above <OptimizationControlMechanism_State_Features>`) and a `control_allocation
+<ControlMechanism.control_allocation>`.
 
 .. _OptimizationControlMechanism_Agent_Rep:
 
@@ -719,7 +720,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     :type:
         """
         function = Parameter(GridSearch, stateful=False, loggable=False)
-        feature_function = Parameter(None, reference=True, stateful=False, loggable=False)
+        state_feature_function = Parameter(None, reference=True, stateful=False, loggable=False)
         search_function = Parameter(None, stateful=False, loggable=False)
         search_space = Parameter(None, read_only=True)
         search_termination_function = Parameter(None, stateful=False, loggable=False)
@@ -787,7 +788,7 @@ class OptimizationControlMechanism(ControlMechanism):
             function=function,
             input_ports=state_features,
             state_features=state_features,
-            feature_function=state_feature_function,
+            state_feature_function=state_feature_function,
             num_estimates=num_estimates,
             search_statefulness=search_statefulness,
             search_function=search_function,
@@ -825,7 +826,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # If any state_features were specified (assigned to self.input_ports in __init__):
         if self.input_ports:
             input_ports = _parse_shadow_inputs(self, self.input_ports)
-            input_ports = self._parse_state_feature_specs(input_ports, self.feature_function)
+            input_ports = self._parse_state_feature_specs(input_ports, self.state_feature_function)
             # Insert primary InputPort for outcome from ObjectiveMechanism;
             #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
             input_ports.insert(0, outcome_input_port),
@@ -1372,7 +1373,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @tc.typecheck
     @handle_external_context()
-    def add_features(self, features, context=None):
+    def add_state_features(self, features, context=None):
         """Add InputPorts and Projections to OptimizationControlMechanism for state_features used to
         predict `net_outcome <ControlMechanism.net_outcome>`
 
