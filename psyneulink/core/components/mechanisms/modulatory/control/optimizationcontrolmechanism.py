@@ -421,6 +421,7 @@ Class Reference
 
 """
 import copy
+import warnings
 from collections.abc import Iterable
 
 import numpy as np
@@ -764,6 +765,32 @@ class OptimizationControlMechanism(ControlMechanism):
                  context=None,
                  **kwargs):
         """Implement OptimizationControlMechanism"""
+
+        # Legacy warnings and conversions
+        for k in kwargs.copy():
+            if k == 'features':
+                if state_features:
+                    warnings.warn(f"Both 'features' and 'state_features' were specified in the constructor for an"
+                                  f" {self.__class__.__name__}. Note: 'features' has been deprecated; "
+                                  f"'state_features' ({state_features}) will be used.")
+                else:
+                    warnings.warn(f"'features' was specified in the constructor for an {self.__class__.__name__}; "
+                                  f"Note: 'features' has been deprecated; please use 'state_features' in the future.")
+                    state = kwargs['features']
+                kwargs.pop('features')
+                continue
+            if k == 'feature_function':
+                if state:
+                    warnings.warn(f"Both 'feature_function' and 'state_feature_function' were specified in the "
+                                  f"constructor for an {self.__class__.__name__}. Note: 'feature_function' has been "
+                                  f"deprecated; 'state_feature_function' ({state_feature_function}) will be used.")
+                else:
+                    warnings.warn(f"'feature_function' was specified in the constructor for an"
+                                  f"{self.__class__.__name__}; Note: 'feature_function' has been deprecated; "
+                                  f"please use 'state_feature_function' in the future.")
+                    state_feature_function = kwargs['feature_function']
+                kwargs.pop('feature_function')
+                continue
 
         function = function or GridSearch
 
