@@ -39,7 +39,7 @@ Contents
      - `Composition_Learning_AutodiffComposition`
      - `Composition_Learning_UDF`
   * `Composition_Execution`
-     - `Composition_Execution_Reporting`
+     - `Reporting <Composition_Execution_Reporting>`
      - `Composition_Execution_Inputs`
         • `Composition_Input_Dictionary`
         • `Composition_Programmatic_Inputs`
@@ -1327,16 +1327,16 @@ they are used to break the `cycle <Composition_Cycle_Structure>` of execution th
 Nodes are executed sequentially as described `below <Composition_Feedback_Sequential_Execution>`.  Each Node that sends
 a feedback Projection is assigned the `NodeRole` `FEEDBACK_SENDER`, and the receiver is assigned the `NodeRole`
 `FEEDBACK_RECEIVER`.  By default, `MappingProjections <MappingProjection>` are not specified as feedback, and
-therefore loops containing only MappingProjections are left as `cycles <Composition_Cycle_Structure>` by default. In
+therefore loops containing only MappingProjections are left as `cycles <Composition_Cycle_Structure>`. In
 contrast, `ModulatoryProjections <ModulatoryProjection>` *are* designated as feedback by default, and therefore any
-loops containing one or more ModulatoryProjections are broken by default, with the Mechanism that is `modulated
+loops containing one or more ModulatoryProjections are broken, with the Mechanism that is `modulated
 <ModulatorySignal_Modulation>` designated as the `FEEDBACK_RECEIVER` and the `ModulatoryMechanism` that projects to
-it designated as the `FEEDBACK_SENDER`. However, the feedback status of any Projection can be specified explicitly,
-either in a tuple with the Projection where it is `specified in a Pathway <Pathway_Specification>` or in the
-Composition's `add_projections <Composition.add_projections>` method, or by using the **feedback** argument of the
-Composition's `add_projection <Composition.add_projection>` method. Specifying True or the keyword *FEEDBACK* forces
-its assignment as a *feedback* Projection, whereas False precludes it from being assigned as a feedback Projection
-(e.g., a `ControlProjection` that forms a cycle).
+it designated as the `FEEDBACK_SENDER`. However, either of these default behaviors can be overidden, by specifying the
+feedback status of a Projection explicitly, either in a tuple with the Projection where it is `specified in a Pathway
+<Pathway_Specification>` or in the Composition's `add_projections <Composition.add_projections>` method, or by using
+the **feedback** argument of the Composition's `add_projection <Composition.add_projection>` method. Specifying True
+or the keyword *FEEDBACK* forces its assignment as a *feedback* Projection, whereas False precludes it from being
+assigned as a feedback Projection (e.g., a `ControlProjection` that otherwise forms a cycle will no longer do so).
 
 .. warning::
    Designating a Projection as **feeedback** that is *not* in a loop is allowed, but will issue a warning and
