@@ -397,7 +397,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     When `function <ContentAddressableMemory.function>` is executed, it first retrieves the
     item in `memory <ContentAddressableMemory.memory>` with the key that most closely matches the key of the item
     (key-value pair) in the call, stores the latter in memory, and returns the retrieved item (key-value pair).
-    If key of the pair in the call is an exact match of a key in memory and `duplicate_keys
+    If the key of the pair in the call is an exact match of a key in memory and `duplicate_keys
     <ContentAddressableMemory.duplicate_keys>` is False, then the matching item is returned, but the
     pair in the call is not stored. These steps are described in more detail below:
 
