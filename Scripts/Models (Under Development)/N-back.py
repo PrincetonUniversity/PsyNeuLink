@@ -20,8 +20,8 @@ def n_back_model():
     em = EpisodicMemoryMechanism(name='EM', content_size=3, assoc_size=3)
     ctl = ControlMechanism()
 
-    input_layer = TransferMechanism(name='INPUT LAYER')
-    output_layer = TransferMechanism(name='OUTPUT LAYER')
+    input_layer = TransferMechanism(name='INPUT LAYER', size=10)
+    output_layer = TransferMechanism(name='OUTPUT LAYER', size=1)
     ffn = AutodiffComposition(name='FFN', pathways=[input_layer,output_layer])
     decision = DDM(name='DECISION')
 

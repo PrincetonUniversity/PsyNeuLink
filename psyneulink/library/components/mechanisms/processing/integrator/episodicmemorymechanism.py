@@ -308,6 +308,18 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         if len(variable) != 2:
             return convert_to_np_array([variable[0],[]])
         else:
+            # Check that both are assigned inputs:
+            missing_inputs = [self.input_ports.names[i] for i,t in enumerate([v for v in variable]) if t is None]
+            if missing_inputs:
+                if len(missing_inputs) == 1:
+                    missing_str = 'an input'
+                    s = ''
+                else:
+                    missing_str = 'inputs'
+                    s = 's'
+                raise EpisodicMemoryMechanismError(f"{self.name} is missing {missing_str} for its"
+                                                   f" {'and '.join(missing_inputs)} {InputPort.__name__}{s}.")
+
             return variable
 
     @property
