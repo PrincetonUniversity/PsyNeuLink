@@ -5436,14 +5436,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             sender = projection.sender
             receiver = projection.receiver
         else:
-            if isinstance(sender, Mechanism):
-                sender = sender.output_port
-            elif isinstance(sender, Composition):
-                sender = sender.output_CIM.output_port
-            if isinstance(receiver, Mechanism):
-                receiver = receiver.input_port
-            elif isinstance(receiver, Composition):
-                receiver = receiver.input_CIM.input_port
+            try:
+                if isinstance(sender, Mechanism):
+                    err_msg = f"'{sender.name}' does not have an '{OutputPort.__name__}'."
+                    sender = sender.output_port
+                elif isinstance(sender, Composition):
+                    if not sender.nodes:
+                        err_msg = f"'{self.name}' does not have any nodes that can project to '{receiver.name}'."
+                        raise IndexError
+                    sender = sender.output_CIM.output_port
+                if isinstance(receiver, Mechanism):
+                    err_msg = f"'{receiver.name}' does not have an {InputPort.__name__}."
+                    receiver = receiver.input_port
+                elif isinstance(receiver, Composition):
+                    if not sender.nodes:
+                        err_msg = f'{self.name} does not have any nodes that can project to {receiver.name}.'
+                        raise IndexError
+                    receiver = receiver.input_CIM.input_port
+            except IndexError:
+                err_msg = f"Can't create a {Projection.__name__} from '{sender.name}' to '{receiver.name}': " + err_msg
+                raise CompositionError(err_msg)
+
         existing_projections = [proj for proj in sender.efferents if proj.receiver is receiver]
         existing_projections_in_composition = [proj for proj in existing_projections if proj in self.projections]
         assert len(existing_projections_in_composition) <= 1, \
