@@ -5449,7 +5449,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     err_msg = f"'{receiver.name}' does not have an {InputPort.__name__}."
                     receiver = receiver.input_port
                 elif isinstance(receiver, Composition):
-                    if not sender.nodes:
+                    if not receiver.nodes:
                         err_msg = f'{self.name} does not have any nodes that can project to {receiver.name}.'
                         raise IndexError
                     receiver = receiver.input_CIM.input_port
