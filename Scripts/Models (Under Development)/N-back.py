@@ -91,16 +91,16 @@ def n_back_model():
     comp.add_projection(MappingProjection(), decision, ctl)
 
 
-    comp._analyze_graph()
-    # comp.show_graph()
-    comp.show_graph(show_cim=True,
-                    show_node_structure=ALL,
-                    show_projection_labels=True,
-                    show_dimensions=True)
-    comp.show_graph(show_cim=True,
-                    show_node_structure=ALL,
-                    show_projection_labels=True,
-                    show_dimensions=True)
+    # comp._analyze_graph()
+    # # comp.show_graph()
+    # comp.show_graph(show_cim=True,
+    #                 show_node_structure=ALL,
+    #                 show_projection_labels=True,
+    #                 show_dimensions=True)
+    # comp.show_graph(show_cim=True,
+    #                 show_node_structure=ALL,
+    #                 show_projection_labels=True,
+    #                 show_dimensions=True)
     comp.run(inputs={stim:[1,2,3,4,5],
                      context:[6,7,8,9,10]})
     # comp.run(inputs={a:2.5}, report_output=ReportOutput.FULL)
