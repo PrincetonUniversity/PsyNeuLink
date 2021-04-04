@@ -5399,18 +5399,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if context.source != ContextFlags.INITIALIZING:
                 for input_port in node.input_ports:
                     if input_port.require_projection_in_composition and not input_port.path_afferents:
-                        warnings.warn(f'{InputPort.__name__} ({input_port.name}) of {node.name} '
-                                      f'doesn\'t have any afferent {Projection.__name__}s')
+                        warnings.warn(f"{InputPort.__name__} ('{input_port.name}') of '{node.name}' "
+                                      f"doesn't have any afferent {Projection.__name__}s.")
                 for output_port in node.output_ports:
                     if output_port.require_projection_in_composition and not output_port.efferents:
-                        warnings.warn(f'{OutputPort.__name__} ({output_port.name}) of {node.name} '
-                                      f'doesn\'t have any efferent {Projection.__name__}s in {self.name}')
+                        warnings.warn(f"{OutputPort.__name__} ('{output_port.name}') of '{node.name}' "
+                                      f"doesn't have any efferent {Projection.__name__}s in '{self.name}'.")
 
         for projection in projections:
             if not projection.sender:
-                warnings.warn(f'{Projection.__name__} {projection.name} is missing a sender')
+                warnings.warn(f'{Projection.__name__} {projection.name} is missing a sender.')
             if not projection.receiver:
-                warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver')
+                warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver.')
 
     def get_feedback_status(self, projection):
         """Return True if **projection** is designated as a `feedback Projection <_Composition_Feedback_Designation>`
@@ -5585,7 +5585,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathway_arg_str = context.string
         # Otherwise, refer to call from this method
         else:
-            pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
+            pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of '{self.name}'"
 
         context.source = ContextFlags.METHOD
         context.string = pathway_arg_str

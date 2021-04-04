@@ -44,7 +44,7 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
-__all__ = ['MemoryFunction', 'Buffer', 'ContentAddressableMemory']
+__all__ = ['MemoryFunction', 'Buffer', 'ContentAddressableMemory', 'RETRIEVAL_PROB', 'STORAGE_PROB']
 
 
 class MemoryFunction(StatefulFunction):  # -----------------------------------------------------------------------------
@@ -736,7 +736,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # argument when function ordering (and so ordering of parsers)
         # is made explicit
         distance_result = self.distance_function.parameters.value._get(context)
-        print(distance_result, self.distance_function.defaults.value)
+        # TEST PRINT:
+        # print(distance_result, self.distance_function.defaults.value)
         return np.asfarray([
             distance_result if i == 0 else np.zeros_like(distance_result)
             for i in range(self.defaults.max_entries)
