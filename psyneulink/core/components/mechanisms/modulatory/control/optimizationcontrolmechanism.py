@@ -870,7 +870,7 @@ class OptimizationControlMechanism(ControlMechanism):
         for i in range(1, len(self.input_ports)):
             port = self.input_ports[i]
             if len(port.path_afferents) > 1:
-                raise OptimizationControlMechanismError(f"Invalid {type(input_port).__name__} on {self.name}. "
+                raise OptimizationControlMechanismError(f"Invalid {type(port).__name__} on {self.name}. "
                                                         f"{port.name} should receive exactly one projection, "
                                                         f"but it receives {len(port.path_afferents)} projections.")
 
