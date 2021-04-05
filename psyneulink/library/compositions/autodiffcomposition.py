@@ -231,6 +231,7 @@ class AutodiffComposition(Composition):
                  disable_cuda=True,
                  cuda_index=None,
                  force_no_retain_graph=False,
+                 pathways=None,
                  name="autodiff_composition"):
 
         if not torch_available:
@@ -241,7 +242,8 @@ class AutodiffComposition(Composition):
                                                   learning_rate = learning_rate,
                                                   optimizer_type = optimizer_type,
                                                   weight_decay = weight_decay,
-                                                  loss_spec = loss_spec)
+                                                  loss_spec = loss_spec,
+                                                  pathways=pathways)
 
         self.optimizer_type = optimizer_type
         self.loss_spec = loss_spec

@@ -166,7 +166,7 @@ def test_predator_prey(benchmark, mode, samples):
     agent_comp.add_node(greedy_action_mech)
     agent_comp.exclude_node_roles(predator_obs, NodeRole.OUTPUT)
 
-    ocm = OptimizationControlMechanism(features={SHADOW_INPUTS: [player_obs, predator_obs, prey_obs]},
+    ocm = OptimizationControlMechanism(state_features={SHADOW_INPUTS: [player_obs, predator_obs, prey_obs]},
                                        agent_rep=agent_comp,
                                        function=GridSearch(direction=MINIMIZE,
                                                            save_values=True),
@@ -201,9 +201,9 @@ def test_predator_prey(benchmark, mode, samples):
         # each Mechanism with GaussianDistort above
         assert np.allclose(run_results[0], [[-10.06333025,   2.4845505 ]])
         if mode is pnl.ExecutionMode.Python:
-            assert np.allclose(ocm.feature_values, [[ 1.1576537,   0.60782117],
-                                                    [-0.03479106, -0.47666293],
-                                                    [-0.60836214,  0.1760381 ]])
+            assert np.allclose(ocm.state_feature_values, [[ 1.1576537,   0.60782117],
+                                                          [-0.03479106, -0.47666293],
+                                                          [-0.60836214,  0.1760381 ]])
 
     if benchmark.enabled:
         benchmark(agent_comp.run, inputs=input_dict, execution_mode=mode)

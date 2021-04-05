@@ -27,21 +27,21 @@ Overview
 A `CompositionFunctionApproximator` is an abstract subclass of `Composition` that, over calls to its `adapt
 <CompositionFunctionApproximator.adapt>` method, parameterizes its `function <Composition.function>` to predict the
 `net_outcome <ControlMechanism.net_outcome>` of the Composition (or part of one) controlled by an
-`OptimizationControlMechanism`, for a given set of `feature_values <OptimizationControlMechanism.feature_values>`
+`OptimizationControlMechanism`, for a given set of `state_feature_values <OptimizationControlMechanism.state_feature_values>`
 and a `control_allocation <ControlMechanism.control_allocation>` provided by the OptimizationControlMechanism.
 Its `evaluate <CompositionFunctionApproximator.evaluate>` method calls its `function
 <CompositionFunctionApproximator.function>` to generate and return the predicted `net_outcome
-<ControlMechanism.net_outcome>` for a given set of `feature_values
-<OptimizationControlMechanism.feature_values>`, `control_allocation <ControlMechanism.control_allocation>` and
+<ControlMechanism.net_outcome>` for a given set of `state_feature_values
+<OptimizationControlMechanism.state_feature_values>`, `control_allocation <ControlMechanism.control_allocation>` and
 `num_estimates <OptimizationControlMechanism.num_estimates>`
 
 COMMENT:
 .. note::
   The CompositionFunctionApproximator's `adapt <CompositionFunctionApproximator.adapt>` method is provided the
-  `feature_values <OptimizationControlMechanism.feature_values>` and `net_outcome <ControlMechanism.net_outcome>`
+  `state_feature_values <OptimizationControlMechanism.state_feature_values>` and `net_outcome <ControlMechanism.net_outcome>`
   from the *previous* trial to update its parameters.  Those are then used to determine the `control_allocation
   <ControlMechanism.control_allocation>` predicted to yield the greatest `EVC <OptimizationControlMechanism_EVC>`
-  based on the `feature_values <OptimizationControlMechanism.feature_values>` for the current trial.
+  based on the `state_feature_values <OptimizationControlMechanism.state_feature_values>` for the current trial.
 COMMENT
 
 
@@ -68,7 +68,7 @@ class CompositionFunctionApproximator(Composition):
     <OptimizationControlmechanism.agent>` of an `OptimizationControlmechanism`.
 
     Parameterizes `its function <CompositionFunctionApproximator.function>` to predict a `net_outcome
-    <Controlmechanism.net_outcome>` for a set of `feature_values <OptimizationControlmechanism.feature_values>`
+    <Controlmechanism.net_outcome>` for a set of `state_feature_values <OptimizationControlmechanism.state_feature_values>`
     and a `control_allocation <ControlMechanism.control_allocation>` provided by an `OptimizationControlmechanism`.
 
     See `Composition <Composition_Class_Reference>` for additional arguments and attributes.
@@ -80,7 +80,7 @@ class CompositionFunctionApproximator(Composition):
         specifies the function parameterized by the CompositionFunctionApproximator's `adapt
         <CompositionFunctionApproximator.adapt>` method, and used by its `evaluate
         <CompositionFunctionApproximator.evaluate>` method to generate and return a predicted `net_outcome
-        <ControlMechanism.net_outcome>` for a set of `feature_values <OptimizationControlMechanism.feature_values>`
+        <ControlMechanism.net_outcome>` for a set of `state_feature_values <OptimizationControlMechanism.state_feature_values>`
         and a `control_allocation <OptimizationControlMechanism>` provided by an `OptimizationControlMechanism`.
 
     Attributes
@@ -89,14 +89,14 @@ class CompositionFunctionApproximator(Composition):
     function : LearningFunction, function or method
         parameterized by the CompositionFunctionApproximator's <adapt <CompositionFunctionApproximator.adapt>`
         method, and used by its `evaluate <CompositionFunctionApproximator.evaluate>` method to generate and return
-        a predicted `net_outcome <ControlMechanism.net_outcome>` for a set of `feature_values
-        <OptimizationControlMechanism.feature_values>` and a `control_allocation <OptimizationControlMechanism>`
+        a predicted `net_outcome <ControlMechanism.net_outcome>` for a set of `state_feature_values
+        <OptimizationControlMechanism.state_feature_values>` and a `control_allocation <OptimizationControlMechanism>`
         provided by an `OptimizationControlMechanism`.
 
     prediction_parameters : 1d array
         parameters adjusted by `adapt <CompositionFunctionApproximator.adapt>` method, and used by `function
         <FunctionAppproximator.function>` to predict the `net_outcome <ControlMechanism.net_outcome>`
-        for a given set of `feature_values <OptimizationControlMechanism.feature_values>` and `control_allocation
+        for a given set of `state_feature_values <OptimizationControlMechanism.state_feature_values>` and `control_allocation
         <ControlMechanism.control_allocation>`.
 
     """

@@ -1266,7 +1266,7 @@ class Report:
                 outcome = node.input_ports[OUTCOME].parameters.value.get(context).tolist()
                 control_allocation = [r.tolist() for r in node.control_allocation]
 
-                ctlr_report = [f'[bold {controller_input_color}]{self._padding_indent_str}features:[/] {features}'
+                ctlr_report = [f'[bold {controller_input_color}]{self._padding_indent_str}state:[/] {features}'
                                f'\n[bold {controller_input_color}]{self._padding_indent_str}outcome:[/] {outcome}']
                 if self._report_simulations is ReportSimulations.ON:
                     ctlr_report.extend(self.output_reports[output_report_owner][SIMULATION][report_num].run_report)

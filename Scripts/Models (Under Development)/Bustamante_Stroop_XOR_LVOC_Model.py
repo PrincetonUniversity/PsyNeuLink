@@ -94,8 +94,8 @@ c.add_projection(sender=word_task, receiver=task_decision)
 
 lvoc = pnl.OptimizationControlMechanism(
     name='LVOC ControlMechanism',
-    features=[color_stim.input_port, word_stim.input_port],
-    # features={pnl.SHADOW_EXTERNAL_INPUTS: [color_stim, word_stim]},
+    state_features=[color_stim.input_port, word_stim.input_port],
+    # state_features={pnl.SHADOW_EXTERNAL_INPUTS: [color_stim, word_stim]},
     objective_mechanism=pnl.ObjectiveMechanism(
         name='LVOC ObjectiveMechanism',
         monitor=[task_decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
@@ -187,7 +187,7 @@ for i in range(3): # testing for three subjects, 200 trials per subject
     print('--------------------')
     print('ControlSignal variables: ', [sig.parameters.variable.get(i) for sig in lvoc.control_signals])
     print('ControlSignal values: ', [sig.parameters.value.get(i) for sig in lvoc.control_signals])
-    # print('features: ', lvoc.get_feature_values(context=c))
+    # print('state_features: ', lvoc.get_feature_values(context=c))
     print('lvoc: ', lvoc.evaluation_function([sig.parameters.variable.get(i) for sig in lvoc.control_signals], context=i))
     # print('time: ', duration)
     print('--------------------')
@@ -228,7 +228,7 @@ print(lvoc.log.csv())
 # print('--------------------')
 # print('ControlSignal variables: ', [sig.parameters.variable.get(c) for sig in lvoc.control_signals])
 # print('ControlSignal values: ', [sig.parameters.value.get(c) for sig in lvoc.control_signals])
-# # print('features: ', lvoc.get_feature_values(context=c))
+# # print('state_features: ', lvoc.get_feature_values(context=c))
 # print('lvoc: ', lvoc.evaluation_function([sig.parameters.variable.get(c) for sig in lvoc.control_signals], context=c))
 # print('time: ', duration)
 # print('--------------------')
