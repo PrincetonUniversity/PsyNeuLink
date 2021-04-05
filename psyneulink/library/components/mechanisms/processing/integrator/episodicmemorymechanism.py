@@ -45,7 +45,7 @@ An EpisodicMemoryMechanism has at least one `InputPort <InputPort>`, its *CONTEN
 optionally, an *ASSOC_INPUT* InputPort (if its *assoc_size* is specified and is not 0) that represent
 an item to store;  a `function <EpisodicMemoryMechanism.function>` that stores and retrieves content-assoc pairs from its
 memory; and at least one `OutputPort <OutputPort>`, *CONTENT_OUTPUT*, as well as a 2nd, *CONTENT_OUTPUT* if it has
-an *ASSOC_INPUT* InputPort, that represent a retrieved item. The default function is a `ContentAddressableMemory` that
+an *ASSOC_INPUT* InputPort, that represent a retrieved item. The default function is a `DictionaryStorage` that
 implements a simple form of content-addressable memory, but a custom function can be specified, so long as it meets the
 following requirements:
 
@@ -98,7 +98,7 @@ import warnings
 import numpy as np
 
 from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import ContentAddressableMemory
+from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import DictionaryStorage
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.inputport import OutputPort
@@ -133,14 +133,14 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     EpisodicMemoryMechanism(                \
         content_size=1,                     \
         assoc_size=1,                       \
-        function=ContentAddressableMemory,  \
+        function=DictionaryStorage,  \
         params=None,                        \
         name=None,                          \
         prefs=None                          \
     )
 
     Subclass of `IntegratorMechanism <IntegratorMechanism>` that implements a `differentiable neural dictionary
-    (ContentAddressableMemory)<HTML>`_.  See `Mechanism <Mechanism_Class_Reference>` for additional arguments and
+    (DictionaryStorage)<HTML>`_.  See `Mechanism <Mechanism_Class_Reference>` for additional arguments and
     attributes.
 
     Arguments
@@ -153,7 +153,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         specifies length of the assoc stored in the `function <EpisodicMemoryMechanism.function>`\\s memory;
         if it is 0 (the default) then no *ASSOC_INPUT* InputPort or *ASSOC_OUTPUT* OutputPort are created.
 
-    function : function : default ContentAddressableMemory
+    function : function : default DictionaryStorage
         specifies the function that implements a memory store and methods to store to and retrieve from it.  It
         must take as its `variable <Function.variable>` a 2d array, the first item of which is the content and the second
         the associate to be stored in its memory, and must return a 2d array that is the value of the
@@ -197,7 +197,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                 function
                     see `function <EpisodicMemoryMechanism.function>`
 
-                    :default value: `ContentAddressableMemory`
+                    :default value: `DictionaryStorage`
                     :type: `Function`
 
                 input_ports
@@ -215,7 +215,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                     :read only: True
         """
         variable = Parameter([[0]], pnl_internal=True, constructor_argument='default_variable')
-        function = Parameter(ContentAddressableMemory, stateful=False, loggable=False)
+        function = Parameter(DictionaryStorage, stateful=False, loggable=False)
         content_size = 1
         assoc_size = 0
 
