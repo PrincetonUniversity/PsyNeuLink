@@ -2204,7 +2204,7 @@ class ShowGraph():
                                     proj_arrowhead = self.control_projection_arrow
                                 assign_proj_to_enclosing_comp = True
                                 assign_sender_edge(sndr, proj_color, proj_arrowhead)
-                            return
+                            continue
 
                         # sender is output_CIM
                         # FIX: 4/5/21 IMPLEMENT LOOP HERE COMPARABLE TO ONE FOR input_CIM ABOVE
