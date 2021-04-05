@@ -29,7 +29,10 @@ def n_back_model():
                                             [context_input_layer, match_output_layer]])
 
     # Episodic Memory, Decision and Control
-    em = EpisodicMemoryMechanism(name='EM', content_size=5, assoc_size=5)
+    # em = EpisodicMemoryMechanism(name='EM', content_size=5, assoc_size=5)
+    em = EpisodicMemoryMechanism(name='EM', content_size=5, assoc_size=5,
+                                 # function=ContentAddressableMemory(initializer=[[[0,0,0,0,0],[0,0,0,0,0]]])
+                                 )
     ctl = ControlMechanism(control=(STORAGE_PROB, em))
     decision = DDM(name='DECISION')
 
@@ -90,9 +93,8 @@ def n_back_model():
     comp.add_projection(MappingProjection(), match_output_layer, decision)
     comp.add_projection(MappingProjection(), decision, ctl)
 
-
     # comp._analyze_graph()
-    # # comp.show_graph()
+    comp.show_graph()
     # comp.show_graph(show_cim=True,
     #                 show_node_structure=ALL,
     #                 show_projection_labels=True,

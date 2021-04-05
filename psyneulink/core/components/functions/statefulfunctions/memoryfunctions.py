@@ -452,7 +452,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     initializer : 3d array or list : default None
         specifies an initial set of entries for `memory <ContentAddressableMemory.memory>`. It must be of the following
         form: [[[key],[value]], [[key],[value]], ...], such that each item in the outer dimension (axis 0)
-        is a 2d array or list containing a key and a value pair for that entry. All of the keys must 1d arrays or
+        is a 2d array or list containing a key and a value pair for that entry. All of the keys must be 1d arrays or
         lists of the same length.
 
     distance_function : Distance or function : default Distance(metric=COSINE)
@@ -1088,7 +1088,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         random_state = self._get_current_parameter_value('random_state', context)
 
         # If this is an initialization run, leave memory empty (don't want to count it as an execution step),
-        # and return current value (variable[1]) for validation.
+        # but set key and value size and then return current value (variable[1]) for validation.
         if self.is_initializing:
             return variable
 
@@ -1170,8 +1170,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         # if no memory, return the zero vector
         if len(_memory[KEYS]) == 0:
-            zeros_key = [0] * self.key_size
-            zeros_val = [0] * self.val_size
+            zeros_key = [0] * self.parameters.key_size.get(context)
+            zeros_val = [0] * self.parameters.val_size.get(context)
             return [zeros_key, zeros_val]
 
         # Get distances between query_key and all keys in memory
