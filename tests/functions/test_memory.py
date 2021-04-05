@@ -199,6 +199,25 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_diff_from_val_si
     assert retrieved[0] == [0, 0, 0]
     assert retrieved[1] == [0, 0, 0, 0]
 
+def test_ContentAddressableMemory_without_initializer_in_composition():
+
+    content = TransferMechanism(size=5)
+    assoc = TransferMechanism(size=3)
+    content_out = TransferMechanism(size=5)
+    assoc_out = TransferMechanism(size=3)
+
+    # Episodic Memory, Decision and Control
+    em = EpisodicMemoryMechanism(name='EM', content_size=5, assoc_size=3)
+    comp = Composition()
+    comp.add_nodes([content, assoc, content_out, assoc_out, em])
+    comp.add_projection(MappingProjection(), content, em.input_ports[CONTENT_INPUT])
+    comp.add_projection(MappingProjection(), assoc, em.input_ports[ASSOC_INPUT])
+    comp.add_projection(MappingProjection(), em.output_ports[CONTENT_OUTPUT], content_out)
+    comp.add_projection(MappingProjection(), em.output_ports[ASSOC_OUTPUT], assoc_out)
+
+    comp.run(inputs={content:[1,2,3,4,5],
+                     assoc:[6,7,8]})
+
 def test_ContentAddressableMemory_without_initializer_and_key_size_same_as_val_size():
 
     stimuli = {'A': [[1,2,3],[4,5,6]],
@@ -297,7 +316,6 @@ def test_ContentAddressableMemory_without_initializer_and_key_size_diff_from_val
     assert retrieved[0] == [0, 0, 0]
     assert retrieved[1] == [0, 0, 0, 0]
 
-
 def test_ContentAddressableMemory_without_assoc():
 
     stimuli = {'A': [[1,2,3]],
@@ -333,7 +351,6 @@ def test_ContentAddressableMemory_without_assoc():
         retrieved_keys.append(retrieved_key)
 
     assert retrieved_keys == [['A', 'C', 'D'], ['B'], ['A', 'C', 'D'], ['A', 'C', 'D'], ['E'], ['F']]
-
 
 def test_ContentAddressableMemory_with_duplicate_entry_in_initializer_warning():
 
@@ -418,7 +435,6 @@ def test_ContentAddressableMemory_add_and_delete_from_memory():
         em.add_to_memory(np.array([[1,2],[200,201,202,203]], dtype=object))
     assert "Length of 'key'" in str(error_text.value) and "must be same as others in the dict" in str(error_text.value)
 
-
 def test_ContentAddressableMemory_overwrite_mode():
 
     em = ContentAddressableMemory(
@@ -465,7 +481,6 @@ def test_ContentAddressableMemory_overwrite_mode():
     assert ('Attempt to store item' in str(error_text.value)
             and 'with \'duplicate_keys\'=\'OVERWRITE\'' in str(error_text.value))
 
-
 def test_ContentAddressableMemory_max_entries():
 
     em = ContentAddressableMemory(
@@ -486,7 +501,6 @@ def test_ContentAddressableMemory_max_entries():
                        [[11,21,31],[41,51,61]],
                        [[12,22,32],[42,52,62]]]
     assert np.allclose(em.memory, expected_memory)
-
 
 @pytest.mark.parametrize(
     'param_name',

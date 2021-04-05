@@ -1170,6 +1170,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         # if no memory, return the zero vector
         if len(_memory[KEYS]) == 0:
+            # zeros_key = [0] * self.parameters.key_size.get(context)
+            # zeros_val = [0] * self.parameters.val_size.get(context)
             zeros_key = [0] * self.parameters.key_size.get(context)
             zeros_val = [0] * self.parameters.val_size.get(context)
             return [zeros_key, zeros_val]
