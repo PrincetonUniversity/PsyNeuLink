@@ -776,11 +776,11 @@ class OptimizationControlMechanism(ControlMechanism):
                 else:
                     warnings.warn(f"'features' was specified in the constructor for an {self.__class__.__name__}; "
                                   f"Note: 'features' has been deprecated; please use 'state_features' in the future.")
-                    state = kwargs['features']
+                    state_features = kwargs['features']
                 kwargs.pop('features')
                 continue
             if k == 'feature_function':
-                if state:
+                if state_feature_function:
                     warnings.warn(f"Both 'feature_function' and 'state_feature_function' were specified in the "
                                   f"constructor for an {self.__class__.__name__}. Note: 'feature_function' has been "
                                   f"deprecated; 'state_feature_function' ({state_feature_function}) will be used.")
