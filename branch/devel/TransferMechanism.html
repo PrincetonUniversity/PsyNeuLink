@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0.8.7.1+11.g50484eae2c documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0.8.7.1+12.g2fa2173211 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+11
+                  0.8.7.1+12
                 </div>
               
             
@@ -558,7 +558,7 @@ Mechanism to continue to integrate the instruction and impact stimulus processin
 <p>This example implements a simple model of attentional selection in perceptual decision making. In the model,
 <code class="docutils literal notranslate"><span class="pre">stim_input</span></code> represents the stimulus input, which is passed to <code class="docutils literal notranslate"><span class="pre">stim_percept</span></code>, which also receives input
 from the <code class="docutils literal notranslate"><span class="pre">attention</span></code> Mechanism.  <code class="docutils literal notranslate"><span class="pre">stim_percpt</span> <span class="pre">passes</span> <span class="pre">its</span> <span class="pre">output</span> <span class="pre">to</span> <span class="pre">``decision</span></code>, which integrates its input
-until one of the features of the input (the first or second) reaches the threshold of 0.65, at which point
+until one of the state_features of the input (the first or second) reaches the threshold of 0.65, at which point
 <code class="docutils literal notranslate"><span class="pre">response</span></code> executes (specified by the condition <code class="docutils literal notranslate"><span class="pre">(reponse,</span> <span class="pre">WhenFinished(decision)</span></code>).  In addition to the
 <code class="docutils literal notranslate"><span class="pre">stim_input</span></code>, the model an instruction on each trial in <code class="docutils literal notranslate"><span class="pre">instruction_input</span></code> that specifies which feature of
 the stimulus (i.e., the first or second element) should be “attended”.  This is passed to the <code class="docutils literal notranslate"><span class="pre">attention</span></code>

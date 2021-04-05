@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MemoryFunctions &mdash; PsyNeuLink 0.8.7.1+11.g50484eae2c documentation</title>
+  <title>MemoryFunctions &mdash; PsyNeuLink 0.8.7.1+12.g2fa2173211 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+11
+                  0.8.7.1+12
                 </div>
               
             
@@ -414,7 +414,7 @@ attribute, which returns a list containing the current entries, each as a 2 item
 <p>When <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> is executed, it first retrieves the
 item in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> with the key that most closely matches the key of the item
 (key-value pair) in the call, stores the latter in memory, and returns the retrieved item (key-value pair).
-If key of the pair in the call is an exact match of a key in memory and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duplicate_keys</span></code></a> is False, then the matching item is returned, but the
+If the key of the pair in the call is an exact match of a key in memory and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.duplicate_keys"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">duplicate_keys</span></code></a> is False, then the matching item is returned, but the
 pair in the call is not stored. These steps are described in more detail below:</p>
 <ul class="simple">
 <li><p>First, with probability <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.retrieval_prob" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.retrieval_prob"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">retrieval_prob</span></code></a>, an entry is retrieved from
@@ -454,7 +454,7 @@ storing in <a class="reference internal" href="#psyneulink.core.components.funct
 storing in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a> (see <a href="#id5"><span class="problematic" id="id6">`</span></a>noise &lt;ContentAddressableMemory.noise&gt; for details).</p></li>
 <li><p><strong>initializer</strong> (<em>3d array</em><em> or </em><em>list : default None</em>) – specifies an initial set of entries for <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>. It must be of the following
 form: [[[key],[value]], [[key],[value]], …], such that each item in the outer dimension (axis 0)
-is a 2d array or list containing a key and a value pair for that entry. All of the keys must 1d arrays or
+is a 2d array or list containing a key and a value pair for that entry. All of the keys must be 1d arrays or
 lists of the same length.</p></li>
 <li><p><strong>distance_function</strong> (<a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Distance" title="psyneulink.core.components.functions.objectivefunctions.Distance"><em>Distance</em></a><em> or </em><em>function : default Distance</em><em>(</em><em>metric=COSINE</em><em>)</em>) – specifies the function used during retrieval to compare the first item in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> with keys in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>.</p></li>
 <li><p><strong>selection_function</strong> (<a class="reference internal" href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot" title="psyneulink.core.components.functions.selectionfunctions.OneHot"><em>OneHot</em></a><em> or </em><em>function : default OneHot</em><em>(</em><em>mode=MIN_VAL</em><em>)</em>) – specifies the function used during retrieval to evaluate the distances returned by <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">distance_function</span></code></a> and select the item to return.</p></li>

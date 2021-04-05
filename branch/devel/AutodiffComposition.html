@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0.8.7.1+11.g50484eae2c documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0.8.7.1+12.g2fa2173211 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+11
+                  0.8.7.1+12
                 </div>
               
             
@@ -307,7 +307,7 @@ Composition:</p>
 <span id="autodiffcomposition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt id="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.library.compositions.autodiffcomposition.</code><code class="sig-name descname">AutodiffComposition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">learning_rate</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">optimizer_type</span><span class="o">=</span><span class="default_value">'sgd'</span></em>, <em class="sig-param"><span class="n">weight_decay</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">loss_spec</span><span class="o">=</span><span class="default_value">'mse'</span></em>, <em class="sig-param"><span class="n">disable_learning</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">refresh_losses</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">disable_cuda</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">cuda_index</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">force_no_retain_graph</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">'autodiff_composition'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">psyneulink.library.compositions.autodiffcomposition.</code><code class="sig-name descname">AutodiffComposition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">learning_rate</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">optimizer_type</span><span class="o">=</span><span class="default_value">'sgd'</span></em>, <em class="sig-param"><span class="n">weight_decay</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">loss_spec</span><span class="o">=</span><span class="default_value">'mse'</span></em>, <em class="sig-param"><span class="n">disable_learning</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">refresh_losses</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">disable_cuda</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">cuda_index</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">force_no_retain_graph</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">pathways</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">'autodiff_composition'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> that trains models using <a class="reference external" href="https://pytorch.org">PyTorch</a>.
 See <a class="reference internal" href="Composition.html#composition-class-reference"><span class="std std-ref">Composition</span></a> for additional arguments and attributes.</p>
 <dl class="field-list simple">

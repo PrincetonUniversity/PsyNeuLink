@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ProcessingMechanism &mdash; PsyNeuLink 0.8.7.1+11.g50484eae2c documentation</title>
+  <title>ProcessingMechanism &mdash; PsyNeuLink 0.8.7.1+12.g2fa2173211 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+11
+                  0.8.7.1+12
                 </div>
               
             
@@ -227,7 +227,7 @@ executed.  Similarly, its output is generally conveyed to another Mechanism or u
 <p>The ProcessingMechanism is the simplest mechanism in PsyNeuLink. It does not have any extra arguments or
 specialized validation. Almost any PsyNeuLink Function, including the <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">UserDefinedFunction</span></a>, may be the function of a
 ProcessingMechanism. Currently, the only exception is <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="psyneulink.core.components.functions.learningfunctions.BackPropagation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BackPropagation</span></code></a>. Subtypes of
-ProcessingMechanism have more specialized features, and often have restrictions on which Functions are allowed.</p>
+ProcessingMechanism have more specialized state_features, and often have restrictions on which Functions are allowed.</p>
 <p>The output of a ProcessingMechanism may also be used by a <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a> to modify the
 parameters of other components (or its own parameters). ProcessingMechanisms are always executed before all
 ModulatoryMechanisms in the Composition to which they belong, so that any modifications made by the ModulatoryMechanism
