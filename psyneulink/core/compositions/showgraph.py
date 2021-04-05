@@ -204,6 +204,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.core.components.ports.port import Port
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
@@ -2017,6 +2018,8 @@ class ShowGraph():
                         continue
 
                     if isinstance(sender, CompositionInterfaceMechanism):
+
+                        # sender is input_CIM or parameter_CIM
                         if sender in {composition.input_CIM, composition.parameter_CIM}:
                             # FIX 6/2/20:
                             #     DELETE ONCE FILTERED BASED ON nesting_level IS IMPLEMENTED BEFORE CALL TO METHOD
@@ -2024,27 +2027,53 @@ class ShowGraph():
                             #     and therefore is not passing an afferent Projection from that Composition
                             if not sender.afferents and rcvr is not composition.controller:
                                 continue
-                            # Get node from enclosing Comopsition that is source of sender
-                            sndr_spec = self._trace_senders_for_original_sender_mechanism(proj, nesting_level)
-                            if not sndr_spec:
+                            # # MODIFIED 4/5/21 OLD:
+                            # # Get node(s) from enclosing Comopsition that is/are source(s) of sender(s)
+                            # sndr_spec = self._trace_senders_for_original_sender_mechanism(proj, nesting_level)
+                            # if not sndr_spec:
+                            #     continue
+                            # sndr, sndr_port, sndr_nesting_level = sndr_spec
+                            # # if original sender is more than one level above receiver, replace enclosing_g with
+                            # # the g of the original sender composition
+                            # enclosing_comp = comp_hierarchy[sndr_nesting_level]
+                            # enclosing_g = enclosing_comp._show_graph.G
+                            # # Skip:
+                            # # - cims as sources (handled in _assign_cim_componoents)
+                            # # - controller (handled in _assign_controller_components)
+                            # if (isinstance(sndr, CompositionInterfaceMechanism) and
+                            #         rcvr is not enclosing_comp.controller
+                            #         and rcvr is not composition.controller
+                            #         or self._is_composition_controller(sndr, enclosing_comp)):
+                            #     continue
+                            # if sender is composition.parameter_CIM:
+                            #     proj_color = self.control_color
+                            #     proj_arrowhead = self.control_projection_arrow
+                            # assign_proj_to_enclosing_comp = True
+                            # MODIFIED 4/5/21 NEW:
+                            # FIX: LOOP HERE OVER sndr_spec IF THERE ARE SEVERAL
+                            # Get node(s) from enclosing Comopsition that is/are source(s) of sender(s)
+                            sndrs_specs = self._trace_senders_for_original_sender_mechanism(proj, nesting_level)
+                            if not sndrs_specs:
                                 continue
-                            sndr, sndr_port, sndr_nesting_level = sndr_spec
-                            # if original sender is more than one level above receiver, replace enclosing_g with
-                            # the g of the original sender composition
-                            enclosing_comp = comp_hierarchy[sndr_nesting_level]
-                            enclosing_g = enclosing_comp._show_graph.G
-                            # Skip:
-                            # - cims as sources (handled in _assign_cim_componoents)
-                            # - controller (handled in _assign_controller_components)
-                            if (isinstance(sndr, CompositionInterfaceMechanism) and
-                                    rcvr is not enclosing_comp.controller
-                                    and rcvr is not composition.controller
-                                    or self._is_composition_controller(sndr, enclosing_comp)):
-                                continue
-                            if sender is composition.parameter_CIM:
-                                proj_color = self.control_color
-                                proj_arrowhead = self.control_projection_arrow
-                            assign_proj_to_enclosing_comp = True
+                            for sndr_spec in sndrs_specs:
+                                sndr, sndr_port, sndr_nesting_level = sndr_spec
+                                # if original sender is more than one level above receiver, replace enclosing_g with
+                                # the g of the original sender composition
+                                enclosing_comp = comp_hierarchy[sndr_nesting_level]
+                                enclosing_g = enclosing_comp._show_graph.G
+                                # Skip:
+                                # - cims as sources (handled in _assign_cim_componoents)
+                                # - controller (handled in _assign_controller_components)
+                                if (isinstance(sndr, CompositionInterfaceMechanism) and
+                                        rcvr is not enclosing_comp.controller
+                                        and rcvr is not composition.controller
+                                        or self._is_composition_controller(sndr, enclosing_comp)):
+                                    continue
+                                if sender is composition.parameter_CIM:
+                                    proj_color = self.control_color
+                                    proj_arrowhead = self.control_projection_arrow
+                                assign_proj_to_enclosing_comp = True
+                                # MODIFIED 4/5/21 END
 
                         # sender is output_CIM
                         else:
@@ -2069,9 +2098,13 @@ class ShowGraph():
                     else:
                         sndr = sender
 
+                # FIX: CREATE CALL TO THIS, AND ABOVE CALL IN LOOP OVER sndr's IDENTIFIED ABOVE
+                #      AS THERE MAY BE MORE THAN ONE IF:
+                #      - sender IN OUTER LOOP IS AN input_CIM (MULTIPLE SENDERS FROM ENCLOSING OUTER COMP)
+                #      - sender IN OUTER LOOP IS AN output_CIM (MULTIPLE SENDERS FROM ENCLOSED INNER COMP)
+
                     # Set sndr info
                     sndr_label = self._get_graph_node_label(composition, sndr, show_types, show_dimensions)
-
 
                     # Skip any projections to ObjectiveMechanism for controller
                     #   (those are handled in _assign_controller_components)
@@ -2329,7 +2362,11 @@ class ShowGraph():
             return self._trace_senders_for_controller(sender_proj, comp)
         return False
 
-    def _trace_senders_for_original_sender_mechanism(self, proj, nesting_level, comp=None):
+    def _trace_senders_for_original_sender_mechanism(self,
+                                                     proj:Projection,
+                                                     nesting_level:int,
+                                                     comp=None
+                                                     ) -> [(Mechanism, Port, int)]:
         """
         Find the original sender of a projection that is routed through n-levels of cims.
         If there is no outer root Mechanism, as in the case of a nested input Mechanism that is not projected to,
@@ -2343,12 +2380,21 @@ class ShowGraph():
             num_afferents = len(owner.port_map[proj.receiver][0].path_afferents)
             if num_afferents == 0:
                 return None
-            # assert num_afferents == 1, f"PROGRAM ERROR: {sender} of {comp.name} " \
-            #                            f"doesn't have exactly one afferent Projection."
-            outer_proj = owner.port_map[proj.receiver][0].path_afferents[0]
-            enclosing_showgraph = owner.composition._show_graph
-            return enclosing_showgraph._trace_senders_for_original_sender_mechanism(outer_proj, nesting_level)
-        return owner, sender, nesting_level
+            # # FIX: ITERATE OVER ALL AFFERENTS TO relevant InputPort of cim:
+            # # MODIFIED 4/5/21 OLD:
+            # outer_proj = owner.port_map[proj.receiver][0].path_afferents[0]
+            # enclosing_showgraph = owner.composition._show_graph
+            # return enclosing_showgraph._trace_senders_for_original_sender_mechanism(outer_proj, nesting_level)
+            # MODIFIED 4/5/21 NEW:
+            senders = []
+            for outer_proj in owner.port_map[proj.receiver][0].path_afferents:
+                enclosing_showgraph = owner.composition._show_graph
+                senders.extend(enclosing_showgraph._trace_senders_for_original_sender_mechanism(outer_proj,
+                                                                                              nesting_level))
+            return senders
+            # MODIFIED 4/5/21 END
+        # FIX: RECEIVERS OF THIS RETURN NEED TO HANDLE LIST
+        return [(owner, sender, nesting_level)]
 
     def _trace_receivers_for_terminal_receiver(self, receiver, comp=None):
         """Find the terminal ParameterPort for a given intermediary input port of a parameter CIM"""

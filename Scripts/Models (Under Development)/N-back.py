@@ -92,6 +92,7 @@ def n_back_model():
     comp.add_projection(MappingProjection(), em.output_ports[ASSOC_OUTPUT], context_input_layer)
     comp.add_projection(MappingProjection(), match_output_layer, decision)
     comp.add_projection(MappingProjection(), decision, ctl)
+    # comp.add_projection(MappingProjection(), decision, stim_input_layer)
 
     # comp._analyze_graph()
     comp.show_graph()
