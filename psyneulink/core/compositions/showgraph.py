@@ -2185,7 +2185,7 @@ class ShowGraph():
                             sndrs_specs = self._trace_senders_for_original_sender_mechanism(proj, nesting_level)
                             if not sndrs_specs:
                                 continue
-                            for sndr_spec in sndrs_specs:
+                            for sndr_spec in sorted(sndrs_specs):
                                 sndr, sndr_port, sndr_nesting_level = sndr_spec
                                 # if original sender is more than one level above receiver, replace enclosing_g with
                                 # the g of the original sender composition
