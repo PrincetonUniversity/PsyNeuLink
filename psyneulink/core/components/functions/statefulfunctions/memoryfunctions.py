@@ -25,6 +25,7 @@ Functions that store and can return a record of their input.
 import numbers
 import warnings
 from collections import deque
+from typing import Optional, Union
 
 import numpy as np
 import typecheck as tc
@@ -1526,8 +1527,11 @@ class ContentAddressableMemory2(MemoryFunction): # -----------------------------
         initial set of entries for `memory <ContentAddressableMemory.memory>`; each is a 2d array with a key-value pair.
 
     memory : list
-        list of key-value pairs containing entries in ContentAddressableMemory:
-        [[[key 1], [value 1]], [[key 2], value 2]]...]
+        list of entries in ContentAddressableMemory, each of which is 2d array of fields containing stored items;
+        the fields of an entry can have different lengths, but the corresponding fields of all entries must be of the
+        same length:
+        [[[field 1],[field 2]...], [[field 1],[field 2]...]] can be:
+        [[[a,b],[c,d,e]...], [[u,w],[x,y,z]...]]
 
     distance_function : Distance or function : default Distance(metric=COSINE)
         function used during retrieval to compare the first item in `variable <ContentAddressableMemory.variable>`
@@ -1537,7 +1541,7 @@ class ContentAddressableMemory2(MemoryFunction): # -----------------------------
         function used during retrieval to evaluate the distances returned by `distance_function
         <ContentAddressableMemory.distance_function>` and select the item(s) to return.
 
-    previous_value : 1d array
+    previous_value : 3d array
         state of the `memory <ContentAddressableMemory.memory>` prior to storing `variable
         <ContentAddressableMemory.variable>` in the current call.
 
@@ -1613,6 +1617,18 @@ class ContentAddressableMemory2(MemoryFunction): # -----------------------------
                     :default value: `RANDOM`
                     :type: ``str``
 
+                memory_field_sizes
+                    see `memory_field_sizes <ContentAddressableMemory.memory_field_sizes>`
+
+                    :default value: [1]
+                    :type: ``numpy.ndarray``
+
+                memory_total_size
+                    see `memory_total_size <ContentAddressableMemory.memory_total_size>`
+
+                    :default value: 1
+                    :type: ``int``
+
                 memory_field_weights
                     see `memory_field_weights <ContentAddressableMemory.memory_field_weights>`
 
@@ -1670,7 +1686,10 @@ class ContentAddressableMemory2(MemoryFunction): # -----------------------------
         variable = Parameter([[0],[0]], pnl_internal=True, constructor_argument='default_variable')
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        memory_field_weights = Parameter([1], stateful=True)
+        memory_num_fields = Parameter(1, stateful=True)
+        memory_field_sizes = Parameter([1], stateful=True)
+        memory_total_size = Parameter(1, stateful=True)
+        memory_field_weights = Parameter([1], stateful=True, modulable=True)
         duplicate_keys = Parameter(False)
         equidistant_keys_select = Parameter(RANDOM)
         rate = Parameter(1.0, modulable=True)
@@ -1690,6 +1709,7 @@ class ContentAddressableMemory2(MemoryFunction): # -----------------------------
                  noise: tc.optional(tc.any(int, float, list, np.ndarray, callable))=None,
                  rate: tc.optional(tc.any(int, float, list, np.ndarray))=None,
                  initializer=None,
+                 memory_field_weights:Optional[Union[list, np.ndarray]]=None,
                  distance_function:tc.optional(tc.any(Distance, is_function_type))=None,
                  selection_function:tc.optional(tc.any(OneHot, is_function_type))=None,
                  duplicate_keys:tc.optional(tc.any(bool, tc.enum(OVERWRITE)))=None,
@@ -1726,8 +1746,9 @@ class ContentAddressableMemory2(MemoryFunction): # -----------------------------
         )
 
         if self.previous_value.size != 0:
-            self.parameters.full_size.set(len(self.previous_value[KEYS][0]))
-            self.parameters.val_size.set(len(self.previous_value[VALS][0]))
+            self.parameters.memory_total_size.set(len(np.hstack(self.previous_value[0])))
+            self.parameters.memory_num_fields.set(len(self.previous_value))
+            self.parameters.memory_field_sizes.set([len(item) for item in self.previous_value[0]])
 
     def _parse_distance_function_variable(self, variable):
         # actual used variable in execution (get_memory) checks distance
@@ -1745,182 +1766,6 @@ class ContentAddressableMemory2(MemoryFunction): # -----------------------------
             distance_result if i == 0 else np.zeros_like(distance_result)
             for i in range(self.defaults.max_entries)
         ])
-
-    def _get_state_ids(self):
-        return super()._get_state_ids() + ["ring_memory"]
-
-    def _get_state_struct_type(self, ctx):
-        # Construct a ring buffer
-        max_entries = self.parameters.max_entries.get()
-        key_type = ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[0])
-        keys_struct = pnlvm.ir.ArrayType(key_type, max_entries)
-        val_type = ctx.convert_python_struct_to_llvm_ir(self.defaults.variable[1])
-        vals_struct = pnlvm.ir.ArrayType(val_type, max_entries)
-        ring_buffer_struct = pnlvm.ir.LiteralStructType((
-            keys_struct, vals_struct, ctx.int32_ty, ctx.int32_ty))
-        generic_struct = ctx.get_state_struct_type(super())
-        return pnlvm.ir.LiteralStructType((*generic_struct,
-                                           ring_buffer_struct))
-
-    def _get_state_initializer(self, context):
-        # FIX 4/5/21 FOR V2:
-        memory = self.parameters.previous_value._get(context)
-        mem_init = pnlvm._tupleize([memory[0], memory[1], 0, 0])
-        return (*super()._get_state_initializer(context), mem_init)
-
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        # PRNG
-        rand_struct = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
-        uniform_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
-
-        # Ring buffer
-        buffer_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "ring_memory")
-        keys_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        vals_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        count_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(2)])
-        wr_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), ctx.int32_ty(3)])
-
-        # Input
-        var_key_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        var_val_ptr = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)])
-
-        # Zero output
-        builder.store(arg_out.type.pointee(None), arg_out)
-        out_key_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        out_val_ptr = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
-
-        # Check retrieval probability
-        retr_ptr = builder.alloca(ctx.bool_ty)
-        builder.store(retr_ptr.type.pointee(1), retr_ptr)
-        retr_prob_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, RETRIEVAL_PROB)
-
-        # Prob can be [x] if we are part of a mechanism
-        retr_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, retr_prob_ptr)
-        retr_rand = builder.fcmp_ordered('<', retr_prob, retr_prob.type(1.0))
-
-        max_entries = len(vals_ptr.type.pointee)
-        entries = builder.load(count_ptr)
-        entries = pnlvm.helpers.uint_min(builder, entries, max_entries)
-        # The call to random function needs to be after check to match python
-        with builder.if_then(retr_rand):
-            rand_ptr = builder.alloca(ctx.float_ty)
-            builder.call(uniform_f, [rand_struct, rand_ptr])
-            rand = builder.load(rand_ptr)
-            passed = builder.fcmp_ordered('<', rand, retr_prob)
-            builder.store(passed, retr_ptr)
-
-        # Retrieve
-        retr = builder.load(retr_ptr)
-        with builder.if_then(retr, likely=True):
-            # Determine distances
-            distance_f = ctx.import_llvm_function(self.distance_function)
-            distance_params = pnlvm.helpers.get_param_ptr(builder, self, params, "distance_function")
-            distance_state = pnlvm.helpers.get_state_ptr(builder, self, state, "distance_function")
-            distance_arg_in = builder.alloca(distance_f.args[2].type.pointee)
-            builder.store(builder.load(var_key_ptr),
-                          builder.gep(distance_arg_in, [ctx.int32_ty(0),
-                                                        ctx.int32_ty(0)]))
-            selection_arg_in = builder.alloca(pnlvm.ir.ArrayType(distance_f.args[3].type.pointee, max_entries))
-            with pnlvm.helpers.for_loop_zero_inc(builder, entries, "distance_loop") as (b, idx):
-                compare_ptr = b.gep(keys_ptr, [ctx.int32_ty(0), idx])
-                b.store(b.load(compare_ptr),
-                        b.gep(distance_arg_in, [ctx.int32_ty(0), ctx.int32_ty(1)]))
-                distance_arg_out = b.gep(selection_arg_in, [ctx.int32_ty(0), idx])
-                b.call(distance_f, [distance_params, distance_state,
-                                    distance_arg_in, distance_arg_out])
-
-            selection_f = ctx.import_llvm_function(self.selection_function)
-            selection_params = pnlvm.helpers.get_param_ptr(builder, self, params, "selection_function")
-            selection_state = pnlvm.helpers.get_state_ptr(builder, self, state, "selection_function")
-            selection_arg_out = builder.alloca(selection_f.args[3].type.pointee)
-            builder.call(selection_f, [selection_params, selection_state,
-                                       selection_arg_in, selection_arg_out])
-
-            # Find the selected index
-            selected_idx_ptr = builder.alloca(ctx.int32_ty)
-            builder.store(ctx.int32_ty(0), selected_idx_ptr)
-            with pnlvm.helpers.for_loop_zero_inc(builder, entries, "distance_loop") as (b,idx):
-                selection_val = b.load(b.gep(selection_arg_out, [ctx.int32_ty(0), idx]))
-                non_zero = b.fcmp_ordered('!=', selection_val, selection_val.type(0))
-                with b.if_then(non_zero):
-                    b.store(idx, selected_idx_ptr)
-
-            selected_idx = builder.load(selected_idx_ptr)
-            selected_key = builder.load(builder.gep(keys_ptr, [ctx.int32_ty(0),
-                                                               selected_idx]))
-            selected_val = builder.load(builder.gep(vals_ptr, [ctx.int32_ty(0),
-                                                               selected_idx]))
-            builder.store(selected_key, out_key_ptr)
-            builder.store(selected_val, out_val_ptr)
-
-        # Check storage probability
-        store_ptr = builder.alloca(ctx.bool_ty)
-        builder.store(store_ptr.type.pointee(1), store_ptr)
-        store_prob_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, STORAGE_PROB)
-
-        # Prob can be [x] if we are part of a mechanism
-        store_prob = pnlvm.helpers.load_extract_scalar_array_one(builder, store_prob_ptr)
-        store_rand = builder.fcmp_ordered('<', store_prob, store_prob.type(1.0))
-
-        # The call to random function needs to be behind jump to match python
-        # code
-        with builder.if_then(store_rand):
-            rand_ptr = builder.alloca(ctx.float_ty)
-            builder.call(uniform_f, [rand_struct, rand_ptr])
-            rand = builder.load(rand_ptr)
-            passed = builder.fcmp_ordered('<', rand, store_prob)
-            builder.store(passed, store_ptr)
-
-        # Store
-        store = builder.load(store_ptr)
-        with builder.if_then(store, likely=True):
-
-            # Check if such key already exists
-            is_new_key_ptr = builder.alloca(ctx.bool_ty)
-            builder.store(is_new_key_ptr.type.pointee(1), is_new_key_ptr)
-            with pnlvm.helpers.for_loop_zero_inc(builder, entries, "distance_loop") as (b,idx):
-                cmp_key_ptr = b.gep(keys_ptr, [ctx.int32_ty(0), idx])
-
-                # Vector compare
-                # TODO: move this to helpers
-                key_differs_ptr = b.alloca(ctx.bool_ty)
-                b.store(key_differs_ptr.type.pointee(0), key_differs_ptr)
-                with pnlvm.helpers.array_ptr_loop(b, cmp_key_ptr, "key_compare") as (b2, idx2):
-                    var_key_element = b2.gep(var_key_ptr, [ctx.int32_ty(0), idx2])
-                    cmp_key_element = b2.gep(cmp_key_ptr, [ctx.int32_ty(0), idx2])
-                    element_differs = b.fcmp_unordered('!=',
-                                                       b.load(var_key_element),
-                                                       b.load(cmp_key_element))
-                    key_differs = b2.load(key_differs_ptr)
-                    key_differs = b2.or_(key_differs, element_differs)
-                    b2.store(key_differs, key_differs_ptr)
-
-                key_differs = b.load(key_differs_ptr)
-                is_new_key = b.load(is_new_key_ptr)
-                is_new_key = b.and_(is_new_key, key_differs)
-                b.store(is_new_key, is_new_key_ptr)
-
-            # Add new key + val if does not exist yet
-            is_new_key = builder.load(is_new_key_ptr)
-            with builder.if_then(is_new_key):
-                write_idx = builder.load(wr_ptr)
-
-                store_key_ptr = builder.gep(keys_ptr, [ctx.int32_ty(0), write_idx])
-                store_val_ptr = builder.gep(vals_ptr, [ctx.int32_ty(0), write_idx])
-
-                builder.store(builder.load(var_key_ptr), store_key_ptr)
-                builder.store(builder.load(var_val_ptr), store_val_ptr)
-
-                # Update counters
-                write_idx = builder.add(write_idx, write_idx.type(1))
-                write_idx = builder.urem(write_idx, write_idx.type(max_entries))
-                builder.store(write_idx, wr_ptr)
-
-                count = builder.load(count_ptr)
-                count = builder.add(count, count.type(1))
-                builder.store(count, count_ptr)
-
-        return builder
 
     def _validate_params(self, request_set, target_set=None, context=None):
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
@@ -1983,10 +1828,9 @@ class ContentAddressableMemory2(MemoryFunction): # -----------------------------
     def _initialize_previous_value(self, initializer, context=None):
         """Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_value
 
-        - Validate, if initializer is specified, it is a 3d array
+        - Validate initializer, if specified, and return previous_value
             (must be done here rather than in validate_params as it is needed to initialize previous_value
-        - Insure that it has exactly 2 items in outer dimension (axis 0)
-            and that all items in each of those two items are all arrays
+          - insure that it is 3D, and that each item along Axis 1 has the same number of arrays (length)
         """
         # vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
 
@@ -1995,14 +1839,14 @@ class ContentAddressableMemory2(MemoryFunction): # -----------------------------
         if len(initializer) == 0:
             return previous_value
         else:
-            # # Set key_size and val_size if this is the first entry
-            # self.parameters.previous_value.set(previous_value, context, override=True)
-            # self.parameters.key_size.set(len(initializer[0][KEYS]), context)
-            # self.parameters.val_size.set(len(initializer[0][VALS]), context)
-            memory_field_sizes = [i.size for i in np.array(variable)]
-            total_memory_size = np.sum(memory_field_sizes)
+            # Set memory fields sizes if this is the first entry
+            self.parameters.previous_value.set(previous_value, context, override=True)
+            self.parameters.memory_num_fields.set(len(initializer), context)
+            self.parameters.memory_total_size.set(len(np.hstack(initializer[0])), context)
+            self.parameters.memory_field_sizes.set([len(item) for item in initializer[0]], context)
 
             for entry in initializer:
+                # Store each item, which also validates it by call to _validate_memory()
                 if not self._store_memory(np.array(entry), context):
                     warnings.warn(f"Attempt to initialize memory of {self.__class__.__name__} with an entry ({entry}) "
                                   f"that has the same key as a previous one, while 'duplicate_keys'==False; "
@@ -2100,39 +1944,46 @@ class ContentAddressableMemory2(MemoryFunction): # -----------------------------
         retrieval_prob = np.array(self._get_current_parameter_value(RETRIEVAL_PROB, context)).astype(float)
         storage_prob = np.array(self._get_current_parameter_value(STORAGE_PROB, context)).astype(float)
 
-        # execute noise if it is a function
-        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
-
         # get random state
         random_state = self._get_current_parameter_value('random_state', context)
+
+        # FIX: MOVED TO _store_memory()
+        # # execute noise if it is a function
+        # noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
+
+        # get memory field weights (which are modulable)
+        memory_field_weights = self._get_current_parameter_value('memory_field_weights', context)
 
         # If this is an initialization run, leave memory empty (don't want to count it as an execution step),
         # but set key and value size and then return current value (variable[1]) for validation.
         if self.is_initializing:
             return variable
 
-        # Set key_size and val_size if this is the first entry
-        if len(self.parameters.previous_value._get(context)[KEYS]) == 0:
-            self.parameters.key_size._set(len(key), context)
-            self.parameters.val_size._set(len(val), context)
+        # Set memory fields sizes and total size if this is the first entry
+        if len(self.parameters.previous_value._get(context)) == 0:
+            self.parameters.memory_total_size.set(len(np.hstack(variable)))
+            self.parameters.memory_num_fields.set(len(variable))
+            self.parameters.memory_field_sizes.set([len(item) for item in variable])
 
         # Retrieve value from current dict with key that best matches key
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
-            memory = self.get_memory(key, context)
+            memory = self.get_memory(variable)
         else:
             # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OutputPort FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_PORT
             #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
-            memory = [[0]* self.parameters.key_size._get(context), [0]* self.parameters.val_size._get(context)]
-        # Store variable to dict:
-        if noise is not None:
-            key = np.asarray(key, dtype=float)
-            if isinstance(noise, numbers.Number):
-                key += noise
-            else:
-                # assume array with same shape as variable
-                # TODO: does val need noise?
-                key += noise[KEYS]
+            memory = [[0]* i for i in self.parameters.memory_field_sizes._get(context)]
+
+        # FIX: MOVED TO _store_memory()
+        # # Store variable to dict:
+        # if noise is not None:
+        #     key = np.asarray(key, dtype=float)
+        #     if isinstance(noise, numbers.Number):
+        #         key += noise
+        #     else:
+        #         # assume array with same shape as variable
+        #         # TODO: does val need noise?
+        #         key += noise[KEYS]
 
         if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.rand()):
             self._store_memory(variable, context)
@@ -2145,12 +1996,17 @@ class ContentAddressableMemory2(MemoryFunction): # -----------------------------
         return ret_val
 
     @tc.typecheck
-    def _validate_memory(self, memory:tc.any(list, np.ndarray), context):
+    def _validate_memory(self, memory:Union[list, np.ndarray], context):
 
-        # memory must be list or 2d array with 2 items
-        if len(memory) != 2 and not all(np.array(i).ndim == 1 for i in memory):
+        field_sizes = self.parameters.memory_field_sizes.get(context)
+        num_fields = self.parameters.memory_field_sizes.get(context)
+        if not len(memory) == num_fields:
             raise FunctionError(f"Attempt to store memory in {self.__class__.__name__} ({memory}) "
-                                f"that is not a 2d array with two items ([[key],[value]])")
+                                f"that has an incorrect number of fields ({num_fields})")
+        if not all((np.array(item).ndim == 1 and len(item) == field_sizes[i]
+                    for i, item in enumerate(memory))):
+            raise FunctionError(f"Attempt to store memory in {self.__class__.__name__} ({memory}) "
+                                f"that has one or more fields with an incorrect size ({field_sizes})")
 
         self._validate_key(memory[KEYS], context)
 
@@ -2183,6 +2039,8 @@ class ContentAddressableMemory2(MemoryFunction): # -----------------------------
         """
         # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OutputPort FROM LAST TRIAL)?
         #           ALSO, SHOULD PROBABILISTIC SUPPRESSION OF RETRIEVAL BE HANDLED HERE OR function (AS IT IS NOW).
+
+        # FIX: RETRIEVE BASED ON SIMILARITY WITHIN EACH FIELD WEIGHTE BY memory_field_weights
 
         self._validate_key(query_key, context)
         _memory = self.parameters.previous_value._get(context)
@@ -2244,6 +2102,24 @@ class ContentAddressableMemory2(MemoryFunction): # -----------------------------
         """
 
         self._validate_memory(memory, context)
+
+        # FIX: FLATTEN MEMORY, APPLY NOISE, THEN STORE
+
+        # Store variable to dict:
+        # execute noise if it is a function
+        # FIX: WHAT IS "try_execute_param" DOING?
+        # noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
+        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), memory, context=context)
+        if noise is not None:
+            key = np.asarray(key, dtype=float)
+            if isinstance(noise, numbers.Number):
+                key += noise
+            else:
+                # assume array with same shape as variable
+                # TODO: does val need noise?
+                key += noise[KEYS]
+
+
 
         key = list(memory[KEYS])
         val = list(memory[VALS])
