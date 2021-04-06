@@ -2,6 +2,7 @@ from psyneulink import *
 
 # TODO:
 #   Nback::
+#     - separate out stim/context external inputs from those from EM into FFN
 #     - figure out how to specify feedback from DDM to EM
 #     - figure out how to execute EM twice:
 #       > first, at beginning of trial, to retrieve item based on current stimulus & context

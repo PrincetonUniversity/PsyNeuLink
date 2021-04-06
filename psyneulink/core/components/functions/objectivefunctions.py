@@ -798,7 +798,7 @@ class Distance(ObjectiveFunction):
         )
 
     def _validate_params(self, request_set, target_set=None, variable=None, context=None):
-        """Validate that variable had two items of equal length
+        """Validate that variable has two items of equal length
 
         """
         super()._validate_params(request_set=request_set, target_set=target_set, context=context)
