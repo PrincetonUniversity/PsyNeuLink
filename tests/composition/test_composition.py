@@ -649,7 +649,6 @@ class TestCompositionPathwayAdditionMethods:
                                             PathwayRole.TERMINAL}
 
     def test_add_processing_pathway_arg_pathway(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         p = Pathway(pathway=A, name='P')
         c = Composition()
@@ -666,7 +665,6 @@ class TestCompositionPathwayAdditionMethods:
                                               PathwayRole.TERMINAL}
 
     def test_add_processing_pathway_with_errant_learning_function_warning(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         p = Pathway(pathway=([A,B], Reinforcement), name='P')
@@ -686,7 +684,6 @@ class TestCompositionPathwayAdditionMethods:
                                               PathwayRole.TERMINAL}
 
     def test_add_learning_pathway_arg_pathway(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         p = Pathway(pathway=[A,B], name='P')
@@ -700,7 +697,6 @@ class TestCompositionPathwayAdditionMethods:
                                               PathwayRole.OUTPUT}
 
     def test_add_learning_pathway_with_errant_learning_function_in_tuple_spec_error(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         p = Pathway(pathway=([A,B], Reinforcement), name='P')
@@ -713,7 +709,6 @@ class TestCompositionPathwayAdditionMethods:
                 and "than the one specified in its 'learning_function' arg (BackPropagation)" in str(error_text.value))
 
     def test_add_bp_learning_pathway_arg_pathway(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         p = Pathway(pathway=[A,B], name='P')
@@ -727,7 +722,6 @@ class TestCompositionPathwayAdditionMethods:
                                               PathwayRole.OUTPUT}
 
     def test_add_bp_learning_pathway_arg_pathway_name_in_method(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         p = Pathway(pathway=[A,B], name='P')
@@ -741,7 +735,6 @@ class TestCompositionPathwayAdditionMethods:
                                                PathwayRole.OUTPUT}
 
     def test_add_rl_learning_pathway_arg_pathway(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         p = Pathway(pathway=[A,B], name='P')
@@ -755,7 +748,6 @@ class TestCompositionPathwayAdditionMethods:
                                               PathwayRole.OUTPUT}
 
     def test_add_td_learning_pathway_arg_pathway(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         p = Pathway(pathway=[A,B], name='P')
@@ -769,7 +761,6 @@ class TestCompositionPathwayAdditionMethods:
                                               PathwayRole.OUTPUT}
 
     def test_add_pathways_with_all_types(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -931,7 +922,6 @@ class TestDuplicatePathwayWarnings:
 class TestCompositionPathwaysArg:
 
     def test_composition_pathways_arg_pathway_object(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         p = Pathway(pathway=A, name='P')
         c = Composition(pathways=p)
@@ -947,7 +937,6 @@ class TestCompositionPathwaysArg:
                                               PathwayRole.TERMINAL}
 
     def test_composition_pathways_arg_pathway_object_in_dict_with_name(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         p = Pathway(pathway=[A], name='P')
         c = Composition(pathways={'DICT NAMED':p})
@@ -977,7 +966,6 @@ class TestCompositionPathwaysArg:
                                             PathwayRole.TERMINAL}
 
     def test_composition_pathways_arg_dict_and_list_and_pathway_roles(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -1004,7 +992,6 @@ class TestCompositionPathwaysArg:
                                                     PathwayRole.LEARNING})
 
     def test_composition_pathways_arg_dict_and_node(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -1013,7 +1000,6 @@ class TestCompositionPathwaysArg:
         assert c.pathways['P1'].name == 'P1'
 
     def test_composition_pathways_arg_two_dicts(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -1024,7 +1010,6 @@ class TestCompositionPathwaysArg:
         assert c.pathways['P2'].name == 'P2'
 
     def test_composition_pathways_arg_two_dicts_one_with_node(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -1089,7 +1074,6 @@ class TestCompositionPathwaysArg:
                 "must be a pathway specification (Node, list or tuple): A." in str(error_text.value))
 
     def test_composition_pathways_Pathway_in_learning_tuples(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -1104,7 +1088,6 @@ class TestCompositionPathwaysArg:
         assert c.pathways['P2'].learning_components[OUTPUT_MECHANISM] is E
 
     def test_composition_processing_and_learning_pathways_pathwayroles_learning_components(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -1139,7 +1122,6 @@ class TestCompositionPathwaysArg:
                         for lm in c.pathways['P2'].learning_components[LEARNED_PROJECTIONS]))
 
     def test_composition_learning_pathway_dict_and_tuple(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
