@@ -25,7 +25,7 @@ Functions that store and can return a record of their input.
 import numbers
 import warnings
 from collections import deque
-from typing import Optional, Union
+from typing import Optional, Union, Literal, Callable
 
 import numpy as np
 import typecheck as tc
@@ -46,7 +46,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import all_within_range, convert_to_np_array, get_global_seed
 
 __all__ = ['MemoryFunction', 'Buffer', 'DictionaryStorage', 'ContentAddressableMemory',
-           'RETRIEVAL_PROB', 'STORAGE_PROB']
+           'RETRIEVAL_PROB', 'STORAGE_PROB', 'INDIVIDUAL']
 
 
 class MemoryFunction(StatefulFunction):  # -----------------------------------------------------------------------------
@@ -341,6 +341,9 @@ RETRIEVAL_PROB = 'retrieval_prob'
 STORAGE_PROB = 'storage_prob'
 DISTANCE_FUNCTION = 'distance_function'
 SELECTION_FUNCTION = 'selection_function'
+INDIVIDUAL = 'individual'
+GLOBAL = 'global'
+
 KEYS = 0
 VALS = 1
 
@@ -1371,68 +1374,94 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     .. _ContentAddressableMemory:
 
-    Implement a configurable, dictionary-style storage and retrieval of key-value pairs, in which storage
-    is determined by `storage_prob <DictionaryStorage.storage_prob>`, and retrieval of items is
-    determined by `distance_function <DictionaryStorage.distance_function>`, `selection_function
-    <DictionaryStorage.selection_function>`, and `retrieval_prob <DictionaryStorage.retrieval_prob>`.
-    Keys and values may have different lengths, and values may vary in length from entry to entry, but all keys
-    must be the same length. Duplicate keys can be allowed, disallowed, or overwritten using `duplicate_keys
-    <DictionaryStorage.duplicate_keys>`), and how selection is made among duplicate keys or ones
-    indistinguishable by the `distance_function <DictionaryStorage.distance_function>` can be specified
-    using `equidistant_keys_select <DictionaryStorage.equidistant_keys_select>`.
+    Implement configurable, content-addressable storage and retrieval of items, in which storage
+    is determined by `storage_prob <ContentAddressableMemory.storage_prob>`, and retrieval of items is
+    determined by `distance_function <ContentAddressableMemory.distance_function>`, `selection_function
+    <ContentAddressableMemory.selection_function>`, and `retrieval_prob <ContentAddressableMemory.retrieval_prob>`.
+    Each entry in `memory <ContentAddressableMemory.storage_prob>` is a list of items (1d arrays), each of which can
+    be of varying length.  However, all entries must have the same number of items, and the corresponding items must
+    all have the same length across entries.  Items are retrieved from `memory <ContentAddressableMemory.memory>`
+    based on their distance from `variable <ContentAddressableMemory.variable>`, used as the cue for retrieval.
+    The distance is computed computed using the `distance_function <ContentAddressableMemory.distance_function>`,
+    which can be used to compare `variable <ContentAddressableMemory.variable>` with each item in `memory
+    <ContentAddressableMemory.storage_prob>` as full vectors (i.e., with all items of each concatentated into a
+    single array), or by computing the distance of each item in `variable <ContentAddressableMemory.variable>` with
+    the corresponding `memory field <ContentAddressableMemory_Memory_Field>` of an entry in `memory
+    <ContentAddressableMemory.storage_prob>`, and then averaging those distances, possibly weighted by the coefficients
+    in `memory_field_weights <ContentAddressableMemory.memory_field_weights>` (this is determined by the
+    `distance_by <ContentAddressableMemory.distance_by>` parameter.  The distances computed between `variable
+    `<ContentAddressableMemory.variable>` and each item in `memory <ContentAddressableMemory.memory>` is used by
+    `selection_function <ContentAddressableMemory.selection_function>` to determine which entry is retrieved.
+
+    Duplicate entries can be allowed, disallowed, or overwritten during storage using `duplicate_keys
+    <ContentAddressableMemory.duplicate_keys>`), and how selection is made among duplicate entries or
+    ones indistinguishable by the `distance_function <ContentAddressableMemory.distance_function>` can be specified
+    using `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`.
 
     The class also provides methods for directly retrieving an entry (`get_memory
-    <DictionaryStorage.get_memory>`), and adding (`add_to_memory <DictionaryStorage.add_to_memory>`)
-    and deleting (`delete_from_memory <DictionaryStorage.delete_from_memory>`) one or more entries.
+    <ContentAddressableMemory.get_memory>`), and adding (`add_to_memory <ContentAddressableMemory.add_to_memory>`)
+    and deleting (`delete_from_memory <ContentAddressableMemory.delete_from_memory>`) one or more entries.
 
     .. _ContentAddressableMemory_Structure:
 
     Structure
     ---------
 
-    An item is stored and retrieved as a 2d array containing a key-value pair ([[key][value]]).  A 3d array of such
-    pairs can be used to initialize the contents of memory by providing it in the **initialzer** argument of the
-    DictionaryStorage's constructor, or in a call to its `reset  <DictionaryStorage.reset>`
-    method.  The current contents of the memory can be inspected using the `memory <DictionaryStorage.memory>`
-    attribute, which returns a list containing the current entries, each as a 2 item list containing a key-value pair.
+    An entry is stored and retrieved as a 2d array containing a set of `memory fields
+    <ContentAddressableMemory_Memory_Fields>`.  A 3d array of such entries can be used to initialize the contents of
+    `memory <ContentAddressableMemory.memory>` by providing it in the **initialzer** argument of the
+    ContentAddressableMemory's constructor, or in a call to its `reset  <ContentAddressableMemory.reset>`
+    method.  The current contents of `memory <ContentAddressableMemory.memory>` can be inspected using the
+    `memory <ContentAddressableMemory.memory>` attribute, which returns a list containing the current entries,
+    each as a list containing all `memory fields <ContentAddressableMemory_Memory_Fields>` for that entry.
+
+    .. _ContentAddressableMemory_Memory_Fields:
+    FIX: ADD SECTION HERE
 
     .. _ContentAddressableMemory_Execution:
 
     Execution
     ---------
 
-    When `function <DictionaryStorage.function>` is executed, it first retrieves the
-    item in `memory <DictionaryStorage.memory>` with the key that most closely matches the key of the item
-    (key-value pair) in the call, stores the latter in memory, and returns the retrieved item (key-value pair).
-    If the key of the pair in the call is an exact match of a key in memory and `duplicate_keys
-    <DictionaryStorage.duplicate_keys>` is False, then the matching item is returned, but the
-    pair in the call is not stored. These steps are described in more detail below:
+    When `function <ContentAddressableMemory.function>` is executed, it first retrieves the
+    entry in `memory <ContentAddressableMemory.memory>` that most closely matches `variable
+    <ContentAddressableMemory.variable>` in the call, stores the latter in `memory <ContentAddressableMemory.memory>`,
+    and returns the retrieved entry.  If `variable <ContentAddressableMemory.variable>` is an exact match of an entry
+    in `memory <ContentAddressableMemory.memory>`, and `duplicate_keys <ContentAddressableMemory.duplicate_keys>` is
+    False, then the matching item is returned, but `variable <ContentAddressableMemory.variable>` is not stored.
+    These steps are described in more detail below:
 
-    * First, with probability `retrieval_prob <DictionaryStorage.retrieval_prob>`, an entry is retrieved from
-      `memory <DictionaryStorage.memory>` that has a key that is closest to the one in the call (first item of
-      `variable <DictionaryStorage.variable>`), as determined by the `distance_function
-      <DictionaryStorage.distance_function>` and `selection_function
-      <DictionaryStorage.selection_function>`.  The `distance_function
-      <DictionaryStorage.distance_function>` generates a list of distances of each key in memory from the
-      one in the call;  the `selection_function <DictionaryStorage.selection_function>` then determines which
-      to select ones for consideration.  If more than one entry from memory is identified, `equidistant_keys_select
-      <DictionaryStorage.equidistant_keys_select>` is used to determine which to retrieve.  If no retrieval
+    * First, with probability `retrieval_prob <ContentAddressableMemory.retrieval_prob>`, an entry is retrieved from
+      `memory <ContentAddressableMemory.memory>` that is closest to `variable <ContentAddressableMemory.variable>`
+      as determined by the `distance_function <ContentAddressableMemory.distance_function>`, the `distance_by
+      <ContentAddressableMemory.distance_by>` setting and, if it is set *INDIVIDUAL*, then `memory_field_weights
+      <ContentAddressableMemory.memory_field_weights>`, and finally the `selection_function
+      <ContentAddressableMemory.selection_function>`.  The `distance_function
+      <ContentAddressableMemory.distance_function>` generates a list of distances between `variable
+      <ContentAddressableMemory.variable>` and each entry in `memory <ContentAddressableMemory.memory>` according to
+      the method specified in `distance_by <ContentAddressableMemory.distance_by>`:
+      FIX:  COPY OR MOVE TO HERE DESCRIPTION OF DISTANCE COMPUTATION FROM distance_by ATTRIBUTE
+      Finally, `selection_function
+      <ContentAddressableMemory.selection_function>` then determines which entries to select ones for consideration.
+      If more than one entry from `memory <ContentAddressableMemory.memory>` is identified, `equidistant_keys_select
+      <ContentAddressableMemory.equidistant_keys_select>` is used to determine which to retrieve.  If no retrieval
       occurs, an appropriately shaped zero-valued array is assigned as the retrieved memory (and returned by the
-      `function <DictionaryStorage.function>`.
+      `function <ContentAddressableMemory.function>`.
     ..
-    * After retrieval, the key-value pair in the call (`variable <DictionaryStorage.variable>`) is stored in
-     `memory <DictionaryStorage.memory>` with probability `storage_prob <DictionaryStorage.storage_prob>`.
-      If the key (`variable <DictionaryStorage.variable>`\\[0]) is identical to one already in `memory
-      <DictionaryStorage.memory>` and `duplicate_keys <DictionaryStorage.duplicate_keys>`
-      is set to False, storage is skipped; if it is set to *OVERWRITE*, the value of the key in memory is replaced
-      with the one in the call.  If **rate** and/or **noise** arguments are specified in the
-      construtor, it is applied to the key before storing, as follows:
+    * After retrieval, `variable <ContentAddressableMemory.variable>` is stored in `memory
+      <ContentAddressableMemory.memory>` with probability `storage_prob <ContentAddressableMemory.storage_prob>`.
+      If `variable <ContentAddressableMemory.variable>` is identical to an entry already in `memory
+      <ContentAddressableMemory.memory>` and `duplicate_keys <ContentAddressableMemory.duplicate_keys>`
+      is set to False, storage is skipped; if it is set to *OVERWRITE*, the entry in `memory
+      <ContentAddressableMemory.memory>` is replaced with `variable <ContentAddressableMemory.variable>`.  If **rate**
+      and/or **noise** arguments are specified in the construtor, it is applied to `variable
+      <ContentAddressableMemory.variable>` before storing, as follows:
 
     .. math::
-        variable[1] * rate + noise
+        variable * rate + noise
 
-    If the number of entries exceeds `max_entries <DictionaryStorage.max_entries>, the first (oldest) item in
-    memory is deleted.
+    If the number of entries in `memory <ContentAddressableMemory.memory>` exceeds `max_entries
+    <ContentAddressableMemory.max_entries>, the first (oldest) entry is deleted.
 
     Arguments
     ---------
@@ -1442,45 +1471,57 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         of which is a list or array;  first item is used as key, and second as value entry of dictionary.
 
     retrieval_prob : float in interval [0,1] : default 1.0
-        specifies probability of retrieiving a key from `memory <DictionaryStorage.memory>`.
+        specifies probability of retrieiving a key from `memory <ContentAddressableMemory.memory>`.
 
     storage_prob : float in interval [0,1] : default 1.0
-        specifies probability of adding `variable <DictionaryStorage.variable>` to `memory
-        <DictionaryStorage.memory>`.
+        specifies probability of adding `variable <ContentAddressableMemory.variable>` to `memory
+        <ContentAddressableMemory.memory>`.
 
     rate : float, list, or array : default 1.0
-        specifies a value used to multiply key (first item of `variable <DictionaryStorage.variable>`) before
-        storing in `memory <DictionaryStorage.memory>` (see `rate <DictionaryStorage.noise> for details).
+        specifies a value used to multiply key (first item of `variable <ContentAddressableMemory.variable>`) before
+        storing in `memory <ContentAddressableMemory.memory>` (see `rate <ContentAddressableMemory.noise> for details).
 
     noise : float, list, array, or Function : default 0.0
-        specifies a random value added to key (first item of `variable <DictionaryStorage.variable>`) before
-        storing in `memory <DictionaryStorage.memory>` (see `noise <DictionaryStorage.noise> for details).
+        specifies a random value added to key (first item of `variable <ContentAddressableMemory.variable>`) before
+        storing in `memory <ContentAddressableMemory.memory>` (see `noise <ContentAddressableMemory.noise> for details).
 
     initializer : 3d array or list : default None
-        specifies an initial set of entries for `memory <DictionaryStorage.memory>`. It must be of the following
+        specifies an initial set of entries for `memory <ContentAddressableMemory.memory>`. It must be of the following
         form: [[[key],[value]], [[key],[value]], ...], such that each item in the outer dimension (axis 0)
         is a 2d array or list containing a key and a value pair for that entry. All of the keys must be 1d arrays or
         lists of the same length.
 
     distance_function : Distance or function : default Distance(metric=COSINE)
         specifies the function used during retrieval to compare the first item in `variable
-        <DictionaryStorage.variable>` with keys in `memory <DictionaryStorage.memory>`.
+        <ContentAddressableMemory.variable>` with keys in `memory <ContentAddressableMemory.memory>`.
+
+    distance_by : INDIVIDUAL or GLOBAL : default GLOBAL
+        specifies the method by which `distance_function <ContentAddressableMemory.distance_function>` is used to
+        calculate the distance of `variable <ContentAddressableMemory.variable>` with each item in `memory
+        <ContentAddressableMemory.memory>` (see `distance_by <ContentAddressableMemory.distance_by>` for additional
+        details.
+
+    memory_field_weights : 1d array : default None
+        specifies the weight to use in computing the distance between each item of `variable
+        <ContentAddressableMemory.variable>` and the corresponding `memory_field
+        <ContentAddressableMemory_Memory_Fields>` of each item in `memory <ContentAddressableMemory.memory>` (see
+        memory_field_weights <ContentAddressableMemory_Memory_Fields.memory_field_weights>` for additional details).
 
     selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
         specifies the function used during retrieval to evaluate the distances returned by `distance_function
-        <DictionaryStorage.distance_function>` and select the item to return.
+        <ContentAddressableMemory.distance_function>` and select the item to return.
 
     equidistant_keys_select:  RANDOM | OLDEST | NEWEST : default RANDOM
         specifies which item is chosen for retrieval if two or more keys have the same distance from the first item of
-        `variable  <DictionaryStorage.variable>`.
+        `variable  <ContentAddressableMemory.variable>`.
 
     duplicate_keys : bool | OVERWRITE : default False
-        specifies whether entries with duplicate keys are allowed in `memory <DictionaryStorage.memory>`
-        (see `duplicate_keys <DictionaryStorage.duplicate_keys for additional details>`).
+        specifies whether entries with duplicate keys are allowed in `memory <ContentAddressableMemory.memory>`
+        (see `duplicate_keys <ContentAddressableMemory.duplicate_keys for additional details>`).
 
     max_entries : int : default None
-        specifies the maximum number of entries allowed in `memory <DictionaryStorage.memory>`
-        (see `max_entries <DictionaryStorage.max_entries for additional details>`).
+        specifies the maximum number of entries allowed in `memory <ContentAddressableMemory.memory>`
+        (see `max_entries <ContentAddressableMemory.max_entries for additional details>`).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -1500,69 +1541,98 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     ----------
 
     variable : 2d array
-        1st item (variable[0] is the key used to retrieve an enrtry from `memory <DictionaryStorage.memory>`,
+        1st item (variable[0] is the key used to retrieve an enrtry from `memory <ContentAddressableMemory.memory>`,
         and 2nd item (variable[1]) is the value of the entry, paired with key and added to the `memory
-        <DictionaryStorage.memory>`.
+        <ContentAddressableMemory.memory>`.
 
     key_size : int
-        length of keys in `memory <DictionaryStorage.memory>`.
+        length of keys in `memory <ContentAddressableMemory.memory>`.
 
     val_size : int
-        length of values in `memory <DictionaryStorage.memory>`.
+        length of values in `memory <ContentAddressableMemory.memory>`.
 
     retrieval_prob : float in interval [0,1]
-        probability of retrieiving a value from `memory <DictionaryStorage.memory>`.
+        probability of retrieiving a value from `memory <ContentAddressableMemory.memory>`.
 
     storage_prob : float in interval [0,1]
-        probability of adding `variable <DictionaryStorage.variable>` to `memory
-        <DictionaryStorage.memory>`.
+        probability of adding `variable <ContentAddressableMemory.variable>` to `memory
+        <ContentAddressableMemory.memory>`.
 
     rate : float or 1d array
-        value applied multiplicatively to key (first item of `variable <DictionaryStorage.variable>`) before
-        storing in `memory <DictionaryStorage.memory>` (see `rate <Stateful_Rate>` for additional details).
+        value applied multiplicatively to key (first item of `variable <ContentAddressableMemory.variable>`) before
+        storing in `memory <ContentAddressableMemory.memory>` (see `rate <Stateful_Rate>` for additional details).
 
     noise : float, 1d array or Function
-        value added to key (first item of `variable <DictionaryStorage.variable>`) before storing in
-        `memory <DictionaryStorage.memory>` (see `noise <Stateful_Noise>` for additional details).
+        value added to key (first item of `variable <ContentAddressableMemory.variable>`) before storing in
+        `memory <ContentAddressableMemory.memory>` (see `noise <Stateful_Noise>` for additional details).
 
     initializer : 3d array
-        initial set of entries for `memory <DictionaryStorage.memory>`; each is a 2d array with a key-value pair.
+        initial set of entries for `memory <ContentAddressableMemory.memory>`; each is a 2d array with a key-value pair.
 
     memory : list
-        list of entries in DictionaryStorage, each of which is 2d array of fields containing stored items;
+        list of entries in ContentAddressableMemory, each of which is 2d array of fields containing stored items;
         the fields of an entry can have different lengths, but the corresponding fields of all entries must be of the
         same length:
         [[[field 1],[field 2]...], [[field 1],[field 2]...]] can be:
         [[[a,b],[c,d,e]...], [[u,w],[x,y,z]...]]
 
     distance_function : Distance or function : default Distance(metric=COSINE)
-        function used during retrieval to compare the first item in `variable <DictionaryStorage.variable>`
-        with keys in `memory <DictionaryStorage.memory>`.
+        function used during retrieval to compare the first item in `variable <ContentAddressableMemory.variable>`
+        with keys in `memory <ContentAddressableMemory.memory>`.
+
+    distance_by : GLOBAL or INDIVIDUAL
+        determines how `distance_function <ContentAddressableMemory.distance_function>` is applied.
+
+        * *GLOBAL* -- all items of `variable <ContentAddressableMemory.variable>` are concatenated,
+          and compared against each item in `memory <ContentAddressableMemory.memory>` by concatenating the
+          `memory_fields <ContentAddressableMemory_Memory_Fields>` of that entry, and then using `distance_function
+          <ContentAddressableMemory.distance_function>` to compare the two resulting 1d arrays.
+
+        * *INDIVIDUAL* -- `variable <ContentAddressableMemory_Memory_Fields.variable>` is compared with each item
+          `memory <ContentAddressableMemory.memory>` by using `distance_function
+          <ContentAddressableMemory.distance_function>` to compare each item in `variable
+          <ContentAddressableMemory_Memory_Fields.variable>` with the corresponding `memory_field of the
+          entry in memory, and then averaging the distances for that entry weighted by `memory_field_weights
+          <ContentAddressableMemory.memory_field_weights>`.
+
+    memory_field_weights : 1d array : default None
+        determines the weight used in computing the distance between each item of `variable
+        <ContentAddressableMemory.variable>` and the corresponding `memory_field
+        <ContentAddressableMemory_Memory_Fields>` of each item in `memory <ContentAddressableMemory.memory>`
+        when `distance_by <ContentAddressableMemory.distance_by>` is set to *INDIVIDUAL*.
+
+    memory_num_fields : int
+        contains the number of `memory fields <ContentAddressableMemory_Memory_Fields>` in each entry of `memory
+        <ContentAddressableMemory.memory>`.
+
+    memory_field_sizes : array
+        contains the sizes of each `memory field <ContentAddressableMemory_Memory_Fields>`  in each entry of `memory
+        <ContentAddressableMemory.memory>`.
 
     selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
         function used during retrieval to evaluate the distances returned by `distance_function
-        <DictionaryStorage.distance_function>` and select the item(s) to return.
+        <ContentAddressableMemory.distance_function>` and select the item(s) to return.
 
     previous_value : 3d array
-        state of the `memory <DictionaryStorage.memory>` prior to storing `variable
-        <DictionaryStorage.variable>` in the current call.
+        state of the `memory <ContentAddressableMemory.memory>` prior to storing `variable
+        <ContentAddressableMemory.variable>` in the current call.
 
     duplicate_keys : bool | OVERWRITE
-        determines whether entries with duplicate keys are allowed in `memory <DictionaryStorage.memory>`.
+        determines whether entries with duplicate keys are allowed in `memory <ContentAddressableMemory.memory>`.
         If True (the default), items with keys that are the same as ones in memory can be stored;  on retrieval, a
-        single one is selected based on `equidistant_keys_select <DictionaryStorage.equidistant_keys_select>`.
+        single one is selected based on `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`.
         If False, then an attempt to store and item with a key that is already in `memory
-        <DictionaryStorage.memory>` is ignored, and the entry already in memory with that key is retrieved.
+        <ContentAddressableMemory.memory>` is ignored, and the entry already in memory with that key is retrieved.
         If a duplicate key is identified during retrieval (e.g., **duplicate_keys** is changed from True to
         False), a warning is issued and zeros are returned.  If *OVERWRITE*, then retrieval of a cue with an identical
         key causes the value at that entry to be overwritten with the new value.
 
     equidistant_keys_select:  RANDOM | OLDEST | NEWEST
         deterimines which entry is retrieved when duplicate keys are identified or are indistinguishable by the
-        `distance_function <DictionaryStorage.distance_function>`.
+        `distance_function <ContentAddressableMemory.distance_function>`.
 
     max_entries : int
-        maximum number of entries allowed in `memory <DictionaryStorage.memory>`;  if storing a memory
+        maximum number of entries allowed in `memory <ContentAddressableMemory.memory>`;  if storing a memory
         exceeds the number, the oldest memory is deleted.
 
     random_state : numpy.RandomState
@@ -1583,8 +1653,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     Returns
     -------
 
-    value and key of entry that best matches first item of `variable <DictionaryStorage.variable>`  : 2d array
-        if no retrieval occures, an appropriately shaped zero-valued array is returned.
+    entry from `memory <ContentAddressableMemory.memory>` that best matches `variable
+    <ContentAddressableMemory.variable>` : 2d array
+        if no retrieval occurs, an appropriately shaped zero-valued array is returned.
 
     """
 
@@ -1596,91 +1667,94 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             ----------
 
                 variable
-                    see `variable <DictionaryStorage.variable>`
+                    see `variable <ContentAddressableMemory.variable>`
 
                     :default value: [[0], [0]]
                     :type: ``list``
 
                 distance_function
-                    see `distance_function <DictionaryStorage.distance_function>`
+                    see `distance_function <ContentAddressableMemory.distance_function>`
 
-                    :default value: `Distance`(metric=cosine)
-                    :type: `Function`
+                    :default value: GLOBAL
+                    :type: ``str``
+
+                distance_by
+                    see `distance_by <ContentAddressableMemory.distance_by>`
 
                 duplicate_keys
-                    see `duplicate_keys <DictionaryStorage.duplicate_keys>`
+                    see `duplicate_keys <ContentAddressableMemory.duplicate_keys>`
 
                     :default value: False
                     :type: ``bool``
 
                 equidistant_keys_select
-                    see `equidistant_keys_select <DictionaryStorage.equidistant_keys_select>`
+                    see `equidistant_keys_select <ContentAddressableMemory.equidistant_keys_select>`
 
                     :default value: `RANDOM`
                     :type: ``str``
 
-                memory_field_sizes
-                    see `memory_field_sizes <DictionaryStorage.memory_field_sizes>`
-
-                    :default value: [1]
-                    :type: ``numpy.ndarray``
-
-                memory_total_size
-                    see `memory_total_size <DictionaryStorage.memory_total_size>`
+                memory_num_fields
+                    see `memory_field_sizes <ContentAddressableMemory.memory_num_fields>`
 
                     :default value: 1
                     :type: ``int``
 
+                memory_field_sizes
+                    see `memory_field_sizes <ContentAddressableMemory.memory_field_sizes>`
+
+                    :default value: [1]
+                    :type: ``numpy.ndarray``
+
                 memory_field_weights
-                    see `memory_field_weights <DictionaryStorage.memory_field_weights>`
+                    see `memory_field_weights <ContentAddressableMemory.memory_field_weights>`
 
                     :default value: [1]
                     :type: ``numpy.ndarray``
 
                 max_entries
-                    see `max_entries <DictionaryStorage.max_entries>`
+                    see `max_entries <ContentAddressableMemory.max_entries>`
 
                     :default value: 1000
                     :type: ``int``
 
                 noise
-                    see `noise <DictionaryStorage.noise>`
+                    see `noise <ContentAddressableMemory.noise>`
 
                     :default value: 0.0
                     :type: ``float``
 
                 random_state
-                    see `random_state <DictionaryStorage.random_state>`
+                    see `random_state <ContentAddressableMemory.random_state>`
 
                     :default value: None
                     :type: ``numpy.random.RandomState``
 
                 rate
-                    see `rate <DictionaryStorage.rate>`
+                    see `rate <ContentAddressableMemory.rate>`
 
                     :default value: 1.0
                     :type: ``float``
 
                 retrieval_prob
-                    see `retrieval_prob <DictionaryStorage.retrieval_prob>`
+                    see `retrieval_prob <ContentAddressableMemory.retrieval_prob>`
 
                     :default value: 1.0
                     :type: ``float``
 
                 selection_function
-                    see `selection_function <DictionaryStorage.selection_function>`
+                    see `selection_function <ContentAddressableMemory.selection_function>`
 
                     :default value: `OneHot`(mode=MIN_INDICATOR)
                     :type: `Function`
 
                 storage_prob
-                    see `storage_prob <DictionaryStorage.storage_prob>`
+                    see `storage_prob <ContentAddressableMemory.storage_prob>`
 
                     :default value: 1.0
                     :type: ``float``
 
                 val_size
-                    see `val_size <DictionaryStorage.val_size>`
+                    see `val_size <ContentAddressableMemory.val_size>`
 
                     :default value: 1
                     :type: ``int``
@@ -1690,8 +1764,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         memory_num_fields = Parameter(1, stateful=True)
         memory_field_sizes = Parameter([1], stateful=True)
-        memory_total_size = Parameter(1, stateful=True)
-        memory_field_weights = Parameter([1], stateful=True, modulable=True)
+        memory_field_weights = Parameter(None, stateful=True, modulable=True)
         duplicate_keys = Parameter(False)
         equidistant_keys_select = Parameter(RANDOM)
         rate = Parameter(1.0, modulable=True)
@@ -1699,26 +1772,27 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         max_entries = Parameter(1000)
         random_state = Parameter(None, stateful=True, loggable=False)
 
+        distance_by = Parameter(INDIVIDUAL, stateful=True)
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
 
-
-    @tc.typecheck
+    @tc.typecheck()
     def __init__(self,
                  default_variable=None,
-                 retrieval_prob: tc.optional(tc.any(int, float))=None,
-                 storage_prob: tc.optional(tc.any(int, float))=None,
-                 noise: tc.optional(tc.any(int, float, list, np.ndarray, callable))=None,
-                 rate: tc.optional(tc.any(int, float, list, np.ndarray))=None,
-                 initializer=None,
+                 retrieval_prob: Optional[Union[int, float]]=None,
+                 storage_prob: Optional[Union[int, float]]=None,
+                 noise: Optional[Union[int, float, list, np.ndarray, callable]]=None,
+                 rate: Optional[Union[int, float, list, np.ndarray]]=None,
+                 initializer:Optional[Union[list, np.ndarray]]=None,
                  memory_field_weights:Optional[Union[list, np.ndarray]]=None,
-                 distance_function:tc.optional(tc.any(Distance, is_function_type))=None,
-                 selection_function:tc.optional(tc.any(OneHot, is_function_type))=None,
-                 duplicate_keys:tc.optional(tc.any(bool, tc.enum(OVERWRITE)))=None,
-                 equidistant_keys_select:tc.optional(tc.enum(RANDOM, OLDEST, NEWEST))=None,
-                 max_entries=None,
-                 seed=None,
-                 params: tc.optional(tc.optional(tc.any(list, np.ndarray))) = None,
+                 distance_function:Optional[Union[Distance, is_function_type]]=None,
+                 distance_by:Optional[Union[INDIVIDUAL, GLOBAL]]=None,
+                 selection_function:Optional[Union[OneHot, is_function_type]]=None,
+                 duplicate_keys:tc.Optional[Union[bool, Literal[OVERWRITE]]]=None,
+                 equidistant_keys_select:Optional[Literal[Union[RANDOM, OLDEST, NEWEST]]]=None,
+                 max_entries:Optional[int]=None,
+                 seed:Optional[int]=None,
+                 params:Optional[Union[list, np.ndarray]] = None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
 
@@ -1748,7 +1822,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         )
 
         if self.previous_value.size != 0:
-            self.parameters.memory_total_size.set(len(np.hstack(self.previous_value[0])))
             self.parameters.memory_num_fields.set(len(self.previous_value))
             self.parameters.memory_field_sizes.set([len(item) for item in self.previous_value[0]])
 
@@ -1844,7 +1917,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             # Set memory fields sizes if this is the first entry
             self.parameters.previous_value.set(previous_value, context, override=True)
             self.parameters.memory_num_fields.set(len(initializer), context)
-            self.parameters.memory_total_size.set(len(np.hstack(initializer[0])), context)
             self.parameters.memory_field_sizes.set([len(item) for item in initializer[0]], context)
 
             for entry in initializer:
@@ -1875,15 +1947,15 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         """
         reset(<new_dictionary> default={})
 
-        Clears the memory in `previous_value <DictionaryStorage.previous_value>`.
+        Clears the memory in `previous_value <ContentAddressableMemory.previous_value>`.
 
-        If an argument is passed into reset or if the `initializer <DictionaryStorage.initializer>`
+        If an argument is passed into reset or if the `initializer <ContentAddressableMemory.initializer>`
         attribute contains a value besides [], then that value is used to start the new memory in `previous_value
-        <DictionaryStorage.previous_value>`. Otherwise, the new `previous_value
-        <DictionaryStorage.previous_value>` memory starts out empty.
+        <ContentAddressableMemory.previous_value>`. Otherwise, the new `previous_value
+        <ContentAddressableMemory.previous_value>` memory starts out empty.
 
-        `value <DictionaryStorage.value>` takes on the same value as
-        `previous_value <DictionaryStorage.previous_value>`.
+        `value <ContentAddressableMemory.value>` takes on the same value as
+        `previous_value <ContentAddressableMemory.previous_value>`.
         """
         # no arguments were passed in -- use current values of initializer attributes
         if previous_value is None:
@@ -1900,22 +1972,20 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         return value
 
     def _function(self,
-                 variable=None,
+                 variable:Optional[Union[list, np.array]]=None,
                  context=None,
                  params=None,
-                 ):
+                 ) -> list:
         """
-        Return entry in `memory <DictionaryStorage.memory>` that key of which best matches first item of
-        `variable <DictionaryStorage.variable>` (query key), then add `variable
-        <DictionaryStorage.variable>` to `memory <DictionaryStorage.memory>` (see `above
-        <ContentAddressableMemory_Execution>` for additional details).
+        Return entry in `memory <ContentAddressableMemory.memory>` that best matches `variable
+        <ContentAddressableMemory.variable>`, then add `variable <ContentAddressableMemory.variable>` to `memory
+        <ContentAddressableMemory.memory>` (see `above <ContentAddressableMemory_Execution>` for additional details).
 
         Arguments
         ---------
 
         variable : list or 2d array : default class_defaults.variable
-           first item (variable[0]) is treated as the key for retrieval; second item (variable[1]), paired
-           with key, is added to `memory <DictionaryStorage.memory>`.
+           used to retrieve an entry from `memory <ContentAddressableMemory.memory>`, and then stored there.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -1925,7 +1995,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         Returns
         -------
 
-        value of entry that best matches first item of `variable <DictionaryStorage.variable>`  : 1d array
+        value of entry that best matches `variable <ContentAddressableMemory.variable>`  : 1d array
         """
 
         # # MODIFIED 4/5/21 OLD:
@@ -1963,11 +2033,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         # Set memory fields sizes and total size if this is the first entry
         if len(self.parameters.previous_value._get(context)) == 0:
-            self.parameters.memory_total_size.set(len(np.hstack(variable)))
             self.parameters.memory_num_fields.set(len(variable))
             self.parameters.memory_field_sizes.set([len(item) for item in variable])
 
-        # Retrieve value from current dict with key that best matches key
+        # Retrieve entry from memory that best matches variable
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
             memory = self.get_memory(variable)
         else:
@@ -1987,12 +2056,14 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         #         # TODO: does val need noise?
         #         key += noise[KEYS]
 
+        # Store variable in memory
         if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.rand()):
             self._store_memory(variable, context)
 
         # Return 3d array with keys and vals as lists
         # IMPLEMENTATION NOTE:  if try to create np.ndarray directly, and keys and vals have same length
         #                       end up with array of arrays, rather than array of lists
+        # FIX: IS THERE STILL A NEED FOR CONVERSION? JUST RETURN RETRIEVED MEMORY AS IS?
         ret_val = convert_to_np_array([list(memory[0]),[]])
         ret_val[1] = list(memory[1])
         return ret_val
@@ -2024,14 +2095,14 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     def get_memory(self, query_key:tc.any(list, np.ndarray), context=None):
         """get_memory(query_key, context=None)
 
-        Retrieve memory from `memory <DictionaryStorage.memory>` based on `distance_function
-        <DictionaryStorage.distance_function>` and `selection_function
-        <DictionaryStorage.selection_function>`.
+        Retrieve memory from `memory <ContentAddressableMemory.memory>` based on `distance_function
+        <ContentAddressableMemory.distance_function>` and `selection_function
+        <ContentAddressableMemory.selection_function>`.
 
         Arguments
         ---------
         query_key : list or 1d array
-            must be same length as key(s) of any existing entries in `memory <DictionaryStorage.memory>`.
+            must be same length as key(s) of any existing entries in `memory <ContentAddressableMemory.memory>`.
 
         Returns
         -------
@@ -2094,13 +2165,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     @tc.typecheck
     def _store_memory(self, memory:tc.any(list, np.ndarray), context):
-        """Save an key-value pair to `memory <DictionaryStorage.memory>`
+        """Save an key-value pair to `memory <ContentAddressableMemory.memory>`
 
         Arguments
         ---------
         memory : list or 2d array
             must be two items, a key and a vaue, each of which must a list of numbers or 1d array;
-            the key must be the same length as key(s) of any existing entries in `dict <DictionaryStorage.dict>`.
+            the key must be the same length as key(s) of any existing entries in `dict <ContentAddressableMemory.dict>`.
         """
 
         self._validate_memory(memory, context)
@@ -2181,7 +2252,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             a single memory (list or 2d array) or list or array of memorys, each of which must be a valid entry
             consisting of two items (e.g., [[key],[value]] or [[[key1],[value1]],[[key2],[value2]]].
             The keys must all be the same length and equal to the length as key(s) of any existing entries in `dict
-            <DictionaryStorage.dict>`.  Items are added to memory in the order listed.
+            <ContentAddressableMemory.dict>`.  Items are added to memory in the order listed.
         """
         memories = self._parse_memories(memories, 'add_to_memory', context)
 
