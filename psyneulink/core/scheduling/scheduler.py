@@ -479,6 +479,13 @@ class Scheduler(JSONDumpable):
             else:
                 self.clocks[execution_id] = Clock()
 
+    def _delete_counts(self, execution_id=None):
+        for obj in [self.counts_useable, self.counts_total, self.clocks, self.execution_list]:
+            try:
+                del obj[execution_id]
+            except KeyError:
+                pass
+
     def _reset_counts_total(self, time_scale, execution_id=None):
         for ts in TimeScale:
             # only reset the values underneath the current scope

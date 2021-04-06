@@ -39,7 +39,7 @@ Contents
      - `Composition_Learning_AutodiffComposition`
      - `Composition_Learning_UDF`
   * `Composition_Execution`
-     - `Composition_Execution_Reporting`
+     - `Reporting <Composition_Execution_Reporting>`
      - `Composition_Execution_Inputs`
         • `Composition_Input_Dictionary`
         • `Composition_Programmatic_Inputs`
@@ -1327,16 +1327,16 @@ they are used to break the `cycle <Composition_Cycle_Structure>` of execution th
 Nodes are executed sequentially as described `below <Composition_Feedback_Sequential_Execution>`.  Each Node that sends
 a feedback Projection is assigned the `NodeRole` `FEEDBACK_SENDER`, and the receiver is assigned the `NodeRole`
 `FEEDBACK_RECEIVER`.  By default, `MappingProjections <MappingProjection>` are not specified as feedback, and
-therefore loops containing only MappingProjections are left as `cycles <Composition_Cycle_Structure>` by default. In
+therefore loops containing only MappingProjections are left as `cycles <Composition_Cycle_Structure>`. In
 contrast, `ModulatoryProjections <ModulatoryProjection>` *are* designated as feedback by default, and therefore any
-loops containing one or more ModulatoryProjections are broken by default, with the Mechanism that is `modulated
+loops containing one or more ModulatoryProjections are broken, with the Mechanism that is `modulated
 <ModulatorySignal_Modulation>` designated as the `FEEDBACK_RECEIVER` and the `ModulatoryMechanism` that projects to
-it designated as the `FEEDBACK_SENDER`. However, the feedback status of any Projection can be specified explicitly,
-either in a tuple with the Projection where it is `specified in a Pathway <Pathway_Specification>` or in the
-Composition's `add_projections <Composition.add_projections>` method, or by using the **feedback** argument of the
-Composition's `add_projection <Composition.add_projection>` method. Specifying True or the keyword *FEEDBACK* forces
-its assignment as a *feedback* Projection, whereas False precludes it from being assigned as a feedback Projection
-(e.g., a `ControlProjection` that forms a cycle).
+it designated as the `FEEDBACK_SENDER`. However, either of these default behaviors can be overidden, by specifying the
+feedback status of a Projection explicitly, either in a tuple with the Projection where it is `specified in a Pathway
+<Pathway_Specification>` or in the Composition's `add_projections <Composition.add_projections>` method, or by using
+the **feedback** argument of the Composition's `add_projection <Composition.add_projection>` method. Specifying True
+or the keyword *FEEDBACK* forces its assignment as a *feedback* Projection, whereas False precludes it from being
+assigned as a feedback Projection (e.g., a `ControlProjection` that otherwise forms a cycle will no longer do so).
 
 .. warning::
    Designating a Projection as **feeedback** that is *not* in a loop is allowed, but will issue a warning and
@@ -2988,7 +2988,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition.retain_old_simulation_data>` for additional details).
 
     show_graph_attributes : dict : None
-        specifies features of how the Composition is displayed when its `show_graph <ShowGraph.show_graph>` method
+        specifies state_features of how the Composition is displayed when its `show_graph <ShowGraph.show_graph>` method
         is called or **animate** is specified in a call to its `run <Composition.run>` method  (see `ShowGraph` for
         list of attributes and their values).
 
@@ -5399,18 +5399,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if context.source != ContextFlags.INITIALIZING:
                 for input_port in node.input_ports:
                     if input_port.require_projection_in_composition and not input_port.path_afferents:
-                        warnings.warn(f'{InputPort.__name__} ({input_port.name}) of {node.name} '
-                                      f'doesn\'t have any afferent {Projection.__name__}s')
+                        warnings.warn(f"{InputPort.__name__} ('{input_port.name}') of '{node.name}' "
+                                      f"doesn't have any afferent {Projection.__name__}s.")
                 for output_port in node.output_ports:
                     if output_port.require_projection_in_composition and not output_port.efferents:
-                        warnings.warn(f'{OutputPort.__name__} ({output_port.name}) of {node.name} '
-                                      f'doesn\'t have any efferent {Projection.__name__}s in {self.name}')
+                        warnings.warn(f"{OutputPort.__name__} ('{output_port.name}') of '{node.name}' "
+                                      f"doesn't have any efferent {Projection.__name__}s in '{self.name}'.")
 
         for projection in projections:
             if not projection.sender:
-                warnings.warn(f'{Projection.__name__} {projection.name} is missing a sender')
+                warnings.warn(f'{Projection.__name__} {projection.name} is missing a sender.')
             if not projection.receiver:
-                warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver')
+                warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver.')
 
     def get_feedback_status(self, projection):
         """Return True if **projection** is designated as a `feedback Projection <_Composition_Feedback_Designation>`
@@ -5436,14 +5436,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             sender = projection.sender
             receiver = projection.receiver
         else:
-            if isinstance(sender, Mechanism):
-                sender = sender.output_port
-            elif isinstance(sender, Composition):
-                sender = sender.output_CIM.output_port
-            if isinstance(receiver, Mechanism):
-                receiver = receiver.input_port
-            elif isinstance(receiver, Composition):
-                receiver = receiver.input_CIM.input_port
+            try:
+                if isinstance(sender, Mechanism):
+                    err_msg = f"'{sender.name}' does not have an '{OutputPort.__name__}'."
+                    sender = sender.output_port
+                elif isinstance(sender, Composition):
+                    if not sender.nodes:
+                        err_msg = f"'{self.name}' does not have any nodes that can project to '{receiver.name}'."
+                        raise IndexError
+                    sender = sender.output_CIM.output_port
+                if isinstance(receiver, Mechanism):
+                    err_msg = f"'{receiver.name}' does not have an {InputPort.__name__}."
+                    receiver = receiver.input_port
+                elif isinstance(receiver, Composition):
+                    if not receiver.nodes:
+                        err_msg = f'{self.name} does not have any nodes that can project to {receiver.name}.'
+                        raise IndexError
+                    receiver = receiver.input_CIM.input_port
+            except IndexError:
+                err_msg = f"Can't create a {Projection.__name__} from '{sender.name}' to '{receiver.name}': " + err_msg
+                raise CompositionError(err_msg)
+
         existing_projections = [proj for proj in sender.efferents if proj.receiver is receiver]
         existing_projections_in_composition = [proj for proj in existing_projections if proj in self.projections]
         assert len(existing_projections_in_composition) <= 1, \
@@ -5572,7 +5585,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathway_arg_str = context.string
         # Otherwise, refer to call from this method
         else:
-            pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of {self.name}"
+            pathway_arg_str = f"'pathway' arg for add_linear_procesing_pathway method of '{self.name}'"
 
         context.source = ContextFlags.METHOD
         context.string = pathway_arg_str
@@ -7203,7 +7216,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _build_predicted_inputs_dict(self, predicted_input):
         inputs = {}
-        # ASSUMPTION: input_ports[0] is NOT a feature and input_ports[1:] are features
+        # ASSUMPTION: input_ports[0] is NOT a feature and input_ports[1:] are state_features
         # If this is not a good assumption, we need another way to look up the feature InputPorts
         # of the OCM and know which InputPort maps to which predicted_input value
 
@@ -8521,11 +8534,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context=context
                 )
 
-            # Report controller execution after executing simulations
-            #    so it includes the results for ReportOutput.FULL
             report(self,
-                   # [RUN_REPORT, PROGRESS_REPORT],
-                   RUN_REPORT,
+                   [RUN_REPORT, PROGRESS_REPORT],
                    report_num=report_num,
                    scheduler=scheduler,
                    content='run_end',
@@ -8992,6 +9002,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         report(self,
                                PROGRESS_REPORT,
                                report_num=report_num,
+                               content='trial_end',
                                context=context)
 
                         self._propagate_most_recent_context(context)
@@ -9575,6 +9586,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 report(self,
                        PROGRESS_REPORT,
                        report_num=report_num,
+                       content='trial_end',
                        context=context)
                 return _comp_ex.extract_node_output(self.output_CIM)
 
@@ -9852,6 +9864,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_parsed_variable(self, *args, **kwargs):
         raise TypeError(f'_get_parsed_variable unsupported for {self.__class__.__name__}')
 
+    def _delete_contexts(self, *contexts, check_simulation_storage=False, visited=None):
+        super()._delete_contexts(*contexts, check_simulation_storage=check_simulation_storage, visited=visited)
+
+        for c in contexts:
+            self.scheduler._delete_counts(c.execution_id)
 
     # ******************************************************************************************************************
     #                                           LLVM
@@ -10072,7 +10089,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return self.parameters.simulation_results.get(self.default_execution_id)
 
     #  For now, external_input_ports == input_ports and external_input_values == input_values
-    #  They could be different in the future depending on new features (ex. if we introduce recurrent compositions)
+    #  They could be different in the future depending on new state_features (ex. if we introduce recurrent compositions)
     #  Useful to have this property for treating Compositions the same as Mechanisms in run & execute
     @property
     def external_input_ports(self):

@@ -649,7 +649,6 @@ class TestCompositionPathwayAdditionMethods:
                                             PathwayRole.TERMINAL}
 
     def test_add_processing_pathway_arg_pathway(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         p = Pathway(pathway=A, name='P')
         c = Composition()
@@ -666,7 +665,6 @@ class TestCompositionPathwayAdditionMethods:
                                               PathwayRole.TERMINAL}
 
     def test_add_processing_pathway_with_errant_learning_function_warning(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         p = Pathway(pathway=([A,B], Reinforcement), name='P')
@@ -686,7 +684,6 @@ class TestCompositionPathwayAdditionMethods:
                                               PathwayRole.TERMINAL}
 
     def test_add_learning_pathway_arg_pathway(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         p = Pathway(pathway=[A,B], name='P')
@@ -700,7 +697,6 @@ class TestCompositionPathwayAdditionMethods:
                                               PathwayRole.OUTPUT}
 
     def test_add_learning_pathway_with_errant_learning_function_in_tuple_spec_error(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         p = Pathway(pathway=([A,B], Reinforcement), name='P')
@@ -713,7 +709,6 @@ class TestCompositionPathwayAdditionMethods:
                 and "than the one specified in its 'learning_function' arg (BackPropagation)" in str(error_text.value))
 
     def test_add_bp_learning_pathway_arg_pathway(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         p = Pathway(pathway=[A,B], name='P')
@@ -727,7 +722,6 @@ class TestCompositionPathwayAdditionMethods:
                                               PathwayRole.OUTPUT}
 
     def test_add_bp_learning_pathway_arg_pathway_name_in_method(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         p = Pathway(pathway=[A,B], name='P')
@@ -741,7 +735,6 @@ class TestCompositionPathwayAdditionMethods:
                                                PathwayRole.OUTPUT}
 
     def test_add_rl_learning_pathway_arg_pathway(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         p = Pathway(pathway=[A,B], name='P')
@@ -755,7 +748,6 @@ class TestCompositionPathwayAdditionMethods:
                                               PathwayRole.OUTPUT}
 
     def test_add_td_learning_pathway_arg_pathway(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         p = Pathway(pathway=[A,B], name='P')
@@ -769,7 +761,6 @@ class TestCompositionPathwayAdditionMethods:
                                               PathwayRole.OUTPUT}
 
     def test_add_pathways_with_all_types(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -823,7 +814,7 @@ class TestCompositionPathwayAdditionMethods:
         with pytest.raises(pnl.CompositionError) as error_text:
             C.add_linear_processing_pathway(pathway=[A,C])
         assert f"Attempt to add Composition as a Node to itself in 'pathway' arg for " \
-               f"add_linear_procesing_pathway method of {C.name}." in str(error_text.value)
+               f"add_linear_procesing_pathway method of '{C.name}'." in str(error_text.value)
 
     def test_for_add_learning_pathway_recursion_error(self):
         A = TransferMechanism()
@@ -931,7 +922,6 @@ class TestDuplicatePathwayWarnings:
 class TestCompositionPathwaysArg:
 
     def test_composition_pathways_arg_pathway_object(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         p = Pathway(pathway=A, name='P')
         c = Composition(pathways=p)
@@ -947,7 +937,6 @@ class TestCompositionPathwaysArg:
                                               PathwayRole.TERMINAL}
 
     def test_composition_pathways_arg_pathway_object_in_dict_with_name(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         p = Pathway(pathway=[A], name='P')
         c = Composition(pathways={'DICT NAMED':p})
@@ -977,7 +966,6 @@ class TestCompositionPathwaysArg:
                                             PathwayRole.TERMINAL}
 
     def test_composition_pathways_arg_dict_and_list_and_pathway_roles(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -1004,7 +992,6 @@ class TestCompositionPathwaysArg:
                                                     PathwayRole.LEARNING})
 
     def test_composition_pathways_arg_dict_and_node(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -1013,7 +1000,6 @@ class TestCompositionPathwaysArg:
         assert c.pathways['P1'].name == 'P1'
 
     def test_composition_pathways_arg_two_dicts(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -1024,7 +1010,6 @@ class TestCompositionPathwaysArg:
         assert c.pathways['P2'].name == 'P2'
 
     def test_composition_pathways_arg_two_dicts_one_with_node(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -1089,7 +1074,6 @@ class TestCompositionPathwaysArg:
                 "must be a pathway specification (Node, list or tuple): A." in str(error_text.value))
 
     def test_composition_pathways_Pathway_in_learning_tuples(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -1104,7 +1088,6 @@ class TestCompositionPathwaysArg:
         assert c.pathways['P2'].learning_components[OUTPUT_MECHANISM] is E
 
     def test_composition_processing_and_learning_pathways_pathwayroles_learning_components(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -1139,7 +1122,6 @@ class TestCompositionPathwaysArg:
                         for lm in c.pathways['P2'].learning_components[LEARNED_PROJECTIONS]))
 
     def test_composition_learning_pathway_dict_and_tuple(self):
-        pnl.clear_registry(pnl.PathwayRegistry)
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -1289,7 +1271,7 @@ class TestAnalyzeGraph:
         B = ProcessingMechanism(name='B')
         comp.add_linear_processing_pathway([A, B])
         comp.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=comp,
-                                                                        features=[A.input_port],
+                                                                        state_features=[A.input_port],
                                                                         objective_mechanism=pnl.ObjectiveMechanism(
                                                                                 function=pnl.LinearCombination(
                                                                                         operation=pnl.PRODUCT),
@@ -1320,7 +1302,7 @@ class TestAnalyzeGraph:
         comp.add_linear_processing_pathway([A, B])
 
         comp.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=comp,
-                                                                        features=[A.input_port],
+                                                                        state_features=[A.input_port],
                                                                         objective_mechanism=pnl.ObjectiveMechanism(
                                                                                 function=pnl.LinearCombination(
                                                                                         operation=pnl.PRODUCT),
@@ -2736,7 +2718,7 @@ class TestRunInputSpecifications:
             icomp.add_controller(
                     pnl.OptimizationControlMechanism(
                             agent_rep=icomp,
-                            features=[ia.input_port],
+                            state_features=[ia.input_port],
                             name="iController",
                             objective_mechanism=pnl.ObjectiveMechanism(
                                     monitor=ib.output_port,
@@ -2763,7 +2745,7 @@ class TestRunInputSpecifications:
             ocomp.add_controller(
                     pnl.OptimizationControlMechanism(
                             agent_rep=ocomp,
-                            features=[ia.input_port],
+                            state_features=[ia.input_port],
                             name="oController",
                             objective_mechanism=pnl.ObjectiveMechanism(
                                     monitor=ib.output_port,
@@ -4231,8 +4213,8 @@ class TestNestedCompositions:
         ocomp.add_controller(
             pnl.OptimizationControlMechanism(
                 agent_rep=ocomp,
-                features=[oa.input_port],
-                # feature_function=pnl.Buffer(history=2),
+                state_features=[oa.input_port],
+                # state_feature_function=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=ocomp_objective_mechanism,
                 function=pnl.GridSearch(direction=pnl.MINIMIZE),
@@ -4251,8 +4233,8 @@ class TestNestedCompositions:
         icomp.add_controller(
             pnl.OptimizationControlMechanism(
                 agent_rep=icomp,
-                features=[ia.input_port],
-                # feature_function=pnl.Buffer(history=2),
+                state_features=[ia.input_port],
+                # state_feature_function=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=icomp_objective_mechanism,
                 function=pnl.GridSearch(direction=pnl.MAXIMIZE),
@@ -4710,7 +4692,7 @@ class TestNestedCompositions:
         c_lvl0.add_controller(OptimizationControlMechanism(
             name='c_top_controller',
             agent_rep=c_lvl0,
-            features=[c_lvl1.input_port],
+            state_features=[c_lvl1.input_port],
             objective_mechanism=ObjectiveMechanism(monitor=[p_lvl3]),
             function=GridSearch(),
             control_signals=ControlSignal(
@@ -4730,7 +4712,7 @@ class TestNestedCompositions:
         c_lvl1.add_controller(OptimizationControlMechanism(
             name='c_lvl1_controller',
             agent_rep=c_lvl1,
-            features=[c_lvl2.input_port],
+            state_features=[c_lvl2.input_port],
             objective_mechanism=ObjectiveMechanism(monitor=[p_lvl3]),
             function=GridSearch(),
             control_signals=ControlSignal(
@@ -4743,7 +4725,7 @@ class TestNestedCompositions:
         c_lvl0.add_controller(OptimizationControlMechanism(
             name='c_lvl0_controller',
             agent_rep=c_lvl0,
-            features=[c_lvl1.input_port],
+            state_features=[c_lvl1.input_port],
             objective_mechanism=ObjectiveMechanism(monitor=[p_lvl3]),
             function=GridSearch(),
             control_signals=ControlSignal(
@@ -5566,7 +5548,7 @@ class TestInputSpecifications:
             icomp.add_controller(
                     pnl.OptimizationControlMechanism(
                             agent_rep=icomp,
-                            features=[ia.input_port],
+                            state_features=[ia.input_port],
                             name="iController",
                             objective_mechanism=pnl.ObjectiveMechanism(
                                     monitor=ib.output_port,
@@ -5593,7 +5575,7 @@ class TestInputSpecifications:
             ocomp.add_controller(
                     pnl.OptimizationControlMechanism(
                             agent_rep=ocomp,
-                            features=[ia.input_port],
+                            state_features=[ia.input_port],
                             name="oController",
                             objective_mechanism=pnl.ObjectiveMechanism(
                                     monitor=ib.output_port,
@@ -6627,7 +6609,7 @@ class TestNodeRoles:
         comp.add_controller(
             controller=pnl.OptimizationControlMechanism(
                 agent_rep=comp,
-                features=[A.input_port],
+                state_features=[A.input_port],
                 objective_mechanism=pnl.ObjectiveMechanism(
                     function=pnl.LinearCombination(
                         operation=pnl.PRODUCT),

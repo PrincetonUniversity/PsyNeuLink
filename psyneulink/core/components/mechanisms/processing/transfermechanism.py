@@ -434,7 +434,7 @@ accepts a single argument that is a 2d array with two entries.
     This example implements a simple model of attentional selection in perceptual decision making. In the model,
     ``stim_input`` represents the stimulus input, which is passed to ``stim_percept``, which also receives input
     from the ``attention`` Mechanism.  ``stim_percpt passes its output to ``decision``, which integrates its input
-    until one of the features of the input (the first or second) reaches the threshold of 0.65, at which point
+    until one of the state_features of the input (the first or second) reaches the threshold of 0.65, at which point
     ``response`` executes (specified by the condition ``(reponse, WhenFinished(decision)``).  In addition to the
     ``stim_input``, the model an instruction on each trial in ``instruction_input`` that specifies which feature of
     the stimulus (i.e., the first or second element) should be "attended".  This is passed to the ``attention``

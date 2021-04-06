@@ -1078,7 +1078,7 @@ class Log:
             delete the data, but leave the entry itself (if `False`).
 
             .. note::
-                This option is included for generality and potential future features, but is not advised;
+                This option is included for generality and potential future state_features, but is not advised;
                 the Log interface (e.g., the `logged_items <Log.logged_items>` interface generally assumes that
                 the only `entries <Log.entries>` in a log are ones with data.
 

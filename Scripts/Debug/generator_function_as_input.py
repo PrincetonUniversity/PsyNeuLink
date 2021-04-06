@@ -17,7 +17,7 @@ icomp.add_projection(pnl.MappingProjection(), sender=ib, receiver=ic)
 icomp.add_controller(
         pnl.OptimizationControlMechanism(
                 agent_rep=icomp,
-                features=[ia.input_port, ib.input_port],
+                state_features=[ia.input_port, ib.input_port],
                 name="Controller",
                 objective_mechanism=pnl.ObjectiveMechanism(
                         monitor=ic.output_port,
@@ -43,7 +43,7 @@ ocomp.add_node(icomp)
 ocomp.add_controller(
         pnl.OptimizationControlMechanism(
                 agent_rep=ocomp,
-                features=[ia.input_port, ib.input_port],
+                state_features=[ia.input_port, ib.input_port],
                 name="Controller",
                 objective_mechanism=pnl.ObjectiveMechanism(
                         monitor=ic.output_port,

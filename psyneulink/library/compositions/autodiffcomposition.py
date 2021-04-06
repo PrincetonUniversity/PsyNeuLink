@@ -145,7 +145,8 @@ from psyneulink.library.components.mechanisms.processing.objective.comparatormec
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.compositions.composition import CompositionError
 from psyneulink.core.compositions.report \
-    import ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices, EXECUTE_REPORT
+    import ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices, \
+    LEARN_REPORT, EXECUTE_REPORT, PROGRESS_REPORT
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import SOFT_CLAMP
 from psyneulink.core.scheduling.scheduler import Scheduler
@@ -230,6 +231,7 @@ class AutodiffComposition(Composition):
                  disable_cuda=True,
                  cuda_index=None,
                  force_no_retain_graph=False,
+                 pathways=None,
                  name="autodiff_composition"):
 
         if not torch_available:
@@ -240,7 +242,8 @@ class AutodiffComposition(Composition):
                                                   learning_rate = learning_rate,
                                                   optimizer_type = optimizer_type,
                                                   weight_decay = weight_decay,
-                                                  loss_spec = loss_spec)
+                                                  loss_spec = loss_spec,
+                                                  pathways=pathways)
 
         self.optimizer_type = optimizer_type
         self.loss_spec = loss_spec
@@ -502,6 +505,14 @@ class AutodiffComposition(Composition):
             autodiff_inputs = self._infer_input_nodes(inputs)
             autodiff_targets = self._infer_output_nodes(inputs)
 
+            report(self,
+                   LEARN_REPORT,
+                   # EXECUTE_REPORT,
+                   report_num=report_num,
+                   scheduler=scheduler,
+                   content='trial_start',
+                   context=context)
+
             self._build_pytorch_representation(context)
             output = self.autodiff_training(autodiff_inputs,
                                             autodiff_targets,
@@ -517,9 +528,15 @@ class AutodiffComposition(Composition):
             # FIX 5/28/20:
             context.execution_phase = execution_phase
 
-            scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
+            report(self,
+                   # [LEARN_REPORT],
+                   [EXECUTE_REPORT, PROGRESS_REPORT],
+                   report_num=report_num,
+                   scheduler=scheduler,
+                   content='trial_end',
+                   context=context)
 
-            report(self, EXECUTE_REPORT, report_num=report_num, scheduler=scheduler, content='trial', context=context)
+            scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
             return output
 
@@ -536,7 +553,8 @@ class AutodiffComposition(Composition):
                                                         clamp_input=clamp_input,
                                                         runtime_params=runtime_params,
                                                         execution_mode=execution_mode,
-                                                        report=None,
+                                                        report=report,
+                                                        report_num=report_num
                                                         )
 
     def _get_state_struct_type(self, ctx):

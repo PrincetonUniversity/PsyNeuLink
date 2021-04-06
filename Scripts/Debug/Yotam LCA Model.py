@@ -80,7 +80,7 @@ def get_all_tasks(env_bipartite_graph):
 # LCAMechanism at the end for performance evaluation
 # Params:
 #     bipartite_graph: bipartite graph representing the task environment (NetworkX object)
-#     num_features: number of particular features per dimension (e.g. number of colours)
+#     num_features: number of particular state_features per dimension (e.g. number of colours)
 #     num_hidden: number of hidden units in the network
 #     epochs: number of training iterations
 #     learning_rate: learning rate for SGD or (however pnl train their networks)
@@ -198,7 +198,7 @@ def get_trained_network(bipartite_graph, num_features=3, num_hidden=200, epochs=
 # RecurrentTransferMechanism at the end for performance evaluation
 # Params:
 #     bipartite_graph: bipartite graph representing the task environment (NetworkX object)
-#     num_features: number of particular features per dimension (e.g. number of colours)
+#     num_features: number of particular state_features per dimension (e.g. number of colours)
 #     num_hidden: number of hidden units in the network
 #     epochs: number of training iterations
 #     learning_rate: learning rate for SGD or (however pnl train their networks)
@@ -335,7 +335,7 @@ def get_trained_network_multLCA(bipartite_graph, num_features=3, num_hidden=200,
 # equal ordinal output feature nodes (i.e. 1st feature input maps to 1st feature output).
 # Params:
 #     all_tasks: list containing all tasks in the environment
-#     num_features: number of particular features per dimension (e.g. number of colours)
+#     num_features: number of particular state_features per dimension (e.g. number of colours)
 #     num_input_dims: number of input dimensions in the environment
 #     num_output_dims: number of output dimensions in the environment
 #     samples_per_feature: how many stimuli will be sampled per feature to be trained within a task
@@ -383,12 +383,12 @@ def generate_training_data(all_tasks, num_features, num_input_dims, num_output_d
     return input_examples, output_examples, control_examples
 
 # Generate data for the network to test on. test_tasks is a performance set (i.e. a multitasking set of tasks to execute).
-# As data we generate random features for all input dimensions. To specify a mapping, we use the rule that input
+# As data we generate random state_features for all input dimensions. To specify a mapping, we use the rule that input
 # feature nodes map to equal ordinal output feature nodes (i.e. 1st feature input maps to 1st feature output).
 # Params:
 #     test_tasks: list containing set of tasks to multitask
 #     all_tasks: list containing all tasks in the environment
-#     num_features: number of particular features per dimension (e.g. number of colours)
+#     num_features: number of particular state_features per dimension (e.g. number of colours)
 #     num_input_dims: number of input dimensions in the environment
 #     num_output_dims: number of output dimensions in the environment
 #     num_test_points: number of test points to generate

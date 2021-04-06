@@ -139,7 +139,7 @@ COMMENT
 Structure
 ---------
 
-The key features that disinguish an LCAMechanism from its parent class (`RecurrentTransferMechainsm`) are:
+The key state_features that disinguish an LCAMechanism from its parent class (`RecurrentTransferMechainsm`) are:
 
 1. its default `function <Mechanism.function>` is a `Logistic` Function (rather than `Linear`);
 

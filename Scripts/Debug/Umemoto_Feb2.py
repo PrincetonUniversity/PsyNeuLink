@@ -129,10 +129,10 @@ Distractor_Rep_Control_Signal = pnl.ControlSignal(modulates=[(pnl.SLOPE, Distrac
 
 Umemoto_comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(
         agent_rep=Umemoto_comp,
-        features=[Target_Stim.input_port,
-                  Distractor_Stim.input_port,
-                  Reward.input_port],
-        feature_function=pnl.AdaptiveIntegrator(rate=1.0),
+        state_features=[Target_Stim.input_port,
+                        Distractor_Stim.input_port,
+                        Reward.input_port],
+        state_feature_function=pnl.AdaptiveIntegrator(rate=1.0),
         objective_mechanism=pnl.ObjectiveMechanism(
                 monitor_for_control=[Reward,
                                      (Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)],

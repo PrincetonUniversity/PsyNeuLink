@@ -194,17 +194,17 @@ class PredatorPreySimulator:
 
         # **************************************  CONOTROL APPARATUS ***********************************************************
         self.ocm = OptimizationControlMechanism(name='EVC',
-                       features=[self.prey_pred_trial_input_mech, self.single_prey_trial_input_mech, self.double_prey_trial_input_mech],
-                       # feature_function=FEATURE_FUNCTION,
-                       agent_rep=RegressionCFA(
+                                                state_features=[self.prey_pred_trial_input_mech, self.single_prey_trial_input_mech, self.double_prey_trial_input_mech],
+                                                # state_feature_function=FEATURE_FUNCTION,
+                                                agent_rep=RegressionCFA(
                                update_weights=BayesGLM(mu_0=-0.0, sigma_0=0.0001),
                                prediction_terms=[PV.F, PV.C, PV.COST]
                        ),
-                       function=GridSearch(direction=MAXIMIZE, save_values=True),
+                                                function=GridSearch(direction=MAXIMIZE, save_values=True),
 
-                       objective_mechanism=ObjectiveMechanism(name='OBJECTIVE MECHANISM',
+                                                objective_mechanism=ObjectiveMechanism(name='OBJECTIVE MECHANISM',
                                                               monitor=[self.reward_input_mech]),
-                       control_signals=[ControlSignal(projections=(VARIANCE,self.player_percept),
+                                                control_signals=[ControlSignal(projections=(VARIANCE,self.player_percept),
                                                       allocation_samples=ALLOCATION_SAMPLES_PLAYER,
                                                       intensity_cost_function=Exponential(rate=COST_RATE,
                                                                                           bias=COST_BIAS)),

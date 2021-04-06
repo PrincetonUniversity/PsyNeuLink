@@ -49,16 +49,17 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import call_with_pruned_args, get_global_seed
 
-__all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess',
-           'ParamEstimationFunction',
-           'OBJECTIVE_FUNCTION', 'SEARCH_FUNCTION', 'SEARCH_SPACE', 'SEARCH_TERMINATION_FUNCTION',
-           'DIRECTION', 'ASCENT', 'DESCENT', 'MAXIMIZE', 'MINIMIZE']
+__all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess', 'ParamEstimationFunction',
+           'ASCENT', 'DESCENT', 'DIRECTION', 'MAXIMIZE', 'MINIMIZE', 'OBJECTIVE_FUNCTION',
+           'SEARCH_FUNCTION', 'SEARCH_SPACE', 'SEARCH_TERMINATION_FUNCTION', 'SIMULATION_PROGRESS'
+           ]
 
 OBJECTIVE_FUNCTION = 'objective_function'
 SEARCH_FUNCTION = 'search_function'
 SEARCH_SPACE = 'search_space'
 SEARCH_TERMINATION_FUNCTION = 'search_termination_function'
 DIRECTION = 'direction'
+SIMULATION_PROGRESS = 'simulation_progress'
 
 class OptimizationFunctionError(Exception):
     def __init__(self, error_value):
@@ -523,7 +524,7 @@ class OptimizationFunction(Function_Base):
         # Set up progress bar
         _show_progress = False
         from psyneulink.core.compositions.report import ReportOutput
-        if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is not ReportOutput.OFF:
+        if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is SIMULATION_PROGRESS:
             _show_progress = True
             _progress_bar_char = '.'
             _progress_bar_rate_str = ""
@@ -1441,7 +1442,7 @@ class GridSearch(OptimizationFunction):
                 ctx.int32_ty]
         builder = ctx.create_llvm_function(args, self, tags=tags)
 
-        params, state, min_sample_ptr, samples_ptr, min_value_ptr, values_ptr, opt_count_ptr, start, stop = builder.function.args
+        params, state_features, min_sample_ptr, samples_ptr, min_value_ptr, values_ptr, opt_count_ptr, start, stop = builder.function.args
         for p in builder.function.args[:-2]:
             p.attributes.add('noalias')
 
@@ -1449,7 +1450,7 @@ class GridSearch(OptimizationFunction):
         # remove the attribute for 'samples_ptr'.
         samples_ptr.attributes.remove('nonnull')
 
-        random_state = pnlvm.helpers.get_state_ptr(builder, self, state,
+        random_state = pnlvm.helpers.get_state_ptr(builder, self, state_features,
                                                    self.parameters.random_state.name)
         select_random_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                         self.parameters.select_randomly_from_optimal_values.name)
@@ -1519,7 +1520,7 @@ class GridSearch(OptimizationFunction):
         builder.ret_void()
         return builder.function
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_body(self, ctx, builder, params, state_features, arg_in, arg_out, *, tags:frozenset):
         ocm = self._get_optimized_controller()
         if ocm is not None:
             assert ocm.function is self
@@ -1530,7 +1531,7 @@ class GridSearch(OptimizationFunction):
             extra_args = [arg_in, comp_args[2]]
         else:
             obj_func = ctx.import_llvm_function(self.objective_function)
-            obj_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
+            obj_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state_features,
                                                         "objective_function")
             obj_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                         "objective_function")
@@ -1586,7 +1587,7 @@ class GridSearch(OptimizationFunction):
             # Check if smaller than current best.
             # the argument pointers are already offset, so use range <0,1)
             select_min_f = ctx.import_llvm_function(self, tags=tags.union({"select_min"}))
-            b.call(select_min_f, [params, state, min_sample_ptr, sample_ptr,
+            b.call(select_min_f, [params, state_features, min_sample_ptr, sample_ptr,
                                   min_value_ptr, value_ptr, opt_count_ptr,
                                   ctx.int32_ty(0), ctx.int32_ty(1)])
 
@@ -1691,7 +1692,7 @@ class GridSearch(OptimizationFunction):
             # Set up progress bar
             _show_progress = False
             from psyneulink.core.compositions.report import ReportOutput
-            if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is not ReportOutput.OFF:
+            if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is SIMULATION_PROGRESS:
                 _show_progress = True
                 _progress_bar_char = '.'
                 _progress_bar_rate_str = ""
