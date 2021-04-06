@@ -14,8 +14,6 @@ class TestReport():
 
     def test_reportOutputPref_true(self):
 
-        pnl.clear_registry(pnl.FunctionRegistry)
-
         t = pnl.TransferMechanism()
         t.reportOutputPref = ReportOutput.FULL
 
@@ -29,8 +27,6 @@ class TestReport():
         assert 'params' not in output
 
     def test_reportOutputPref_params(self):
-
-        pnl.clear_registry(pnl.FunctionRegistry)
 
         t = pnl.TransferMechanism()
         t.reportOutputPref = 'params'
@@ -56,7 +52,6 @@ class TestReport():
     def test_simple_output_and_progress(self):
         """Test simple sequence of three Mechanisms, using all report_output and report_progress options
         """
-        pnl.clear_registry(pnl.FunctionRegistry)
 
         a = pnl.TransferMechanism(name='a')
         b = pnl.TransferMechanism(name='b')
@@ -185,8 +180,6 @@ class TestReport():
         """Test output and progress reports for execution of simulations by controller in both an outer and nested
         composition, using input dictionary, generator instance and generator function.
         """
-
-        pnl.clear_registry(pnl.FunctionRegistry)
 
         # instantiate mechanisms and inner comp
         ia = pnl.TransferMechanism(name='ia')
@@ -448,7 +441,6 @@ class TestReport():
 
     def test_nested_comps_and_sims_with_modulated_and_monitored_params_and_use_prefs(self):
 
-        pnl.clear_registry(pnl.FunctionRegistry)
         # instantiate mechanisms and inner comp
         ia = pnl.TransferMechanism(name='ia')
         ib = pnl.TransferMechanism(name='ib')
