@@ -2026,7 +2026,6 @@ class TestBackProp:
             #       \     /
             #        A + A
             #
-            pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
@@ -2052,7 +2051,6 @@ class TestBackProp:
             #     /
             #    D
             #
-            pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
@@ -2080,7 +2078,6 @@ class TestBackProp:
             #     /
             #    D
             #
-            pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
@@ -2104,7 +2101,6 @@ class TestBackProp:
             #         /
             #        B
             #
-            pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
@@ -2128,7 +2124,6 @@ class TestBackProp:
             #     /     \
             #    D       B
             #
-            pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
@@ -2152,7 +2147,6 @@ class TestBackProp:
             #     /     \
             #    D      B
             #
-            pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
@@ -2176,7 +2170,6 @@ class TestBackProp:
             #     /     \
             #    C       B
             #
-            pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
@@ -2200,7 +2193,6 @@ class TestBackProp:
             #     /         \
             #    D           C
             #
-            pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
@@ -2228,7 +2220,6 @@ class TestBackProp:
             #     /
             #    E
             #
-            pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
@@ -2255,7 +2246,6 @@ class TestBackProp:
             #              /        \
             #             E         H
             #
-            pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
@@ -2285,7 +2275,6 @@ class TestBackProp:
             #     /       \
             #    D         C
             #
-            pnl.clear_registry(pnl.MechanismRegistry)
             A = pnl.ProcessingMechanism(name='A')
             B = pnl.ProcessingMechanism(name='B')
             C = pnl.ProcessingMechanism(name='C')
