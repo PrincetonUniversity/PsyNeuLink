@@ -567,6 +567,7 @@ class TestReport():
         ocomp.controller.reportOutputPref = ReportOutput.FULL
 
 
+    @pytest.mark.pytorch
     def test_autodiff_report(self):
         xor_in = pnl.TransferMechanism(name='xor_in',
                                        default_variable=np.zeros(2))
