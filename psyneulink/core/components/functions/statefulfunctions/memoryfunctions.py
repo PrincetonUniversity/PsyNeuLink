@@ -1881,6 +1881,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             duplicate_entries=duplicate_entries,
             duplicate_threshold=duplicate_threshold,
             equidistant_entries_select=equidistant_entries_select,
+            distance_by=distance_by,
+            distance_field_weights=distance_field_weights,
             rate=rate,
             noise=noise,
             max_entries=max_entries,
@@ -2175,7 +2177,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         self._validate_memory(cue, context)
         num_fields = self.parameters.memory_num_fields._get(context)
-        field_weights = field_weights or np.array([1]*num_fields)
+        if field_weights is None:
+            field_weights = np.array([1]*num_fields)
         distance_fct = self.parameters.distance_function._get(context)
 
         if self.parameters.distance_by._get(context) == GLOBAL:
