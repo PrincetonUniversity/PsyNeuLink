@@ -46,8 +46,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import all_within_range, convert_to_np_array, get_global_seed, convert_to_list
 
-__all__ = ['MemoryFunction', 'Buffer', 'DictionaryMemory', 'ContentAddressableMemory',
-           'GLOBAL', 'INDIVIDUAL', 'RETRIEVAL_PROB', 'STORAGE_PROB']
+__all__ = ['MemoryFunction', 'Buffer', 'DictionaryMemory', 'ContentAddressableMemory', 'RETRIEVAL_PROB', 'STORAGE_PROB']
 
 
 class MemoryFunction(StatefulFunction):  # -----------------------------------------------------------------------------
@@ -342,8 +341,6 @@ RETRIEVAL_PROB = 'retrieval_prob'
 STORAGE_PROB = 'storage_prob'
 DISTANCE_FUNCTION = 'distance_function'
 SELECTION_FUNCTION = 'selection_function'
-INDIVIDUAL = 'individual'
-GLOBAL = 'global'
 
 KEYS = 0
 VALS = 1
@@ -1390,10 +1387,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     the corresponding `memory field <ContentAddressableMemory_Memory_Fields>` of an entry in `memory
     <ContentAddressableMemory.storage_prob>`, and then averaging those distances, possibly weighted by the coefficients
     in `distance_field_weights <ContentAddressableMemory.distance_field_weights>` (this is determined by the
-    `distance_by <ContentAddressableMemory.distance_by>` parameter.  The distances computed between `variable
-    `<ContentAddressableMemory.variable>` and each item in `memory <ContentAddressableMemory.memory>` are used by
-    `selection_function <ContentAddressableMemory.selection_function>` to determine which entry is retrieved. The
-    distance used for the last retrieval (i.e., between the last cue to the entry retrieved), the corresponding
+    `distance_by_fields <ContentAddressableMemory.distance_by_fields>` parameter.  The distances computed between
+    `variable `<ContentAddressableMemory.variable>` and each item in `memory <ContentAddressableMemory.memory>` are
+    used by `selection_function <ContentAddressableMemory.selection_function>` to determine which entry is retrieved.
+    The distance used for the last retrieval (i.e., between the last cue to the entry retrieved), the corresponding
     distances of each of their `memory fields <ContentAddressableMemory_Memory_Fields>` (weighted by
     `distance_field_weights <ContentAddressableMemory.distance_field_weights>`), and the distances to all other entries
     are stored in `distance <ContentAddressableMemory.distance>` and `distances_by_field
@@ -1446,14 +1443,14 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     * First, with probability `retrieval_prob <ContentAddressableMemory.retrieval_prob>`, an entry is retrieved from
       `memory <ContentAddressableMemory.memory>` that is closest to `variable <ContentAddressableMemory.variable>`
-      as determined by the `distance_function <ContentAddressableMemory.distance_function>`, the `distance_by
-      <ContentAddressableMemory.distance_by>` setting and, if it is set *INDIVIDUAL*, then `distance_field_weights
+      as determined by the `distance_function <ContentAddressableMemory.distance_function>`, the `distance_by_fields
+      <ContentAddressableMemory.distance_by_fields>` setting and, if it is True, then `distance_field_weights
       <ContentAddressableMemory.distance_field_weights>`, and finally the `selection_function
       <ContentAddressableMemory.selection_function>`.  The `distance_function
       <ContentAddressableMemory.distance_function>` generates a list of distances between `variable
       <ContentAddressableMemory.variable>` and each entry in `memory <ContentAddressableMemory.memory>` according to
-      the method specified in `distance_by <ContentAddressableMemory.distance_by>`:
-      FIX:  COPY OR MOVE TO HERE DESCRIPTION OF DISTANCE COMPUTATION FROM distance_by ATTRIBUTE
+      the method specified in `distance_by_fields <ContentAddressableMemory.distance_by_fields>`:
+      FIX:  COPY OR MOVE TO HERE DESCRIPTION OF DISTANCE COMPUTATION FROM distance_by_fields ATTRIBUTE
       Finally, `selection_function
       <ContentAddressableMemory.selection_function>` then determines which entries to select ones for consideration.
       If more than one entry from `memory <ContentAddressableMemory.memory>` is identified, `equidistant_entries_select
@@ -1507,11 +1504,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         specifies the function used during retrieval to compare `variable <ContentAddressableMemory.variable>` with
         entries in `memory <ContentAddressableMemory.memory>`.
 
-    distance_by : INDIVIDUAL or GLOBAL : default GLOBAL
+    distance_by_fields : bool : default False
         specifies the method by which `distance_function <ContentAddressableMemory.distance_function>` is used to
         calculate the distance of `variable <ContentAddressableMemory.variable>` with each item in `memory
-        <ContentAddressableMemory.memory>` (see `distance_by <ContentAddressableMemory.distance_by>` for additional
-        details.
+        <ContentAddressableMemory.memory>` (see `distance_by_fields <ContentAddressableMemory.distance_by_fields>`
+        for additional details.
 
     distance_field_weights : 1d array : default None
         specifies the weight to use in computing the distance between each item of `variable
@@ -1599,15 +1596,15 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         function used during retrieval to compare `variable <ContentAddressableMemory.variable>` with entries in
         `memory <ContentAddressableMemory.memory>`.
 
-    distance_by : GLOBAL or INDIVIDUAL
-        determines how `distance_function <ContentAddressableMemory.distance_function>` is applied.
+    distance_by_fields : bool
+        determines how `distance_function <ContentAddressableMemory.distance_function>` is applied:
 
-        * *GLOBAL* -- all items of `variable <ContentAddressableMemory.variable>` are concatenated,
+        * False -- all items of `variable <ContentAddressableMemory.variable>` are concatenated,
           and compared against each item in `memory <ContentAddressableMemory.memory>` by concatenating the
           `memory_fields <ContentAddressableMemory_Memory_Fields>` of that entry, and then using `distance_function
           <ContentAddressableMemory.distance_function>` to compare the two resulting 1d arrays.
 
-        * *INDIVIDUAL* -- `variable <ContentAddressableMemory_Memory_Fields.variable>` is compared with each item
+        * True -- `variable <ContentAddressableMemory_Memory_Fields.variable>` is compared with each item
           `memory <ContentAddressableMemory.memory>` by using `distance_function
           <ContentAddressableMemory.distance_function>` to compare each item in `variable
           <ContentAddressableMemory_Memory_Fields.variable>` with the corresponding `memory_field of the
@@ -1618,7 +1615,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         determines the weight used in computing the distance between each item of `variable
         <ContentAddressableMemory.variable>` and the corresponding `memory_field
         <ContentAddressableMemory_Memory_Fields>` of each item in `memory <ContentAddressableMemory.memory>`
-        when `distance_by <ContentAddressableMemory.distance_by>` is set to *INDIVIDUAL*.
+        when `distance_by_fields <ContentAddressableMemory.distance_by_fields>` is True.  If it is not specified
+        and `distance_by_fields <ContentAddressableMemory.distance_by_fields>` is True, a weight of 1 is assigned
+        for each field.
 
     distance : float : default 0
         contains distance used for retrieval last cue to last entry returned in a given `context <Context>`.
@@ -1713,11 +1712,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 distance_function
                     see `distance_function <ContentAddressableMemory.distance_function>`
 
-                    :default value: GLOBAL
+                    :default value: Cosine
                     :type: ``str``
 
-                distance_by
-                    see `distance_by <ContentAddressableMemory.distance_by>`
+                distance_by_fields
+                    see `distance_by_fields <ContentAddressableMemory.distance_by_fields>`
 
                 duplicate_entries
                     see `duplicate_entries <ContentAddressableMemory.duplicate_entries>`
@@ -1834,7 +1833,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
         random_state = Parameter(None, stateful=True, loggable=False)
-        distance_by = Parameter(INDIVIDUAL, stateful=True)
+        distance_by_fields = Parameter(False, stateful=True)
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
         distance = Parameter(0, stateful=True, read_only=True)
@@ -1850,8 +1849,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                  initializer:Optional[Union[list, np.ndarray]]=None,
                  distance_field_weights:Optional[Union[list, np.ndarray]]=None,
                  distance_function:Optional[Union[Distance, is_function_type]]=None,
-                 # distance_by:Optional[Union[Literal[INDIVIDUAL, GLOBAL]]]=None,
-                 distance_by=None,
+                 distance_by_fields:bool=False,
                  selection_function:Optional[Union[OneHot, is_function_type]]=None,
                  # duplicate_entries:Optional[Union[bool, Literal[OVERWRITE]]]=None,
                  duplicate_entries=None,
@@ -1881,7 +1879,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             duplicate_entries=duplicate_entries,
             duplicate_threshold=duplicate_threshold,
             equidistant_entries_select=equidistant_entries_select,
-            distance_by=distance_by,
+            distance_by_fields=distance_by_fields,
             distance_field_weights=distance_field_weights,
             rate=rate,
             noise=noise,
@@ -2181,15 +2179,15 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             field_weights = np.array([1]*num_fields)
         distance_fct = self.parameters.distance_function._get(context)
 
-        if self.parameters.distance_by._get(context) == GLOBAL:
-            # Get distances between entire cue vector and all that for each entry in memory
-            distances_to_entries = [distance_fct([np.hstack(cue), np.hstack(m)]) for m in _memory]
-        else:
+        if self.parameters.distance_by_fields._get(context) is True:
             # Get mean of field-wise distances between cue each entry in memory
             distances_to_entries = []
             for entry in _memory:
                 distances_to_entries.append(np.sum([distance_fct([cue[i], entry[i]]) * field_weights[i] / num_fields
                                   for i in range(num_fields)]))
+        else:
+            # Get distances between entire cue vector and all that for each entry in memory
+            distances_to_entries = [distance_fct([np.hstack(cue), np.hstack(m)]) for m in _memory]
 
         # Get the best-match(es) in memory based on selection_function and return as non-zero value(s) in an array
         selection_array = self.selection_function(distances_to_entries, context=context)
