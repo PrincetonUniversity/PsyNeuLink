@@ -2100,17 +2100,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                                 f"that has an incorrect number of fields ({len(memory)}; should be {num_fields}).")
         if not all((np.array(item).ndim == 1 and len(item) == field_sizes[i]
                     for i, item in enumerate(memory))):
-            raise FunctionError(f"Attempt to store and/or retrieve entry in {self.__class__.__name__} ({memory}) "
-                                f"that has one or more fields with an incorrect size (should be {field_sizes}).")
-
-        # self._validate_key(memory[KEYS], context)
-
-    # @tc.typecheck
-    # def _validate_key(self, key:tc.any(list, np.ndarray), context):
-    #     # Length of key must be same as that of existing entries (so it can be matched on retrieval)
-    #     if len(key) != self.parameters.key_size._get(context):
-    #         raise FunctionError(f"Length of 'key' ({key}) to store in {self.__class__.__name__} ({len(key)}) "
-    #                             f"must be same as others in the dict ({self.parameters.key_size._get(context)})")
+            raise FunctionError(f"Attempt to store and/or retrieve entry in {self.__class__.__name__} ({memory}) that "
+                                f"has one or more fields with an incorrect size (sizes should be {field_sizes}).")
 
     def uniform_entry(self, value:Union[int, float], context) -> np.ndarray:
         return np.array([[value]* i for i in self.parameters.memory_field_sizes._get(context)])
@@ -2175,11 +2166,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             if (not self.duplicate_entries
                     # FIX: Seems this tests only for duplicates of first item in indices_of_selected_items
                     #      (by checking it against others), but not duplicates among the others
-                    # and any(list(selected_keys[indices_of_selected_items[0]])==list(selected_keys[other])
+                    # and any(all(np.array_equal(i,j) for i,j in zip(selected_keys[indices_of_selected_items[0]],
+                    #                                        selected_keys[other]))
                     #         for other in indices_of_selected_items[1:])):
-                    #
-                    and any(all(np.array_equal(i,j) for i,j in zip(selected_keys[indices_of_selected_items[0]],
-                                                           selected_keys[other]))
+                    and any(self._is_duplicate(selected_keys[indices_of_selected_items[0]], selected_keys[other])
                             for other in indices_of_selected_items[1:])):
                 owner_str = ''
                 if self.owner:
@@ -2235,7 +2225,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         existing_entries = self.parameters.previous_value._get(context)
 
         # Check for matches with existing entries
-        # matches = [m for m in existing_entries if m==memory]
         matches = [m for m in existing_entries if len(m) and self._is_duplicate(memory, m)]
 
         # If dupliciate keys are not allowed and key matches any existing keys, don't store
