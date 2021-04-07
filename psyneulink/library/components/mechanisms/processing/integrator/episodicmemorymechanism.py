@@ -25,27 +25,49 @@ Contents
 Overview
 --------
 
-An EpisodicMemoryMechanism is an `IntegratorMechanism` that can store and retrieve content-associate pairs.
-Only the content is used for determining which pairs are retrieved
+An EpisodicMemoryMechanism is an `IntegratorMechanism` that can store and retrieve items from a content addressable
+memory;  that is, it can store items presented to it as input, and use that to retrieve an item from its memory
+based on the content of the input.  It can be assigned an appropriate `MemoryFunction`, which determines how items
+are stored and retrieved. At present, it supports the following two MemoryFunctions:
+
+• `DictionaryMemory` -- store pairs of content and associate vectors as key-value entries, that are retrieved
+  based on the key (similarity to the content vector).  This is provided for consistency with many applications that
+  use dictionaries as a form of external memory.
+
+• `ContentAddressableMemory` -- a more general form of memory, that stores 2d arrays that are comprised of one or
+  more 1d arrays, referred to as `memory fields <ContentAddressableMemory_Memory_Fields>`, any or all of which can be
+  used (and weighted) for retrieval.
+
 
 .. _EpisodicMemoryMechanism_Creation:
 
-Creating a TransferMechanism
------------------------------
+Creating an EpisodicMemoryMechanism
+-----------------------------------
 
-An EpisodicMemoryMechanism is created by calling its constructor with **content_size** and, optionally, **assoc_size**,
-that define the shapes of the items stored in its memory.
+An EpisodicMemoryMechanism is created by calling its constructor with an appropriate `MemoryFunction` and
+corresponding information about the shapes of the items to be stored in memory and the `Distance` used for
+comparing the Mechanism's input with entries in its memory to determine which is retrieved.
 
 .. _EpisodicMemoryMechanism_Structure:
 
 Structure
 ---------
 
-An EpisodicMemoryMechanism has at least one `InputPort <InputPort>`, its *CONTENT_INPUT* and,
-optionally, an *ASSOC_INPUT* InputPort (if its *assoc_size* is specified and is not 0) that represent
-an item to store;  a `function <EpisodicMemoryMechanism.function>` that stores and retrieves content-assoc pairs from its
+An EpisodicMemoryMechanism has one or more `InputPorts <InputPort>` that receive the item to be stored,
+and that is used to retrieve an existing entry from its memory.  If the Mechanism is assigned
+`ContentAddressableMemory` as its `function <EpisodicMemoryMechanism.function>`, then it has a number of InputPorts
+equal to **memory_num_fields** specified for the function (this is 1 by default;  see
+`ContentAddressableMemory_Memory_Fields`);  these can be labeled by assigning a list of names to the **input_ports**
+argument of the Mechanism's constructor.  If the Mechanism is assigned `DictionaryMemory` as
+its `function <EpisodicMemoryMechanism.function>`, then it has at least one InputPort, named *CONTENT_INPUT* and,
+optionally, an *ASSOC_INPUT* InputPort (if the *assoc_size* argument of the function is specified and is not 0)
+that represent an item to store;
+
+
+a `function <EpisodicMemoryMechanism.function>` that stores and retrieves
+content-assoc pairs from its
 memory; and at least one `OutputPort <OutputPort>`, *CONTENT_OUTPUT*, as well as a 2nd, *CONTENT_OUTPUT* if it has
-an *ASSOC_INPUT* InputPort, that represent a retrieved item. The default function is a `DictionaryMemory` that
+an *ASSOC_INPUT* InputPort, that represent a retrieved item. The default function is `DictionaryMemory` that
 implements a simple form of content-addressable memory, but a custom function can be specified, so long as it meets the
 following requirements:
 
@@ -102,8 +124,7 @@ from psyneulink.core.components.functions.statefulfunctions.memoryfunctions impo
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.inputport import OutputPort
-from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.keywords import CONTEXT, NAME, OWNER_VALUE, SIZE, VARIABLE
+from psyneulink.core.globals.keywords import NAME, OWNER_VALUE, SIZE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import convert_to_np_array
@@ -131,27 +152,43 @@ def _generate_content_input_port_spec(content_size):
 class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     """
     EpisodicMemoryMechanism(                \
-        content_size=1,                     \
-        assoc_size=1,                       \
-        function=DictionaryMemory,  \
+        default_variable=None,              \
+        field_sizes=[1],                    \
+        function=ContentAddressableMemory,  \
         params=None,                        \
         name=None,                          \
         prefs=None                          \
     )
 
+    Subclass of `IntegratorMechanism <IntegratorMechanism>` that implements a content addressable dictionary.
+    See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
+
+    COMMENT:
+    OLD
     Subclass of `IntegratorMechanism <IntegratorMechanism>` that implements a `differentiable neural dictionary
     (DictionaryMemory)<HTML>`_.  See `Mechanism <Mechanism_Class_Reference>` for additional arguments and
     attributes.
+    COMMENT
 
     Arguments
     ---------
 
-    content_size : int : default 1
-        specifies length of the content stored in the `function <EpisodicMemoryMechanism.function>`\\s memory.
+    # content_size : int : default 1
+    #     specifies length of the content stored in the `function <EpisodicMemoryMechanism.function>`\\s memory.
+    #
+    # assoc_size : int : default 0
+    #     specifies length of the assoc stored in the `function <EpisodicMemoryMechanism.function>`\\s memory;
+    #     if it is 0 (the default) then no *ASSOC_INPUT* InputPort or *ASSOC_OUTPUT* OutputPort are created.
 
-    assoc_size : int : default 0
-        specifies length of the assoc stored in the `function <EpisodicMemoryMechanism.function>`\\s memory;
-        if it is 0 (the default) then no *ASSOC_INPUT* InputPort or *ASSOC_OUTPUT* OutputPort are created.
+
+    field_sizes : list[int] or 1d array : default [1]
+        specifies the size of each field in the input, each of which corresponds an `InputPort` of the Mechanism.
+        For a `ContentAddressableMemory` function, there can any number of fields, each of which can be any size.
+        For a `ContentAddressableMemory` function, there can any number of fields, each of which can be any size.
+
+
+    FIX: NOTE: PUT WARNING HERE ABOUT FIELDS WITH SIZE 1 PRODUCING PARTICULAR (POTENTIALLY UNANTICIPATED) RESULTS
+    WITH SOME DISTANCE METRICS (SCALRS & EUCLIDEAN MEASURES = 0)
 
     function : function : default DictionaryMemory
         specifies the function that implements a memory store and methods to store to and retrieve from it.  It
