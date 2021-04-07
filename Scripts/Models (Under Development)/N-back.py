@@ -10,7 +10,8 @@ from psyneulink import *
 #       > second time, at end of trial (under influence of ControlMechanism) to encode current stimulus & context
 #             (with prob storage = 1;  prob of retrieval = 0)
 #     - implement circular drift as function for an input mechanism
-#     - BUG:  should be able to use InputPort as spec for a pathway (if there is nothing after it);  same for OutputPort (if there is nothing before it)
+#     - BUG:  should be able to use InputPort as spec for a pathway (if there is nothing after it);
+#             same for OutputPort (if there is nothing before it)
 
 
 #region N-BACK MODEL
