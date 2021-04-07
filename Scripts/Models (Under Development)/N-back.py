@@ -32,7 +32,7 @@ def n_back_model():
     # Episodic Memory, Decision and Control
     # em = EpisodicMemoryMechanism(name='EM', content_size=5, assoc_size=5)
     em = EpisodicMemoryMechanism(name='EM', content_size=5, assoc_size=5,
-                                 # function=DictionaryStorage(initializer=[[[0,0,0,0,0],[0,0,0,0,0]]])
+                                 # function=DictionaryMemory(initializer=[[[0,0,0,0,0],[0,0,0,0,0]]])
                                  )
     ctl = ControlMechanism(control=(STORAGE_PROB, em))
     decision = DDM(name='DECISION')

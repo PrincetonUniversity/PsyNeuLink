@@ -13,7 +13,7 @@
 Functions that store and can retrieve a record of their current input.
 
 * `Buffer`
-* `DictionaryStorage`
+* `DictionaryMemory`
 
 Overview
 --------
@@ -40,14 +40,14 @@ from psyneulink.core.components.functions.statefulfunctions.integratorfunctions 
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, \
-    ContentAddressableMemory_FUNCTION, DictionaryStorage_FUNCTION, \
+    ContentAddressableMemory_FUNCTION, DictionaryMemory_FUNCTION, \
     MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import all_within_range, convert_to_np_array, get_global_seed, convert_to_list
 
-__all__ = ['MemoryFunction', 'Buffer', 'DictionaryStorage', 'ContentAddressableMemory',
-           'RETRIEVAL_PROB', 'STORAGE_PROB', 'INDIVIDUAL']
+__all__ = ['MemoryFunction', 'Buffer', 'DictionaryMemory', 'ContentAddressableMemory',
+           'GLOBAL', 'INDIVIDUAL', 'RETRIEVAL_PROB', 'STORAGE_PROB']
 
 
 class MemoryFunction(StatefulFunction):  # -----------------------------------------------------------------------------
@@ -349,9 +349,9 @@ KEYS = 0
 VALS = 1
 
 
-class DictionaryStorage(MemoryFunction):  # ---------------------------------------------------------------------
+class DictionaryMemory(MemoryFunction):  # ---------------------------------------------------------------------
     """
-    DictionaryStorage(                        \
+    DictionaryMemory(                        \
         default_variable=None,                       \
         retrieval_prob=1.0                           \
         storage_prob=1.0                             \
@@ -368,61 +368,61 @@ class DictionaryStorage(MemoryFunction):  # ------------------------------------
         prefs=None,                                  \
         )
 
-    .. _DictionaryStorage:
+    .. _DictionaryMemory:
 
     Implement a configurable, dictionary-style storage and retrieval of key-value pairs, in which storage
-    is determined by `storage_prob <DictionaryStorage.storage_prob>`, and retrieval of items is
-    determined by `distance_function <DictionaryStorage.distance_function>`, `selection_function
-    <DictionaryStorage.selection_function>`, and `retrieval_prob <DictionaryStorage.retrieval_prob>`.
+    is determined by `storage_prob <DictionaryMemory.storage_prob>`, and retrieval of items is
+    determined by `distance_function <DictionaryMemory.distance_function>`, `selection_function
+    <DictionaryMemory.selection_function>`, and `retrieval_prob <DictionaryMemory.retrieval_prob>`.
     Keys and values may have different lengths, and values may vary in length from entry to entry, but all keys
     must be the same length. Duplicate keys can be allowed, disallowed, or overwritten using `duplicate_keys
-    <DictionaryStorage.duplicate_keys>`), and how selection is made among duplicate keys or ones
-    indistinguishable by the `distance_function <DictionaryStorage.distance_function>` can be specified
-    using `equidistant_keys_select <DictionaryStorage.equidistant_keys_select>`.
+    <DictionaryMemory.duplicate_keys>`), and how selection is made among duplicate keys or ones
+    indistinguishable by the `distance_function <DictionaryMemory.distance_function>` can be specified
+    using `equidistant_keys_select <DictionaryMemory.equidistant_keys_select>`.
 
     The class also provides methods for directly retrieving an entry (`get_memory
-    <DictionaryStorage.get_memory>`), and adding (`add_to_memory <DictionaryStorage.add_to_memory>`)
-    and deleting (`delete_from_memory <DictionaryStorage.delete_from_memory>`) one or more entries.
+    <DictionaryMemory.get_memory>`), and adding (`add_to_memory <DictionaryMemory.add_to_memory>`)
+    and deleting (`delete_from_memory <DictionaryMemory.delete_from_memory>`) one or more entries.
 
-    .. _DictionaryStorage_Structure:
+    .. _DictionaryMemory_Structure:
 
     Structure
     ---------
 
     An item is stored and retrieved as a 2d array containing a key-value pair ([[key][value]]).  A 3d array of such
     pairs can be used to initialize the contents of memory by providing it in the **initialzer** argument of the
-    DictionaryStorage's constructor, or in a call to its `reset  <DictionaryStorage.reset>`
-    method.  The current contents of the memory can be inspected using the `memory <DictionaryStorage.memory>`
+    DictionaryMemory's constructor, or in a call to its `reset  <DictionaryMemory.reset>`
+    method.  The current contents of the memory can be inspected using the `memory <DictionaryMemory.memory>`
     attribute, which returns a list containing the current entries, each as a 2 item list containing a key-value pair.
 
-    .. _DictionaryStorage_Execution:
+    .. _DictionaryMemory_Execution:
 
     Execution
     ---------
 
-    When `function <DictionaryStorage.function>` is executed, it first retrieves the
-    item in `memory <DictionaryStorage.memory>` with the key that most closely matches the key of the item
+    When `function <DictionaryMemory.function>` is executed, it first retrieves the
+    item in `memory <DictionaryMemory.memory>` with the key that most closely matches the key of the item
     (key-value pair) in the call, stores the latter in memory, and returns the retrieved item (key-value pair).
     If the key of the pair in the call is an exact match of a key in memory and `duplicate_keys
-    <DictionaryStorage.duplicate_keys>` is False, then the matching item is returned, but the
+    <DictionaryMemory.duplicate_keys>` is False, then the matching item is returned, but the
     pair in the call is not stored. These steps are described in more detail below:
 
-    * First, with probability `retrieval_prob <DictionaryStorage.retrieval_prob>`, an entry is retrieved from
-      `memory <DictionaryStorage.memory>` that has a key that is closest to the one in the call (first item of
-      `variable <DictionaryStorage.variable>`), as determined by the `distance_function
-      <DictionaryStorage.distance_function>` and `selection_function
-      <DictionaryStorage.selection_function>`.  The `distance_function
-      <DictionaryStorage.distance_function>` generates a list of distances of each key in memory from the
-      one in the call;  the `selection_function <DictionaryStorage.selection_function>` then determines which
+    * First, with probability `retrieval_prob <DictionaryMemory.retrieval_prob>`, an entry is retrieved from
+      `memory <DictionaryMemory.memory>` that has a key that is closest to the one in the call (first item of
+      `variable <DictionaryMemory.variable>`), as determined by the `distance_function
+      <DictionaryMemory.distance_function>` and `selection_function
+      <DictionaryMemory.selection_function>`.  The `distance_function
+      <DictionaryMemory.distance_function>` generates a list of distances of each key in memory from the
+      one in the call;  the `selection_function <DictionaryMemory.selection_function>` then determines which
       to select ones for consideration.  If more than one entry from memory is identified, `equidistant_keys_select
-      <DictionaryStorage.equidistant_keys_select>` is used to determine which to retrieve.  If no retrieval
+      <DictionaryMemory.equidistant_keys_select>` is used to determine which to retrieve.  If no retrieval
       occurs, an appropriately shaped zero-valued array is assigned as the retrieved memory (and returned by the
-      `function <DictionaryStorage.function>`.
+      `function <DictionaryMemory.function>`.
     ..
-    * After retrieval, the key-value pair in the call (`variable <DictionaryStorage.variable>`) is stored in
-     `memory <DictionaryStorage.memory>` with probability `storage_prob <DictionaryStorage.storage_prob>`.
-      If the key (`variable <DictionaryStorage.variable>`\\[0]) is identical to one already in `memory
-      <DictionaryStorage.memory>` and `duplicate_keys <DictionaryStorage.duplicate_keys>`
+    * After retrieval, the key-value pair in the call (`variable <DictionaryMemory.variable>`) is stored in
+     `memory <DictionaryMemory.memory>` with probability `storage_prob <DictionaryMemory.storage_prob>`.
+      If the key (`variable <DictionaryMemory.variable>`\\[0]) is identical to one already in `memory
+      <DictionaryMemory.memory>` and `duplicate_keys <DictionaryMemory.duplicate_keys>`
       is set to False, storage is skipped; if it is set to *OVERWRITE*, the value of the key in memory is replaced
       with the one in the call.  If **rate** and/or **noise** arguments are specified in the
       construtor, it is applied to the key before storing, as follows:
@@ -430,7 +430,7 @@ class DictionaryStorage(MemoryFunction):  # ------------------------------------
     .. math::
         variable[1] * rate + noise
 
-    If the number of entries exceeds `max_entries <DictionaryStorage.max_entries>, the first (oldest) item in
+    If the number of entries exceeds `max_entries <DictionaryMemory.max_entries>, the first (oldest) item in
     memory is deleted.
 
     Arguments
@@ -441,45 +441,45 @@ class DictionaryStorage(MemoryFunction):  # ------------------------------------
         of which is a list or array;  first item is used as key, and second as value entry of dictionary.
 
     retrieval_prob : float in interval [0,1] : default 1.0
-        specifies probability of retrieiving a key from `memory <DictionaryStorage.memory>`.
+        specifies probability of retrieiving a key from `memory <DictionaryMemory.memory>`.
 
     storage_prob : float in interval [0,1] : default 1.0
-        specifies probability of adding `variable <DictionaryStorage.variable>` to `memory
-        <DictionaryStorage.memory>`.
+        specifies probability of adding `variable <DictionaryMemory.variable>` to `memory
+        <DictionaryMemory.memory>`.
 
     rate : float, list, or array : default 1.0
-        specifies a value used to multiply key (first item of `variable <DictionaryStorage.variable>`) before
-        storing in `memory <DictionaryStorage.memory>` (see `rate <DictionaryStorage.noise> for details).
+        specifies a value used to multiply key (first item of `variable <DictionaryMemory.variable>`) before
+        storing in `memory <DictionaryMemory.memory>` (see `rate <DictionaryMemory.noise> for details).
 
     noise : float, list, array, or Function : default 0.0
-        specifies a random value added to key (first item of `variable <DictionaryStorage.variable>`) before
-        storing in `memory <DictionaryStorage.memory>` (see `noise <DictionaryStorage.noise> for details).
+        specifies a random value added to key (first item of `variable <DictionaryMemory.variable>`) before
+        storing in `memory <DictionaryMemory.memory>` (see `noise <DictionaryMemory.noise> for details).
 
     initializer : 3d array or list : default None
-        specifies an initial set of entries for `memory <DictionaryStorage.memory>`. It must be of the following
+        specifies an initial set of entries for `memory <DictionaryMemory.memory>`. It must be of the following
         form: [[[key],[value]], [[key],[value]], ...], such that each item in the outer dimension (axis 0)
         is a 2d array or list containing a key and a value pair for that entry. All of the keys must be 1d arrays or
         lists of the same length.
 
     distance_function : Distance or function : default Distance(metric=COSINE)
         specifies the function used during retrieval to compare the first item in `variable
-        <DictionaryStorage.variable>` with keys in `memory <DictionaryStorage.memory>`.
+        <DictionaryMemory.variable>` with keys in `memory <DictionaryMemory.memory>`.
 
     selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
         specifies the function used during retrieval to evaluate the distances returned by `distance_function
-        <DictionaryStorage.distance_function>` and select the item to return.
+        <DictionaryMemory.distance_function>` and select the item to return.
 
     equidistant_keys_select:  RANDOM | OLDEST | NEWEST : default RANDOM
         specifies which item is chosen for retrieval if two or more keys have the same distance from the first item of
-        `variable  <DictionaryStorage.variable>`.
+        `variable  <DictionaryMemory.variable>`.
 
     duplicate_keys : bool | OVERWRITE : default False
-        specifies whether entries with duplicate keys are allowed in `memory <DictionaryStorage.memory>`
-        (see `duplicate_keys <DictionaryStorage.duplicate_keys for additional details>`).
+        specifies whether entries with duplicate keys are allowed in `memory <DictionaryMemory.memory>`
+        (see `duplicate_keys <DictionaryMemory.duplicate_keys for additional details>`).
 
     max_entries : int : default None
-        specifies the maximum number of entries allowed in `memory <DictionaryStorage.memory>`
-        (see `max_entries <DictionaryStorage.max_entries for additional details>`).
+        specifies the maximum number of entries allowed in `memory <DictionaryMemory.memory>`
+        (see `max_entries <DictionaryMemory.max_entries for additional details>`).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -499,66 +499,66 @@ class DictionaryStorage(MemoryFunction):  # ------------------------------------
     ----------
 
     variable : 2d array
-        1st item (variable[0] is the key used to retrieve an enrtry from `memory <DictionaryStorage.memory>`,
+        1st item (variable[0] is the key used to retrieve an enrtry from `memory <DictionaryMemory.memory>`,
         and 2nd item (variable[1]) is the value of the entry, paired with key and added to the `memory
-        <DictionaryStorage.memory>`.
+        <DictionaryMemory.memory>`.
 
     key_size : int
-        length of keys in `memory <DictionaryStorage.memory>`.
+        length of keys in `memory <DictionaryMemory.memory>`.
 
     val_size : int
-        length of values in `memory <DictionaryStorage.memory>`.
+        length of values in `memory <DictionaryMemory.memory>`.
 
     retrieval_prob : float in interval [0,1]
-        probability of retrieiving a value from `memory <DictionaryStorage.memory>`.
+        probability of retrieiving a value from `memory <DictionaryMemory.memory>`.
 
     storage_prob : float in interval [0,1]
-        probability of adding `variable <DictionaryStorage.variable>` to `memory
-        <DictionaryStorage.memory>`.
+        probability of adding `variable <DictionaryMemory.variable>` to `memory
+        <DictionaryMemory.memory>`.
 
     rate : float or 1d array
-        value applied multiplicatively to key (first item of `variable <DictionaryStorage.variable>`) before
-        storing in `memory <DictionaryStorage.memory>` (see `rate <Stateful_Rate>` for additional details).
+        value applied multiplicatively to key (first item of `variable <DictionaryMemory.variable>`) before
+        storing in `memory <DictionaryMemory.memory>` (see `rate <Stateful_Rate>` for additional details).
 
     noise : float, 1d array or Function
-        value added to key (first item of `variable <DictionaryStorage.variable>`) before storing in
-        `memory <DictionaryStorage.memory>` (see `noise <Stateful_Noise>` for additional details).
+        value added to key (first item of `variable <DictionaryMemory.variable>`) before storing in
+        `memory <DictionaryMemory.memory>` (see `noise <Stateful_Noise>` for additional details).
 
     initializer : 3d array
-        initial set of entries for `memory <DictionaryStorage.memory>`; each is a 2d array with a key-value pair.
+        initial set of entries for `memory <DictionaryMemory.memory>`; each is a 2d array with a key-value pair.
 
     memory : list
-        list of key-value pairs containing entries in DictionaryStorage:
+        list of key-value pairs containing entries in DictionaryMemory:
         [[[key 1], [value 1]], [[key 2], value 2]]...]
 
     distance_function : Distance or function : default Distance(metric=COSINE)
-        function used during retrieval to compare the first item in `variable <DictionaryStorage.variable>`
-        with keys in `memory <DictionaryStorage.memory>`.
+        function used during retrieval to compare the first item in `variable <DictionaryMemory.variable>`
+        with keys in `memory <DictionaryMemory.memory>`.
 
     selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
         function used during retrieval to evaluate the distances returned by `distance_function
-        <DictionaryStorage.distance_function>` and select the item(s) to return.
+        <DictionaryMemory.distance_function>` and select the item(s) to return.
 
     previous_value : 1d array
-        state of the `memory <DictionaryStorage.memory>` prior to storing `variable
-        <DictionaryStorage.variable>` in the current call.
+        state of the `memory <DictionaryMemory.memory>` prior to storing `variable
+        <DictionaryMemory.variable>` in the current call.
 
     duplicate_keys : bool | OVERWRITE
-        determines whether entries with duplicate keys are allowed in `memory <DictionaryStorage.memory>`.
+        determines whether entries with duplicate keys are allowed in `memory <DictionaryMemory.memory>`.
         If True (the default), items with keys that are the same as ones in memory can be stored;  on retrieval, a
-        single one is selected based on `equidistant_keys_select <DictionaryStorage.equidistant_keys_select>`.
+        single one is selected based on `equidistant_keys_select <DictionaryMemory.equidistant_keys_select>`.
         If False, then an attempt to store and item with a key that is already in `memory
-        <DictionaryStorage.memory>` is ignored, and the entry already in memory with that key is retrieved.
+        <DictionaryMemory.memory>` is ignored, and the entry already in memory with that key is retrieved.
         If a duplicate key is identified during retrieval (e.g., **duplicate_keys** is changed from True to
         False), a warning is issued and zeros are returned.  If *OVERWRITE*, then retrieval of a cue with an identical
         key causes the value at that entry to be overwritten with the new value.
 
     equidistant_keys_select:  RANDOM | OLDEST | NEWEST
         deterimines which entry is retrieved when duplicate keys are identified or are indistinguishable by the
-        `distance_function <DictionaryStorage.distance_function>`.
+        `distance_function <DictionaryMemory.distance_function>`.
 
     max_entries : int
-        maximum number of entries allowed in `memory <DictionaryStorage.memory>`;  if storing a memory
+        maximum number of entries allowed in `memory <DictionaryMemory.memory>`;  if storing a memory
         exceeds the number, the oldest memory is deleted.
 
     random_state : numpy.RandomState
@@ -579,12 +579,12 @@ class DictionaryStorage(MemoryFunction):  # ------------------------------------
     Returns
     -------
 
-    value and key of entry that best matches first item of `variable <DictionaryStorage.variable>`  : 2d array
+    value and key of entry that best matches first item of `variable <DictionaryMemory.variable>`  : 2d array
         if no retrieval occures, an appropriately shaped zero-valued array is returned.
 
     """
 
-    componentName = DictionaryStorage_FUNCTION
+    componentName = DictionaryMemory_FUNCTION
 
     class Parameters(StatefulFunction.Parameters):
         """
@@ -592,79 +592,79 @@ class DictionaryStorage(MemoryFunction):  # ------------------------------------
             ----------
 
                 variable
-                    see `variable <DictionaryStorage.variable>`
+                    see `variable <DictionaryMemory.variable>`
 
                     :default value: [[0], [0]]
                     :type: ``list``
 
                 distance_function
-                    see `distance_function <DictionaryStorage.distance_function>`
+                    see `distance_function <DictionaryMemory.distance_function>`
 
                     :default value: `Distance`(metric=cosine)
                     :type: `Function`
 
                 duplicate_keys
-                    see `duplicate_keys <DictionaryStorage.duplicate_keys>`
+                    see `duplicate_keys <DictionaryMemory.duplicate_keys>`
 
                     :default value: False
                     :type: ``bool``
 
                 equidistant_keys_select
-                    see `equidistant_keys_select <DictionaryStorage.equidistant_keys_select>`
+                    see `equidistant_keys_select <DictionaryMemory.equidistant_keys_select>`
 
                     :default value: `RANDOM`
                     :type: ``str``
 
                 key_size
-                    see `key_size <DictionaryStorage.key_size>`
+                    see `key_size <DictionaryMemory.key_size>`
 
                     :default value: 1
                     :type: ``int``
 
                 max_entries
-                    see `max_entries <DictionaryStorage.max_entries>`
+                    see `max_entries <DictionaryMemory.max_entries>`
 
                     :default value: 1000
                     :type: ``int``
 
                 noise
-                    see `noise <DictionaryStorage.noise>`
+                    see `noise <DictionaryMemory.noise>`
 
                     :default value: 0.0
                     :type: ``float``
 
                 random_state
-                    see `random_state <DictionaryStorage.random_state>`
+                    see `random_state <DictionaryMemory.random_state>`
 
                     :default value: None
                     :type: ``numpy.random.RandomState``
 
                 rate
-                    see `rate <DictionaryStorage.rate>`
+                    see `rate <DictionaryMemory.rate>`
 
                     :default value: 1.0
                     :type: ``float``
 
                 retrieval_prob
-                    see `retrieval_prob <DictionaryStorage.retrieval_prob>`
+                    see `retrieval_prob <DictionaryMemory.retrieval_prob>`
 
                     :default value: 1.0
                     :type: ``float``
 
                 selection_function
-                    see `selection_function <DictionaryStorage.selection_function>`
+                    see `selection_function <DictionaryMemory.selection_function>`
 
                     :default value: `OneHot`(mode=MIN_INDICATOR)
                     :type: `Function`
 
                 storage_prob
-                    see `storage_prob <DictionaryStorage.storage_prob>`
+                    see `storage_prob <DictionaryMemory.storage_prob>`
 
                     :default value: 1.0
                     :type: ``float``
 
                 val_size
-                    see `val_size <DictionaryStorage.val_size>`
+                    see `val_size <DictionaryMemory.val_size>`
 
                     :default value: 1
                     :type: ``int``
@@ -1027,15 +1027,15 @@ class DictionaryStorage(MemoryFunction):  # ------------------------------------
         """
         reset(<new_dictionary> default={})
 
-        Clears the memory in `previous_value <DictionaryStorage.previous_value>`.
+        Clears the memory in `previous_value <DictionaryMemory.previous_value>`.
 
-        If an argument is passed into reset or if the `initializer <DictionaryStorage.initializer>`
+        If an argument is passed into reset or if the `initializer <DictionaryMemory.initializer>`
         attribute contains a value besides [], then that value is used to start the new memory in `previous_value
-        <DictionaryStorage.previous_value>`. Otherwise, the new `previous_value
-        <DictionaryStorage.previous_value>` memory starts out empty.
+        <DictionaryMemory.previous_value>`. Otherwise, the new `previous_value
+        <DictionaryMemory.previous_value>` memory starts out empty.
 
-        `value <DictionaryStorage.value>` takes on the same value as
-        `previous_value <DictionaryStorage.previous_value>`.
+        `value <DictionaryMemory.value>` takes on the same value as
+        `previous_value <DictionaryMemory.previous_value>`.
         """
         # no arguments were passed in -- use current values of initializer attributes
         if previous_value is None:
@@ -1057,17 +1057,17 @@ class DictionaryStorage(MemoryFunction):  # ------------------------------------
                  params=None,
                  ):
         """
-        Return entry in `memory <DictionaryStorage.memory>` that key of which best matches first item of
-        `variable <DictionaryStorage.variable>` (query key), then add `variable
-        <DictionaryStorage.variable>` to `memory <DictionaryStorage.memory>` (see `above
-        <DictionaryStorage_Execution>` for additional details).
+        Return entry in `memory <DictionaryMemory.memory>` that key of which best matches first item of
+        `variable <DictionaryMemory.variable>` (query key), then add `variable
+        <DictionaryMemory.variable>` to `memory <DictionaryMemory.memory>` (see `above
+        <DictionaryMemory_Execution>` for additional details).
 
         Arguments
         ---------
 
         variable : list or 2d array : default class_defaults.variable
            first item (variable[0]) is treated as the key for retrieval; second item (variable[1]), paired
-           with key, is added to `memory <DictionaryStorage.memory>`.
+           with key, is added to `memory <DictionaryMemory.memory>`.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -1077,7 +1077,7 @@ class DictionaryStorage(MemoryFunction):  # ------------------------------------
         Returns
         -------
 
-        value of entry that best matches first item of `variable <DictionaryStorage.variable>`  : 1d array
+        value of entry that best matches first item of `variable <DictionaryMemory.variable>`  : 1d array
         """
 
         key = variable[KEYS]
@@ -1153,14 +1153,14 @@ class DictionaryStorage(MemoryFunction):  # ------------------------------------
     def get_memory(self, query_key:tc.any(list, np.ndarray), context=None):
         """get_memory(query_key, context=None)
 
-        Retrieve memory from `memory <DictionaryStorage.memory>` based on `distance_function
-        <DictionaryStorage.distance_function>` and `selection_function
-        <DictionaryStorage.selection_function>`.
+        Retrieve memory from `memory <DictionaryMemory.memory>` based on `distance_function
+        <DictionaryMemory.distance_function>` and `selection_function
+        <DictionaryMemory.selection_function>`.
 
         Arguments
         ---------
         query_key : list or 1d array
-            must be same length as key(s) of any existing entries in `memory <DictionaryStorage.memory>`.
+            must be same length as key(s) of any existing entries in `memory <DictionaryMemory.memory>`.
 
         Returns
         -------
@@ -1221,13 +1221,13 @@ class DictionaryStorage(MemoryFunction):  # ------------------------------------
 
     @tc.typecheck
     def _store_memory(self, memory:tc.any(list, np.ndarray), context):
-        """Save an key-value pair to `memory <DictionaryStorage.memory>`
+        """Save an key-value pair to `memory <DictionaryMemory.memory>`
 
         Arguments
         ---------
         memory : list or 2d array
             must be two items, a key and a vaue, each of which must a list of numbers or 1d array;
-            the key must be the same length as key(s) of any existing entries in `dict <DictionaryStorage.dict>`.
+            the key must be the same length as key(s) of any existing entries in `dict <DictionaryMemory.dict>`.
         """
 
         self._validate_memory(memory, context)
@@ -1290,7 +1290,7 @@ class DictionaryStorage(MemoryFunction):  # ------------------------------------
             a single memory (list or 2d array) or list or array of memorys, each of which must be a valid entry
             consisting of two items (e.g., [[key],[value]] or [[[key1],[value1]],[[key2],[value2]]].
             The keys must all be the same length and equal to the length as key(s) of any existing entries in `dict
-            <DictionaryStorage.dict>`.  Items are added to memory in the order listed.
+            <DictionaryMemory.dict>`.  Items are added to memory in the order listed.
         """
         memories = self._parse_memories(memories, 'add_to_memory', context)
 
@@ -1614,6 +1614,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         <ContentAddressableMemory_Memory_Fields>` of each item in `memory <ContentAddressableMemory.memory>`
         when `distance_by <ContentAddressableMemory.distance_by>` is set to *INDIVIDUAL*.
 
+    distance : float : default 0
+        contains distance of last cue to last entry returned in a given `context <Context>`.
+
+    distances : array : default [0]
+        contains array of distances between each `memory field <ContentAddressbleMemory_Memory_Fields>`
+        of the last cue and the corresponding ones of the last entry returned in a given `context <Context>`.
+
     memory_num_fields : int
         contains the number of `memory fields <ContentAddressableMemory_Memory_Fields>` in each entry of `memory
         <ContentAddressableMemory.memory>`.
@@ -1732,6 +1739,18 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                     :default value: [1]
                     :type: ``numpy.ndarray``
 
+                distance
+                    see `distance <ContentAddressableMemory.distance>`
+
+                    :default value: 0
+                    :type: ``float``
+
+                distances
+                    see `distances <ContentAddressableMemory.distances>`
+
+                    :default value: [0]
+                    :type: ``numpy.ndarray``
+
                 distance_field_weights
                     see `distance_field_weights <ContentAddressableMemory.distance_field_weights>`
 
@@ -1799,10 +1818,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
         random_state = Parameter(None, stateful=True, loggable=False)
-
         distance_by = Parameter(INDIVIDUAL, stateful=True)
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
+        distance = Parameter(0, stateful=True, read_only=True)
+        distances = Parameter([0], stateful=True, read_only=True)
 
     def __init__(self,
                  default_variable=None,
@@ -2139,16 +2159,16 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         self._validate_memory(cue, context)
         num_fields = self.parameters.memory_num_fields._get(context)
         field_weights = field_weights or np.array([1]*num_fields)
-        distance = self.parameters.distance_function._get(context)
+        distance_fct = self.parameters.distance_function._get(context)
 
         if self.parameters.distance_by._get(context) == GLOBAL:
             # Get distances between entire cue vector and all that for each entry in memory
-            distances = [distance([np.hstack(cue), np.hstack(m)]) for m in _memory]
+            distances = [distance_fct([np.hstack(cue), np.hstack(m)]) for m in _memory]
         else:
             # Get distances between entire cue vector and all that for each entry in memory
             distances = []
             for entry in _memory:
-                distances.append(np.sum([distance([cue[i], entry[i]]) * field_weights[i] / num_fields
+                distances.append(np.sum([distance_fct([cue[i], entry[i]]) * field_weights[i] / num_fields
                                   for i in range(num_fields)]))
 
         # Get the best-match(es) in memory based on selection_function and return as non-zero value(s) in an array

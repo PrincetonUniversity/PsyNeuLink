@@ -48,7 +48,7 @@ w_ho = pnl.MappingProjection(
     receiver=output
 )
 
-# DictionaryStorage
+# DictionaryMemory
 EM = pnl.EpisodicMemoryMechanism(
     cue_size=n_hidden, assoc_size=n_hidden,
     name='EM'
@@ -85,7 +85,7 @@ for node in all_nodes:
 # input-hidden-output pathway
 comp.add_projection(sender=input, projection=w_ih, receiver=hidden)
 comp.add_projection(sender=hidden, projection=w_ho, receiver=output)
-# conneciton, DictionaryStorage
+# conneciton, DictionaryMemory
 comp.add_projection(sender=EM, projection=w_dh, receiver=hidden)
 comp.add_projection(
     sender=hidden,
@@ -101,20 +101,20 @@ comp.add_projection(
 comp.show_graph()
 
 # # comp.show()
-# # the required inputs for DictionaryStorage
-# print('DictionaryStorage input_ports: ', DictionaryStorage.input_ports.names)
+# # the required inputs for DictionaryMemory
+# print('DictionaryMemory input_ports: ', DictionaryMemory.input_ports.names)
 #
-# # currently, DictionaryStorage receive info from the following node
-# print('DictionaryStorage receive: ')
-# for EM_input in DictionaryStorage.input_ports.names:
-#     afferents = DictionaryStorage.input_ports[EM_input].path_afferents
+# # currently, DictionaryMemory receive info from the following node
+# print('DictionaryMemory receive: ')
+# for EM_input in DictionaryMemory.input_ports.names:
+#     afferents = DictionaryMemory.input_ports[EM_input].path_afferents
 #     if len(afferents) == 0:
 #         print(f'- {EM_input}: NA')
 #     else:
 #         sending_node_name = afferents[0].sender.owner.name
 #         print(f'- {EM_input}: {sending_node_name}')
 #
-# print('DictionaryStorage cue input: ', DictionaryStorage.input_ports.names)
+# print('DictionaryMemory cue input: ', DictionaryMemory.input_ports.names)
 #
 # print('hidden receive: ')
 # for hidden_afferent in hidden.input_ports[0].path_afferents:

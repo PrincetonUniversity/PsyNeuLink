@@ -58,8 +58,8 @@ rl_agent._analyze_graph()
 # em = EpisodicMemoryMechanism(name='Episodic Memory',
 #                              content_size=stim_size+context_size,
 #                              assoc_size=rpe_size,
-#                              # function=DictionaryStorage(function=ExepctedValueCalc))
-#                              function=DictionaryStorage)
+#                              # function=DictionaryMemory(function=ExepctedValueCalc))
+#                              function=DictionaryMemory)
 #
 # sr = ProcessingMechanism(name='Successor Rep')
 
