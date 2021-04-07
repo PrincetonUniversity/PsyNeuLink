@@ -2086,9 +2086,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         # IMPLEMENTATION NOTE:  if try to create np.ndarray directly, and keys and vals have same length
         #                       end up with array of arrays, rather than array of lists
         # FIX: IS THERE STILL A NEED FOR CONVERSION? JUST RETURN RETRIEVED MEMORY AS IS?
-        ret_val = convert_to_np_array([list(memory[0]),[]])
-        ret_val[1] = list(memory[1])
-        return ret_val
+        # ret_val = convert_to_np_array([list(memory[0]),[]])
+        # ret_val[1] = list(memory[1])
+        # return ret_val
+        return memory
 
     def _validate_memory(self, memory:Union[list, np.ndarray], context) -> None:
 
@@ -2169,38 +2170,22 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         # More than one key identified
         else:
-            # # MODIFIED 4/5/21 OLD:
-            # selected_keys = _memory[KEYS]
-            # # Check for any duplicate keys in matches and, if they are not allowed, return zeros
-            # if (not self.duplicate_entries
-            #         # Seems this tests only for duplicates of first item in indices_of_selected_items
-            #         #    (by checking it against others), but not duplicates among the others
-            #         and any(list(selected_keys[indices_of_selected_items[0]])==list(selected_keys[other])
-            #                 for other in indices_of_selected_items[1:])):
-            #     warnings.warn(f'More than one item matched key ({query_key}) in memory for {self.name} of '
-            #                   f'{self.owner.name} even though {repr("duplicate_entries")} is False')
-            #     return [[0]* self.parameters.key_size._get(context),
-            #             [0]* self.parameters.val_size._get(context)]
-            # if self.equidistant_entries_select == RANDOM:
-            #     random_state = self._get_current_parameter_value('random_state', context)
-            #     index_of_selected_item = random_state.choice(indices_of_selected_items)
-            # elif self.equidistant_entries_select == OLDEST:
-            #     index_of_selected_item = indices_of_selected_items[0]
-            # elif self.equidistant_entries_select == NEWEST:
-            #     index_of_selected_item = indices_of_selected_items[-1]
-            # else:
-            #     assert False, f'PROGRAM ERROR:  bad specification ({self.equidistant_entries_select}) for  ' \
-            #         f'\'equidistant_entries_select parameter of {self.name} for {self.owner.name}'
-            # MODIFIED 4/5/21 NEW:
             selected_keys = _memory
             # Check for any duplicate keys in matches and, if they are not allowed, return zeros
             if (not self.duplicate_entries
                     # FIX: Seems this tests only for duplicates of first item in indices_of_selected_items
                     #      (by checking it against others), but not duplicates among the others
-                    and any(list(selected_keys[indices_of_selected_items[0]])==list(selected_keys[other])
+                    # and any(list(selected_keys[indices_of_selected_items[0]])==list(selected_keys[other])
+                    #         for other in indices_of_selected_items[1:])):
+                    #
+                    and any(all(np.array_equal(i,j) for i,j in zip(selected_keys[indices_of_selected_items[0]],
+                                                           selected_keys[other]))
                             for other in indices_of_selected_items[1:])):
-                warnings.warn(f'More than one item matched key ({cue}) in memory for {self.name} of '
-                              f'{self.owner.name} even though {repr("duplicate_entries")} is False')
+                owner_str = ''
+                if self.owner:
+                    owner_str = ' of self.owner.name'
+                warnings.warn(f'More than one item matched cue ({cue}) in memory for {self.name}'
+                              f'{owner_str} even though {repr("duplicate_entries")} is False')
                 return self.uniform_entry(0, context)
             if self.equidistant_entries_select == RANDOM:
                 random_state = self._get_current_parameter_value('random_state', context)
@@ -2212,20 +2197,22 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             else:
                 assert False, f'PROGRAM ERROR:  bad specification ({self.equidistant_entries_select}) for  ' \
                     f'\'equidistant_entries_select parameter of {self.name} for {self.owner.name}'
-            # MODIFIED 4/5/21 END
+
         best_match = _memory[index_of_selected_item]
 
         # Return entry
         return best_match
 
     def _store_memory(self, memory:Union[list, np.ndarray], context) -> bool:
-        """Save an key-value pair to `memory <ContentAddressableMemory.memory>`
+        """Add an entry to `memory <ContentAddressableMemory.memory>`
 
         Arguments
         ---------
         memory : list or 2d array
-            must be two items, a key and a vaue, each of which must a list of numbers or 1d array;
-            the key must be the same length as key(s) of any existing entries in `dict <ContentAddressableMemory.dict>`.
+            must be a list or 2d array containing 1d arrays (fields);  if any memories already exist in `memory
+            <ContentAddressableMemory.memory>`, then both the number of fields and the length of each must match
+            exiting entries (contained in the `memory_num_fields <ContentAddressableMemory.memory_num_fields>`
+            and `memory_field_sizes <ContentAddressableMemory.memory_field_sizes>` attributes, respectively).
         """
 
         self._validate_memory(memory, context)
@@ -2234,7 +2221,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         memory = np.array([np.array(m) for m in memory])
 
         num_fields = self.parameters.memory_num_fields._get(context)
-
 
         # execute noise if it is a function
         # FIX: WHAT IS "try_execute_param" DOING?
@@ -2246,16 +2232,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             except:
                 raise FunctionError(f"'noise' for '{self.name}' of '{self.owner.name}' "
                                     f"not appropriate shape (single number or array of length {num_fields}.")
-            # FIX: CONTINUE HERE:
-
-        # key = list(memory[KEYS])
-        # val = list(memory[VALS])
-
         existing_entries = self.parameters.previous_value._get(context)
 
         # Check for matches with existing entries
-        # matches = [m for m in existing_memories if m==list(m)]
-        matches = [m for m in existing_entries if m==memory]
+        # matches = [m for m in existing_entries if m==memory]
+        matches = [m for m in existing_entries if len(m) and self._is_duplicate(memory, m)]
 
         # If dupliciate keys are not allowed and key matches any existing keys, don't store
         if matches and self.duplicate_entries == False:
@@ -2348,6 +2329,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     def _parse_memories(self, memories, method, context=None):
         """Parse passing of single vs. multiple memories, validate memories, and return ndarray"""
         memories = convert_to_np_array(memories)
+        # FIX: GET RID OF THIS IF/WHEN convert_to_np_array IS CHANGED TO ENFORCE ARRAYS EVEN IN dtype=Object
+        memories = np.array([np.array(m) for m in memories])
         if not 1 <= memories.ndim <= 3:
             raise FunctionError(f"'memories' arg for {method} method of {self.__class__.__name__} "
                                 f"must be a list or array containing 1 or 2 arrays")
@@ -2359,6 +2342,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             self._validate_memory(memory, context)
 
         return memories
+
+    def _is_duplicate(self, entry1:np.ndarray, entry2:np.ndarray) -> bool:
+        if all(np.array_equal(i,j) for i,j in zip(entry1, entry2)):
+            return True
+        return False
 
     @property
     def memory(self):
