@@ -2394,8 +2394,9 @@ class ShowGraph():
             senders = []
             for outer_proj in owner.port_map[proj.receiver][0].path_afferents:
                 enclosing_showgraph = owner.composition._show_graph
-                senders.extend(enclosing_showgraph._trace_senders_for_original_sender_mechanism(outer_proj,
-                                                                                              nesting_level))
+                sndrs = enclosing_showgraph._trace_senders_for_original_sender_mechanism(outer_proj, nesting_level)
+                if sndrs is not None:
+                    senders.extend(sndrs)
             return senders
             # MODIFIED 4/5/21 END
         # FIX: RECEIVERS OF THIS RETURN NEED TO HANDLE LIST
