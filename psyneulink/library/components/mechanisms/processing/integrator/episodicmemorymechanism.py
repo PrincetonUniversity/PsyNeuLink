@@ -27,8 +27,8 @@ Overview
 
 An EpisodicMemoryMechanism is an `IntegratorMechanism` that can store and retrieve items from a content addressable
 memory;  that is, it can store items presented to it as input, and use that to retrieve an item from its memory
-based on the content of the input.  It can be assigned an appropriate `MemoryFunction`, which determines how items
-are stored and retrieved. At present, it supports the following two MemoryFunctions:
+based on the content of the input.  It can be assigned a `MemoryFunction`, which determines how items are stored and
+retrieved. At present, it supports the following two MemoryFunctions:
 
 • `ContentAddressableMemory` -- a general form of memory, that stores 2d arrays that are comprised of one or
   more 1d arrays, referred to as `memory fields <ContentAddressableMemory_Memory_Fields>`, any or all of which can be
@@ -38,6 +38,16 @@ are stored and retrieved. At present, it supports the following two MemoryFuncti
   based on the similarity of the key to keys in the dictionary.  This follows a format used by applications that use
   dictionaries as a form of external memory.
 
+Each memory is a list or 2d array composed of items referred to as "fields," each of which is a list or 1d array.
+Memories can have an arbitrary number of fields, each of arbitrary length, however all memories for an instance of a
+EpisodicMemoryMechanism must have the same shape (number of fields, and lengths of corresponding fields).  Each
+`InputPort` of an EpisodicMemoryMechanism provides the input to a corresponding field of a memory to be stored and/or
+retrieved, and each `OutputPort` contains the value of a field of the last retrieved memory.  The full set of stored
+memories can be accessed from the Mechanism's `memory <EpisodicMemoryMechanism.memory>` attribute, which references
+its `function's <EpisodicMemoryMechanism.function>` memory attribute.  `Parameters <Parameter>` of the function
+(e.g., that functions that determine retrieval, and ones that regulate the probability of storage and/or retrieval),
+can be accessed and/or `modulated <ModulatorySignal_Modulation>` in the standard way for a Mechanism's `function
+<Mechanism_Base.function>`.
 
 .. _EpisodicMemoryMechanism_Creation:
 
@@ -47,15 +57,18 @@ Creating an EpisodicMemoryMechanism
 An EpisodicMemoryMechanism is created by calling its constructor with an appropriate `MemoryFunction` and
 corresponding information about the shapes of the items to be stored in memory and the `Distance` used for
 comparing the Mechanism's input with entries in its memory to determine which is retrieved.  The number of fields
-in a memory entry can be specified using the **field_sizes** argument of the constructor (this is an alias to the
-standard `size <Component_Size>` argument of a `Component`.  This creates a number of `InputPorts <InputPort>` for
-the Mechanism equal to the number of elements in **fields_sizes**, each of which will receive an input for a
-corresponding field of the entry to be stored. The InputPorts can be named by specifying a list of labels in the
-**input_ports** argument of the constructor.  A number of `OutputPorts <OutputPort>` is created equal to the number
-of InputPorts, that receive the value of each field of the memory retrieved.  The OutputPorts can be named using 
-the **output_ports** argument of the constructor.  Parameters that govern the storage and retrieval process are
-specified as arguments to `MemoryFunction` specified in the **function** of the constructor (for example, see 
-`ContentAddressableMemory` for parameters of the default `function <EpisodicMemoryMechanism.function>`).
+in a memory entry can be specified using the **default_variable** or **size** arguments of the constructor
+(see `default_variable <Component_Variable>` and `size <Component_Size>` for additional information).  These are
+used to construct a 2d array, the items of which are used as fields in the entry stored in memory.  A number of
+`InputPorts <InputPort>` is created for the Mechanism equal to the number of items specified in **size** or
+**default_variable**.  By default, these are named *FIELD_n_INPUT*, where "n" is replaced by the index of each field;
+however, they can be named explicitly by specifying a list of labels in the **input_ports** argument of the
+constructor.  A number of `OutputPorts <OutputPort>` is created equal to the number of InputPorts, that receive the
+value of each field of the memory retrieved.  By default, they are named *FIELD_n_OUTPUT*, where "n" is replaced by
+the index of each field. The OutputPorts can be named explicitly using the **output_ports** argument of the
+constructor. Parameters that govern the storage and retrieval process are specified as arguments to `MemoryFunction`
+specified in the **function** of the constructor (for example, see `ContentAddressableMemory` for parameters of the
+default `function <EpisodicMemoryMechanism.function>`).
 
 .. _EpisodicMemoryMechanism_Structure:
 
@@ -67,13 +80,14 @@ Input
 
 An EpisodicMemoryMechanism has one or more `InputPorts <InputPort>` that receive the item to be stored, and that is
 used to retrieve an existing entry from its memory.  It has a number of `InputPorts <InputPort>` equal to the number
-of elements specified in the **field_sizes** argument of its constructor.  If the Mechanism is assigned 
-`ContentAddressableMemory` as its `function <EpisodicMemoryMechanism.function>`, then it
-can have an arbitrary number of InputPorts, the input to which is assigned to the corresponding `memory field
-<ContentAddressableMemory_Memory_Fields>` of that function. If the Mechanism is assigned `DictionaryMemory` as
-its `function <EpisodicMemoryMechanism.function>`, then it is assigned at least one InputPort (named *KEY_INPUT* by
-default), and optionally a second (named *VALUE_INPUT*) if **field_sizes** has two elements; any additional elements in
-**field_sizes** are ignored.
+of elements specified in the **default_variable** or **size** argument of the constructor.  If the Mechanism is assigned
+`ContentAddressableMemory` as its `function <EpisodicMemoryMechanism.function>`, then it can have an arbitrary number
+of InputPorts, the input to which is assigned to the corresponding `memory field
+<ContentAddressableMemory_Memory_Fields>` of that function, each named *FIELD_n_INPUT* by default (see
+`EpisodicMemoryMechanism_Creation`). If the Mechanism is assigned `DictionaryMemory` as its `function
+<EpisodicMemoryMechanism.function>`, then it is assigned at least one InputPort (named *KEY_INPUT* by default),
+and optionally a second (named *VALUE_INPUT*) if **default_variable** or **size* specifies two items;
+any additional items are ignored.
 
 Function
 ~~~~~~~~
@@ -84,24 +98,28 @@ be assigned, that implements a more specific form of memory in which entries are
 retrieved based on similarity to a stored key.  A custom function can also be specified, so long as it meets the
 following requirements:
 
-    * It must accept a list or 2d array as its first argument, the items of which are lists or 1d arrays.
+    * it must accept a list or 2d array as its first argument, the items of which are lists or 1d arrays;
 
-    * It must return a 2d array of the same size and shape as the input.
+    * it must return a 2d array of the same size and shape as the input;
 
-    * It may also implement a ``memory`` attribute;  if it does, it can be accessed by the EpisodicMemoryMechanism's
-      `memory <EpisodicMemoryMechanism.memory>` attribute.
+    * it must implement a ``memory`` attribute, that is accessed by the EpisodicMemoryMechanism's `memory
+      <EpisodicMemoryMechanism.memory>` attribute.
+
+    * it must implement a ``store_memory`` and a ``get_memory()`` method that, respectively, store and retrieve
+      entries from its memory.
+
 
 .. _EpisodicMemoryMechanism_Execution:
 
 Output
 ~~~~~~
 
-An EpisodicMemoryMechanism has one or more `OutputPorts <OutputPort>` that contain entry retrieved from memory.
-If `function <EpisodicMemoryMechanism.function>` is `ContentAddressableMemory`, then the Mechanism will have a
-number of OutputPorts equal to the to the number of elements in the **field_sizes** argument of its constructor.
-If `function <EpisodicMemoryMechanism.function>` is `DictionaryMemory`, then it will be assigned at least one
-OutputPort, named *KEY_OUTPUT* and, if **field_sizes** has two elements, a second OutputPort named *VALUE_OUTPUT*
-(if **field_sizes** has more than two elements, the additional ones are ignored and no other OutputPorts are created).
+An EpisodicMemoryMechanism has a number of `OutputPorts <OutputPort>` equal to its number of InputPorts, each of which
+is assigned the value of a corresponding field in the entry retrieved from memory.  By default, these are named
+*FIELD_n_OUTPUT*, wher "n" is the index of the field (see `EpisodicMemoryMechanism_Creation`). If `function
+<EpisodicMemoryMechanism.function>` is `DictionaryMemory`, then it will be assigned at least one OutputPort, named
+*KEY_OUTPUT* and, if **default_varible** or **sze** specified two items, a second OutputPort named *VALUE_OUTPUT*;
+any additional ones are ignored and no other OutputPorts are created).
 
 Execution
 ---------
@@ -114,7 +132,7 @@ the following operations:
       arrays are assigned to the `value <OutputPort.value>` of its `OutputPorts <OutputPort>`.
     ..
     * stores the `value <InputPort.value>` of its InputPorts as an entry in its `function's
-      <EpisodicMemoryMechanism.funcition>` memory.
+      <EpisodicMemoryMechanism.function>` memory.
     ..
     * assigns the value of the retrieved to its OutputPorts.
 
@@ -136,7 +154,8 @@ import warnings
 import numpy as np
 
 from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import DictionaryMemory
+from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import \
+    DictionaryMemory, ContentAddressableMemory
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.inputport import OutputPort
@@ -161,15 +180,18 @@ class EpisodicMemoryMechanismError(Exception):
         return repr(self.error_value)
 
 
-def _generate_KEY_INPUT_port_spec(content_size):
-    return [{NAME: KEY_INPUT, SIZE: content_size}]
+def _generate_input_port_spec(field_sizes, function):
+    if function is DictionaryMemory:
+        return [{NAME: KEY_INPUT, SIZE: field_sizes}]
+    XXX
+
+def _generate_output_port_spec(field_sizes, function):
+    [{NAME: KEY_OUTPUT, VARIABLE: (OWNER_VALUE, 0)}],
 
 
 class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     """
     EpisodicMemoryMechanism(                \
-        field_sizes=[1],                    \
-        field_names=None                    \
         function=ContentAddressableMemory,  \
         params=None,                        \
         name=None,                          \
@@ -198,14 +220,16 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
 
     field_sizes : list[int] or 1d array : default [1]
-        specifies the size of each field in the input, each of which corresponds an `InputPort` of the Mechanism.
+        specifies the size of each field in the input, each of which corresponds an `InputPort` of the Mechanism
+        (alias for the standard `size <Component_Size>` argument of a Component's constructor).
         For a `ContentAddressableMemory` function, there can any number of fields, each of which can be any size.
         For a `DicionaryMemory` function, there can be one or two elements, the first of which specifies the size
         of the *CONTENT* vector and second, if present, specifies the size of the *ASSOC*  vector;  any additional
         elements in **field_sizes** are ignored.
 
     field_names : list[str] : default None
-        specifies the name of the `InputPort` used for each field in the input.
+        specifies the name of the `InputPort` used for each field in the input (alias for the standard `input_ports
+        <Mechanism_InputPorts>` argument of a `Mechanism's <Mechanism>` consrtuctor).
         For a `ContentAddressableMemory` function, there can any number of fields, each of which can be any size.
         For a `DicionaryMemory` function, there can be one or two elements, the first of which specifies the size
 
@@ -246,18 +270,6 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                     :default value: [[0]]
                     :type: ``list``
 
-                assoc_size
-                    see `assoc_size <EpisodicMemoryMechanism.assoc_size>`
-
-                    :default value: 0
-                    :type: ``int``
-
-                content_size
-                    see `content_size <EpisodicMemoryMechanism.content_size>`
-
-                    :default value: 1
-                    :type: ``int``
-
                 function
                     see `function <EpisodicMemoryMechanism.function>`
 
@@ -279,12 +291,11 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                     :read only: True
         """
         variable = Parameter([[0]], pnl_internal=True, constructor_argument='default_variable')
-        function = Parameter(DictionaryMemory, stateful=False, loggable=False)
-        content_size = 1
-        assoc_size = 0
+        function = Parameter(ContentAddressableMemory, stateful=False, loggable=False)
+        field_sizes = [1]
 
         input_ports = Parameter(
-            _generate_KEY_INPUT_port_spec(content_size),
+            _generate_input_port_spec(len(variable)),
             stateful=False,
             loggable=False,
             read_only=True,
@@ -293,7 +304,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         )
 
         output_ports = Parameter(
-            [{NAME: KEY_OUTPUT, VARIABLE: (OWNER_VALUE, 0)}],
+            _generate_output_port_spec(len(variable)),
             stateful=False,
             loggable=False,
             read_only=True,
@@ -301,20 +312,66 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         )
 
     def __init__(self,
-                 content_size:int=None,
-                 assoc_size:int=None,
-                 function:Function=None,
+                 default_variable:Union[int, list, np.ndarray]=None,
+                 size:Union[int, list, np.ndarray]=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
+
+        def deprecation_warning(component, kwargs, deprecated_args):
+            # deprecated_args = {'deprecated_arg_name':('real_arg"name', real_arg_value)}
+
+            for deprecated_arg in deprecated_arg():
+                if deprecated_arg in kwargs:
+                    if deprecated_args[deprecated_arg][1]:
+                        # Value for real arg was also specified:
+                        warnings.warn(f"Both '{deprecated_arg}' and '{deprecated_args[deprecated_arg][0]}' "
+                                      f"were specified in the constructor for a(n) {self.__class__.__name__}; "
+                                      f"{deprecated_arg} ({kwargs[deprecated_arg]}) will be used,"
+                                      f"but note that it is deprecated  and may be removed in the future.")
+                    else:
+                        # Only deprecated arg was specified:
+                        warnings.warn(f"'{deprecated_arg}' was specified in the constructor for a(n)"
+                                      f" {self.__class__.__name__}; note that this has been deprecated "
+                                      f"and may be removed in the future; '{deprecated_args[deprecated_arg][0]}' "
+                                      f"should be used instead.")
+                    # FIX: PUT DEPRECATED VALUE IN DICT WITH REAL VALUE AND RETURN FOR ASSIGNMENT BY CALLER
+                    kwargs.pop(deprecated_arg)
+                continue
+
+        # for k in kwargs.copy():
+        #     if k == 'content_size':
+        #         if default_variable or size:
+        #             warnings.warn(f"Both 'content_size' and 'default_variable' or 'size' were specified "
+        #                           f"in the constructor for an {self.__class__.__name__}; "
+        #                           f"'content_size' ({kwargs['content_size']}) will be used, "
+        #                           f"but note that this is deprecated for the future.")
+        #             size = kwargs.pop('content_size')
+        #         continue
+        #     if k == 'assoc_size':
+        #         if default_variable or size:
+        #             warnings.warn(f"Both 'assoc_size' and 'default_variable' or 'size' were specified "
+        #                           f"in the constructor for an {self.__class__.__name__}; "
+        #                           f"'assoc_size' ({kwargs['assoc_size']}) will be used, "
+        #                           f"but note that this is deprecated for the future.")
+        #             size = kwargs.pop('assoc_size')
+        #         continue
+        deprecation_warning(self, kwargs, {'content_size':'size',
+                                           'assoc_size':'size'})
+
+        # GET fields HERE FROM default_variable OR size
         # Template for memory_store entries
-        default_variable = [np.zeros(content_size)]
+        # FIX: MANAGE field_size -> size, input_ports, and output_ports
+
+
+        # default_variable = [np.zeros(field_sizes)]
         input_ports = None
         output_ports = None
 
-        if content_size is not None and content_size != self.defaults.content_size:
-            input_ports = _generate_KEY_INPUT_port_spec(content_size)
+        # FIX: MOVE THIS TO A LATER METHOD, SO THAT DEFAULT_VARIBLE/SIZE CAN BE RESOLVED:
+        if field_sizes is not None and field_sizes != self.defaults.field_sizes:
+            input_ports = _generate_input_port_spec(field_sizes)
 
         if assoc_size is not None and assoc_size != self.defaults.assoc_size:
             try:
@@ -323,6 +380,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                 input_ports = [{NAME: VALUE_INPUT, SIZE: assoc_size}]
 
             output_ports = self.class_defaults.output_ports.copy()
+            # FIX: BASE THIS ON field_sizes:
             output_ports.append({NAME: VALUE_OUTPUT, VARIABLE: (OWNER_VALUE, 1)})
             default_variable.append(np.zeros(assoc_size))
 
@@ -330,7 +388,8 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
             function = self.parameters.function.default_value()
 
         super().__init__(
-            default_variable=default_variable,
+            # default_variable=default_variable,
+            size=size,
             function=function,
             params=params,
             name=name,
@@ -392,4 +451,5 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         try:
             return self.function.memory
         except:
-            warnings.warning(f'Function of {self.name} (self.function.name) has no memory attribute')
+            raise EpisodicMemoryMechanismError(f"Function of {self.name} ({self.function.name}) "
+                                               f"has no `memory attribute")
