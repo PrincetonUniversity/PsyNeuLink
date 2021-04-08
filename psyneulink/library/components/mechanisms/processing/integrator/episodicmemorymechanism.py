@@ -381,44 +381,76 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
             size += kwargs['assoc_size']
             kwargs.pop('assoc_size')
 
-        # Format template for memory entries (number of fields and size of each)
-        # FIX: GET fields HERE FROM default_variable OR size
-        # FIX: MANAGE field_size -> size, input_ports, and output_ports
+        # # Format template for memory entries (number of fields and size of each)
+        # # FIX: GET fields HERE FROM default_variable OR size
+        # # FIX: MANAGE field_size -> size, input_ports, and output_ports
+        #
+        # # default_variable = [np.zeros(field_sizes)]
+        # input_ports = None
+        # output_ports = None
+        #
+        # # FIX: MOVE THIS TO A LATER METHOD, SO THAT DEFAULT_VARIBLE/SIZE CAN BE RESOLVED:
+        # if size is not None and size != self.defaults.field_sizes:
+        #     input_ports = _generate_input_port_spec(size, function)
+        #
+        # # FIX: HANDLE THIS IN _generate_input_port_spec BY PASSING IT function
+        # # if assoc_size is not None and assoc_size != self.defaults.assoc_size:
+        # #     try:
+        # #         input_ports.append({NAME: VALUE_INPUT, SIZE: assoc_size})
+        # #     except AttributeError:
+        # #         input_ports = [{NAME: VALUE_INPUT, SIZE: assoc_size}]
+        #
+        #     output_ports = self.class_defaults.output_ports.copy()
+        #     # FIX: BASE THIS ON field_sizes:
+        #     output_ports.append({NAME: VALUE_OUTPUT, VARIABLE: (OWNER_VALUE, 1)})
+        #     default_variable.append(np.zeros(size))
 
-        # default_variable = [np.zeros(field_sizes)]
-        input_ports = None
-        output_ports = None
-
-        # FIX: MOVE THIS TO A LATER METHOD, SO THAT DEFAULT_VARIBLE/SIZE CAN BE RESOLVED:
-        if size is not None and size != self.defaults.field_sizes:
-            input_ports = _generate_input_port_spec(size, function)
-
-        # FIX: HANDLE THIS IN _generate_input_port_spec BY PASSING IT function
-        # if assoc_size is not None and assoc_size != self.defaults.assoc_size:
-        #     try:
-        #         input_ports.append({NAME: VALUE_INPUT, SIZE: assoc_size})
-        #     except AttributeError:
-        #         input_ports = [{NAME: VALUE_INPUT, SIZE: assoc_size}]
-
-            output_ports = self.class_defaults.output_ports.copy()
-            # FIX: BASE THIS ON field_sizes:
-            output_ports.append({NAME: VALUE_OUTPUT, VARIABLE: (OWNER_VALUE, 1)})
-            default_variable.append(np.zeros(size))
-
-        if function is None:
-            function = self.parameters.function.default_value()
+        # if function is None:
+        #     function = self.parameters.function.default_value()
 
         super().__init__(
-            # default_variable=default_variable,
+            default_variable=default_variable,
             size=size,
-            function=function,
+            # function=function,
             params=params,
             name=name,
             prefs=prefs,
-            input_ports=input_ports,
-            output_ports=output_ports,
+            # input_ports=input_ports,
+            # output_ports=output_ports,
             **kwargs
         )
+
+    # def _instantiate_input_ports(self, context=None):
+    #     # Format template for memory entries (number of fields and size of each)
+    #     # FIX: GET fields HERE FROM default_variable OR size
+    #     # FIX: MANAGE field_size -> size, input_ports, and output_ports
+    #
+    #     # default_variable = [np.zeros(field_sizes)]
+    #     input_ports = None
+    #     output_ports = None
+    #
+    #     assert True
+    #
+    #     # # FIX: MOVE THIS TO A LATER METHOD, SO THAT DEFAULT_VARIBLE/SIZE CAN BE RESOLVED:
+    #     # if size is not None and size != self.defaults.field_sizes:
+    #     #     input_ports = _generate_input_port_spec(size, function)
+    #     #
+    #     # # FIX: HANDLE THIS IN _generate_input_port_spec BY PASSING IT function
+    #     # # if assoc_size is not None and assoc_size != self.defaults.assoc_size:
+    #     # #     try:
+    #     # #         input_ports.append({NAME: VALUE_INPUT, SIZE: assoc_size})
+    #     # #     except AttributeError:
+    #     # #         input_ports = [{NAME: VALUE_INPUT, SIZE: assoc_size}]
+    #     #
+    #     #     output_ports = self.class_defaults.output_ports.copy()
+    #     #     # FIX: BASE THIS ON field_sizes:
+    #     #     output_ports.append({NAME: VALUE_OUTPUT, VARIABLE: (OWNER_VALUE, 1)})
+    #     #     default_variable.append(np.zeros(size))
+    #     #
+    #     # if function is None:
+    #     #     function = self.parameters.function.default_value()
+
+
 
     def _execute(self, variable=None, context=None, runtime_params=None):
 
