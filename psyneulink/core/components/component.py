@@ -782,7 +782,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     size : int, list or np.ndarray of ints : default None
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
-        if **default_variable** is specified, it takes precedence over the specification of **size**.
+        if **default_variable** is specified, it takes precedence over the specification of **size** (see
+        `size <Component_Size>` for additonal details).
 
     COMMENT:
     param_defaults :   :  default None,
