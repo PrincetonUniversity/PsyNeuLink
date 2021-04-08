@@ -9,6 +9,8 @@
 
 """
 
+FIX: ADD INTIALIZER TO MECHANISM CONSTRUCTOR AND DOCUMENTATION??
+     CAN BE USED IN PLACE OF defdault_variable OR size TO FORMAT MEMORY
 
 Contents
 --------
@@ -150,6 +152,7 @@ Class Reference
 
 """
 import warnings
+from typing import Union
 
 import numpy as np
 
@@ -181,11 +184,12 @@ class EpisodicMemoryMechanismError(Exception):
 
 
 def _generate_input_port_spec(field_sizes, function):
+    # FIX:  REFACTOR FOR NEW VERSION
     if function is DictionaryMemory:
         return [{NAME: KEY_INPUT, SIZE: field_sizes}]
-    XXX
 
 def _generate_output_port_spec(field_sizes, function):
+    # FIX:  REFACTOR FOR NEW VERSION
     [{NAME: KEY_OUTPUT, VARIABLE: (OWNER_VALUE, 0)}],
 
 
@@ -295,7 +299,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         field_sizes = [1]
 
         input_ports = Parameter(
-            _generate_input_port_spec(len(variable)),
+            _generate_input_port_spec(len(variable.default_value), function),
             stateful=False,
             loggable=False,
             read_only=True,
@@ -304,7 +308,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         )
 
         output_ports = Parameter(
-            _generate_output_port_spec(len(variable)),
+            _generate_output_port_spec(len(variable.default_value), function),
             stateful=False,
             loggable=False,
             read_only=True,
@@ -314,31 +318,39 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable:Union[int, list, np.ndarray]=None,
                  size:Union[int, list, np.ndarray]=None,
+                 function:Function=ContentAddressableMemory,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
                  **kwargs):
 
-        def deprecation_warning(component, kwargs, deprecated_args):
-            # deprecated_args = {'deprecated_arg_name':('real_arg"name', real_arg_value)}
+        def deprecation_warning(component, kwargs:dict, deprecated_args:dict) -> dict:
+            """Identify and warn about any deprecated args, and return their values for reassignment
+            Format of deprecated_args dict:  {'deprecated_arg_name':'real_arg"name')}
+            Format of returned dict:  {'real_arg_name':<value assigned to deprecated arg>)}
+            """
 
-            for deprecated_arg in deprecated_arg():
+            value_assignments = dict()
+            for deprecated_arg in deprecated_args:
                 if deprecated_arg in kwargs:
-                    if deprecated_args[deprecated_arg][1]:
+                    real_arg = deprecated_args[deprecated_arg]
+                    arg_value = kwargs.pop(deprecated_arg)
+                    if arg_value:
                         # Value for real arg was also specified:
-                        warnings.warn(f"Both '{deprecated_arg}' and '{deprecated_args[deprecated_arg][0]}' "
+                        warnings.warn(f"Both '{deprecated_arg}' and '{real_arg}' "
                                       f"were specified in the constructor for a(n) {self.__class__.__name__}; "
-                                      f"{deprecated_arg} ({kwargs[deprecated_arg]}) will be used,"
+                                      f"{deprecated_arg} ({arg_value}) will be used,"
                                       f"but note that it is deprecated  and may be removed in the future.")
                     else:
                         # Only deprecated arg was specified:
                         warnings.warn(f"'{deprecated_arg}' was specified in the constructor for a(n)"
                                       f" {self.__class__.__name__}; note that this has been deprecated "
-                                      f"and may be removed in the future; '{deprecated_args[deprecated_arg][0]}' "
+                                      f"and may be removed in the future; '{real_arg}' "
                                       f"should be used instead.")
                     # FIX: PUT DEPRECATED VALUE IN DICT WITH REAL VALUE AND RETURN FOR ASSIGNMENT BY CALLER
-                    kwargs.pop(deprecated_arg)
+                    value_assignments.update({real_arg:arg_value})
                 continue
+            return value_assignments
 
         # for k in kwargs.copy():
         #     if k == 'content_size':
@@ -357,32 +369,41 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         #                           f"but note that this is deprecated for the future.")
         #             size = kwargs.pop('assoc_size')
         #         continue
-        deprecation_warning(self, kwargs, {'content_size':'size',
-                                           'assoc_size':'size'})
 
-        # GET fields HERE FROM default_variable OR size
-        # Template for memory_store entries
+        # Identify and warn about any deprecated args, and return their values for reassignment
+        deprecated_arg_values = deprecation_warning(self, kwargs, {'content_size':'size'})
+        # Assign value of deprecated args to current ones
+        if 'size' in deprecated_arg_values:
+            size = deprecated_arg_values['size']
+
+        # Need to handle assoc_size specially, since it needs to be added to what was content_size
+        if 'assoc_size' in kwargs:
+            size += kwargs['assoc_size']
+            kwargs.pop('assoc_size')
+
+        # Format template for memory entries (number of fields and size of each)
+        # FIX: GET fields HERE FROM default_variable OR size
         # FIX: MANAGE field_size -> size, input_ports, and output_ports
-
 
         # default_variable = [np.zeros(field_sizes)]
         input_ports = None
         output_ports = None
 
         # FIX: MOVE THIS TO A LATER METHOD, SO THAT DEFAULT_VARIBLE/SIZE CAN BE RESOLVED:
-        if field_sizes is not None and field_sizes != self.defaults.field_sizes:
-            input_ports = _generate_input_port_spec(field_sizes)
+        if size is not None and size != self.defaults.field_sizes:
+            input_ports = _generate_input_port_spec(size, function)
 
-        if assoc_size is not None and assoc_size != self.defaults.assoc_size:
-            try:
-                input_ports.append({NAME: VALUE_INPUT, SIZE: assoc_size})
-            except AttributeError:
-                input_ports = [{NAME: VALUE_INPUT, SIZE: assoc_size}]
+        # FIX: HANDLE THIS IN _generate_input_port_spec BY PASSING IT function
+        # if assoc_size is not None and assoc_size != self.defaults.assoc_size:
+        #     try:
+        #         input_ports.append({NAME: VALUE_INPUT, SIZE: assoc_size})
+        #     except AttributeError:
+        #         input_ports = [{NAME: VALUE_INPUT, SIZE: assoc_size}]
 
             output_ports = self.class_defaults.output_ports.copy()
             # FIX: BASE THIS ON field_sizes:
             output_ports.append({NAME: VALUE_OUTPUT, VARIABLE: (OWNER_VALUE, 1)})
-            default_variable.append(np.zeros(assoc_size))
+            default_variable.append(np.zeros(size))
 
         if function is None:
             function = self.parameters.function.default_value()
