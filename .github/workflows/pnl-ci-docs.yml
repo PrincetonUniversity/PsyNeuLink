@@ -84,7 +84,7 @@ jobs:
       run: sphinx-build -b html -aE docs/source pnl-html
 
     - name: Upload Documentation
-      uses: actions/upload-artifact@v2.2.2
+      uses: actions/upload-artifact@v2.2.3
       with:
         name: Documentation-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         retention-days: 1
