@@ -165,7 +165,6 @@ from psyneulink.core.components.ports.inputport import OutputPort
 from psyneulink.core.globals.keywords import NAME, OWNER_VALUE, SIZE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
-from psyneulink.core.globals.utilities import convert_to_np_array
 
 __all__ = ['EpisodicMemoryMechanism', 'KEY_INPUT', 'VALUE_INPUT', 'KEY_OUTPUT', 'VALUE_OUTPUT']
 
@@ -298,22 +297,22 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         function = Parameter(ContentAddressableMemory, stateful=False, loggable=False)
         field_sizes = [1]
 
-        input_ports = Parameter(
-            _generate_input_port_spec(len(variable.default_value), function),
-            stateful=False,
-            loggable=False,
-            read_only=True,
-            structural=True,
-            parse_spec=True,
-        )
-
-        output_ports = Parameter(
-            _generate_output_port_spec(len(variable.default_value), function),
-            stateful=False,
-            loggable=False,
-            read_only=True,
-            structural=True,
-        )
+        # input_ports = Parameter(
+        #     _generate_input_port_spec(len(variable.default_value), function),
+        #     stateful=False,
+        #     loggable=False,
+        #     read_only=True,
+        #     structural=True,
+        #     parse_spec=True,
+        # )
+        #
+        # output_ports = Parameter(
+        #     _generate_output_port_spec(len(variable.default_value), function),
+        #     stateful=False,
+        #     loggable=False,
+        #     read_only=True,
+        #     structural=True,
+        # )
 
     def __init__(self,
                  default_variable:Union[int, list, np.ndarray]=None,
@@ -420,37 +419,14 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
             **kwargs
         )
 
-    # def _instantiate_input_ports(self, context=None):
-    #     # Format template for memory entries (number of fields and size of each)
-    #     # FIX: GET fields HERE FROM default_variable OR size
-    #     # FIX: MANAGE field_size -> size, input_ports, and output_ports
-    #
-    #     # default_variable = [np.zeros(field_sizes)]
-    #     input_ports = None
-    #     output_ports = None
-    #
-    #     assert True
-    #
-    #     # # FIX: MOVE THIS TO A LATER METHOD, SO THAT DEFAULT_VARIBLE/SIZE CAN BE RESOLVED:
-    #     # if size is not None and size != self.defaults.field_sizes:
-    #     #     input_ports = _generate_input_port_spec(size, function)
-    #     #
-    #     # # FIX: HANDLE THIS IN _generate_input_port_spec BY PASSING IT function
-    #     # # if assoc_size is not None and assoc_size != self.defaults.assoc_size:
-    #     # #     try:
-    #     # #         input_ports.append({NAME: VALUE_INPUT, SIZE: assoc_size})
-    #     # #     except AttributeError:
-    #     # #         input_ports = [{NAME: VALUE_INPUT, SIZE: assoc_size}]
-    #     #
-    #     #     output_ports = self.class_defaults.output_ports.copy()
-    #     #     # FIX: BASE THIS ON field_sizes:
-    #     #     output_ports.append({NAME: VALUE_OUTPUT, VARIABLE: (OWNER_VALUE, 1)})
-    #     #     default_variable.append(np.zeros(size))
-    #     #
-    #     # if function is None:
-    #     #     function = self.parameters.function.default_value()
+    def _instantiate_input_ports(self, context=None):
 
+        # HANDLE DictionaryMemory as function (from self.parameters.function.default_value())
 
+        if self.input_ports is None:
+            input_ports = [f'FIELD_{i}_INPUT' for i in range(len(self.parameters.variable.default_value))]
+        super()._instantiate_input_ports(input_ports=input_ports, context=context)
+        assert True
 
     def _execute(self, variable=None, context=None, runtime_params=None):
 
@@ -478,25 +454,25 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
         return super()._instantiate_output_ports(context=context)
 
-    def _parse_function_variable(self, variable, context=None):
-
-        # If assoc has not been specified, add empty list to call to function (which expects two items in its variable)
-        if len(variable) != 2:
-            return convert_to_np_array([variable[0],[]])
-        else:
-            # Check that both are assigned inputs:
-            missing_inputs = [self.input_ports.names[i] for i,t in enumerate([v for v in variable]) if t is None]
-            if missing_inputs:
-                if len(missing_inputs) == 1:
-                    missing_str = 'an input'
-                    s = ''
-                else:
-                    missing_str = 'inputs'
-                    s = 's'
-                raise EpisodicMemoryMechanismError(f"{self.name} is missing {missing_str} for its"
-                                                   f" {'and '.join(missing_inputs)} {InputPort.__name__}{s}.")
-
-            return variable
+    # def _parse_function_variable(self, variable, context=None):
+    #
+    #     # If assoc has not been specified, add empty list to call to function (which expects two items in its variable)
+    #     if len(variable) != 2:
+    #         return convert_to_np_array([variable[0],[]])
+    #     else:
+    #         # Check that both are assigned inputs:
+    #         missing_inputs = [self.input_ports.names[i] for i,t in enumerate([v for v in variable]) if t is None]
+    #         if missing_inputs:
+    #             if len(missing_inputs) == 1:
+    #                 missing_str = 'an input'
+    #                 s = ''
+    #             else:
+    #                 missing_str = 'inputs'
+    #                 s = 's'
+    #             raise EpisodicMemoryMechanismError(f"{self.name} is missing {missing_str} for its"
+    #                                                f" {'and '.join(missing_inputs)} {InputPort.__name__}{s}.")
+    #
+    #         return variable
 
     @property
     def memory(self):
