@@ -75,7 +75,7 @@ w_hda = pnl.MappingProjection(
     name='hidden_to_assoc',
     matrix=np.random.randn(n_hidden, n_hidden) * wts_init_scale,
     sender=hidden,
-    receiver=EM.input_ports[pnl.VALUE_INPUT]
+    receiver=EM.input_ports[pnl.ASSOC_INPUT]
 )
 
 
@@ -105,7 +105,7 @@ comp.add_projection(
 comp.add_projection(
     sender=hidden,
     projection=w_hda,
-    receiver=EM.input_ports[pnl.VALUE_INPUT]
+    receiver=EM.input_ports[pnl.ASSOC_INPUT]
 )
 # show graph
 comp.show_graph(show_node_structure=True)
@@ -195,7 +195,7 @@ print(result2)
 print(output.output_values)
 
 EM.CUE_INPUT = [1,1,1,1,1]
-EM.VALUE_INPUT = [1,2,3,4,5]
+EM.ASSOC_INPUT = [1,2,3,4,5]
 
 print(EM.input_values)
 print(EM.output_values)
