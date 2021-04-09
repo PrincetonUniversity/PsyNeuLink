@@ -29,7 +29,7 @@ An EpisodicMemoryMechanism is a `ProcessingMechanism` that can store and retriev
 memory;  that is, on each execution it can store an item presented to it as input, and use that to retrieve an item
 from its memory based on the content of the input.  The `MemoryFunction` assigned as its `function
 <EpisodicMemoryMechanism.function>` determines how items are stored and retrieved. Each memory is a list or 2d array
-composed of items referred to as `memory fields <ContentAddressableMemory_Memory_Fields>`, each of which is a list or
+composed of items referred to as `memory fields <EpisodicMemoryMechanism_Memory_Fields>`, each of which is a list or
 1d array. Memories can have an arbitrary number of fields, and each of those can be of arbitrary length, however all
 memories for a given instance of an  EpisodicMemoryMechanism must have the same shape (number of fields, and lengths
 of corresponding fields).  Each `InputPort` of an EpisodicMemoryMechanism provides the input for a corresponding
@@ -62,7 +62,7 @@ Creating an EpisodicMemoryMechanism
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An EpisodicMemoryMechanism is created by calling its constructor with a specification of its `MemoryFunction` and
-corresponding information about the number and length of its `fields <ContentAddressableMemory_Memory_Fields>`.  These
+corresponding information about the number and length of its `fields <EpisodicMemoryMechanism_Memory_Fields>`. These
 are specified using the **default_variable** or **size** arguments of the constructor, in the standard way that the
 `variable <Mechanism_Base.variable>` is specified for a `Component` (see `default_variable <Component_Variable>`,
 `size <Component_Size>`).  This construct a 2d array that in turn is used to create the `InputPorts <InputPort>` for
@@ -105,11 +105,26 @@ Structure
 An EpisodicMemoryMechanism has one or more `InputPorts <InputPort>` that receive the item to be stored, and that is
 used to retrieve an existing entry from its memory.  If the Mechanism is assigned `ContentAddressableMemory` as its
 `function <EpisodicMemoryMechanism.function>`, then it can have an arbitrary number of InputPorts, the input to which
-is assigned to the corresponding `memory field <ContentAddressableMemory_Memory_Fields>` of that function. By default
+is assigned to the corresponding `memory field <EpisodicMemoryMechanism_Memory_Fields>` of that function. By default
 InputPorts are named *FIELD_n_INPUT* (see `EpisodicMemoryMechanism_Creation`). If the Mechanism is assigned
 `DictionaryMemory` as its `function <EpisodicMemoryMechanism.function>`, then it is assigned at least one InputPort
 (named *KEY_INPUT* by default), and optionally a second (named *VALUE_INPUT*) if **default_variable** or **size*
 specifies two items; any additional fields are ignored.
+
+.. _EpisodicMemoryMechanism_Memory_Fields:
+
+*Memory Fields*
+~~~~~~~~~~~~~~~
+
+COMMENT:
+*Memory fields and weighting.* --
+FIX: ADD SECTION HERE:
+ - MEMORY FIELDS REFER TO ITEMS IN VARIABLE, GENERALLY CORRESPONDING TO INPUT PORTS ON MECHANISM (E.G., EM)
+ - CAN BE WEGITHED FOR DISTANCE COMPUTATION (SEE RELEVANT SECTION)
+ - INCLUDE NOTE THAT, BECAUSE FIELDS CAN BE OF DIFFERENT LENGTHS, MEMORY CAN'T BE TREATED AS A  STANDARD 3D ARRAY
+     NOR CAN ENTRIES BE TREATED AS STANDARD 2D ARRAYS
+COMMENT
+
 
 *Function*
 ~~~~~~~~~~
