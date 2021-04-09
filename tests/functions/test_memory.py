@@ -199,26 +199,25 @@ def test_ContentAddressableMemory_with_initializer_and_key_size_diff_from_val_si
     assert retrieved[0] == [0, 0, 0]
     assert retrieved[1] == [0, 0, 0, 0]
 
-def test_ContentAddressableMemory_without_initializer_in_composition():
-
-    content = TransferMechanism(size=5)
-    assoc = TransferMechanism(size=3)
-    content_out = TransferMechanism(size=5)
-    assoc_out = TransferMechanism(size=3)
-
-    # Episodic Memory, Decision and Control
-    em = EpisodicMemoryMechanism(name='EM',
-                                 function=DictionaryMemory,
-                                 content_size=5, assoc_size=3)
-    comp = Composition()
-    comp.add_nodes([content, assoc, content_out, assoc_out, em])
-    comp.add_projection(MappingProjection(), content, em.input_ports[KEY_INPUT])
-    comp.add_projection(MappingProjection(), assoc, em.input_ports[VALUE_INPUT])
-    comp.add_projection(MappingProjection(), em.output_ports[KEY_OUTPUT], content_out)
-    comp.add_projection(MappingProjection(), em.output_ports[VALUE_OUTPUT], assoc_out)
-
-    comp.run(inputs={content:[1,2,3,4,5],
-                     assoc:[6,7,8]})
+# def test_ContentAddressableMemory_without_initializer_in_composition():
+#
+#     content = TransferMechanism(size=5)
+#     assoc = TransferMechanism(size=3)
+#     content_out = TransferMechanism(size=5)
+#     assoc_out = TransferMechanism(size=3)
+#
+#     # Episodic Memory, Decision and Control
+#     em = EpisodicMemoryMechanism(name='EM',
+#                                  content_size=5, assoc_size=3)
+#     comp = Composition()
+#     comp.add_nodes([content, assoc, content_out, assoc_out, em])
+#     comp.add_projection(MappingProjection(), content, em.input_ports[KEY_INPUT])
+#     comp.add_projection(MappingProjection(), assoc, em.input_ports[VALUE_INPUT])
+#     comp.add_projection(MappingProjection(), em.output_ports[KEY_OUTPUT], content_out)
+#     comp.add_projection(MappingProjection(), em.output_ports[VALUE_OUTPUT], assoc_out)
+#
+#     comp.run(inputs={content:[1,2,3,4,5],
+#                      assoc:[6,7,8]})
 
 def test_ContentAddressableMemory_without_initializer_and_key_size_same_as_val_size():
 
