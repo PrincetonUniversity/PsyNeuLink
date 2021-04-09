@@ -25,7 +25,7 @@ Contents
 Overview
 --------
 
-An EpisodicMemoryMechanism is an `IntegratorMechanism` that can store and retrieve items from a content addressable
+An EpisodicMemoryMechanism is a `ProcessingMechanism` that can store and retrieve items from a content addressable
 memory;  that is, it can store items presented to it as input, and use that to retrieve an item from its memory
 based on the content of the input.  It can be assigned a `MemoryFunction`, which determines how items are stored and
 retrieved. At present, it supports the following two MemoryFunctions:
