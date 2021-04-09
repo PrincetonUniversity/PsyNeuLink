@@ -345,7 +345,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         # LEGACY SUPPORT FOR DictionaryMemory
         self._dictionary_memory = (isinstance(function, DictionaryMemory)
                                   or (isinstance(function, type)
-                                      and function.__class__.__name__ is DictionaryMemory.__name__))
+                                      and function.__name__ is DictionaryMemory.__name__))
         if self._dictionary_memory:
             # Identify and warn about any deprecated args, and return their values for reassignment
             deprecated_arg_values = deprecation_warning(self, kwargs, {'content_size':'size'})
@@ -354,13 +354,16 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                 size = deprecated_arg_values['size']
             # Need to handle assoc_size specially, since it needs to be added to what was content_size
             if 'assoc_size' in kwargs:
-                size += kwargs['assoc_size']
+                if isinstance(size, int):
+                    size = [size,kwargs['assoc_size']]
+                else:
+                    size += kwargs['assoc_size']
                 kwargs.pop('assoc_size')
 
         super().__init__(
             default_variable=default_variable,
             size=size,
-            # function=function,
+            function=function,
             params=params,
             name=name,
             prefs=prefs,
@@ -396,30 +399,38 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                    shapes of the corresponding Inputs (i.e., memory fields).
         """
 
-        output_ports_spec = self.output_ports
-        # If output_ports was not specified or they are all strings, instantiate
-        # (note: need to instantiate here if output_port specs are strings, to be sure values are correct,
-        #    as this doesn't seem to be handled properly by super()._instantiate_output_ports)
-        if output_ports_spec is None or all(isinstance(o, str) for o in output_ports_spec):
-            output_ports = []
-            input_suffix_len = len(DEFAULT_INPUT_PORT_NAME_SUFFIX)
-            # Total number should be either the number of names provided, or default to length of Mech's value:
-            num_output_ports = len(output_ports_spec) if output_ports_spec else len(self.value)
-            for i in range(num_output_ports):
-                # Names specified, so use those:
-                if output_ports_spec:
-                    output_ports.append({NAME: self.output_ports[i],
-                                         VARIABLE: (OWNER_VALUE, i)})
-                # Otherweise, use InputPort names as base, removing DEFAULT_INPUT_PORT_NAME_SUFFIX
-                else:
-                    input_port_name = self.input_ports[i].name
-                    # if input_port_name[-input_suffix_len:] == DEFAULT_INPUT_PORT_NAME_SUFFIX:
-                    # if not self.input_ports[i]._user_specified:
-                    if not self.parameters.input_ports._user_specified:
-                        input_port_name = input_port_name[:-input_suffix_len]
-                    output_ports.append({NAME: DEFAULT_OUTPUT_PORT_PREFIX + input_port_name,
-                                         VARIABLE: (OWNER_VALUE, i)})
+        # FIX: REMOVE THIS AND DELETE "ELSE" WHEN DictionaryMemory IS RETIRED
+        if self._dictionary_memory:
+            output_ports = [KEY_OUTPUT]
+            if len(self.parameters.variable.default_value) == 2:
+                output_ports.append(VALUE_INPUT)
             self.parameters.output_ports._set(output_ports, override=True, context=context)
+
+        else:
+            output_ports_spec = self.output_ports
+            # If output_ports was not specified or they are all strings, instantiate
+            # (note: need to instantiate here if output_port specs are strings, to be sure values are correct,
+            #    as this doesn't seem to be handled properly by super()._instantiate_output_ports)
+            if output_ports_spec is None or all(isinstance(o, str) for o in output_ports_spec):
+                output_ports = []
+                input_suffix_len = len(DEFAULT_INPUT_PORT_NAME_SUFFIX)
+                # Total number should be either the number of names provided, or default to length of Mech's value:
+                num_output_ports = len(output_ports_spec) if output_ports_spec else len(self.value)
+                for i in range(num_output_ports):
+                    # Names specified, so use those:
+                    if output_ports_spec:
+                        output_ports.append({NAME: self.output_ports[i],
+                                             VARIABLE: (OWNER_VALUE, i)})
+                    # Otherweise, use InputPort names as base, removing DEFAULT_INPUT_PORT_NAME_SUFFIX
+                    else:
+                        input_port_name = self.input_ports[i].name
+                        # if input_port_name[-input_suffix_len:] == DEFAULT_INPUT_PORT_NAME_SUFFIX:
+                        # if not self.input_ports[i]._user_specified:
+                        if not self.parameters.input_ports._user_specified:
+                            input_port_name = input_port_name[:-input_suffix_len]
+                        output_ports.append({NAME: DEFAULT_OUTPUT_PORT_PREFIX + input_port_name,
+                                             VARIABLE: (OWNER_VALUE, i)})
+                self.parameters.output_ports._set(output_ports, override=True, context=context)
 
         super()._instantiate_output_ports(context=context)
 

@@ -207,11 +207,13 @@ def test_ContentAddressableMemory_without_initializer_in_composition():
     assoc_out = TransferMechanism(size=3)
 
     # Episodic Memory, Decision and Control
-    em = EpisodicMemoryMechanism(name='EM', content_size=5, assoc_size=3)
+    em = EpisodicMemoryMechanism(name='EM',
+                                 function=DictionaryMemory,
+                                 content_size=5, assoc_size=3)
     comp = Composition()
     comp.add_nodes([content, assoc, content_out, assoc_out, em])
     comp.add_projection(MappingProjection(), content, em.input_ports[KEY_INPUT])
-    comp.add_projection(MappingProjection(), assoc, em.input_ports[ASSOC_INPUT])
+    comp.add_projection(MappingProjection(), assoc, em.input_ports[VALUE_INPUT])
     comp.add_projection(MappingProjection(), em.output_ports[KEY_OUTPUT], content_out)
     comp.add_projection(MappingProjection(), em.output_ports[VALUE_OUTPUT], assoc_out)
 
