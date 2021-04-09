@@ -434,7 +434,8 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
         super()._instantiate_output_ports(context=context)
 
-        # # FIX: VERSION THAT ENFORCES NUMBER OF OutputPorts EQUAL TO NUMBER OF InputPorts (i.e., ALL MEMORY FIELDS)
+        # # IMPLEMENTATION NOTE: VERSION THAT ENFORCES NUMBER OF OutputPorts EQUAL TO NUMBER OF InputPorts
+        #                       (i.e., ALL MEMORY FIELDS)
         # for i in range(len(self.value)):
         #     # No OutputPut specified, so base name on corresponding InputPort,
         #     # (removing default _INPUT if it is a default name for the InputPort)
@@ -452,7 +453,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         #     elif not isinstance(self.output_ports[i], dict, OutputPort):
         #         raise EpisodicMemoryMechanismError(f"Bad specification for {OutputPort.__name__} for {self.name}.")
 
-    # FIX: REMOVE THIS METHOD WHEN DictionaryMemory IS RETIRED
+    # IMPLEMENTATION NOTE: REMOVE THIS METHOD WHEN DictionaryMemory IS RETIRED
     def _parse_function_variable(self, variable, context=None):
 
         if self._dictionary_memory:
@@ -473,7 +474,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                                                        f" {'and '.join(missing_inputs)} {InputPort.__name__}{s}.")
         return variable
 
-    # FIX: REMOVE THIS METHOD WHEN DictionaryMemory IS RETIRED
+    # IMPLEMENTATION NOTE: REMOVE THIS METHOD WHEN DictionaryMemory IS RETIRED
     def _execute(self, variable=None, context=None, runtime_params=None):
 
         value = super()._execute(variable=variable,
