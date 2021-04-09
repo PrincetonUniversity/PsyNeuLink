@@ -168,8 +168,7 @@ Class Reference
 
 
 """
-import warnings
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 
@@ -178,11 +177,10 @@ from psyneulink.core.components.functions.statefulfunctions.memoryfunctions impo
     DictionaryMemory, ContentAddressableMemory
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
-from psyneulink.core.components.ports.inputport import OutputPort
-from psyneulink.core.globals.keywords import NAME, OWNER_VALUE, SIZE, VARIABLE
-from psyneulink.core.globals.utilities import deprecation_warning, convert_to_np_array
+from psyneulink.core.globals.keywords import NAME, OWNER_VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.utilities import deprecation_warning, convert_to_np_array
 
 __all__ = ['EpisodicMemoryMechanism', 'KEY_INPUT', 'VALUE_INPUT', 'KEY_OUTPUT', 'VALUE_OUTPUT']
 
@@ -335,8 +333,8 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
     def __init__(self,
                  default_variable:Union[int, list, np.ndarray]=None,
-                 size:Union[int, list, np.ndarray]=None,
-                 function:Function=ContentAddressableMemory,
+                 size:Optional[Union[int, list, np.ndarray]]=None,
+                 function:Optional[Function]=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -423,7 +421,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                     if output_ports_spec:
                         output_ports.append({NAME: self.output_ports[i],
                                              VARIABLE: (OWNER_VALUE, i)})
-                    # Otherweise, use InputPort names as base, removing DEFAULT_INPUT_PORT_NAME_SUFFIX
+                    # Otherwise, use InputPort names as base, removing DEFAULT_INPUT_PORT_NAME_SUFFIX
                     else:
                         input_port_name = self.input_ports[i].name
                         # if input_port_name[-input_suffix_len:] == DEFAULT_INPUT_PORT_NAME_SUFFIX:
