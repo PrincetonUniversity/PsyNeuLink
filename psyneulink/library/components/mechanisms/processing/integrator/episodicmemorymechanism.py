@@ -401,9 +401,11 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
         # FIX: REMOVE THIS AND DELETE "ELSE" WHEN DictionaryMemory IS RETIRED
         if self._dictionary_memory:
-            output_ports = [KEY_OUTPUT]
+            output_ports = [{NAME: KEY_OUTPUT,
+                            VARIABLE: (OWNER_VALUE, 0)}]
             if len(self.parameters.variable.default_value) == 2:
-                output_ports.append(VALUE_INPUT)
+                output_ports.append({NAME: VALUE_OUTPUT,
+                                     VARIABLE: (OWNER_VALUE, 1)})
             self.parameters.output_ports._set(output_ports, override=True, context=context)
 
         else:
@@ -456,29 +458,21 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     def _parse_function_variable(self, variable, context=None):
 
         if self._dictionary_memory:
-
-            # # MODIFIED 4/9/21 OLD:
-            # # If assoc has not been specified, add empty list to call to function (which expects two items in its variable)
-            # if len(variable) != 2:
-            #     return convert_to_np_array([variable[0],[]])
-            # else:
-            #     # Check that both are assigned inputs:
-            #     missing_inputs = [self.input_ports.names[i] for i,t in enumerate([v for v in variable]) if t is None]
-            #     if missing_inputs:
-            #         if len(missing_inputs) == 1:
-            #             missing_str = 'an input'
-            #             s = ''
-            #         else:
-            #             missing_str = 'inputs'
-            #             s = 's'
-            #         raise EpisodicMemoryMechanismError(f"{self.name} is missing {missing_str} for its"
-            #                                            f" {'and '.join(missing_inputs)} {InputPort.__name__}{s}.")
-            # MODIFIED 4/9/21 NEW:
+            # If assoc has not been specified, add empty list to call to function (which expects two items in its variable)
             if len(variable) != 2:
                 return convert_to_np_array([variable[0],[]])
             else:
-                return variable
-            # MODIFIED 4/9/21 END
+                # Check that both are assigned inputs:
+                missing_inputs = [self.input_ports.names[i] for i,t in enumerate([v for v in variable]) if t is None]
+                if missing_inputs:
+                    if len(missing_inputs) == 1:
+                        missing_str = 'an input'
+                        s = ''
+                    else:
+                        missing_str = 'inputs'
+                        s = 's'
+                    raise EpisodicMemoryMechanismError(f"{self.name} is missing {missing_str} for its"
+                                                       f" {'and '.join(missing_inputs)} {InputPort.__name__}{s}.")
         return variable
 
     # FIX: REMOVE THIS METHOD WHEN DictionaryMemory IS RETIRED
