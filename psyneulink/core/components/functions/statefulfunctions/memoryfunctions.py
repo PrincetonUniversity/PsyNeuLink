@@ -2225,10 +2225,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         Arguments
         ---------
         entry : list or 2d array
-            must be a list or 2d array containing 1d arrays (fields);  if any entries already exist in `memory
-            <ContentAddressableMemory.memory>`, then both the number of fields and the length of each must match
-            exiting entries (contained in the `memory_num_fields <ContentAddressableMemory.memory_num_fields>`
-            and `memory_field_sizes <ContentAddressableMemory.memory_field_sizes>` attributes, respectively).
+            must be a list or 2d array containing items (fields) each of which must be list or at least a 1d array;
+            if any entries already exist in `memory <ContentAddressableMemory.memory>`, then both the number of fields
+            and the length of each must match exiting entries (contained in the `memory_num_fields
+            <ContentAddressableMemory.memory_num_fields>` and `memory_field_sizes
+            <ContentAddressableMemory.memory_field_sizes>` attributes, respectively).
 
             .. technical_note::
                this method supports adding entries with items in each field that are greater than 1d for potential
