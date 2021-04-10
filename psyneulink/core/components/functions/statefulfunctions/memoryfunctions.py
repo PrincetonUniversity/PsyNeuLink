@@ -1577,11 +1577,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         the same length.
 
     memory : list
-        list of entries in ContentAddressableMemory, each of which is 2d array of fields containing stored items;
-        the fields of an entry can have different lengths, but the corresponding fields of all entries must be of the
-        same length:
-        [[[field 1],[field 2]...], [[field 1],[field 2]...]] can be:
-        [[[a,b],[c,d,e]...], [[u,w],[x,y,z]...]]
+        list of entries in ContentAddressableMemory, each of which is array of fields containing stored items;
+        the fields of an entry can have different shapes, but the corresponding fields of all entries must have the
+        same shape:
+        [[[field 1],[field 2],[field 3]...], [[field 1],[field 2],[field 3]...]] could be:
+        |---------------- entry 1 ---------------|---------------- entry 2 ---------------|
+        |-- field1 --|-- field2 --|--- field3 ---|-- field1 --|-- field2 --|--- field3 ---|
+        [[   [a],      [b,c,d],    [[e],[f]]    ],[    [u],      [v,w,x],     [[y],[z]]  ]]
 
     distance_function : Distance or function : default Distance(metric=COSINE)
         function used during retrieval to compare `variable <ContentAddressableMemory.variable>` with entries in
@@ -1970,12 +1972,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     def _initialize_previous_value(self, initializer, context=None):
         """Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_value
 
-        - Validate initializer, if specified, and return previous_value
+        If specified and it is the first entry:
+        - set memory_num_fields and memory_field_shapes based on initializer
+        - use to set previous_value (and return previous_value)
             (must be done here rather than in validate_params as it is needed to initialize previous_value
-          - insure that it is 3D, and that each item along Axis 1 has the same number of arrays (length)
         """
-        # vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
-
         if initializer is None or np.array(initializer).size == 0:
             return None
         else:
@@ -1984,7 +1985,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             # Set memory fields shapes if this is the first entry
             self.parameters.memory_num_fields.set(initializer.shape[1],
                                                   context=context, override=True)
-            self.parameters.memory_field_shapes.set([item.shape for item in initializer[0]],
+            self.parameters.memory_field_shapes.set([np.array(item).shape for item in initializer[0]],
                                                    context=context, override=True)
             # "pre-initialize" previous_value for use by _store_memory below:
             self.parameters.previous_value.set(None, context, override=True)
@@ -2000,14 +2001,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             return previous_value
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-        # FIX: SUPERFLUOUS SINCE IT IS SET IN _initialize_previous_value
-        # self.parameters.previous_value._set(
-        #     self._initialize_previous_value(
-        #         self.parameters.initializer._get(context),
-        #         context
-        #     ),
-        #     context
-        # )
         self._initialize_previous_value(self.parameters.initializer._get(context), context)
 
         if isinstance(self.distance_function, type):
@@ -2138,13 +2131,12 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         Arguments
         ---------
         cue : list or 2d array
-            must have same number of items, which with the same length as existing entries in
-            `memory <ContentAddressableMemory.memory>`.
+          must have same number and shapes of fields as existing entries in `memory <ContentAddressableMemory.memory>`.
 
         Returns
         -------
         entry retrieved : 2d array
-            if no retrieval occurs, returns appropriately shaped zero-valued array.
+          if no retrieval occurs, returns appropriately shaped zero-valued array.
 
         """
         # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OutputPort FROM LAST TRIAL)?
@@ -2227,7 +2219,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         entry : list or 2d array
             must be a list or 2d array containing items (fields) each of which must be list or at least a 1d array;
             if any entries already exist in `memory <ContentAddressableMemory.memory>`, then both the number of fields
-            and the length of each must match exiting entries (contained in the `memory_num_fields
+            and their shapes must match exiting entries (contained in the `memory_num_fields
             <ContentAddressableMemory.memory_num_fields>` and `memory_field_shapes
             <ContentAddressableMemory.memory_field_shapes>` attributes, respectively).
 
@@ -2239,8 +2231,16 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         self._validate_entry(entry, context)
         # convert all fields and entry itself arrays
-        # FIX: USE convert_to_nparray HERE ONCE THAT CAN HANDLE LISTS
-        entry = np.array([np.array(m) for m in entry])
+        # FIX: USE utilities.convert_to_nparray() HERE ONCE THAT CAN HANDLE LISTS (INCLUDING NESTED ONES)
+        def convert_all_nested_items_in_entry_to_nparray(entry):
+            for i, item in enumerate(entry.copy()):
+                if isinstance(item, list):
+                    item = convert_all_nested_items_in_entry_to_nparray(item)
+                entry[i] = np.array(item)
+            return entry
+
+        # entry = np.array([np.array(m) for m in entry])
+        entry = convert_all_nested_items_in_entry_to_nparray(entry)
 
         num_fields = self.parameters.memory_num_fields._get(context)
 
@@ -2260,15 +2260,15 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             """Format an entry to be added to memory
             Returns entry formatted to match the shape of `memory <EpisodicMemoryMechanism.memory>`,
             so that it can be appended (or, if it is the first, simply assigned) to memory:
-            - if entry is a regular array (all fields [axis 0 items] have equal length),
+            - if entry is a regular array (all fields [axis 0 items] have the same shape),
                 returns object with ndim = entry.ndim + 1 (see technical_note above);
-            - if the entry is a ragged array (fields [axis 0 items] have differing lengths),
+            - if the entry is a ragged array (fields [axis 0 items] have differing shapes),
                 returns 2d object with dtype=object.
             """
-            # Ragged array (i.e., fields of different lengths)
+            # Ragged array (i.e., fields of different shapes)
             if entry.ndim == 1 and entry.dtype==object:
                 shape = (1, num_fields)
-            # Regular array (all fields have the same length)
+            # Regular array (all fields have the same shapes)
             elif entry.ndim >= 2:
                 # Note: if greater ndim>2, item in each field is >1d
                 shape = (1, num_fields, entry.shape[1])
@@ -2323,13 +2323,12 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         Arguments
         ---------
 
-        memories : list or array
-            a single entry (list or 2d array) or list or array of entries, each of which must be a valid entry
-            consisting of two items (e.g., [[key],[value]] or [[[key1],[value1]],[[key2],[value2]]].
-            The keys must all be the same length and equal to the length as key(s) of any existing entries in `dict
-            <ContentAddressableMemory.dict>`.  Items are added to memory in the order listed.
+        entries : list or array
+            a single entry (list or array) or list or array of entries, each of which must be a valid entry;
+            each must have the same number of and shapes of corresponding fields;
+            items are added to memory in the order listed.
         """
-        memories = self._parse_memories(memories, 'add_to_memory', context)
+        entries = self._parse_memories(entries, 'add_to_memory', context)
 
         for entry in entries:
             self._store_memory(entry, context)
@@ -2345,9 +2344,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         ---------
 
         memories : list or array
-            a single entry (list or 2d array) or list or array of entries, each of which must be a valid entry
-            (i.e. same number of fields and lengths of each field as entries already in `memory
-            <ContentAddressableMemory.memory>`.
+            a single entry (list or 2d array) or list or array of entries,
+            each of which must be a valid entry (i.e. same number of fields and shapes of each
+            as entries already in `memory <ContentAddressableMemory.memory>`.
 
         fields :  int or list : default None
             if None, delete all entries in `memory <ContentAddressableMemory.memory>` that are identical

@@ -62,7 +62,7 @@ Creating an EpisodicMemoryMechanism
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An EpisodicMemoryMechanism is created by calling its constructor with a specification of its `MemoryFunction` and
-corresponding information about the number and length of its `fields <EpisodicMemoryMechanism_Memory_Fields>`. These
+corresponding information about the number and shape of its `fields <EpisodicMemoryMechanism_Memory_Fields>`. These
 are specified using the **default_variable** or **size** arguments of the constructor, in the standard way that the
 `variable <Mechanism_Base.variable>` is specified for a `Component` (see `default_variable <Component_Variable>`,
 `size <Component_Size>`).  This constructs an array that in turn is used to create the `InputPorts <InputPort>` for
@@ -245,62 +245,11 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     """
     EpisodicMemoryMechanism()
 
-    Subclass of `IntegratorMechanism <IntegratorMechanism>` that implements a content addressable dictionary.
+    Subclass of `ProcessingMechanism <ProcessingMechanism>` that implements a content addressable dictionary.
     See `Mechanism <Mechanism_Class_Reference>` for arguments and attributes.
-
-    COMMENT:
-    # OLD
-    # Subclass of `IntegratorMechanism <IntegratorMechanism>` that implements a `differentiable neural dictionary
-    # (DictionaryMemory)<HTML>`_.  See `Mechanism <Mechanism_Class_Reference>` for additional arguments and
-    # attributes.
-    COMMENT
-
-    Arguments
-    ---------
-
-    COMMENT:
-    # # content_size : int : default 1
-    # #     specifies length of the content stored in the `function <EpisodicMemoryMechanism.function>`\\s memory.
-    # #
-    # # assoc_size : int : default 0
-    # #     specifies length of the assoc stored in the `function <EpisodicMemoryMechanism.function>`\\s memory;
-    # #     if it is 0 (the default) then no *VALUE_INPUT* InputPort or *VALUE_OUTPUT* OutputPort are created.
-    #
-    # field_sizes : list[int] or 1d array : default [1]
-    #     specifies the size of each field in the input, each of which corresponds an `InputPort` of the Mechanism
-    #     (alias for the standard `size <Component_Size>` argument of a Component's constructor).
-    #     For a `ContentAddressableMemory` function, there can any number of fields, each of which can be any size.
-    #     For a `DicionaryMemory` function, there can be one or two elements, the first of which specifies the size
-    #     of the *CONTENT* vector and second, if present, specifies the size of the *ASSOC*  vector;  any additional
-    #     elements in **field_sizes** are ignored.
-    #
-    # field_names : list[str] : default None
-    #     specifies the name of the `InputPort` used for each field in the input (alias for the standard `input_ports
-    #     <Mechanism_InputPorts>` argument of a `Mechanism's <Mechanism>` consrtuctor).
-    #     For a `ContentAddressableMemory` function, there can any number of fields, each of which can be any size.
-    #     For a `DicionaryMemory` function, there can be one or two elements, the first of which specifies the size
-    #
-    #
-    #     For a `ContentAddressableMemory` function, there can any number of fields, each of which can be any size.
-    #     For a `ContentAddressableMemory` function, there can any number of fields, each of which can be any size.
-    #
-    # FIX: NOTE: PUT WARNING HERE ABOUT FIELDS WITH SIZE 1 PRODUCING PARTICULAR (POTENTIALLY UNANTICIPATED) RESULTS
-    # WITH SOME DISTANCE METRICS (SCALRS & EUCLIDEAN MEASURES = 0)
-    #
-    # function : function : default DictionaryMemory
-    #     specifies the function that implements a memory store and methods to store to and retrieve from it.  It
-    #     must take as its `variable <Function.variable>` a 2d array, the first item of which is the content and the second
-    #     the associate to be stored in its memory, and must return a 2d array that is the value of the
-    #     content and assoc retrieved from its memory.
-    COMMENT
 
     Attributes
     ----------
-
-    COMMENT:
-    # function : function
-    #     function that implements storage and retrieval from a memory.
-    COMMENT
 
     memory : 3d array
         contains key-value pairs stored in the `function <EpisodicMemoryMechanism.function>'\\s `memory` attribute
@@ -415,7 +364,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         super()._instantiate_input_ports(input_ports=input_ports, context=context)
 
     def _instantiate_output_ports(self, context=None):
-        """Generate OutputPorts with names specified and values with lengths equal to corresponding InputPorts
+        """Generate OutputPorts with names specified and values with shapes equal to corresponding InputPorts
 
         If OutputPorts have not been specified, use InputPort names with prefix replaced and suffix removed.
 
