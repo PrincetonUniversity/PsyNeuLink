@@ -29,7 +29,8 @@ json_results_parametrization = [
         'stroop_conflict_monitoring.py',
         'Stroop_model',
         str(stroop_stimuli).replace("'", '')
-    )
+    ),
+    ('model_backprop.py', 'comp', '{a: [1, 2, 3]}'),
 ]
 
 
