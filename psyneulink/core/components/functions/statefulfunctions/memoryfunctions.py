@@ -1569,12 +1569,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         can be added Hadamard style to `variable <ContentAddressableMemory.variable>` before storing it in
         `memory <ContentAddressableMemory.memory>`.
 
-    initializer : 3d array
-        initial set of entries for `memory <ContentAddressableMemory.memory>`; it must be of the following
-        form: [[[value],[value]...], [[value],[value]...]...] , such that each entry is a 2d array or list containing
-        1d arrays or lists that are the items in each `memory field <EpisodicMemoryMechanism_Memory_Fields>` for that
-        entry. All entries must have the same number of items, and the corresponding items of all entries must be of
-        the same length.
+    initializer : ndarray
+        initial set of entries for `memory <ContentAddressableMemory.memory>`; it must be of the same form as
+        `memory <ContentAddresableMemory.memory>.
 
     memory : list
         list of entries in ContentAddressableMemory, each of which is an array of fields containing stored items;
@@ -1662,7 +1659,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         function used during retrieval to evaluate the distances returned by `distance_function
         <ContentAddressableMemory.distance_function>` and select the item(s) to return.
 
-    previous_value : 3d array
+    previous_value : ndarray
         state of the `memory <ContentAddressableMemory.memory>` prior to storing `variable
         <ContentAddressableMemory.variable>` in the current call.
 
@@ -1766,6 +1763,12 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                     :default value: [0]
                     :type: ``numpy.ndarray``
 
+                initializer
+                    see `initializer <ContentAddressableMemory.initializer>`
+
+                    :default value: None
+                    :type: ``numpy.ndarray``
+
                 max_entries
                     see `max_entries <ContentAddressableMemory.max_entries>`
 
@@ -1777,6 +1780,12 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
                     :default value: 0.0
                     :type: ``float``
+
+                previous_value
+                    see `previous_value <ContentAddressableMemory.previous_value>`
+
+                    :default value: None
+                    :type: ``numpy.ndarray``
 
                 random_state
                     see `random_state <ContentAddressableMemory.random_state>`
@@ -1815,6 +1824,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                     :type: ``int``
         """
         variable = Parameter([[0],[0]], pnl_internal=True, constructor_argument='default_variable')
+        initializer = Parameter(None, pnl_internal=True)
+        previous_value = Parameter(None, initializer='initializer', pnl_internal=True)
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         memory_num_fields = Parameter(1, stateful=True, read_only=True)
@@ -1884,7 +1895,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             prefs=prefs,
         )
 
-        if self.previous_value.size is not None:
+        if self.previous_value is not None:
             self.parameters.memory_num_fields.set(len(self.previous_value), override=True)
             self.parameters.memory_field_shapes.set([item.shape for item in self.previous_value[0]], override=True)
 
@@ -1979,27 +1990,31 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             (must be done here rather than in validate_params as it is needed to initialize previous_value
         """
         if initializer is None or np.array(initializer).size == 0:
+        #     return None
+        # if initializer is None or np.array(initializer).size == 0 or not self.parameters.initializer._user_specified:
+        #     if self.parameters.variable._user_specified:
             return None
-        else:
-            initializer = np.atleast_2d(initializer)
-            # FIX: HOW DOES THIS RELATE TO WHAT IS DONE IN __init__()?
-            # Set memory fields shapes if this is the first entry
-            self.parameters.memory_num_fields.set(initializer.shape[1],
-                                                  context=context, override=True)
-            self.parameters.memory_field_shapes.set([np.array(item).shape for item in initializer[0]],
-                                                   context=context, override=True)
-            # "pre-initialize" previous_value for use by _store_memory below:
-            self.parameters.previous_value.set(None, context, override=True)
+            # initializer = [self.parameters.variable.default_value]
 
-            for entry in initializer:
-                # Store each item, which also validates it by call to _validate_entry()
-                if not self._store_memory(np.array(entry), context):
-                    warnings.warn(f"Attempt to initialize memory of {self.__class__.__name__} with an entry ({entry}) "
-                                  f"that has the same key as a previous one, while 'duplicate_entries'==False; "
-                                  f"that entry has been skipped")
-            previous_value = convert_to_np_array(self._memory)
-            self.parameters.previous_value.set(previous_value, context, override=True)
-            return previous_value
+        initializer = np.atleast_2d(initializer)
+        # FIX: HOW DOES THIS RELATE TO WHAT IS DONE IN __init__()?
+        # Set memory fields shapes if this is the first entry
+        self.parameters.memory_num_fields.set(initializer.shape[1],
+                                              context=context, override=True)
+        self.parameters.memory_field_shapes.set([np.array(item).shape for item in initializer[0]],
+                                               context=context, override=True)
+        # "pre-initialize" previous_value for use by _store_memory below:
+        self.parameters.previous_value.set(None, context, override=True)
+
+        for entry in initializer:
+            # Store each item, which also validates it by call to _validate_entry()
+            if not self._store_memory(np.array(entry), context):
+                warnings.warn(f"Attempt to initialize memory of {self.__class__.__name__} with an entry ({entry}) "
+                              f"that has the same key as a previous one, while 'duplicate_entries'==False; "
+                              f"that entry has been skipped")
+        previous_value = convert_to_np_array(self._memory)
+        self.parameters.previous_value.set(previous_value, context, override=True)
+        return previous_value
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         self._initialize_previous_value(self.parameters.initializer._get(context), context)
