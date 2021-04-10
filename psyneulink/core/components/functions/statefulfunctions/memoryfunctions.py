@@ -1980,10 +1980,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if len(initializer) == 0:
             return previous_value
         else:
+            initializer = np.atleast_2d(initializer)
             # FIX: HOW DOES THIS RELATE TO WHAT IS DONE IN __init__()?
             # Set memory fields sizes if this is the first entry
             self.parameters.previous_value.set(previous_value, context, override=True)
-            self.parameters.memory_num_fields.set(len(initializer), context)
+            self.parameters.memory_num_fields.set(initializer.shape[1], context)
             self.parameters.memory_field_sizes.set([len(item) for item in initializer[0]], context)
 
             for entry in initializer:
@@ -2093,7 +2094,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             return variable
 
         # Set memory fields sizes and total size if this is the first entry
-        if len(self.parameters.previous_value._get(context)) == 0:
+        if self.parameters.previous_value._get(context).size == 0:
             self.parameters.memory_num_fields.set(len(variable))
             self.parameters.memory_field_sizes.set([len(item) for item in variable])
 
@@ -2251,7 +2252,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), memory, context=context)
         if noise is not None:
             try:
-                memory += noise
+                memory = memory + noise
             except:
                 raise FunctionError(f"'noise' for '{self.name}' of '{self.owner.name}' "
                                     f"not appropriate shape (single number or array of length {num_fields}.")
@@ -2280,9 +2281,12 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             storage_succeeded = True
 
         else:
-            if existing_entries.shape == (2,0):
-                # No entries yet
-                entries = np.atleast_2d(np.append(existing_entries, memory))
+            # No entries yet
+            if existing_entries.size == (2,0):
+                if memory.ndim == 1:
+                    entries = np.atleast_2d(np.append(existing_entries, memory))
+                else:
+                    assert False
             else:
                 # Add to existing entries
                 entries = np.append(existing_entries, np.atleast_2d(memory), axis=0)

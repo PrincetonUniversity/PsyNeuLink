@@ -28,7 +28,7 @@ Overview
 An EpisodicMemoryMechanism is a `ProcessingMechanism` that can store and retrieve items from a content addressable
 memory;  that is, on each execution it can store an item presented to it as input, and use that to retrieve an item
 from its memory based on the content of the input.  The `MemoryFunction` assigned as its `function
-<EpisodicMemoryMechanism.function>` determines how items are stored and retrieved. Each memory is a list or 2d array
+<EpisodicMemoryMechanism.function>` determines how items are stored and retrieved. Each memory is a list or array
 composed of items referred to as `memory fields <EpisodicMemoryMechanism_Memory_Fields>`, each of which is a list or
 1d array. Memories can have an arbitrary number of fields, and each of those can be of arbitrary length, however all
 memories for a given instance of an  EpisodicMemoryMechanism must have the same shape (number of fields, and lengths
@@ -65,13 +65,13 @@ An EpisodicMemoryMechanism is created by calling its constructor with a specific
 corresponding information about the number and length of its `fields <EpisodicMemoryMechanism_Memory_Fields>`. These
 are specified using the **default_variable** or **size** arguments of the constructor, in the standard way that the
 `variable <Mechanism_Base.variable>` is specified for a `Component` (see `default_variable <Component_Variable>`,
-`size <Component_Size>`).  This construct a 2d array that in turn is used to create the `InputPorts <InputPort>` for
+`size <Component_Size>`).  This constructs an array that in turn is used to create the `InputPorts <InputPort>` for
 the Mechanism (see `Mechanism Variable <Mechanism_Variable_and_InputPorts>` for additional information), with the
-number created equal to the number of items in the 2d array.  The InputPorts provide the values that are
-assigned to the corresponding fields of the entry stored in `memory <EpisodicMemoryMechanism.memory>, and used to
-retrieve one similar to it.  By default, InputPorts are named *FIELD_n_INPUT*, where "n" is replaced by the index of
-each field; however, they can be named explicitly by specifying a list of strings in the **input_ports** argument of
-the constructor; the number of these must equal the number of fields specified in **default_variable** or **size**.
+number created equal to the number of items in the array.  The InputPorts provide the values that are assigned to the
+corresponding fields of the entry stored in `memory <EpisodicMemoryMechanism.memory>, and used to retrieve one similar
+to it.  By default, InputPorts are named *FIELD_n_INPUT*, where "n" is replaced by the index of each field; however,
+they can be named explicitly by specifying a list of strings in the **input_ports** argument of the constructor; the
+number of these must equal the number of fields specified in **default_variable** or **size**.
 
 .. _EpisodicMemoryMechanism_Creation_Function_Parameters:
 
@@ -102,27 +102,29 @@ Structure
 *Memory Fields*
 ~~~~~~~~~~~~~~~
 
-Entries in the memory of an EpisodicMemoryMechanism are comprised of fields: lists or 1d arrays within the outer
-list or 2d array that makes up an entry.  Fields can be used both for storing distinct forms of information within a
-single entry, and/or retrieving entries based on distinct forms of information.  All entries have the same number of
-fields, and the length of corresponding fields must be the same for all entries.  Retrieval of an entry from memory
-can be based on all fields, or a weighted combination of them (as determined by the `MemoryFunction` assigned to
-`function <EpisodicMemoryMechanism.function>`).
+Entries in the `memory <EpisodicMemoryMechanism.memory> of an EpisodicMemoryMechanism are comprised of fields: lists
+or 1d arrays within the outer list or array that makes up each entry. Fields can be used both for storing distinct
+pieces of information within a single entry, and/or retrieving entries selectively based on those.  All entries must
+have the same number of fields, and the length of corresponding fields must be the same for all entries. One InputPort
+of the EpisodicMemoryMechanism is assigned to each field.  Retrieval of an entry from memory can be based on all
+fields, or a weighted combination of them (as determined by the `MemoryFunction` assigned to `function
+<EpisodicMemoryMechanism.function>`).
 
 .. technical_note::
-   The shape of an entry in memory is determined by the Mechanism's `variable <Mechanism_Base.variable>`, with each
-   item corresponding to a field. Because fields can be of different lengths, although entries are comprised of
-   1d arrays, the entry itself is implemented as Numpy 1d array with dtype=Object.  Similarly, since an
-   EpisodicMemoryMechanism's `memory <EpisodicMemoryMechanism.memory>` is comprised of entries that are implemented
-   as 1d arrays, it is a 2d array of dtype=Object
+   The shape of an entry in memory is determined by the Mechanism's `variable <Mechanism_Base.variable>`,
+   with each item within it (a 1d array) corresponding to a field. Because fields can be of different lengths,
+   entries -- and the EpisodicMemoryMechanism's `memory <EpisodicMemoryMechanism.memory>` in which they are stored
+   -- can be `ragged arrays <https://en.wikipedia.org/wiki/Jagged_array>`_.  Accordingly, entries even though they
+   contain arrays within them, are Numpy 1d arrays of dtype=object, and the EpisodicMemoryMechanism's `memory
+   <EpisodicMemoryMechanism.memory>` is a 2d array also of dtype=object.
 
 COMMENT:
 *Memory fields and weighting.* --
 ADD TO CONTENTADDRESSABLEMEMORY
  - MEMORY FIELDS REFER TO ITEMS IN VARIABLE, GENERALLY CORRESPONDING TO INPUT PORTS ON MECHANISM (E.G., EM)
  - CAN BE WEGITHED FOR DISTANCE COMPUTATION (SEE RELEVANT SECTION)
- - INCLUDE NOTE THAT, BECAUSE FIELDS CAN BE OF DIFFERENT LENGTHS, MEMORY CAN'T BE TREATED AS A  STANDARD 3D ARRAY
-     NOR CAN ENTRIES BE TREATED AS STANDARD 2D ARRAYS
+ - INCLUDE NOTE THAT, BECAUSE FIELDS CAN BE OF DIFFERENT LENGTHS, ENTRIES AND MEMORY ARE RAGGED ARRAYS WITH
+   dtype=object, and dimensions in Numpy 1d less than might be expected
 COMMENT
 
 
@@ -149,9 +151,9 @@ can also be be assigned, that implements a more specific form of memory in which
 pairs, and retrieved based on similarity only to the key.  A custom function can also be specified, so long as it
 meets the following requirements:
 
-    * it must accept a list or 2d array as its first argument, the items of which are lists or 1d arrays;
+    * it must accept a list or array as its first argument, the items of which are lists or 1d arrays;
 
-    * it must return a 2d array of the same size and shape as the input;
+    * it must return a list or array of the same size and shape as the input;
 
     * it must implement a ``memory`` attribute, that is accessed by the EpisodicMemoryMechanism's `memory
       <EpisodicMemoryMechanism.memory>` attribute.
