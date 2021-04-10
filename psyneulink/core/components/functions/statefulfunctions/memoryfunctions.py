@@ -1728,7 +1728,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                     :type: ``str``
 
                 memory_num_fields
-                    see `memory_field_sizes <ContentAddressableMemory.memory_num_fields>`
+                    see `memory_num_fields <ContentAddressableMemory.memory_num_fields>`
 
                     :default value: 1
                     :type: ``int``
