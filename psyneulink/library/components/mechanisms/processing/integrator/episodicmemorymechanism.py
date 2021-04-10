@@ -103,33 +103,25 @@ Structure
 ~~~~~~~~~~~~~~~
 
 Entries in the `memory <EpisodicMemoryMechanism.memory> of an EpisodicMemoryMechanism are comprised of fields: lists
-or 1d arrays within the outer list or array that makes up each entry. Fields can be used both for storing distinct
-pieces of information within a single entry, and/or retrieving entries selectively based on those.  All entries must
-have the same number of fields, and the length of corresponding fields must be the same for all entries. One InputPort
-of the EpisodicMemoryMechanism is assigned to each field.  Retrieval of an entry from memory can be based on all
-fields, or a weighted combination of them (as determined by the `MemoryFunction` assigned to `function
-<EpisodicMemoryMechanism.function>`).
-
-.. technical_note::
-   The shape of an entry in memory is determined by the Mechanism's `variable <Mechanism_Base.variable>`,
-   with each item within it corresponding to a field. Because fields can have different shapes, entries -- and the
-   EpisodicMemoryMechanism's `memory <EpisodicMemoryMechanism.memory>` in which they are stored -- can be `ragged
-   arrays <https://en.wikipedia.org/wiki/Jagged_array>`_.  Accordingly, the dimensionality of these can vary between
-   instances.  If entries are *ragged*, then each entry is a 1d array, irrespective of whether fields are numbers or
-   arrays), and `memory <EpisodicMemoryMechanism.memory>` is 2d, and both are of dtype=object. If entries are
-   *regular*, then they are either 1d (if fields are numbers) or 2d (if fields are arrays), and `memory
-   <EpisodicMemoryMechanism.memory>` is either 2d or 3d, respectively, and the dtype of both is determined by the
-   values of their numeric elements.
+or arrays within the outer list or array that makes up each entry. Fields can be used both for storing distinct pieces
+of information within a single entry, and/or retrieving entries selectively based on those.  All entries must have
+the same form (i.e., number of fields and shape of corresponding fields). One InputPort of the EpisodicMemoryMechanism
+is assigned to each field.  Retrieval of an entry from memory can be based on all fields, or a weighted combination of
+them (as determined by the `MemoryFunction` assigned to `function <EpisodicMemoryMechanism.function>`).
 
 COMMENT:
-*Memory fields and weighting.* --
-ADD TO CONTENTADDRESSABLEMEMORY
- - MEMORY FIELDS REFER TO ITEMS IN VARIABLE, GENERALLY CORRESPONDING TO INPUT PORTS ON MECHANISM (E.G., EM)
- - CAN BE WEGITHED FOR DISTANCE COMPUTATION (SEE RELEVANT SECTION)
- - INCLUDE NOTE THAT, BECAUSE FIELDS CAN BE OF DIFFERENT LENGTHS, ENTRIES AND MEMORY ARE RAGGED ARRAYS WITH
-   dtype=object, and dimensions in Numpy 1d less than might be expected
+FIX: REWRITE THIS WHEN MEMORY FIELDS ARE ALLOWED TO BE ANY SIZE:
+     ContentAddressableMemory.memory_field_sizes -> memory_field_shapes
 COMMENT
-
+.. technical_note::
+   The shape of an entry in memory is determined by the Mechanism's `variable <Mechanism_Base.variable>`,
+   with each of its items corresponding to a field. Because fields can have different shapes, entries and the
+   EpisodicMemoryMechanism's `memory <EpisodicMemoryMechanism.memory>` can be `ragged arrays
+   <https://en.wikipedia.org/wiki/Jagged_array>`_, and therefore their dimensionality can vary between instances.
+   Ragged entries are implemented 1d arrays, irrespective of the shapes of their fields, `memory
+   <EpisodicMemoryMechanism.memory>` is 2d, and both are dtype=object. If entries are *regular*, then entries are
+   2d, `memory <EpisodicMemoryMechanism.memory>` is 3d, and the dtype of both is determined by the values of their
+   innermost numeric elements.
 
 *Input*
 ~~~~~~~
