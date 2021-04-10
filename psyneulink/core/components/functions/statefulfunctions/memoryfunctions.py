@@ -2113,10 +2113,18 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if not len(entry) == num_fields:
             raise FunctionError(f"Attempt to store and/or retrieve entry in {self.__class__.__name__} ({entry}) "
                                 f"that has an incorrect number of fields ({len(entry)}; should be {num_fields}).")
-        if not all((np.array(item).ndim == 1 and len(item) == field_shapes[i][0]
-                    for i, item in enumerate(entry))):
-            raise FunctionError(f"Attempt to store and/or retrieve an entry in {self.__class__.__name__} that has one "
-                                f"or more fields with an incorrect size (sizes should be {field_sizes}):\n{entry}.")
+        # if not all((np.array(item).ndim == 1 and np.array(item).shape == field_shapes[i][0]
+        #             for i, item in enumerate(entry))):
+        #     raise FunctionError(f"Attempt to store and/or retrieve an entry in {self.__class__.__name__} that has one "
+        #                         f"or more fields with an incorrect shape (shapes should be {field_shapes}):\n{entry}.")
+        owner_name = ''
+        if self.owner:
+            owner_name = f'of {self.owner.name}'
+        for i, field in enumerate(entry):
+            field = np.array(field)
+            if field.ndim != 1 or field.shape != field_shapes[i]:
+                raise FunctionError(f"Field {i} of entry ({entry}) has incorrect shape ({field.shape}) "
+                                    f"for memory of '{self.name}{owner_name}';  should be: {field_shapes[i]}.")
 
     def uniform_entry(self, value:Union[int, float], context) -> np.ndarray:
         return np.array([[value]* i for i in self.parameters.memory_field_shapes._get(context)[0]])
