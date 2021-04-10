@@ -1625,8 +1625,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         contains the number of `memory fields <EpisodicMemoryMechanism_Memory_Fields>` in each entry of `memory
         <ContentAddressableMemory.memory>`.
 
-    memory_field_sizes : array
-        contains the sizes of each `memory field <EpisodicMemoryMechanism_Memory_Fields>`  in each entry of `memory
+    memory_field_shapes : array
+        contains the shapes of each `memory field <EpisodicMemoryMechanism_Memory_Fields>`  in each entry of `memory
         <ContentAddressableMemory.memory>`.
 
     duplicate_entries : bool | OVERWRITE
@@ -1728,13 +1728,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                     :type: ``str``
 
                 memory_num_fields
-                    see `memory_field_sizes <ContentAddressableMemory.memory_num_fields>`
+                    see `memory_num_fields <ContentAddressableMemory.memory_num_fields>`
 
                     :default value: 1
                     :type: ``int``
 
-                memory_field_sizes
-                    see `memory_field_sizes <ContentAddressableMemory.memory_field_sizes>`
+                memory_field_shapes
+                    see `memory_field_shapes <ContentAddressableMemory.memory_field_shapes>`
 
                     :default value: [1]
                     :type: ``numpy.ndarray``
@@ -1815,7 +1815,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         memory_num_fields = Parameter(1, stateful=True, read_only=True)
-        memory_field_sizes = Parameter([1], stateful=True, read_only=True)
+        memory_field_shapes = Parameter((1), stateful=True, read_only=True)
         distance_field_weights = Parameter(None, stateful=True, modulable=True)
         duplicate_entries = Parameter(False)
         duplicate_threshold = Parameter(0, stateful=False, modulable=True)
@@ -1883,7 +1883,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         if self.previous_value.size is not None:
             self.parameters.memory_num_fields.set(len(self.previous_value), override=True)
-            self.parameters.memory_field_sizes.set([len(item) for item in self.previous_value[0]], override=True)
+            self.parameters.memory_field_shapes.set([item.shape for item in self.previous_value[0]], override=True)
 
     # FIX: IS THIS USED ANYWHERE?
     def _parse_distance_function_variable(self, variable):
@@ -1981,10 +1981,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         else:
             initializer = np.atleast_2d(initializer)
             # FIX: HOW DOES THIS RELATE TO WHAT IS DONE IN __init__()?
-            # Set memory fields sizes if this is the first entry
+            # Set memory fields shapes if this is the first entry
             self.parameters.memory_num_fields.set(initializer.shape[1],
                                                   context=context, override=True)
-            self.parameters.memory_field_sizes.set([len(item) for item in initializer[0]],
+            self.parameters.memory_field_shapes.set([item.shape for item in initializer[0]],
                                                    context=context, override=True)
             # "pre-initialize" previous_value for use by _store_memory below:
             self.parameters.previous_value.set(None, context, override=True)
@@ -2091,7 +2091,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         # Set memory fields sizes and total size if this is the first entry
         if self.parameters.previous_value._get(context) is None:
             self.parameters.memory_num_fields.set(len(variable), context=context, override=True)
-            self.parameters.memory_field_sizes.set([len(item) for item in variable], context=context, override=True)
+            self.parameters.memory_field_shapes.set([item.shape for item in variable], context=context, override=True)
 
         # Retrieve entry from memory that best matches variable
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
@@ -2110,7 +2110,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     def _validate_entry(self, entry:Union[list, np.ndarray], context) -> None:
 
-        field_sizes = self.parameters.memory_field_sizes.get(context)
+        field_shapes = self.parameters.memory_field_shapes.get(context)
         num_fields = self.parameters.memory_num_fields.get(context)
         if entry.ndim >2:
             # IMPLEMENTATION NOTE:  Remove this if/when >2d arrays are supported more generally in PsyNeuLink
@@ -2119,13 +2119,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if not len(entry) == num_fields:
             raise FunctionError(f"Attempt to store and/or retrieve entry in {self.__class__.__name__} ({entry}) "
                                 f"that has an incorrect number of fields ({len(entry)}; should be {num_fields}).")
-        if not all((np.array(item).ndim == 1 and len(item) == field_sizes[i]
+        if not all((np.array(item).ndim == 1 and len(item) == field_shapes[i][0]
                     for i, item in enumerate(entry))):
             raise FunctionError(f"Attempt to store and/or retrieve an entry in {self.__class__.__name__} that has one "
                                 f"or more fields with an incorrect size (sizes should be {field_sizes}):\n{entry}.")
 
     def uniform_entry(self, value:Union[int, float], context) -> np.ndarray:
-        return np.array([[value]* i for i in self.parameters.memory_field_sizes._get(context)])
+        return np.array([[value]* i for i in self.parameters.memory_field_shapes._get(context)[0]])
 
     @handle_external_context()
     def get_memory(self, cue:Union[list, np.ndarray], field_weights=None, context=None) -> np.ndarray:
@@ -2228,8 +2228,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             must be a list or 2d array containing items (fields) each of which must be list or at least a 1d array;
             if any entries already exist in `memory <ContentAddressableMemory.memory>`, then both the number of fields
             and the length of each must match exiting entries (contained in the `memory_num_fields
-            <ContentAddressableMemory.memory_num_fields>` and `memory_field_sizes
-            <ContentAddressableMemory.memory_field_sizes>` attributes, respectively).
+            <ContentAddressableMemory.memory_num_fields>` and `memory_field_shapes
+            <ContentAddressableMemory.memory_field_shapes>` attributes, respectively).
 
             .. technical_note::
                this method supports adding entries with items in each field that are greater than 1d for potential
