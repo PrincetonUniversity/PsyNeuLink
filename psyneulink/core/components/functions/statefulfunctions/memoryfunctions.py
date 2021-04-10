@@ -2090,8 +2090,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         # Set memory fields sizes and total size if this is the first entry
         if self.parameters.previous_value._get(context) is None:
-            self.parameters.memory_num_fields.set(len(variable), override=True)
-            self.parameters.memory_field_sizes.set([len(item) for item in variable], override=True)
+            self.parameters.memory_num_fields.set(len(variable), context=context, override=True)
+            self.parameters.memory_field_sizes.set([len(item) for item in variable], context=context, override=True)
 
         # Retrieve entry from memory that best matches variable
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
