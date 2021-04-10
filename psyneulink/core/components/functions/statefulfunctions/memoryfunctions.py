@@ -1577,13 +1577,14 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         the same length.
 
     memory : list
-        list of entries in ContentAddressableMemory, each of which is array of fields containing stored items;
-        the fields of an entry can have different shapes, but the corresponding fields of all entries must have the
-        same shape:
-        [[[field 1],[field 2],[field 3]...], [[field 1],[field 2],[field 3]...]] could be:
-        |---------------- entry 1 ---------------|---------------- entry 2 ---------------|
-        |-- field1 --|-- field2 --|--- field3 ---|-- field1 --|-- field2 --|--- field3 ---|
-        [[   [a],      [b,c,d],    [[e],[f]]    ],[    [u],      [v,w,x],     [[y],[z]]  ]]
+        list of entries in ContentAddressableMemory, each of which is an array of fields containing stored items;
+        the fields of an entry must be lists or arrays, each of which can be different shapes, but the corresponding
+        fields of all entries must have the same shape;  for example:
+            [[[field1],[field2],[field3]...], [[field1],[field2],[field3]...]...]
+        could be:
+            |---------------- entry 1 ---------------|---------------- entry 2 ---------------|
+            |-- field1 --|-- field2 --|--- field3 ---|-- field1 --|-- field2 --|--- field3 ---|
+            [[   [a],      [b,c,d],      [[e],[f]]  ],[    [u],      [v,w,x],     [[y],[z]]  ]]
 
     distance_function : Distance or function : default Distance(metric=COSINE)
         function used during retrieval to compare `variable <ContentAddressableMemory.variable>` with entries in
