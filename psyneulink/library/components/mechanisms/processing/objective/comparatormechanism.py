@@ -337,6 +337,7 @@ class ComparatorMechanism(ObjectiveMechanism):
                  ):
 
         input_ports = kwargs.pop(INPUT_PORTS, {})
+        input_ports_spec = input_ports
         if input_ports:
             input_ports = {INPUT_PORTS: input_ports}
 
@@ -363,6 +364,8 @@ class ComparatorMechanism(ObjectiveMechanism):
 
         # Require Projection to TARGET InputPort (already required for SAMPLE as primary InputPort)
         self.input_ports[1].parameters.require_projection_in_composition.set(True, override=True)
+        # reset input ports spec to actual spec, not parsed
+        self.parameters.input_ports.spec = input_ports_spec
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """If sample and target values are specified, validate that they are compatible
