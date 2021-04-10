@@ -2074,19 +2074,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         value of entry that best matches `variable <ContentAddressableMemory.variable>`  : 1d array
         """
 
-        # # MODIFIED 4/5/21 OLD:
-        # key = variable[KEYS]
-        # # if len(variable)==2:
-        # val = variable[VALS]
-        # MODIFIED 4/5/21 NEW:
-        # FIX: OVERVIEW
-        # Allow memory entry to come in as a 2d array with variable number of items, each of its own length,
-        #    corresponding to standard format of Mechanism's variable (and, accordingly, each of its InputPorts)
-        # Then concatenate them into a single vector, and construct field_map that weights each field using
-        # distance_field_weights.
-
-        # MODIFIED 4/5/21 END
-
         retrieval_prob = np.array(self._get_current_parameter_value(RETRIEVAL_PROB, context)).astype(float)
         storage_prob = np.array(self._get_current_parameter_value(STORAGE_PROB, context)).astype(float)
 
@@ -2119,13 +2106,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.rand()):
             self._store_memory(variable, context)
 
-        # Return 3d array with keys and vals as lists
-        # IMPLEMENTATION NOTE:  if try to create np.ndarray directly, and keys and vals have same length
-        #                       end up with array of arrays, rather than array of lists
-        # FIX: IS THERE STILL A NEED FOR CONVERSION? JUST RETURN RETRIEVED MEMORY AS IS?
-        # ret_val = convert_to_np_array([list(memory[0]),[]])
-        # ret_val[1] = list(memory[1])
-        # return ret_val
         return entry
 
     def _validate_entry(self, entry:Union[list, np.ndarray], context) -> None:
@@ -2253,12 +2233,12 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             .. technical_note::
                this method supports adding entries with items in each field that are greater than 1d for potential
                future use (see format_for_storage() below); however they are currently rejected in _validate_memory
-               as they may produce unexpected results (by returning entries that are greater than 2d).
+               as currently they may produce unexpected results (by returning entries that are greater than 2d).
         """
 
         self._validate_entry(entry, context)
         # convert all fields and entry itself arrays
-        # FIX: USE convert_to_nparary HERE ONCE THAT CAN HANDLE LISTS
+        # FIX: USE convert_to_nparray HERE ONCE THAT CAN HANDLE LISTS
         entry = np.array([np.array(m) for m in entry])
 
         num_fields = self.parameters.memory_num_fields._get(context)
