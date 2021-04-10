@@ -30,8 +30,8 @@ memory;  that is, on each execution it can store an item presented to it as inpu
 from its memory based on the content of the input.  The `MemoryFunction` assigned as its `function
 <EpisodicMemoryMechanism.function>` determines how items are stored and retrieved. Each memory is a list or array
 composed of items referred to as `memory fields <EpisodicMemoryMechanism_Memory_Fields>`, each of which is a list or
-1d array. Memories can have an arbitrary number of fields, and each of those can be of arbitrary length, however all
-memories for a given instance of an  EpisodicMemoryMechanism must have the same shape (number of fields, and lengths
+array. Memories can have an arbitrary number of fields, and each of those can be of arbitrary shape, however all
+memories for a given instance of an  EpisodicMemoryMechanism must have the same shape (number of fields, and shapes
 of corresponding fields).  Each `InputPort` of an EpisodicMemoryMechanism provides the input for a corresponding
 field of a memory to be stored and used for retrieval.  By default, each `OutputPort` contains the value of a field
 of the last retrieved memory although, as with any Mechanism, OutputPorts can be `configured in other ways
@@ -112,11 +112,14 @@ fields, or a weighted combination of them (as determined by the `MemoryFunction`
 
 .. technical_note::
    The shape of an entry in memory is determined by the Mechanism's `variable <Mechanism_Base.variable>`,
-   with each item within it (a 1d array) corresponding to a field. Because fields can be of different lengths,
-   entries -- and the EpisodicMemoryMechanism's `memory <EpisodicMemoryMechanism.memory>` in which they are stored
-   -- can be `ragged arrays <https://en.wikipedia.org/wiki/Jagged_array>`_.  Accordingly, entries even though they
-   contain arrays within them, are Numpy 1d arrays of dtype=object, and the EpisodicMemoryMechanism's `memory
-   <EpisodicMemoryMechanism.memory>` is a 2d array also of dtype=object.
+   with each item within it corresponding to a field. Because fields can have different shapes, entries -- and the
+   EpisodicMemoryMechanism's `memory <EpisodicMemoryMechanism.memory>` in which they are stored -- can be `ragged
+   arrays <https://en.wikipedia.org/wiki/Jagged_array>`_.  Accordingly, the dimensionality of these can vary between
+   instances.  If entries are *ragged*, then each entry is a 1d array, irrespective of whether fields are numbers or
+   arrays), and `memory <EpisodicMemoryMechanism.memory>` is 2d, and both are of dtype=object. If entries are
+   *regular*, then they are either 1d (if fields are numbers) or 2d (if fields are arrays), and `memory
+   <EpisodicMemoryMechanism.memory>` is either 2d or 3d, respectively, and the dtype of both is determined by the
+   values of their numeric elements.
 
 COMMENT:
 *Memory fields and weighting.* --
@@ -146,20 +149,20 @@ specifies two items; any additional fields are ignored.
 ~~~~~~~~~~
 
 The default function is `ContentAddressableMemory` that can store entries with an arbitrary number of fields and
-lengths, and retrieve them based on a weighted similarity to any combination of those fields.  A `DictionaryMemory`
+shapes, and retrieve them based on a weighted similarity to any combination of those fields.  A `DictionaryMemory`
 can also be be assigned, that implements a more specific form of memory in which entries are made of up key-value
 pairs, and retrieved based on similarity only to the key.  A custom function can also be specified, so long as it
 meets the following requirements:
 
-    * it must accept a list or array as its first argument, the items of which are lists or 1d arrays;
+    * it must accept a list or array as its first argument, the items of which are lists or arrays;
 
     * it must return a list or array of the same size and shape as the input;
 
-    * it must implement a ``memory`` attribute, that is accessed by the EpisodicMemoryMechanism's `memory
+    * it must implement a ``memory`` attribute, that can be accessed by the EpisodicMemoryMechanism's `memory
       <EpisodicMemoryMechanism.memory>` attribute.
 
-    * it must implement a ``store_memory`` and a ``get_memory()`` method that, respectively, store and retrieve
-      entries from its memory.
+    * it must implement ``store_memory`` and ``get_memory()`` methods that, respectively, store and retrieve
+      entries from its ``memory`` attribute.
 
 .. _EpisodicMemoryMechanism_Execution:
 

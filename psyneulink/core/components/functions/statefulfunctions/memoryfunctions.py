@@ -1814,8 +1814,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         variable = Parameter([[0],[0]], pnl_internal=True, constructor_argument='default_variable')
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        memory_num_fields = Parameter(1, stateful=True)
-        memory_field_sizes = Parameter([1], stateful=True)
+        memory_num_fields = Parameter(1, stateful=True, read_only=True)
+        memory_field_sizes = Parameter([1], stateful=True, read_only=True)
         distance_field_weights = Parameter(None, stateful=True, modulable=True)
         duplicate_entries = Parameter(False)
         duplicate_threshold = Parameter(0, stateful=False, modulable=True)
@@ -1882,8 +1882,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         )
 
         if self.previous_value.size is not None:
-            self.parameters.memory_num_fields.set(len(self.previous_value))
-            self.parameters.memory_field_sizes.set([len(item) for item in self.previous_value[0]])
+            self.parameters.memory_num_fields.set(len(self.previous_value), override=True)
+            self.parameters.memory_field_sizes.set([len(item) for item in self.previous_value[0]], override=True)
 
     # FIX: IS THIS USED ANYWHERE?
     def _parse_distance_function_variable(self, variable):
@@ -1982,12 +1982,15 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             initializer = np.atleast_2d(initializer)
             # FIX: HOW DOES THIS RELATE TO WHAT IS DONE IN __init__()?
             # Set memory fields sizes if this is the first entry
-            # self.parameters.previous_value.set(previous_value, context, override=True)
-            self.parameters.memory_num_fields.set(initializer.shape[1], context)
-            self.parameters.memory_field_sizes.set([len(item) for item in initializer[0]], context)
+            self.parameters.memory_num_fields.set(initializer.shape[1],
+                                                  context=context, override=True)
+            self.parameters.memory_field_sizes.set([len(item) for item in initializer[0]],
+                                                   context=context, override=True)
+            # "pre-initialize" previous_value for use by _store_memory below:
+            self.parameters.previous_value.set(None, context, override=True)
 
             for entry in initializer:
-                # Store each item, which also validates it by call to _validate_memory()
+                # Store each item, which also validates it by call to _validate_entry()
                 if not self._store_memory(np.array(entry), context):
                     warnings.warn(f"Attempt to initialize memory of {self.__class__.__name__} with an entry ({entry}) "
                                   f"that has the same key as a previous one, while 'duplicate_entries'==False; "
@@ -2100,17 +2103,17 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         # Set memory fields sizes and total size if this is the first entry
         if self.parameters.previous_value._get(context) is None:
-            self.parameters.memory_num_fields.set(len(variable))
-            self.parameters.memory_field_sizes.set([len(item) for item in variable])
+            self.parameters.memory_num_fields.set(len(variable), override=True)
+            self.parameters.memory_field_sizes.set([len(item) for item in variable], override=True)
 
         # Retrieve entry from memory that best matches variable
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
-            memory = self.get_memory(variable, self.parameters.distance_field_weights._get(context), context)
+            entry = self.get_memory(variable, self.parameters.distance_field_weights._get(context), context)
         else:
             # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OutputPort FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_PORT
             #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
-            memory = self.uniform_entry(0, context)
+            entry = self.uniform_entry(0, context)
 
         # Store variable in memory
         if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.rand()):
@@ -2123,19 +2126,23 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         # ret_val = convert_to_np_array([list(memory[0]),[]])
         # ret_val[1] = list(memory[1])
         # return ret_val
-        return memory
+        return entry
 
-    def _validate_memory(self, memory:Union[list, np.ndarray], context) -> None:
+    def _validate_entry(self, entry:Union[list, np.ndarray], context) -> None:
 
         field_sizes = self.parameters.memory_field_sizes.get(context)
         num_fields = self.parameters.memory_num_fields.get(context)
-        if not len(memory) == num_fields:
-            raise FunctionError(f"Attempt to store and/or retrieve entry in {self.__class__.__name__} ({memory}) "
-                                f"that has an incorrect number of fields ({len(memory)}; should be {num_fields}).")
+        if entry.ndim >2:
+            # IMPLEMENTATION NOTE:  Remove this if/when >2d arrays are supported more generally in PsyNeuLink
+            raise FunctionError(f"Attempt to store and/or retrieve an entry in {self.__class__.__name__} that has "
+                                f"more than 2 dimensions ({entry.ndim});  try flattening innermost ones.")
+        if not len(entry) == num_fields:
+            raise FunctionError(f"Attempt to store and/or retrieve entry in {self.__class__.__name__} ({entry}) "
+                                f"that has an incorrect number of fields ({len(entry)}; should be {num_fields}).")
         if not all((np.array(item).ndim == 1 and len(item) == field_sizes[i]
-                    for i, item in enumerate(memory))):
-            raise FunctionError(f"Attempt to store and/or retrieve entry in {self.__class__.__name__} ({memory}) that "
-                                f"has one or more fields with an incorrect size (sizes should be {field_sizes}).")
+                    for i, item in enumerate(entry))):
+            raise FunctionError(f"Attempt to store and/or retrieve an entry in {self.__class__.__name__} that has one "
+                                f"or more fields with an incorrect size (sizes should be {field_sizes}):\n{entry}.")
 
     def uniform_entry(self, value:Union[int, float], context) -> np.ndarray:
         return np.array([[value]* i for i in self.parameters.memory_field_sizes._get(context)])
@@ -2170,7 +2177,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if _memory is None:
             return self.uniform_entry(0, context)
 
-        self._validate_memory(cue, context)
+        self._validate_entry(cue, context)
         num_fields = self.parameters.memory_num_fields._get(context)
         if field_weights is None:
             field_weights = np.array([1]*num_fields)
@@ -2232,40 +2239,65 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         # Return entry
         return best_match
 
-    def _store_memory(self, memory:Union[list, np.ndarray], context) -> bool:
+    def _store_memory(self, entry:Union[list, np.ndarray], context) -> bool:
         """Add an entry to `memory <ContentAddressableMemory.memory>`
 
         Arguments
         ---------
-        memory : list or 2d array
-            must be a list or 2d array containing 1d arrays (fields);  if any memories already exist in `memory
+        entry : list or 2d array
+            must be a list or 2d array containing 1d arrays (fields);  if any entries already exist in `memory
             <ContentAddressableMemory.memory>`, then both the number of fields and the length of each must match
             exiting entries (contained in the `memory_num_fields <ContentAddressableMemory.memory_num_fields>`
             and `memory_field_sizes <ContentAddressableMemory.memory_field_sizes>` attributes, respectively).
+
+            .. technical_note::
+               this method supports adding entries with items in each field that are greater than 1d for potential
+               future use (see format_for_storage() below); however they are currently rejected in _validate_memory
+               as they may produce unexpected results (by returning entries that are greater than 2d).
         """
 
-        self._validate_memory(memory, context)
-        # convert all fields and memory itself arrays
+        self._validate_entry(entry, context)
+        # convert all fields and entry itself arrays
         # FIX: USE convert_to_nparary HERE ONCE THAT CAN HANDLE LISTS
-        memory = np.array([np.array(m) for m in memory])
+        entry = np.array([np.array(m) for m in entry])
 
         num_fields = self.parameters.memory_num_fields._get(context)
 
         # execute noise if it is a function
         # FIX: WHAT IS "try_execute_param" DOING?
         # noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
-        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), memory, context=context)
+        noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), entry, context=context)
         if noise is not None:
             try:
-                memory = memory + noise
+                entry = entry + noise
             except:
                 raise FunctionError(f"'noise' for '{self.name}' of '{self.owner.name}' "
                                     f"not appropriate shape (single number or array of length {num_fields}.")
         existing_entries = self.parameters.previous_value._get(context)
 
-        if existing_entries:
+        def format_for_storage(entry:np.ndarray) -> np.ndarray:
+            """Format an entry to be added to memory
+            Returns entry formatted to match the shape of `memory <EpisodicMemoryMechanism.memory>`,
+            so that it can be appended (or, if it is the first, simply assigned) to memory:
+            - if entry is a regular array (all fields [axis 0 items] have equal length),
+                returns object with ndim = entry.ndim + 1 (see technical_note above);
+            - if the entry is a ragged array (fields [axis 0 items] have differing lengths),
+                returns 2d object with dtype=object.
+            """
+            # Ragged array (i.e., fields of different lengths)
+            if entry.ndim == 1 and entry.dtype==object:
+                shape = (1, num_fields)
+            # Regular array (all fields have the same length)
+            elif entry.ndim >= 2:
+                # Note: if greater ndim>2, item in each field is >1d
+                shape = (1, num_fields, entry.shape[1])
+            else:
+                raise ContentAddressableMemory(f"Unrecognized format for entry to be stored in {self.name}: {entry}.")
+            return np.atleast_3d(entry).reshape(shape)
+
+        if existing_entries is not None:
             # Check for matches with existing entries
-            matches = [m for m in existing_entries if len(m) and self._is_duplicate(memory, m)]
+            matches = [m for m in existing_entries if len(m) and self._is_duplicate(entry, m)]
 
             # If dupliciate keys are not allowed and key matches any existing keys, don't store
             if matches and self.duplicate_entries == False:
@@ -2274,30 +2306,25 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             # If dupliciate_keys is specified as OVERWRITE, replace value for matching key:
             elif matches and self.duplicate_entries == OVERWRITE:
                 if len(matches)>1:
-                    raise FunctionError(f"Attempt to store item ({memory}) in {self.name} "
+                    raise FunctionError(f"Attempt to store item ({entry}) in {self.name} "
                                         f"with 'duplicate_entries'='OVERWRITE' "
-                                        f"when there is more than one matching key in its memory; "
+                                        f"when there is more than one matching key in its entry; "
                                         f"'duplicate_entries' may have previously been set to 'True'")
                 try:
-                    index = existing_entries[KEYS].index(memory)
+                    index = existing_entries[KEYS].index(entry)
                 except AttributeError:
-                    index = existing_entries.tolist().index(memory)
+                    index = existing_entries.tolist().index(entry)
                 except ValueError:
-                    index = np.array(existing_entries).tolist().index(memory)
+                    index = np.array(existing_entries).tolist().index(entry)
                 storage_succeeded = True
             else:
                 # Add to existing entries
-                entries = np.append(existing_entries, np.atleast_2d(memory), axis=0)
-                existing_entries = entries
+                existing_entries = np.append(existing_entries, format_for_storage(entry), axis=0)
                 storage_succeeded = True
 
         else:
             # No entries yet, so add new one
-            if memory.ndim == 1:
-                entries = np.atleast_2d(np.append(existing_entries, memory))
-            else:
-                assert False
-            existing_entries = entries
+            existing_entries = format_for_storage(entry)
             storage_succeeded = True
 
         if len(existing_entries) > self.max_entries:
@@ -2309,26 +2336,26 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         return storage_succeeded
 
     @handle_external_context()
-    def add_to_memory(self, memories:Union[list, np.ndarray], context=None):
+    def add_to_memory(self, entries:Union[list, np.ndarray], context=None):
         """Add one or more entries into `memory <ContentAddressableMememory.memory>`
 
         Arguments
         ---------
 
         memories : list or array
-            a single memory (list or 2d array) or list or array of memorys, each of which must be a valid entry
+            a single entry (list or 2d array) or list or array of entries, each of which must be a valid entry
             consisting of two items (e.g., [[key],[value]] or [[[key1],[value1]],[[key2],[value2]]].
             The keys must all be the same length and equal to the length as key(s) of any existing entries in `dict
             <ContentAddressableMemory.dict>`.  Items are added to memory in the order listed.
         """
         memories = self._parse_memories(memories, 'add_to_memory', context)
 
-        for memory in memories:
-            self._store_memory(memory, context)
+        for entry in entries:
+            self._store_memory(entry, context)
 
     @handle_external_context()
     def delete_from_memory(self,
-                           memories:Union[list, np.ndarray],
+                           entries:Union[list, np.ndarray],
                            fields:Optional[Union[int, list]]= None,
                            context=None):
         """Delete one or more key-value pairs from `memory <ContentAddressableMememory.memory>`
@@ -2337,7 +2364,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         ---------
 
         memories : list or array
-            a single memory (list or 2d array) or list or array of memories, each of which must be a valid entry
+            a single entry (list or 2d array) or list or array of entries, each of which must be a valid entry
             (i.e. same number of fields and lengths of each field as entries already in `memory
             <ContentAddressableMemory.memory>`.
 
@@ -2346,20 +2373,20 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             to any of the **memories** specified; if int or list, delete all entries with the same values as those
             in the field(s) specified.
         """
-        memories = self._parse_memories(memories, 'add_to_memory', context)
+        memories = self._parse_memories(entries, 'add_to_memory', context)
         # FIX: ??IS THIS NEEDED (IS IT JUST A HOLDOVER FROM KEYS OR NEEDED FOR LIST-T0-LIST COMPARISON BELOW?):
         memories = [list(m) for m in memories]
         fields = convert_to_list(fields)
 
-        for i, memory in enumerate(memories):
+        for i, entry in enumerate(entries):
             for j, entry in enumerate(self._memory):
-                if (memory[i] == entry[j]
-                        or fields and all(memory[i][f] == entry[j][f] for f in fields)):
+                if (entry[i] == entry[j]
+                        or fields and all(entry[i][f] == entry[j][f] for f in fields)):
                     new_memory_bank = np.delete(self._memory,j,axis=0)
                     self._memory = np.array(new_memory_bank)
                     self.parameters.previous_value._set(self._memory, context)
 
-    def _parse_memories(self, memories, method, context=None):
+    def _parse_memories(self, entries, method, context=None):
         """Parse passing of single vs. multiple memories, validate memories, and return ndarray"""
         memories = convert_to_np_array(memories)
         # FIX: GET RID OF THIS IF/WHEN convert_to_np_array IS CHANGED TO ENFORCE ARRAYS EVEN IN dtype=Object
@@ -2371,8 +2398,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if (memories.ndim == 2 and memories.dtype != object) or (memories.ndim == 1 and memories.dtype == object):
             memories = np.expand_dims(memories,axis=0)
 
-        for memory in memories:
-            self._validate_memory(memory, context)
+        for entry in entries:
+            self._validate_entry(entry, context)
 
         return memories
 
