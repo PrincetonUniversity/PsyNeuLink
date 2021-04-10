@@ -650,7 +650,9 @@ def _generate_composition_string(composition_list, component_identifiers):
     implicit_types = (
         psyneulink.ObjectiveMechanism,
         psyneulink.ControlProjection,
-        psyneulink.AutoAssociativeProjection
+        psyneulink.AutoAssociativeProjection,
+        psyneulink.LearningMechanism,
+        psyneulink.LearningProjection,
     )
     output = []
 
