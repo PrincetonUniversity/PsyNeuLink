@@ -99,6 +99,33 @@ specified are created, which may not match the number of fields of a retrieved m
 Structure
 ---------
 
+*Memory Fields*
+~~~~~~~~~~~~~~~
+
+Entries in the memory of an EpisodicMemoryMechanism are comprised of fields: lists or 1d arrays within the outer
+list or 2d array that makes up an entry.  Fields can be used both for storing distinct forms of information within a
+single entry, and/or retrieving entries based on distinct forms of information.  All entries have the same number of
+fields, and the length of corresponding fields must be the same for all entries.  Retrieval of an entry from memory
+can be based on all fields, or a weighted combination of them (as determined by the `MemoryFunction` assigned to
+`function <EpisodicMemoryMechanism.function>`).
+
+.. technical_note::
+   The shape of an entry in memory is determined by the Mechanism's `variable <Mechanism_Base.variable>`, with each
+   item corresponding to a field. Because fields can be of different lengths, although entries are comprised of
+   1d arrays, the entry itself is implemented as Numpy 1d array with dtype=Object.  Similarly, since an
+   EpisodicMemoryMechanism's `memory <EpisodicMemoryMechanism.memory>` is comprised of entries that are implemented
+   as 1d arrays, it is a 2d array of dtype=Object
+
+COMMENT:
+*Memory fields and weighting.* --
+ADD TO CONTENTADDRESSABLEMEMORY
+ - MEMORY FIELDS REFER TO ITEMS IN VARIABLE, GENERALLY CORRESPONDING TO INPUT PORTS ON MECHANISM (E.G., EM)
+ - CAN BE WEGITHED FOR DISTANCE COMPUTATION (SEE RELEVANT SECTION)
+ - INCLUDE NOTE THAT, BECAUSE FIELDS CAN BE OF DIFFERENT LENGTHS, MEMORY CAN'T BE TREATED AS A  STANDARD 3D ARRAY
+     NOR CAN ENTRIES BE TREATED AS STANDARD 2D ARRAYS
+COMMENT
+
+
 *Input*
 ~~~~~~~
 
@@ -112,19 +139,6 @@ InputPorts are named *FIELD_n_INPUT* (see `EpisodicMemoryMechanism_Creation`). I
 specifies two items; any additional fields are ignored.
 
 .. _EpisodicMemoryMechanism_Memory_Fields:
-
-*Memory Fields*
-~~~~~~~~~~~~~~~
-
-COMMENT:
-*Memory fields and weighting.* --
-FIX: ADD SECTION HERE:
- - MEMORY FIELDS REFER TO ITEMS IN VARIABLE, GENERALLY CORRESPONDING TO INPUT PORTS ON MECHANISM (E.G., EM)
- - CAN BE WEGITHED FOR DISTANCE COMPUTATION (SEE RELEVANT SECTION)
- - INCLUDE NOTE THAT, BECAUSE FIELDS CAN BE OF DIFFERENT LENGTHS, MEMORY CAN'T BE TREATED AS A  STANDARD 3D ARRAY
-     NOR CAN ENTRIES BE TREATED AS STANDARD 2D ARRAYS
-COMMENT
-
 
 *Function*
 ~~~~~~~~~~
