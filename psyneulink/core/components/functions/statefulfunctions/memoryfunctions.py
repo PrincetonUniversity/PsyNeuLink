@@ -1384,7 +1384,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     which can be used to compare `variable <ContentAddressableMemory.variable>` with each item in `memory
     <ContentAddressableMemory.storage_prob>` as full vectors (i.e., with all items of each concatentated into a
     single array), or by computing the distance of each item in `variable <ContentAddressableMemory.variable>` with
-    the corresponding `memory field <EpisodicMemoryMechanism_Memory_Fields>` of an entry in `memory
+    the corresponding `memory field <EpisprevodicMemoryMechanism_Memory_Fields>` of an entry in `memory
     <ContentAddressableMemory.storage_prob>`, and then averaging those distances, possibly weighted by the coefficients
     in `distance_field_weights <ContentAddressableMemory.distance_field_weights>` (this is determined by the
     `distance_by_fields <ContentAddressableMemory.distance_by_fields>` parameter.  The distances computed between
@@ -1853,8 +1853,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
 
-        if initializer is None:
-            initializer = []
+        # if initializer is None:
+        #     initializer = []
 
         if seed is None:
             seed = get_global_seed()
@@ -1881,7 +1881,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             prefs=prefs,
         )
 
-        if self.previous_value.size != 0:
+        if self.previous_value.size is not None:
             self.parameters.memory_num_fields.set(len(self.previous_value))
             self.parameters.memory_field_sizes.set([len(item) for item in self.previous_value[0]])
 
@@ -1976,14 +1976,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         """
         # vals = [[k for k in initializer.keys()], [v for v in initializer.values()]]
 
-        previous_value = np.ndarray(shape=(2, 0))
-        if len(initializer) == 0:
-            return previous_value
+        if initializer is None or np.array(initializer).size == 0:
+            return None
         else:
             initializer = np.atleast_2d(initializer)
             # FIX: HOW DOES THIS RELATE TO WHAT IS DONE IN __init__()?
             # Set memory fields sizes if this is the first entry
-            self.parameters.previous_value.set(previous_value, context, override=True)
+            # self.parameters.previous_value.set(previous_value, context, override=True)
             self.parameters.memory_num_fields.set(initializer.shape[1], context)
             self.parameters.memory_field_sizes.set([len(item) for item in initializer[0]], context)
 
@@ -1993,16 +1992,20 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                     warnings.warn(f"Attempt to initialize memory of {self.__class__.__name__} with an entry ({entry}) "
                                   f"that has the same key as a previous one, while 'duplicate_entries'==False; "
                                   f"that entry has been skipped")
-            return convert_to_np_array(self._memory)
+            previous_value = convert_to_np_array(self._memory)
+            self.parameters.previous_value.set(previous_value, context, override=True)
+            return previous_value
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
-        self.parameters.previous_value._set(
-            self._initialize_previous_value(
-                self.parameters.initializer._get(context),
-                context
-            ),
-            context
-        )
+        # FIX: SUPERFLUOUS SINCE IT IS SET IN _initialize_previous_value
+        # self.parameters.previous_value._set(
+        #     self._initialize_previous_value(
+        #         self.parameters.initializer._get(context),
+        #         context
+        #     ),
+        #     context
+        # )
+        self._initialize_previous_value(self.parameters.initializer._get(context), context)
 
         if isinstance(self.distance_function, type):
             self.distance_function = self.distance_function(context=context)
@@ -2020,7 +2023,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         If an argument is passed into reset or if the `initializer <ContentAddressableMemory.initializer>`
         attribute contains a value besides [], then that value is used to start the new memory in `previous_value
         <ContentAddressableMemory.previous_value>`. Otherwise, the new `previous_value
-        <ContentAddressableMemory.previous_value>` memory starts out empty.
+        <ContentAddressableMemory.previous_value>` memory starts out as None.
 
         `value <ContentAddressableMemory.value>` takes on the same value as
         `previous_value <ContentAddressableMemory.previous_value>`.
@@ -2029,9 +2032,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if previous_value is None:
             previous_value = self._get_current_parameter_value("initializer", context)
 
-        if previous_value == []:
+        # if previous_value == []:
+        if previous_value == None:
             self.parameters.previous_value._get(context).clear()
-            value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
+            # value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
+            value = None
 
         else:
             value = self._initialize_previous_value(previous_value, context=context)
@@ -2094,7 +2099,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             return variable
 
         # Set memory fields sizes and total size if this is the first entry
-        if self.parameters.previous_value._get(context).size == 0:
+        if self.parameters.previous_value._get(context) is None:
             self.parameters.memory_num_fields.set(len(variable))
             self.parameters.memory_field_sizes.set([len(item) for item in variable])
 
@@ -2162,7 +2167,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         _memory = self.parameters.previous_value._get(context)
         # if no entries in memory, return the zero vector
-        if len(_memory) == 0:
+        if _memory is None:
             return self.uniform_entry(0, context)
 
         self._validate_memory(cue, context)
@@ -2258,38 +2263,40 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                                     f"not appropriate shape (single number or array of length {num_fields}.")
         existing_entries = self.parameters.previous_value._get(context)
 
-        # Check for matches with existing entries
-        matches = [m for m in existing_entries if len(m) and self._is_duplicate(memory, m)]
+        if existing_entries:
+            # Check for matches with existing entries
+            matches = [m for m in existing_entries if len(m) and self._is_duplicate(memory, m)]
 
-        # If dupliciate keys are not allowed and key matches any existing keys, don't store
-        if matches and self.duplicate_entries == False:
-            storage_succeeded = False
+            # If dupliciate keys are not allowed and key matches any existing keys, don't store
+            if matches and self.duplicate_entries == False:
+                storage_succeeded = False
 
-        # If dupliciate_keys is specified as OVERWRITE, replace value for matching key:
-        elif matches and self.duplicate_entries == OVERWRITE:
-            if len(matches)>1:
-                raise FunctionError(f"Attempt to store item ({memory}) in {self.name} "
-                                    f"with 'duplicate_entries'='OVERWRITE' "
-                                    f"when there is more than one matching key in its memory; "
-                                    f"'duplicate_entries' may have previously been set to 'True'")
-            try:
-                index = existing_entries[KEYS].index(memory)
-            except AttributeError:
-                index = existing_entries.tolist().index(memory)
-            except ValueError:
-                index = np.array(existing_entries).tolist().index(memory)
-            storage_succeeded = True
-
-        else:
-            # No entries yet
-            if existing_entries.size == (2,0):
-                if memory.ndim == 1:
-                    entries = np.atleast_2d(np.append(existing_entries, memory))
-                else:
-                    assert False
+            # If dupliciate_keys is specified as OVERWRITE, replace value for matching key:
+            elif matches and self.duplicate_entries == OVERWRITE:
+                if len(matches)>1:
+                    raise FunctionError(f"Attempt to store item ({memory}) in {self.name} "
+                                        f"with 'duplicate_entries'='OVERWRITE' "
+                                        f"when there is more than one matching key in its memory; "
+                                        f"'duplicate_entries' may have previously been set to 'True'")
+                try:
+                    index = existing_entries[KEYS].index(memory)
+                except AttributeError:
+                    index = existing_entries.tolist().index(memory)
+                except ValueError:
+                    index = np.array(existing_entries).tolist().index(memory)
+                storage_succeeded = True
             else:
                 # Add to existing entries
                 entries = np.append(existing_entries, np.atleast_2d(memory), axis=0)
+                existing_entries = entries
+                storage_succeeded = True
+
+        else:
+            # No entries yet, so add new one
+            if memory.ndim == 1:
+                entries = np.atleast_2d(np.append(existing_entries, memory))
+            else:
+                assert False
             existing_entries = entries
             storage_succeeded = True
 
