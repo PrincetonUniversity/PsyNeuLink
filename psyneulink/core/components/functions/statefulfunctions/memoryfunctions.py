@@ -1913,7 +1913,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         )
 
         if self.previous_value is not None:
-            self.parameters.memory_num_fields.set(len(self.previous_value), override=True)
+            self.parameters.memory_num_fields.set(self.previous_value.shape[1], override=True)
             self.parameters.memory_field_shapes.set([item.shape for item in self.previous_value[0]], override=True)
 
     # FIX: IS THIS USED ANYWHERE?
