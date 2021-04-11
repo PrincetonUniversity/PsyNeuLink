@@ -83,21 +83,21 @@ test_data = [
         {'size':[1,2,3]},
         # test_var
         [list([10]), list([20, 30]), list([40, 50, 60])],
-        # expected
+        # expected input_port names
+        ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
+        # expected output_port names
+        ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1', 'RETREIVED_FIELD_2'],
+        # expected output
         [[10.],[20., 30.],[40., 50., 60.]]
     ),
     (
-        # name
         "ContentAddressableMemory Func Default Variable Mech Default Var Init",
-        # func
         ContentAddressableMemory,
-        # func_params
         {'default_variable': [[0],[0,0],[0,0,0]]},
-        # mech_params
         {'default_variable': [[0],[0,0],[0,0,0]]},
-        # test_var
         [list([10]), list([20, 30]), list([40, 50, 60])],
-        # expected
+        ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
+        ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1', 'RETREIVED_FIELD_2'],
         [[10.],[20., 30.],[40., 50., 60.]]
     ),
     (
@@ -108,6 +108,8 @@ test_data = [
                                  [np.array([11]), np.array([22, 33]), np.array([44, 55, 66])]])},
         {'size':[1,2,3]},
         [list([10]), list([20, 30]), list([40, 50, 60])],
+        ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
+        ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1', 'RETREIVED_FIELD_2'],
         [[10.],[20., 30.],[40., 50., 60.]]
     ),
     (
@@ -116,25 +118,12 @@ test_data = [
         {'initializer':np.array([[np.array([1]), np.array([2, 3]), np.array([4, 5, 6])],
                                  [list([10]), list([20, 30]), list([40, 50, 60])],
                                  [np.array([11]), np.array([22, 33]), np.array([44, 55, 66])]])},
-        {'default_variable': [[0],[0,0],[0,0,0]]},
+        {'default_variable': [[0],[0,0],[0,0,0]], 'input_ports':['hello','world','goodbye']},
         [list([10]), list([20, 30]), list([40, 50, 60])],
+        ['hello', 'world', 'goodbye'],
+        ['RETREIVED_hello', 'RETREIVED_world', 'RETREIVED_goodbye'],
         [[10.],[20., 30.],[40., 50., 60.]]
     ),
-    # (
-    #     "ContentAddressableMemory InputPort Names",
-    #     # FIX:
-    #     # OTHER DATA
-    # ),
-    # (
-    #     "ContentAddressableMemory OutputPort Names",
-    #     # FIX:
-    #     # OTHER DATA
-    # ),
-    # (
-    #     "ContentAddressableMemory OutputPort Names",
-    #     # FIX:
-    #     # OTHER DATA
-    # ),
     # (
     #     "ContentAddressableMemory Initializer Regular Fields",
     #     # FIX:
@@ -159,6 +148,7 @@ test_data = [
     #     [[[1],[[2],[3,4]],[4]],[[1],[[2],[3,4]],[4]]]
     #     [[[1,2,3],[4]],[[1],[[2],[3,4]],[4]]]
     # ),
+    # FIX: THESE SHOULD BE IN MemoryFunctions TEST for ContentAddressableMemory
     # (
     #     "ContentAddressableMemory Random Retrieval",
     #     # FIX:
@@ -189,11 +179,16 @@ test_data = [
 # Allows names to be with each test_data set
 names = [test_data[i][0] for i in range(len(test_data))]
 
-@pytest.mark.parametrize('name, func, func_params, mech_params, test_var, expected', test_data, ids=names)
-def test_with_contentaddressablememory(name, func, func_params, mech_params, test_var, expected, mech_mode):
+@pytest.mark.parametrize('name, func, func_params, mech_params, test_var,'
+                         'input_port_names, output_port_names, expected_output', test_data, ids=names)
+def test_with_contentaddressablememory(name, func, func_params, mech_params, test_var,
+                                       input_port_names, output_port_names, expected_output, mech_mode):
     f = func(seed=0, **func_params)
     EpisodicMemoryMechanism(function=f, **mech_params)
     em = EpisodicMemoryMechanism(**mech_params)
+    assert em.input_ports.names == input_port_names
+    assert em.output_ports.names == output_port_names
+
     if mech_mode == 'Python':
         def EX(variable):
             em.execute(variable)
@@ -208,8 +203,8 @@ def test_with_contentaddressablememory(name, func, func_params, mech_params, tes
             return variable
 
     EX(test_var)
-    res = EX(test_var)
-    for i,j in zip(res,expected):
+    actual_output = EX(test_var)
+    for i,j in zip(actual_output,expected_output):
         np.testing.assert_allclose(i, j, atol=1e-08)
 
 # TEST FAILURE:
