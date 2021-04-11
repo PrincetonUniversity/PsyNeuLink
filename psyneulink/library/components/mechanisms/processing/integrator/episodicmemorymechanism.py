@@ -231,6 +231,7 @@ class EpisodicMemoryMechanismError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
+
 # def _generate_input_port_spec(field_sizes, function):
 #     # FIX:  REFACTOR FOR NEW VERSION
 #     if function is DictionaryMemory:
