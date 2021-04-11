@@ -1828,8 +1828,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         previous_value = Parameter(None, initializer='initializer', pnl_internal=True)
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        memory_num_fields = Parameter(1, stateful=True, read_only=True)
-        memory_field_shapes = Parameter((1), stateful=True, read_only=True)
+        memory_num_fields = Parameter(None, stateful=True, read_only=True)
+        memory_field_shapes = Parameter(None, stateful=True, read_only=True)
         distance_field_weights = Parameter(None, stateful=True, modulable=True)
         duplicate_entries = Parameter(False)
         duplicate_threshold = Parameter(0, stateful=False, modulable=True)
@@ -1980,6 +1980,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if result.shape != test_var.shape:
             raise FunctionError(f'Value returned by {repr(SELECTION_FUNCTION)} specified for {self.__class__} '
                                 f'({result}) must return an array of the same length it receives')
+
+    @handle_external_context()
+    def _update_default_variable(self, new_default_variable, context=None):
+        """Override method on parent (StatefulFunction) since it can't handle arbitrarily-shaped fields"""
+        if not self.parameters.initializer._user_specified and self.parameters.variable._user_specified:
+            new_default_variable = self.parameters.variable.default_value
+        super(StatefulFunction, self)._update_default_variable(new_default_variable, context=context)
 
     def _initialize_previous_value(self, initializer, context=None):
         """Ensure that initializer is appropriate for assignment as memory attribute and assign as previous_value
@@ -2142,7 +2149,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                                     f"for memory of '{self.name}{owner_name}';  should be: {field_shapes[i]}.")
 
     def uniform_entry(self, value:Union[int, float], context) -> np.ndarray:
-        return np.array([[value]* i for i in self.parameters.memory_field_shapes._get(context)[0]])
+        return [np.full(i,value) for i in self.parameters.memory_field_shapes._get(context)]
 
     @handle_external_context()
     def get_memory(self, cue:Union[list, np.ndarray], field_weights=None, context=None) -> np.ndarray:
