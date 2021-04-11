@@ -1,9 +1,12 @@
 import numpy as np
 import pytest
 
-from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import DictionaryMemory, ContentAddressableMemory
-from psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism import EpisodicMemoryMechanism
 import psyneulink.core.llvm as pnlvm
+from psyneulink.core.components.functions.function import FunctionError
+from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import DictionaryMemory, \
+    ContentAddressableMemory
+from psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism import \
+    EpisodicMemoryMechanism
 
 np.random.seed(0)
 
@@ -63,10 +66,7 @@ def test_with_dictionary_memory(variable, func, params, expected, benchmark, mec
         benchmark(EX, variable)
 
 # TEST WITH ContentAddressableMemory ***********************************************************************************
-
 # Note:  ContentAddressableMemory has not yet been compiled for use with LLVM or PTX, so those are dummy tests for now
-
-SIZE = 3
 
 test_data = [
     (
@@ -144,41 +144,7 @@ test_data = [
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
         ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1', 'RETREIVED_FIELD_2'],
         [[10,20], [30,40], [50, 60]],
-    ),
-
-    # (
-    #     "ContentAddressableMemory Initializer Ndimensional Fields",
-    #     # FIX:
-    #     # OTHER DATA
-    #     [[[1],[[2],[3,4]],[4]],[[1],[[2],[3,4]],[4]]]
-    #     [[[1,2,3],[4]],[[1],[[2],[3,4]],[4]]]
-    # ),
-    # FIX: THESE SHOULD BE IN MemoryFunctions TEST for ContentAddressableMemory
-    # (
-    #     "ContentAddressableMemory Random Retrieval",
-    #     # FIX:
-    #     # OTHER DATA
-    # ),
-    # (
-    #     "ContentAddressableMemory Random Storage",
-    #     # FIX:
-    #     # OTHER DATA
-    # ),
-    # (
-    #     "ContentAddressableMemory Random Retrieval-Storage",
-    #     # FIX:
-    #     # OTHER DATA
-    # ),
-    # (
-    #     "ContentAddressableMemory Weighted Retrieval",
-    #     # FIX:
-    #     # OTHER DATA
-    # ),
-    # (
-    #     "ContentAddressableMemory Duplicates Retrieval",
-    #     # FIX:
-    #     # OTHER DATA
-    # ),
+    )
 ]
 
 # Allows names to be with each test_data set
@@ -212,19 +178,13 @@ def test_with_contentaddressablememory(name, func, func_params, mech_params, tes
     for i,j in zip(actual_output,expected_output):
         np.testing.assert_allclose(i, j, atol=1e-08)
 
-# TEST FAILURES FOR:
-# [ [[1,2,3], [4]], [[1,2,3], [[1],[4]]] ]
-# ----------------
-# (
-#     "ContentAddressableMemory Func Initializer (regular shape = 3,3,1) Mech Default Variable Init",
-#     ContentAddressableMemory,
-#     {'initializer':[[[[1],[2],[3]], [[4],[5],[6]], [[7],[8],[9]]],
-#                     [[[9],[8],[7]], [[6],[5],[4]], [[3],[2],[1]]]]},
-#     {'default_variable': [[0],[0],[0]], 'input_ports':['hello','world','goodbye']},
-#     [[[9],[8],[7]], [[6],[5],[4]], [[3],[2],[1]]],
-#     ['hello', 'world', 'goodbye'],
-#     ['RETREIVED_hello', 'RETREIVED_world', 'RETREIVED_goodbye'],
-#     [[[9],[8],[7]], [[6],[5],[4]], [[3],[2],[1]]],
-#     'Attempt to store and/or retrieve an entry in ContentAddressableMemory',
-#     'that has more than 2 dimensions (3);  try flattening innermost ones.'
-# ),
+def test_failures_with_contentaddressable_memory():
+
+    # Initializer with >2d regular array
+    with pytest.raises(FunctionError) as error_text:
+        f = ContentAddressableMemory(initializer=[[[[1],[0],[1]], [[1],[0],[0]], [[0],[1],[1]]],
+                                                  [[[0],[1],[0]], [[0],[1],[1]], [[1],[1],[0]]]])
+        em = EpisodicMemoryMechanism(size = [1,1,1], function=f)
+        em.execute([[[0],[1],[0]], [[0],[1],[1]], [[1],[1],[0]]])
+    assert 'Attempt to store and/or retrieve an entry in ContentAddressableMemory that has more than 2 dimensions (' \
+           '3);  try flattening innermost ones.' in str(error_text.value)

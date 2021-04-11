@@ -523,3 +523,61 @@ def test_ContentAddressableMemory_unique_functions(param_name):
         getattr(a.defaults, param_name)
         is not getattr(b.defaults, param_name)
     )
+
+#
+
+    # (
+    #     "ContentAddressableMemory Initializer Ndimensional Fields",
+    #     # FIX:
+    #     # OTHER DATA
+    #     [[[1],[[2],[3,4]],[4]],[[1],[[2],[3,4]],[4]]]
+    #     [[[1,2,3],[4]],[[1],[[2],[3,4]],[4]]]
+    # ),
+    # FIX: THESE SHOULD BE IN MemoryFunctions TEST for ContentAddressableMemory
+    # (
+    #     "ContentAddressableMemory Random Retrieval",
+    #     # FIX:
+    #     # OTHER DATA
+    # ),
+    # (
+    #     "ContentAddressableMemory Random Storage",
+    #     # FIX:
+    #     # OTHER DATA
+    # ),
+    # (
+    #     "ContentAddressableMemory Random Retrieval-Storage",
+    #     # FIX:
+    #     # OTHER DATA
+    # ),
+    # (
+    #     "ContentAddressableMemory Weighted Retrieval",
+    #     # FIX:
+    #     # OTHER DATA
+    # ),
+    # (
+    #     "ContentAddressableMemory Duplicates Retrieval",
+    #     # FIX:
+    #     # OTHER DATA
+    # ),
+
+
+    # # Initializer with >2d regular array
+    # with pytest.raises(FunctionError) as error_text:
+    #     f = ContentAddressableMemory(initializer=[[[[1,0],[1,0],[1,0]], [[1,0],[1,0],[1,0]], [[1,0],[1,0],[1,0]]],
+    #                                               [[[0,1],[0,1],[0,1]], [[0,1],[0,0],[1,0]], [[0,1],[0,1],[0,1]]]])
+    #     em = EpisodicMemoryMechanism(size = [1,1,1], function=f)
+    #     em.execute([[[0,1],[0,1],[0,1]], [[0,1],[0,0],[1,0]], [[0,1],[0,1],[0,1]]])
+    # assert 'Attempt to store and/or retrieve an entry in ContentAddressableMemory that has more than 2 dimensions (' \
+    #        '3);  try flattening innermost ones.' in str(error_text.value)
+    #
+    # # Initializer with >2d ragged array
+    # with pytest.raises(FunctionError) as error_text:
+    #     f = ContentAddressableMemory(initializer=[ [[1,2,3], [4]], [[1,2,3], [[1],[4]]] ])
+    #     em = EpisodicMemoryMechanism(size = [1,1,1], function=f)
+    #     em.execute([[[0,1],[0,1],[0,1]], [[0,1],[0,0],[1,0]], [[0,1],[0,1],[0,1]]])
+    # assert 'Attempt to store and/or retrieve an entry in ContentAddressableMemory that has more than 2 dimensions (' \
+    #        '3);  try flattening innermost ones.' in str(error_text.value)
+
+    # [ [[1,2,3], [4]], [[1,2,3], [[1],[4]]] ]
+
+
