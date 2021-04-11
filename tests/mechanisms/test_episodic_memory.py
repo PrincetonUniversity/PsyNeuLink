@@ -39,7 +39,6 @@ names = [
     "DictionaryMemory Random Retrieval-Storage",
 ]
 
-# Test using DictionaryMemory
 @pytest.mark.function
 @pytest.mark.memory_function
 @pytest.mark.benchmark
@@ -65,9 +64,7 @@ def test_with_dictionary_memory(variable, func, params, expected, benchmark, mec
 
 # TEST WITH ContentAddressableMemory ***********************************************************************************
 
-# Note:  ContentAddressableMemory has not yet been compiled for use with LLVM
-
-# use list, naming function produces ugly names
+# Note:  ContentAddressableMemory has not yet been compiled for use with LLVM or PTX, so those are dummy tests for now
 
 SIZE = 3
 
@@ -82,7 +79,7 @@ test_data = [
         # mech_params
         {'size':[1,2,3]},
         # test_var
-        [list([10]), list([20, 30]), list([40, 50, 60])],
+        [[10.],[20., 30.],[40., 50., 60.]],
         # expected input_port names
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
         # expected output_port names
@@ -95,52 +92,60 @@ test_data = [
         ContentAddressableMemory,
         {'default_variable': [[0],[0,0],[0,0,0]]},
         {'default_variable': [[0],[0,0],[0,0,0]]},
-        [list([10]), list([20, 30]), list([40, 50, 60])],
+        [[10.],[20., 30.],[40., 50., 60.]],
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
         ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1', 'RETREIVED_FIELD_2'],
         [[10.],[20., 30.],[40., 50., 60.]]
     ),
     (
-        "ContentAddressableMemory Func Initializer Mech Size Init",
+        "ContentAddressableMemory Func Initializer (ragged) Mech Size Init",
         ContentAddressableMemory,
         {'initializer':np.array([[np.array([1]), np.array([2, 3]), np.array([4, 5, 6])],
                                  [list([10]), list([20, 30]), list([40, 50, 60])],
                                  [np.array([11]), np.array([22, 33]), np.array([44, 55, 66])]])},
         {'size':[1,2,3]},
-        [list([10]), list([20, 30]), list([40, 50, 60])],
+        [[10.],[20., 30.],[40., 50., 60.]],
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
         ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1', 'RETREIVED_FIELD_2'],
         [[10.],[20., 30.],[40., 50., 60.]]
     ),
     (
-        "ContentAddressableMemory Func Initializer Mech Default Variable Init",
+        "ContentAddressableMemory Func Initializer (ragged) Mech Default Variable Init",
         ContentAddressableMemory,
         {'initializer':np.array([[np.array([1]), np.array([2, 3]), np.array([4, 5, 6])],
-                                 [list([10]), list([20, 30]), list([40, 50, 60])],
+                                 [[10], [20, 30], [40, 50, 60]],
                                  [np.array([11]), np.array([22, 33]), np.array([44, 55, 66])]])},
         {'default_variable': [[0],[0,0],[0,0,0]], 'input_ports':['hello','world','goodbye']},
-        [list([10]), list([20, 30]), list([40, 50, 60])],
+        [[10.],[20., 30.],[40., 50., 60.]],
         ['hello', 'world', 'goodbye'],
         ['RETREIVED_hello', 'RETREIVED_world', 'RETREIVED_goodbye'],
         [[10.],[20., 30.],[40., 50., 60.]]
     ),
-    # (
-    #     "ContentAddressableMemory Initializer Regular Fields",
-    #     # FIX:
-    #     # OTHER DATA
-    #     # np.array([[np.array([1,1,1]), np.array([2,1, 3]), np.array([4, 5, 6])],
-    #     # #        # [list([10]), list([20, 30]), list([40, 50, 60])],
-    #     # #        [np.array([11,1,1]), np.array([22, 33,1]), np.array([44, 55, 66])]])
-    # ),
-    # (
-    #     "ContentAddressableMemory Initializer Ragged Fields",
-    #     # FIX:
-    #     # OTHER DATA
-    #     # np.array([[np.array([1]), np.array([2, 3]), np.array([4, 5, 6])],
-    #     #        [list([10]), list([20, 30]), list([40, 50, 60])],
-    #     #        [np.array([11]), np.array([22, 33]), np.array([44, 55, 66])]])
-    #     #
-    # ),
+    (
+        "ContentAddressableMemory Func Initializer (regular 2d) Mech Size Init",
+        ContentAddressableMemory,
+        {'initializer':np.array([[np.array([1,2]), np.array([3,4]), np.array([5, 6])],
+                                 [[10,20], [30,40], [50,60]],
+                                 [np.array([11,12]), np.array([22, 23]), np.array([34, 35])]])},
+        {'size':[2,2,2]},
+        [[10,20], [30,40], [50, 60]],
+        ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
+        ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1', 'RETREIVED_FIELD_2'],
+        [[10,20], [30,40], [50, 60]],
+    ),
+    (
+        "ContentAddressableMemory Func Initializer (regular 2d) Mech Default Variable Init",
+        ContentAddressableMemory,
+        {'initializer':np.array([[np.array([1,2]), np.array([3,4]), np.array([5, 6])],
+                                 [[10,20], [30,40], [50,60]],
+                                 [np.array([11,12]), np.array([22, 23]), np.array([34, 35])]])},
+        {'default_variable':[[0,0],[0,0],[0,0]]},
+        [[10,20], [30,40], [50, 60]],
+        ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
+        ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1', 'RETREIVED_FIELD_2'],
+        [[10,20], [30,40], [50, 60]],
+    ),
+
     # (
     #     "ContentAddressableMemory Initializer Ndimensional Fields",
     #     # FIX:
@@ -207,5 +212,19 @@ def test_with_contentaddressablememory(name, func, func_params, mech_params, tes
     for i,j in zip(actual_output,expected_output):
         np.testing.assert_allclose(i, j, atol=1e-08)
 
-# TEST FAILURE:
-[ [[1,2,3], [4]], [[1,2,3], [[1],[4]]] ]
+# TEST FAILURES FOR:
+# [ [[1,2,3], [4]], [[1,2,3], [[1],[4]]] ]
+# ----------------
+# (
+#     "ContentAddressableMemory Func Initializer (regular shape = 3,3,1) Mech Default Variable Init",
+#     ContentAddressableMemory,
+#     {'initializer':[[[[1],[2],[3]], [[4],[5],[6]], [[7],[8],[9]]],
+#                     [[[9],[8],[7]], [[6],[5],[4]], [[3],[2],[1]]]]},
+#     {'default_variable': [[0],[0],[0]], 'input_ports':['hello','world','goodbye']},
+#     [[[9],[8],[7]], [[6],[5],[4]], [[3],[2],[1]]],
+#     ['hello', 'world', 'goodbye'],
+#     ['RETREIVED_hello', 'RETREIVED_world', 'RETREIVED_goodbye'],
+#     [[[9],[8],[7]], [[6],[5],[4]], [[3],[2],[1]]],
+#     'Attempt to store and/or retrieve an entry in ContentAddressableMemory',
+#     'that has more than 2 dimensions (3);  try flattening innermost ones.'
+# ),
