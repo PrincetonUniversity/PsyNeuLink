@@ -1359,7 +1359,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         rate=None,                                   \
         noise=0.0,                                   \
         initializer=None,                            \
-        field_weights=None,                          \
+        distance_field_weights=None,                 \
         distance_function=Distance(metric=COSINE),   \
         selection_function=OneHot(mode=MIN_VAL),     \
         equidistant_entries_select=RANDOM,           \
@@ -2139,7 +2139,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         # Retrieve entry from memory that best matches variable
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
-            entry = self.get_memory(variable, self.parameters.distance_field_weights._get(context), context)
+            entry = self.get_memory(variable, distance_field_weights, context)
         else:
             # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OutputPort FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_PORT
@@ -2216,8 +2216,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         cue = np.array(cue)
         self._validate_entry(cue, context)
         num_fields = self.parameters.memory_num_fields._get(context)
-        if field_weights is None:
-            field_weights = np.array([1]*num_fields)
+        field_weights = (field_weights
+                         or self._get_current_parameter_value('distance_field_weights', context)
+                         or  np.array([1]*num_fields))
         distance_fct = self.parameters.distance_function._get(context)
 
         if self.parameters.distance_by_fields._get(context) is True:

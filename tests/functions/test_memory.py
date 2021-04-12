@@ -579,58 +579,66 @@ class TestContentAddressableMemory:
         c = ContentAddressableMemory(
             seed=2,
             initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
+            distance_function=Distance(metric=COSINE),
             duplicate_entries_allowed=True,
             equidistant_entries_select=RANDOM
         )
 
-        retrieved_keys=[]
-        for key in sorted(stimuli.keys()):
-            retrieved = [i for i in c.execute(stimuli[key])]
-            # retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-            retrieved_key = [k for k,v in stimuli.items()
+        retrieved_labels=[]
+        sorted_labels = sorted(stimuli.keys())
+        for label in sorted_labels:
+            retrieved = [i for i in c.execute(stimuli[label])]
+            # Get label of retrieved item
+            retrieved_label = [k for k,v in stimuli.items()
                              if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
-            retrieved_keys.append(retrieved_key)
-        assert retrieved_keys == [['F'], ['A'], ['F'], ['C'], ['B'], ['F']]
+            # Get distances of retrieved entry to all other entries and assert it has the minimum distance
+            distances = [Distance(metric=COSINE)([retrieved,stimuli[k]]) for k in sorted_labels]
+            min_idx = distances.index(min(distances))
+            assert retrieved_label == [sorted_labels[min_idx]]
+            retrieved_labels.append(retrieved_label)
+        assert retrieved_labels == [['F'], ['A'], ['F'], ['C'], ['B'], ['F']]
 
         # Run again to test re-initialization and random retrieval
         c.reset(np.array([stimuli['A'], stimuli['F']]))
-        retrieved_keys=[]
-        for key in sorted(stimuli.keys()):
-            retrieved = [i for i in c.execute(stimuli[key])]
-            retrieved_key = [k for k,v in stimuli.items()
+        retrieved_labels=[]
+        for label in sorted(stimuli.keys()):
+            retrieved = [i for i in c.execute(stimuli[label])]
+            retrieved_label = [k for k,v in stimuli.items()
                              if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
-            retrieved_keys.append(retrieved_key)
-        assert retrieved_keys == [['A'], ['A'], ['F'], ['C'], ['B'], ['F']]
+            # Get distances of retrieved entry to all other entries and assert it has the minimum distance
+            distances = [Distance(metric=COSINE)([retrieved,stimuli[k]]) for k in sorted_labels]
+            min_idx = distances.index(min(distances))
+            assert retrieved_label == [sorted_labels[min_idx]]
+            retrieved_labels.append(retrieved_label)
+            Distance()([retrieved,stimuli['A']])
+        assert retrieved_labels == [['A'], ['A'], ['F'], ['C'], ['B'], ['F']]
 
-        stim = 'C'
-        c.equidistant_entries_select = OLDEST
-        retrieved = [i for i in c.get_memory(stimuli[stim])]
-        retrieved_key = [k for k,v in stimuli.items()
+        # Test  restricting retrieval to only 1st field (which has duplicate values) and selecting for OLDEST
+        c.distance_by_fields = True
+        c.distance_field_weights = [1,0]
+        stim = 'C' # Has same 1st field as A (older) and D (newer)
+
+        c.equidistant_entries_select = OLDEST  # Should return A
+        retrieved = c.get_memory(stimuli[stim])
+        retrieved_label = [k for k,v in stimuli.items()
                          if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
-        assert retrieved_key == ['C']
+        assert retrieved_label == ['A']
 
-        c.equidistant_entries_select = NEWEST
-        retrieved = [i for i in c.get_memory(stimuli[stim])]
-        retrieved_key = [k for k,v in stimuli.items()
+        c.equidistant_entries_select = NEWEST  # Should return D
+        retrieved = c.get_memory(stimuli[stim])
+        retrieved_label = [k for k,v in stimuli.items()
                          if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
-        assert retrieved_key == ['C']
+        assert retrieved_label == ['D']
 
-        # Test that after allowing dups, warning is issued and memory with zeros is returned
+        # Test that after allowing dups and now disallowing them, warning is issued and memory with zeros is returned
         c.duplicate_entries_allowed = False
         stim = 'A'
-
-        # text = r'More than one item matched cue \(\[1 2 3\]\) in memory for ContentAddressableMemory'
-        # text = r'More than one item matched cue ([[1 2 3]\n [4 5 6]]) in memory for ContentAddressableMemory'
-        # text = r"More than one item matched cue \(\[[1 2 3]\\n [4 5 6]]\) in memory for ContentAddressableMemory " \
-        #        r"Function-0 even though \'duplicate_entries_allowed\' is False"
-        # text = r"More than one item matched cue ([[1 2 3]\n [4 5 6]]) in memory for ContentAddressableMemory"
         text = "More than one item matched cue"
         with pytest.warns(UserWarning, match=text):
             retrieved = c.execute(stimuli[stim])
-
-        retrieved_key = [k for k,v in stimuli.items()
+        retrieved_label = [k for k,v in stimuli.items()
                          if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
-        assert retrieved_key == [None]
+        assert retrieved_label == [None]
         expected = np.array([[0,0,0],[0,0,0]])
         assert np.all(expected==retrieved)
 
