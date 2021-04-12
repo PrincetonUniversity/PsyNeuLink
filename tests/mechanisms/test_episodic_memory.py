@@ -187,4 +187,4 @@ def test_failures_with_contentaddressable_memory():
         em = EpisodicMemoryMechanism(size = [1,1,1], function=f)
         em.execute([[[0],[1],[0]], [[0],[1],[1]], [[1],[1],[0]]])
     assert 'Attempt to store and/or retrieve an entry in ContentAddressableMemory that has more than 2 dimensions (' \
-           '3);  try flattening innermost ones.' in str(error_text.value)
+           '3);  try flattening innermost ones.' in str(error_text.value)d
