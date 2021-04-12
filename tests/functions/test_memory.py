@@ -586,7 +586,7 @@ class TestContentAddressableMemory:
         )
 
         retrieved_keys=[]
-        for key in sorted(stimuli.keys(self)):
+        for key in sorted(stimuli.keys()):
             retrieved = [i for i in em.execute(stimuli[key])]
             retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
             retrieved_keys.append(retrieved_key)
