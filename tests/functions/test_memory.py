@@ -588,9 +588,11 @@ class TestContentAddressableMemory:
         retrieved_keys=[]
         for key in sorted(stimuli.keys()):
             retrieved = [i for i in em.execute(stimuli[key])]
-            retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
+            # retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
+            retrieved_key = [k for k,v in stimuli.items()
+                             if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
             retrieved_keys.append(retrieved_key)
-        assert retrieved_keys == [['F'], ['A'], ['A'], ['C'], ['B'], ['F']]
+        assert retrieved_keys == [['F'], ['A'], ['F'], ['C'], ['B'], ['F']]
 
         # Run again to test re-initialization and random retrieval
         em.function.reset(np.array([stimuli['A'], stimuli['F']]))
