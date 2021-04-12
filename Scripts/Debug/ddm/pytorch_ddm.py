@@ -111,6 +111,9 @@ jit_ddm_model.save("ddm.pt")
 
 #%%
 graph = jit_ddm_model.graph
+nodes = list(graph.nodes())
+
+#%%
 parsed_graph = {}
 graph_nodes = []
 for node in graph.nodes():
