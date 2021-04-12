@@ -111,11 +111,6 @@ fields can be used to store different types of information in each field, and to
 all fields, or a weighted combination of them (as determined by the `MemoryFunction` assigned to `function
 <EpisodicMemoryMechanism.function>`).
 
-COMMENT:
-FIX: REWRITE THIS WHEN MEMORY FIELDS ARE ALLOWED TO BE ANY SIZE:
-     ContentAddressableMemory.memory_field_sizes -> memory_field_shapes
-COMMENT
-
 .. _EpisodicMemoryMechanism_Shape:
 
 .. technical_note::
