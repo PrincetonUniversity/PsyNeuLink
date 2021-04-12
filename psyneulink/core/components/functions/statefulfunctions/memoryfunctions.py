@@ -44,7 +44,7 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
-__all__ = ['MemoryFunction', 'Buffer', 'ContentAddressableMemory']
+__all__ = ['MemoryFunction', 'Buffer', 'ContentAddressableMemory', 'RETRIEVAL_PROB', 'STORAGE_PROB']
 
 
 class MemoryFunction(StatefulFunction):  # -----------------------------------------------------------------------------
@@ -397,7 +397,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     When `function <ContentAddressableMemory.function>` is executed, it first retrieves the
     item in `memory <ContentAddressableMemory.memory>` with the key that most closely matches the key of the item
     (key-value pair) in the call, stores the latter in memory, and returns the retrieved item (key-value pair).
-    If key of the pair in the call is an exact match of a key in memory and `duplicate_keys
+    If the key of the pair in the call is an exact match of a key in memory and `duplicate_keys
     <ContentAddressableMemory.duplicate_keys>` is False, then the matching item is returned, but the
     pair in the call is not stored. These steps are described in more detail below:
 
@@ -452,7 +452,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
     initializer : 3d array or list : default None
         specifies an initial set of entries for `memory <ContentAddressableMemory.memory>`. It must be of the following
         form: [[[key],[value]], [[key],[value]], ...], such that each item in the outer dimension (axis 0)
-        is a 2d array or list containing a key and a value pair for that entry. All of the keys must 1d arrays or
+        is a 2d array or list containing a key and a value pair for that entry. All of the keys must be 1d arrays or
         lists of the same length.
 
     distance_function : Distance or function : default Distance(metric=COSINE)
@@ -736,7 +736,8 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         # argument when function ordering (and so ordering of parsers)
         # is made explicit
         distance_result = self.distance_function.parameters.value._get(context)
-        print(distance_result, self.distance_function.defaults.value)
+        # TEST PRINT:
+        # print(distance_result, self.distance_function.defaults.value)
         return np.asfarray([
             distance_result if i == 0 else np.zeros_like(distance_result)
             for i in range(self.defaults.max_entries)
@@ -1087,7 +1088,7 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
         random_state = self._get_current_parameter_value('random_state', context)
 
         # If this is an initialization run, leave memory empty (don't want to count it as an execution step),
-        # and return current value (variable[1]) for validation.
+        # but set key and value size and then return current value (variable[1]) for validation.
         if self.is_initializing:
             return variable
 
@@ -1169,8 +1170,10 @@ class ContentAddressableMemory(MemoryFunction):  # -----------------------------
 
         # if no memory, return the zero vector
         if len(_memory[KEYS]) == 0:
-            zeros_key = [0] * self.key_size
-            zeros_val = [0] * self.val_size
+            # zeros_key = [0] * self.parameters.key_size.get(context)
+            # zeros_val = [0] * self.parameters.val_size.get(context)
+            zeros_key = [0] * self.parameters.key_size.get(context)
+            zeros_val = [0] * self.parameters.val_size.get(context)
             return [zeros_key, zeros_val]
 
         # Get distances between query_key and all keys in memory

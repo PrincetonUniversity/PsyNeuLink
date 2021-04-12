@@ -94,7 +94,7 @@ jobs:
       run: pytest --junit-xml=tests_out.xml --verbosity=0 -n auto --maxprocesses=2
 
     - name: Upload test results
-      uses: actions/upload-artifact@v2.2.2
+      uses: actions/upload-artifact@v2.2.3
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         path: tests_out.xml
@@ -108,7 +108,7 @@ jobs:
       if: contains(github.ref, 'tags')
 
     - name: Upload dist packages
-      uses: actions/upload-artifact@v2.2.2
+      uses: actions/upload-artifact@v2.2.3
       with:
         name: dist-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         path: dist/

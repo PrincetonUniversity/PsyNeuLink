@@ -113,8 +113,8 @@ Distractor_Rep_Control_Signal = pnl.ControlSignal(modulates=[(pnl.SLOPE, Distrac
                                                   allocation_samples=signalSearchRange)
 
 Umemoto_comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=Umemoto_comp,
-                                                                                  features={pnl.SHADOW_EXTERNAL_INPUTS: [Target_Stim, Distractor_Stim, Reward]},
-                                                                                  feature_function=pnl.AdaptiveIntegrator(rate=1.0),
+                                                                                  state_features={pnl.SHADOW_EXTERNAL_INPUTS: [Target_Stim, Distractor_Stim, Reward]},
+                                                                                  state_feature_function=pnl.AdaptiveIntegrator(rate=1.0),
                                                                                   objective_mechanism=pnl.ObjectiveMechanism(monitor_for_control=[Reward,
                                                                                                                                                  (Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)],
                                                                                                                              ),

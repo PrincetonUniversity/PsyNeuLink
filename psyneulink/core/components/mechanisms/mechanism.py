@@ -2308,7 +2308,8 @@ class Mechanism_Base(Mechanism):
                 context=None,
                 runtime_params=None,
                 report_output=None,
-                run_report=None
+                report_params=None,
+                report_num=None
                 ):
         """Carry out a single `execution <Mechanism_Execution>` of the Mechanism.
 
@@ -2533,22 +2534,32 @@ class Mechanism_Base(Mechanism):
 
         # REPORT EXECUTION
 
-        if (context.source == ContextFlags.COMMAND_LINE or
-                context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING)):
-            from psyneulink.core.compositions.report import Report, ReportOutput
-            # Use report_output passed to execute from Composition or command line;
+        # Generate report for Mechanism if it is:
+        #   - executed on its own (i.e., from the command line, not in a Composition)
+        #   - or in a Composition while that is executing and has passed it an report_num
+        #     (the latter excludes CIMs [not reported] and controllers [reporting handled directly]
+        if ((context.source == ContextFlags.COMMAND_LINE and not context.composition) or
+                (context.execution_phase & (ContextFlags.PROCESSING | ContextFlags.LEARNING)
+                 and report_num is not None)):
+
+            from psyneulink.core.compositions.report import Report, ReportOutput, ReportParams, MECHANISM_REPORT
+            # Use any report_output and report_params options passed to execute from command line;
             # otherwise try to get from Mechanism's reportOutputPref
             report_output = report_output or next((pref for pref in convert_to_list(self.prefs.reportOutputPref)
-                                                   if isinstance(pref, ReportOutput)), None)
-            if report_output is not ReportOutput.OFF:
-                with Report(self, context=context) as report:
-                    report.report_output(caller=self,
-                                         report_num=run_report,
-                                         scheduler=None,
-                                         report_output=report_output,
-                                         content='node',
-                                         context=context,
-                                         node=self)
+                                                   if isinstance(pref, ReportOutput)), ReportOutput.OFF)
+            report_params = report_params or next((pref for pref in convert_to_list(self.prefs.reportOutputPref)
+                                                   if isinstance(pref, ReportParams)), ReportParams.OFF)
+            with Report(self,
+                        report_output=report_output,
+                        report_params=report_params,
+                        context=context) as report:
+                report(self,
+                       MECHANISM_REPORT,
+                       report_num=report_num,
+                       scheduler=None,
+                       content='node',
+                       context=context,
+                       node=self)
 
         return value
 

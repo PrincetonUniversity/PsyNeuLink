@@ -50,7 +50,7 @@ its relationship to the backpropagation learning rule, and its use in connection
   `Verguts, T., & Notebaert, W. (2008). Hebbian learning of cognitive control: dealing with specific and nonspecific
   adaptation. Psychological review, 115(2), 518 <http://psycnet.apa.org/record/2008-04236-010>`_
 
-The features and operation of a ContrastiveHebbianMechanism that differ from those of a RecurrentTransferMechanism are
+The state_features and operation of a ContrastiveHebbianMechanism that differ from those of a RecurrentTransferMechanism are
 described below.
 
 .. _ContrastiveHebbian_Creation:

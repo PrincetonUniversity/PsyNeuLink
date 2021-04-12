@@ -100,7 +100,7 @@ else:
     CTL_PARAM = SLOPE
 
 
-ocm = OptimizationControlMechanism(features={SHADOW_INPUTS:[player_input, predator_input, prey_input]},
+ocm = OptimizationControlMechanism(state_features={SHADOW_INPUTS:[player_input, predator_input, prey_input]},
                                    agent_rep=agent_comp,
                                    function=GridSearch(direction=MAXIMIZE,
                                                        save_values=True),

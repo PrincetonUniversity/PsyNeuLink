@@ -36,16 +36,16 @@ calls the gym-forager agent with a specified action and returns the reward assoc
 
     Parameterizes weights of a `update_weights <RegressorCFA.update_weights>` used by its `evaluate
     <CompositionFunctionApproximator.evaluate>` method to predict the `net_outcome <ControlMechanism.net_outcome>`
-    for a `Composition` (or part of one) controlled by an `OptimiziationControlMechanism`, from a set of `feature_values
-    <OptimizationControlMechanism.feature_values>` and a `control_allocation <ControlMechanism.control_allocation>`
+    for a `Composition` (or part of one) controlled by an `OptimiziationControlMechanism`, from a set of `state_feature_values
+    <OptimizationControlMechanism.state_feature_values>` and a `control_allocation <ControlMechanism.control_allocation>`
     provided by the OptimiziationControlMechanism.
 
-    The `feature_values <OptimiziationControlMechanism.feature_values>` and `control_allocation
+    The `state_feature_values <OptimiziationControlMechanism.state_feature_values>` and `control_allocation
     <ControlMechanism.control_allocation>` passed to the RegressorCFA's `adapt <RegressorCFA.adapt>` method,
     and provided as the input to its `update_weights <RegressorCFA.update_weights>`, are represented in the
     `vector <PredictionVector.vector>` attribute of a `PredictionVector` assigned to the RegressorCFA`s
-    `prediction_vector <RegressorCFA.prediction_vector>` attribute.  The  `feature_values
-    <OptimizationControlMechanism.feature_values>` are assigned to the features field of the
+    `prediction_vector <RegressorCFA.prediction_vector>` attribute.  The  `state_feature_values
+    <OptimizationControlMechanism.state_feature_values>` are assigned to the state_features field of the
     `prediction_vector <RegressorCFA.prediction_vector>`, and the `control_allocation
     <ControlMechanism_control_allocation>` is assigned to the control_allocation field of the `prediction_vector
     <RegressorCFA.prediction_vector>`.  The `prediction_vector <RegressorCFA.prediction_vector>` may also contain
@@ -61,11 +61,11 @@ calls the gym-forager agent with a specified action and returns the reward assoc
 
 COMMENT:
 .. note::
-  The RegressionCFA's `update_weights <RegressionCFA.update_weights>` is provided the `feature_values
-  <OptimizationControlMechanism.feature_values>` and `net_outcome <ControlMechanism.net_outcome>` from the
+  The RegressionCFA's `update_weights <RegressionCFA.update_weights>` is provided the `state_feature_values
+  <OptimizationControlMechanism.state_feature_values>` and `net_outcome <ControlMechanism.net_outcome>` from the
   *previous* trial to update its parameters.  Those are then used to determine the `control_allocation
   <ControlMechanism.control_allocation>` predicted to yield the greatest `EVC <OptimizationControlMechanism_EVC>`
-  based on the `feature_values <OptimizationControlMechanism.feature_values>` for the current trial.
+  based on the `state_feature_values <OptimizationControlMechanism.state_feature_values>` for the current trial.
 COMMENT
 
 .. _GymForagerCFA_Class_Reference:
@@ -140,7 +140,7 @@ class GymForagerCFA(RegressionCFA):
 
     def adapt(self, feature_values, control_allocation, net_outcome, context=None):
         """Update `regression_weights <RegressorCFA.regression_weights>` so as to improve prediction of
-        **net_outcome** from **feature_values** and **control_allocation**.
+        **net_outcome** from **state_feature_values** and **control_allocation**.
         """
         prediction_vector = self.parameters.prediction_vector._get(context)
         previous_state = self.parameters.previous_state._get(context)
@@ -148,7 +148,7 @@ class GymForagerCFA(RegressionCFA):
         if previous_state is not None:
             # Update regression_weights
             regression_weights = self.update_weights([previous_state, net_outcome], context=context)
-            # Update vector with current feature_values and control_allocation and store for next trial
+            # Update vector with current state_feature_values and control_allocation and store for next trial
             prediction_vector.update_vector(control_allocation, feature_values, context)
             previous_state = prediction_vector.vector
         else:
@@ -167,13 +167,13 @@ class GymForagerCFA(RegressionCFA):
         )
 
     # FIX: RENAME AS _EXECUTE_AS_REP ONCE SAME IS DONE FOR COMPOSITION
-    # def evaluate(self, control_allocation, num_samples, reset_stateful_functions_to, feature_values, context):
+    # def evaluate(self, control_allocation, num_samples, reset_stateful_functions_to, state_feature_values, context):
     def evaluate(self, feature_values, control_allocation, num_estimates, context):
         """Update prediction_vector <RegressorCFA.prediction_vector>`,
         then multiply by regression_weights.
 
         Uses the current values of `regression_weights <RegressorCFA.regression_weights>` together with
-        values of **control_allocation** and **feature_values** arguments to generate predicted `net_outcome
+        values of **control_allocation** and **state_feature_values** arguments to generate predicted `net_outcome
         <OptimiziationControlMechanism.net_outcome>`.
 
         .. note::

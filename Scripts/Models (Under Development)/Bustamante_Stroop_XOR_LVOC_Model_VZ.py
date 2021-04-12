@@ -126,8 +126,8 @@ c.add_projection(sender=word_task, receiver=task_decision)
 
 lvoc = pnl.OptimizationControlMechanism(
     name='LVOC ControlMechanism',
-    features=[color_stim.input_port, word_stim.input_port],
-    # features={pnl.SHADOW_EXTERNAL_INPUTS: [color_stim, word_stim]},
+    state_features=[color_stim.input_port, word_stim.input_port],
+    # state_features={pnl.SHADOW_EXTERNAL_INPUTS: [color_stim, word_stim]},
 
     # computes value of processing, reward received
     objective_mechanism=pnl.ObjectiveMechanism(
@@ -146,7 +146,7 @@ lvoc = pnl.OptimizationControlMechanism(
         prediction_terms=[pnl.PV.C, pnl.PV.FC, pnl.PV.FF, pnl.PV.COST]
     ),
     # sample control allocs, and return best
-    # evaluate() computes outcome (obj mech) - costs given state (features) and sample ctrl alloc
+    # evaluate() computes outcome (obj mech) - costs given state (state_features) and sample ctrl alloc
     function=pnl.GradientOptimization(
             convergence_criterion=pnl.VALUE,
             convergence_threshold=0.001,
@@ -179,7 +179,7 @@ lvoc = pnl.OptimizationControlMechanism(
 )
 
 lvoc.set_log_conditions('value')
-# lvoc.set_log_conditions('features')
+# lvoc.set_log_conditions('state_features')
 # print("LVOC loggable: ", lvoc.loggable_items)
 # lvoc.set_log_conditions('variable')
 # lvoc.agent_rep.set_log_conditions('regression_weights')
@@ -239,7 +239,7 @@ for i in range(num_subj):
     print('--------------------')
     print('ControlSignal variables: ', [sig.parameters.variable.get(i) for sig in lvoc.control_signals])
     print('ControlSignal values: ', [sig.parameters.value.get(i) for sig in lvoc.control_signals])
-    # print('features: ', lvoc.feature_values)
+    # print('state_features: ', lvoc.state_feature_values)
     # print('lvoc: ', lvoc.evaluation_function([sig.parameters.variable.get(i) for sig in lvoc.control_signals], context=i))
     # print('time: ', duration)
     print('--------------------')

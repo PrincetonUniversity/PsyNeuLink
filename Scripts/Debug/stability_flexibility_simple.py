@@ -163,11 +163,11 @@ objective_mech = pnl.ObjectiveMechanism(monitor=[inputLayer, stimulusInfo,
 										function=computeAccuracy)
 
 meta_controller = pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
-												   features=[inputLayer.input_port, stimulusInfo.input_port],
-												   feature_function=pnl.Buffer(history=100),
-												   objective_mechanism=objective_mech,
-												   function=pnl.GridSearch(),
-												   control_signals=[signal])
+                                                   state_features=[inputLayer.input_port, stimulusInfo.input_port],
+                                                   state_feature_function=pnl.Buffer(history=100),
+                                                   objective_mechanism=objective_mech,
+                                                   function=pnl.GridSearch(),
+                                                   control_signals=[signal])
 
 inputs = {inputLayer: INPUT, stimulusInfo: stimulusInput}
 stabilityFlexibility.add_model_based_optimizer(meta_controller)

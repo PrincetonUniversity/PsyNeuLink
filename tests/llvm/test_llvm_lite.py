@@ -99,7 +99,7 @@ def test_llvm_lite():
 
 @pytest.mark.llvm
 @pytest.mark.cuda
-@pytest.mark.skipif(pycuda is None, reason="pyCUDA modeule is not available")
+@pytest.mark.skipif(pycuda is None, reason="pyCUDA module is not available")
 def test_llvm_lite_ptx_pycuda():
     # Create some useful types
     double = ir.DoubleType()

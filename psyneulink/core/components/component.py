@@ -1232,6 +1232,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         #    - assign function's output to self.defaults.value (based on call of self.execute)
         self._instantiate_function(function=function, function_params=function_params, context=context)
 
+        # FIX TIME 3/18/21
+        if '(RESULT) to (OUTPUT_CIM_TransferMechanism-1_RESULT)' in self.name:
+            assert True
         self._instantiate_value(context=context)
 
         # INSTANTIATE ATTRIBUTES AFTER FUNCTION
@@ -1336,7 +1339,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "variable", "value", "saved_values", "saved_samples",
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
-                     "monitor_for_control", "feature_values", "simulation_ids",
+                     "monitor_for_control", "state_feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict",
                      "modulated_mechanisms", "grid",
                      "activation_derivative_fct", "input_specification",
@@ -3196,6 +3199,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         var = convert_all_elements_to_np_array(copy.deepcopy(var), cast_from=int, cast_to=float)
 
+        # ignore zero-length variables (e.g. empty Buffer)
+        if var.shape == (0, ):
+            return var
+
         # handle simple wrapping of a Component (e.g. from ParameterPort in
         # case of set after Component instantiation)
         if (
@@ -3221,6 +3228,15 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 if param.shape == np.squeeze(var).shape:
                     param = param.reshape(var.shape)
         except AttributeError:
+            pass
+
+        try:
+            # try to broadcast param to variable if param is numeric and regular
+            param_arr = np.asarray(param)
+            if param_arr.dtype != object:
+                return np.broadcast_to(param_arr, var.shape)
+        except ValueError:
+            # param not directly compatible with variable, continue elementwise
             pass
 
         fill_recursively(var, param)

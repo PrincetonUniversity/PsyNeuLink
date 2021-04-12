@@ -584,10 +584,13 @@ class Function_Base(Function):
                                     params=params,
                                     target_set=target_set,
                                     )
-        value = self._function(variable=variable,
-                               context=context,
-                               params=params,
-                               **kwargs)
+        try:
+            value = self._function(variable=variable,
+                                   context=context,
+                                   params=params,
+                                   **kwargs)
+        except ValueError as err:
+            raise FunctionError(f"Problem with '{self}' in '{self.owner.name}': {err}")
         self.most_recent_context = context
         self.parameters.value._set(value, context=context)
         return value
