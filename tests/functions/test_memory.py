@@ -604,27 +604,35 @@ class TestContentAddressableMemory:
 
         stim = 'C'
         c.equidistant_entries_select = OLDEST
-        retrieved = [i for i in c.function.get_memory(stimuli[stim][0])]
-        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-        assert retrieved_key == ['A']
+        retrieved = [i for i in c.get_memory(stimuli[stim])]
+        retrieved_key = [k for k,v in stimuli.items()
+                         if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
+        assert retrieved_key == ['C']
 
         c.equidistant_entries_select = NEWEST
-        retrieved = [i for i in c.function.get_memory(stimuli[stim][0])]
-        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-        assert retrieved_key == ['D']
+        retrieved = [i for i in c.get_memory(stimuli[stim])]
+        retrieved_key = [k for k,v in stimuli.items()
+                         if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
+        assert retrieved_key == ['C']
 
         # Test that after allowing dups, warning is issued and memory with zeros is returned
         c.duplicate_entries_allowed = False
         stim = 'A'
 
-        text = r'More than one item matched key \(\[1 2 3\]\) in memory for ContentAddressableMemory'
+        # text = r'More than one item matched cue \(\[1 2 3\]\) in memory for ContentAddressableMemory'
+        # text = r'More than one item matched cue ([[1 2 3]\n [4 5 6]]) in memory for ContentAddressableMemory'
+        # text = r"More than one item matched cue \(\[[1 2 3]\\n [4 5 6]]\) in memory for ContentAddressableMemory " \
+        #        r"Function-0 even though \'duplicate_entries_allowed\' is False"
+        # text = r"More than one item matched cue ([[1 2 3]\n [4 5 6]]) in memory for ContentAddressableMemory"
+        text = "More than one item matched cue"
         with pytest.warns(UserWarning, match=text):
             retrieved = c.execute(stimuli[stim])
 
-        retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
+        retrieved_key = [k for k,v in stimuli.items()
+                         if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
         assert retrieved_key == [None]
-        assert retrieved[0] == [0, 0, 0]
-        assert retrieved[1] == [0, 0, 0]
+        expected = np.array([[0,0,0],[0,0,0]])
+        assert np.all(expected==retrieved)
 
     def test_ContentAddressableMemory_with_initializer_and_key_size_diff_from_val_size(self):
 

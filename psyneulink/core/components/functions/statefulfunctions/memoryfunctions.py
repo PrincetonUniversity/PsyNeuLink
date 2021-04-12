@@ -2213,6 +2213,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if _memory is None:
             return self.uniform_entry(0, context)
 
+        cue = np.array(cue)
         self._validate_entry(cue, context)
         num_fields = self.parameters.memory_num_fields._get(context)
         if field_weights is None:
