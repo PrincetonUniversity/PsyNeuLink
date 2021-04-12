@@ -566,7 +566,7 @@ class TestDictionaryMemory:
 #region
 class TestContentAddressableMemory:
     # Test of ContentAddressableMemory without LLVM:
-    def test_ContentAddressableMemory_with_initializer_and_key_size_same_as_val_size(self):
+    def test_ContentAddressableMemory_with_initializer_and_equal_field_sizes(self):
 
         stimuli = {'A': [[1,2,3],[4,5,6]],
                    'B': [[8,9,10],[11,12,13]],
@@ -576,18 +576,16 @@ class TestContentAddressableMemory:
                    'F': [[10,10,30],[40,50,60]],
                    }
 
-        em = EpisodicMemoryMechanism(
-                size=[3,3],
-                function = ContentAddressableMemory(
-                        seed=2,
-                        initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
-                        duplicate_entries_allowed=True,
-                        equidistant_entries_select=RANDOM)
+        c = ContentAddressableMemory(
+            seed=2,
+            initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
+            duplicate_entries_allowed=True,
+            equidistant_entries_select=RANDOM
         )
 
         retrieved_keys=[]
         for key in sorted(stimuli.keys()):
-            retrieved = [i for i in em.execute(stimuli[key])]
+            retrieved = [i for i in c.execute(stimuli[key])]
             # retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
             retrieved_key = [k for k,v in stimuli.items()
                              if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
@@ -595,32 +593,33 @@ class TestContentAddressableMemory:
         assert retrieved_keys == [['F'], ['A'], ['F'], ['C'], ['B'], ['F']]
 
         # Run again to test re-initialization and random retrieval
-        em.function.reset(np.array([stimuli['A'], stimuli['F']]))
+        c.reset(np.array([stimuli['A'], stimuli['F']]))
         retrieved_keys=[]
         for key in sorted(stimuli.keys()):
-            retrieved = [i for i in em.execute(stimuli[key])]
-            retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
+            retrieved = [i for i in c.execute(stimuli[key])]
+            retrieved_key = [k for k,v in stimuli.items()
+                             if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
             retrieved_keys.append(retrieved_key)
-        assert retrieved_keys == [['A'], ['A'], ['A'], ['A'], ['B'], ['F']]
+        assert retrieved_keys == [['A'], ['A'], ['F'], ['C'], ['B'], ['F']]
 
         stim = 'C'
-        em.function.equidistant_entries_select = OLDEST
-        retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
+        c.equidistant_entries_select = OLDEST
+        retrieved = [i for i in c.function.get_memory(stimuli[stim][0])]
         retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
         assert retrieved_key == ['A']
 
-        em.function.equidistant_entries_select = NEWEST
-        retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
+        c.equidistant_entries_select = NEWEST
+        retrieved = [i for i in c.function.get_memory(stimuli[stim][0])]
         retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
         assert retrieved_key == ['D']
 
         # Test that after allowing dups, warning is issued and memory with zeros is returned
-        em.function.duplicate_entries_allowed = False
+        c.duplicate_entries_allowed = False
         stim = 'A'
 
         text = r'More than one item matched key \(\[1 2 3\]\) in memory for ContentAddressableMemory'
         with pytest.warns(UserWarning, match=text):
-            retrieved = em.execute(stimuli[stim])
+            retrieved = c.execute(stimuli[stim])
 
         retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
         assert retrieved_key == [None]
