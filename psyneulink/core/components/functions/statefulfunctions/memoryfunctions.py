@@ -1351,7 +1351,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
 
 class ContentAddressableMemory(MemoryFunction): # ---------------------------------------------------------------------
-     """
+    """
     ContentAddressableMemory(                        \
         default_variable=None,                       \
         retrieval_prob=1.0                           \
