@@ -1351,7 +1351,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
 
 class ContentAddressableMemory(MemoryFunction): # ---------------------------------------------------------------------
-    """
+     """
     ContentAddressableMemory(                        \
         default_variable=None,                       \
         retrieval_prob=1.0                           \
@@ -1372,52 +1372,62 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     .. _ContentAddressableMemory:
 
-    Implement configurable, content-addressable storage and retrieval of items, in which storage
-    is determined by `storage_prob <ContentAddressableMemory.storage_prob>`, and retrieval of items is
-    determined by `distance_function <ContentAddressableMemory.distance_function>`, `selection_function
-    <ContentAddressableMemory.selection_function>`, and `retrieval_prob <ContentAddressableMemory.retrieval_prob>`.
-    Each entry in `memory <ContentAddressableMemory.storage_prob>` is a list of items (1d arrays), each of which can
-    be of varying length.  However, all entries must have the same number of items, and the corresponding items must
-    all have the same length across entries.  Items are retrieved from `memory <ContentAddressableMemory.memory>`
-    based on their distance from `variable <ContentAddressableMemory.variable>`, used as the cue for retrieval.
-    The distance is computed computed using the `distance_function <ContentAddressableMemory.distance_function>`,
-    which can be used to compare `variable <ContentAddressableMemory.variable>` with each item in `memory
-    <ContentAddressableMemory.storage_prob>` as full vectors (i.e., with all items of each concatentated into a
-    single array), or by computing the distance of each item in `variable <ContentAddressableMemory.variable>` with
-    the corresponding `memory field <EpisprevodicMemoryMechanism_Memory_Fields>` of an entry in `memory
-    <ContentAddressableMemory.storage_prob>`, and then averaging those distances, possibly weighted by the coefficients
-    in `distance_field_weights <ContentAddressableMemory.distance_field_weights>` (this is determined by the
+    Implement configurable, content-addressable storage and retrieval of items, in which storage is determined by
+    `storage_prob <ContentAddressableMemory.storage_prob>`, and retrieval of items is determined by `distance_function
+    <ContentAddressableMemory.distance_function>`, `selection_function <ContentAddressableMemory.selection_function>`,
+    and `retrieval_prob <ContentAddressableMemory.retrieval_prob>`. The **default_variable** argument specifies the
+    shape of an entry in `memory <ContentAddressableMemory.storage_prob>`, each of which is a list or array of items
+    that are themselves lists or 1d arrays (called "fields;" see `EpisodicMemoryMechanism_Memory_Fields`). An entry can
+    have an arbitrary number of fields, and each field can have an arbitrary length.  However, all entries must have
+    the same number of fields, and the corresponding fields must all have the same length across entries.  Entries are
+    retrieved from `memory <ContentAddressableMemory.memory>` based on their distance from `variable
+    <ContentAddressableMemory.variable>`, used as the cue for retrieval. The distance is computed using the
+    `distance_function <ContentAddressableMemory.distance_function>`, which compares `variable
+    <ContentAddressableMemory.variable>` with each entry in `memory <ContentAddressableMemory.storage_prob>` as full
+    vectors (i.e., with all fields of each concatenated into a single array), or by computing the distance of each
+    field in `variable <ContentAddressableMemory.variable>` with the corresponding ones of each entry in `memory
+    <ContentAddressableMemory.memory>`, and then averaging those distances, possibly weighted by the coefficients
+    specified in `distance_field_weights <ContentAddressableMemory.distance_field_weights>` (this is determined by the
     `distance_by_fields <ContentAddressableMemory.distance_by_fields>` parameter.  The distances computed between
-    `variable `<ContentAddressableMemory.variable>` and each item in `memory <ContentAddressableMemory.memory>` are
+    `variable `<ContentAddressableMemory.variable>` and each entry in `memory <ContentAddressableMemory.memory>` are
     used by `selection_function <ContentAddressableMemory.selection_function>` to determine which entry is retrieved.
-    The distance used for the last retrieval (i.e., between the last cue to the entry retrieved), the corresponding
-    distances of each of their `memory fields <EpisodicMemoryMechanism_Memory_Fields>` (weighted by
-    `distance_field_weights <ContentAddressableMemory.distance_field_weights>`), and the distances to all other entries
-    are stored in `distance <ContentAddressableMemory.distance>` and `distances_by_field
-    <ContentAddressableMemory.distances_by_field>`, and `distances_to_entries
-    <ContentAddressableMemory.distances_to_entries>` respectively.
+    The distance used for the last retrieval (i.e., between `variable <ContentAddressableMemory.variable>` and the
+    entry retrieved), the distances of each of their corresponding fields (weighted by `distance_field_weights
+    <ContentAddressableMemory.distance_field_weights>`), and the distances to all other entries are stored in `distance
+    <ContentAddressableMemory.distance>` and `distances_by_field <ContentAddressableMemory.distances_by_field>`, and
+    `distances_to_entries <ContentAddressableMemory.distances_to_entries>` respectively.
 
     Duplicate entries can be allowed, disallowed, or overwritten during storage using `duplicate_entries_allowed
     <ContentAddressableMemory.duplicate_entries_allowed>`), and how selection is made among duplicate entries or
     ones indistinguishable by the `distance_function <ContentAddressableMemory.distance_function>` can be specified
     using `equidistant_entries_select <ContentAddressableMemory.equidistant_entries_select>`.
 
-    The class also provides methods for directly retrieving an entry (`get_memory
-    <ContentAddressableMemory.get_memory>`), and adding (`add_to_memory <ContentAddressableMemory.add_to_memory>`)
-    and deleting (`delete_from_memory <ContentAddressableMemory.delete_from_memory>`) one or more entries.
+    The class also provides methods for directly retrieving (`get_memory
+    <ContentAddressableMemory.get_memory>`), adding (`add_to_memory <ContentAddressableMemory.add_to_memory>`)
+    and deleting (`delete_from_memory <ContentAddressableMemory.delete_from_memory>`) one or more entries from
+    `memory <ContentAddressableMemory.memory>`.
 
     .. _ContentAddressableMemory_Structure:
 
     Structure
     ---------
 
-    An entry is stored and retrieved as a 2d array containing a set of `memory fields
-    <EpisodicMemoryMechanism_Memory_Fields>`.  A 3d array of such entries can be used to initialize the contents of
-    `memory <ContentAddressableMemory.memory>` by providing it in the **initialzer** argument of the
-    ContentAddressableMemory's constructor, or in a call to its `reset  <ContentAddressableMemory.reset>`
-    method.  The current contents of `memory <ContentAddressableMemory.memory>` can be inspected using the
-    `memory <ContentAddressableMemory.memory>` attribute, which returns a list containing the current entries,
-    each as a list containing all `memory fields <EpisodicMemoryMechanism_Memory_Fields>` for that entry.
+    An entry is stored and retrieved as an array containing a set of `fields <EpisodicMemoryMechanism_Memory_Fields>`
+    each of which is a 1d array.  An array containing such entries can be used to initialize the contents of `memory
+    <ContentAddressableMemory.memory>` by providing it in the **initializer** argument of the ContentAddressableMemory's
+    constructor, or in a call to its  `reset  <ContentAddressableMemory.reset>` method.  The current contents of `memory
+    <ContentAddressableMemory.memory>` can be inspected using the `memory <ContentAddressableMemory.memory>` attribute,
+    which returns a list containing the current entries, each as a list containing all fields for that entry.
+
+    .. _ContentAddressableMemory_Shapes:
+
+    .. technical_note::
+
+       Both `memory <ContentAddressableMemory.memory>` and all entries are stored as np.ndarrays, the dimensionality of
+       which is determined by the shape of the fields of an entry.  If all fields have the same length (regular), then
+       they are 2d arrays and `memory <ContentAddressableMemory.memory>` is a 3d array.  However, if fields vary in
+       length (`ragged <https://en.wikipedia.org/wiki/Jagged_array>`_) then, although each field is 1d, an entry is
+       also 1d (with dtype='object'), and`memory <ContentAddressableMemory.memory>` is 2d (with dtype='object').
 
     .. _ContentAddressableMemory_Execution:
 
@@ -1490,11 +1500,12 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     ---------
 
     default_variable : list or 2d array : default class_defaults.variable
-        specifies a template for entries of the dictionary;  list can have any number of items, each of which
-        must be a list or array of any length.
+        specifies a template for an entry in the dictionary;  the list or array can have any number of items,
+        each of which must be a list or array of any length;  however, at present entries are constrained to be
+        at most 2d.
 
     retrieval_prob : float in interval [0,1] : default 1.0
-        specifies probability of retrieiving an entry from `memory <ContentAddressableMemory.memory>`.
+        specifies probability of retrieving an entry from `memory <ContentAddressableMemory.memory>`.
 
     storage_prob : float in interval [0,1] : default 1.0
         specifies probability of adding `variable <ContentAddressableMemory.variable>` to `memory
@@ -2314,7 +2325,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             Returns entry formatted to match the shape of `memory <EpisodicMemoryMechanism.memory>`,
             so that it can be appended (or, if it is the first, simply assigned) to memory:
             - if entry is a regular array (all fields [axis 0 items] have the same shape),
-                returns object with ndim = entry.ndim + 1 (see technical_note above);
+                returns object with ndim = entry.ndim + 1 (see `technical_note <ContentAddressableMemory_Shapes>` above)
             - if the entry is a ragged array (fields [axis 0 items] have differing shapes),
                 returns 2d object with dtype=object.
             """

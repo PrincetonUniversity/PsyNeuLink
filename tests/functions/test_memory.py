@@ -577,13 +577,12 @@ class TestContentAddressableMemory:
                    }
 
         em = EpisodicMemoryMechanism(
-                content_size=3,
-                assoc_size=3,
+                size=[3,3],
                 function = ContentAddressableMemory(
                         seed=2,
                         initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
-                        duplicate_keys=True,
-                        equidistant_keys_select=RANDOM)
+                        duplicate_entries_allowed=True,
+                        equidistant_entries_select=RANDOM)
         )
 
         retrieved_keys=[]
@@ -603,18 +602,18 @@ class TestContentAddressableMemory:
         assert retrieved_keys == [['A'], ['A'], ['A'], ['A'], ['B'], ['F']]
 
         stim = 'C'
-        em.function.equidistant_keys_select = OLDEST
+        em.function.equidistant_entries_select = OLDEST
         retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
         retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
         assert retrieved_key == ['A']
 
-        em.function.equidistant_keys_select = NEWEST
+        em.function.equidistant_entries_select = NEWEST
         retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
         retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
         assert retrieved_key == ['D']
 
         # Test that after allowing dups, warning is issued and memory with zeros is returned
-        em.function.duplicate_keys = False
+        em.function.duplicate_entries_allowed = False
         stim = 'A'
 
         text = r'More than one item matched key \(\[1 2 3\]\) in memory for ContentAddressableMemory'
@@ -641,8 +640,8 @@ class TestContentAddressableMemory:
                 assoc_size=4,
                 function = ContentAddressableMemory(
                         initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
-                        duplicate_keys=True,
-                        equidistant_keys_select=RANDOM)
+                        duplicate_entries_allowed=True,
+                        equidistant_entries_select=RANDOM)
         )
 
         retrieved_keys=[]
@@ -654,18 +653,18 @@ class TestContentAddressableMemory:
         assert retrieved_keys == [['F'], ['A'], ['A'], ['A'], ['B'], ['F']]
 
         stim = 'C'
-        em.function.equidistant_keys_select = OLDEST
+        em.function.equidistant_entries_select = OLDEST
         retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
         retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
         assert retrieved_key == ['A']
 
-        em.function.equidistant_keys_select = NEWEST
+        em.function.equidistant_entries_select = NEWEST
         retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
         retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
         assert retrieved_key == ['D']
 
         # Test that after allowing dups, warning is issued and memory with zeros is returned
-        em.function.duplicate_keys = False
+        em.function.duplicate_entries_allowed = False
         stim = 'A'
 
         text = r'More than one item matched key \(\[1 2 3\]\) in memory for ContentAddressableMemory'
@@ -711,8 +710,8 @@ class TestContentAddressableMemory:
                 content_size=3,
                 assoc_size=3,
                 function = ContentAddressableMemory(
-                        duplicate_keys=True,
-                        equidistant_keys_select=RANDOM)
+                        duplicate_entries_allowed=True,
+                        equidistant_entries_select=RANDOM)
         )
 
         retrieved_keys=[]
@@ -723,18 +722,18 @@ class TestContentAddressableMemory:
         assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['D']]
 
         stim = 'C'
-        em.function.equidistant_keys_select = OLDEST
+        em.function.equidistant_entries_select = OLDEST
         retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
         retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
         assert retrieved_key == ['A']
 
-        em.function.equidistant_keys_select = NEWEST
+        em.function.equidistant_entries_select = NEWEST
         retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
         retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
         assert retrieved_key == ['D']
 
         # Test that after allowing dups, warning is issued and memory with zeros is returned
-        em.function.duplicate_keys = False
+        em.function.duplicate_entries_allowed = False
         stim = 'A'
 
         text = r'More than one item matched key \(\[1 2 3\]\) in memory for ContentAddressableMemory'
@@ -760,8 +759,8 @@ class TestContentAddressableMemory:
                 content_size=3,
                 assoc_size=4,
                 function = ContentAddressableMemory(
-                        duplicate_keys=True,
-                        equidistant_keys_select=RANDOM)
+                        duplicate_entries_allowed=True,
+                        equidistant_entries_select=RANDOM)
         )
 
         retrieved_keys=[]
@@ -772,18 +771,18 @@ class TestContentAddressableMemory:
         assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['D']]
 
         stim = 'C'
-        em.function.equidistant_keys_select = OLDEST
+        em.function.equidistant_entries_select = OLDEST
         retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
         retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
         assert retrieved_key == ['A']
 
-        em.function.equidistant_keys_select = NEWEST
+        em.function.equidistant_entries_select = NEWEST
         retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
         retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
         assert retrieved_key == ['D']
 
         # Test that after allowing dups, warning is issued and memory with zeros is returned
-        em.function.duplicate_keys = False
+        em.function.duplicate_entries_allowed = False
         stim = 'A'
 
         text = r'More than one item matched key \(\[1 2 3\]\) in memory for ContentAddressableMemory'
@@ -810,8 +809,8 @@ class TestContentAddressableMemory:
                 content_size=3,
                 function = ContentAddressableMemory(
                         # initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
-                        duplicate_keys=True,
-                        equidistant_keys_select=RANDOM,
+                        duplicate_entries_allowed=True,
+                        equidistant_entries_select=RANDOM,
                         retrieval_prob = 1.0
                 )
         )
@@ -842,8 +841,8 @@ class TestContentAddressableMemory:
                     function = ContentAddressableMemory(
                             initializer=np.array([[[1,2,3], [4,5,6]],
                                                   [[1,2,3], [7,8,9]]]),
-                            duplicate_keys=False,
-                            equidistant_keys_select=RANDOM,
+                            duplicate_entries_allowed=False,
+                            equidistant_entries_select=RANDOM,
                             retrieval_prob = 1.0
                     )
             )
@@ -854,8 +853,8 @@ class TestContentAddressableMemory:
         em = ContentAddressableMemory(
                 initializer=[[[1,2,3], [4,5,6]],
                              [[7,8,9], [10,11,12]]],
-                duplicate_keys=True,
-                equidistant_keys_select=RANDOM,
+                duplicate_entries_allowed=True,
+                equidistant_entries_select=RANDOM,
                 retrieval_prob = 1.0,
                 storage_prob = 1.0
         )
@@ -919,13 +918,13 @@ class TestContentAddressableMemory:
         em = ContentAddressableMemory(
                 initializer=[[[1,2,3], [4,5,6]],
                              [[7,8,9], [10,11,12]]],
-                duplicate_keys=True,
-                equidistant_keys_select=RANDOM,
+                duplicate_entries_allowed=True,
+                equidistant_entries_select=RANDOM,
                 retrieval_prob = 1.0,
                 storage_prob = 1.0
         )
 
-        em.duplicate_keys = OVERWRITE
+        em.duplicate_entries_allowed = OVERWRITE
 
         # Add new memory
         retreived = em.execute([[7,8,10], [100,110,120]])
@@ -944,7 +943,7 @@ class TestContentAddressableMemory:
         assert np.allclose(em.memory, expected_memory)
 
         # Allow entry of memory with duplicate key
-        em.duplicate_keys = True
+        em.duplicate_entries_allowed = True
         retreived = em.execute([[7,8,9], [200,210,220]])
         assert np.allclose(list(retreived), [[7,8,9],[100,110,120]])
         expected_memory = [[[ 1,  2,  3],[4, 5, 6]],
@@ -954,11 +953,11 @@ class TestContentAddressableMemory:
         assert np.allclose(em.memory, expected_memory)
 
         # Attempt to overwrite with two matches should generate error
-        em.duplicate_keys = OVERWRITE
+        em.duplicate_entries_allowed = OVERWRITE
         with pytest.raises(FunctionError) as error_text:
             em.execute([[7,8,9], [200,210,220]])
         assert ('Attempt to store item' in str(error_text.value)
-                and 'with \'duplicate_keys\'=\'OVERWRITE\'' in str(error_text.value))
+                and 'with \'duplicate_entries_allowed\'=\'OVERWRITE\'' in str(error_text.value))
 
     def test_ContentAddressableMemory_max_entries(self):
 
@@ -966,8 +965,8 @@ class TestContentAddressableMemory:
                 initializer=[[[1,2,3], [4,5,6]],
                              [[7,8,9], [10,11,12]],
                              [[1,2,3], [100,101,102]]],
-                duplicate_keys=True,
-                equidistant_keys_select=RANDOM,
+                duplicate_entries_allowed=True,
+                equidistant_entries_select=RANDOM,
                 retrieval_prob = 1.0,
                 storage_prob = 1.0,
                 max_entries = 4
