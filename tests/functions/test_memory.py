@@ -564,10 +564,17 @@ class TestDictionaryMemory:
 # **********************************************************************************************************************
 
 def retrieve_label(retrieved, stimuli):
-    return [k for k,v in stimuli.items() if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
+    try:
+        return [k for k,v in stimuli.items() if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
+    except ValueError:
+        return [k for k,v in stimuli.items() if np.all(retrieved == v)] or [None]
 
 #region
 class TestContentAddressableMemory:
+
+    # FIX: Add tests for:
+    #      - error on different shaped entries; others (search for ContentAddressableMemoryError in code)
+
     # Test of ContentAddressableMemory without LLVM:
     def test_ContentAddressableMemory_with_initializer_and_equal_field_sizes(self):
 
@@ -590,7 +597,7 @@ class TestContentAddressableMemory:
         retrieved_labels=[]
         sorted_labels = sorted(stimuli.keys())
         for label in sorted_labels:
-            retrieved = [i for i in c.execute(stimuli[label])]
+            retrieved = [i for i in c(stimuli[label])]
             # Get label of retrieved item
             retrieved_label = retrieve_label(retrieved, stimuli)
             # Get distances of retrieved entry to all other entries and assert it has the minimum distance
@@ -604,7 +611,7 @@ class TestContentAddressableMemory:
         c.reset(np.array([stimuli['A'], stimuli['F']]))
         retrieved_labels=[]
         for label in sorted(stimuli.keys()):
-            retrieved = [i for i in c.execute(stimuli[label])]
+            retrieved = [i for i in c(stimuli[label])]
             retrieved_label = retrieve_label(retrieved, stimuli)
             # Get distances of retrieved entry to all other entries and assert it has the minimum distance
             distances = [Distance(metric=COSINE)([retrieved,stimuli[k]]) for k in sorted_labels]
@@ -635,13 +642,13 @@ class TestContentAddressableMemory:
         stim = 'A'
         text = "More than one item matched cue"
         with pytest.warns(UserWarning, match=text):
-            retrieved = c.execute(stimuli[stim])
+            retrieved = c(stimuli[stim])
         retrieved_label = retrieve_label(retrieved, stimuli)
         assert retrieved_label == [None]
         expected = np.array([[0,0,0],[0,0,0]])
         assert np.all(expected==retrieved)
 
-    def test_ContentAddressableMemory_with_initializer_and_key_size_diff_from_val_size(self):
+    def test_ContentAddressableMemory_with_initializer_and_diff_field_sizes(self):
 
         stimuli = {'A': [[1,2,3],[4,5,6,7]],
                    'B': [[8,9,10],[11,12,13,14]],
@@ -658,8 +665,7 @@ class TestContentAddressableMemory:
 
         retrieved_labels=[]
         for key in sorted(stimuli.keys()):
-            print(key)
-            retrieved = [i for i in c.execute(stimuli[key])]
+            retrieved = c(stimuli[key])
             retrieved_label = retrieve_label(retrieved, stimuli)
             retrieved_labels.append(retrieved_label)
         assert retrieved_labels == [['F'], ['A'], ['A'], ['A'], ['B'], ['F']]
@@ -681,7 +687,7 @@ class TestContentAddressableMemory:
 
         text = r'More than one item matched key \(\[1 2 3\]\) in memory for ContentAddressableMemory'
         with pytest.warns(UserWarning, match=text):
-            retrieved = c.execute(stimuli[stim])
+            retrieved = c(stimuli[stim])
 
         retrieved_label = retrieve_label(retrieved, stimuli)
         assert retrieved_label == [None]

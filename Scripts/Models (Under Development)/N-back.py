@@ -31,7 +31,7 @@ def n_back_model():
 
     # Episodic Memory, Decision and Control
     # em = EpisodicMemoryMechanism(name='EM', content_size=5, assoc_size=5)
-    em = EpisodicMemoryMechanism(name='EM', content_size=5, assoc_size=5,
+    em = EpisodicMemoryMechanism(name='EM', size=5,
                                  # function=DictionaryMemory(initializer=[[[0,0,0,0,0],[0,0,0,0,0]]])
                                  )
     ctl = ControlMechanism(control=(STORAGE_PROB, em))
@@ -96,7 +96,7 @@ def n_back_model():
     # comp.add_projection(MappingProjection(), decision, stim_input_layer)
 
     # comp._analyze_graph()
-    # comp.show_graph()
+    comp.show_graph()
     # comp.show_graph(show_cim=True,
     #                 show_node_structure=ALL,
     #                 show_projection_labels=True,
@@ -105,9 +105,9 @@ def n_back_model():
     #                 show_node_structure=ALL,
     #                 show_projection_labels=True,
     #                 show_dimensions=True)
-    comp.run(inputs={stim:[1,2,3,4,5],
-                     context:[6,7,8,9,10]},
-             report_output=ReportOutput.ON)
+    # comp.run(inputs={stim:[1,2,3,4,5],
+    #                  context:[6,7,8,9,10]},
+    #          report_output=ReportOutput.ON)
     # comp.run(inputs={a:2.5}, report_output=ReportOutput.FULL)
 #endregion
 n_back_model()
