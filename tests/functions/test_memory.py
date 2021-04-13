@@ -563,8 +563,11 @@ class TestDictionaryMemory:
 # TEST ContentAddressableMemory ****************************************************************************************
 # **********************************************************************************************************************
 
+def retrieve_label(retrieved, stimuli):
+    return [k for k,v in stimuli.items() if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
+
 #region
-class TestContentAddressableMemory:
+class TestContentAddressableMemory-
     # Test of ContentAddressableMemory without LLVM:
     def test_ContentAddressableMemory_with_initializer_and_equal_field_sizes(self):
 
@@ -589,8 +592,7 @@ class TestContentAddressableMemory:
         for label in sorted_labels:
             retrieved = [i for i in c.execute(stimuli[label])]
             # Get label of retrieved item
-            retrieved_label = [k for k,v in stimuli.items()
-                             if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
+            retrieved_label = retrieve_label(retrieved, stimuli)
             # Get distances of retrieved entry to all other entries and assert it has the minimum distance
             distances = [Distance(metric=COSINE)([retrieved,stimuli[k]]) for k in sorted_labels]
             min_idx = distances.index(min(distances))
@@ -603,8 +605,7 @@ class TestContentAddressableMemory:
         retrieved_labels=[]
         for label in sorted(stimuli.keys()):
             retrieved = [i for i in c.execute(stimuli[label])]
-            retrieved_label = [k for k,v in stimuli.items()
-                             if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
+            retrieved_label = retrieve_label(retrieved, stimuli)
             # Get distances of retrieved entry to all other entries and assert it has the minimum distance
             distances = [Distance(metric=COSINE)([retrieved,stimuli[k]]) for k in sorted_labels]
             min_idx = distances.index(min(distances))
@@ -626,8 +627,7 @@ class TestContentAddressableMemory:
 
         c.equidistant_entries_select = NEWEST  # Should return D
         retrieved = c.get_memory(stimuli[stim])
-        retrieved_label = [k for k,v in stimuli.items()
-                         if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
+        retrieved_label = retrieve_label(retrieved, stimuli)
         assert retrieved_label == ['D']
 
         # Test that after allowing dups and now disallowing them, warning is issued and memory with zeros is returned
@@ -636,8 +636,7 @@ class TestContentAddressableMemory:
         text = "More than one item matched cue"
         with pytest.warns(UserWarning, match=text):
             retrieved = c.execute(stimuli[stim])
-        retrieved_label = [k for k,v in stimuli.items()
-                         if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
+        retrieved_label = retrieve_label(retrieved, stimuli)
         assert retrieved_label == [None]
         expected = np.array([[0,0,0],[0,0,0]])
         assert np.all(expected==retrieved)
@@ -652,44 +651,40 @@ class TestContentAddressableMemory:
                    'F': [[10,10,30],[40,50,60,70]],
                    }
 
-        em = EpisodicMemoryMechanism(
-                content_size=3,
-                assoc_size=4,
-                function = ContentAddressableMemory(
-                        initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
-                        duplicate_entries_allowed=True,
-                        equidistant_entries_select=RANDOM)
-        )
+        c = ContentAddressableMemory(
+            initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
+            duplicate_entries_allowed=True,
+            equidistant_entries_select=RANDOM)
 
-        retrieved_keys=[]
+        retrieved_labels=[]
         for key in sorted(stimuli.keys()):
             print(key)
-            retrieved = [i for i in em.execute(stimuli[key])]
-            retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-            retrieved_keys.append(retrieved_key)
-        assert retrieved_keys == [['F'], ['A'], ['A'], ['A'], ['B'], ['F']]
+            retrieved = [i for i in c.execute(stimuli[key])]
+            retrieved_label = retrieve_label(retrieved, stimuli)
+            retrieved_labels.append(retrieved_label)
+        assert retrieved_labels == [['F'], ['A'], ['A'], ['A'], ['B'], ['F']]
 
         stim = 'C'
-        em.function.equidistant_entries_select = OLDEST
-        retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-        assert retrieved_key == ['A']
+        c.equidistant_entries_select = OLDEST
+        retrieved = [i for i in c.get_memory(stimuli[stim])]
+        retrieved_labels.append(retrieved_label)
+        assert retrieved_label == ['A']
 
-        em.function.equidistant_entries_select = NEWEST
-        retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-        assert retrieved_key == ['D']
+        c.equidistant_entries_select = NEWEST
+        retrieved = [i for i in c.get_memory(stimuli[stim])]
+        retrieved_label = retrieve_label(retrieved, stimuli)
+        assert retrieved_label == ['D']
 
         # Test that after allowing dups, warning is issued and memory with zeros is returned
-        em.function.duplicate_entries_allowed = False
+        c.duplicate_entries_allowed = False
         stim = 'A'
 
         text = r'More than one item matched key \(\[1 2 3\]\) in memory for ContentAddressableMemory'
         with pytest.warns(UserWarning, match=text):
-            retrieved = em.execute(stimuli[stim])
+            retrieved = c.execute(stimuli[stim])
 
-        retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
-        assert retrieved_key == [None]
+        retrieved_label = retrieve_label(retrieved, stimuli)
+        assert retrieved_label == [None]
         assert retrieved[0] == [0, 0, 0]
         assert retrieved[1] == [0, 0, 0, 0]
 
