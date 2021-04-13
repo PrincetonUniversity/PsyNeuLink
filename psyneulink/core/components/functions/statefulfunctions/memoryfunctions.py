@@ -2296,23 +2296,23 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         """
 
         self._validate_entry(entry, context)
-        # convert all fields and entry itself arrays
+        # convert all fields and entry itself to arrays
         # FIX: USE utilities.convert_to_nparray() HERE ONCE THAT CAN HANDLE LISTS (INCLUDING NESTED ONES)
         def convert_all_nested_items_in_entry_to_nparray(entry):
             for i, item in enumerate(entry.copy()):
                 if isinstance(item, list):
-                    item = convert_all_nested_items_in_entry_to_nparray(item)
+                    if all(isinstance(i, (int, float)) for i in item ):
+                        pass
+                    else:
+                        item = convert_all_nested_items_in_entry_to_nparray(item)
                 entry[i] = np.array(item)
             return entry
-
         # entry = np.array([np.array(m) for m in entry])
         entry = convert_all_nested_items_in_entry_to_nparray(entry)
 
         num_fields = self.parameters.memory_num_fields._get(context)
 
         # execute noise if it is a function
-        # FIX: WHAT IS "try_execute_param" DOING?
-        # noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), variable, context=context)
         noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), entry, context=context)
         if noise is not None:
             try:
