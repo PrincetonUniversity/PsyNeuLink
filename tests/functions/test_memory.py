@@ -567,7 +567,7 @@ def retrieve_label(retrieved, stimuli):
     return [k for k,v in stimuli.items() if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
 
 #region
-class TestContentAddressableMemory-
+class TestContentAddressableMemory:
     # Test of ContentAddressableMemory without LLVM:
     def test_ContentAddressableMemory_with_initializer_and_equal_field_sizes(self):
 
