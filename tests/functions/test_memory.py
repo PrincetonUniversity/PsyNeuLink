@@ -567,7 +567,14 @@ def retrieve_label(retrieved, stimuli):
     try:
         return [k for k,v in stimuli.items() if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
     except ValueError:
-        return [k for k,v in stimuli.items() if np.all(retrieved == v)] or [None]
+        # return [k for k,v in stimuli.items() if
+        #         np.all(np.append(np.array([i==j
+        #                                    for i,j in zip(retrieved,v)])[0],np.array([i==j
+        #                                                                               for i,j in zip(retrieved,
+        #                                                                                              v)])[0]))]
+        return [k for k,v in stimuli.items()
+                if np.array_equiv(retrieved, convert_all_elements_to_np_array(v))] or [None]
+
 
 #region
 class TestContentAddressableMemory:
@@ -650,12 +657,12 @@ class TestContentAddressableMemory:
 
     def test_ContentAddressableMemory_with_initializer_and_diff_field_sizes(self):
 
-        stimuli = {'A': [[1,2,3],[4,5,6,7]],
-                   'B': [[8,9,10],[11,12,13,14]],
-                   'C': [[1,2,3],[11,12,13,14]],
-                   'D': [[1,2,3],[21,22,23,24]],
-                   'E': [[9,8,4],[11,12,13,14]],
-                   'F': [[10,10,30],[40,50,60,70]],
+        stimuli = {'A': [[1.,2.,3.],[4.,5.,6.,7.]],
+                   'B': [[8.,9.,10.],[11.,12.,13.,14.]],
+                   'C': [[1.,2.,3.],[11.,12.,13.,14.]],
+                   'D': [[1.,2.,3.],[21.,22.,23.,24.]],
+                   'E': [[9.,8.,4.],[11.,12.,13.,14.]],
+                   'F': [[10.,10.,30.],[40.,50.,60.,70.]],
                    }
 
         c = ContentAddressableMemory(
