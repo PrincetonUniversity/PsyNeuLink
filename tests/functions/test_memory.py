@@ -564,17 +564,9 @@ class TestDictionaryMemory:
 # **********************************************************************************************************************
 
 def retrieve_label(retrieved, stimuli):
-    try:
-        return [k for k,v in stimuli.items() if np.all([v[i] == retrieved[i] for i in range(len(v))])] or [None]
-    except ValueError:
-        # return [k for k,v in stimuli.items() if
-        #         np.all(np.append(np.array([i==j
-        #                                    for i,j in zip(retrieved,v)])[0],np.array([i==j
-        #                                                                               for i,j in zip(retrieved,
-        #                                                                                              v)])[0]))]
-        return [k for k,v in stimuli.items()
-                if np.array_equiv(retrieved, convert_all_elements_to_np_array(v))] or [None]
-
+    return [k for k,v in stimuli.items()
+            if all(np.alltrue(a)
+                   for a in np.equal(retrieved,v, dtype=object))] or [None]
 
 #region
 class TestContentAddressableMemory:
@@ -670,21 +662,26 @@ class TestContentAddressableMemory:
             duplicate_entries_allowed=True,
             equidistant_entries_select=RANDOM)
 
+        # Run again to test re-initialization and random retrieval
+        c.reset(np.array([stimuli['A'], stimuli['F']]))
         retrieved_labels=[]
         for key in sorted(stimuli.keys()):
             retrieved = c(stimuli[key])
             retrieved_label = retrieve_label(retrieved, stimuli)
             retrieved_labels.append(retrieved_label)
-        assert retrieved_labels == [['F'], ['A'], ['A'], ['A'], ['B'], ['F']]
+        assert retrieved_labels == [['A'], ['A'], ['F'], ['C'], ['B'], ['F']]
 
+        c.distance_by_fields = True
+        c.distance_field_weights = [1,0]
         stim = 'C'
         c.equidistant_entries_select = OLDEST
-        retrieved = [i for i in c.get_memory(stimuli[stim])]
+        retrieved = c.get_memory(stimuli[stim])
+        retrieved_label = retrieve_label(retrieved, stimuli)
         retrieved_labels.append(retrieved_label)
         assert retrieved_label == ['A']
 
         c.equidistant_entries_select = NEWEST
-        retrieved = [i for i in c.get_memory(stimuli[stim])]
+        retrieved = c.get_memory(stimuli[stim])
         retrieved_label = retrieve_label(retrieved, stimuli)
         assert retrieved_label == ['D']
 
@@ -692,34 +689,35 @@ class TestContentAddressableMemory:
         c.duplicate_entries_allowed = False
         stim = 'A'
 
-        text = r'More than one item matched key \(\[1 2 3\]\) in memory for ContentAddressableMemory'
+        text = r'More than one item matched cue'
         with pytest.warns(UserWarning, match=text):
             retrieved = c(stimuli[stim])
 
         retrieved_label = retrieve_label(retrieved, stimuli)
         assert retrieved_label == [None]
-        assert retrieved[0] == [0, 0, 0]
-        assert retrieved[1] == [0, 0, 0, 0]
+        expected = np.array([np.array([0,0,0]),np.array([0,0,0,0])])
+        assert all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
 
-    # def test_ContentAddressableMemory_without_initializer_in_composition(self):
-    #
-    #     content = TransferMechanism(size=5)
-    #     assoc = TransferMechanism(size=3)
-    #     content_out = TransferMechanism(size=5)
-    #     assoc_out = TransferMechanism(size=3)
-    #
-    #     # Episodic Memory, Decision and Control
-    #     em = EpisodicMemoryMechanism(name='EM',
-    #                                  content_size=5, assoc_size=3)
-    #     comp = Composition()
-    #     comp.add_nodes([content, assoc, content_out, assoc_out, em])
-    #     comp.add_projection(MappingProjection(), content, em.input_ports[KEY_INPUT])
-    #     comp.add_projection(MappingProjection(), assoc, em.input_ports[VALUE_INPUT])
-    #     comp.add_projection(MappingProjection(), em.output_ports[KEY_OUTPUT], content_out)
-    #     comp.add_projection(MappingProjection(), em.output_ports[VALUE_OUTPUT], assoc_out)
-    #
-    #     comp.run(inputs={content:[1,2,3,4,5],
-    #                      assoc:[6,7,8]})
+    def test_ContentAddressableMemory_errors(self):
+
+        c = ContentAddressableMemory()
+        retrieved = c([[1,2,3],[4,5,6]])
+
+        with pytest.raises(FunctionError) as error_text:
+            retrieved = c([[[1,2,3],[4,5,6]]])
+        assert 'Attempt to store and/or retrieve an entry in ContentAddressableMemory that has ' \
+               'more than 2 dimensions (3);  try flattening innermost ones.' in str(error_text.value)
+
+
+        with pytest.raises(FunctionError) as error_text:
+            retrieved = c([[1,2,3],[4,5],[6,7]])
+        assert ('Attempt to store and/or retrieve entry in ContentAddressableMemory' in str(error_text.value)
+                and 'that has an incorrect number of fields' in str(error_text.value))
+
+        with pytest.raises(FunctionError) as error_text:
+            retrieved = c([[1,2,3],[4,5,6,7]])
+        assert 'Field 1 of entry ([array([1, 2, 3]) array([4, 5, 6, 7])]) has incorrect shape ((4,)) ' \
+               'for memory of \'ContentAddressableMemory Function-0\';  should be: (3,).' in str(error_text.value)
 
     def test_ContentAddressableMemory_without_initializer_and_key_size_same_as_val_size(self):
 

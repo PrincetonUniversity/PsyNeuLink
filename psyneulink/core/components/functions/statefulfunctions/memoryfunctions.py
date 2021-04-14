@@ -24,6 +24,8 @@ Functions that store and can return a record of their input.
 
 import numbers
 import warnings
+from itertools import combinations
+
 from collections import deque
 # from typing import Optional, Union, Literal, Callable
 from typing import Optional, Union
@@ -44,7 +46,8 @@ from psyneulink.core.globals.keywords import \
     MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
-from psyneulink.core.globals.utilities import all_within_range, convert_to_np_array, get_global_seed, convert_to_list
+from psyneulink.core.globals.utilities import \
+    all_within_range, convert_to_np_array, get_global_seed, convert_to_list, convert_all_elements_to_np_array
 
 __all__ = ['MemoryFunction', 'Buffer', 'DictionaryMemory', 'ContentAddressableMemory', 'RETRIEVAL_PROB', 'STORAGE_PROB']
 
@@ -2118,6 +2121,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         value of entry that best matches `variable <ContentAddressableMemory.variable>`  : 1d array
         """
 
+        variable = convert_all_elements_to_np_array(variable)
+
         retrieval_prob = np.array(self._get_current_parameter_value(RETRIEVAL_PROB, context)).astype(float)
         storage_prob = np.array(self._get_current_parameter_value(STORAGE_PROB, context)).astype(float)
 
@@ -2241,16 +2246,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         # More than one key identified
         else:
-            selected_keys = _memory
-            # Check for any duplicate keys in matches and, if they are not allowed, return zeros
+            # Check for any duplicate entries in matches and, if they are not allowed, return zeros
             if (not self.duplicate_entries_allowed
-                    # FIX: Seems this tests only for duplicates of first item in indices_of_selected_items
-                    #      (by checking it against others), but not duplicates among the others
-                    # and any(all(np.array_equal(i,j) for i,j in zip(selected_keys[indices_of_selected_items[0]],
-                    #                                        selected_keys[other]))
-                    #         for other in indices_of_selected_items[1:])):
-                    and any(self._is_duplicate(selected_keys[indices_of_selected_items[0]], selected_keys[other])
-                            for other in indices_of_selected_items[1:])):
+                    and any(self._is_duplicate(_memory[i],_memory[j])
+                            for i, j in combinations(indices_of_selected_items, 2))):
                 owner_str = ''
                 if self.owner:
                     owner_str = ' of self.owner.name'
