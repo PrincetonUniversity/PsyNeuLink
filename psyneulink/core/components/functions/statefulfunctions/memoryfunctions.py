@@ -2218,22 +2218,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         cue = np.array(cue)
         self._validate_entry(cue, context)
 
-
-        num_fields = self.parameters.memory_num_fields._get(context)
-        field_weights = (field_weights
-                         or self._get_current_parameter_value('distance_field_weights', context)
-                         or  np.array([1]*num_fields))
-        distance_fct = self.parameters.distance_function._get(context)
-
-        if self.parameters.distance_by_fields._get(context) is True:
-            # Get mean of field-wise distances between cue each entry in memory
-            distances_to_entries = []
-            for entry in _memory:
-                distances_to_entries.append(np.sum([distance_fct([cue[i], entry[i]]) * field_weights[i] / num_fields
-                                  for i in range(num_fields)]))
-        else:
-            # Get distances between entire cue vector and all that for each entry in memory
-            distances_to_entries = [distance_fct([np.hstack(cue), np.hstack(m)]) for m in _memory]
+        distances_to_entries, distances_by_fields = self._get_distances(cue, field_weights, _memory, context)
 
         # Get the best-match(es) in memory based on selection_function and return as non-zero value(s) in an array
         selection_array = self.selection_function(distances_to_entries, context=context)
@@ -2268,12 +2253,36 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         best_match = _memory[index_of_selected_item]
         self.parameters.distance.set(distances_to_entries[index_of_selected_item], context, override=True)
-        self.parameters.distances_by_field.set([distance_fct([cue[i], best_match[i]]) * field_weights[i]
-                                               for i in range(num_fields)],
-                                              context,override=True)
+        # self.parameters.distances_by_field.set([distance_fct([cue[i], best_match[i]]) * field_weights[i]
+        #                                        for i in range(num_fields)],
+        #                                       context,override=True)
+        self.parameters.distances_by_field.set(distances_by_fields, context,override=True)
         self.parameters.distances_to_entries.set(distances_to_entries, context,override=True)
         # Return entry
         return best_match
+
+    def _get_distances(self, cue, field_weights, _memory, context):
+
+        num_fields = self.parameters.memory_num_fields._get(context)
+        field_weights = (field_weights
+                         or self._get_current_parameter_value('distance_field_weights', context)
+                         or  np.array([1]*num_fields))
+        distance_fct = self.parameters.distance_function._get(context)
+
+        if self.parameters.distance_by_fields._get(context) is True:
+            # Get mean of field-wise distances between cue each entry in memory
+            distances_to_entries = []
+            for entry in _memory:
+                distances_to_entries.append(np.sum([distance_fct([cue[i], entry[i]]) * field_weights[i] / num_fields
+                                  for i in range(num_fields)]))
+        else:
+            # Get distances between entire cue vector and all that for each entry in memory
+            distances_to_entries = [distance_fct([np.hstack(cue), np.hstack(m)]) for m in _memory]
+
+        distances_by_fields = [distance_fct([cue[i], best_match[i]]) * field_weights[i]
+                               for i in range(num_fields)]
+
+        return distances_to_entries, distances_by_fields
 
     def _store_memory(self, entry:Union[list, np.ndarray], context) -> bool:
         """Add an entry to `memory <ContentAddressableMemory.memory>`
