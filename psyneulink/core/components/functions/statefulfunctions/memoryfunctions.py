@@ -1877,6 +1877,16 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         distances_by_field = Parameter([0], stateful=True, read_only=True)
         distances_to_entries = Parameter([0], stateful=True, read_only=True)
 
+        def _validate_retrieval_prob(self, retrieval_prob):
+            retrieval_prob = float(retrieval_prob)
+            if not all_within_range(retrieval_prob, 0, 1):
+                return f"{RETRIEVAL_PROB} must be a float in the interval [0,1]."
+
+        def _validate_storage_prob(self, storage_prob):
+            storage_prob = float(storage_prob)
+            if not all_within_range(storage_prob, 0, 1):
+                return f"{STORAGE_PROB} must be a float in the interval [0,1]."
+
     def __init__(self,
                  default_variable=None,
                  retrieval_prob: Optional[Union[int, float]]=None,
@@ -1915,6 +1925,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             duplicate_entries_allowed=duplicate_entries_allowed,
             duplicate_threshold=duplicate_threshold,
             equidistant_entries_select=equidistant_entries_select,
+            distance_function=distance_function,
             distance_by_fields=distance_by_fields,
             distance_field_weights=distance_field_weights,
             rate=rate,
@@ -1952,42 +1963,28 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             for i in range(self.defaults.max_entries)
         ])
 
-    def _validate_params(self, request_set, target_set=None, context=None):
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-
-        if RETRIEVAL_PROB in request_set and request_set[RETRIEVAL_PROB] is not None:
-            retrieval_prob = request_set[RETRIEVAL_PROB]
-            if not all_within_range(retrieval_prob, 0, 1):
-                raise FunctionError("{} arg of {} ({}) must be a float in the interval [0,1]".
-                                    format(repr(RETRIEVAL_PROB), self.__class___.__name__, retrieval_prob))
-
-        if STORAGE_PROB in request_set and request_set[STORAGE_PROB] is not None:
-            storage_prob = request_set[STORAGE_PROB]
-            if not all_within_range(storage_prob, 0, 1):
-                raise FunctionError("{} arg of {} ({}) must be a float in the interval [0,1]".
-                                    format(repr(STORAGE_PROB), self.__class___.__name__, storage_prob))
-
     def _validate(self, context=None):
         """Validate distance_function, selection_function and memory store"""
         distance_function = self.distance_function
-        test_var = self.defaults.variable
-        if isinstance(distance_function, type):
-            distance_function = distance_function(default_variable=test_var)
-            fct_msg = 'Function type'
-        else:
-            distance_function.defaults.variable = test_var
-            distance_function._instantiate_value(context)
-            fct_msg = 'Function'
-        try:
-            distance_result = distance_function(test_var, context=context)
-            if not np.isscalar(distance_result):
-                raise FunctionError("Value returned by {} specified for {} ({}) must return a scalar".
-                                    format(repr(DISTANCE_FUNCTION), self.__name__.__class__, distance_result))
-        except:
-            raise FunctionError("{} specified for {} arg of {} ({}) "
-                                "must accept a list with two 1d arrays or a 2d array as its argument".
-                                format(fct_msg, repr(DISTANCE_FUNCTION), self.__class__,
-                                       distance_function))
+        # Try actual default_variable as well as standard cases for generality
+        for test_var in [self.defaults.variable, [[0],[0]], [[0,0],[0,0]] ]:
+            if isinstance(distance_function, type):
+                distance_function = distance_function(default_variable=test_var)
+                fct_msg = 'Function type'
+            else:
+                distance_function.defaults.variable = test_var
+                distance_function._instantiate_value(context)
+                fct_msg = 'Function'
+            try:
+                distance_result = distance_function([[0,0],[0,0]], context=context)
+                if not np.isscalar(distance_result):
+                    raise FunctionError("Value returned by {} specified for {} ({}) must return a scalar".
+                                        format(repr(DISTANCE_FUNCTION), self.__name__.__class__, distance_result))
+            except:
+                raise FunctionError("{} specified for {} arg of {} ({}) "
+                                    "must accept an array with two lists or 1d arrays, or a 2d array, as its argument".
+                                    format(fct_msg, repr(DISTANCE_FUNCTION), self.__class__,
+                                           distance_function))
 
         # FIX: 4/5/21 SHOULD VALIDATE NOISE AND RATE HERE AS WELL?
 
@@ -2220,6 +2217,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         cue = np.array(cue)
         self._validate_entry(cue, context)
+
+
         num_fields = self.parameters.memory_num_fields._get(context)
         field_weights = (field_weights
                          or self._get_current_parameter_value('distance_field_weights', context)
