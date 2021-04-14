@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.8.7.1+29.g4fd3ed6888 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.8.7.1+31.g4d26bad6ed documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+29
+                  0.8.7.1+31
                 </div>
               
             
@@ -365,6 +365,29 @@ corresponding to its function’s
 <a class="reference internal" href="TransferFunctions.html#transferwithcosts"><span class="std std-ref">intensity_cost_fct</span></a> parameter, because a
 ControlSignal’s function is always a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.TransferWithCosts" title="psyneulink.core.components.functions.transferfunctions.TransferWithCosts"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TransferWithCosts</span></code></a> and is
 not user-specifiable.</p>
+</div></blockquote>
+</section>
+</div>
+<div class="technical-note docutils container">
+<section id="user-specified">
+<h4>_user_specified<a class="headerlink" href="#user-specified" title="Permalink to this headline">¶</a></h4>
+<blockquote>
+<div><p>Currently, default argument values for __init__ methods of
+Components are all None to allow distinguishing between a
+default value a user actually passed in during construction and
+a default automatically assigned. Consider</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p><code class="xref any docutils literal notranslate"><span class="pre">pnl.TransferMechanism(noise=[[0,</span> <span class="pre">0]])</span></code></p></li>
+<li><p><code class="xref any docutils literal notranslate"><span class="pre">pnl.TransferMechanism(default_variable=[[0]],</span> <span class="pre">noise=[[0,</span> <span class="pre">0]])</span></code></p></li>
+</ol>
+</div></blockquote>
+<p>In case 1, the default variable is not specified by the user,
+and is <code class="xref any docutils literal notranslate"><span class="pre">flexible</span></code> as a result.
+Since noise indicates a shape, <code class="xref any docutils literal notranslate"><span class="pre">[[0,</span> <span class="pre">0]]</span></code> is implicitly assigned
+as the Mechanism’s default variable. This is intended as a
+convenience specification. In case 2, the variable and noise are
+incompatible, and an error is raised.</p>
 </div></blockquote>
 </section>
 </div>
