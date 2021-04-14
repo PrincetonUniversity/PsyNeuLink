@@ -24,9 +24,8 @@ Functions that store and can return a record of their input.
 
 import numbers
 import warnings
-from itertools import combinations
-
 from collections import deque
+from itertools import combinations
 # from typing import Optional, Union, Literal, Callable
 from typing import Optional, Union
 
@@ -215,17 +214,22 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  # default_variable=None,   # Changed to [] because None conflicts with initializer
                  rate=None,
                  noise=None,
+                 # rate:Optional[Union[int, float, np.ndarray]]=None,
+                 # noise:Optional[Union[int, float, np.ndarray]]=None,
                  # rate: parameter_spec=1.0,
                  # noise: parameter_spec=0.0,
-                 # rate: tc.optional(tc.optional(tc.any(int, float))) = None,         # Changed to 1.0 because None fails validation
-                 # noise: tc.optional(tc.optional(tc.any(int, float, callable))) = None,    # Changed to 0.0 - None fails validation
-                 # rate: tc.optional(tc.any(int, float, list, np.ndarray)) = 1.0,
-                 # noise: tc.optional(tc.any(int, float, list, np.ndarray, callable)) = 0.0,
-                 history: tc.optional(tc.optional(int)) = None,
+                 # rate: Optional[Union(int, float]] = None,  # Changed to 1.0: None fails validation
+                 # noise: Optional[Union[int, float, callable]] = None, # Changed to 0.0 - None fails validation
+                 # rate: Optional[Union[int, float, list, np.ndarray]] = 1.0,
+                 # noise: Optional[Union[int, float, list, np.ndarray, callable]] = 0.0,
+                 history:tc.optional(int)=None,
+                 # history: Optional[int] = None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: tc.optional(dict) = None,
+                 # params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs: tc.optional(is_pref_set) = None
+                 ):
 
         super().__init__(
             default_variable=default_variable,
@@ -1107,7 +1111,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
             memory = self.get_memory(key, context)
         else:
-            # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OutputPort FROM LAST TRIAL)?
+            # QUESTION: SHOULD IT RETURN 0's VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE & OutputPort FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_PORT
             #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
             memory = [[0]* self.parameters.key_size._get(context), [0]* self.parameters.val_size._get(context)]
@@ -1281,7 +1285,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
     @tc.typecheck
     @handle_external_context()
     def add_to_memory(self, memories:tc.any(list, np.ndarray), context=None):
-        """Add one or more key-value pairs into `memory <ContentAddressableMememory.memory>`
+        """Add one or more key-value pairs into `memory <ContentAddressableMemory.memory>`
 
         Arguments
         ---------
@@ -1554,8 +1558,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     duplicate_threshold : float : default 0
         specifies how similar `variable <ContentAddressableMemory.variable>` must be to an entry in `memory
         `<ContentAddressableMemory.memory>` based on `distance_function <ContentAddressableMemory.distance_function>`
-        to be considered a duplicate (see `duplicate_entries_allowed <ContentAddressableMemory.duplicate_entries_allowed>` for
-        additional details).
+        to be considered a duplicate (see `duplicate_entries_allowed
+        <ContentAddressableMemory.duplicate_entries_allowed>` for additional details).
 
     equidistant_entries_select:  RANDOM | OLDEST | NEWEST : default RANDOM
         specifies which entry in `memory <ContentAddressableMemory.memory>` is chosen for retrieval if two or more
@@ -1675,8 +1679,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     duplicate_threshold : float
         determines how similar `variable <ContentAddressableMemory.variable>` must be to an entry in `memory
         `<ContentAddressableMemory.memory>` based on `distance_function <ContentAddressableMemory.distance_function>`
-        to be considered a duplicate (see `duplicate_entries_allowed <ContentAddressableMemory.duplicate_entries_allowed>` for
-        additional details).
+        to be considered a duplicate (see `duplicate_entries_allowed
+        <ContentAddressableMemory.duplicate_entries_allowed>` for additional details).
 
     equidistant_entries_select:  RANDOM | OLDEST | NEWEST
         determines which entry is retrieved when duplicate entries are identified or are indistinguishable by the
@@ -2218,7 +2222,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         cue = np.array(cue)
         self._validate_entry(cue, context)
 
-        distances_to_entries, distances_by_fields = self._get_distances(cue, field_weights, _memory, context)
+        # Get mean of field-wise distances between cue each entry in memory
+        distances_to_entries = []
+        for entry in _memory:
+            distances_to_entries.append(self._get_distance(cue, entry, field_weights, 'full_entry', context))
 
         # Get the best-match(es) in memory based on selection_function and return as non-zero value(s) in an array
         selection_array = self.selection_function(distances_to_entries, context=context)
@@ -2252,16 +2259,34 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                     f'\'equidistant_entries_select parameter of {self.name} for {self.owner.name}'
 
         best_match = _memory[index_of_selected_item]
+        best_match_distances = self._get_distance(cue,best_match,field_weights, 'per_field',context)
         self.parameters.distance.set(distances_to_entries[index_of_selected_item], context, override=True)
-        # self.parameters.distances_by_field.set([distance_fct([cue[i], best_match[i]]) * field_weights[i]
-        #                                        for i in range(num_fields)],
-        #                                       context,override=True)
-        self.parameters.distances_by_field.set(distances_by_fields, context,override=True)
+        self.parameters.distances_by_field.set(best_match_distances,override=True)
         self.parameters.distances_to_entries.set(distances_to_entries, context,override=True)
         # Return entry
         return best_match
 
-    def _get_distances(self, cue, field_weights, _memory, context):
+    def _get_distance(self, cue:Union[list, np.ndarray],
+                      candidate:Union[list, np.ndarray],
+                      field_weights:np.ndarray,
+                      granularity:str,
+                      # granularity:Literal[Union['full_entry', 'per_field']],
+                      context) -> Union[float, np.ndarray]:
+        """Get distance of cue from candidate using `distance_function <ContentAddressableMemory.distance_function>`.
+
+        - If granularity=='full_entry':
+            returns *single scalar distance* computed over full cue and candidate entries; 
+                if `distance_by_fields <ContentAddressMemory.distance_by_fields>` is:
+                  - False -- computes distance over cue and candidate vectors ignoring fields;  
+                  - True -- computes mean of field-wise distances, weighted by `distance_field_weights 
+                        <ContentAddressMemory.distance_field_weights>`.
+        - if granularity=='per_field':
+            returns *array of distances* computed field-wise (hadamard) for cue and candidate entries.
+
+        :returns    
+            scalar if granularity=='full_entry';
+            array if granularity=='per_fields'  
+        """
 
         num_fields = self.parameters.memory_num_fields._get(context)
         field_weights = (field_weights
@@ -2269,20 +2294,23 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                          or  np.array([1]*num_fields))
         distance_fct = self.parameters.distance_function._get(context)
 
-        if self.parameters.distance_by_fields._get(context) is True:
-            # Get mean of field-wise distances between cue each entry in memory
-            distances_to_entries = []
-            for entry in _memory:
-                distances_to_entries.append(np.sum([distance_fct([cue[i], entry[i]]) * field_weights[i] / num_fields
-                                  for i in range(num_fields)]))
+        if granularity is 'per_field':
+            return [distance_fct([cue[i], candidate[i]]) * field_weights[i] for i in range(num_fields)]
+
+        elif granularity is 'full_entry':
+            if self.parameters.distance_by_fields._get(context) is True:
+                # Get mean of field-wise distances between cue each entry in memory
+                distance = np.sum([distance_fct([cue[i], candidate[i]]) * field_weights[i] / num_fields
+                               for i in range(num_fields)])
+            else:
+                # Get distances between entire cue vector and all that for each entry in memory
+                distance = distance_fct([np.hstack(cue), np.hstack(candidate)])
+            return distance
+
         else:
-            # Get distances between entire cue vector and all that for each entry in memory
-            distances_to_entries = [distance_fct([np.hstack(cue), np.hstack(m)]) for m in _memory]
-
-        distances_by_fields = [distance_fct([cue[i], best_match[i]]) * field_weights[i]
-                               for i in range(num_fields)]
-
-        return distances_to_entries, distances_by_fields
+            assert False, f"PROGRAM ERROR: call to 'ContentAddressableMemory.get_distance()' method " \
+                          f"with invalid 'granularity' argument ({granularity});  " \
+                          f"should be 'full_entry' or 'per_field."
 
     def _store_memory(self, entry:Union[list, np.ndarray], context) -> bool:
         """Add an entry to `memory <ContentAddressableMemory.memory>`
