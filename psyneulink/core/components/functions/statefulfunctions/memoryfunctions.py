@@ -2288,23 +2288,26 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             array if granularity=='per_fields'  
         """
 
-        num_fields = self.parameters.memory_num_fields._get(context)
-        field_weights = (field_weights
-                         or self._get_current_parameter_value('distance_field_weights', context)
-                         or  np.array([1]*num_fields))
         distance_fct = self.parameters.distance_function._get(context)
+        num_fields = self.parameters.memory_num_fields._get(context)
+        field_weights = np.array(field_weights
+                                 or self._get_current_parameter_value('distance_field_weights', context)
+                                 or  [1])
+        field_weights = field_weights[0] if np.all(field_weights[0]==field_weights) else field_weights
+        distance_by_fields = not np.isscalar(field_weights)
 
         if granularity is 'per_field':
-            return [distance_fct([cue[i], candidate[i]]) * field_weights[i] for i in range(num_fields)]
+            return np.array([distance_fct([cue[i], candidate[i]]) for i in range(num_fields)]) * field_weights
 
         elif granularity is 'full_entry':
-            if self.parameters.distance_by_fields._get(context) is True:
-                # Get mean of field-wise distances between cue each entry in memory
-                distance = np.sum([distance_fct([cue[i], candidate[i]]) * field_weights[i] / num_fields
-                               for i in range(num_fields)])
+            if distance_by_fields:
+                # Get mean of field-wise distances between cue each entry in memory, weighted by field_weights
+                distance = np.sum([distance_fct([cue[i], candidate[i]]) * field_weights[i]
+                                   for i in range(num_fields)]) / num_fields
             else:
                 # Get distances between entire cue vector and all that for each entry in memory
-                distance = distance_fct([np.hstack(cue), np.hstack(candidate)])
+                #    Note: in this case, field_weights is just a scalar coefficient
+                distance = distance_fct([np.hstack(cue), np.hstack(candidate)]) * field_weights
             return distance
 
         else:
