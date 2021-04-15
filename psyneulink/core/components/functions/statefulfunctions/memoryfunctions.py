@@ -2504,16 +2504,27 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         """
         memories = self._parse_memories(entries, 'add_to_memory', context)
         # FIX: ??IS THIS NEEDED (IS IT JUST A HOLDOVER FROM KEYS OR NEEDED FOR LIST-T0-LIST COMPARISON BELOW?):
-        memories = [list(m) for m in memories]
+        entries = [list(m) for m in memories]
         fields = convert_to_list(fields)
 
-        for i, entry in enumerate(entries):
-            for j, entry in enumerate(self._memory):
-                if (entry[i] == entry[j]
-                        or fields and all(entry[i][f] == entry[j][f] for f in fields)):
-                    new_memory_bank = np.delete(self._memory,j,axis=0)
-                    self._memory = np.array(new_memory_bank)
-                    self.parameters.previous_value._set(self._memory, context)
+        # # MODIFIED 4/15/21 OLD:
+        # for i, entry in enumerate(entries):
+        #     for j, entry in enumerate(self._memory):
+        #         if (entry[i] == entry[j]
+        #                 or fields and all(entry[i][f] == entry[j][f] for f in fields)):
+        #             new_memory_bank = np.delete(self._memory,j,axis=0)
+        #             self._memory = np.array(new_memory_bank)
+        #             self.parameters.previous_value._set(self._memory, context)
+        # MODIFIED 4/15/21 NEW:
+        existing_memory = self.parameters.previous_value._get(context)
+        pruned_memory = existing_memory.copy()
+        for entry, memory in product(entries, existing_memory):
+            if (np.all(entry == memory)
+                    or fields and all(entry[f] == memory[f] for f in fields)):
+                pruned_memory = np.delete(pruned_memory, pruned_memory.tolist().index(memory.tolist()), axis=0)
+        self._memory = np.array(pruned_memory)
+        self.parameters.previous_value._set(self._memory, context)
+        # MODIFIED 4/15/21 END
 
     def _parse_memories(self, entries, method, context=None):
         """Parse passing of single vs. multiple memories, validate memories, and return ndarray

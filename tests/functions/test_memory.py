@@ -929,8 +929,6 @@ class TestContentAddressableMemory:
             )
         assert np.allclose(c.memory, np.array([[[1, 2, 3], [4, 5, 6]]]))
 
-# FIX: THE ONES BELOW STILL NEED TO BE UPDATED: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
     def test_ContentAddressableMemory_add_and_delete_from_memory(self):
 
         c = ContentAddressableMemory(
@@ -948,7 +946,7 @@ class TestContentAddressableMemory:
                            [[ 7,  8,  9],[10, 11, 12]],
                            [[10, 20, 30],[40, 50, 60]],
                            [[11, 21, 31],[41, 51, 61]]]
-        assert np.allclose(em.memory, expected_memory)
+        assert np.allclose(c.memory, expected_memory)
 
         c.delete_from_memory([[[1,2,3],[4,5,6]]])
         expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
@@ -962,39 +960,33 @@ class TestContentAddressableMemory:
                            [[10, 20, 30],[40, 50, 60]],
                            [[11, 21, 31],[41, 51, 61]],
                            [[ 1,  2,  3],[100,101,102]]]
-        assert np.allclose(em.memory, expected_memory)
+        assert np.allclose(c.memory, expected_memory)
 
         c.delete_from_memory([[1,2,3],[100,101,102]])
         expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
                            [[10, 20, 30],[40, 50, 60]],
                            [[11, 21, 31],[41, 51, 61]]]
-        assert np.allclose(em.memory, expected_memory)
+        assert np.allclose(c.memory, expected_memory)
 
         # Test adding memory with different size value
-        c.add_to_memory([[1,2,3],[100,101,102,103]])
-        expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
-                           [[10, 20, 30],[40, 50, 60]],
-                           [[11, 21, 31],[41, 51, 61]],
-                           [[ 1,  2,  3],[100,101,102,103]]]
-        for m,e in zip(em.memory,expected_memory):
-            for i,j in zip(m,e):
-                assert np.allclose(i,j)
+        with pytest.raises(FunctionError) as error_text:
+            c.add_to_memory([[1,2,3],[100,101,102,103]])
+        assert "Field 1 of entry ([array([1, 2, 3]) array([100, 101, 102, 103])]) has incorrect shape ((4,)) " \
+               "for memory of 'ContentAddressableMemory Function-0';  should be: (3,)." in str(error_text.value)
 
-        # Test adding memory with different size value as np.array
-        c.add_to_memory(np.array([[1,2,3],[200,201,202,203]], dtype=object))
-        expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
-                           [[10, 20, 30],[40, 50, 60]],
-                           [[11, 21, 31],[41, 51, 61]],
-                           [[ 1,  2,  3],[100,101,102,103]],
-                           [[ 1,  2,  3],[200,201,202,203]]]
-        for m,e in zip(c.memory,expected_memory):
-            for i,j in zip(m,e):
-                assert np.allclose(i,j)
-
-        # Test error for illegal key:
+        # Test adding memory in first field of np.ndarray with wrong size:
         with pytest.raises(FunctionError) as error_text:
             c.add_to_memory(np.array([[1,2],[200,201,202,203]], dtype=object))
-        assert "Length of 'key'" in str(error_text.value) and "must be same as others in the dict" in str(error_text.value)
+        assert "Field 0 of entry ([array([1, 2]) array([200, 201, 202, 203])]) has incorrect shape ((2,)) " \
+               "for memory of 'ContentAddressableMemory Function-0';  should be: (3,)." in str(error_text.value)
+
+        # Test adding memory in second field of np.ndarray with wrong size:
+        with pytest.raises(FunctionError) as error_text:
+            c.add_to_memory(np.array([[1,2,3],[200,201,202,203]], dtype=object))
+        assert "Field 1 of entry ([array([1, 2, 3]) array([200, 201, 202, 203])]) has incorrect shape ((4,)) " \
+               "for memory of 'ContentAddressableMemory Function-0';  should be: (3,)." in str(error_text.value)
+
+# FIX: THE ONES BELOW STILL NEED TO BE UPDATED: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def test_ContentAddressableMemory_overwrite_mode(self):
 
