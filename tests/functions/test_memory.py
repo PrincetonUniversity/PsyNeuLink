@@ -933,15 +933,15 @@ class TestContentAddressableMemory:
 
     def test_ContentAddressableMemory_add_and_delete_from_memory(self):
 
-        em = ContentAddressableMemory(
-                initializer=[[[1,2,3], [4,5,6]],
-                             [[7,8,9], [10,11,12]]],
-                duplicate_entries_allowed=True,
-                equidistant_entries_select=RANDOM,
-                retrieval_prob = 1.0,
-                storage_prob = 1.0
+        c = ContentAddressableMemory(
+            initializer=[[[1,2,3], [4,5,6]],
+                         [[7,8,9], [10,11,12]]],
+            duplicate_entries_allowed=True,
+            equidistant_entries_select=RANDOM,
+            retrieval_prob = 1.0,
+            storage_prob = 1.0
         )
-        em.add_to_memory([[[10,20,30],[40,50,60]],
+        c.add_to_memory([[[10,20,30],[40,50,60]],
                          [[11,21,31],[41,51,61]]])
 
         expected_memory = [[[ 1,  2,  3],[ 4,  5,  6]],
@@ -950,28 +950,28 @@ class TestContentAddressableMemory:
                            [[11, 21, 31],[41, 51, 61]]]
         assert np.allclose(em.memory, expected_memory)
 
-        em.delete_from_memory([[[1,2,3],[4,5,6]]])
+        c.delete_from_memory([[[1,2,3],[4,5,6]]])
         expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
                            [[10, 20, 30],[40, 50, 60]],
                            [[11, 21, 31],[41, 51, 61]]]
-        assert np.allclose(em.memory, expected_memory)
+        assert np.allclose(c.memory, expected_memory)
 
         # Test adding and deleting a single memory
-        em.add_to_memory([[1,2,3],[100,101,102]])
+        c.add_to_memory([[1,2,3],[100,101,102]])
         expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
                            [[10, 20, 30],[40, 50, 60]],
                            [[11, 21, 31],[41, 51, 61]],
                            [[ 1,  2,  3],[100,101,102]]]
         assert np.allclose(em.memory, expected_memory)
 
-        em.delete_from_memory([[1,2,3],[100,101,102]])
+        c.delete_from_memory([[1,2,3],[100,101,102]])
         expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
                            [[10, 20, 30],[40, 50, 60]],
                            [[11, 21, 31],[41, 51, 61]]]
         assert np.allclose(em.memory, expected_memory)
 
         # Test adding memory with different size value
-        em.add_to_memory([[1,2,3],[100,101,102,103]])
+        c.add_to_memory([[1,2,3],[100,101,102,103]])
         expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
                            [[10, 20, 30],[40, 50, 60]],
                            [[11, 21, 31],[41, 51, 61]],
@@ -981,19 +981,19 @@ class TestContentAddressableMemory:
                 assert np.allclose(i,j)
 
         # Test adding memory with different size value as np.array
-        em.add_to_memory(np.array([[1,2,3],[200,201,202,203]], dtype=object))
+        c.add_to_memory(np.array([[1,2,3],[200,201,202,203]], dtype=object))
         expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
                            [[10, 20, 30],[40, 50, 60]],
                            [[11, 21, 31],[41, 51, 61]],
                            [[ 1,  2,  3],[100,101,102,103]],
                            [[ 1,  2,  3],[200,201,202,203]]]
-        for m,e in zip(em.memory,expected_memory):
+        for m,e in zip(c.memory,expected_memory):
             for i,j in zip(m,e):
                 assert np.allclose(i,j)
 
         # Test error for illegal key:
         with pytest.raises(FunctionError) as error_text:
-            em.add_to_memory(np.array([[1,2],[200,201,202,203]], dtype=object))
+            c.add_to_memory(np.array([[1,2],[200,201,202,203]], dtype=object))
         assert "Length of 'key'" in str(error_text.value) and "must be same as others in the dict" in str(error_text.value)
 
     def test_ContentAddressableMemory_overwrite_mode(self):
