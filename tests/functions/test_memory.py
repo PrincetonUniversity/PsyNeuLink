@@ -866,8 +866,6 @@ class TestContentAddressableMemory:
         expected = np.array([np.array([0,0,0]),np.array([0,0,0])])
         assert all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
 
-# FIX: THE ONES BELOW STILL NEED TO BE UPDATED: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
     def test_ContentAddressableMemory_without_initializer_and_key_size_diff_from_val_size(self):
 
         stimuli = {'A': [[1,2,3],[4,5,6,7]],
@@ -917,23 +915,20 @@ class TestContentAddressableMemory:
         assert retrieved[0] == [0, 0, 0]
         assert retrieved[1] == [0, 0, 0, 0]
 
+# FIX: THE ONES BELOW STILL NEED TO BE UPDATED: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     def test_ContentAddressableMemory_with_duplicate_entry_in_initializer_warning(self):
 
         regexp = r'Attempt to initialize memory of ContentAddressableMemory with an entry \([[1 2 3]'
         with pytest.warns(UserWarning, match=regexp):
-            em = EpisodicMemoryMechanism(
-                    name='EPISODIC MEMORY MECH',
-                    content_size=3,
-                    assoc_size=3,
-                    function = ContentAddressableMemory(
-                            initializer=np.array([[[1,2,3], [4,5,6]],
-                                                  [[1,2,3], [7,8,9]]]),
-                            duplicate_entries_allowed=False,
-                            equidistant_entries_select=RANDOM,
-                            retrieval_prob = 1.0
-                    )
+            c = ContentAddressableMemory(
+                initializer=np.array([[[1,2,3], [4,5,6]],
+                                      [[1,2,3], [7,8,9]]]),
+                duplicate_entries_allowed=False,
+                equidistant_entries_select=RANDOM,
+                retrieval_prob = 1.0
             )
-        assert np.allclose(em.memory, np.array([[[1, 2, 3], [4, 5, 6]]]))
+        assert np.allclose(c.memory, np.array([[[1, 2, 3], [4, 5, 6]]]))
 
     def test_ContentAddressableMemory_add_and_delete_from_memory(self):
 
