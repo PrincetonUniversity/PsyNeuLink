@@ -618,7 +618,6 @@ class TestContentAddressableMemory:
         assert retrieved_labels == [['A'], ['A'], ['F'], ['C'], ['B'], ['F']]
 
         # Test  restricting retrieval to only 1st field (which has duplicate values) and selecting for OLDEST
-        c.distance_by_fields = True
         c.distance_field_weights = [1,0]
         stim = 'C' # Has same 1st field as A (older) and D (newer)
 
@@ -668,7 +667,6 @@ class TestContentAddressableMemory:
             retrieved_labels.append(retrieved_label)
         assert retrieved_labels == [['A'], ['A'], ['F'], ['C'], ['B'], ['F']]
 
-        c.distance_by_fields = True
         c.distance_field_weights = [1,0]
         stim = 'C'
         c.equidistant_entries_select = OLDEST
