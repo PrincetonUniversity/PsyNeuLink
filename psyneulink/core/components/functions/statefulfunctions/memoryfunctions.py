@@ -25,7 +25,7 @@ Functions that store and can return a record of their input.
 import numbers
 import warnings
 from collections import deque
-from itertools import combinations
+from itertools import combinations, product
 # from typing import Optional, Union, Literal, Callable
 from typing import Optional, Union
 
@@ -1954,48 +1954,79 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     def _validate(self, context=None):
         """Validate distance_function, selection_function and memory store"""
         distance_function = self.distance_function
+
+        # MODIFIED 4/14/21 OLD:
+        # # Try actual default_variable as well as standard cases for generality
+        # for test_var in [self.defaults.variable, [[0],[0]], [[0,0],[0,0]] ]:
+        #     if isinstance(distance_function, type):
+        #         distance_function = distance_function(default_variable=test_var)
+        #         fct_msg = 'Function type'
+        #     else:
+        #         distance_function.defaults.variable = test_var
+        #         distance_function._instantiate_value(context)
+        #         fct_msg = 'Function'
+        #     try:
+        #         distance_result = distance_function([[0,0],[0,0]], context=context)
+        #         if not np.isscalar(distance_result):
+        #             raise FunctionError("Value returned by {} specified for {} ({}) must return a scalar".
+        #                                 format(repr(DISTANCE_FUNCTION), self.__name__.__class__, distance_result))
+        #     except:
+        #         raise FunctionError("{} specified for {} arg of {} ({}) "
+        #                             "must accept an array with two lists or 1d arrays, or a 2d array, as its argument".
+        #                             format(fct_msg, repr(DISTANCE_FUNCTION), self.__class__,
+        #                                    distance_function))
+        # MODIFIED 4/14/21 NEW:
         # Try actual default_variable as well as standard cases for generality
-        for test_var in [self.defaults.variable, [[0],[0]], [[0,0],[0,0]] ]:
-            if isinstance(distance_function, type):
-                distance_function = distance_function(default_variable=test_var)
-                fct_msg = 'Function type'
-            else:
-                distance_function.defaults.variable = test_var
-                distance_function._instantiate_value(context)
-                fct_msg = 'Function'
-            try:
-                distance_result = distance_function([[0,0],[0,0]], context=context)
-                if not np.isscalar(distance_result):
-                    raise FunctionError("Value returned by {} specified for {} ({}) must return a scalar".
-                                        format(repr(DISTANCE_FUNCTION), self.__name__.__class__, distance_result))
-            except:
-                raise FunctionError("{} specified for {} arg of {} ({}) "
-                                    "must accept an array with two lists or 1d arrays, or a 2d array, as its argument".
-                                    format(fct_msg, repr(DISTANCE_FUNCTION), self.__class__,
-                                           distance_function))
-
-        # FIX: 4/5/21 SHOULD VALIDATE NOISE AND RATE HERE AS WELL?
-
-        # Default to full memory
-        selection_function = self.selection_function
-        test_var = np.asfarray([distance_result if i==0
-                                else np.zeros_like(distance_result)
-                                for i in range(self._get_current_parameter_value('max_entries', context))])
-        if isinstance(selection_function, type):
-            selection_function = selection_function(default_variable=test_var, context=context)
-            fct_string = 'Function type'
+        test_var = self.defaults.variable
+        if isinstance(distance_function, type):
+            distance_function = distance_function(default_variable=test_var)
+            fct_msg = 'Function type'
         else:
-            selection_function.defaults.variable = test_var
-            selection_function._instantiate_value(context)
-            fct_string = 'Function'
-        try:
-            result = np.asarray(selection_function(test_var, context=context))
-        except e:
-            raise FunctionError(f'{fct_string} specified for {repr(SELECTION_FUNCTION)} arg of {self.__class__} '
-                                f'({selection_function}) must accept a 1d array as its argument')
-        if result.shape != test_var.shape:
-            raise FunctionError(f'Value returned by {repr(SELECTION_FUNCTION)} specified for {self.__class__} '
-                                f'({result}) must return an array of the same length it receives')
+            distance_function.defaults.variable = test_var
+            distance_function._instantiate_value(context)
+            fct_msg = 'Function'
+        field_wts_homog = np.ones_like(test_var)
+        field_wts_heterog = np.full_like(test_var,range(0,len(test_var)))
+
+        # for granularity, field_weights in product(['full_entry', 'per_field'],[field_wts_homog, field_wts_heterog]):
+        #     try:
+        #         distance_result = self._get_distance(test_var, test_var, field_weights, granularity, context=context)
+        #         if granularity is 'full_entry' and not np.isscalar(distance_result):
+        #             raise FunctionError(f"Value returned by {repr(DISTANCE_FUNCTION)} specified for "
+        #                                 f"{self.__name__.__class__} ({distance_result}) must return a scalar if "
+        #                                 f"field_width is homogenous (i.e., all elements are the same.")
+        #         if granularity is 'per_field' and not len(distance_result)==len(field_weights):
+        #             raise FunctionError(f"Value returned by {repr(DISTANCE_FUNCTION)} specified for "
+        #                                 f"{self.__name__.__class__} ({distance_result}) must return an array "
+        #                                 f"if field_width is a non-homogenous list or array"
+        #                                 f"(i.e., not all elements are the same.")
+        #     except:
+        #         raise FunctionError(f"{fct_msg} specified for {repr(DISTANCE_FUNCTION)} arg of "
+        #                             f"{self.__class__.__name__} ({distance_function}) must accept an array "
+        #                             f"with two lists or 1d arrays, or a 2d array, as its argument.")
+        #
+        # # FIX: 4/5/21 SHOULD VALIDATE NOISE AND RATE HERE AS WELL?
+        #
+        # # Default to full memory
+        # selection_function = self.selection_function
+        # test_var = np.asfarray([distance_result if i==0
+        #                         else np.zeros_like(distance_result)
+        #                         for i in range(self._get_current_parameter_value('max_entries', context))])
+        # if isinstance(selection_function, type):
+        #     selection_function = selection_function(default_variable=test_var, context=context)
+        #     fct_string = 'Function type'
+        # else:
+        #     selection_function.defaults.variable = test_var
+        #     selection_function._instantiate_value(context)
+        #     fct_string = 'Function'
+        # try:
+        #     result = np.asarray(selection_function(test_var, context=context))
+        # except e:
+        #     raise FunctionError(f'{fct_string} specified for {repr(SELECTION_FUNCTION)} arg of {self.__class__} '
+        #                         f'({selection_function}) must accept a 1d array as its argument')
+        # if result.shape != test_var.shape:
+        #     raise FunctionError(f'Value returned by {repr(SELECTION_FUNCTION)} specified for {self.__class__} '
+        #                         f'({result}) must return an array of the same length it receives')
 
     @handle_external_context()
     def _update_default_variable(self, new_default_variable, context=None):
