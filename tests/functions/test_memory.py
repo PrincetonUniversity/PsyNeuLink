@@ -915,8 +915,6 @@ class TestContentAddressableMemory:
         assert retrieved[0] == [0, 0, 0]
         assert retrieved[1] == [0, 0, 0, 0]
 
-# FIX: THE ONES BELOW STILL NEED TO BE UPDATED: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
     def test_ContentAddressableMemory_with_duplicate_entry_in_initializer_warning(self):
 
         regexp = r'Attempt to initialize memory of ContentAddressableMemory with an entry \([[1 2 3]'
@@ -925,10 +923,13 @@ class TestContentAddressableMemory:
                 initializer=np.array([[[1,2,3], [4,5,6]],
                                       [[1,2,3], [7,8,9]]]),
                 duplicate_entries_allowed=False,
+                distance_field_weights=[1,0],
                 equidistant_entries_select=RANDOM,
                 retrieval_prob = 1.0
             )
         assert np.allclose(c.memory, np.array([[[1, 2, 3], [4, 5, 6]]]))
+
+# FIX: THE ONES BELOW STILL NEED TO BE UPDATED: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def test_ContentAddressableMemory_add_and_delete_from_memory(self):
 

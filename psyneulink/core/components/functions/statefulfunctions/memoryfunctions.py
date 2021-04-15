@@ -2404,7 +2404,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     def _get_distance(self, cue:Union[list, np.ndarray],
                       candidate:Union[list, np.ndarray],
-                      field_weights:np.ndarray,
+                      field_weights:Union[list, np.ndarray],
                       granularity:str,
                       # granularity:Literal[Union['full_entry', 'per_field']],
                       context) -> Union[float, np.ndarray]:
@@ -2425,6 +2425,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         """
 
         distance_fct = self.parameters.distance_function._get(context)
+        if isinstance(field_weights, np.ndarray):
+            # Need to convert to to list for testing and assignment below
+            field_weights = field_weights.tolist()
         num_fields = self.parameters.memory_num_fields._get(context) or len(field_weights)
         field_weights = np.array(field_weights
                                  or self._get_current_parameter_value('distance_field_weights', context)
