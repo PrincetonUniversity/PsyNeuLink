@@ -635,7 +635,7 @@ class TestContentAddressableMemory:
         # Test that after allowing dups and now disallowing them, warning is issued and memory with zeros is returned
         c.duplicate_entries_allowed = False
         stim = 'A'
-        text = "More than one item matched cue"
+        text = "More than one entry matched cue"
         with pytest.warns(UserWarning, match=text):
             retrieved = c(stimuli[stim])
         retrieved_label = retrieve_label(retrieved, stimuli)
@@ -684,7 +684,7 @@ class TestContentAddressableMemory:
         c.duplicate_entries_allowed = False
         stim = 'A'
 
-        text = r'More than one item matched cue'
+        text = r'More than one entry matched cue'
         with pytest.warns(UserWarning, match=text):
             retrieved = c(stimuli[stim])
 
@@ -698,65 +698,108 @@ class TestContentAddressableMemory:
         # Test constructor
 
         with pytest.raises(ParameterError) as error_text:
+            clear_registry(FunctionRegistry)
             c = ContentAddressableMemory(retrieval_prob=32)
         assert 'Value (32) assigned to parameter \'retrieval_prob\' of (ContentAddressableMemory ' \
                'ContentAddressableMemory Function-0).parameters is not valid: ' \
                'retrieval_prob must be a float in the interval [0,1].' in str(error_text.value)
 
         with pytest.raises(ParameterError) as error_text:
+            clear_registry(FunctionRegistry)
             c = ContentAddressableMemory(storage_prob=-1)
         assert 'Value (-1) assigned to parameter \'storage_prob\' of (ContentAddressableMemory ' \
-               'ContentAddressableMemory Function-1).parameters is not valid: ' \
+               'ContentAddressableMemory Function-0).parameters is not valid: ' \
                'storage_prob must be a float in the interval [0,1].' in str(error_text.value)
 
         with pytest.raises(ParameterError) as error_text:
-            c = ContentAddressableMemory(distance_function=LinearCombination)
-        assert 'xxx' in str(error_text.value)
+            clear_registry(FunctionRegistry)
+            c = ContentAddressableMemory(equidistant_entries_select='HELLO')
+        assert "parameters is not valid: 'equidistant_entries_select' must be random or oldest or newest."\
+               in str(error_text.value)
 
+        with pytest.raises(ParameterError) as error_text:
+            clear_registry(FunctionRegistry)
+            c = ContentAddressableMemory(duplicate_entries_allowed='HELLO')
+        assert "parameters is not valid: 'duplicate_entries_allowed' must be a bool or 'OVERWRITE'."\
+               in str(error_text.value)
+
+        with pytest.raises(FunctionError) as error_text:
+            clear_registry(FunctionRegistry)
+            c = ContentAddressableMemory(distance_function=LinearCombination)
+        assert "Value returned by 'distance_function' (LinearCombination) specified for ContentAddressableMemory " \
+               "must return a scalar if 'distance_field_weights' is not specified or is homogenous " \
+               "(i.e., all elements are the same." in str(error_text.value)
+
+        clear_registry(FunctionRegistry)
         c = ContentAddressableMemory()
-        retrieved = c([[1,2,3],[4,5,6]])
+        c([[1,2,3],[4,5,6]])
 
         # Test parameter and value assignments
 
         with pytest.raises(ParameterError) as error_text:
+            clear_registry(FunctionRegistry)
             c.parameters.retrieval_prob = 2
-        assert 'Value (2) assigned to parameter \'retrieval_prob\' of (ContentAddressableMemory ' \
-               'ContentAddressableMemory Function-2).parameters is not valid: ' \
-               'retrieval_prob must be a float in the interval [0,1].' in str(error_text.value)
-
-        # with pytest.raises(ParameterError) as error_text:
-        #     c.parameters.retrieval_prob.set(2)
-        # assert 'Value (32) assigned to parameter \'retrieval_prob\' of (ContentAddressableMemory ' \
-        #        'ContentAddressableMemory Function-0).parameters is not valid: ' \
-        #        'retrieval_prob must be a float in the interval [0,1].' in str(error_text.value)
+        assert "Value (2) assigned to parameter 'retrieval_prob' of (ContentAddressableMemory " \
+               "ContentAddressableMemory Function-0).parameters is not valid: retrieval_prob " \
+               "must be a float in the interval [0,1]." in str(error_text.value)
 
         with pytest.raises(ParameterError) as error_text:
+            clear_registry(FunctionRegistry)
             c = ContentAddressableMemory(retrieval_prob=32)
-        assert 'Value (32) assigned to parameter \'retrieval_prob\' of (ContentAddressableMemory ' \
-               'ContentAddressableMemory Function-0).parameters is not valid: ' \
-               'retrieval_prob must be a float in the interval [0,1].' in str(error_text.value)
+        assert "Value (32) assigned to parameter 'retrieval_prob' of (ContentAddressableMemory " \
+               "ContentAddressableMemory Function-0).parameters is not valid: retrieval_prob must " \
+               "be a float in the interval [0,1]." in str(error_text.value)
 
         with pytest.raises(ParameterError) as error_text:
+            clear_registry(FunctionRegistry)
             c = ContentAddressableMemory(storage_prob=-1)
-        assert 'Value (-1) assigned to parameter \'storage_prob\' of (ContentAddressableMemory ' \
-               'ContentAddressableMemory Function-1).parameters is not valid: ' \
-               'storage_prob must be a float in the interval [0,1].' in str(error_text.value)
-
+        assert "Value (-1) assigned to parameter 'storage_prob' of (ContentAddressableMemory " \
+               "ContentAddressableMemory Function-0).parameters is not valid: storage_prob must " \
+               "be a float in the interval [0,1]." in str(error_text.value)
 
         with pytest.raises(FunctionError) as error_text:
-            retrieved = c([[[1,2,3],[4,5,6]]])
+            c([[[1,2,3],[4,5,6]]])
         assert 'Attempt to store and/or retrieve an entry in ContentAddressableMemory that has ' \
                'more than 2 dimensions (3);  try flattening innermost ones.' in str(error_text.value)
 
         with pytest.raises(FunctionError) as error_text:
-            retrieved = c([[1,2,3],[4,5],[6,7]])
+            c([[1,2,3],[4,5],[6,7]])
         assert ('Attempt to store and/or retrieve entry in ContentAddressableMemory' in str(error_text.value)
                 and 'that has an incorrect number of fields' in str(error_text.value))
 
         with pytest.raises(FunctionError) as error_text:
-            retrieved = c([[1,2,3],[4,5,6,7]])
-        assert 'Field 1 of entry ([array([1, 2, 3]) array([4, 5, 6, 7])]) has incorrect shape ((4,)) ' \
-               'for memory of \'ContentAddressableMemory Function-0\';  should be: (3,).' in str(error_text.value)
+            c([[1,2,3],[4,5,6,7]])
+        assert "Field 1 of entry ([array([1, 2, 3]) array([4, 5, 6, 7])]) has incorrect shape ((4,)) for memory of " \
+               "'ContentAddressableMemory Function-0';  should be: (3,)." in str(error_text.value)
+
+        with pytest.raises(FunctionError) as error_text:
+            # c = ContentAddressableMemory()
+            # c = ContentAddressableMemory(equidistant_entries_select='HELLO')
+            c.duplicate_entries_allowed = True
+            c([[1,2,3],[4,5,6]])
+            # c.equidistant_entries_select = 'HELLO'
+            # c([[1., 2., 3.],  [4.,5.,6.]])
+            c.duplicate_entries_allowed = OVERWRITE
+            c([[1,2,3],[4,5,6]])
+        assert "Attempt to store item ([[1. 2. 3.]\n [4. 5. 6.]]) in ContentAddressableMemory Function-0 with " \
+               "'duplicate_entries_allowed'='OVERWRITE' when there is more than one matching entry in its memory; " \
+               "'duplicate_entries_allowed' may have previously been set to 'True'"  in str(error_text.value)
+
+
+        # with pytest.raises(FunctionError) as error_text:
+        #     clear_registry(FunctionRegistry)
+        #     c = ContentAddressableMemory(initializer=[[[1,2,3],[4,5,6]],
+        #                                               [[8,9,10],[11,12,13,14]]])
+
+# # FIX: ADD THESE:  [ALSO SEARCH FOR "KEYS" AND FIX]
+#             warnings.warn(f'More than one item matched cue ({cue}) in memory for {self.name}'
+#                           f'{owner_str} even though {repr("duplicate_entries_allowed")} is False')
+#
+#             raise FunctionError(f"'memories' arg for {method} method of {self.__class__.__name__} "
+#                                 f"must be a list or
+#                                     array containing 1 or 2 arrays")
+
+
 
 # FIX: THE ONES BELOW STILL NEED TO BE UPDATED: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

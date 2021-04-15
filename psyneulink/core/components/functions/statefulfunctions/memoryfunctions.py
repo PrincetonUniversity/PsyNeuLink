@@ -348,6 +348,8 @@ RETRIEVAL_PROB = 'retrieval_prob'
 STORAGE_PROB = 'storage_prob'
 DISTANCE_FUNCTION = 'distance_function'
 SELECTION_FUNCTION = 'selection_function'
+DISTANCE_FIELD_WEIGHTS = 'distance_field_weights'
+equidistant_entries_select_keywords = [RANDOM, OLDEST, NEWEST]
 
 KEYS = 0
 VALS = 1
@@ -1494,14 +1496,31 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
       memory <ContentAddressableMemory.memory>` with probability `storage_prob<ContentAddressableMemory.storage_prob>`;
       if the attempt is made:
 
+      .. _ContentAddressableMemory_Duplicate_Entries:
+
       * if `variable <ContentAddressableMemory.variable>` is identical to an entry already in `memory
-        <ContentAddressableMemory.memory>`, then `duplicate_entries_allowed
-        <ContentAddressableMemory.duplicate_entries_allowed>` determines whether or not to store the entry; if it is:
+        <ContentAddressableMemory.memory>`, as evaluated by
+        `distance_function <ContentAddressableMemory.distance_function>` and `duplicate_threshold
+        <ContentAddressableMemory.duplicate_threshold>`, then `duplicate_entries_allowed
+        <ContentAddressableMemory.duplicate_entries_allowed>` determines whether or not to store the entry;
 
-        * False -- storage is skipped;
+        if `duplicate_entries_allowed <ContentAddressableMemory.duplicate_entries_allowed>` is:
 
-        * *True*, the duplicate entry in `memory <ContentAddressableMemory.memory>` is replaced with `variable
-          <ContentAddressableMemory.variable>`;
+            * False -- storage is skipped;
+
+            * True -- `variable <ContentAddressableMemory.variable>` is stored as another duplicate;
+
+            * *OVERWRITE*, the duplicate entry in `memory <ContentAddressableMemory.memory>` is replaced with `variable
+              <ContentAddressableMemory.variable>` (which may be slightly different than the item it replaces, within
+            the tolerance of `duplicate_threshold <ContentAddressableMemory.duplicate_threshold>`), and the
+            matching entry is returned;
+
+            .. note::
+
+               If `duplicate_entries_allowed <ContentAddressableMemory.duplicate_entries_allowed>` is OVERWRITE but
+               a duplicate entry is nevertheless identified during retrieval (e.g., **duplicate_entries_allowed** was
+               previously changed from True to False), a warning is issued, and duplicate entry is overwritten with
+               `variable <ContentAddressableMemory.variable>`.
 
       * if storage **rate** and/or **noise** arguments are specified in the constructor, they are
       applied to `variable <ContentAddressableMemory.variable>` before storage as :math:`variable * rate + noise`;
@@ -1653,18 +1672,14 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         contains the shapes of each `memory field <EpisodicMemoryMechanism_Memory_Fields>`  in each entry of `memory
         <ContentAddressableMemory.memory>`.
 
-    duplicate_entries_allowed : bool
-        determines whether duplicate entries are allowed in `memory <ContentAddressableMemory.memory>`, as evaluated
-        by `distance_function <ContentAddressableMemory.distance_function>` and `duplicate_threshold
-        <ContentAddressableMemory.duplicate_threshold>`. If duplicate_entries_allowed is True then, on retrieval, a
-        single one is selected based on
-        `equidistant_entries_select<ContentAddressableMemory.equidistant_entries_select>`, and the entry is added
-        to `memory <ContentAddressableMemory.memory>` (as another duplicate).  If duplicate_entries_allowed is False,
-        then an attempt to store `variable <ContentAddressableMemory.variable>` is ignored if it is deemed to be a
-        duplicate of an existing entry, and the matching entry is retrieved. If duplicate_entries_allowed is False
-        but a duplicate entry is nevertheless identified during retrieval (e.g., **duplicate_entries_allowed** is
-        changed from True to False), a warning is issued and zeros are returned; at storage the duplicate entry is
-        overwritten with the new value.
+    duplicate_entries_allowed : bool | OVERWRITE
+        determines whether duplicate entries are allowed in `memory <ContentAddressableMemory.memory>`,
+        as evaluated by `distance_function <ContentAddressableMemory.distance_function>` and `duplicate_threshold
+        <ContentAddressableMemory.duplicate_threshold>`. If duplicate_entries_allowed is True then, on retrieval,
+        a single one is selected based on
+        `equidistant_entries_select <ContentAddressableMemory.equidistant_entries_select>`,
+        and the entry is added to `memory <ContentAddressableMemory.memory>` as another duplicate
+        (see `ContentAddressableMemory_Duplicate_Entries` for additional details).
 
     duplicate_threshold : float
         determines how similar `variable <ContentAddressableMemory.variable>` must be to an entry in `memory
@@ -1736,7 +1751,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                     see `duplicate_entries_allowed <ContentAddressableMemory.duplicate_entries_allowed>`
 
                     :default value: False
-                    :type: ``bool``
+                    :type: ``bool or OVERWRITE``
 
                 duplicate_threshold
                     see `duplicate_threshold <ContentAddressableMemory.duplicate_threshold>`
@@ -1854,7 +1869,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         memory_num_fields = Parameter(None, stateful=True, read_only=True)
         memory_field_shapes = Parameter(None, stateful=True, read_only=True)
         distance_field_weights = Parameter(None, stateful=True, modulable=True)
-        duplicate_entries_allowed = Parameter(False)
+        duplicate_entries_allowed = Parameter(False, stateful=True)
         duplicate_threshold = Parameter(0, stateful=False, modulable=True)
         equidistant_entries_select = Parameter(RANDOM)
         rate = Parameter(1.0, modulable=True)
@@ -1877,6 +1892,14 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             if not all_within_range(storage_prob, 0, 1):
                 return f"{STORAGE_PROB} must be a float in the interval [0,1]."
 
+        def _validate_equidistant_entries_select(self, equidistant_entries_select):
+            if not equidistant_entries_select in equidistant_entries_select_keywords:
+                return f"'equidistant_entries_select' must be {' or '.join(equidistant_entries_select_keywords)}."
+
+        def _validate_duplicate_entries_allowed(self, duplicate_entries_allowed):
+            if not isinstance(duplicate_entries_allowed, bool) or duplicate_entries_allowed == OVERWRITE:
+                return f"'duplicate_entries_allowed' must be a bool or 'OVERWRITE'."
+
     def __init__(self,
                  default_variable=None,
                  retrieval_prob: Optional[Union[int, float]]=None,
@@ -1888,6 +1911,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                  distance_function:Optional[Union[Distance, is_function_type]]=None,
                  selection_function:Optional[Union[OneHot, is_function_type]]=None,
                  duplicate_entries_allowed=None,
+                 # duplicate_entries_allowed:Optional[Union[(bool, Literal[OVERWRITE]]]=None,
                  duplicate_threshold:Optional[int]=None,
                  # equidistant_entries_select:Optional[Literal[Union[RANDOM, OLDEST, NEWEST]]]=None,
                  equidistant_entries_select=None,
@@ -1955,78 +1979,62 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         """Validate distance_function, selection_function and memory store"""
         distance_function = self.distance_function
 
-        # MODIFIED 4/14/21 OLD:
-        # # Try actual default_variable as well as standard cases for generality
-        # for test_var in [self.defaults.variable, [[0],[0]], [[0,0],[0,0]] ]:
-        #     if isinstance(distance_function, type):
-        #         distance_function = distance_function(default_variable=test_var)
-        #         fct_msg = 'Function type'
-        #     else:
-        #         distance_function.defaults.variable = test_var
-        #         distance_function._instantiate_value(context)
-        #         fct_msg = 'Function'
-        #     try:
-        #         distance_result = distance_function([[0,0],[0,0]], context=context)
-        #         if not np.isscalar(distance_result):
-        #             raise FunctionError("Value returned by {} specified for {} ({}) must return a scalar".
-        #                                 format(repr(DISTANCE_FUNCTION), self.__name__.__class__, distance_result))
-        #     except:
-        #         raise FunctionError("{} specified for {} arg of {} ({}) "
-        #                             "must accept an array with two lists or 1d arrays, or a 2d array, as its argument".
-        #                             format(fct_msg, repr(DISTANCE_FUNCTION), self.__class__,
-        #                                    distance_function))
-        # MODIFIED 4/14/21 NEW:
-        # Try actual default_variable as well as standard cases for generality
-        test_var = self.defaults.variable
+        if self.get_previous_value(context) is not None:
+            test_var = self.get_previous_value(context)[0]
+        else:
+            test_var = self.defaults.variable
         if isinstance(distance_function, type):
             distance_function = distance_function(default_variable=test_var)
             fct_msg = 'Function type'
         else:
-            distance_function.defaults.variable = test_var
+            distance_function.defaults.variable = [test_var,test_var]
             distance_function._instantiate_value(context)
             fct_msg = 'Function'
-        field_wts_homog = np.ones_like(test_var)
-        field_wts_heterog = np.full_like(test_var,range(0,len(test_var)))
+        field_wts_homog = np.full(len(test_var),1).tolist()
+        field_wts_heterog = np.full(len(test_var),range(0,len(test_var))).tolist()
 
-        # for granularity, field_weights in product(['full_entry', 'per_field'],[field_wts_homog, field_wts_heterog]):
-        #     try:
-        #         distance_result = self._get_distance(test_var, test_var, field_weights, granularity, context=context)
-        #         if granularity is 'full_entry' and not np.isscalar(distance_result):
-        #             raise FunctionError(f"Value returned by {repr(DISTANCE_FUNCTION)} specified for "
-        #                                 f"{self.__name__.__class__} ({distance_result}) must return a scalar if "
-        #                                 f"field_width is homogenous (i.e., all elements are the same.")
-        #         if granularity is 'per_field' and not len(distance_result)==len(field_weights):
-        #             raise FunctionError(f"Value returned by {repr(DISTANCE_FUNCTION)} specified for "
-        #                                 f"{self.__name__.__class__} ({distance_result}) must return an array "
-        #                                 f"if field_width is a non-homogenous list or array"
-        #                                 f"(i.e., not all elements are the same.")
-        #     except:
-        #         raise FunctionError(f"{fct_msg} specified for {repr(DISTANCE_FUNCTION)} arg of "
-        #                             f"{self.__class__.__name__} ({distance_function}) must accept an array "
-        #                             f"with two lists or 1d arrays, or a 2d array, as its argument.")
-        #
-        # # FIX: 4/5/21 SHOULD VALIDATE NOISE AND RATE HERE AS WELL?
-        #
-        # # Default to full memory
-        # selection_function = self.selection_function
-        # test_var = np.asfarray([distance_result if i==0
-        #                         else np.zeros_like(distance_result)
-        #                         for i in range(self._get_current_parameter_value('max_entries', context))])
-        # if isinstance(selection_function, type):
-        #     selection_function = selection_function(default_variable=test_var, context=context)
-        #     fct_string = 'Function type'
-        # else:
-        #     selection_function.defaults.variable = test_var
-        #     selection_function._instantiate_value(context)
-        #     fct_string = 'Function'
-        # try:
-        #     result = np.asarray(selection_function(test_var, context=context))
-        # except e:
-        #     raise FunctionError(f'{fct_string} specified for {repr(SELECTION_FUNCTION)} arg of {self.__class__} '
-        #                         f'({selection_function}) must accept a 1d array as its argument')
-        # if result.shape != test_var.shape:
-        #     raise FunctionError(f'Value returned by {repr(SELECTION_FUNCTION)} specified for {self.__class__} '
-        #                         f'({result}) must return an array of the same length it receives')
+        for granularity, field_weights in product(['full_entry', 'per_field'],[field_wts_homog, field_wts_heterog]):
+            try:
+                distance_result = self._get_distance(test_var, test_var, field_weights, granularity, context=context)
+            except:
+                raise FunctionError(f"{fct_msg} specified for {repr(DISTANCE_FUNCTION)} arg of "
+                                    f"{self.__class__.__name__} ({distance_function}) must accept an array "
+                                    f"with two lists or 1d arrays, or a 2d array, as its argument.")
+            if granularity is 'full_entry' and not np.isscalar(distance_result):
+                raise FunctionError(f"Value returned by {repr(DISTANCE_FUNCTION)} "
+                                    f"({distance_function.__class__.__name__}) specified for "
+                                    f"{self.__class__.__name__} must return a scalar if "
+                                    f"{repr(DISTANCE_FIELD_WEIGHTS)} is not specified or is homogenous "
+                                    f"(i.e., all elements are the same.")
+            if granularity is 'per_field' and not len(distance_result)==len(field_weights):
+                raise FunctionError(f"Value returned by {repr(DISTANCE_FUNCTION)} "
+                                    f"({distance_function.__class__.__name__}) specified for "
+                                    f"{self.__class__.__name__} must return an array "
+                                    f"if {repr(DISTANCE_FIELD_WEIGHTS)} is a non-homogenous list or array"
+                                    f"(i.e., not all elements are the same.")
+
+        # FIX: 4/5/21 SHOULD VALIDATE NOISE AND RATE HERE AS WELL?
+
+        # Default to full memory
+        selection_function = self.selection_function
+        test_var = np.asfarray([distance_result if i==0
+                                else np.zeros_like(distance_result)
+                                for i in range(self._get_current_parameter_value('max_entries', context))])
+        if isinstance(selection_function, type):
+            selection_function = selection_function(default_variable=test_var, context=context)
+            fct_string = 'Function type'
+        else:
+            selection_function.defaults.variable = test_var
+            selection_function._instantiate_value(context)
+            fct_string = 'Function'
+        try:
+            result = np.asarray(selection_function(test_var, context=context))
+        except e:
+            raise FunctionError(f'{fct_string} specified for {repr(SELECTION_FUNCTION)} arg of {self.__class__} '
+                                f'({selection_function}) must accept a 1d array as its argument')
+        if result.shape != test_var.shape:
+            raise FunctionError(f'Value returned by {repr(SELECTION_FUNCTION)} specified for {self.__class__} '
+                                f'({result}) must return an array of the same length it receives')
 
     @handle_external_context()
     def _update_default_variable(self, new_default_variable, context=None):
@@ -2246,21 +2254,19 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         selection_array = self.selection_function(distances_to_entries, context=context)
         indices_of_selected_items = np.flatnonzero(selection_array)
 
-        # Single key identified
+        # Single entry identified
         if len(indices_of_selected_items)==1:
             index_of_selected_item = int(np.flatnonzero(selection_array))
 
-        # More than one key identified
+        # More than one entry identified
         else:
             # Check for any duplicate entries in matches and, if they are not allowed, return zeros
             if (not self.duplicate_entries_allowed
                     and any(self._is_duplicate(_memory[i],_memory[j])
                             for i, j in combinations(indices_of_selected_items, 2))):
-                owner_str = ''
-                if self.owner:
-                    owner_str = ' of self.owner.name'
-                warnings.warn(f'More than one item matched cue ({cue}) in memory for {self.name}'
-                              f'{owner_str} even though {repr("duplicate_entries_allowed")} is False')
+                warnings.warn(f"More than one entry matched cue ({cue}) in memory for {self.name}"
+                              f"{'of ' + self.owner.name if self.owner else ''} even though "
+                              f"{repr('duplicate_entries_allowed')} is False; zeros returned as retrieved item.")
                 return self.uniform_entry(0, context)
             if self.equidistant_entries_select == RANDOM:
                 random_state = self._get_current_parameter_value('random_state', context)
@@ -2270,8 +2276,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             elif self.equidistant_entries_select == NEWEST:
                 index_of_selected_item = indices_of_selected_items[-1]
             else:
-                assert False, f'PROGRAM ERROR:  bad specification ({self.equidistant_entries_select}) for  ' \
-                    f'\'equidistant_entries_select parameter of {self.name} for {self.owner.name}'
+                assert False, f"PROGRAM ERROR:  bad specification ({repr(self.equidistant_entries_select)}) for " \
+                              f"'equidistant_entries_select' parameter of {self.name}" \
+                              f"{'for ' + self.owner.name if self.owner else ''}"
 
         best_match = _memory[index_of_selected_item]
         best_match_distances = self._get_distance(cue,best_match,field_weights, 'per_field',context)
@@ -2304,7 +2311,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         """
 
         distance_fct = self.parameters.distance_function._get(context)
-        num_fields = self.parameters.memory_num_fields._get(context)
+        num_fields = self.parameters.memory_num_fields._get(context) or len(field_weights)
         field_weights = np.array(field_weights
                                  or self._get_current_parameter_value('distance_field_weights', context)
                                  or  [1])
@@ -2396,26 +2403,29 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             return np.atleast_3d(entry).reshape(shape)
 
         if existing_entries is not None:
-            # Check for matches with existing entries
+            # Check for matches of entry with existing entries
             matches = [m for m in existing_entries if len(m) and self._is_duplicate(entry, m)]
 
-            # If dupliciate keys are not allowed and key matches any existing keys, don't store
+            # If duplicate entries are not allowed and entry matches any existing entries, don't store
             if matches and self.duplicate_entries_allowed == False:
                 storage_succeeded = False
 
-            # If dupliciate_entries_allowed is False, replace value for matching entry:
-            elif matches and self.duplicate_entries_allowed is False:
+            # If duplicate_entries_allowed is True or OVERWRITE, replace value for matching entry:
+            # FIX: SHOULD BE OVERWRITE or False
+            elif matches and self.duplicate_entries_allowed is OVERWRITE:
                 if len(matches)>1:
+                    # If there is already more than one duplicate, raise error as it is not clear what to overwrite
                     raise FunctionError(f"Attempt to store item ({entry}) in {self.name} "
-                                        f"with 'duplicate_entries_allowed'='False' "
-                                        f"when there is more than one matching key in its entry; "
+                                        f"with 'duplicate_entries_allowed'='OVERWRITE' "
+                                        f"when there is more than one matching entry in its memory; "
                                         f"'duplicate_entries_allowed' may have previously been set to 'True'")
                 try:
-                    index = existing_entries[KEYS].index(entry)
+                    index = existing_entries.index(entry)
                 except AttributeError:
                     index = existing_entries.tolist().index(entry)
                 except ValueError:
                     index = np.array(existing_entries).tolist().index(entry)
+                existing_entries[index] = entry
                 storage_succeeded = True
             else:
                 # Add to existing entries
@@ -2457,7 +2467,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                            entries:Union[list, np.ndarray],
                            fields:Optional[Union[int, list]]= None,
                            context=None):
-        """Delete one or more key-value pairs from `memory <ContentAddressableMememory.memory>`
+        """Delete one or more entries from `memory <ContentAddressableMememory.memory>`
 
         Arguments
         ---------
@@ -2487,12 +2497,12 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     def _parse_memories(self, entries, method, context=None):
         """Parse passing of single vs. multiple memories, validate memories, and return ndarray"""
-        memories = convert_to_np_array(memories)
+        memories = convert_to_np_array(entries)
         # FIX: GET RID OF THIS IF/WHEN convert_to_np_array IS CHANGED TO ENFORCE ARRAYS EVEN IN dtype=Object
         memories = np.array([np.array(m) for m in memories])
         if not 1 <= memories.ndim <= 3:
             raise FunctionError(f"'memories' arg for {method} method of {self.__class__.__name__} "
-                                f"must be a list or array containing 1 or 2 arrays")
+                                f"must be a list or array containing 1d or 2d arrays")
 
         if (memories.ndim == 2 and memories.dtype != object) or (memories.ndim == 1 and memories.dtype == object):
             memories = np.expand_dims(memories,axis=0)
