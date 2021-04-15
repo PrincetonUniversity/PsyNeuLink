@@ -785,7 +785,6 @@ class TestContentAddressableMemory:
                "'duplicate_entries_allowed'='OVERWRITE' when there is more than one matching entry in its memory; " \
                "'duplicate_entries_allowed' may have previously been set to 'True'"  in str(error_text.value)
 
-# # FIX: ADD THESE:  [ALSO SEARCH FOR "KEYS" AND FIX]
         with pytest.raises(FunctionError) as error_text:
             clear_registry(FunctionRegistry)
             c.add_to_memory([[[1,2,3],[4,5,6]],
@@ -829,34 +828,34 @@ class TestContentAddressableMemory:
                    'F': [[10,10,30],[40,50,60]],
                    }
 
-        em = EpisodicMemoryMechanism(
-                content_size=3,
-                assoc_size=3,
-                function = ContentAddressableMemory(
-                        duplicate_entries_allowed=True,
-                        equidistant_entries_select=RANDOM)
+        c = ContentAddressableMemory(
+            distance_function=Distance(metric=COSINE),
+            duplicate_entries_allowed=True,
+            equidistant_entries_select=RANDOM
         )
 
-        retrieved_keys=[]
-        for key in sorted(stimuli.keys()):
-            retrieved = [i for i in em.execute(stimuli[key])]
-            retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-            retrieved_keys.append(retrieved_key)
-        assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['D']]
+        retrieved_labels=[]
+        sorted_labels = sorted(stimuli.keys())
+        for label in sorted_labels:
+            retrieved = [i for i in c(stimuli[label])]
+            retrieved_label = retrieve_label(retrieved, stimuli)
+            retrieved_labels.append(retrieved_label)
+        assert retrieved_labels == [[None], ['A'], ['A'], ['C'], ['B'], ['A']]
 
         stim = 'C'
-        em.function.equidistant_entries_select = OLDEST
-        retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-        assert retrieved_key == ['A']
+        c.distance_field_weights = [1,0]
+        c.equidistant_entries_select = OLDEST
+        retrieved = [i for i in c.get_memory(stimuli[stim])]
+        retrieved_label = retrieve_label(retrieved, stimuli)
+        assert retrieved_label == ['A']
 
-        em.function.equidistant_entries_select = NEWEST
-        retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-        assert retrieved_key == ['D']
+        c.equidistant_entries_select = NEWEST
+        retrieved = [i for i in c.get_memory(stimuli[stim])]
+        retrieved_label = retrieve_label(retrieved, stimuli)
+        assert retrieved_label == ['D']
 
         # Test that after allowing dups, warning is issued and memory with zeros is returned
-        em.function.duplicate_entries_allowed = False
+        c.duplicate_entries_allowed = False
         stim = 'A'
 
         text = r'More than one item matched key \(\[1 2 3\]\) in memory for ContentAddressableMemory'
