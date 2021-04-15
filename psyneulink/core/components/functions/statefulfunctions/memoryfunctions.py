@@ -2186,10 +2186,15 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         field_shapes = self.parameters.memory_field_shapes.get(context)
         num_fields = self.parameters.memory_num_fields.get(context)
 
-        if entry.ndim >2:
+        if not entry.ndim:
             # IMPLEMENTATION NOTE:  Remove this if/when >2d arrays are supported more generally in PsyNeuLink
             raise FunctionError(f"Attempt to store and/or retrieve an entry in {self.__class__.__name__} that has "
-                                f"more than 2 dimensions ({entry.ndim});  try flattening innermost ones.")
+                                f"has dimensions ({entry}); must be a list or 1d or 2d array.")
+
+        if entry.ndim >2:
+            # IMPLEMENTATION NOTE:  Remove this if/when >2d arrays are supported more generally in PsyNeuLink
+            raise FunctionError(f"Attempt to store and/or retrieve an entry in {self.__class__.__name__} ({entry}) "
+                                f"that has more than 2 dimensions ({entry.ndim});  try flattening innermost ones.")
 
         if not len(entry) == num_fields:
             raise FunctionError(f"Attempt to store and/or retrieve entry in {self.__class__.__name__} ({entry}) "
@@ -2496,19 +2501,24 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                     self.parameters.previous_value._set(self._memory, context)
 
     def _parse_memories(self, entries, method, context=None):
-        """Parse passing of single vs. multiple memories, validate memories, and return ndarray"""
+        """Parse passing of single vs. multiple memories, validate memories, and return ndarray
+        Used by add_to_memory and delete_from_memory
+        """
         memories = convert_to_np_array(entries)
-        # FIX: GET RID OF THIS IF/WHEN convert_to_np_array IS CHANGED TO ENFORCE ARRAYS EVEN IN dtype=Object
-        memories = np.array([np.array(m) for m in memories])
+        if memories.ndim != 0:  # Will handle ndim==0 below
+            # FIX: GET RID OF THIS IF/WHEN convert_to_np_array IS CHANGED TO ENFORCE ARRAYS EVEN IN dtype=Object
+            memories = np.array([np.array(m) for m in memories])
         if not 1 <= memories.ndim <= 3:
-            raise FunctionError(f"'memories' arg for {method} method of {self.__class__.__name__} "
-                                f"must be a list or array containing 1d or 2d arrays")
+            was_str = f'(was {memories.ndim}d)' if memories.ndim else '(was scalar)'
+            raise FunctionError(f"The 'memories' arg for {method} method of "
+                                f"must be a list or array containing 1d or 2d arrays {was_str}.")
 
-        if (memories.ndim == 2 and memories.dtype != object) or (memories.ndim == 1 and memories.dtype == object):
+        # if (memories.ndim == 2 and memories.dtype != object) or (memories.ndim == 1 and memories.dtype == object):
+        if (memories.ndim == 2 and memories.dtype != object) or (memories.ndim == 1):
             memories = np.expand_dims(memories,axis=0)
 
-        for entry in entries:
-            self._validate_entry(entry, context)
+        for entry in memories:
+            self._validate_entry(np.array(entry), context)
 
         return memories
 

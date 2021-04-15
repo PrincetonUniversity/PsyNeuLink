@@ -759,8 +759,8 @@ class TestContentAddressableMemory:
 
         with pytest.raises(FunctionError) as error_text:
             c([[[1,2,3],[4,5,6]]])
-        assert 'Attempt to store and/or retrieve an entry in ContentAddressableMemory that has ' \
-               'more than 2 dimensions (3);  try flattening innermost ones.' in str(error_text.value)
+        assert 'Attempt to store and/or retrieve an entry in ContentAddressableMemory ([[[1 2 3]\n  [4 5 6]]]) that ' \
+               'has more than 2 dimensions (3);  try flattening innermost ones.' in str(error_text.value)
 
         with pytest.raises(FunctionError) as error_text:
             c([[1,2,3],[4,5],[6,7]])
@@ -785,21 +785,37 @@ class TestContentAddressableMemory:
                "'duplicate_entries_allowed'='OVERWRITE' when there is more than one matching entry in its memory; " \
                "'duplicate_entries_allowed' may have previously been set to 'True'"  in str(error_text.value)
 
-
-        # with pytest.raises(FunctionError) as error_text:
-        #     clear_registry(FunctionRegistry)
-        #     c = ContentAddressableMemory(initializer=[[[1,2,3],[4,5,6]],
-        #                                               [[8,9,10],[11,12,13,14]]])
-
 # # FIX: ADD THESE:  [ALSO SEARCH FOR "KEYS" AND FIX]
-#             warnings.warn(f'More than one item matched cue ({cue}) in memory for {self.name}'
-#                           f'{owner_str} even though {repr("duplicate_entries_allowed")} is False')
-#
-#             raise FunctionError(f"'memories' arg for {method} method of {self.__class__.__name__} "
-#                                 f"must be a list or
-#                                     array containing 1 or 2 arrays")
+        with pytest.raises(FunctionError) as error_text:
+            clear_registry(FunctionRegistry)
+            c.add_to_memory([[[1,2,3],[4,5,6]],
+                             [[8,9,10],[11,12,13,14]]])
+        assert "Field 1 of entry ([list([8, 9, 10]) list([11, 12, 13, 14])]) has incorrect shape ((4,)) " \
+               "for memory of 'ContentAddressableMemory Function-0';  should be: (3,)." in str(error_text.value)
 
+        with pytest.raises(FunctionError) as error_text:
+            clear_registry(FunctionRegistry)
+            c.add_to_memory([1,2,3])
+        assert 'Attempt to store and/or retrieve entry in ContentAddressableMemory ([1 2 3]) ' \
+               'that has an incorrect number of fields (3; should be 2).' in str(error_text.value)
 
+        with pytest.raises(FunctionError) as error_text:
+            clear_registry(FunctionRegistry)
+            c.add_to_memory([[[1]]])
+        assert 'Attempt to store and/or retrieve entry in ContentAddressableMemory ([[1]]) ' \
+               'that has an incorrect number of fields (1; should be 2).' in str(error_text.value)
+
+        with pytest.raises(FunctionError) as error_text:
+            clear_registry(FunctionRegistry)
+            c.add_to_memory(1)
+        assert "The 'memories' arg for add_to_memory method of must be a list or array containing 1d or 2d arrays " \
+               "(was scalar)." in str(error_text.value)
+
+        with pytest.raises(FunctionError) as error_text:
+            clear_registry(FunctionRegistry)
+            c.add_to_memory([[[[1,2]]]])
+        assert "The 'memories' arg for add_to_memory method of must be a list or array containing 1d or 2d arrays " \
+               "(was 4d)." in str(error_text.value)
 
 # FIX: THE ONES BELOW STILL NEED TO BE UPDATED: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
