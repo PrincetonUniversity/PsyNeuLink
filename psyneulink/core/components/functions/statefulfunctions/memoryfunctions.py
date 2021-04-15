@@ -2267,7 +2267,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         else:
             # Check for any duplicate entries in matches and, if they are not allowed, return zeros
             if (not self.duplicate_entries_allowed
-                    and any(self._is_duplicate(_memory[i],_memory[j])
+                    and any(self._is_duplicate(_memory[i],_memory[j], field_weights, context)
                             for i, j in combinations(indices_of_selected_items, 2))):
                 warnings.warn(f"More than one entry matched cue ({cue}) in memory for {self.name}"
                               f"{'of ' + self.owner.name if self.owner else ''} even though "
@@ -2292,55 +2292,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         self.parameters.distances_to_entries.set(distances_to_entries, context,override=True)
         # Return entry
         return best_match
-
-    def _get_distance(self, cue:Union[list, np.ndarray],
-                      candidate:Union[list, np.ndarray],
-                      field_weights:np.ndarray,
-                      granularity:str,
-                      # granularity:Literal[Union['full_entry', 'per_field']],
-                      context) -> Union[float, np.ndarray]:
-        """Get distance of cue from candidate using `distance_function <ContentAddressableMemory.distance_function>`.
-
-        - If **granularity**=='full_entry':
-            returns *single scalar distance* computed over full **cue** and **candidate** entries if all elements of
-                **fields_weights** are equal (i.e., it is a homogenous array);  otherwise it is used to weight the
-                the distance computed between each field of **cue** and corresponding one of **candidate**,
-                when computing their mean field-wise distances.
-        - if **granularity**=='per_field':
-            returns *array of distances* computed field-wise (hadamard) for **cue** and **candidate**,
-            weighted by **field_weights**.
-
-        :returns    
-            scalar if **granularity**=='full_entry';
-            array if **granularity**=='per_fields'
-        """
-
-        distance_fct = self.parameters.distance_function._get(context)
-        num_fields = self.parameters.memory_num_fields._get(context) or len(field_weights)
-        field_weights = np.array(field_weights
-                                 or self._get_current_parameter_value('distance_field_weights', context)
-                                 or  [1])
-        field_weights = field_weights[0] if np.all(field_weights[0]==field_weights) else field_weights
-        distance_by_fields = not np.isscalar(field_weights)
-
-        if granularity is 'per_field':
-            return np.array([distance_fct([cue[i], candidate[i]]) for i in range(num_fields)]) * field_weights
-
-        elif granularity is 'full_entry':
-            if distance_by_fields:
-                # Get mean of field-wise distances between cue each entry in memory, weighted by field_weights
-                distance = np.sum([distance_fct([cue[i], candidate[i]]) * field_weights[i]
-                                   for i in range(num_fields)]) / num_fields
-            else:
-                # Get distances between entire cue vector and all that for each entry in memory
-                #    Note: in this case, field_weights is just a scalar coefficient
-                distance = distance_fct([np.hstack(cue), np.hstack(candidate)]) * field_weights
-            return distance
-
-        else:
-            assert False, f"PROGRAM ERROR: call to 'ContentAddressableMemory.get_distance()' method " \
-                          f"with invalid 'granularity' argument ({granularity});  " \
-                          f"should be 'full_entry' or 'per_field."
 
     def _store_memory(self, entry:Union[list, np.ndarray], context) -> bool:
         """Add an entry to `memory <ContentAddressableMemory.memory>`
@@ -2376,6 +2327,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         entry = convert_all_nested_items_in_entry_to_nparray(entry)
 
         num_fields = self.parameters.memory_num_fields._get(context)
+        field_weights = self.parameters.distance_field_weights._get(context)
 
         # execute noise if it is a function
         noise = self._try_execute_param(self._get_current_parameter_value(NOISE, context), entry, context=context)
@@ -2409,7 +2361,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         if existing_entries is not None:
             # Check for matches of entry with existing entries
-            matches = [m for m in existing_entries if len(m) and self._is_duplicate(entry, m)]
+            matches = [m for m in existing_entries if len(m) and self._is_duplicate(entry, m, field_weights, context)]
 
             # If duplicate entries are not allowed and entry matches any existing entries, don't store
             if matches and self.duplicate_entries_allowed == False:
@@ -2449,6 +2401,66 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         self._memory = existing_entries
 
         return storage_succeeded
+
+    def _get_distance(self, cue:Union[list, np.ndarray],
+                      candidate:Union[list, np.ndarray],
+                      field_weights:np.ndarray,
+                      granularity:str,
+                      # granularity:Literal[Union['full_entry', 'per_field']],
+                      context) -> Union[float, np.ndarray]:
+        """Get distance of cue from candidate using `distance_function <ContentAddressableMemory.distance_function>`.
+
+        - If **granularity**=='full_entry':
+            returns *single scalar distance* computed over full **cue** and **candidate** entries if all elements of
+                **fields_weights** are equal (i.e., it is a homogenous array);  otherwise it is used to weight the
+                the distance computed between each field of **cue** and corresponding one of **candidate**,
+                when computing their mean field-wise distances.
+        - if **granularity**=='per_field':
+            returns *array of distances* computed field-wise (hadamard) for **cue** and **candidate**,
+            weighted by **field_weights**.
+
+        :returns
+            scalar if **granularity**=='full_entry';
+            array if **granularity**=='per_fields'
+        """
+
+        distance_fct = self.parameters.distance_function._get(context)
+        num_fields = self.parameters.memory_num_fields._get(context) or len(field_weights)
+        field_weights = np.array(field_weights
+                                 or self._get_current_parameter_value('distance_field_weights', context)
+                                 or  [1])
+        field_weights = field_weights[0] if np.all(field_weights[0]==field_weights) else field_weights
+        distance_by_fields = not np.isscalar(field_weights)
+
+        if granularity is 'per_field':
+            return np.array([distance_fct([cue[i], candidate[i]]) for i in range(num_fields)]) * field_weights
+
+        elif granularity is 'full_entry':
+            if distance_by_fields:
+                # Get mean of field-wise distances between cue each entry in memory, weighted by field_weights
+                distance = np.sum([distance_fct([cue[i], candidate[i]]) * field_weights[i]
+                                   for i in range(num_fields)]) / num_fields
+            else:
+                # Get distances between entire cue vector and all that for each entry in memory
+                #    Note: in this case, field_weights is just a scalar coefficient
+                distance = distance_fct([np.hstack(cue), np.hstack(candidate)]) * field_weights
+            return distance
+
+        else:
+            assert False, f"PROGRAM ERROR: call to 'ContentAddressableMemory.get_distance()' method " \
+                          f"with invalid 'granularity' argument ({granularity});  " \
+                          f"should be 'full_entry' or 'per_field."
+
+    def _is_duplicate(self, entry1:np.ndarray, entry2:np.ndarray, field_weights:np.ndarray, context) -> bool:
+        """Determines whether two entries are duplicates
+         Duplicates are treated as ones with a distance within the tolerance specified by duplicate_threshold.
+         Distances are computed using distance_field_weights.
+         """
+        # if all(np.array_equal(i,j) for i,j in zip(entry1, entry2)):
+        if (self._get_distance(entry1, entry2, field_weights, 'full_entry', context)
+                <= self.parameters.duplicate_threshold.get(context)):
+            return True
+        return False
 
     @handle_external_context()
     def add_to_memory(self, entries:Union[list, np.ndarray], context=None):
@@ -2521,11 +2533,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             self._validate_entry(np.array(entry), context)
 
         return memories
-
-    def _is_duplicate(self, entry1:np.ndarray, entry2:np.ndarray) -> bool:
-        if all(np.array_equal(i,j) for i,j in zip(entry1, entry2)):
-            return True
-        return False
 
     @property
     def memory(self):

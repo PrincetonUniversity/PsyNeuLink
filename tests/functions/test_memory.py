@@ -816,7 +816,6 @@ class TestContentAddressableMemory:
         assert "The 'memories' arg for add_to_memory method of must be a list or array containing 1d or 2d arrays " \
                "(was 4d)." in str(error_text.value)
 
-# FIX: THE ONES BELOW STILL NEED TO BE UPDATED: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def test_ContentAddressableMemory_without_initializer_and_key_size_same_as_val_size(self):
 
@@ -858,14 +857,16 @@ class TestContentAddressableMemory:
         c.duplicate_entries_allowed = False
         stim = 'A'
 
-        text = r'More than one item matched key \(\[1 2 3\]\) in memory for ContentAddressableMemory'
+        text = "More than one entry matched cue"
         with pytest.warns(UserWarning, match=text):
-            retrieved = em.execute(stimuli[stim])
+            retrieved = c.execute(stimuli[stim])
 
-        retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
-        assert retrieved_key == [None]
-        assert retrieved[0] == [0, 0, 0]
-        assert retrieved[1] == [0, 0, 0]
+        retrieved_label = retrieve_label(retrieved, stimuli)
+        assert retrieved_label == [None]
+        expected = np.array([np.array([0,0,0]),np.array([0,0,0])])
+        assert all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
+
+# FIX: THE ONES BELOW STILL NEED TO BE UPDATED: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def test_ContentAddressableMemory_without_initializer_and_key_size_diff_from_val_size(self):
 
