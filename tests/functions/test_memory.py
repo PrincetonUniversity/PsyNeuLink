@@ -917,42 +917,6 @@ class TestContentAddressableMemory:
         assert retrieved[0] == [0, 0, 0]
         assert retrieved[1] == [0, 0, 0, 0]
 
-    def test_ContentAddressableMemory_without_assoc(self):
-
-        stimuli = {'A': [[1,2,3]],
-                   'B': [[8,9,10]],
-                   'C': [[1,2,3]],
-                   'D': [[1,2,3]],
-                   'E': [[9,8,4]],
-                   'F': [[10,10,30]],
-                   }
-
-        em = EpisodicMemoryMechanism(
-                name='EPISODIC MEMORY MECH',
-                content_size=3,
-                function = ContentAddressableMemory(
-                        # initializer=np.array([stimuli['F'], stimuli['F']], dtype=object),
-                        duplicate_entries_allowed=True,
-                        equidistant_entries_select=RANDOM,
-                        retrieval_prob = 1.0
-                )
-        )
-
-        for key in sorted(stimuli.keys()):
-            print(f'\nCurrent memory: \n{em.memory}\n')
-            retrieved = [i for i in em.execute(stimuli[key])]
-            retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-            print(f'\nExecuted with stimulus {key}: {stimuli[key]};'
-                  f'\nRetrieved memory {retrieved_key[0]}: \n\t{retrieved}')
-
-        retrieved_keys=[]
-        for key in sorted(stimuli.keys()):
-            retrieved = [i for i in em.execute(stimuli[key])]
-            retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-            retrieved_keys.append(retrieved_key)
-
-        assert retrieved_keys == [['A', 'C', 'D'], ['B'], ['A', 'C', 'D'], ['A', 'C', 'D'], ['E'], ['F']]
-
     def test_ContentAddressableMemory_with_duplicate_entry_in_initializer_warning(self):
 
         regexp = r'Attempt to initialize memory of ContentAddressableMemory with an entry \([[1 2 3]'
