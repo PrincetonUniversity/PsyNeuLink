@@ -24,9 +24,8 @@ Functions that store and can return a record of their input.
 
 import numbers
 import warnings
-from itertools import combinations
-
 from collections import deque
+from itertools import combinations
 # from typing import Optional, Union, Literal, Callable
 from typing import Optional, Union
 
@@ -215,17 +214,22 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                  # default_variable=None,   # Changed to [] because None conflicts with initializer
                  rate=None,
                  noise=None,
+                 # rate:Optional[Union[int, float, np.ndarray]]=None,
+                 # noise:Optional[Union[int, float, np.ndarray]]=None,
                  # rate: parameter_spec=1.0,
                  # noise: parameter_spec=0.0,
-                 # rate: tc.optional(tc.optional(tc.any(int, float))) = None,         # Changed to 1.0 because None fails validation
-                 # noise: tc.optional(tc.optional(tc.any(int, float, callable))) = None,    # Changed to 0.0 - None fails validation
-                 # rate: tc.optional(tc.any(int, float, list, np.ndarray)) = 1.0,
-                 # noise: tc.optional(tc.any(int, float, list, np.ndarray, callable)) = 0.0,
-                 history: tc.optional(tc.optional(int)) = None,
+                 # rate: Optional[Union(int, float]] = None,  # Changed to 1.0: None fails validation
+                 # noise: Optional[Union[int, float, callable]] = None, # Changed to 0.0 - None fails validation
+                 # rate: Optional[Union[int, float, list, np.ndarray]] = 1.0,
+                 # noise: Optional[Union[int, float, list, np.ndarray, callable]] = 0.0,
+                 history:tc.optional(int)=None,
+                 # history: Optional[int] = None,
                  initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
+                 params: tc.optional(dict) = None,
+                 # params: Optional[dict] = None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+                 prefs: tc.optional(is_pref_set) = None
+                 ):
 
         super().__init__(
             default_variable=default_variable,
@@ -1107,7 +1111,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
             memory = self.get_memory(key, context)
         else:
-            # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OutputPort FROM LAST TRIAL)?
+            # QUESTION: SHOULD IT RETURN 0's VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE & OutputPort FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_PORT
             #           SO, WOULD HAVE TO RETURN ZEROS ON INIT AND THEN SUPPRESS AFTERWARDS, AS MOCKED UP BELOW
             memory = [[0]* self.parameters.key_size._get(context), [0]* self.parameters.val_size._get(context)]
@@ -1281,7 +1285,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
     @tc.typecheck
     @handle_external_context()
     def add_to_memory(self, memories:tc.any(list, np.ndarray), context=None):
-        """Add one or more key-value pairs into `memory <ContentAddressableMememory.memory>`
+        """Add one or more key-value pairs into `memory <ContentAddressableMemory.memory>`
 
         Arguments
         ---------
@@ -1389,9 +1393,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     <ContentAddressableMemory.variable>` with each entry in `memory <ContentAddressableMemory.storage_prob>` as full
     vectors (i.e., with all fields of each concatenated into a single array), or by computing the distance of each
     field in `variable <ContentAddressableMemory.variable>` with the corresponding ones of each entry in `memory
-    <ContentAddressableMemory.memory>`, and then averaging those distances, possibly weighted by the coefficients
-    specified in `distance_field_weights <ContentAddressableMemory.distance_field_weights>` (this is determined by the
-    `distance_by_fields <ContentAddressableMemory.distance_by_fields>` parameter.  The distances computed between
+    <ContentAddressableMemory.memory>`, and then averaging those distances, possibly weighted by coefficients specified
+    in `distance_field_weights <ContentAddressableMemory.distance_field_weights>`. The distances computed between
     `variable `<ContentAddressableMemory.variable>` and each entry in `memory <ContentAddressableMemory.memory>` are
     used by `selection_function <ContentAddressableMemory.selection_function>` to determine which entry is retrieved.
     The distance used for the last retrieval (i.e., between `variable <ContentAddressableMemory.variable>` and the
@@ -1449,35 +1452,42 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     * *Retrieval:* first, with probability `retrieval_prob <ContentAddressableMemory.retrieval_prob>`,
       an entry is retrieved from`memory <ContentAddressableMemory.memory>` that is closest to `variable
-      <ContentAddressableMemory.variable>`.  An entry is chosen by:
+      <ContentAddressableMemory.variable>`.  An entry is chosen by calling, in order:
 
-        * calling the `distance_function <ContentAddressableMemory.distance_function>` with variable and each entry
-          in `memory <ContentAddressableMemory.memory>` to generate a list of distances between
-          `variable <ContentAddressableMemory.variable>` and each entry in `memory <ContentAddressableMemory.memory>`
-          according to the method specified in `distance_by_fields <ContentAddressableMemory.distance_by_fields>`;
-          if it is:
+        * `distance_function <ContentAddressableMemory.distance_function>` to compare, and generate a list of
+           `distances <ContentAddressableMemory.distances>` between `variable <ContentAddressableMemory.variable>`
+           and each entry in `memory <ContentAddressableMemory.memory>`, possibly weighted by `distance_field_weights
+           <ContentAddressableMemory.distance_field_weights>`, as follows:
 
-          .. _ContentAddressableMemory_Distance_By_Fields:
+          .. _ContentAddressableMemory_Distance_Field_Weights:
 
-          * False -- all items of `variable <ContentAddressableMemory.variable>` are concatenated,
-            and compared against each item in `memory <ContentAddressableMemory.memory>` by concatenating the
-            `memory_fields <EpisodicMemoryMechanism_Memory_Fields>` of that entry, and then using `distance_function
-            <ContentAddressableMemory.distance_function>` to compare the two resulting 1d arrays.
+          * if `distance_field_weights <ContentAddressableMemory.distance_field_weights>` is either an scalar or an
+            array of scalars that are all the same, then it is used simply to scale the distance computed between
+            `variable <ContentAddressableMemory.variable>` and each entry in `memory <ContentAddressableMemory.memory>`,
+            each of which is computed by concatenating all items of `variable <ContentAddressableMemory.variable>` into
+            a 1d array, similarly concatentating all `memory_fields <EpisodicMemoryMechanism_Memory_Fields>` of an
+            entry in `memory <ContentAddressableMemory.memory>`, and then using `distance_function
+            <ContentAddressableMemory.distance_function>` to compute the distance betwen them.
 
-          * True -- `variable <EpisodicMemoryMechanism_Memory_Fields.variable>` is compared with each item
-            `memory <ContentAddressableMemory.memory>` by using `distance_function
-            <ContentAddressableMemory.distance_function>` to compare each item in `variable
-            <EpisodicMemoryMechanism_Memory_Fields.variable>` with the corresponding `memory_field of the
-            entry in memory, and then averaging the distances for that entry weighted by `distance_field_weights
-            <ContentAddressableMemory.distance_field_weights>`.
+          * if `distance_field_weights <ContentAddressableMemory.distance_field_weights>` is an array of scalars with
+            different values, then `variable <ContentAddressableMemory.variable>` is compared with each entry in `memory
+            <ContentAddressableMemory.memory>` by using `distance_function <ContentAddressableMemory.distance_function>`
+            to compute the distance of each item in `variable <EpisodicMemoryMechanism_Memory_Fields.variable>` with
+            the corresponding `memory_field of the entry in memory, and then averaging those distances weighted by the
+            corresponding element of `distance_field_weights<ContentAddressableMemory.distance_field_weights>`.
 
-        * calling the `selection_function <ContentAddressableMemory.selection_function>` with the list of distances
+        * `selection_function <ContentAddressableMemory.selection_function>` with the list of distances
           to determine which entries to select for consideration. If more than on entry from `memory
           <ContentAddressableMemory.memory>` is identified, `equidistant_entries_select
           <ContentAddressableMemory.equidistant_entries_select>` is used to determine which to retrieve.  If no
           retrieval occurs, an appropriately shaped zero-valued array is
           assigned as the retrieved memory, and returned by `function <ContentAddressableMemory.function>`.
 
+        The distance between `variable <ContentAddressableMemory.variable>` and the retrieved entry is stored in
+        `distance `<ContentAddressableMemory.distance>`, the distance between of each of their fields is stored in
+        `distances_by_field <ContentAddressableMemory.distances_by_field>`, and the distances of `variable
+        <ContentAddressableMemory.variable>` to all entries in `memory <ContentAddressableMemory.memory>` is stored
+        in `distances_to_entries <ContentAddressableMemory.distances_to_entries>`.
     .. _ContentAddressableMemory_Execution_Storage:
 
     * *Storage:* after retrieval, an attempt is made to store `variable <ContentAddressableMemory.variable>` in `memory
@@ -1531,12 +1541,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         specifies the function used during retrieval to compare `variable <ContentAddressableMemory.variable>` with
         entries in `memory <ContentAddressableMemory.memory>`.
 
-    distance_by_fields : bool : default False
-        specifies the method by which `distance_function <ContentAddressableMemory.distance_function>` is used to
-        calculate the distance of `variable <ContentAddressableMemory.variable>` with each item in `memory
-        <ContentAddressableMemory.memory>` (see `distance_by_fields <ContentAddressableMemory.distance_by_fields>`
-        for additional details).
-
     distance_field_weights : 1d array : default None
         specifies the weight to use in computing the distance between each item of `variable
         <ContentAddressableMemory.variable>` and the corresponding `memory_field
@@ -1554,8 +1558,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     duplicate_threshold : float : default 0
         specifies how similar `variable <ContentAddressableMemory.variable>` must be to an entry in `memory
         `<ContentAddressableMemory.memory>` based on `distance_function <ContentAddressableMemory.distance_function>`
-        to be considered a duplicate (see `duplicate_entries_allowed <ContentAddressableMemory.duplicate_entries_allowed>` for
-        additional details).
+        to be considered a duplicate (see `duplicate_entries_allowed
+        <ContentAddressableMemory.duplicate_entries_allowed>` for additional details).
 
     equidistant_entries_select:  RANDOM | OLDEST | NEWEST : default RANDOM
         specifies which entry in `memory <ContentAddressableMemory.memory>` is chosen for retrieval if two or more
@@ -1623,28 +1627,18 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         function used during retrieval to compare `variable <ContentAddressableMemory.variable>` with entries in
         `memory <ContentAddressableMemory.memory>`.
 
-    distance_by_fields : bool
-        determines how `distance_function <ContentAddressableMemory.distance_function>` is applied.  If False,
-        all items of `variable <ContentAddressableMemory.variable>` are concatenated and used as a single vector
-        to determine distance from entries in `memory <ContentAddressableMemory.memory>`; if True,
-        `variable <ContentAddressableMemory.variable>` is compared field-wise with entries in `memory
-        <ContentAddressableMemory.memory>`, possibly weighted by `distance_field_weights
-        <ContentAddressableMemory.distance_field_weights>` if that is also specified (see `retrieval
-        <ContentAddressableMemory_Retrieval>` for additional details).
-
     distance_field_weights : 1d array : default None
         determines the weight used in computing the distance between each item of `variable
         <ContentAddressableMemory.variable>` and the corresponding `memory_field
-        <EpisodicMemoryMechanism_Memory_Fields>` of each item in `memory <ContentAddressableMemory.memory>`
-        when `distance_by_fields <ContentAddressableMemory.distance_by_fields>` is True.  If it is not specified
-        and `distance_by_fields <ContentAddressableMemory.distance_by_fields>` is True, a weight of 1 is assigned
-        for each field.
+        <EpisodicMemoryMechanism_Memory_Fields>` of each entry in `memory <ContentAddressableMemory.memory>`;
+        if all elements are identical, it is treated as a scalar coefficient on `distance
+        <ContentAddressableMemory.distance>` (see `ContentAddressableMemory_Field_Weights` for additional details).
 
     distance : float : default 0
         contains distance used for retrieval last cue to last entry returned in a given `context <Context>`.
 
     distances_by_field : array : default [0]
-        contains array of distances between each `memory field <ContentAddressbleMemory_Memory_Fields>`
+        contains array of distances between each `memory field <ContentAddressableMemory_Memory_Fields>`
         of the last cue and the corresponding ones of the last entry returned in a given `context <Context>`.
 
     distances_to_entries : array : default [0]
@@ -1675,8 +1669,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     duplicate_threshold : float
         determines how similar `variable <ContentAddressableMemory.variable>` must be to an entry in `memory
         `<ContentAddressableMemory.memory>` based on `distance_function <ContentAddressableMemory.distance_function>`
-        to be considered a duplicate (see `duplicate_entries_allowed <ContentAddressableMemory.duplicate_entries_allowed>` for
-        additional details).
+        to be considered a duplicate (see `duplicate_entries_allowed
+        <ContentAddressableMemory.duplicate_entries_allowed>` for additional details).
 
     equidistant_entries_select:  RANDOM | OLDEST | NEWEST
         determines which entry is retrieved when duplicate entries are identified or are indistinguishable by the
@@ -1737,9 +1731,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
                     :default value: Cosine
                     :type: ``str``
-
-                distance_by_fields
-                    see `distance_by_fields <ContentAddressableMemory.distance_by_fields>`
 
                 duplicate_entries_allowed
                     see `duplicate_entries_allowed <ContentAddressableMemory.duplicate_entries_allowed>`
@@ -1870,12 +1861,21 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
         random_state = Parameter(None, stateful=True, loggable=False)
-        distance_by_fields = Parameter(False, stateful=True)
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
         distance = Parameter(0, stateful=True, read_only=True)
         distances_by_field = Parameter([0], stateful=True, read_only=True)
         distances_to_entries = Parameter([0], stateful=True, read_only=True)
+
+        def _validate_retrieval_prob(self, retrieval_prob):
+            retrieval_prob = float(retrieval_prob)
+            if not all_within_range(retrieval_prob, 0, 1):
+                return f"{RETRIEVAL_PROB} must be a float in the interval [0,1]."
+
+        def _validate_storage_prob(self, storage_prob):
+            storage_prob = float(storage_prob)
+            if not all_within_range(storage_prob, 0, 1):
+                return f"{STORAGE_PROB} must be a float in the interval [0,1]."
 
     def __init__(self,
                  default_variable=None,
@@ -1886,7 +1886,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                  initializer:Optional[Union[list, np.ndarray]]=None,
                  distance_field_weights:Optional[Union[list, np.ndarray]]=None,
                  distance_function:Optional[Union[Distance, is_function_type]]=None,
-                 distance_by_fields:Optional[bool]=None,
                  selection_function:Optional[Union[OneHot, is_function_type]]=None,
                  duplicate_entries_allowed=None,
                  duplicate_threshold:Optional[int]=None,
@@ -1915,7 +1914,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             duplicate_entries_allowed=duplicate_entries_allowed,
             duplicate_threshold=duplicate_threshold,
             equidistant_entries_select=equidistant_entries_select,
-            distance_by_fields=distance_by_fields,
+            distance_function=distance_function,
             distance_field_weights=distance_field_weights,
             rate=rate,
             noise=noise,
@@ -1952,42 +1951,28 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             for i in range(self.defaults.max_entries)
         ])
 
-    def _validate_params(self, request_set, target_set=None, context=None):
-        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
-
-        if RETRIEVAL_PROB in request_set and request_set[RETRIEVAL_PROB] is not None:
-            retrieval_prob = request_set[RETRIEVAL_PROB]
-            if not all_within_range(retrieval_prob, 0, 1):
-                raise FunctionError("{} arg of {} ({}) must be a float in the interval [0,1]".
-                                    format(repr(RETRIEVAL_PROB), self.__class___.__name__, retrieval_prob))
-
-        if STORAGE_PROB in request_set and request_set[STORAGE_PROB] is not None:
-            storage_prob = request_set[STORAGE_PROB]
-            if not all_within_range(storage_prob, 0, 1):
-                raise FunctionError("{} arg of {} ({}) must be a float in the interval [0,1]".
-                                    format(repr(STORAGE_PROB), self.__class___.__name__, storage_prob))
-
     def _validate(self, context=None):
         """Validate distance_function, selection_function and memory store"""
         distance_function = self.distance_function
-        test_var = self.defaults.variable
-        if isinstance(distance_function, type):
-            distance_function = distance_function(default_variable=test_var)
-            fct_msg = 'Function type'
-        else:
-            distance_function.defaults.variable = test_var
-            distance_function._instantiate_value(context)
-            fct_msg = 'Function'
-        try:
-            distance_result = distance_function(test_var, context=context)
-            if not np.isscalar(distance_result):
-                raise FunctionError("Value returned by {} specified for {} ({}) must return a scalar".
-                                    format(repr(DISTANCE_FUNCTION), self.__name__.__class__, distance_result))
-        except:
-            raise FunctionError("{} specified for {} arg of {} ({}) "
-                                "must accept a list with two 1d arrays or a 2d array as its argument".
-                                format(fct_msg, repr(DISTANCE_FUNCTION), self.__class__,
-                                       distance_function))
+        # Try actual default_variable as well as standard cases for generality
+        for test_var in [self.defaults.variable, [[0],[0]], [[0,0],[0,0]] ]:
+            if isinstance(distance_function, type):
+                distance_function = distance_function(default_variable=test_var)
+                fct_msg = 'Function type'
+            else:
+                distance_function.defaults.variable = test_var
+                distance_function._instantiate_value(context)
+                fct_msg = 'Function'
+            try:
+                distance_result = distance_function([[0,0],[0,0]], context=context)
+                if not np.isscalar(distance_result):
+                    raise FunctionError("Value returned by {} specified for {} ({}) must return a scalar".
+                                        format(repr(DISTANCE_FUNCTION), self.__name__.__class__, distance_result))
+            except:
+                raise FunctionError("{} specified for {} arg of {} ({}) "
+                                    "must accept an array with two lists or 1d arrays, or a 2d array, as its argument".
+                                    format(fct_msg, repr(DISTANCE_FUNCTION), self.__class__,
+                                           distance_function))
 
         # FIX: 4/5/21 SHOULD VALIDATE NOISE AND RATE HERE AS WELL?
 
@@ -2220,21 +2205,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         cue = np.array(cue)
         self._validate_entry(cue, context)
-        num_fields = self.parameters.memory_num_fields._get(context)
-        field_weights = (field_weights
-                         or self._get_current_parameter_value('distance_field_weights', context)
-                         or  np.array([1]*num_fields))
-        distance_fct = self.parameters.distance_function._get(context)
 
-        if self.parameters.distance_by_fields._get(context) is True:
-            # Get mean of field-wise distances between cue each entry in memory
-            distances_to_entries = []
-            for entry in _memory:
-                distances_to_entries.append(np.sum([distance_fct([cue[i], entry[i]]) * field_weights[i] / num_fields
-                                  for i in range(num_fields)]))
-        else:
-            # Get distances between entire cue vector and all that for each entry in memory
-            distances_to_entries = [distance_fct([np.hstack(cue), np.hstack(m)]) for m in _memory]
+        # Get mean of field-wise distances between cue each entry in memory
+        distances_to_entries = []
+        for entry in _memory:
+            distances_to_entries.append(self._get_distance(cue, entry, field_weights, 'full_entry', context))
 
         # Get the best-match(es) in memory based on selection_function and return as non-zero value(s) in an array
         selection_array = self.selection_function(distances_to_entries, context=context)
@@ -2268,13 +2243,61 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                     f'\'equidistant_entries_select parameter of {self.name} for {self.owner.name}'
 
         best_match = _memory[index_of_selected_item]
+        best_match_distances = self._get_distance(cue,best_match,field_weights, 'per_field',context)
         self.parameters.distance.set(distances_to_entries[index_of_selected_item], context, override=True)
-        self.parameters.distances_by_field.set([distance_fct([cue[i], best_match[i]]) * field_weights[i]
-                                               for i in range(num_fields)],
-                                              context,override=True)
+        self.parameters.distances_by_field.set(best_match_distances,override=True)
         self.parameters.distances_to_entries.set(distances_to_entries, context,override=True)
         # Return entry
         return best_match
+
+    def _get_distance(self, cue:Union[list, np.ndarray],
+                      candidate:Union[list, np.ndarray],
+                      field_weights:np.ndarray,
+                      granularity:str,
+                      # granularity:Literal[Union['full_entry', 'per_field']],
+                      context) -> Union[float, np.ndarray]:
+        """Get distance of cue from candidate using `distance_function <ContentAddressableMemory.distance_function>`.
+
+        - If **granularity**=='full_entry':
+            returns *single scalar distance* computed over full **cue** and **candidate** entries if all elements of
+                **fields_weights** are equal (i.e., it is a homogenous array);  otherwise it is used to weight the
+                the distance computed between each field of **cue** and corresponding one of **candidate**,
+                when computing their mean field-wise distances.
+        - if **granularity**=='per_field':
+            returns *array of distances* computed field-wise (hadamard) for **cue** and **candidate**,
+            weighted by **field_weights**.
+
+        :returns    
+            scalar if **granularity**=='full_entry';
+            array if **granularity**=='per_fields'
+        """
+
+        distance_fct = self.parameters.distance_function._get(context)
+        num_fields = self.parameters.memory_num_fields._get(context)
+        field_weights = np.array(field_weights
+                                 or self._get_current_parameter_value('distance_field_weights', context)
+                                 or  [1])
+        field_weights = field_weights[0] if np.all(field_weights[0]==field_weights) else field_weights
+        distance_by_fields = not np.isscalar(field_weights)
+
+        if granularity is 'per_field':
+            return np.array([distance_fct([cue[i], candidate[i]]) for i in range(num_fields)]) * field_weights
+
+        elif granularity is 'full_entry':
+            if distance_by_fields:
+                # Get mean of field-wise distances between cue each entry in memory, weighted by field_weights
+                distance = np.sum([distance_fct([cue[i], candidate[i]]) * field_weights[i]
+                                   for i in range(num_fields)]) / num_fields
+            else:
+                # Get distances between entire cue vector and all that for each entry in memory
+                #    Note: in this case, field_weights is just a scalar coefficient
+                distance = distance_fct([np.hstack(cue), np.hstack(candidate)]) * field_weights
+            return distance
+
+        else:
+            assert False, f"PROGRAM ERROR: call to 'ContentAddressableMemory.get_distance()' method " \
+                          f"with invalid 'granularity' argument ({granularity});  " \
+                          f"should be 'full_entry' or 'per_field."
 
     def _store_memory(self, entry:Union[list, np.ndarray], context) -> bool:
         """Add an entry to `memory <ContentAddressableMemory.memory>`

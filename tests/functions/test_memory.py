@@ -571,9 +571,6 @@ def retrieve_label(retrieved, stimuli):
 #region
 class TestContentAddressableMemory:
 
-    # FIX: Add tests for:
-    #      - error on different shaped entries; others (search for ContentAddressableMemoryError in code)
-
     # Test of ContentAddressableMemory without LLVM:
     def test_ContentAddressableMemory_with_initializer_and_equal_field_sizes(self):
 
@@ -621,7 +618,6 @@ class TestContentAddressableMemory:
         assert retrieved_labels == [['A'], ['A'], ['F'], ['C'], ['B'], ['F']]
 
         # Test  restricting retrieval to only 1st field (which has duplicate values) and selecting for OLDEST
-        c.distance_by_fields = True
         c.distance_field_weights = [1,0]
         stim = 'C' # Has same 1st field as A (older) and D (newer)
 
@@ -671,7 +667,6 @@ class TestContentAddressableMemory:
             retrieved_labels.append(retrieved_label)
         assert retrieved_labels == [['A'], ['A'], ['F'], ['C'], ['B'], ['F']]
 
-        c.distance_by_fields = True
         c.distance_field_weights = [1,0]
         stim = 'C'
         c.equidistant_entries_select = OLDEST
@@ -700,14 +695,58 @@ class TestContentAddressableMemory:
 
     def test_ContentAddressableMemory_errors(self):
 
+        # Test constructor
+
+        with pytest.raises(ParameterError) as error_text:
+            c = ContentAddressableMemory(retrieval_prob=32)
+        assert 'Value (32) assigned to parameter \'retrieval_prob\' of (ContentAddressableMemory ' \
+               'ContentAddressableMemory Function-0).parameters is not valid: ' \
+               'retrieval_prob must be a float in the interval [0,1].' in str(error_text.value)
+
+        with pytest.raises(ParameterError) as error_text:
+            c = ContentAddressableMemory(storage_prob=-1)
+        assert 'Value (-1) assigned to parameter \'storage_prob\' of (ContentAddressableMemory ' \
+               'ContentAddressableMemory Function-1).parameters is not valid: ' \
+               'storage_prob must be a float in the interval [0,1].' in str(error_text.value)
+
+        with pytest.raises(ParameterError) as error_text:
+            c = ContentAddressableMemory(distance_function=LinearCombination)
+        assert 'xxx' in str(error_text.value)
+
         c = ContentAddressableMemory()
         retrieved = c([[1,2,3],[4,5,6]])
+
+        # Test parameter and value assignments
+
+        with pytest.raises(ParameterError) as error_text:
+            c.parameters.retrieval_prob = 2
+        assert 'Value (2) assigned to parameter \'retrieval_prob\' of (ContentAddressableMemory ' \
+               'ContentAddressableMemory Function-2).parameters is not valid: ' \
+               'retrieval_prob must be a float in the interval [0,1].' in str(error_text.value)
+
+        # with pytest.raises(ParameterError) as error_text:
+        #     c.parameters.retrieval_prob.set(2)
+        # assert 'Value (32) assigned to parameter \'retrieval_prob\' of (ContentAddressableMemory ' \
+        #        'ContentAddressableMemory Function-0).parameters is not valid: ' \
+        #        'retrieval_prob must be a float in the interval [0,1].' in str(error_text.value)
+
+        with pytest.raises(ParameterError) as error_text:
+            c = ContentAddressableMemory(retrieval_prob=32)
+        assert 'Value (32) assigned to parameter \'retrieval_prob\' of (ContentAddressableMemory ' \
+               'ContentAddressableMemory Function-0).parameters is not valid: ' \
+               'retrieval_prob must be a float in the interval [0,1].' in str(error_text.value)
+
+        with pytest.raises(ParameterError) as error_text:
+            c = ContentAddressableMemory(storage_prob=-1)
+        assert 'Value (-1) assigned to parameter \'storage_prob\' of (ContentAddressableMemory ' \
+               'ContentAddressableMemory Function-1).parameters is not valid: ' \
+               'storage_prob must be a float in the interval [0,1].' in str(error_text.value)
+
 
         with pytest.raises(FunctionError) as error_text:
             retrieved = c([[[1,2,3],[4,5,6]]])
         assert 'Attempt to store and/or retrieve an entry in ContentAddressableMemory that has ' \
                'more than 2 dimensions (3);  try flattening innermost ones.' in str(error_text.value)
-
 
         with pytest.raises(FunctionError) as error_text:
             retrieved = c([[1,2,3],[4,5],[6,7]])
@@ -718,6 +757,8 @@ class TestContentAddressableMemory:
             retrieved = c([[1,2,3],[4,5,6,7]])
         assert 'Field 1 of entry ([array([1, 2, 3]) array([4, 5, 6, 7])]) has incorrect shape ((4,)) ' \
                'for memory of \'ContentAddressableMemory Function-0\';  should be: (3,).' in str(error_text.value)
+
+# FIX: THE ONES BELOW STILL NEED TO BE UPDATED: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def test_ContentAddressableMemory_without_initializer_and_key_size_same_as_val_size(self):
 
