@@ -152,7 +152,7 @@ class TestDictionaryMemory:
         assert retrieved_keys == [['F'], ['A'], ['A'], ['C'], ['B'], ['F']]
 
         # Run again to test re-initialization and random retrieval
-        em.function.reset(np.array([stimuli['A'], stimuli['F']]))
+        em.function.reset(np.array([stimuli['A'], stimuli['F']], dtype=object))
         retrieved_keys=[]
         for key in sorted(stimuli.keys()):
             retrieved = [i for i in em.execute(stimuli[key])]
@@ -718,7 +718,7 @@ class TestContentAddressableMemory:
         assert retrieved_labels == [['F'], ['A'], ['F'], ['C'], ['B'], ['F']]
 
         # Run again to test re-initialization and random retrieval
-        c.reset(np.array([stimuli['A'], stimuli['F']]))
+        c.reset(np.array([stimuli['A'], stimuli['F']], dtype=object))
         retrieved_labels=[]
         for label in sorted(stimuli.keys()):
             retrieved = [i for i in c(stimuli[label])]
@@ -773,7 +773,7 @@ class TestContentAddressableMemory:
             equidistant_entries_select=RANDOM)
 
         # Run again to test re-initialization and random retrieval
-        c.reset(np.array([stimuli['A'], stimuli['F']]))
+        c.reset(np.array([stimuli['A'], stimuli['F']], dtype=object))
         retrieved_labels=[]
         for key in sorted(stimuli.keys()):
             retrieved = c(stimuli[key])
