@@ -1025,7 +1025,7 @@ class TestContentAddressableMemory:
             c([[1,2,3],[4,5,6]])
         assert "Attempt to store item ([[1. 2. 3.]\n [4. 5. 6.]]) in ContentAddressableMemory Function-0 with " \
                "'duplicate_entries_allowed'='OVERWRITE' when there is more than one matching entry in its memory; " \
-               "'duplicate_entries_allowed' may have previously been set to 'True'"  in str(error_text.value)
+               "'duplicate_entries_allowed' may have previously been set to 'True'" in str(error_text.value)
 
         with pytest.raises(FunctionError) as error_text:
             clear_registry(FunctionRegistry)

@@ -1868,7 +1868,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         memory_num_fields = Parameter(None, stateful=True, read_only=True)
         memory_field_shapes = Parameter(None, stateful=True, read_only=True)
-        distance_field_weights = Parameter(None, stateful=True, modulable=True)
+        distance_field_weights = Parameter([1], stateful=True, modulable=True)
         duplicate_entries_allowed = Parameter(False, stateful=True)
         duplicate_threshold = Parameter(0, stateful=False, modulable=True)
         equidistant_entries_select = Parameter(RANDOM)
@@ -2425,29 +2425,14 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             array if **granularity**=='per_fields'
         """
 
+        # Get distance function and params
         distance_fct = self.parameters.distance_function._get(context)
         num_fields = self.parameters.memory_num_fields._get(context) or len(field_weights)
-
-        # field_weights_param = self._get_current_parameter_value('distance_field_weights', context)
-        # if isinstance(field_weights, np.ndarray):
-        #     # Need to convert to to list for testing and assignment below
-        #     field_weights = field_weights.tolist()
-        # field_weights = np.array(field_weights
-        #                          or field_weights_param
-        #                          or  [1])
-
         if field_weights is None:
+            # Could be from get_memory called from COMMAND LINE without field_weights
             field_weights =  self._get_current_parameter_value('distance_field_weights', context)
-            if field_weights is None:
-                field_weights = [1]
         field_weights = np.array(field_weights)
-
-        # field_weights = np.array(field_weights
-        #                          or field_weights_param.tolist()
-        #                          or  [1])
-        # field_weights = np.array(field_weights
-        #                          or field_weights_param.tolist() if field_weights is not None else [1])
-
+        # Use first element as scalar if it is a homogenous array (i.e., all elements are the same)
         field_weights = field_weights[0] if np.all(field_weights[0]==field_weights) else field_weights
         distance_by_fields = not np.isscalar(field_weights)
 
