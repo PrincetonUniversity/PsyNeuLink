@@ -804,7 +804,7 @@ class TestContentAddressableMemory:
 
         retrieved_label = retrieve_label(retrieved, stimuli)
         assert retrieved_label == [None]
-        expected = np.array([np.array([0,0,0]),np.array([0,0,0,0])])
+        expected = np.array([np.array([0,0,0]),np.array([0,0,0,0])], dtype=object)
         assert all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
 
     def test_ContentAddressableMemory_without_initializer_and_equal_field_sizes(self):
@@ -900,7 +900,7 @@ class TestContentAddressableMemory:
 
         retrieved_label = retrieve_label(retrieved, stimuli)
         assert retrieved_label == [None]
-        expected = np.array([np.array([0,0,0]),np.array([0,0,0,0])])
+        expected = np.array([np.array([0,0,0]),np.array([0,0,0,0])], dtype=object)
         assert all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
 
     def test_ContentAddressableMemory_with_duplicate_entry_in_initializer_warning(self):
