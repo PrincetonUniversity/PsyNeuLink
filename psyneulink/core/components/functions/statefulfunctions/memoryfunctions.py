@@ -1479,9 +1479,14 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             corresponding element of `distance_field_weights<ContentAddressableMemory.distance_field_weights>`.
 
             .. note::
-               Any fields assigned a weight of 0 are ignored in the distance calculation; that is, distances between
+               Fields assigned a weight of 0 are ignored in the distance calculation; that is, distances between
                `variable <ContentAddressableMemory.variable>`  and a given entry are not included in the averaging
                of distances by field.
+
+            .. hint::
+               Entries in `memory <ContentAddressableMemory.memory>` can be assigned "labels" --
+               i.e., values that are not used in the calculation of distance -- by assigning them
+               a weight of 0 in `distance_field_weights <ContentAddressableMemory.memory>`).
 
         * `selection_function <ContentAddressableMemory.selection_function>` with the list of distances
           to determine which entries to select for consideration. If more than on entry from `memory
