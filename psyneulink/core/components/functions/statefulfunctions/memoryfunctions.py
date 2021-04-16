@@ -2569,9 +2569,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     @property
     def memory(self):
-        '''Return entries in self._memory as lists in an outer np.array;
+        """Return entries in self._memory as lists in an outer np.array;
            use np.array for multi-line printout
-       '''
+       """
         try:
             # return np.array([list([list(f) for f in m]) for m in self._memory])
             return self._memory
