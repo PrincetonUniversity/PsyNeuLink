@@ -584,7 +584,7 @@ class TestContentAddressableMemory:
             storage_prob=0,
             distance_function=Distance(metric=COSINE)
         )
-        pairs = combinations(range(0,3),2)
+        pairs = list(combinations(range(0,3),2))
         # Distances between all stimuli
         distances = [Distance(metric=COSINE)([stimuli[i],stimuli[j]]) for i, j in pairs]
         c_distances = []
@@ -603,11 +603,15 @@ class TestContentAddressableMemory:
         assert np.allclose(c.distances_to_entries, [distances[1], distances[2], 0])
 
         # Test distances based only on field 0
-        pairs = combinations(range(0,3),2)
-        c.distance_field_weights = [1,0]
-        distances = [Distance(metric=COSINE)([stimuli[i][0]* np.array([[1],[0]]),
-                                              stimuli[j][0]** np.array([[1],[0]])])/2
-                     for i, j in pairs]
+
+        field_weights = np.array([[1],[0]])
+        c.distance_field_weights = field_weights
+        distances = []
+        for k in range(2):
+            distances.append([Distance(metric=COSINE)([stimuli[i][k], stimuli[j][k]]) * field_weights[k]
+                              for i, j in pairs])
+        distances = np.array(distances)
+        distances = np.squeeze((distances[0] + distances[1]) / 2)
 
         retrieved = c(stimuli[0])
         np.all(retrieved==stimuli[0])
