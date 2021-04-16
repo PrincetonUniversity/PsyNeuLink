@@ -1897,7 +1897,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 return f"'equidistant_entries_select' must be {' or '.join(equidistant_entries_select_keywords)}."
 
         def _validate_duplicate_entries_allowed(self, duplicate_entries_allowed):
-            if not isinstance(duplicate_entries_allowed, bool) or duplicate_entries_allowed == OVERWRITE:
+            if not isinstance(duplicate_entries_allowed, bool) and duplicate_entries_allowed != OVERWRITE:
                 return f"'duplicate_entries_allowed' must be a bool or 'OVERWRITE'."
 
     def __init__(self,

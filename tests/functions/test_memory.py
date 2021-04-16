@@ -571,7 +571,6 @@ def retrieve_label(retrieved, stimuli):
 #region
 class TestContentAddressableMemory:
 
-    # FIX: try c.execute(XXX)
 
     # Test of ContentAddressableMemory without LLVM:
     def test_ContentAddressableMemory_with_initializer_and_equal_field_sizes(self):
@@ -868,14 +867,11 @@ class TestContentAddressableMemory:
                 initializer=[[[1,2,3], [4,5,6]],
                              [[7,8,9], [10,11,12]]],
                 distance_field_weights=[1,0],
-                duplicate_entries_allowed=True,
-                # duplicate_entries_allowed=OVERWRITE,   # FIX <-CRASHES
+                duplicate_entries_allowed=OVERWRITE,
                 equidistant_entries_select=RANDOM,
                 retrieval_prob = 1.0,
                 storage_prob = 1.0
         )
-
-        c.duplicate_entries_allowed = OVERWRITE
 
         # Add new memory
         retreived = c([[10,11,12], [100,110,120]])
