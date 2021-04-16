@@ -1953,16 +1953,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             self.parameters.memory_num_fields.set(self.previous_value.shape[1], override=True)
             self.parameters.memory_field_shapes.set([item.shape for item in self.previous_value[0]], override=True)
 
-    # FIX: IS THIS USED ANYWHERE?
-    def _parse_distance_function_variable(self, variable):
-        # # MODIFIED 4/5/21 OLD:
-        # actual used variable in execution (get_memory) checks distance
-        # between key and key, not key and val as implied in _validate
-        # return convert_to_np_array([variable[KEYS], variable[KEYS]])
-        # MODIFIED 4/5/21 NEW:
-        return convert_to_np_array([variable[0], variable[0]])
-        # MODIFIED 4/5/21 END
-
     def _parse_selection_function_variable(self, variable, context=None):
         # this should be replaced in the future with the variable
         # argument when function ordering (and so ordering of parsers)
@@ -2290,6 +2280,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         self.parameters.distance.set(distances_to_entries[index_of_selected_item], context, override=True)
         self.parameters.distances_by_field.set(best_match_distances,override=True)
         self.parameters.distances_to_entries.set(distances_to_entries, context,override=True)
+
         # Return entry
         return best_match
 
@@ -2508,15 +2499,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         entries = [list(m) for m in memories]
         fields = convert_to_list(fields)
 
-        # # MODIFIED 4/15/21 OLD:
-        # for i, entry in enumerate(entries):
-        #     for j, entry in enumerate(self._memory):
-        #         if (entry[i] == entry[j]
-        #                 or fields and all(entry[i][f] == entry[j][f] for f in fields)):
-        #             new_memory_bank = np.delete(self._memory,j,axis=0)
-        #             self._memory = np.array(new_memory_bank)
-        #             self.parameters.previous_value._set(self._memory, context)
-        # MODIFIED 4/15/21 NEW:
         existing_memory = self.parameters.previous_value._get(context)
         pruned_memory = existing_memory.copy()
         for entry, memory in product(entries, existing_memory):
@@ -2525,7 +2507,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 pruned_memory = np.delete(pruned_memory, pruned_memory.tolist().index(memory.tolist()), axis=0)
         self._memory = np.array(pruned_memory)
         self.parameters.previous_value._set(self._memory, context)
-        # MODIFIED 4/15/21 END
 
     def _parse_memories(self, entries, method, context=None):
         """Parse passing of single vs. multiple memories, validate memories, and return ndarray
