@@ -590,8 +590,15 @@ class TestContentAddressableMemory:
         # Test distance (for retrieved item) and distances_by_field
         retrieved = c([[1,2,4],[4,5,9]])
         assert np.all(retrieved==np.array([[1,2,5],[4,5,8]]))
-        assert c.distance == 0.006782910698679978
+        assert c.distance == Distance(metric=COSINE)([retrieved,[[1,2,4],[4,5,9]]])
         assert np.allclose(c.distances_by_field, [0.00397616, 0.00160159])
+
+        # Test distance_field_weights as scalar
+        c.distance_field_weights=[2.5]
+        retrieved = c([[1,2,4],[4,5,9]])
+        assert np.all(retrieved==np.array([[1,2,5],[4,5,8]]))
+        assert c.distance == 2.5 * Distance(metric=COSINE)([retrieved,[[1,2,4],[4,5,9]]])
+        assert np.allclose(c.distances_by_field, [2.5*0.00397616, 2.5*0.00160159])
 
         # Test with 0 as field weight
         c.distance_field_weights=[1,0]
