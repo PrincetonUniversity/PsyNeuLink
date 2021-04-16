@@ -573,7 +573,6 @@ def retrieve_label(retrieved, stimuli):
 #region
 class TestContentAddressableMemory:
 
-    # FIX:  CHECK USE OF FIELDS AS SCALAR
     def test_ContentAddressableMemory_simple_distances(self):
 
         stimuli = np.array([[[1,2,3],[4,5,6]],
@@ -622,7 +621,7 @@ class TestContentAddressableMemory:
         assert np.all(retrieved==np.array([[1,2,3],[4,5,6]]))
         assert all(c.distances_by_field == [0.0, None])
 
-    # FIX: PARAMETERIZE FOR DISTANCE METRIC AND FIELDWEIGHTS
+    # FIX: COULD CONDENSE THESE TESTS BY PARAMETERIZING FIELD-WEIGHTS AND ALSO INCLUDE DISTANCE METRIC AS A PARAM
     def test_ContentAddressableMemory_parametric_distances(self):
 
         stimuli = np.array([[[1,2,3],[4,5,6]],
