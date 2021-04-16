@@ -2446,28 +2446,17 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         if granularity is 'per_field':
             # Note: this is just used for reporting, and not determining storage or retrieval
-            # return np.array([distance_fct([cue[i], candidate[i]]) for i in range(num_fields)]) * field_weights
-            # field_weights = np.atleast_1d(field_weights)
 
-            # num_non_zero_fields = len([fw for fw in field_weights if fw])
-            # return np.array([distance_fct([cue[i], candidate[i]])
-            #                  for i in range(num_non_zero_fields)]
-            #                 ) * np.array([f for f in field_weights if f])
-
-            # Replace 0's by None to allow multiplication
+            # Replace None's with 0 to allow multiplication
             distances_by_field =  np.array([distance_fct([cue[i], candidate[i]])
                                             for i in range(num_fields)]
                                            ) * np.array([f if f is not None else 0 for f in field_weights])
+            # If field_weights is scalar, splay out as array of length num_fields so can iterate through all of them
             if len(field_weights)==1:
                 field_weights = np.full(num_fields, field_weights[0])
-            # Restore None's for fields with None in field_weights
+            # Replace 0's with None's for fields with None in field_weights
             distances_by_field = np.array([distances_by_field[i]
                                            if f is not None else None for i,f in enumerate(field_weights)])
-            return distances_by_field
-            # if len(field_weights) > 1:
-            #     for i in range(num_fields):
-            #         if field_weights[i] is None:
-            #             distances_by_field[i] = None
             return distances_by_field
 
         elif granularity is 'full_entry':
