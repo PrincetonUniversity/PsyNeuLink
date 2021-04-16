@@ -2411,6 +2411,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             returns *array of distances* computed field-wise (hadamard) for **cue** and **candidate**,
             weighted by **field_weights**.
 
+        .. note::
+           granularity is only used for reporting field-wise distances in `distances_by_field
+           <ContentAddressableMemory.distances_by_field>`, and not used to determine retrieval or storage
+
         :returns
             scalar if **granularity**=='full_entry';
             array if **granularity**=='per_fields'
@@ -2428,13 +2432,15 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         distance_by_fields = not np.isscalar(field_weights)
 
         if granularity is 'per_field':
+            # Note: this is just used for reporting, and not determining storage or retrieval
             return np.array([distance_fct([cue[i], candidate[i]]) for i in range(num_fields)]) * field_weights
 
         elif granularity is 'full_entry':
             if distance_by_fields:
+                num_non_zero_fields = len([fw for fw in field_weights if fw])
                 # Get mean of field-wise distances between cue each entry in memory, weighted by field_weights
                 distance = np.sum([distance_fct([cue[i], candidate[i]]) * field_weights[i]
-                                   for i in range(num_fields)]) / num_fields
+                                   for i in range(num_fields) if field_weights[i]]) / num_non_zero_fields
             else:
                 # Get distances between entire cue vector and all that for each entry in memory
                 #    Note: in this case, field_weights is just a scalar coefficient

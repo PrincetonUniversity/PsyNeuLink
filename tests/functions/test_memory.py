@@ -573,6 +573,7 @@ def retrieve_label(retrieved, stimuli):
 class TestContentAddressableMemory:
 
 
+    # FIX: PARAMETERIZE FOR DISTANCE METRIC AND FIELDWEIGHTS;  ADD FIELD_I
     def test_ContentAddressableMemory_distances(self):
 
         stimuli = np.array([[[1,2,3],[4,5,6]],
@@ -602,30 +603,29 @@ class TestContentAddressableMemory:
         np.all(retrieved==stimuli[2])
         assert np.allclose(c.distances_to_entries, [distances[1], distances[2], 0])
 
-        # Test distances based only on field 0
+        # Test distances using distance_field_weights
+        field_weights = [np.array([[1],[0]]), np.array([[0],[1]])]
+        for fw in field_weights:
+            c.distance_field_weights = fw
+            distances = []
+            for k in range(2):
+                if fw[k]:
+                    distances.append([Distance(metric=COSINE)([stimuli[i][k], stimuli[j][k]]) * fw[k]
+                                      for i, j in pairs])
+            distances = np.array(distances)
+            distances = np.squeeze(np.sum(distances, axis=0)/len([f for f in fw if f]))
 
-        field_weights = np.array([[1],[0]])
-        c.distance_field_weights = field_weights
-        distances = []
-        for k in range(2):
-            distances.append([Distance(metric=COSINE)([stimuli[i][k], stimuli[j][k]]) * field_weights[k]
-                              for i, j in pairs])
-        distances = np.array(distances)
-        distances = np.squeeze((distances[0] + distances[1]) / 2)
+            retrieved = c(stimuli[0])
+            np.all(retrieved==stimuli[0])
+            assert np.allclose(c.distances_to_entries, [0, distances[0], distances[1]])
 
-        retrieved = c(stimuli[0])
-        np.all(retrieved==stimuli[0])
-        assert np.allclose(c.distances_to_entries, [0, distances[0], distances[1]])
+            retrieved = c(stimuli[1])
+            np.all(retrieved==stimuli[1])
+            assert np.allclose(c.distances_to_entries, [distances[0], 0, distances[2]])
 
-        retrieved = c(stimuli[1])
-        np.all(retrieved==stimuli[1])
-        assert np.allclose(c.distances_to_entries, [distances[0], 0, distances[2]])
-
-        retrieved = c(stimuli[2])
-        np.all(retrieved==stimuli[2])
-        assert np.allclose(c.distances_to_entries, [distances[1], distances[2], 0])
-
-        assert True
+            retrieved = c(stimuli[2])
+            np.all(retrieved==stimuli[2])
+            assert np.allclose(c.distances_to_entries, [distances[1], distances[2], 0])
 
 
     # Test of ContentAddressableMemory without LLVM:
