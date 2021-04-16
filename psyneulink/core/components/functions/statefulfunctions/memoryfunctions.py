@@ -13,6 +13,7 @@
 Functions that store and can retrieve a record of their current input.
 
 * `Buffer`
+* `ContentAddressableMemory`
 * `DictionaryMemory`
 
 Overview
@@ -374,16 +375,23 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     .. _ContentAddressableMemory:
 
-    Implement configurable, content-addressable storage and retrieval of items, in which storage is determined by
-    `storage_prob <ContentAddressableMemory.storage_prob>`, and retrieval of items is determined by `distance_function
-    <ContentAddressableMemory.distance_function>`, `selection_function <ContentAddressableMemory.selection_function>`,
-    and `retrieval_prob <ContentAddressableMemory.retrieval_prob>`. The **default_variable** argument specifies the
-    shape of an entry in `memory <ContentAddressableMemory.storage_prob>`, each of which is a list or array of items
-    that are themselves lists or 1d arrays (called "fields;" see `EpisodicMemoryMechanism_Memory_Fields`). An entry can
-    have an arbitrary number of fields, and each field can have an arbitrary length.  However, all entries must have
-    the same number of fields, and the corresponding fields must all have the same length across entries.  Entries are
-    retrieved from `memory <ContentAddressableMemory.memory>` based on their distance from `variable
-    <ContentAddressableMemory.variable>`, used as the cue for retrieval. The distance is computed using the
+    **Overview**
+
+    Implement configurable, content-addressable storage and retrieval of entries from
+    `memory <ContentAddressableMemory.memory>`. Storage is determined by `storage_prob
+    <ContentAddressableMemory.storage_prob>`, and retrieval of entries is determined by
+    `distance_function <ContentAddressableMemory.distance_function>`,
+    `selection_function <ContentAddressableMemory.selection_function>`, and `retrieval_prob
+    <ContentAddressableMemory.retrieval_prob>`.
+
+    *Entries and Fields*. The **default_variable** argument specifies the shape of an entry in `memory
+    <ContentAddressableMemory.storage_prob>`, each of which is a list or array of fields are themselves lists or
+    1d arrays (see `EpisodicMemoryMechanism_Memory_Fields`). An entry can have an arbitrary number of fields, and
+    each field can have an arbitrary length.  However, all entries must have the same number of fields, and the
+    corresponding fields must all have the same length across entries.
+
+    *Retrieval*. Entries are retrieved from `memory <ContentAddressableMemory.memory>` based on their distance from
+    `variable <ContentAddressableMemory.variable>`, used as the cue for retrieval. The distance is computed using the
     `distance_function <ContentAddressableMemory.distance_function>`, which compares `variable
     <ContentAddressableMemory.variable>` with each entry in `memory <ContentAddressableMemory.storage_prob>` as full
     vectors (i.e., with all fields of each concatenated into a single array), or by computing the distance of each
@@ -398,9 +406,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     <ContentAddressableMemory.distance>` and `distances_by_field <ContentAddressableMemory.distances_by_field>`, and
     `distances_to_entries <ContentAddressableMemory.distances_to_entries>` respectively.
 
-    Duplicate entries can be allowed, disallowed, or overwritten during storage using `duplicate_entries_allowed
-    <ContentAddressableMemory.duplicate_entries_allowed>`), and how selection is made among duplicate entries or
-    ones indistinguishable by the `distance_function <ContentAddressableMemory.distance_function>` can be specified
+    *Duplicate Entries*. These can be allowed, disallowed, or overwritten during storage using
+    `duplicate_entries_allowed <ContentAddressableMemory.duplicate_entries_allowed>`),
+    and how selection is made among duplicate entries or ones indistinguishable by the
+    `distance_function <ContentAddressableMemory.distance_function>` can be specified
     using `equidistant_entries_select <ContentAddressableMemory.equidistant_entries_select>`.
 
     The class also provides methods for directly retrieving (`get_memory
@@ -410,8 +419,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     .. _ContentAddressableMemory_Structure:
 
-    Structure
-    ---------
+    **Structure**
 
     An entry is stored and retrieved as an array containing a set of `fields <EpisodicMemoryMechanism_Memory_Fields>`
     each of which is a 1d array.  An array containing such entries can be used to initialize the contents of `memory
@@ -423,20 +431,18 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     .. _ContentAddressableMemory_Shapes:
 
     .. technical_note::
-
        Both `memory <ContentAddressableMemory.memory>` and all entries are stored as np.ndarrays, the dimensionality of
        which is determined by the shape of the fields of an entry.  If all fields have the same length (regular), then
        they are 2d arrays and `memory <ContentAddressableMemory.memory>` is a 3d array.  However, if fields vary in
        length (`ragged <https://en.wikipedia.org/wiki/Jagged_array>`_) then, although each field is 1d, an entry is
-       also 1d (with dtype='object'), and`memory <ContentAddressableMemory.memory>` is 2d (with dtype='object').
+       also 1d (with dtype='object'), and `memory <ContentAddressableMemory.memory>` is 2d (with dtype='object').
 
     .. _ContentAddressableMemory_Execution:
 
-    Execution
-    ---------
+    **Execution**
 
-    When `function <ContentAddressableMemory.function>` is executed, it first retrieves the
-    entry in `memory <ContentAddressableMemory.memory>` that most closely matches `variable
+    When the ContentAddressableMemory function is executed, it first retrieves the entry in `memory
+    <ContentAddressableMemory.memory>` that most closely matches `variable
     <ContentAddressableMemory.variable>` in the call, stores the latter in `memory <ContentAddressableMemory.memory>`,
     and returns the retrieved entry.  If `variable <ContentAddressableMemory.variable>` is an exact match of an entry
     in `memory <ContentAddressableMemory.memory>`, and `duplicate_entries_allowed
@@ -446,13 +452,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     .. _ContentAddressableMemory_Execution_Retrieval:
 
     * *Retrieval:* first, with probability `retrieval_prob <ContentAddressableMemory.retrieval_prob>`,
-      an entry is retrieved from`memory <ContentAddressableMemory.memory>` that is closest to `variable
-      <ContentAddressableMemory.variable>`.  An entry is chosen by calling, in order:
+      the entry closest to `variable <ContentAddressableMemory.variable>` is retrieved from is retrieved from `memory
+      <ContentAddressableMemory.memory>`.  The entry is chosen by calling, in order:
 
-        * `distance_function <ContentAddressableMemory.distance_function>` to compare, and generate a list of
-           `distances <ContentAddressableMemory.distances>` between `variable <ContentAddressableMemory.variable>`
-           and each entry in `memory <ContentAddressableMemory.memory>`, possibly weighted by `distance_field_weights
-           <ContentAddressableMemory.distance_field_weights>`, as follows:
+        * `distance_function <ContentAddressableMemory.distance_function>`\: generates a list of and compares
+          `distances <ContentAddressableMemory.distances>` between `variable <ContentAddressableMemory.variable>`
+          and each entry in `memory <ContentAddressableMemory.memory>`, possibly weighted by `distance_field_weights
+          <ContentAddressableMemory.distance_field_weights>`, as follows:
 
           .. _ContentAddressableMemory_Distance_Field_Weights:
 
@@ -468,13 +474,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             different values, then `variable <ContentAddressableMemory.variable>` is compared with each entry in `memory
             <ContentAddressableMemory.memory>` by using `distance_function <ContentAddressableMemory.distance_function>`
             to compute the distance of each item in `variable <EpisodicMemoryMechanism_Memory_Fields.variable>` with
-            the corresponding `memory_field of the entry in memory, and then averaging those distances weighted by the
+            the corresponding field of the entry in memory, and then averaging those distances weighted by the
             corresponding element of `distance_field_weights<ContentAddressableMemory.distance_field_weights>`.
 
             .. note::
-               Fields assigned a weight of 0 or None are ignored in the distance calculation; that is, distances
-               between `variable <ContentAddressableMemory.variable>`  and a given entry are not included in the
-               averaging of distances by field.
+               Fields assigned a weight of *0* or *None* are ignored in the distance calculation; that is, the distances
+               between `variable <ContentAddressableMemory.variable>` and entries for those fields are not included
+               in the averaging of distances by field.
 
             .. hint::
                Entries in `memory <ContentAddressableMemory.memory>` can be assigned "labels" -- i.e., values
@@ -483,7 +489,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                are numeric values; however, if non-numeric values are assigned to a field as labels, then None
                must be specified for that field in `distance_field_weights <ContentAddressableMemory.memory>`.
 
-        * `selection_function <ContentAddressableMemory.selection_function>` with the list of distances
+        * `selection_function <ContentAddressableMemory.selection_function>`\: called with the list of distances
           to determine which entries to select for consideration. If more than on entry from `memory
           <ContentAddressableMemory.memory>` is identified, `equidistant_entries_select
           <ContentAddressableMemory.equidistant_entries_select>` is used to determine which to retrieve.  If no
@@ -515,10 +521,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
             * True -- `variable <ContentAddressableMemory.variable>` is stored as another duplicate;
 
-            * *OVERWRITE*, the duplicate entry in `memory <ContentAddressableMemory.memory>` is replaced with `variable
-              <ContentAddressableMemory.variable>` (which may be slightly different than the item it replaces, within
-            the tolerance of `duplicate_threshold <ContentAddressableMemory.duplicate_threshold>`), and the
-            matching entry is returned;
+            * *OVERWRITE* -- the duplicate entry in `memory <ContentAddressableMemory.memory>` is replaced with
+            `variable <ContentAddressableMemory.variable>` (which may be slightly different than the item it
+            replaces, within the tolerance of `duplicate_threshold <ContentAddressableMemory.duplicate_threshold>`),
+            and the matching entry is returned;
 
             .. note::
 
@@ -577,7 +583,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     duplicate_entries_allowed : bool : default False
         specifies whether duplicate entries are allowed in `memory <ContentAddressableMemory.memory>`
-        (see `duplicate_entries_allowed <ContentAddressableMemory.duplicate_entries_allowed for additional details>`).
+        (see `duplicate_entries_allowed <ContentAddressableMemory.duplicate_entries_allowed` for additional details>`).
 
     duplicate_threshold : float : default 0
         specifies how similar `variable <ContentAddressableMemory.variable>` must be to an entry in `memory
@@ -591,7 +597,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     max_entries : int : default None
         specifies the maximum number of entries allowed in `memory <ContentAddressableMemory.memory>`
-        (see `max_entries <ContentAddressableMemory.max_entries for additional details>`).
+        (see `max_entries <ContentAddressableMemory.max_entries` for additional details>`).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
