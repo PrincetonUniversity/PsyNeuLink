@@ -571,6 +571,8 @@ def retrieve_label(retrieved, stimuli):
 #region
 class TestContentAddressableMemory:
 
+    # FIX: try c.execute(XXX)
+
     # Test of ContentAddressableMemory without LLVM:
     def test_ContentAddressableMemory_with_initializer_and_equal_field_sizes(self):
 
@@ -692,6 +694,246 @@ class TestContentAddressableMemory:
         assert retrieved_label == [None]
         expected = np.array([np.array([0,0,0]),np.array([0,0,0,0])])
         assert all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
+
+    def test_ContentAddressableMemory_without_initializer_and_equal_field_sizes(self):
+
+        stimuli = {'A': [[1,2,3],[4,5,6]],
+                   'B': [[8,9,10],[11,12,13]],
+                   'C': [[1,2,3],[11,12,13]],
+                   'D': [[1,2,3],[21,22,23]],
+                   'E': [[9,8,4],[11,12,13]],
+                   'F': [[10,10,30],[40,50,60]],
+                   }
+
+        c = ContentAddressableMemory(
+            distance_function=Distance(metric=COSINE),
+            duplicate_entries_allowed=True,
+            equidistant_entries_select=RANDOM
+        )
+
+        retrieved_labels=[]
+        sorted_labels = sorted(stimuli.keys())
+        for label in sorted_labels:
+            retrieved = [i for i in c(stimuli[label])]
+            retrieved_label = retrieve_label(retrieved, stimuli)
+            retrieved_labels.append(retrieved_label)
+        assert retrieved_labels == [[None], ['A'], ['A'], ['C'], ['B'], ['A']]
+
+        stim = 'C'
+        c.distance_field_weights = [1,0]
+        c.equidistant_entries_select = OLDEST
+        retrieved = [i for i in c.get_memory(stimuli[stim])]
+        retrieved_label = retrieve_label(retrieved, stimuli)
+        assert retrieved_label == ['A']
+
+        c.equidistant_entries_select = NEWEST
+        retrieved = [i for i in c.get_memory(stimuli[stim])]
+        retrieved_label = retrieve_label(retrieved, stimuli)
+        assert retrieved_label == ['D']
+
+        # Test that after allowing dups, warning is issued and memory with zeros is returned
+        c.duplicate_entries_allowed = False
+        stim = 'A'
+
+        text = "More than one entry matched cue"
+        with pytest.warns(UserWarning, match=text):
+            retrieved = c.execute(stimuli[stim])
+
+        retrieved_label = retrieve_label(retrieved, stimuli)
+        assert retrieved_label == [None]
+        expected = np.array([np.array([0,0,0]),np.array([0,0,0])])
+        assert all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
+
+    def test_ContentAddressableMemory_without_initializer_and_diff_field_sizes(self):
+
+        stimuli = {'A': [[1,2,3],[4,5,6,7]],
+                   'B': [[8,9,10],[11,12,13,14]],
+                   'C': [[1,2,3],[11,12,13,14]],
+                   'D': [[1,2,3],[21,22,23,24]],
+                   'E': [[9,8,4],[11,12,13,14]],
+                   'F': [[10,10,30],[40,50,60,70]],
+                   }
+
+        c = ContentAddressableMemory(
+            duplicate_entries_allowed=True,
+            equidistant_entries_select=RANDOM,
+            distance_field_weights=[1,0]
+        )
+
+        retrieved_labels=[]
+        for key in sorted(stimuli.keys()):
+            retrieved = c(stimuli[key])
+            retrieved_label = retrieve_label(retrieved, stimuli)
+            retrieved_labels.append(retrieved_label)
+        assert retrieved_labels == [[None], ['A'], ['A'], ['C'], ['B'], ['D']]
+
+        stim = 'C'
+        c.equidistant_entries_select = OLDEST
+        retrieved = c.get_memory(stimuli[stim])
+        retrieved_label = retrieve_label(retrieved, stimuli)
+        assert retrieved_label == ['A']
+
+        c.equidistant_entries_select = NEWEST
+        retrieved = c.get_memory(stimuli[stim])
+        retrieved_label = retrieve_label(retrieved, stimuli)
+        assert retrieved_label == ['D']
+
+        # Test that after allowing dups, warning is issued and memory with zeros is returned
+        c.duplicate_entries_allowed = False
+        stim = 'A'
+
+        text = "More than one entry matched cue"
+        with pytest.warns(UserWarning, match=text):
+            retrieved = c(stimuli[stim])
+
+        retrieved_label = retrieve_label(retrieved, stimuli)
+        assert retrieved_label == [None]
+        expected = np.array([np.array([0,0,0]),np.array([0,0,0,0])])
+        assert all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
+
+    def test_ContentAddressableMemory_with_duplicate_entry_in_initializer_warning(self):
+
+        regexp = r'Attempt to initialize memory of ContentAddressableMemory with an entry \([[1 2 3]'
+        with pytest.warns(UserWarning, match=regexp):
+            c = ContentAddressableMemory(
+                initializer=np.array([[[1,2,3], [4,5,6]],
+                                      [[1,2,3], [7,8,9]]]),
+                duplicate_entries_allowed=False,
+                distance_field_weights=[1,0],
+                equidistant_entries_select=RANDOM,
+                retrieval_prob = 1.0
+            )
+        assert np.allclose(c.memory, np.array([[[1, 2, 3], [4, 5, 6]]]))
+
+    def test_ContentAddressableMemory_add_and_delete_from_memory(self):
+
+        c = ContentAddressableMemory(
+            initializer=[[[1,2,3], [4,5,6]],
+                         [[7,8,9], [10,11,12]]],
+            duplicate_entries_allowed=True,
+            equidistant_entries_select=RANDOM,
+            retrieval_prob = 1.0,
+            storage_prob = 1.0
+        )
+        c.add_to_memory([[[10,20,30],[40,50,60]],
+                         [[11,21,31],[41,51,61]]])
+
+        expected_memory = [[[ 1,  2,  3],[ 4,  5,  6]],
+                           [[ 7,  8,  9],[10, 11, 12]],
+                           [[10, 20, 30],[40, 50, 60]],
+                           [[11, 21, 31],[41, 51, 61]]]
+        assert np.allclose(c.memory, expected_memory)
+
+        c.delete_from_memory([[[1,2,3],[4,5,6]]])
+        expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
+                           [[10, 20, 30],[40, 50, 60]],
+                           [[11, 21, 31],[41, 51, 61]]]
+        assert np.allclose(c.memory, expected_memory)
+
+        # Test adding and deleting a single memory
+        c.add_to_memory([[1,2,3],[100,101,102]])
+        expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
+                           [[10, 20, 30],[40, 50, 60]],
+                           [[11, 21, 31],[41, 51, 61]],
+                           [[ 1,  2,  3],[100,101,102]]]
+        assert np.allclose(c.memory, expected_memory)
+
+        c.delete_from_memory([[1,2,3],[100,101,102]])
+        expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
+                           [[10, 20, 30],[40, 50, 60]],
+                           [[11, 21, 31],[41, 51, 61]]]
+        assert np.allclose(c.memory, expected_memory)
+
+        # Test adding memory with different size value
+        with pytest.raises(FunctionError) as error_text:
+            c.add_to_memory([[1,2,3],[100,101,102,103]])
+        assert "Field 1 of entry ([array([1, 2, 3]) array([100, 101, 102, 103])]) has incorrect shape ((4,)) " \
+               "for memory of 'ContentAddressableMemory Function-0';  should be: (3,)." in str(error_text.value)
+
+        # Test adding memory in first field of np.ndarray with wrong size:
+        with pytest.raises(FunctionError) as error_text:
+            c.add_to_memory(np.array([[1,2],[200,201,202,203]], dtype=object))
+        assert "Field 0 of entry ([array([1, 2]) array([200, 201, 202, 203])]) has incorrect shape ((2,)) " \
+               "for memory of 'ContentAddressableMemory Function-0';  should be: (3,)." in str(error_text.value)
+
+        # Test adding memory in second field of np.ndarray with wrong size:
+        with pytest.raises(FunctionError) as error_text:
+            c.add_to_memory(np.array([[1,2,3],[200,201,202,203]], dtype=object))
+        assert "Field 1 of entry ([array([1, 2, 3]) array([200, 201, 202, 203])]) has incorrect shape ((4,)) " \
+               "for memory of 'ContentAddressableMemory Function-0';  should be: (3,)." in str(error_text.value)
+
+    def test_ContentAddressableMemory_overwrite_mode(self):
+
+        c = ContentAddressableMemory(
+                initializer=[[[1,2,3], [4,5,6]],
+                             [[7,8,9], [10,11,12]]],
+                distance_field_weights=[1,0],
+                duplicate_entries_allowed=True,
+                # duplicate_entries_allowed=OVERWRITE,   # FIX <-CRASHES
+                equidistant_entries_select=RANDOM,
+                retrieval_prob = 1.0,
+                storage_prob = 1.0
+        )
+
+        c.duplicate_entries_allowed = OVERWRITE
+
+        # Add new memory
+        retreived = c([[10,11,12], [100,110,120]])
+        assert np.allclose(list(retreived), [[7,8,9], [10,11,12]])
+        expected_memory = [[[1,2,3], [4,5,6]],
+                           [[7,8,9], [10,11,12]],
+                           [[10,11,12], [100,110,120]]]
+        assert np.allclose(c.memory, expected_memory)
+
+        # Overwrite old memory
+        retreived = c([[7,8,9], [200,201,202]])
+        assert np.allclose(list(retreived), [[7,8,9], [10,11,12]])
+        expected_memory = [[[1,2,3], [4,5,6]],
+                           [[7,8,9], [200,201,202]],
+                           [[10,11,12], [100,110,120]]]
+        assert np.allclose(c.memory, expected_memory)
+
+        # Allow entry duplicate of memory with
+        c.duplicate_entries_allowed = True
+        retreived = c([[7,8,9], [300,310,320]])
+        assert np.allclose(list(retreived), [[7,8,9],[200,201,202]])
+        expected_memory = [[[1,2,3],[4,5,6]],
+                           [[7,8,9], [200,201,202]],
+                           [[10,11,12], [100,110,120]],
+                           [[7,8,9], [300,310,320]]]
+        assert np.allclose(c.memory, expected_memory)
+
+        # Attempt to overwrite with two matches should generate error
+        c.duplicate_entries_allowed = OVERWRITE
+        with pytest.raises(FunctionError) as error_text:
+            c.execute([[7,8,9], [100,110,120]])
+        assert ('Attempt to store item' in str(error_text.value)
+                and 'with \'duplicate_entries_allowed\'=\'OVERWRITE\'' in str(error_text.value))
+        with pytest.raises(FunctionError) as error_text:
+            c.execute([[7,8,9], [300,310,320]])
+        assert ('Attempt to store item' in str(error_text.value)
+                and 'with \'duplicate_entries_allowed\'=\'OVERWRITE\'' in str(error_text.value))
+
+    def test_ContentAddressableMemory_max_entries(self):
+
+        c = ContentAddressableMemory(
+                initializer=[[[1,2,3], [4,5,6]],
+                             [[7,8,9], [10,11,12]],
+                             [[1,2,3], [100,101,102]]],
+                duplicate_entries_allowed=True,
+                equidistant_entries_select=RANDOM,
+                retrieval_prob = 1.0,
+                storage_prob = 1.0,
+                max_entries = 4
+        )
+        c.add_to_memory([[[10,20,30],[40,50,60]],
+                        [[11,21,31],[41,51,61]],
+                        [[12,22,32],[42,52,62]]])
+        expected_memory = [[[1,2,3], [100,101,102]],
+                           [[10,20,30],[40,50,60]],
+                           [[11,21,31],[41,51,61]],
+                           [[12,22,32],[42,52,62]]]
+        assert np.allclose(c.memory, expected_memory)
 
     def test_ContentAddressableMemory_errors(self):
 
@@ -815,245 +1057,6 @@ class TestContentAddressableMemory:
             c.add_to_memory([[[[1,2]]]])
         assert "The 'memories' arg for add_to_memory method of must be a list or array containing 1d or 2d arrays " \
                "(was 4d)." in str(error_text.value)
-
-
-    def test_ContentAddressableMemory_without_initializer_and_key_size_same_as_val_size(self):
-
-        stimuli = {'A': [[1,2,3],[4,5,6]],
-                   'B': [[8,9,10],[11,12,13]],
-                   'C': [[1,2,3],[11,12,13]],
-                   'D': [[1,2,3],[21,22,23]],
-                   'E': [[9,8,4],[11,12,13]],
-                   'F': [[10,10,30],[40,50,60]],
-                   }
-
-        c = ContentAddressableMemory(
-            distance_function=Distance(metric=COSINE),
-            duplicate_entries_allowed=True,
-            equidistant_entries_select=RANDOM
-        )
-
-        retrieved_labels=[]
-        sorted_labels = sorted(stimuli.keys())
-        for label in sorted_labels:
-            retrieved = [i for i in c(stimuli[label])]
-            retrieved_label = retrieve_label(retrieved, stimuli)
-            retrieved_labels.append(retrieved_label)
-        assert retrieved_labels == [[None], ['A'], ['A'], ['C'], ['B'], ['A']]
-
-        stim = 'C'
-        c.distance_field_weights = [1,0]
-        c.equidistant_entries_select = OLDEST
-        retrieved = [i for i in c.get_memory(stimuli[stim])]
-        retrieved_label = retrieve_label(retrieved, stimuli)
-        assert retrieved_label == ['A']
-
-        c.equidistant_entries_select = NEWEST
-        retrieved = [i for i in c.get_memory(stimuli[stim])]
-        retrieved_label = retrieve_label(retrieved, stimuli)
-        assert retrieved_label == ['D']
-
-        # Test that after allowing dups, warning is issued and memory with zeros is returned
-        c.duplicate_entries_allowed = False
-        stim = 'A'
-
-        text = "More than one entry matched cue"
-        with pytest.warns(UserWarning, match=text):
-            retrieved = c.execute(stimuli[stim])
-
-        retrieved_label = retrieve_label(retrieved, stimuli)
-        assert retrieved_label == [None]
-        expected = np.array([np.array([0,0,0]),np.array([0,0,0])])
-        assert all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
-
-    def test_ContentAddressableMemory_without_initializer_and_key_size_diff_from_val_size(self):
-
-        stimuli = {'A': [[1,2,3],[4,5,6,7]],
-                   'B': [[8,9,10],[11,12,13,14]],
-                   'C': [[1,2,3],[11,12,13,14]],
-                   'D': [[1,2,3],[21,22,23,24]],
-                   'E': [[9,8,4],[11,12,13,14]],
-                   'F': [[10,10,30],[40,50,60,70]],
-                   }
-
-        em = EpisodicMemoryMechanism(
-                content_size=3,
-                assoc_size=4,
-                function = ContentAddressableMemory(
-                        duplicate_entries_allowed=True,
-                        equidistant_entries_select=RANDOM)
-        )
-
-        retrieved_keys=[]
-        for key in sorted(stimuli.keys()):
-            retrieved = [i for i in em.execute(stimuli[key])]
-            retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-            retrieved_keys.append(retrieved_key)
-        assert retrieved_keys == [[None], ['A'], ['A'], ['C'], ['B'], ['D']]
-
-        stim = 'C'
-        em.function.equidistant_entries_select = OLDEST
-        retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-        assert retrieved_key == ['A']
-
-        em.function.equidistant_entries_select = NEWEST
-        retrieved = [i for i in em.function.get_memory(stimuli[stim][0])]
-        retrieved_key = [k for k,v in stimuli.items() if v == retrieved] or [None]
-        assert retrieved_key == ['D']
-
-        # Test that after allowing dups, warning is issued and memory with zeros is returned
-        em.function.duplicate_entries_allowed = False
-        stim = 'A'
-
-        text = r'More than one item matched key \(\[1 2 3\]\) in memory for ContentAddressableMemory'
-        with pytest.warns(UserWarning, match=text):
-            retrieved = em.execute(stimuli[stim])
-
-        retrieved_key = [k for k,v in stimuli.items() if v==list(retrieved)] or [None]
-        assert retrieved_key == [None]
-        assert retrieved[0] == [0, 0, 0]
-        assert retrieved[1] == [0, 0, 0, 0]
-
-    def test_ContentAddressableMemory_with_duplicate_entry_in_initializer_warning(self):
-
-        regexp = r'Attempt to initialize memory of ContentAddressableMemory with an entry \([[1 2 3]'
-        with pytest.warns(UserWarning, match=regexp):
-            c = ContentAddressableMemory(
-                initializer=np.array([[[1,2,3], [4,5,6]],
-                                      [[1,2,3], [7,8,9]]]),
-                duplicate_entries_allowed=False,
-                distance_field_weights=[1,0],
-                equidistant_entries_select=RANDOM,
-                retrieval_prob = 1.0
-            )
-        assert np.allclose(c.memory, np.array([[[1, 2, 3], [4, 5, 6]]]))
-
-    def test_ContentAddressableMemory_add_and_delete_from_memory(self):
-
-        c = ContentAddressableMemory(
-            initializer=[[[1,2,3], [4,5,6]],
-                         [[7,8,9], [10,11,12]]],
-            duplicate_entries_allowed=True,
-            equidistant_entries_select=RANDOM,
-            retrieval_prob = 1.0,
-            storage_prob = 1.0
-        )
-        c.add_to_memory([[[10,20,30],[40,50,60]],
-                         [[11,21,31],[41,51,61]]])
-
-        expected_memory = [[[ 1,  2,  3],[ 4,  5,  6]],
-                           [[ 7,  8,  9],[10, 11, 12]],
-                           [[10, 20, 30],[40, 50, 60]],
-                           [[11, 21, 31],[41, 51, 61]]]
-        assert np.allclose(c.memory, expected_memory)
-
-        c.delete_from_memory([[[1,2,3],[4,5,6]]])
-        expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
-                           [[10, 20, 30],[40, 50, 60]],
-                           [[11, 21, 31],[41, 51, 61]]]
-        assert np.allclose(c.memory, expected_memory)
-
-        # Test adding and deleting a single memory
-        c.add_to_memory([[1,2,3],[100,101,102]])
-        expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
-                           [[10, 20, 30],[40, 50, 60]],
-                           [[11, 21, 31],[41, 51, 61]],
-                           [[ 1,  2,  3],[100,101,102]]]
-        assert np.allclose(c.memory, expected_memory)
-
-        c.delete_from_memory([[1,2,3],[100,101,102]])
-        expected_memory = [[[ 7,  8,  9],[10, 11, 12]],
-                           [[10, 20, 30],[40, 50, 60]],
-                           [[11, 21, 31],[41, 51, 61]]]
-        assert np.allclose(c.memory, expected_memory)
-
-        # Test adding memory with different size value
-        with pytest.raises(FunctionError) as error_text:
-            c.add_to_memory([[1,2,3],[100,101,102,103]])
-        assert "Field 1 of entry ([array([1, 2, 3]) array([100, 101, 102, 103])]) has incorrect shape ((4,)) " \
-               "for memory of 'ContentAddressableMemory Function-0';  should be: (3,)." in str(error_text.value)
-
-        # Test adding memory in first field of np.ndarray with wrong size:
-        with pytest.raises(FunctionError) as error_text:
-            c.add_to_memory(np.array([[1,2],[200,201,202,203]], dtype=object))
-        assert "Field 0 of entry ([array([1, 2]) array([200, 201, 202, 203])]) has incorrect shape ((2,)) " \
-               "for memory of 'ContentAddressableMemory Function-0';  should be: (3,)." in str(error_text.value)
-
-        # Test adding memory in second field of np.ndarray with wrong size:
-        with pytest.raises(FunctionError) as error_text:
-            c.add_to_memory(np.array([[1,2,3],[200,201,202,203]], dtype=object))
-        assert "Field 1 of entry ([array([1, 2, 3]) array([200, 201, 202, 203])]) has incorrect shape ((4,)) " \
-               "for memory of 'ContentAddressableMemory Function-0';  should be: (3,)." in str(error_text.value)
-
-# FIX: THE ONES BELOW STILL NEED TO BE UPDATED: ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    def test_ContentAddressableMemory_overwrite_mode(self):
-
-        em = ContentAddressableMemory(
-                initializer=[[[1,2,3], [4,5,6]],
-                             [[7,8,9], [10,11,12]]],
-                duplicate_entries_allowed=True,
-                equidistant_entries_select=RANDOM,
-                retrieval_prob = 1.0,
-                storage_prob = 1.0
-        )
-
-        em.duplicate_entries_allowed = OVERWRITE
-
-        # Add new memory
-        retreived = em.execute([[7,8,10], [100,110,120]])
-        assert np.allclose(list(retreived), [[7,8,9],[10,11,12]])
-        expected_memory = [[[ 1,  2,  3],[4, 5, 6]],
-                           [[7,8,9], [10,11,12]],
-                           [[7,8,10], [100,110,120]]]
-        assert np.allclose(em.memory, expected_memory)
-
-        # Overwrite old memory
-        retreived = em.execute([[7,8,9], [100,110,120]])
-        assert np.allclose(list(retreived), [[7,8,9],[10,11,12]])
-        expected_memory = [[[ 1,  2,  3],[4, 5, 6]],
-                           [[7,8,9], [100,110,120]],
-                           [[7,8,10], [100,110,120]]]
-        assert np.allclose(em.memory, expected_memory)
-
-        # Allow entry of memory with duplicate key
-        em.duplicate_entries_allowed = True
-        retreived = em.execute([[7,8,9], [200,210,220]])
-        assert np.allclose(list(retreived), [[7,8,9],[100,110,120]])
-        expected_memory = [[[ 1,  2,  3],[4, 5, 6]],
-                           [[7,8,9], [100,110,120]],
-                           [[7,8,10], [100,110,120]],
-                           [[7,8,9], [200,210,220]]]
-        assert np.allclose(em.memory, expected_memory)
-
-        # Attempt to overwrite with two matches should generate error
-        em.duplicate_entries_allowed = OVERWRITE
-        with pytest.raises(FunctionError) as error_text:
-            em.execute([[7,8,9], [200,210,220]])
-        assert ('Attempt to store item' in str(error_text.value)
-                and 'with \'duplicate_entries_allowed\'=\'OVERWRITE\'' in str(error_text.value))
-
-    def test_ContentAddressableMemory_max_entries(self):
-
-        em = ContentAddressableMemory(
-                initializer=[[[1,2,3], [4,5,6]],
-                             [[7,8,9], [10,11,12]],
-                             [[1,2,3], [100,101,102]]],
-                duplicate_entries_allowed=True,
-                equidistant_entries_select=RANDOM,
-                retrieval_prob = 1.0,
-                storage_prob = 1.0,
-                max_entries = 4
-        )
-        em.add_to_memory([[[10,20,30],[40,50,60]],
-                        [[11,21,31],[41,51,61]],
-                        [[12,22,32],[42,52,62]]])
-        expected_memory = [[[1,2,3], [100,101,102]],
-                           [[10,20,30],[40,50,60]],
-                           [[11,21,31],[41,51,61]],
-                           [[12,22,32],[42,52,62]]]
-        assert np.allclose(em.memory, expected_memory)
 
     @pytest.mark.parametrize(
         'param_name',

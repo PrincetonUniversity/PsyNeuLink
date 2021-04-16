@@ -2168,7 +2168,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         # Retrieve entry from memory that best matches variable
         if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
-            entry = self.get_memory(variable, distance_field_weights, context)
+            entry = self.get_memory(variable, distance_field_weights, context).copy()
         else:
             # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OutputPort FROM LAST TRIAL)?
             #           CURRENT PROBLEM WITH LATTER IS THAT IT CAUSES CRASH ON INIT, SINCE NOT OUTPUT_PORT
@@ -2379,7 +2379,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 try:
                     index = existing_entries.index(entry)
                 except AttributeError:
-                    index = existing_entries.tolist().index(entry)
+                    # index = existing_entries.tolist().index(entry)
+                    index = [i for i,e in enumerate(existing_entries) if np.all(e == matches[0])][0]
                 except ValueError:
                     index = np.array(existing_entries).tolist().index(entry)
                 existing_entries[index] = entry
@@ -2425,13 +2426,22 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         """
 
         distance_fct = self.parameters.distance_function._get(context)
+        # field_weights_param = self._get_current_parameter_value('distance_field_weights', context)
+        num_fields = self.parameters.memory_num_fields._get(context) or len(field_weights)
         if isinstance(field_weights, np.ndarray):
             # Need to convert to to list for testing and assignment below
             field_weights = field_weights.tolist()
-        num_fields = self.parameters.memory_num_fields._get(context) or len(field_weights)
+
         field_weights = np.array(field_weights
                                  or self._get_current_parameter_value('distance_field_weights', context)
                                  or  [1])
+
+        # field_weights = np.array(field_weights
+        #                          or field_weights_param.tolist()
+        #                          or  [1])
+        # field_weights = np.array(field_weights
+        #                          or field_weights_param.tolist() if field_weights is not None else [1])
+
         field_weights = field_weights[0] if np.all(field_weights[0]==field_weights) else field_weights
         distance_by_fields = not np.isscalar(field_weights)
 
