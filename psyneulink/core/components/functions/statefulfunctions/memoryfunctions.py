@@ -516,11 +516,11 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         length of values in `memory <DictionaryMemory.memory>`.
 
     retrieval_prob : float in interval [0,1]
-        probability of retrieiving a value from `memory <DictionaryMemory.memory>`.
+        probability of retrieving a value from `memory <DictionaryMemory.memory>`.
 
     storage_prob : float in interval [0,1]
         probability of adding `variable <DictionaryMemory.variable>` to `memory
-        <DictionaryMemory.memory>`.
+        <DictionaryMemory.memory>`;
 
     rate : float or 1d array
         value applied multiplicatively to key (first item of `variable <DictionaryMemory.variable>`) before
@@ -1479,14 +1479,16 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             corresponding element of `distance_field_weights<ContentAddressableMemory.distance_field_weights>`.
 
             .. note::
-               Fields assigned a weight of 0 are ignored in the distance calculation; that is, distances between
-               `variable <ContentAddressableMemory.variable>`  and a given entry are not included in the averaging
-               of distances by field.
+               Fields assigned a weight of 0 or None are ignored in the distance calculation; that is, distances
+               between `variable <ContentAddressableMemory.variable>`  and a given entry are not included in the
+               averaging of distances by field.
 
             .. hint::
-               Entries in `memory <ContentAddressableMemory.memory>` can be assigned "labels" --
-               i.e., values that are not used in the calculation of distance -- by assigning them
-               a weight of 0 in `distance_field_weights <ContentAddressableMemory.memory>`).
+               Entries in `memory <ContentAddressableMemory.memory>` can be assigned "labels" -- i.e., values
+               that are not used in the calculation of distance -- by assigning them a weight of 0 or None in
+               `distance_field_weights <ContentAddressableMemory.memory>`); either can be used for labels that
+               are numeric values; however, if non-numeric values are assigned to a field as labels, then None
+               must be specified for that field in `distance_field_weights <ContentAddressableMemory.memory>`.
 
         * `selection_function <ContentAddressableMemory.selection_function>` with the list of distances
           to determine which entries to select for consideration. If more than on entry from `memory
@@ -1624,6 +1626,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     storage_prob : float in interval [0,1]
         probability of adding `variable <ContentAddressableMemory.variable>` to `memory
         <ContentAddressableMemory.memory>`.
+
+        .. note::
+           storage_prob does not apply to `initializer <ContentAddressableMemory,initializer>`, the entries of
+           which are added to `memory <ContentAddressableMemory.memory>` irrespective of storage_prob.
 
     rate : float or 1d array
         value applied multiplicatively to `variable <ContentAddressableMemory.variable>`) before storing
@@ -2436,16 +2442,39 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if field_weights is None:
             # Could be from get_memory called from COMMAND LINE without field_weights
             field_weights =  self._get_current_parameter_value('distance_field_weights', context)
-        field_weights = np.array(field_weights)
-        # Use first element as scalar if it is a homogenous array (i.e., all elements are the same)
-        field_weights = field_weights[0] if np.all(field_weights[0]==field_weights) else field_weights
-        distance_by_fields = not np.isscalar(field_weights)
+        field_weights = np.atleast_1d(field_weights)
 
         if granularity is 'per_field':
             # Note: this is just used for reporting, and not determining storage or retrieval
-            return np.array([distance_fct([cue[i], candidate[i]]) for i in range(num_fields)]) * field_weights
+            # return np.array([distance_fct([cue[i], candidate[i]]) for i in range(num_fields)]) * field_weights
+            # field_weights = np.atleast_1d(field_weights)
+
+            # num_non_zero_fields = len([fw for fw in field_weights if fw])
+            # return np.array([distance_fct([cue[i], candidate[i]])
+            #                  for i in range(num_non_zero_fields)]
+            #                 ) * np.array([f for f in field_weights if f])
+
+            # Replace 0's by None to allow multiplication
+            distances_by_field =  np.array([distance_fct([cue[i], candidate[i]])
+                                            for i in range(num_fields)]
+                                           ) * np.array([f if f is not None else 0 for f in field_weights])
+            if len(field_weights)==1:
+                field_weights = np.full(num_fields, field_weights[0])
+            # Restore None's for fields with None in field_weights
+            distances_by_field = np.array([distances_by_field[i]
+                                           if f is not None else None for i,f in enumerate(field_weights)])
+            return distances_by_field
+            # if len(field_weights) > 1:
+            #     for i in range(num_fields):
+            #         if field_weights[i] is None:
+            #             distances_by_field[i] = None
+            return distances_by_field
 
         elif granularity is 'full_entry':
+            # Use first element as scalar if it is a homogenous array (i.e., all elements are the same)
+            # field_weights = np.array(field_weights)
+            field_weights = field_weights[0] if np.all(field_weights[0]==field_weights) else field_weights
+            distance_by_fields = not np.isscalar(field_weights)
             if distance_by_fields:
                 num_non_zero_fields = len([fw for fw in field_weights if fw])
                 # Get mean of field-wise distances between cue each entry in memory, weighted by field_weights

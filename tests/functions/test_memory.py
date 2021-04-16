@@ -1,6 +1,7 @@
+from itertools import combinations
+
 import numpy as np
 import pytest
-from itertools import combinations, product
 
 import psyneulink.core.components.functions.statefulfunctions.memoryfunctions as Functions
 import psyneulink.core.llvm as pnlvm
@@ -572,9 +573,49 @@ def retrieve_label(retrieved, stimuli):
 #region
 class TestContentAddressableMemory:
 
+    # FIX:  CHECK USE OF FIELDS AS SCALAR
+    def test_ContentAddressableMemory_simple_distances(self):
 
-    # FIX: PARAMETERIZE FOR DISTANCE METRIC AND FIELDWEIGHTS;  ADD FIELD_I
-    def test_ContentAddressableMemory_distances(self):
+        stimuli = np.array([[[1,2,3],[4,5,6]],
+                            [[1,2,5],[4,5,8]],
+                            [[1,2,10],[4,5,10]]
+                            ])
+
+        c = ContentAddressableMemory(
+            initializer=stimuli,
+            storage_prob=0,
+            distance_function=Distance(metric=COSINE)
+        )
+
+        retrieved = c([[1,2,4],[4,5,9]])
+        assert np.all(retrieved==np.array([[1,2,5],[4,5,8]]))
+        assert c.distance == 0.006782910698679978
+        assert np.allclose(c.distances_by_field, [0.00397616, 0.00160159])
+
+        # Test with 0 as field weight
+        c.distance_field_weights=[1,0]
+        retrieved = c([[1,2,3],[4,5,10]])
+        assert np.all(retrieved==np.array([[1,2,3],[4,5,6]]))
+        assert all(c.distances_by_field == [0.0, 0.0])
+
+        c.distance_field_weights=[0,1]
+        retrieved = c([[1,2,3],[4,5,10]])
+        assert np.all(retrieved==np.array([[1,2,10],[4,5,10]]))
+        assert all(c.distances_by_field == [0.0, 0.0])
+
+        # Test with None as field weight
+        c.distance_field_weights=[None,1]
+        retrieved = c([[1,2,3],[4,5,10]])
+        assert np.all(retrieved==np.array([[1,2,10],[4,5,10]]))
+        assert all(c.distances_by_field == [None, 0.0])
+
+        c.distance_field_weights=[1, None]
+        retrieved = c([[1,2,3],[4,5,10]])
+        assert np.all(retrieved==np.array([[1,2,3],[4,5,6]]))
+        assert all(c.distances_by_field == [0.0, None])
+
+    # FIX: PARAMETERIZE FOR DISTANCE METRIC AND FIELDWEIGHTS
+    def test_ContentAddressableMemory_parametric_distances(self):
 
         stimuli = np.array([[[1,2,3],[4,5,6]],
                             [[7,8,9],[10,11,12]],
@@ -585,12 +626,14 @@ class TestContentAddressableMemory:
             storage_prob=0,
             distance_function=Distance(metric=COSINE)
         )
+
         pairs = list(combinations(range(0,3),2))
         # Distances between all stimuli
         distances = [Distance(metric=COSINE)([stimuli[i],stimuli[j]]) for i, j in pairs]
         c_distances = []
         # for i,j in pairs:
 
+        # Test distances with evenly weighted fields
         retrieved = c(stimuli[0])
         np.all(retrieved==stimuli[0])
         assert np.allclose(c.distances_to_entries, [0, distances[0], distances[1]])
@@ -613,7 +656,7 @@ class TestContentAddressableMemory:
                     distances.append([Distance(metric=COSINE)([stimuli[i][k], stimuli[j][k]]) * fw[k]
                                       for i, j in pairs])
             distances = np.array(distances)
-            distances = np.squeeze(np.sum(distances, axis=0)/len([f for f in fw if f]))
+            distances = np.squeeze(np.sum(distances, axis=0) / len([f for f in fw if f]))
 
             retrieved = c(stimuli[0])
             np.all(retrieved==stimuli[0])
@@ -627,6 +670,13 @@ class TestContentAddressableMemory:
             np.all(retrieved==stimuli[2])
             assert np.allclose(c.distances_to_entries, [distances[1], distances[2], 0])
 
+        # Test distances_by_fields
+        c.distance_field_weights=[1,1]
+        stim = [[8,9,10],[11,12,13]]
+        retrieved = c(stim)
+        np.all(retrieved==np.array([[7,8,9],[10,11,12]]))
+        distances_by_field = [Distance(metric=COSINE)([retrieved[i], stim[i]]) for i in range(2)]
+        np.allclose(c.distances_by_field, distances_by_field)
 
     # Test of ContentAddressableMemory without LLVM:
     def test_ContentAddressableMemory_with_initializer_and_equal_field_sizes(self):
