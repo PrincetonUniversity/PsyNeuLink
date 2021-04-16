@@ -1463,7 +1463,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
           .. _ContentAddressableMemory_Distance_Field_Weights:
 
-          * if `distance_field_weights <ContentAddressableMemory.distance_field_weights>` is either an scalar or an
+          * if `distance_field_weights <ContentAddressableMemory.distance_field_weights>` is either a scalar or an
             array of scalars that are all the same, then it is used simply to scale the distance computed between
             `variable <ContentAddressableMemory.variable>` and each entry in `memory <ContentAddressableMemory.memory>`,
             each of which is computed by concatenating all items of `variable <ContentAddressableMemory.variable>` into
@@ -1478,6 +1478,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             the corresponding `memory_field of the entry in memory, and then averaging those distances weighted by the
             corresponding element of `distance_field_weights<ContentAddressableMemory.distance_field_weights>`.
 
+            .. note::
+               Any fields assigned a weight of 0 are ignored in the distance calculation; that is, distances between
+               `variable <ContentAddressableMemory.variable>`  and a given entry are not included in the averaging
+               of distances by field.
+
         * `selection_function <ContentAddressableMemory.selection_function>` with the list of distances
           to determine which entries to select for consideration. If more than on entry from `memory
           <ContentAddressableMemory.memory>` is identified, `equidistant_entries_select
@@ -1485,11 +1490,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
           retrieval occurs, an appropriately shaped zero-valued array is
           assigned as the retrieved memory, and returned by `function <ContentAddressableMemory.function>`.
 
-        The distance between `variable <ContentAddressableMemory.variable>` and the retrieved entry is stored in
-        `distance `<ContentAddressableMemory.distance>`, the distance between of each of their fields is stored in
+        The distance between `variable <ContentAddressableMemory.variable>` and the retrieved entry is assigned to
+        `distance `<ContentAddressableMemory.distance>`, the distance between of each of their fields is assigned to
         `distances_by_field <ContentAddressableMemory.distances_by_field>`, and the distances of `variable
-        <ContentAddressableMemory.variable>` to all entries in `memory <ContentAddressableMemory.memory>` is stored
-        in `distances_to_entries <ContentAddressableMemory.distances_to_entries>`.
+        <ContentAddressableMemory.variable>` to all entries in `memory <ContentAddressableMemory.memory>` is assigned
+        to `distances_to_entries <ContentAddressableMemory.distances_to_entries>`.
     .. _ContentAddressableMemory_Execution_Storage:
 
     * *Storage:* after retrieval, an attempt is made to store `variable <ContentAddressableMemory.variable>` in `memory
