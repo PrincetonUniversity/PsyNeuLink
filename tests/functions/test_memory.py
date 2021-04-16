@@ -587,6 +587,7 @@ class TestContentAddressableMemory:
             distance_function=Distance(metric=COSINE)
         )
 
+        # Test distance (for retrieved item) and distances_by_field
         retrieved = c([[1,2,4],[4,5,9]])
         assert np.all(retrieved==np.array([[1,2,5],[4,5,8]]))
         assert c.distance == 0.006782910698679978
