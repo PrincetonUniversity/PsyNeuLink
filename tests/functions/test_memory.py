@@ -728,7 +728,7 @@ class TestContentAddressableMemory:
             min_idx = distances.index(min(distances))
             assert retrieved_label == [sorted_labels[min_idx]]
             retrieved_labels.append(retrieved_label)
-            Distance()([retrieved,stimuli['A']])
+            Distance(metric=COSINE)([retrieved,stimuli['A']])
         assert retrieved_labels == [['A'], ['A'], ['F'], ['C'], ['B'], ['F']]
 
         # Test  restricting retrieval to only 1st field (which has duplicate values) and selecting for OLDEST
