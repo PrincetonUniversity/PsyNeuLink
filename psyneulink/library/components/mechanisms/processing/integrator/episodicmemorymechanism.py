@@ -39,7 +39,7 @@ of the last retrieved memory although, as with any Mechanism, OutputPorts can be
 <EpisodicMemoryMechanism.memory>` attribute, which references its `function's <EpisodicMemoryMechanism.function>`
 memory `Parameter`. Other Parameters of its function (e.g., that regulate the probability of storage and/or retrieval
 -- see `ContentAddressableMemory`) can be accessed and/or `modulated <ModulatorySignal_Modulation>` in the standard way
-for a Mechanism's `function <Mechanism_Base.function>`.
+for a Mechanism's `function <EpisodicMemoryMechanism.function>`.
 
 At present, EpisodicMemoryMechanism supports the following two MemoryFunctions:
 
@@ -64,13 +64,13 @@ Creating an EpisodicMemoryMechanism
 An EpisodicMemoryMechanism is created by calling its constructor with a specification of its `MemoryFunction` and
 corresponding information about the number and shape of its `fields <EpisodicMemoryMechanism_Memory_Fields>`. These
 are specified using the **default_variable** or **size** arguments of the constructor, in the standard way that the
-`variable <Mechanism_Base.variable>` is specified for a `Component` (see `default_variable <Component_Variable>`,
-`size <Component_Size>`).  These specify the shape of an entry `memory <EpisodicMemoryMechanism.memory>`, and used to
-create the `InputPorts <InputPort>` for the Mechanism (see `Mechanism Variable <Mechanism_Variable_and_InputPorts>`
-for additional information), with the number created equal to the number of items in the array (corresponding to
-fields in an entry).  Each `input_port <Mechanism_Base.input_ports>` provides the value assigned to a corresponding
-fields of the entry stored in `memory <EpisodicMemoryMechanism.memory>, and used to retrieve one similar to it.
-By default, `input_port <Mechanism_Base.input_ports>` are named *FIELD_n_INPUT*, where "n" is replaced by the index of
+`variable <Mechanism_Base.variable>` is specified for a `Component` (see `default_variable <Component_Variable>`, `size
+<Component_Size>`).  These specify the shape of an entry `memory <EpisodicMemoryMechanism.memory>`, and used to create
+the `InputPorts <InputPort>` for the Mechanism (see `Mechanism Variable <Mechanism_Variable_and_InputPorts>` for
+additional information), with the number created equal to the number of items in the array (corresponding to fields in
+an entry).  Each `input_port <EpisodicMemoryMechanism.input_ports>` provides the value assigned to a corresponding field
+of the entry stored in `memory <EpisodicMemoryMechanism.memory>`, and used to retrieve one similar to it. By default,
+`input_port <EpisodicMemoryMechanism.input_ports>` are named *FIELD_n_INPUT*, where "n" is replaced by the index of
 each field; however, they can be named explicitly by specifying a list of strings in the **input_ports** argument of
 the constructor; the number of these must equal the number of fields specified in **default_variable** or **size**.
 
@@ -80,7 +80,7 @@ the constructor; the number of these must equal the number of fields specified i
 ~~~~~~~~~~~~~~~~~~~~
 
 Parameters that govern the storage and retrieval process are specified as arguments to the `MemoryFunction` specified
-in the **function** of the constructor (for example, see `ContentAddressableMemory`for parameters of the default
+in the **function** of the constructor (for example, see `ContentAddressableMemory` for parameters of the default
 `function <EpisodicMemoryMechanism.function>`).
 
 .. _EpisodicMemoryMechanism_Creation_OutputPorts:
@@ -99,6 +99,8 @@ specified are created, which may not match the number of fields of a retrieved m
 
 Structure
 ---------
+
+.. _EpisodicMemoryMechanism_Memory_Fields:
 
 *Memory Fields*
 ~~~~~~~~~~~~~~~
@@ -125,19 +127,22 @@ all fields, or a weighted combination of them (as determined by the `MemoryFunct
    different lengths (`ragged <https://en.wikipedia.org/wiki/Jagged_array>`_) then, although each field is 1d, an
    entry is also 1d (with dtype='object'), and `memory <EpisodicMemoryMechanism.memory>` is 2d (with dtype='object').
 
+.. _EpisodicMemoryMechanism_Input:
+
 *Input*
 ~~~~~~~
 
-An EpisodicMemoryMechanism has one or more `input_ports <Mechanism_Base.input_ports>` that receive the item to be stored
-and that is used to retrieve an existing entry from its memory.  If the Mechanism is assigned `ContentAddressableMemory`
-as its `function <EpisodicMemoryMechanism.function>`, then it can have an arbitrary number of InputPorts, the input to
-which is assigned to the corresponding `memory field <EpisodicMemoryMechanism_Memory_Fields>` of that function. By
-default InputPorts are named *FIELD_n_INPUT* (see `EpisodicMemoryMechanism_Creation`). If the Mechanism is assigned
-`DictionaryMemory` as its `function <EpisodicMemoryMechanism.function>`, then it is assigned at least one InputPort
-(named *KEY_INPUT* by default), and optionally a second (named *VALUE_INPUT*) if **default_variable** or **size*
-specifies two items; any additional fields are ignored.
+An EpisodicMemoryMechanism has one or more `input_ports <EpisodicMemoryMechanism.input_ports>` that receive the
+item to be stored and that is used to retrieve an existing entry from its memory.  If the Mechanism is assigned
+`ContentAddressableMemory` as its `function <EpisodicMemoryMechanism.function>`, then it can have an arbitrary
+number of InputPorts, the input to which is assigned to the corresponding `memory field
+<EpisodicMemoryMechanism_Memory_Fields>` of that function. By default InputPorts are named *FIELD_n_INPUT* (see
+`EpisodicMemoryMechanism_Creation`). If the Mechanism is assigned `DictionaryMemory` as its `function
+<EpisodicMemoryMechanism.function>`, then it is assigned at least one InputPort (named *KEY_INPUT* by default),
+and optionally a second (named *VALUE_INPUT*) if **default_variable** or **size** specifies two items; any additional
+fields are ignored.
 
-.. _EpisodicMemoryMechanism_Memory_Fields:
+.. _EpisodicMemoryMechanism_Function:
 
 *Function*
 ~~~~~~~~~~
@@ -158,7 +163,7 @@ meets the following requirements:
     * it must implement ``store_memory`` and ``get_memory()`` methods that, respectively, store and retrieve
       entries from its ``memory`` attribute.
 
-.. _EpisodicMemoryMechanism_Execution:
+.. _EpisodicMemoryMechanism_Output:
 
 *Output*
 ~~~~~~~~
@@ -167,12 +172,14 @@ By default, an EpisodicMemoryMechanism has a number of `OutputPorts <OutputPort>
 each of which is assigned the value of a corresponding field of the entry retrieved from memory (see
 `EpisodicMemoryMechanism_Creation` for naming). However, if OutputPorts were specified in the constructor, then there
 may be a different number of OutputPorts than InputPorts and `memory fields <EpisodicMemoryMechanism_Memory_Fields>`,
-and thus some of the latter may not be reflected in any of the Mechanism's `output_ports <Mechanism.output_ports>`.
-If the `function <EpisodicMemoryMechanism.function>` is an `DictionaryMemory`, then it will have at least one
-OutputPort, named *KEY_OUTPUT*, that is assigned the key (first field) of the entry retrieved from memory and, if two
-fields are specified in **default_variable** or **sze**, the Mechanism will have a second OutputPort named
-*VALUE_OUTPUT* that is assigned the value (second field) of the entry retrieved from memory; any additional ones are
-ignored and no other OutputPorts are created.
+and thus some of the latter may not be reflected in any of the Mechanism's `output_ports
+<EpisodicMemoryMechanism.output_ports>`. If the `function <EpisodicMemoryMechanism.function>` is a `DictionaryMemory`,
+then it will have at least one OutputPort, named *KEY_OUTPUT*, that is assigned the key (first field) of the entry
+retrieved from memory and, if two fields are specified in **default_variable** or **sze**, the Mechanism will have a
+second OutputPort named *VALUE_OUTPUT* that is assigned the value (second field) of the entry retrieved from memory;
+any additional ones are ignored and no other OutputPorts are created.
+
+.. _EpisodicMemoryMechanism_Execution:
 
 Execution
 ---------
@@ -180,14 +187,15 @@ Execution
 When an EpisodicMemoryMechanism is executed, its `function <EpisodicMemoryMechanism.function>` carries out
 the following operations:
 
-    * retrieve an item from `memory <EpisodicMemoryMechanism.memory>` based on the `value <InputPort.value>` of its
-    `InputPorts <InputPort>`; if no retrieval is made, then an appropriately shaped zero-valued array is returned.
+    * retrieve an item from `memory <EpisodicMemoryMechanism.memory>` based on the `value <InputPort.value>` of
+      its `input_ports <EpisodicMemoryMechanism.input_ports>`; if no retrieval is made, then an appropriately
+      shaped zero-valued array is returned.
     ..
-    * store the `value <InputPort.value>` of its `input_ports <Mechanism_Base.input_ports>` as an entry in
-    <EpisodicMemoryMechanism.function>` memory.
+    * store the `value <InputPort.value>` of its `input_ports <EpisodicMemoryMechanism.input_ports>` as an entry in
+      <EpisodicMemoryMechanism.function>` memory.
     ..
-    * assign the value of the entry retrieved to its `output_ports <Mechanism_Base.output_ports>, based on how the
-    latter are configured (see `EpisodicMemoryMechanism_Creation_OutputPorts`).
+    * assign the value of the entry retrieved to its `output_ports <EpisodicMemoryMechanism.output_ports>`,
+      based on how the latter are configured (see `EpisodicMemoryMechanism_Creation_OutputPorts`).
 
     .. note::
          In general, retrieval is executed before storage, so that the current items is not also retrieved;
@@ -254,10 +262,30 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     Attributes
     ----------
 
-    memory : 3d array
-        contains key-value pairs stored in the `function <EpisodicMemoryMechanism.function>'\\s `memory` attribute
-        (if it has one).
+    input_ports : ContentAddressableList[str, InputPort]
+        a list of the Mechanism's `InputPorts <Mechanism_InputPorts>`, the number of which is equal to the
+        number of `memory fields <EpisodicMemoryMechanism_Memory_Fields>` in an entry of the Mechanism's `memory
+        <EpisodicMemoryMechanism.memory>`, and that are named *FIELD_n_INPUT* by default (see
+        `EpisodicMemoryMechanism_Input` and Mechanism `input_ports <Mechanism_Base.input_ports>` for additional
+        information).
 
+    function : MemoryFunction
+        takes the Mechanism's `variable <Mechanism_Base.variable>` and uses it as a cue to retrieve an entry from
+        `memory <EpisodicMemoryMechanism_Function>` based on its distance from existing entries, and then stores
+        `variable <Mechanism_Base.variable>` in `memory <EpisodicMemoryMechanism_Function>` (see
+        `EpisodicMemoryMechanism_Function` and Mechanism `function <Mechanism_Base.function>` for
+        additional information).
+
+    memory : 3d array
+        contains entries stored in the `function <EpisodicMemoryMechanism.function>'\\s `memory` attribute.
+
+    output_ports : ContentAddressableList[str, OutputPort]
+        a list of the Mechanism's `OutputPorts <Mechanism_OutputPorts>`, the number of which is, by default, equal to
+        the number of `memory fields <EpisodicMemoryMechanism_Memory_Fields>` in an entry of the Mechanism's `memory
+        <EpisodicMemoryMechanism.memory>`, and each of which is assigned the value of the corresponding field of the
+        last entry retrieved from `memory <EpisodicMemoryMechanism.memory>`.  However, as with any Mechanism, the
+        number and value of OutputPorts can be customized (see `EpisodicMemoryMechanism_Output` and Mechanism
+        `output_ports <Mechanism_Base.output_ports>` for additional information).
     """
 
     class Parameters(ProcessingMechanism_Base.Parameters):
