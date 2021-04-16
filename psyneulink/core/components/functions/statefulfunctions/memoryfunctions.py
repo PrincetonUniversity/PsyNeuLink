@@ -2426,15 +2426,21 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         """
 
         distance_fct = self.parameters.distance_function._get(context)
-        # field_weights_param = self._get_current_parameter_value('distance_field_weights', context)
         num_fields = self.parameters.memory_num_fields._get(context) or len(field_weights)
-        if isinstance(field_weights, np.ndarray):
-            # Need to convert to to list for testing and assignment below
-            field_weights = field_weights.tolist()
 
-        field_weights = np.array(field_weights
-                                 or self._get_current_parameter_value('distance_field_weights', context)
-                                 or  [1])
+        # field_weights_param = self._get_current_parameter_value('distance_field_weights', context)
+        # if isinstance(field_weights, np.ndarray):
+        #     # Need to convert to to list for testing and assignment below
+        #     field_weights = field_weights.tolist()
+        # field_weights = np.array(field_weights
+        #                          or field_weights_param
+        #                          or  [1])
+
+        if field_weights is None:
+            field_weights =  self._get_current_parameter_value('distance_field_weights', context)
+            if field_weights is None:
+                field_weights = [1]
+        field_weights = np.array(field_weights)
 
         # field_weights = np.array(field_weights
         #                          or field_weights_param.tolist()
