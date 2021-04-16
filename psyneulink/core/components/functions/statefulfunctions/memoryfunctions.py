@@ -1909,7 +1909,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 return f"{STORAGE_PROB} must be a float in the interval [0,1]."
 
         def _validate_equidistant_entries_select(self, equidistant_entries_select):
-            if not equidistant_entries_select in equidistant_entries_select_keywords:
+            if equidistant_entries_select not in equidistant_entries_select_keywords:
                 return f"'equidistant_entries_select' must be {' or '.join(equidistant_entries_select_keywords)}."
 
         def _validate_duplicate_entries_allowed(self, duplicate_entries_allowed):
@@ -2441,16 +2441,16 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         num_fields = self.parameters.memory_num_fields._get(context) or len(field_weights)
         if field_weights is None:
             # Could be from get_memory called from COMMAND LINE without field_weights
-            field_weights =  self._get_current_parameter_value('distance_field_weights', context)
+            field_weights = self._get_current_parameter_value('distance_field_weights', context)
         field_weights = np.atleast_1d(field_weights)
 
         if granularity is 'per_field':
             # Note: this is just used for reporting, and not determining storage or retrieval
 
             # Replace None's with 0 to allow multiplication
-            distances_by_field =  np.array([distance_fct([cue[i], candidate[i]])
-                                            for i in range(num_fields)]
-                                           ) * np.array([f if f is not None else 0 for f in field_weights])
+            distances_by_field = np.array([distance_fct([cue[i], candidate[i]])
+                                           for i in range(num_fields)]
+                                          ) * np.array([f if f is not None else 0 for f in field_weights])
             # If field_weights is scalar, splay out as array of length num_fields so can iterate through all of them
             if len(field_weights)==1:
                 field_weights = np.full(num_fields, field_weights[0])
