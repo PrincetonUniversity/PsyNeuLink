@@ -575,7 +575,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         specifies the weight to use in computing the distance between each item of `variable
         <ContentAddressableMemory.variable>` and the corresponding `memory_field
         <EpisodicMemoryMechanism_Memory_Fields>` of each item in `memory <ContentAddressableMemory.memory>` (see
-        distance_field_weights <ContentAddressableMemory.distance_field_weights>` for additional details).
+        `distance_field_weights <ContentAddressableMemory.distance_field_weights>` for additional details).
 
     selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
         specifies the function used during retrieval to evaluate the distances returned by `distance_function
