@@ -2446,6 +2446,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                           f"with invalid 'granularity' argument ({granularity});  " \
                           f"should be 'full_entry' or 'per_field."
 
+    def _parse_distance_function_variable(self, variable):
+        return convert_to_np_array([variable[0], variable[0]])
+
     def _is_duplicate(self, entry1:np.ndarray, entry2:np.ndarray, field_weights:np.ndarray, context) -> bool:
         """Determines whether two entries are duplicates
          Duplicates are treated as ones with a distance within the tolerance specified by duplicate_threshold.
