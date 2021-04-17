@@ -594,7 +594,7 @@ class Function_Base(Function):
             raise FunctionError(err_msg)
         self.most_recent_context = context
         self.parameters.value._set(value, context=context)
-        return value
+        return self.convert_output_type(value)
 
     @abc.abstractmethod
     def _function(
