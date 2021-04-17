@@ -807,7 +807,8 @@ class TestContentAddressableMemory:
         retrieved_label = retrieve_label(retrieved, stimuli)
         assert retrieved_label == [None]
         expected = np.array([np.array([0,0,0]),np.array([0,0,0,0])], dtype=object)
-        assert all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
+        retrieved = np.array(retrieved, dtype=object)
+        assert np.all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
 
     def test_ContentAddressableMemory_without_initializer_and_equal_field_sizes(self):
 
@@ -903,7 +904,8 @@ class TestContentAddressableMemory:
         retrieved_label = retrieve_label(retrieved, stimuli)
         assert retrieved_label == [None]
         expected = np.array([np.array([0,0,0]),np.array([0,0,0,0])], dtype=object)
-        assert all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
+        # retrieved = np.array(retrieved, dtype=object)
+        assert np.all(np.alltrue(np.array(x) for x in np.equal(expected, retrieved, dtype=object)))
 
     def test_ContentAddressableMemory_with_duplicate_entry_in_initializer_warning(self):
 
@@ -1150,9 +1152,10 @@ class TestContentAddressableMemory:
             clear_registry(FunctionRegistry)
             c.add_to_memory([[[1,2,3],[4,5,6]],
                              [[8,9,10],[11,12,13,14]]])
-        assert ("Field 0 of entry ([array([[1, 2, 3],\n       [4, 5, 6]])\n " in str(error_text.value)
+        assert ("Field 0 of entry ([array([[1, 2, 3],\n       [4, 5, 6]])\n" in str(error_text.value)
                 and "has incorrect shape ((2, 3)) for memory of 'ContentAddressableMemory Function-0';  "
                     "should be: (3,)." in str(error_text.value))
+
         with pytest.raises(FunctionError) as error_text:
             clear_registry(FunctionRegistry)
             c.add_to_memory([1,2,3])
