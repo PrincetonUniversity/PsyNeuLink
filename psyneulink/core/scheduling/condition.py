@@ -685,7 +685,7 @@ class Any(Condition):
 
           unpack the list to supply its members as args::
 
-           composite_condition = All(*conditions)
+           composite_condition = Any(*conditions)
 
     """
     def __init__(self, *args):
