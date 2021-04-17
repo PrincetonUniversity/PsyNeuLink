@@ -9,14 +9,19 @@
 
 """
 
-# FIX: CONSOLIDATE STRUCTURE AND CREATION, AND ADD SUBHEADINGS TO Contents
-
 Contents
 --------
 
   * `EpisodicMemoryMechanism_Overview`
   * `EpisodicMemoryMechanism_Creation`
+      - `EpisodicMemoryMechanism_Creation_InputPorts`
+      - `EpisodicMemoryMechanism_Creation_Function_Parameters`
+      - `EpisodicMemoryMechanism_Creation_OutputPorts`
   * `EpisodicMemoryMechanism_Structure`
+      - `EpisodicMemoryMechanism_Memory_Fields`
+      - `EpisodicMemoryMechanism_Input`
+      - `EpisodicMemoryMechanism_Function`
+      - `EpisodicMemoryMechanism_Output`
   * `EpisodicMemoryMechanism_Execution`
   * `EpisodicMemoryMechanism_Class_Reference`
 
@@ -133,7 +138,7 @@ all fields, or a weighted combination of them (as determined by the `MemoryFunct
 ~~~~~~~
 
 An EpisodicMemoryMechanism has one or more `input_ports <EpisodicMemoryMechanism.input_ports>` that receive the
-item to be stored and that is used to retrieve an existing entry from its memory.  If the Mechanism is assigned
+entry to be stored and that is used to retrieve an existing entry from its memory.  If the Mechanism is assigned
 `ContentAddressableMemory` as its `function <EpisodicMemoryMechanism.function>`, then it can have an arbitrary
 number of InputPorts, the input to which is assigned to the corresponding `memory field
 <EpisodicMemoryMechanism_Memory_Fields>` of that function. By default InputPorts are named *FIELD_n_INPUT* (see
@@ -159,9 +164,6 @@ meets the following requirements:
 
     * it must implement a ``memory`` attribute, that can be accessed by the EpisodicMemoryMechanism's `memory
       <EpisodicMemoryMechanism.memory>` attribute.
-
-    * it must implement ``store_memory`` and ``get_memory()`` methods that, respectively, store and retrieve
-      entries from its ``memory`` attribute.
 
 .. _EpisodicMemoryMechanism_Output:
 
@@ -242,16 +244,6 @@ class EpisodicMemoryMechanismError(Exception):
         return repr(self.error_value)
 
 
-# def _generate_input_port_spec(field_sizes, function):
-#     # FIX:  REFACTOR FOR NEW VERSION
-#     if function is DictionaryMemory:
-#         return [{NAME: KEY_INPUT, SIZE: field_sizes}]
-#
-# def _generate_output_port_spec(field_sizes, function):
-#     # FIX:  REFACTOR FOR NEW VERSION
-#     [{NAME: KEY_OUTPUT, VARIABLE: (OWNER_VALUE, 0)}],
-
-
 class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     """
     EpisodicMemoryMechanism()
@@ -305,42 +297,9 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                     :default value: `DictionaryMemory`
                     :type: `Function`
 
-                COMMENT:
-                # input_ports
-                #     see `input_ports <EpisodicMemoryMechanism.input_ports>`
-                #
-                #     :default value: ["{name: KEY_INPUT, size: 1}"]
-                #     :type: ``list``
-                #     :read only: True
-                #
-                # output_ports
-                #     see `output_ports <EpisodicMemoryMechanism.output_ports>`
-                #
-                #     :default value: ["{name: KEY_OUTPUT, variable: (OWNER_VALUE, 0)}"]
-                #     :type: ``list``
-                #     :read only: True
-                COMMENT
         """
         variable = Parameter([[0]], pnl_internal=True, constructor_argument='default_variable')
         function = Parameter(ContentAddressableMemory, stateful=False, loggable=False)
-
-        # FIX: IS THIS STILL NEEDED:
-        # input_ports = Parameter(
-        #     _generate_input_port_spec(len(variable.default_value), function),
-        #     stateful=False,
-        #     loggable=False,
-        #     read_only=True,
-        #     structural=True,
-        #     parse_spec=True,
-        # )
-        #
-        # output_ports = Parameter(
-        #     _generate_output_port_spec(len(variable.default_value), function),
-        #     stateful=False,
-        #     loggable=False,
-        #     read_only=True,
-        #     structural=True,
-        # )
 
     def __init__(self,
                  default_variable:Union[int, list, np.ndarray]=None,
@@ -444,25 +403,6 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                 self.parameters.output_ports._set(output_ports, override=True, context=context)
 
         super()._instantiate_output_ports(context=context)
-
-        # # IMPLEMENTATION NOTE: VERSION THAT ENFORCES NUMBER OF OutputPorts EQUAL TO NUMBER OF InputPorts
-        #                       (i.e., ALL MEMORY FIELDS)
-        # for i in range(len(self.value)):
-        #     # No OutputPut specified, so base name on corresponding InputPort,
-        #     # (removing default _INPUT if it is a default name for the InputPort)
-        #     if self.output_ports is None or i >= len(self.output_ports):
-        #         input_port_name = self.input_ports[i].name
-        #         if input_port_name[-input_suffix_len:] == DEFAULT_INPUT_PORT_NAME_SUFFIX:
-        #             input_port_name = input_port_name[:-input_suffix_len]
-        #         output_ports.append({NAME: 'RETREIVED_' + input_port_name,
-        #                              VARIABLE: (OWNER_VALUE, i)})
-        #     # String specified, so use as name
-        #     elif isinstance(self.output_ports[i], str):
-        #         output_ports.append({NAME: self.output_ports[i],
-        #                              VARIABLE: (OWNER_VALUE, i)})
-        #     # Error if specifie as other a dict or an instance of an OutputPort
-        #     elif not isinstance(self.output_ports[i], dict, OutputPort):
-        #         raise EpisodicMemoryMechanismError(f"Bad specification for {OutputPort.__name__} for {self.name}.")
 
     # IMPLEMENTATION NOTE: REMOVE THIS METHOD WHEN DictionaryMemory IS RETIRED
     def _parse_function_variable(self, variable, context=None):

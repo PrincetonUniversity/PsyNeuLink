@@ -568,7 +568,9 @@ class TestDictionaryMemory:
 def retrieve_label(retrieved, stimuli):
     return [k for k,v in stimuli.items()
             if all(np.alltrue(a)
-                   for a in np.equal(retrieved,v, dtype=object))] or [None]
+                   for a in np.equal(np.array(retrieved, dtype=object),
+                                     np.array(v, dtype=object),
+                                     dtype=object))] or [None]
 
 #region
 class TestContentAddressableMemory:
@@ -1044,9 +1046,17 @@ class TestContentAddressableMemory:
                            [[12,22,32],[42,52,62]]]
         assert np.allclose(c.memory, expected_memory)
 
-    def test_ContentAddressableMemory_errors(self):
+    def test_ContentAddressableMemory_errors_and_warnings(self):
 
         # Test constructor
+
+        text = "(the angle of scalars is not defined)."
+        with pytest.warns(UserWarning, match=text):
+            clear_registry(FunctionRegistry)
+            c = ContentAddressableMemory(
+                default_variable=np.array([[0],[1,2]],dtype=object),
+                distance_function=Distance(metric=COSINE)
+            )
 
         with pytest.raises(ParameterError) as error_text:
             clear_registry(FunctionRegistry)

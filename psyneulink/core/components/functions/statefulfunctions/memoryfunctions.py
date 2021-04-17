@@ -466,15 +466,15 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             array of scalars that are all the same, then it is used simply to scale the distance computed between
             `variable <ContentAddressableMemory.variable>` and each entry in `memory <ContentAddressableMemory.memory>`,
             each of which is computed by concatenating all items of `variable <ContentAddressableMemory.variable>` into
-            a 1d array, similarly concatentating all `memory_fields <EpisodicMemoryMechanism_Memory_Fields>` of an
+            a 1d array, similarly concatenating all `memory_fields <EpisodicMemoryMechanism_Memory_Fields>` of an
             entry in `memory <ContentAddressableMemory.memory>`, and then using `distance_function
             <ContentAddressableMemory.distance_function>` to compute the distance betwen them.
 
           * if `distance_field_weights <ContentAddressableMemory.distance_field_weights>` is an array of scalars with
             different values, then `variable <ContentAddressableMemory.variable>` is compared with each entry in `memory
             <ContentAddressableMemory.memory>` by using `distance_function <ContentAddressableMemory.distance_function>`
-            to compute the distance of each item in `variable <EpisodicMemoryMechanism_Memory_Fields.variable>` with
-            the corresponding field of the entry in memory, and then averaging those distances weighted by the
+            to compute the distance of each item in `variable <ContentAddressableMemory.variable>` with the
+            corresponding field of the entry in memory, and then averaging those distances weighted by the
             corresponding element of `distance_field_weights<ContentAddressableMemory.distance_field_weights>`.
 
             .. note::
@@ -493,8 +493,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
           to determine which entries to select for consideration. If more than on entry from `memory
           <ContentAddressableMemory.memory>` is identified, `equidistant_entries_select
           <ContentAddressableMemory.equidistant_entries_select>` is used to determine which to retrieve.  If no
-          retrieval occurs, an appropriately shaped zero-valued array is
-          assigned as the retrieved memory, and returned by `function <ContentAddressableMemory.function>`.
+          retrieval occurs, an appropriately shaped zero-valued array is assigned as the retrieved memory, and
+          returned by the function.
 
         The distance between `variable <ContentAddressableMemory.variable>` and the retrieved entry is assigned to
         `distance `<ContentAddressableMemory.distance>`, the distance between of each of their fields is assigned to
@@ -534,10 +534,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                `variable <ContentAddressableMemory.variable>`.
 
       * if storage **rate** and/or **noise** arguments are specified in the constructor, they are
-      applied to `variable <ContentAddressableMemory.variable>` before storage as :math:`variable * rate + noise`;
+        applied to `variable <ContentAddressableMemory.variable>` before storage as :math:`variable * rate + noise`;
 
       * finally, if the number of entries in `memory <ContentAddressableMemory.memory>` exceeds `max_entries
-          <ContentAddressableMemory.max_entries>, the first (oldest) entry is deleted.
+        <ContentAddressableMemory.max_entries>`, the first (oldest) entry is deleted.
 
     Arguments
     ---------
@@ -556,11 +556,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     rate : float, list, or array : default 1.0
         specifies a value used to multiply `variable <ContentAddressableMemory.variable>` before storing in
-        `memory <ContentAddressableMemory.memory>` (see `rate <ContentAddressableMemory.noise> for details).
+        `memory <ContentAddressableMemory.memory>` (see `rate <ContentAddressableMemory.rate>` for details).
 
     noise : float, list, 2d array, or Function : default 0.0
-        specifies random value(s) added to `variable <ContentAddressableMemory.variable>`) before storing in
-        `memory <ContentAddressableMemory.memory>`;  if a list or 2d array, it must be the same shape as `variable
+        specifies random value(s) added to `variable <ContentAddressableMemory.variable>` before storing in
+        `memory <ContentAddressableMemory.memory>`\;  if a list or 2d array, it must be the same shape as `variable
          ContentAddressableMemory.variable>` (see `noise <ContentAddressableMemory.noise>` for details).
 
     initializer : 3d array or list : default None
@@ -579,17 +579,17 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
         specifies the function used during retrieval to evaluate the distances returned by `distance_function
-        <ContentAddressableMemory.distance_function>` and select the item to return.
+        <ContentAddressableMemory.distance_function>` and select the item to retrieve.
 
     duplicate_entries_allowed : bool : default False
         specifies whether duplicate entries are allowed in `memory <ContentAddressableMemory.memory>`
-        (see `duplicate_entries_allowed <ContentAddressableMemory.duplicate_entries_allowed` for additional details>`).
+        (see `duplicate entries <ContentAddressableMemory_Duplicate_Entries>` for additional details).
 
     duplicate_threshold : float : default 0
         specifies how similar `variable <ContentAddressableMemory.variable>` must be to an entry in `memory
-        `<ContentAddressableMemory.memory>` based on `distance_function <ContentAddressableMemory.distance_function>`
-        to be considered a duplicate (see `duplicate_entries_allowed
-        <ContentAddressableMemory.duplicate_entries_allowed>` for additional details).
+        <ContentAddressableMemory.memory>` based on `distance_function <ContentAddressableMemory.distance_function>` to
+        be considered a duplicate (see `duplicate entries <ContentAddressableMemory_Duplicate_Entries>`
+        for additional details).
 
     equidistant_entries_select:  RANDOM | OLDEST | NEWEST : default RANDOM
         specifies which entry in `memory <ContentAddressableMemory.memory>` is chosen for retrieval if two or more
@@ -597,7 +597,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     max_entries : int : default None
         specifies the maximum number of entries allowed in `memory <ContentAddressableMemory.memory>`
-        (see `max_entries <ContentAddressableMemory.max_entries` for additional details>`).
+        (see `max_entries <ContentAddressableMemory.max_entries>` for additional details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -687,20 +687,21 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         contains the shapes of each `memory field <EpisodicMemoryMechanism_Memory_Fields>`  in each entry of `memory
         <ContentAddressableMemory.memory>`.
 
+    selection_function : OneHot or function
+        function used during retrieval to evaluate the distances returned by `distance_function
+        <ContentAddressableMemory.distance_function>` and select the item(s) to return.
+
     duplicate_entries_allowed : bool | OVERWRITE
         determines whether duplicate entries are allowed in `memory <ContentAddressableMemory.memory>`,
         as evaluated by `distance_function <ContentAddressableMemory.distance_function>` and `duplicate_threshold
-        <ContentAddressableMemory.duplicate_threshold>`. If duplicate_entries_allowed is True then, on retrieval,
-        a single one is selected based on
-        `equidistant_entries_select <ContentAddressableMemory.equidistant_entries_select>`,
-        and the entry is added to `memory <ContentAddressableMemory.memory>` as another duplicate
-        (see `duplicate entries <ContentAddressableMemory_Duplicate_Entries>` for additional details).
+        <ContentAddressableMemory.duplicate_threshold>`. (see `duplicate entries
+        <ContentAddressableMemory_Duplicate_Entries>` for additional details).
 
     duplicate_threshold : float
         determines how similar `variable <ContentAddressableMemory.variable>` must be to an entry in `memory
         `<ContentAddressableMemory.memory>` based on `distance_function <ContentAddressableMemory.distance_function>`
-        to be considered a duplicate (see `duplicate_entries_allowed
-        <ContentAddressableMemory.duplicate_entries_allowed>` for additional details).
+        to be considered a duplicate (see `duplicate entries <ContentAddressableMemory_Duplicate_Entries>` for
+        additional details).
 
     equidistant_entries_select:  RANDOM | OLDEST | NEWEST
         determines which entry is retrieved when duplicate entries are identified or are indistinguishable by the
@@ -709,11 +710,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     max_entries : int
         maximum number of entries allowed in `memory <ContentAddressableMemory.memory>`;  if storing a memory
         exceeds the number, the oldest memory is deleted.
-
-
-    selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
-        function used during retrieval to evaluate the distances returned by `distance_function
-        <ContentAddressableMemory.distance_function>` and select the item(s) to return.
 
     previous_value : ndarray
         state of the `memory <ContentAddressableMemory.memory>` prior to storing `variable
@@ -995,6 +991,14 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             distance_function.defaults.variable = [test_var,test_var]
             distance_function._instantiate_value(context)
             fct_msg = 'Function'
+
+        if (isinstance(distance_function, Distance)
+                and distance_function.metric == COSINE
+                and any([len(v)==1 for v in test_var])):
+            warnings.warn(f"{self.__class__.__name__} is using {distance_function} with metric=COSINE and has "
+                          f"at least one memory field that is a scalar (i.e., size=1), which will always produce "
+                          f"a distance of 0 (the angle of scalars is not defined).")
+
         field_wts_homog = np.full(len(test_var),1).tolist()
         field_wts_heterog = np.full(len(test_var),range(0,len(test_var))).tolist()
 
