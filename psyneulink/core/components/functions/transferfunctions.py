@@ -16,6 +16,7 @@
 * `Logistic`
 * `Tanh`
 * `ReLU`
+* `Angle`
 * `Gaussian`
 * `GaussianDistort`
 * `SoftMax`
@@ -59,7 +60,7 @@ from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.keywords import \
-    ADDITIVE_PARAM, ALL, BIAS, EXPONENTIAL_FUNCTION, \
+    ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, EXPONENTIAL_FUNCTION, \
     GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
     IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
     TANH_FUNCTION, MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, \
@@ -73,7 +74,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
 
-__all__ = ['Exponential', 'Gaussian', 'GaussianDistort', 'Identity', 'Linear', 'LinearMatrix',
+__all__ = ['Angle', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity', 'Linear', 'LinearMatrix',
            'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
            ]
 
@@ -265,7 +266,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     .. _Linear:
 
-    `function <Logistic.function>` returns linear transform of `variable <Linear.variable>`:
+    `function <Linear.function>` returns linear transform of `variable <Linear.variable>`:
 
     .. math::
 
@@ -1567,6 +1568,228 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         input[input<=0] = gain * leak
 
         return input
+
+
+# **********************************************************************************************************************
+#                                                    Angle
+# **********************************************************************************************************************
+
+# FIX: VALIDATE LEN(VARIABLE)>=2
+class Angle(TransferFunction):  # -------------------------------------------------------------------------------------
+    """
+    Angle(                 \
+         default_variable, \
+         params=None,      \
+         owner=None,       \
+         name=None,        \
+         prefs=None        \
+         )
+
+    .. _Angle:
+
+    `function <angle.function>` returns Angle transform of vector in `variable <Angle.variable>`:
+
+    COMMENT:
+    FIX: WITH PROPER MATHEMATICAL DEFN
+    .. math::
+
+        slope * variable + intercept
+
+    `derivative <Angle.derivative>` returns `slope <Angle.slope>`.
+    COMMENT
+
+    Arguments
+    ---------
+
+    default_variable : number or array : default class_defaults.variable
+        specifies a template for the value to be transformed.
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : number or array
+        contains value to be transformed.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
+    """
+
+    componentName = ANGLE_FUNCTION
+
+    classPreferences = {
+        PREFERENCE_SET_NAME: 'AngleClassPreferences',
+        REPORT_OUTPUT_PREF: PreferenceEntry(False, PreferenceLevel.INSTANCE),
+    }
+
+    _model_spec_class_name_is_generic = True
+
+    class Parameters(TransferFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                intercept
+                    see `intercept <Angle.intercept>`
+
+                    :default value: 0.0
+                    :type: ``float``
+
+                slope
+                    see `slope <Angle.slope>`
+
+                    :default value: 1.0
+                    :type: ``float``
+        """
+        pass
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 params=None,
+                 owner=None,
+                 prefs: tc.optional(is_pref_set) = None):
+
+        super().__init__(
+            default_variable=default_variable,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
+
+    # def _gen_llvm_transfer(self, builder, index, ctx, vi, vo, params, state, *, tags:frozenset):
+    #     ptri = builder.gep(vi, [ctx.int32_ty(0), index])
+    #     ptro = builder.gep(vo, [ctx.int32_ty(0), index])
+    #     slope_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, SLOPE)
+    #     intercept_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, INTERCEPT)
+    #
+    #     slope = pnlvm.helpers.load_extract_scalar_array_one(builder, slope_ptr)
+    #     intercept = pnlvm.helpers.load_extract_scalar_array_one(builder, intercept_ptr)
+    #
+    #
+    #     if "derivative" in tags:
+    #         # f'(x) = m
+    #         val = slope
+    #     else:
+    #         # f(x) = mx + b
+    #         val = builder.load(ptri)
+    #         val = builder.fmul(val, slope)
+    #         val = builder.fadd(val, intercept)
+    #
+    #     builder.store(val, ptro)
+
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None,
+                 ):
+        """
+
+        Arguments
+        ---------
+
+        variable : number or array : default class_defaults.variable
+           an array to be transformed.
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        Angle transformation of variable : number or array
+
+        """
+
+        def _angle(value):
+            value = np.squeeze(value)
+            dim = len(value)
+            angle = np.zeros(dim)
+            angle[0] = np.cos(value[0])
+            prod = np.product([np.sin(value[k]) for k in range(1, dim - 1)])
+            n_prod = prod
+            for j in range(dim - 2):
+                n_prod /= np.sin(value[j + 1])
+                amt = n_prod * np.cos(value[j + 1])
+                angle[j + 1] = amt
+            angle[dim - 1] = prod
+            return angle
+
+        try:
+            # By default, result should be returned as np.ndarray with same dimensionality as input
+            result = _angle(variable)
+        except TypeError:
+            if hasattr(variable, "dtype"):
+                # If variable is an array with mixed sizes or types, try item-by-item operation
+                if variable.dtype == object:
+                    result = np.zeros_like(variable)
+                    for i, item in enumerate(variable):
+                        result[i] = _angle(variable[i])
+                else:
+                    raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+            # KAM 6/28/18: If the variable does not have a "dtype" attr but made it to this line, then it must be of a
+            # type that even np does not recognize -- typically a custom OutputPort variable with items of different
+            # shapes (e.g. variable = [[0.0], [0.0], array([[0.0, 0.0]])] )
+            elif isinstance(variable, list):
+                result = []
+                for variable_item in variable:
+                    result.append(_angle(variable_item))
+            else:
+                raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
+
+        return self.convert_output_type(result)
+
+    # @handle_external_context()
+    # def derivative(self, input=None, output=None, context=None):
+    #     """
+    #     derivative(input)
+    #
+    #     Derivative of `function <Angle.function>` at **input**.
+    #
+    #     Arguments
+    #     ---------
+    #
+    #     input : number
+    #         value of the input to the Angle transform at which derivative is to be taken.
+    #
+    #     Returns
+    #     -------
+    #
+    #     Slope of function :  number or array
+    #
+    #     """
+    #
+    #     return self._get_current_parameter_value(SLOPE, context)
+    #
+    # def _is_identity(self, context=None):
+    #     return (
+    #         self.parameters.slope._get(context) == 1
+    #         and self.parameters.intercept._get(context) == 0
+    #     )
 
 
 # **********************************************************************************************************************
