@@ -958,7 +958,7 @@ class TestContentAddressableMemory:
 
         # Test adding memory with different size value
         with pytest.raises(FunctionError) as error_text:
-            c.add_to_memory([[1,2,3],[100,101,102,103]])
+            c.add_to_memory(np.array([[1,2,3],[100,101,102,103]], dtype=object))
         assert "Field 1 of entry ([array([1, 2, 3]) array([100, 101, 102, 103])]) has incorrect shape ((4,)) " \
                "for memory of 'ContentAddressableMemory Function-0';  should be: (3,)." in str(error_text.value)
 
