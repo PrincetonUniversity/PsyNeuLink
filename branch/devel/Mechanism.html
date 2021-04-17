@@ -6,11 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17: http://docutils.sourceforge.net/" />
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanism &mdash; PsyNeuLink 0.8.7.1+34.gda30eee3d2 documentation</title>
+  <title>Mechanism &mdash; PsyNeuLink 0.8.7.1+35.g712354371e documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+34
+                  0.8.7.1+35
                 </div>
               
             
@@ -467,10 +467,13 @@ The <a class="reference internal" href="InputPort.html#psyneulink.core.component
 identified in its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_port"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_port</span></code></a> attribute. However some Mechanisms have more than one
 InputPort. For example, a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> has one InputPort for its <strong>SAMPLE</strong> and another for its <strong>TARGET</strong>
 input. All of the Mechanism’s InputPorts (including its primary InputPort &lt;InputPort_Primary&gt;` are listed in its
-<a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> attribute (note the plural).  The <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> attribute is a ContentAddressableList – a PsyNeuLink-defined subclass of the Python
-class <a class="reference external" href="https://docs.python.org/3.6/library/collections.html?highlight=userlist#collections.UserList">UserList</a> –
-that allows a specific InputPort in the list to be accessed using its name as the index for the list (e.g.,
-<code class="docutils literal notranslate"><span class="pre">my_mechanism['InputPort</span> <span class="pre">name']</span></code>).</p>
+<a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> attribute (note the plural).</p>
+<div class="technical-note docutils container">
+<p>The <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> attribute is a ContentAddressableList
+– a PsyNeuLink-defined subclass of the Python class <a class="reference external" href="https://docs.python.org/3.6/library/collections.html?highlight=userlist#collections.UserList">UserList</a> –
+that allows a specific InputPort in the list to be accessed using its name as the index for the list
+(e.g., <code class="docutils literal notranslate"><span class="pre">my_mechanism['InputPort</span> <span class="pre">name']</span></code>).</p>
+</div>
 <p id="mechanism-variable-and-inputports">The <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of each InputPort for a Mechanism is assigned to a different item of the Mechanism’s
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> attribute (a 2d np.array), as well as to a corresponding item of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_values</span></code></a> attribute (a list).  The <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> provides the input to the
 Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, while its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_values</span></code></a> provides a
