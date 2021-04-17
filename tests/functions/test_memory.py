@@ -1150,9 +1150,9 @@ class TestContentAddressableMemory:
             clear_registry(FunctionRegistry)
             c.add_to_memory([[[1,2,3],[4,5,6]],
                              [[8,9,10],[11,12,13,14]]])
-        assert "Field 1 of entry ([list([8, 9, 10]) list([11, 12, 13, 14])]) has incorrect shape ((4,)) " \
-               "for memory of 'ContentAddressableMemory Function-0';  should be: (3,)." in str(error_text.value)
-
+        assert ("Field 0 of entry ([array([[1, 2, 3],\n       [4, 5, 6]])\n " in str(error_text.value)
+                and "has incorrect shape ((2, 3)) for memory of 'ContentAddressableMemory Function-0';  "
+                    "should be: (3,)." in str(error_text.value))
         with pytest.raises(FunctionError) as error_text:
             clear_registry(FunctionRegistry)
             c.add_to_memory([1,2,3])
