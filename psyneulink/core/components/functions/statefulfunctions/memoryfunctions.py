@@ -694,7 +694,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         a single one is selected based on
         `equidistant_entries_select <ContentAddressableMemory.equidistant_entries_select>`,
         and the entry is added to `memory <ContentAddressableMemory.memory>` as another duplicate
-        (see `ContentAddressableMemory_Duplicate_Entries` for additional details).
+        (see `duplicate entries <ContentAddressableMemory_Duplicate_Entries>` for additional details).
 
     duplicate_threshold : float
         determines how similar `variable <ContentAddressableMemory.variable>` must be to an entry in `memory
