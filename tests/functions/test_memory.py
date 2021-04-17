@@ -761,12 +761,12 @@ class TestContentAddressableMemory:
 
     def test_ContentAddressableMemory_with_initializer_and_diff_field_sizes(self):
 
-        stimuli = {'A': [[1.,2.,3.],[4.,5.,6.,7.]],
-                   'B': [[8.,9.,10.],[11.,12.,13.,14.]],
-                   'C': [[1.,2.,3.],[11.,12.,13.,14.]],
-                   'D': [[1.,2.,3.],[21.,22.,23.,24.]],
-                   'E': [[9.,8.,4.],[11.,12.,13.,14.]],
-                   'F': [[10.,10.,30.],[40.,50.,60.,70.]],
+        stimuli = {'A': np.array([[1.,2.,3.],[4.,5.,6.,7.]], dtype=object),
+                   'B': np.array([[8.,9.,10.],[11.,12.,13.,14.]], dtype=object),
+                   'C': np.array([[1.,2.,3.],[11.,12.,13.,14.]], dtype=object),
+                   'D': np.array([[1.,2.,3.],[21.,22.,23.,24.]], dtype=object),
+                   'E': np.array([[9.,8.,4.],[11.,12.,13.,14.]], dtype=object),
+                   'F': np.array([[10.,10.,30.],[40.,50.,60.,70.]], dtype=object),
                    }
 
         c = ContentAddressableMemory(
@@ -860,12 +860,12 @@ class TestContentAddressableMemory:
 
     def test_ContentAddressableMemory_without_initializer_and_diff_field_sizes(self):
 
-        stimuli = {'A': [[1,2,3],[4,5,6,7]],
-                   'B': [[8,9,10],[11,12,13,14]],
-                   'C': [[1,2,3],[11,12,13,14]],
-                   'D': [[1,2,3],[21,22,23,24]],
-                   'E': [[9,8,4],[11,12,13,14]],
-                   'F': [[10,10,30],[40,50,60,70]],
+        stimuli = {'A': np.array([[1,2,3],[4,5,6,7]], dtype=object),
+                   'B': np.array([[8,9,10],[11,12,13,14]], dtype=object),
+                   'C': np.array([[1,2,3],[11,12,13,14]], dtype=object),
+                   'D': np.array([[1,2,3],[21,22,23,24]], dtype=object),
+                   'E': np.array([[9,8,4],[11,12,13,14]], dtype=object),
+                   'F': np.array([[10,10,30],[40,50,60,70]], dtype=object),
                    }
 
         c = ContentAddressableMemory(
