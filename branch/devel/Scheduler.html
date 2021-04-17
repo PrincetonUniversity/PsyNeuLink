@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0.8.7.1+31.g4d26bad6ed documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0.8.7.1+34.gda30eee3d2 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+31
+                  0.8.7.1+34
                 </div>
               
             
@@ -440,8 +440,9 @@ specification dictionary, possibly determined by a set of <a class="reference in
 based on the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>'s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.graph_processing" title="psyneulink.core.compositions.composition.Composition.graph_processing"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">graph</span></code></a>.</p></li>
 <li><p><strong>conditions</strong> (<a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet" title="psyneulink.core.scheduling.condition.ConditionSet"><em>ConditionSet</em></a>) – set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that specify when individual <a class="reference internal" href="Components.html"><span class="doc">Components</span></a> &lt;Component&gt;` in <strong>composition</strong>
 execute and any dependencies among them.</p></li>
-<li><p><strong>graph</strong> (<em>Dict</em><em>[</em><em>Component: set</em><em>(</em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>)</em><em>]</em>) – a graph specification dictionary - each entry of the dictionary must be a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>,
-and the value of each entry must be a set of zero or more Components that project directly to the key.</p></li>
+<li><p><strong>graph</strong> (<em>Dict</em><em>[</em><em>object: set</em><em>(</em><em>object</em><em>)</em><em>]</em><em>, </em><em>Graph</em>) – a graph specification dictionary - each entry of the dictionary must be an object,
+and the value of each entry must be a set of zero or more objects that project directly to the key.
+or, a <code class="xref any docutils literal notranslate"><span class="pre">Graph</span></code></p></li>
 </ul>
 </dd>
 </dl>

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0.8.7.1+31.g4d26bad6ed documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.8.7.1+34.gda30eee3d2 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+31
+                  0.8.7.1+34
                 </div>
               
             
@@ -730,6 +730,12 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 </div></blockquote>
 </dd></dl>
 
+<dl class="py attribute">
+<dt id="psyneulink.core.scheduling.condition.And">
+<code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">And</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.And" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#psyneulink.core.scheduling.condition.All" title="psyneulink.core.scheduling.condition.All"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.core.scheduling.condition.All</span></code></a></p>
+</dd></dl>
+
 <dl class="py class">
 <dt id="psyneulink.core.scheduling.condition.Any">
 <em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">Any</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Any" title="Permalink to this definition">¶</a></dt>
@@ -751,7 +757,7 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 </pre></div>
 </div>
 <p>unpack the list to supply its members as args:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">composite_condition</span> <span class="o">=</span> <span class="n">All</span><span class="p">(</span><span class="o">*</span><span class="n">conditions</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">composite_condition</span> <span class="o">=</span> <span class="n">Any</span><span class="p">(</span><span class="o">*</span><span class="n">conditions</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
@@ -1257,6 +1263,12 @@ JustRan(A) is satisfied at the beginning of the next <a class="reference interna
 <li><p>the first <strong>n</strong> times <strong>condition</strong> is satisfied upon evaluation</p></li>
 </ul>
 </div></blockquote>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="psyneulink.core.scheduling.condition.Or">
+<code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">Or</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.Or" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#psyneulink.core.scheduling.condition.Any" title="psyneulink.core.scheduling.condition.Any"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.core.scheduling.condition.Any</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
