@@ -42,14 +42,14 @@ from psyneulink.core.globals.keywords import \
     INCREMENT, INITIALIZER, INPUT_PORTS, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
     INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, \
     MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_PORTS, PRODUCT, \
-    RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD, VARIABLE
+    RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SIZE, SUM, TIME_STEP_SIZE, THRESHOLD, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, iscompatible, get_global_seed, convert_all_elements_to_np_array
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
 
-__all__ = ['SimpleIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator',
+__all__ = ['SimpleIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator', 'DriftOnASphereIntegrator',
            'OrnsteinUhlenbeckIntegrator', 'FitzHughNagumoIntegrator', 'AccumulatorIntegrator',
            'LeakyCompetingIntegrator', 'DualAdaptiveIntegrator', 'InteractiveActivationIntegrator',
            'S_MINUS_L', 'L_MINUS_S', 'IntegratorFunction'
@@ -293,13 +293,11 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         elif any(len(v)!=len(values[0]) for v in values):
             raise FunctionError(f"The parameters with len>1 specified for {self.name} "
                                 f"({sorted(params_to_check.keys())}) don't all have the same length")
-    # MODIFIED 6/21/19 END
 
-    # MODIFIED 6/21/19 NEW: [JDC]
     def _instantiate_attributes_before_function(self, function=None, context=None):
         """Insure inner dimension of default_variable matches the length of any parameters that have len>1"""
 
-        # Note:  if default_variable was user specfied, equal length of parameters was validated in _validate_params
+        # Note:  if default_variable was user specified, equal length of parameters was validated in _validate_params
         if not self.parameters.variable._user_specified:
             values_with_a_len = [param.default_value for param in self.parameters if
                                  param.function_arg and
@@ -322,8 +320,6 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                     self.parameters.variable._user_specified = True
 
         super()._instantiate_attributes_before_function(function=function, context=context)
-        assert True
-    # MODIFIED 6/21/19 END
 
     def _EWMA_filter(self, previous_value, rate, variable):
         """Return `exponentially weighted moving average (EWMA)
@@ -2547,6 +2543,560 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
         time_vo_ptr = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(1), index])
         builder.store(curr_time, time_vo_ptr)
+
+    def reset(self, previous_value=None, previous_time=None, context=None):
+        return super().reset(
+            previous_value=previous_value,
+            previous_time=previous_time,
+            context=context
+        )
+
+
+class DriftOnASphereIntegrator(IntegratorFunction):  # -----------------------------------------------------------------
+    """
+    DriftOnASphereIntegrator(                \
+        default_variable=None,               \
+        rate=1.0,                            \
+        noise=0.0,                           \
+        offset= 0.0,                         \
+        starting_point=0.0,                  \
+        threshold=1.0                        \
+        time_step_size=1.0,                  \
+        initializer=None,                    \
+        dimension=2,                         \
+        # initial_angle=np.zeros(dimension), \
+        params=None,                         \
+        owner=None,                          \
+        prefs=None,                          \
+        )
+
+    .. _DriftOnASphereIntegrator:
+
+    Accumulate "evidence" to a bound.  `function <DriftOnASphereIntegrator.function>` returns one
+    time step of integration:
+
+    ..  math::
+        previous\\_value + rate \\cdot variable \\cdot time\\_step\\_size + \\mathcal{N}(\\sigma^2)
+
+    where
+
+    ..  math::
+        \\sigma^2 =\\sqrt{time\\_step\\_size \\cdot noise}
+
+    *Modulatory Parameters:*
+
+    | *MULTIPLICATIVE_PARAM:* `rate <AdaptiveIntegrator.rate>`
+    | *ADDITIVE_PARAM:* `offset <AdaptiveIntegrator.offset>`
+    |
+
+    Arguments
+    ---------
+
+    default_variable : number, list or array : default class_defaults.variable
+        specifies the stimulus component of drift rate -- the drift rate is the product of variable and rate
+
+    rate : float, list or 1d array : default 1.0
+        applied multiplicatively to `variable <DriftOnASphereIntegrator.variable>`;  If it is a list or array, it must
+        be the same length as `variable <DriftOnASphereIntegrator.variable>` (see `rate <DriftOnASphereIntegrator.rate>`
+        for details).
+
+    noise : float : default 0.0
+        specifies a value by which to scale the normally distributed random value added to the integral in each call to
+        `function <DriftOnASphereIntegrator.function>` (see `noise <DriftOnASphereIntegrator.noise>` for details).
+
+    COMMENT:
+    FIX: REPLACE ABOVE WITH THIS ONCE LIST/ARRAY SPECIFICATION OF NOISE IS FULLY IMPLEMENTED
+    noise : float, list or 1d array : default 0.0
+        specifies a value by which to scale the normally distributed random value added to the integral in each call to
+        `function <DriftOnASphereIntegrator.function>`; if it is a list or array, it must be the same length as
+        `variable <DriftOnASphereIntegrator.variable>` (see `noise <DriftOnASphereIntegrator.noise>` for details).
+    COMMENT
+
+    offset : float, list or 1d array : default 0.0
+        specifies constant value added to integral in each call to `function <DriftOnASphereIntegrator.function>`
+        if it's absolute value is below `threshold <DriftOnASphereIntegrator.threshold>`;
+        if it is a list or array, it must be the same length as `variable <DriftOnASphereIntegrator.variable>`
+        (see `offset <DriftOnASphereIntegrator.offset>` for details).
+
+    starting_point : float, list or 1d array:  default 0.0
+        specifies the starting value for the integration process; if it is a list or array, it must be the
+        same length as `variable <DriftOnASphereIntegrator.variable>` (see `starting_point
+        <DriftOnASphereIntegrator.starting_point>` for details).
+
+    threshold : float : default 0.0
+        specifies the threshold (boundaries) of the drift diffusion process -- i.e., at which the
+        integration process terminates (see `threshold <DriftOnASphereIntegrator.threshold>` for details).
+
+    time_step_size : float : default 0.0
+        specifies the timing precision of the integration process (see `time_step_size
+        <DriftOnASphereIntegrator.time_step_size>` for details.
+
+    dimension : int : default 2
+        specifies dimensionality of the sphere over which drift occurs.
+
+    initializer : float, list or 1d array : default 0.0
+        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
+        `default_variable <DriftOnASphereIntegrator.variable>` (see `initializer <Integrator_Initializer>` for details).
+
+    initial_angle : 1d array
+        specifies the starting point on the sphere from which angle is derived;  its length must be equal to `dimension
+        <DriftOnASphereIntegrator.dimension>` (see `initial_angle <DriftOnASphereIntegrator.initial_angle>` for any
+        additional details).
+
+    params : Dict[param keyword: param value] : default None
+        a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+        function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+        arguments of the constructor.
+
+    owner : Component
+        `component <Component>` to which to assign the Function.
+
+    name : str : default see `name <Function.name>`
+        specifies the name of the Function.
+
+    prefs : PreferenceSet or specification dict : default Function.classPreferences
+        specifies the `PreferenceSet` for the Function (see `prefs <Function_Base.prefs>` for details).
+
+    Attributes
+    ----------
+
+    variable : float or array
+        current input value (can be thought of as implementing the stimulus component of the drift rate);  if it is an
+        array, each element represents an independently integrated decision variable.
+
+    rate : float or 1d array
+        applied multiplicatively to `variable <DriftOnASphereIntegrator.variable>` (can be thought of as implementing
+        the attentional component of the drift rate).  If it is a float or has a single element, its value is applied
+        to all the elements of `variable <DriftOnASphereIntegrator.variable>`; if it is an array, each element is
+        applied to the corresponding element of `variable <DriftOnASphereIntegrator.variable>`. Serves as
+        *MULTIPLICATIVE_PARAM* for `modulation <ModulatorySignal_Modulation>` of `function
+        <DriftOnASphereIntegrator.function>`.
+
+    random_state : numpy.RandomState
+        private pseudorandom number generator
+
+    noise : float or 1d array
+        scales the normally distributed random value added to integral in each call to `function
+        <DriftOnASphereIntegrator.function>`. If `variable <DriftOnASphereIntegrator.variable>` is a list or array,
+        and noise is a float, a single random term is generated and applied for each element of `variable
+        <DriftOnASphereIntegrator.variable>`.  If noise is a list or array, it must be the same length as `variable
+        <DriftOnASphereIntegrator.variable>`, and a separate random term scaled by noise is applied for each of the
+        corresponding elements of `variable <DriftOnASphereIntegrator.variable>`.
+    COMMENT
+
+    offset : float or 1d array
+        constant value added to integral in each call to `function <DriftOnASphereIntegrator.function>`
+        if it's absolute value is below `threshold <DriftOnASphereIntegrator.threshold>`.
+        If `variable <DriftOnASphereIntegrator.variable>` is an array and offset is a float, offset is applied
+        to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
+        the corresponding elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for
+        `modulation <ModulatorySignal_Modulation>` of `function <DriftOnASphereIntegrator.function>`.
+
+    starting_point : float or 1d array
+        determines the starting value for the integration process; if it is a list or array, it must be the
+        same length as `variable <DriftOnASphereIntegrator.variable>`. If `variable <DriftOnASphereIntegrator.variable>`
+        is an array and starting_point is a float, starting_point is used for each element of the integral;  if
+        starting_point is a list or array, each of its elements is used as the starting point for each element of the
+        integral.
+
+    threshold : float
+        determines the boundaries of the drift diffusion process:  the integration process can be scheduled to
+        terminate when the result of `function <DriftOnASphereIntegrator.function>` equals or exceeds either the
+        positive or negative value of threshold (see hint).
+        NOTE: Vector version of this parameter acts as a saturation barrier.
+        While it is possible to subtract from value == threshold, any movement
+        in the threshold direction will be capped at the threshold value.
+
+        .. hint::
+           To terminate execution of the `Mechanism <Mechanism>` to which the `function
+           <DriftOnASphereIntegrator.function>` is assigned, a `WhenFinished` `Condition` should be assigned for that
+           Mechanism to `scheduler <Composition.scheduler>` of the `Composition` to which the Mechanism belongs.
+
+    time_step_size : float
+        determines the timing precision of the integration process and is used to scale the `noise
+        <DriftOnASphereIntegrator.noise>` parameter according to the standard DDM probability distribution.
+
+    dimension : int
+        determines dimensionality of sphere over which drift occurs.
+
+    initializer : float or 1d array
+        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
+        <DriftDiffusionIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
+
+    initial_angle : 1d array
+        determines the starting point on the sphere from which angle is derived;  its length must be equal to `dimension
+        <DriftOnASphereIntegrator.dimension>`.
+
+    previous_time : float
+        stores previous time at which the function was executed and accumulates with each execution according to
+        `time_step_size <DriftOnASphereIntegrator.default_time_step_size>`.
+
+    previous_value : 1d array : default class_defaults.variable
+        stores previous value with which `variable <DriftOnASphereIntegrator.variable>` is integrated.
+
+    owner : Component
+        `component <Component>` to which the Function has been assigned.
+
+    name : str
+        the name of the Function; if it is not specified in the **name** argument of the constructor, a default is
+        assigned by FunctionRegistry (see `Registry_Naming` for conventions used for default and duplicate names).
+
+    prefs : PreferenceSet or specification dict : Function.classPreferences
+        the `PreferenceSet` for function; if it is not specified in the **prefs** argument of the Function's
+        constructor, a default is assigned using `classPreferences` defined in __init__.py (see `Preferences`
+        for details).
+    """
+
+    componentName = DRIFT_DIFFUSION_INTEGRATOR_FUNCTION
+
+    class Parameters(IntegratorFunction.Parameters):
+        """
+            Attributes
+            ----------
+
+                dimension
+                    see `dimension <DriftOnASphereIntegrator.dimension>`
+
+                    :default value: 2
+                    :type: ``int``
+
+
+                enable_output_type_conversion
+                    see `enable_output_type_conversion <DriftOnASphereIntegrator.enable_output_type_conversion>`
+
+                    :default value: False
+                    :type: ``bool``
+                    :read only: True
+
+                initial_angle
+                    see `initial_angle <DriftOnASphereIntegrator.initial_angle>`
+
+                    :default value: np.zeros(dimension)
+                    :type: ``numpy.ndarray``
+
+                offset
+                    see `offset <DriftOnASphereIntegrator.offset>`
+
+                    :default value: 0.0
+                    :type: ``float``
+
+                previous_time
+                    see `previous_time <DriftOnASphereIntegrator.previous_time>`
+
+                    :default value: None
+                    :type:
+
+                random_state
+                    see `random_state <DriftOnASphereIntegrator.random_state>`
+
+                    :default value: None
+                    :type: ``numpy.random.RandomState``
+
+                rate
+                    see `rate <DriftOnASphereIntegrator.rate>`
+
+                    :default value: 1.0
+                    :type: ``float``
+
+                seed
+                    see `seed <DriftOnASphereIntegrator.seed>`
+
+                    :default value: None
+                    :type:
+                    :read only: True
+
+                starting_point
+                    see `starting_point <DriftOnASphereIntegrator.starting_point>`
+
+                    :default value: 0.0
+                    :type: ``float``
+
+                threshold
+                    see `threshold <DriftOnASphereIntegrator.threshold>`
+
+                    :default value: 100.0
+                    :type: ``float``
+
+                time_step_size
+                    see `time_step_size <DriftOnASphereIntegrator.time_step_size>`
+
+                    :default value: 1.0
+                    :type: ``float``
+        """
+        rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        starting_point = 0.0
+        threshold = Parameter(100.0, modulable=True)
+        time_step_size = Parameter(1.0, modulable=True)
+        previous_time = Parameter(None, initializer='starting_point', pnl_internal=True)
+        dimension = Parameter(2, stateful=False, read_only=True)
+        initial_angle = Parameter(None, stateful=True)
+        # initializer = Parameter(None, initalizer='variable', stateful=True)
+        seed = Parameter(None, read_only=True)
+        random_state = Parameter(None, stateful=True, loggable=False)
+        enable_output_type_conversion = Parameter(
+            False,
+            stateful=False,
+            loggable=False,
+            pnl_internal=True,
+            read_only=True
+        )
+
+        def _validate_dimension(self, dimension):
+            if dimension < 2:
+                return 'dimension must be an integer >= 2'
+
+        def _validate_initializer(self, initializer):
+            if (self.initializer._user_specified
+                    and (initializer.ndim != 1 or len(initializer) != self.dimension.default_value-1)):
+                return 'the length of initializer must be the value of the \'dimension\' parameter minus 1'
+
+        def _parse_initializer(self, initializer):
+            initializer_dim = self.dimension.default_value-1
+            if initializer.ndim != 1 or len(initializer) != initializer_dim:
+                initializer = np.random.random(initializer_dim)
+                self.initializer._set_default_value(initializer)
+            return initializer
+
+    @tc.typecheck
+    def __init__(self,
+                 default_variable=None,
+                 rate: tc.optional(parameter_spec) = None,
+                 noise=None,
+                 offset: tc.optional(parameter_spec) = None,
+                 starting_point=None,
+                 threshold=None,
+                 time_step_size=None,
+                 dimension=None,
+                 initial_angle=None,
+                 initializer=None,
+                 seed=None,
+                 params: tc.optional(tc.optional(dict)) = None,
+                 owner=None,
+                 prefs: tc.optional(is_pref_set) = None,
+                 **kwargs):
+
+        if seed is None:
+            seed = get_global_seed()
+
+        random_state = np.random.RandomState([seed])
+
+        # Assign here as default, for use in initialization of function
+        super().__init__(
+            default_variable=default_variable,
+            rate=rate,
+            time_step_size=time_step_size,
+            starting_point=starting_point,
+            initializer=initializer,
+            threshold=threshold,
+            noise=noise,
+            offset=offset,
+            dimension=dimension,
+            initial_angle=initial_angle,
+            random_state=random_state,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
+
+    def _validate_noise(self, noise):
+        if noise is not None and not isinstance(noise, float) \
+                and not(isinstance(noise, np.ndarray) and np.issubdtype(noise.dtype, np.floating)):
+            raise FunctionError(
+                f"Invalid noise parameter for {self.name}: {type(noise)}. "
+                f"DriftOnASphereIntegrator requires noise parameter to be a float or float array.")
+
+    def _validate_initializers(self, default_variable, context=None):
+        pass
+
+    def _instantiate_attributes_before_function(self, function=None, context=None):
+        if not self.parameters.initializer._user_specified:
+            self._initialize_previous_value(self.parameters.initializer.get(context), context)
+        # self._initialize_previous_value(self.parameters.initializer.get(context), context)
+
+        initializers = list(self.initializers)
+        initializers.remove('initializer')
+        self._instantiate_stateful_attributes(self.stateful_attributes, initializers, context)
+
+
+    def _initialize_previous_value(self, initializer, context=None):
+        return super()._initialize_previous_value(self.parameters._parse_initializer(initializer), context)
+
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None,
+                 ):
+        """
+
+        Arguments
+        ---------
+
+        variable : number, list or array : default class_defaults.variable
+           a single value or array of values to be integrated (can be thought of as the stimulus component of
+           the drift rate).
+
+        params : Dict[param keyword: param value] : default None
+            a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
+            function.  Values specified for parameters in the dictionary override any assigned to those parameters in
+            arguments of the constructor.
+
+        Returns
+        -------
+
+        updated value of integral : 2d array
+
+        """
+
+        rate = np.array(self._get_current_parameter_value(RATE, context)).astype(float)
+        noise = self._get_current_parameter_value(NOISE, context)
+        offset = self._get_current_parameter_value(OFFSET, context)
+        threshold = self._get_current_parameter_value(THRESHOLD, context)
+        time_step_size = self._get_current_parameter_value(TIME_STEP_SIZE, context)
+        random_state = self._get_current_parameter_value("random_state", context)
+
+        dimension = self.parameters.dimension.get(context)
+
+        # initialial_angle = self.parameters.initialial_angle.get(context)
+        # if initialial_angle is None:
+        #     initialial_angle = np.random.random(self.parameters.dimension.get(context)-1)
+
+        # variable = self.parameters._parse_initializer(variable)
+        previous_value = self.parameters.previous_value._get(context)
+
+        # # FIX: FROM MAIA:
+        # def spherical_drift(n_steps=20, dim=10, var=0.25, mean=0.25):
+        #     # initialize the spherical coordinates to ensure each context run begins in a new random location on the unit sphere
+        #     ros = np.random.random(dim - 1)
+        #     slen = n_steps
+        #     ctxt = np.zeros((slen, dim))
+        #     for i in range(slen):
+        #         noise = np.random.normal(mean, var, size=(dim - 1)) # add a separately-drawn Gaussian to each spherical coord
+        #         ros += noise
+        #         ctxt[i] = convert_spherical_to_angular(dim, ros)
+        #     return ctxt
+        #
+        # # Convert spherical coordinates to angular ones
+        # def convert_spherical_to_angular(dim, ros):
+        #     ct = np.zeros(dim)
+        #     ct[0] = np.cos(ros[0])
+        #     prod = np.product([np.sin(ros[k]) for k in range(1, dim - 1)])
+        #     n_prod = prod
+        #     for j in range(dim - 2):
+        #         n_prod /= np.sin(ros[j + 1])
+        #         amt = n_prod * np.cos(ros[j + 1])
+        #         ct[j + 1] = amt
+        #     ct[dim - 1] = prod
+        #     return ct
+
+        # FIX:  SHOULD INITIALIZE TO A RANDOM STATE AS PER:
+        #     ros = np.random.random(dim - 1)
+        # FIX:  MEAN [OF NORMAL] = VARIABLE (DRIFT)
+        # FIX:  VAR [OF NORMAL] = NOISE
+        # FIX:  ROS [ANGLE] ("random on sphere"?) = PREVIOUS_VALUE
+        # noise = np.random.normal(mean, var, size=(dim - 1)) # add a separately-drawn Gaussian to each spherical coord
+        # ros += noise
+        # ctxt = convert_spherical_to_angular(dim, ros)
+
+        # self.parameters.initialial_angle._set(initialial_angle, context)
+
+        drift = np.full(dimension-1, variable)
+
+        random_draw = np.array([random_state.normal() for _ in list(variable)])
+        value = previous_value + rate * drift * time_step_size \
+                + np.sqrt(time_step_size * noise) * random_draw
+        # value = previous_value + variable + noise
+
+        adjusted_value = np.clip(value + offset, -threshold, threshold)
+
+        # If this NOT an initialization run, update the old value and time
+        # If it IS an initialization run, leave as is
+        #    (don't want to count it as an execution step)
+        previous_time = self._get_current_parameter_value('previous_time', context)
+        if not self.is_initializing:
+            previous_value = adjusted_value
+            previous_time = previous_time + time_step_size
+            self.parameters.previous_time._set(previous_time, context)
+
+        self.parameters.previous_value._set(previous_value, context)
+
+        return convert_all_elements_to_np_array(self._convert_spherical_to_angular(previous_value))
+
+    def _convert_spherical_to_angular(self, value):
+        """Convert spherical coordinates to angular ones"""
+        dim = self.parameters.dimension.get()
+        angle = np.zeros(dim)
+        angle[0] = np.cos(value[0])
+        prod = np.product([np.sin(value[k]) for k in range(1, dim - 1)])
+        n_prod = prod
+        for j in range(dim - 2):
+            n_prod /= np.sin(value[j + 1])
+            amt = n_prod * np.cos(value[j + 1])
+            angle[j + 1] = amt
+        angle[dim - 1] = prod
+        return angle
+
+    # def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
+    #     # Get parameter pointers
+    #     rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
+    #     noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE,
+    #                                       state=state)
+    #     offset = self._gen_llvm_load_param(ctx, builder, params, index, OFFSET)
+    #     threshold = self._gen_llvm_load_param(ctx, builder, params, index, THRESHOLD)
+    #     time_step_size = self._gen_llvm_load_param(ctx, builder, params, index, TIME_STEP_SIZE)
+    #
+    #     random_state = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
+    #     rand_val_ptr = builder.alloca(ctx.float_ty)
+    #     rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
+    #     builder.call(rand_f, [random_state, rand_val_ptr])
+    #     rand_val = builder.load(rand_val_ptr)
+    #
+    #     if isinstance(rate.type, pnlvm.ir.ArrayType):
+    #         assert len(rate.type) == 1
+    #         rate = builder.extract_value(rate, 0)
+    #
+    #     # Get state pointers
+    #     prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
+    #     prev_time_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_time")
+    #
+    #     # value = previous_value + rate * variable * time_step_size \
+    #     #       + np.sqrt(time_step_size * noise) * random_state.normal()
+    #     prev_val_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
+    #     prev_val = builder.load(prev_val_ptr)
+    #     val = builder.load(builder.gep(vi, [ctx.int32_ty(0), index]))
+    #     if isinstance(val.type, pnlvm.ir.ArrayType):
+    #         assert len(val.type) == 1
+    #         val = builder.extract_value(val, 0)
+    #     val = builder.fmul(val, rate)
+    #     val = builder.fmul(val, time_step_size)
+    #     val = builder.fadd(val, prev_val)
+    #
+    #     factor = builder.fmul(noise, time_step_size)
+    #     sqrt_f = ctx.get_builtin("sqrt", [ctx.float_ty])
+    #     factor = builder.call(sqrt_f, [factor])
+    #
+    #     factor = builder.fmul(rand_val, factor)
+    #
+    #     val = builder.fadd(val, factor)
+    #
+    #     val = builder.fadd(val, offset)
+    #     neg_threshold = pnlvm.helpers.fneg(builder, threshold)
+    #     val = pnlvm.helpers.fclamp(builder, val, neg_threshold, threshold)
+    #
+    #     # Store value result
+    #     data_vo_ptr = builder.gep(vo, [ctx.int32_ty(0),
+    #                                    ctx.int32_ty(0), index])
+    #     builder.store(val, data_vo_ptr)
+    #     builder.store(val, prev_val_ptr)
+    #
+    #     # Update timestep
+    #     prev_time_ptr = builder.gep(prev_time_ptr, [ctx.int32_ty(0), index])
+    #     prev_time = builder.load(prev_time_ptr)
+    #     curr_time = builder.fadd(prev_time, time_step_size)
+    #     builder.store(curr_time, prev_time_ptr)
+    #
+    #     time_vo_ptr = builder.gep(vo, [ctx.int32_ty(0), ctx.int32_ty(1), index])
+    #     builder.store(curr_time, time_vo_ptr)
 
     def reset(self, previous_value=None, previous_time=None, context=None):
         return super().reset(
