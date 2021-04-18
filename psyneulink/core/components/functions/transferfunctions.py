@@ -42,37 +42,37 @@ All TransferFunctions have the following attributes:
 """
 
 import numbers
-import numpy as np
-import typecheck as tc
 import types
 import warnings
-
 from enum import IntEnum
 from math import e, pi, sqrt
 
+import numpy as np
+import typecheck as tc
+
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.function import (
     Function, Function_Base, FunctionError, function_keywords, get_matrix, is_function_type,
 )
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.shellclasses import Projection
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, ALL, ANGLE_FUNCTION, BIAS, EXPONENTIAL_FUNCTION, \
     GAIN, GAUSSIAN_DISTORT_FUNCTION, GAUSSIAN_FUNCTION, HAS_INITIALIZERS, HOLLOW_MATRIX, \
     IDENTITY_FUNCTION, IDENTITY_MATRIX, INTERCEPT, LEAK, LINEAR_FUNCTION, LINEAR_MATRIX_FUNCTION, LOGISTIC_FUNCTION, \
     TANH_FUNCTION, MATRIX_KEYWORD_NAMES, MATRIX, MATRIX_KEYWORD_VALUES, MAX_INDICATOR, MAX_VAL, MULTIPLICATIVE_PARAM, \
     OFF, OFFSET, ON, PER_ITEM, PROB, PRODUCT, OUTPUT_TYPE, PROB_INDICATOR, \
-    RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM,\
+    RATE, RECEIVER, RELU_FUNCTION, SCALE, SLOPE, SOFTMAX_FUNCTION, STANDARD_DEVIATION, SUM, \
     TRANSFER_FUNCTION_TYPE, TRANSFER_WITH_COSTS_FUNCTION, VARIANCE, VARIABLE, X_0, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import \
     FunctionParameter, Parameter, get_validator_by_function
-from psyneulink.core.globals.utilities import parameter_spec, get_global_seed, safe_len, convert_to_np_array
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
+from psyneulink.core.globals.utilities import parameter_spec, get_global_seed, safe_len
 
 __all__ = ['Angle', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity', 'Linear', 'LinearMatrix',
            'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
@@ -89,7 +89,7 @@ class TransferFunction(Function_Base):
 
     `multiplicative_param <Function_Modulatory_Params>` and `additive_param <Function_Modulatory_Params>` -- each
     of these is assigned the name of one of the function's parameters and used by `ModulatoryProjections
-    <ModulatoryProjection>` to modulate the output of the TransferFunction's `function <TransferFunction.function>`
+    <ModulatoryProjection>` to modulate the output of the TransferFunction's `function <TransferFunction._function>`
     (see  `Function_Modulatory_Params`).
 
     """
@@ -266,7 +266,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
     .. _Linear:
 
-    `function <Linear.function>` returns linear transform of `variable <Linear.variable>`:
+    `function <Linear._function>` returns linear transform of `variable <Linear.variable>`:
 
     .. math::
 
@@ -459,7 +459,7 @@ class Linear(TransferFunction):  # ---------------------------------------------
         """
         derivative(input)
 
-        Derivative of `function <Linear.function>` at **input**.
+        Derivative of `function <Linear._function>` at **input**.
 
         Arguments
         ---------
@@ -503,7 +503,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
 
     .. _Exponential:
 
-    `function <Exponential.function>` returns exponential transform of `variable <Exponential.variable>`:
+    `function <Exponential._function>` returns exponential transform of `variable <Exponential.variable>`:
 
     .. math::
          scale * e^{rate*variable+bias} + offset
@@ -717,7 +717,7 @@ class Exponential(TransferFunction):  # ----------------------------------------
         input : number
             value of the input to the Exponential transform at which derivative is to be taken.
 
-        Derivative of `function <Exponential.function>` at **input**.
+        Derivative of `function <Exponential._function>` at **input**.
 
         Returns
         -------
@@ -753,7 +753,7 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
     .. _Logistic_Function:
 
-    `function <Logistic.function>` returns logistic transform of `variable <Logistic.variable>`:
+    `function <Logistic._function>` returns logistic transform of `variable <Logistic.variable>`:
 
     .. math::
         \\frac{1}{1 + e^{ - gain ( variable + bias  - x_{0}) + offset}}
@@ -997,11 +997,11 @@ class Logistic(TransferFunction):  # -------------------------------------------
         """
         derivative(input=None, output=None)
 
-        Derivative of `function <Exponential.function>` at either **input** or **output**.
+        Derivative of `function <Exponential._function>` at either **input** or **output**.
 
         Either **input** or **ouput** must be specified.  If **output** is not specified, it is computed from **input**.
         If both are specified, **input** is ignored unless paramValidationPref is set, in which case
-        an error is generated if **output** does not correspond to `function <Logistic.function>`\\(**input**).
+        an error is generated if **output** does not correspond to `function <Logistic._function>`\\(**input**).
 
         Arguments
         ---------
@@ -1059,7 +1059,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
 
     .. _Tanh_Function:
 
-    `function <Logistic.function>` returns hyperbolic tangent of `variable <Logistic.variable>`:
+    `function <Logistic._function>` returns hyperbolic tangent of `variable <Logistic.variable>`:
 
     .. math::
 
@@ -1318,7 +1318,7 @@ class Tanh(TransferFunction):  # -----------------------------------------------
         """
         derivative(input)
 
-        Derivative of `function <Tanh.function>` at **input**.
+        Derivative of `function <Tanh._function>` at **input**.
 
         Arguments
         ---------
@@ -1361,9 +1361,10 @@ class ReLU(TransferFunction):  # -----------------------------------------------
          name=None,        \
          prefs=None        \
          )
-    .. _Relu:
 
-    `function <ReLU.function>` returns rectified linear tranform of `variable <ReLU.variable>`:
+    .. _RelU_Function:
+
+    `function <ReLU._function>` returns rectified linear tranform of `variable <ReLU.variable>`:
 
     .. math::
         x = gain*(variable - bias)
@@ -1546,7 +1547,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
         """
         derivative(input)
 
-        Derivative of `function <ReLU.function>` at **input**.
+        Derivative of `function <ReLU._function>` at **input**.
 
         Arguments
         ---------
@@ -1575,6 +1576,7 @@ class ReLU(TransferFunction):  # -----------------------------------------------
 # **********************************************************************************************************************
 
 # FIX: VALIDATE LEN(VARIABLE)>=2
+
 class Angle(TransferFunction):  # -------------------------------------------------------------------------------------
     """
     Angle(                 \
@@ -1585,9 +1587,9 @@ class Angle(TransferFunction):  # ----------------------------------------------
          prefs=None        \
          )
 
-    .. _Angle:
+    .. _Angle_Function:
 
-    `function <angle.function>` returns Angle transform of vector in `variable <Angle.variable>`:
+    `function <angle._function>` returns Angle transform of vector in `variable <Angle.variable>`:
 
     COMMENT:
     FIX: WITH PROPER MATHEMATICAL DEFN
@@ -1772,7 +1774,7 @@ class Angle(TransferFunction):  # ----------------------------------------------
     #     """
     #     derivative(input)
     #
-    #     Derivative of `function <Angle.function>` at **input**.
+    #     Derivative of `function <Angle._function>` at **input**.
     #
     #     Arguments
     #     ---------
@@ -1816,7 +1818,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
 
     .. _Gaussian_Function:
 
-    `function <Gaussian.function>` returns Gaussian transform of `variable <Gaussian.variable>`:
+    `function <Gaussian._function>` returns Gaussian transform of `variable <Gaussian.variable>`:
 
     .. math::
       scale*\\frac{e^{-\\frac{(varible-bias)^{2}}{2\\sigma^{2}}}}{\\sqrt{2\\pi}\\sigma}+offset
@@ -2031,7 +2033,7 @@ class Gaussian(TransferFunction):  # -------------------------------------------
         """
         derivative(input)
 
-        Derivative of `function <Gaussian.function>` at **input**.
+        Derivative of `function <Gaussian._function>` at **input**.
 
 
         Arguments
@@ -2077,7 +2079,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
 
     .. _GaussianDistort_Function:
 
-    `function <GaussianDistort.function>` returns random value from a Gaussian distribution with
+    `function <GaussianDistort._function>` returns random value from a Gaussian distribution with
      mean = `variable <GaussianDistort.variable>` and variance = `variance <GaussianDistort.variance>`
 
     .. note::
@@ -2349,7 +2351,7 @@ class SoftMax(TransferFunction):
 
     SoftMax transform of `variable <Softmax.variable>`
 
-    `function <SoftMax.function>` returns SoftMax transform of `variable <Softmax.variable>`:
+    `function <SoftMax._function>` returns SoftMax transform of `variable <Softmax.variable>`:
 
     .. math::
 
@@ -2379,7 +2381,7 @@ class SoftMax(TransferFunction):
         specifies a value by which to multiply `variable <Linear.variable>` before SoftMax transformation.
 
     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB : default ALL
-        specifies the format of array returned by `function <SoftMax.function>`
+        specifies the format of array returned by `function <SoftMax._function>`
         (see `output <SoftMax.output>` for details).
 
     per_item : boolean : default True
@@ -2412,7 +2414,7 @@ class SoftMax(TransferFunction):
 
     output : ALL, MAX_VAL, MAX_INDICATOR, or PROB
         determines how the SoftMax-transformed values of the elements in `variable <SoftMax.variable>` are reported
-        in the array returned by `function <SoftMax.function>`:
+        in the array returned by `function <SoftMax._function>`:
             * **ALL**: array of all SoftMax-transformed values (the default);
             * **MAX_VAL**: SoftMax-transformed value for the element with the maximum such value, 0 for all others;
             * **MAX_INDICATOR**: 1 for the element with the maximum SoftMax-transformed value, 0 for all others;
@@ -2762,7 +2764,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     Matrix transform of `variable <LinearMatrix.variable>`.
 
-    `function <LinearMatrix.function>` returns dot product of variable with matrix:
+    `function <LinearMatrix._function>` returns dot product of variable with matrix:
 
     .. math::
         variable \\bullet matrix
@@ -2803,7 +2805,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         specifies matrix used to transform `variable <LinearMatrix.variable>`
         (see `matrix <LinearMatrix.matrix>` for specification details).
 
-        When LinearMatrix is the `function <Projection_Base.function>` of a projection:
+        When LinearMatrix is the `function <Projection_Base._function>` of a projection:
 
             - the matrix specification must be compatible with the variables of the `sender <Projection_Base.sender>`
               and `receiver <Projection_Base.receiver>`
@@ -3161,7 +3163,7 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
     def instantiate_matrix(self, specification, context=None):
         """Implements matrix indicated by specification
 
-         Specification is derived from MATRIX param (passed to self.__init__ or self.function)
+         Specification is derived from MATRIX param (passed to self.__init__ or self._function)
 
          Specification (validated in _validate_params):
             + single number (used to fill self.matrix)
@@ -3439,7 +3441,7 @@ class TransferWithCosts(TransferFunction):
     **Cost Functions**
 
     The TransferWithCosts function has three individual cost functions that it can execute when its `function
-    <TransferWithCosts.function>` is executed, which assign their results to the attributes indicated below:
+    <TransferWithCosts._function>` is executed, which assign their results to the attributes indicated below:
 
     * `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>` -> `intensity_cost <TransferWithCosts.intensity_cost>`;
     * `adjustment_cost_fct <TransferWithCosts.adjustment_cost_fct>` -> `adjustment_cost <TransferWithCosts.adjustment_cost>`;
@@ -3466,7 +3468,7 @@ class TransferWithCosts(TransferFunction):
     The `multiplicative_param <Function_Modulatory_Params>` and `additive_param <Function_Modulatory_Params>` of each
     `cost function <TransferWithCosts_Cost_Functions>` is assigned as a parameter of the TransferWithCost `Function`.
     This makes them accessible for `modulation <ModulatorySignal_Modulation>` when the Function is assigned to a
-    `Port` (e.g., as the default `function <ControlSignal.function>` of a `ControlSignal`), or a `Mechanism
+    `Port` (e.g., as the default `function <ControlSignal._function>` of a `ControlSignal`), or a `Mechanism
     <Mechanism>`.  They can be referred to in the **modulation** argument of a `ModulatorySignal`\\'s constructor
     (see `ModulatorySignal_Types`) using the following keywords:
 
@@ -3492,7 +3494,7 @@ class TransferWithCosts(TransferFunction):
 
     size : int : None
         specifies length of the array for `variable <TransferWithCosts.variable>` used by `function
-        <TransferWithCosts.function>` and on which costs are calculated;  can be used in place of
+        <TransferWithCosts._function>` and on which costs are calculated;  can be used in place of
         default_value, in which case zeros are assigned as the value(s). An error is generated if both are
         specified but size != len(default_value).
 
@@ -3500,7 +3502,7 @@ class TransferWithCosts(TransferFunction):
         specifies the primary function, used to generate the value it returns.
 
     enabled_cost_functions : CostFunctions or List[CostFunctions] : None
-        specifies the costs to execute when `function <TransferWithCosts.function>` is called, and
+        specifies the costs to execute when `function <TransferWithCosts._function>` is called, and
         include in the computation of `combined_costs <TransferWithCosts.combined_costs>`.
 
     intensity_cost_fct : Optional[`TransferFunction`] : default `Exponential`
@@ -3534,7 +3536,7 @@ class TransferWithCosts(TransferFunction):
     ----------
 
     variable : 1d array
-        value used by `function <TransferWithCosts.function>`, and on which `intensity <TransferWithCosts.intensity>`
+        value used by `function <TransferWithCosts._function>`, and on which `intensity <TransferWithCosts.intensity>`
         and associated costs are calculated.
 
     size : int
@@ -3542,7 +3544,7 @@ class TransferWithCosts(TransferFunction):
 
     intensity : 1 array
         the result of the transfer_fct <TransferWithCosts.transfer_fct>`, and the value returned by
-        `function <TransferWithCosts.function>`.
+        `function <TransferWithCosts._function>`.
 
     function : TransferFunction
         primary function, specified by **transfer_fct** argument of constructor, and also stored in
@@ -3550,13 +3552,13 @@ class TransferWithCosts(TransferFunction):
 
     transfer_fct : TransferMechanism
         the TransferWithCosts Function's primary function, used to generate the value it returns;
-        same as `function <TransferWithCosts.function>`.
+        same as `function <TransferWithCosts._function>`.
 
     enabled_cost_functions : CostFunctions or None
         boolean combination of currently enabled CostFunctions;  determines which `cost functions
-        <TransferWithCosts_Cost_Functions>` are calculated when `function <TransferWithCosts.function>` is called, and
-        are included in the computation of `combined_costs <TransferWithCosts.combined_costs>` (see
-        `Cost Functions <TransferWithCosts_Cost_Functions>` for additional details).
+        <TransferWithCosts_Cost_Functions>` are calculated when `function <TransferWithCosts._function>`
+        is called, and are included in the computation of `combined_costs <TransferWithCosts.combined_costs>`
+        (see `Cost Functions <TransferWithCosts_Cost_Functions>` for additional details).
 
     intensity_cost : float or None
         cost computed by `intensity_cost_fct <TransferWithCosts.intensity_cost_fct>` for current `intensity
@@ -3578,13 +3580,13 @@ class TransferWithCosts(TransferFunction):
 
     adjustment_cost : float or None
         cost of change in `intensity <TransferWithCosts.intensity>` from the last time `function
-        <TransferWithCosts.function>` was executed.  Value is None if `adjustment_cost_fct
+        <TransferWithCosts._function>` was executed.  Value is None if `adjustment_cost_fct
         <TransferWithCosts.adjustment_cost_fct>` has not been enabled (see `Cost Functions
         <TransferWithCosts_Cost_Functions>` for additional details).
 
     adjustment_cost_fct : TransferFunction
         calculates `adjustment_cost <TransferWithCosts.adjustment_cost>` based on the change in `intensity
-        <TransferWithCosts.intensity>` from its value the last time `function <TransferWithCosts.function>` was
+        <TransferWithCosts.intensity>` from its value the last time `function <TransferWithCosts._function>` was
         executed. It can be any `TransferFunction`, or any other function that takes and returns a scalar value.
 
     adjustment_cost_fct_mult_param : value
@@ -3600,7 +3602,7 @@ class TransferWithCosts(TransferFunction):
         <TransferWithCosts.duration_cost_fct>`.  Value is None if `duration_cost_fct
         <TransferWithCosts.duration_cost_fct>` has not been enabled; othewise, the integral of
         `intensity <intensity <TransferWithCosts.intensity>` is only for those executions of `function
-        <TransferWithCosts.function>` in which `function <TransferWithCosts.duration_cost_fct>` was enabled.
+        <TransferWithCosts._function>` in which `function <TransferWithCosts.duration_cost_fct>` was enabled.
 
     duration_cost_fct : IntegratorFunction
         calculates an integral of `intensity <TransferWithCosts.intensity>`.  It can be any `IntegratorFunction`,
