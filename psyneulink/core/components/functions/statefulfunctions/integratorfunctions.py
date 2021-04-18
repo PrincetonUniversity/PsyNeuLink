@@ -18,6 +18,7 @@ Functions that integrate current value of input with previous value.
 * `AdaptiveIntegrator`
 * `DualAdaptiveIntegrator`
 * `DriftDiffusionIntegrator`
+* `DriftOnASphereIntegrator`
 * `OrnsteinUhlenbeckIntegrator`
 * `InteractiveActivationIntegrator`
 * `LeakyCompetingIntegrator`
@@ -37,8 +38,8 @@ from psyneulink.core.components.functions.distributionfunctions import Distribut
 from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
 from psyneulink.core.globals.keywords import \
     ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ADDITIVE_PARAM, \
-    DECAY, DEFAULT_VARIABLE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, \
-    FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION, \
+    DECAY, DEFAULT_VARIABLE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION, \
+    DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION, \
     INCREMENT, INITIALIZER, INPUT_PORTS, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
     INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, \
     MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_PORTS, PRODUCT, \
@@ -2297,7 +2298,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         for details).
     """
 
-    componentName = DRIFT_DIFFUSION_INTEGRATOR_FUNCTION
+    componentName = DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION
 
     class Parameters(IntegratorFunction.Parameters):
         """
@@ -2568,11 +2569,14 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         owner=None,                          \
         prefs=None,                          \
         )
+        COMMENT: REMOVED FROM ABOVE
+        threshold=1.0
+        COMMENT
 
     .. _DriftOnASphereIntegrator:
 
-    Accumulate "evidence" to a bound.  `function <DriftOnASphereIntegrator.function>` returns one
-    time step of integration:
+    Drift and diffuse on a sphere.  `function <DriftOnASphereIntegrator.function>` integrates previous coordinates
+    with drift and/or noise that is applied either equally to all coordinates or dimension by dimension:
 
     ..  math::
         previous\\_value + rate \\cdot variable \\cdot time\\_step\\_size + \\mathcal{N}(\\sigma^2)
@@ -2591,8 +2595,9 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
     Arguments
     ---------
 
-    default_variable : number, list or array : default class_defaults.variable
-        specifies the stimulus component of drift rate -- the drift rate is the product of variable and rate
+    default_variable : list or 1d array : default class_defaults.variable
+        specifies template for drift:  if specified, its length must be 1 or the value specified for *dimension*
+        minus 1 (see `variable <DriftOnASphereIntegrator._function.variable>` for additional details).
 
     rate : float, list or 1d array : default 1.0
         applied multiplicatively to `variable <DriftOnASphereIntegrator.variable>`;  If it is a list or array, it must
@@ -2612,19 +2617,26 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
     COMMENT
 
     offset : float, list or 1d array : default 0.0
+        specifies constant value added to integral in each call to `function <DriftOnASphereIntegrator.function>`;
+        if it is a list or array, it must be the same length as `variable <DriftOnASphereIntegrator.variable>`
+        (see `offset <DriftOnASphereIntegrator.offset>` for details).
+        COMMENT:
         specifies constant value added to integral in each call to `function <DriftOnASphereIntegrator.function>`
         if it's absolute value is below `threshold <DriftOnASphereIntegrator.threshold>`;
         if it is a list or array, it must be the same length as `variable <DriftOnASphereIntegrator.variable>`
         (see `offset <DriftOnASphereIntegrator.offset>` for details).
+        COMMENT
 
     starting_point : float, list or 1d array:  default 0.0
         specifies the starting value for the integration process; if it is a list or array, it must be the
         same length as `variable <DriftOnASphereIntegrator.variable>` (see `starting_point
         <DriftOnASphereIntegrator.starting_point>` for details).
 
+    COMMENT:
     threshold : float : default 0.0
         specifies the threshold (boundaries) of the drift diffusion process -- i.e., at which the
         integration process terminates (see `threshold <DriftOnASphereIntegrator.threshold>` for details).
+    COMMENT
 
     time_step_size : float : default 0.0
         specifies the timing precision of the integration process (see `time_step_size
@@ -2632,10 +2644,6 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
 
     dimension : int : default 2
         specifies dimensionality of the sphere over which drift occurs.
-
-    # initializer : float, list or 1d array : default 0.0
-    #     specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
-    #     `default_variable <DriftOnASphereIntegrator.variable>` (see `initializer <Integrator_Initializer>` for details).
 
     initializer : 1d array : default [0]
         specifies the starting point on the sphere from which angle is derived;  its length must be equal to
@@ -2687,17 +2695,26 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         <DriftOnASphereIntegrator.variable>`.  If noise is a list or array, it must be the same length as `variable
         <DriftOnASphereIntegrator.variable>`, and a separate random term scaled by noise is applied for each of the
         corresponding elements of `variable <DriftOnASphereIntegrator.variable>`.
-    COMMENT
 
     offset : float or 1d array
+        constant value added to integral in each call to `function <DriftOnASphereIntegrator.function>`.
+        If `variable <DriftOnASphereIntegrator.variable>` is an array and offset is a float, offset is applied
+        to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
+        the corresponding elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for
+        `modulation <ModulatorySignal_Modulation>` of `function <DriftOnASphereIntegrator.function>`.
+        COMMENT:
         constant value added to integral in each call to `function <DriftOnASphereIntegrator.function>`
         if it's absolute value is below `threshold <DriftOnASphereIntegrator.threshold>`.
         If `variable <DriftOnASphereIntegrator.variable>` is an array and offset is a float, offset is applied
         to each element of the integral;  if offset is a list or array, each of its elements is applied to each of
         the corresponding elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for
         `modulation <ModulatorySignal_Modulation>` of `function <DriftOnASphereIntegrator.function>`.
+        COMMENT
 
-    # FIX: MAY NEED TO BE REDEFINED (HERE AND FOR DriftDiffusionIntegratorFunction?)
+    COMMENT:
+    FIX: MAY NEED TO BE REDEFINED (HERE AND FOR DriftDiffusionIntegratorFunction?)
+    COMMENT
+
     starting_point : float or 1d array
         determines the starting value for the integration process; if it is a list or array, it must be the
         same length as `variable <DriftOnASphereIntegrator.variable>`. If `variable <DriftOnASphereIntegrator.variable>`
@@ -2705,6 +2722,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         starting_point is a list or array, each of its elements is used as the starting point for each element of the
         integral.
 
+    COMMENT:
     threshold : float
         determines the boundaries of the drift diffusion process:  the integration process can be scheduled to
         terminate when the result of `function <DriftOnASphereIntegrator.function>` equals or exceeds either the
@@ -2717,17 +2735,14 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
            To terminate execution of the `Mechanism <Mechanism>` to which the `function
            <DriftOnASphereIntegrator.function>` is assigned, a `WhenFinished` `Condition` should be assigned for that
            Mechanism to `scheduler <Composition.scheduler>` of the `Composition` to which the Mechanism belongs.
+    COMMENT
 
     time_step_size : float
         determines the timing precision of the integration process and is used to scale the `noise
-        <DriftOnASphereIntegrator.noise>` parameter according to the standard DDM probability distribution.
+        <DriftOnASphereIntegrator.noise>` parameter.
 
     dimension : int
         determines dimensionality of sphere on which drift occurs.
-
-    # initializer : float or 1d array
-    #     determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
-    #     <DriftDiffusionIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
     initializer : 1d array
         determines the starting point on the sphere from which angle is derived;  its length must be equal to
@@ -2758,7 +2773,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         for details).
     """
 
-    componentName = DRIFT_DIFFUSION_INTEGRATOR_FUNCTION
+    componentName = DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION
 
     class Parameters(IntegratorFunction.Parameters):
         """
@@ -2827,11 +2842,13 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                     :default value: 0.0
                     :type: ``float``
 
+                COMMENT:
                 threshold
                     see `threshold <DriftOnASphereIntegrator.threshold>`
 
                     :default value: 100.0
                     :type: ``float``
+                COMMENT
 
                 time_step_size
                     see `time_step_size <DriftOnASphereIntegrator.time_step_size>`
@@ -2842,7 +2859,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         starting_point = 0.0
-        threshold = Parameter(100.0, modulable=True)
+        # threshold = Parameter(100.0, modulable=True)
         time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(None, initializer='starting_point', pnl_internal=True)
         dimension = Parameter(2, stateful=False, read_only=True)
@@ -2885,7 +2902,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                  noise=None,
                  offset: tc.optional(parameter_spec) = None,
                  starting_point=None,
-                 threshold=None,
+                 # threshold=None,
                  time_step_size=None,
                  dimension=None,
                  initializer=None,
@@ -2909,7 +2926,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
             starting_point=starting_point,
             initializer=initializer,
             angle_function=angle_function,
-            threshold=threshold,
+            # threshold=threshold,
             noise=noise,
             offset=offset,
             dimension=dimension,
@@ -2942,6 +2959,10 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
     def _validate_initializers(self, default_variable, context=None):
         """Need to override this to manage mismatch in dimensionality of initializer vs. variable"""
         pass
+
+    def _parse_angle_function_variable(self, variable):
+        from psyneulink.core.components.functions.transferfunctions import Angle
+        return Angle.parameters.variable.default_value
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         """Need to override this to manage mismatch in dimensionality of initializer vs. variable"""
@@ -3002,8 +3023,10 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         Arguments
         ---------
 
-        variable : number, list or array : default class_defaults.variable
-           a single value or array of values to be integrated.
+        variable : number, list or 1d array : default class_defaults.variable
+           value used as drift;  if it is a number, then used for all coordinates;  if it is  list or array its
+           length must equal `dimension <DriftOnASphereIntegrator.dimension>` - 1, and is applied Hadamard to
+           each coordinate.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -3013,14 +3036,13 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         Returns
         -------
 
-        updated value of integral : 2d array
-
+        updated coordinates : 1d array
         """
 
         rate = np.array(self._get_current_parameter_value(RATE, context)).astype(float)
         noise = self._get_current_parameter_value(NOISE, context)
         offset = self._get_current_parameter_value(OFFSET, context)
-        threshold = self._get_current_parameter_value(THRESHOLD, context)
+        # threshold = self._get_current_parameter_value(THRESHOLD, context)
         time_step_size = self._get_current_parameter_value(TIME_STEP_SIZE, context)
         random_state = self._get_current_parameter_value("random_state", context)
 
@@ -3041,7 +3063,8 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         value = previous_value + rate * drift * time_step_size \
                 + np.sqrt(time_step_size * noise) * random_draw
 
-        adjusted_value = np.clip(value + offset, -threshold, threshold)
+        # adjusted_value = np.clip(value + offset, -threshold, threshold)
+        adjusted_value = value + offset
 
         # If this NOT an initialization run, update the old value and time
         # If it IS an initialization run, leave as is

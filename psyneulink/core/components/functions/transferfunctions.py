@@ -1601,8 +1601,8 @@ class Angle(TransferFunction):  # ----------------------------------------------
     Arguments
     ---------
 
-    default_variable : number or array : default class_defaults.variable
-        specifies a template for the value to be transformed.
+    default_variable : 1array : default class_defaults.variable
+        specifies a template for the value to be transformed;  length must be at least 2.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -1621,7 +1621,7 @@ class Angle(TransferFunction):  # ----------------------------------------------
     Attributes
     ----------
 
-    variable : number or array
+    variable : 1d array
         contains value to be transformed.
 
     owner : Component
@@ -1651,19 +1651,23 @@ class Angle(TransferFunction):  # ----------------------------------------------
             Attributes
             ----------
 
-                intercept
-                    see `intercept <Angle.intercept>`
+                variable
+                    see `variable <Angle.variable>`
 
-                    :default value: 0.0
-                    :type: ``float``
+                    :default value: numpy.array([0.,0,])
+                    :type: ``numpy.ndarray``
+                    :read only: True
 
-                slope
-                    see `slope <Angle.slope>`
-
-                    :default value: 1.0
-                    :type: ``float``
         """
-        pass
+        variable = Parameter(np.array([1,1]),
+                             read_only=True,
+                             pnl_internal=True,
+                             constructor_argument='default_variable')
+
+        def _validate_variable(self, variable):
+            variable = np.squeeze(variable)
+            if variable.ndim != 1 or len(variable) < 2:
+                return f"must be list or 1d array of length 2 or greater."
 
     @tc.typecheck
     def __init__(self,
@@ -1699,9 +1703,6 @@ class Angle(TransferFunction):  # ----------------------------------------------
     #         val = builder.fadd(val, intercept)
     #
     #     builder.store(val, ptro)
-
-    # def _validate_variable(self, variable, context=None):
-    #     assert True
 
     def _function(self,
                  variable=None,
@@ -1754,7 +1755,7 @@ class Angle(TransferFunction):  # ----------------------------------------------
     def _angle(self, value):
         """Take nd value and return n+1d coordinates for angle on a sphere"""
         value = np.squeeze(value)
-        dim = len(value)+1
+        dim = len(value) + 1
         angle = np.zeros(dim)
         angle[0] = np.cos(value[0])
         prod = np.product([np.sin(value[k]) for k in range(1, dim - 1)])
