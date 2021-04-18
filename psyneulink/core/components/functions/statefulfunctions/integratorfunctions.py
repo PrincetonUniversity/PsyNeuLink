@@ -2900,27 +2900,29 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         )
 
     def _validate_noise(self, noise):
-        if noise is not None and not isinstance(noise, float) \
-                and not(isinstance(noise, np.ndarray) and np.issubdtype(noise.dtype, np.floating)):
+        if (noise is not None and not isinstance(noise, float)
+                and not(isinstance(noise, np.ndarray) and np.issubdtype(noise.dtype, np.floating))):
             raise FunctionError(
                 f"Invalid noise parameter for {self.name}: {type(noise)}. "
                 f"DriftOnASphereIntegrator requires noise parameter to be a float or float array.")
 
     def _validate_initializers(self, default_variable, context=None):
+        """Need to override this to manage mismatch in dimensionality of initializer vs. variable"""
         pass
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
+        """Need to override this to manage mismatch in dimensionality of initializer vs. variable"""
+
         if not self.parameters.initializer._user_specified:
             self._initialize_previous_value(self.parameters.initializer.get(context), context)
-        # self._initialize_previous_value(self.parameters.initializer.get(context), context)
 
+        # Remove initializer from self.initializers to manage mismatch in dimensionality of initializer vs. variable
         initializers = list(self.initializers)
         initializers.remove('initializer')
         self._instantiate_stateful_attributes(self.stateful_attributes, initializers, context)
 
-
-    def _initialize_previous_value(self, initializer, context=None):
-        return super()._initialize_previous_value(self.parameters._parse_initializer(initializer), context)
+        from psyneulink.core.components.functions.transferfunctions import Angle
+        self._angle_function = Angle(self.parameters.initializer.default_value)
 
     def _function(self,
                  variable=None,
@@ -2933,8 +2935,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         ---------
 
         variable : number, list or array : default class_defaults.variable
-           a single value or array of values to be integrated (can be thought of as the stimulus component of
-           the drift rate).
+           a single value or array of values to be integrated.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -2957,55 +2958,19 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
 
         dimension = self.parameters.dimension.get(context)
 
-        # initialial_angle = self.parameters.initialial_angle.get(context)
-        # if initialial_angle is None:
-        #     initialial_angle = np.random.random(self.parameters.dimension.get(context)-1)
-
-        # variable = self.parameters._parse_initializer(variable)
         previous_value = self.parameters.previous_value._get(context)
 
-        # # FIX: FROM MAIA:
-        # def spherical_drift(n_steps=20, dim=10, var=0.25, mean=0.25):
-        #     # initialize the spherical coordinates to ensure each context run begins in a new random location on the unit sphere
-        #     ros = np.random.random(dim - 1)
-        #     slen = n_steps
-        #     ctxt = np.zeros((slen, dim))
-        #     for i in range(slen):
-        #         noise = np.random.normal(mean, var, size=(dim - 1)) # add a separately-drawn Gaussian to each spherical coord
-        #         ros += noise
-        #         ctxt[i] = convert_spherical_to_angular(dim, ros)
-        #     return ctxt
-        #
-        # # Convert spherical coordinates to angular ones
-        # def convert_spherical_to_angular(dim, ros):
-        #     ct = np.zeros(dim)
-        #     ct[0] = np.cos(ros[0])
-        #     prod = np.product([np.sin(ros[k]) for k in range(1, dim - 1)])
-        #     n_prod = prod
-        #     for j in range(dim - 2):
-        #         n_prod /= np.sin(ros[j + 1])
-        #         amt = n_prod * np.cos(ros[j + 1])
-        #         ct[j + 1] = amt
-        #     ct[dim - 1] = prod
-        #     return ct
-
-        # FIX:  SHOULD INITIALIZE TO A RANDOM STATE AS PER:
-        #     ros = np.random.random(dim - 1)
-        # FIX:  MEAN [OF NORMAL] = VARIABLE (DRIFT)
-        # FIX:  VAR [OF NORMAL] = NOISE
-        # FIX:  ROS [ANGLE] ("random on sphere"?) = PREVIOUS_VALUE
-        # noise = np.random.normal(mean, var, size=(dim - 1)) # add a separately-drawn Gaussian to each spherical coord
-        # ros += noise
-        # ctxt = convert_spherical_to_angular(dim, ros)
-
-        # self.parameters.initialial_angle._set(initialial_angle, context)
-
-        drift = np.full(dimension-1, variable)
+        try:
+            drift = np.full(dimension-1, variable)
+        except ValueError:
+            owner_str = f"'of '{self.owner.name}" if self.owner else ""
+            raise FunctionError(f"Length of 'variable' for {self.name}{owner_str} ({len(variable)}) must be "
+                                # f"1 or one less than its 'dimension' parameter ({dimension}-1={dimension-1}).")
+                                f"1 or {dimension-1} (one less than its 'dimension' parameter: {dimension}).")
 
         random_draw = np.array([random_state.normal() for _ in list(variable)])
         value = previous_value + rate * drift * time_step_size \
                 + np.sqrt(time_step_size * noise) * random_draw
-        # value = previous_value + variable + noise
 
         adjusted_value = np.clip(value + offset, -threshold, threshold)
 
@@ -3014,27 +2979,13 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         #    (don't want to count it as an execution step)
         previous_time = self._get_current_parameter_value('previous_time', context)
         if not self.is_initializing:
-            previous_value = adjusted_value
+            value = adjusted_value
             previous_time = previous_time + time_step_size
             self.parameters.previous_time._set(previous_time, context)
 
-        self.parameters.previous_value._set(previous_value, context)
+        self.parameters.previous_value._set(value, context)
 
-        return convert_all_elements_to_np_array(self._convert_spherical_to_angular(previous_value))
-
-    def _convert_spherical_to_angular(self, value):
-        """Convert spherical coordinates to angular ones"""
-        dim = self.parameters.dimension.get()
-        angle = np.zeros(dim)
-        angle[0] = np.cos(value[0])
-        prod = np.product([np.sin(value[k]) for k in range(1, dim - 1)])
-        n_prod = prod
-        for j in range(dim - 2):
-            n_prod /= np.sin(value[j + 1])
-            amt = n_prod * np.cos(value[j + 1])
-            angle[j + 1] = amt
-        angle[dim - 1] = prod
-        return angle
+        return self._angle_function(value)
 
     # def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
     #     # Get parameter pointers

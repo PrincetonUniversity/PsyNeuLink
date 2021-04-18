@@ -1700,6 +1700,9 @@ class Angle(TransferFunction):  # ----------------------------------------------
     #
     #     builder.store(val, ptro)
 
+    # def _validate_variable(self, variable, context=None):
+    #     assert True
+
     def _function(self,
                  variable=None,
                  context=None,
@@ -1710,8 +1713,8 @@ class Angle(TransferFunction):  # ----------------------------------------------
         Arguments
         ---------
 
-        variable : number or array : default class_defaults.variable
-           an array to be transformed.
+        variable : ndarray : default class_defaults.variable
+           an array of coordinates on a sphere to be transformed to n+1d angular coordinates;  must be at least 2d.
 
         params : Dict[param keyword: param value] : default None
             a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -1721,34 +1724,19 @@ class Angle(TransferFunction):  # ----------------------------------------------
         Returns
         -------
 
-        Angle transformation of variable : number or array
+        Angle transformation of variable : ndarray of variable.ndim+1
 
         """
-
-        def _angle(value):
-            value = np.squeeze(value)
-            dim = len(value)
-            angle = np.zeros(dim)
-            angle[0] = np.cos(value[0])
-            prod = np.product([np.sin(value[k]) for k in range(1, dim - 1)])
-            n_prod = prod
-            for j in range(dim - 2):
-                n_prod /= np.sin(value[j + 1])
-                amt = n_prod * np.cos(value[j + 1])
-                angle[j + 1] = amt
-            angle[dim - 1] = prod
-            return angle
-
         try:
             # By default, result should be returned as np.ndarray with same dimensionality as input
-            result = _angle(variable)
+            result = self._angle(variable)
         except TypeError:
             if hasattr(variable, "dtype"):
                 # If variable is an array with mixed sizes or types, try item-by-item operation
                 if variable.dtype == object:
                     result = np.zeros_like(variable)
                     for i, item in enumerate(variable):
-                        result[i] = _angle(variable[i])
+                        result[i] = self._angle(variable[i])
                 else:
                     raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
             # KAM 6/28/18: If the variable does not have a "dtype" attr but made it to this line, then it must be of a
@@ -1757,11 +1745,26 @@ class Angle(TransferFunction):  # ----------------------------------------------
             elif isinstance(variable, list):
                 result = []
                 for variable_item in variable:
-                    result.append(_angle(variable_item))
+                    result.append(self._angle(variable_item))
             else:
                 raise FunctionError("Unrecognized type for {} of {} ({})".format(VARIABLE, self.name, variable))
 
         return self.convert_output_type(result)
+
+    def _angle(self, value):
+        """Take nd value and return n+1d coordinates for angle on a sphere"""
+        value = np.squeeze(value)
+        dim = len(value)+1
+        angle = np.zeros(dim)
+        angle[0] = np.cos(value[0])
+        prod = np.product([np.sin(value[k]) for k in range(1, dim - 1)])
+        n_prod = prod
+        for j in range(dim - 2):
+            n_prod /= np.sin(value[j + 1])
+            amt = n_prod * np.cos(value[j + 1])
+            angle[j + 1] = amt
+        angle[dim - 1] = prod
+        return angle
 
     # @handle_external_context()
     # def derivative(self, input=None, output=None, context=None):
