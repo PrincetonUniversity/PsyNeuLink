@@ -249,7 +249,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
     def _validate_params(self, request_set, target_set=None, context=None):
         """Check inner dimension (length) of all parameters used for the function
 
-        Insure that for any parameters that are in the Paramaters class, designated as function_arg, and
+        Insure that for any parameters that are in the Parameters class, designated as function_arg, and
             specified by the user with length>1:
             1) they all have the same length;
             2) if default_variable:
@@ -2564,7 +2564,6 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         time_step_size=1.0,                  \
         initializer=None,                    \
         dimension=2,                         \
-        # initial_angle=np.zeros(dimension), \
         params=None,                         \
         owner=None,                          \
         prefs=None,                          \
@@ -2634,14 +2633,18 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
     dimension : int : default 2
         specifies dimensionality of the sphere over which drift occurs.
 
-    initializer : float, list or 1d array : default 0.0
-        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
-        `default_variable <DriftOnASphereIntegrator.variable>` (see `initializer <Integrator_Initializer>` for details).
+    # initializer : float, list or 1d array : default 0.0
+    #     specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
+    #     `default_variable <DriftOnASphereIntegrator.variable>` (see `initializer <Integrator_Initializer>` for details).
 
-    initial_angle : 1d array
-        specifies the starting point on the sphere from which angle is derived;  its length must be equal to `dimension
-        <DriftOnASphereIntegrator.dimension>` (see `initial_angle <DriftOnASphereIntegrator.initial_angle>` for any
-        additional details).
+    initializer : 1d array : default [0]
+        specifies the starting point on the sphere from which angle is derived;  its length must be equal to
+        `dimension <DriftOnASphereIntegrator.dimension>` (see `initializer <DriftOnASphereIntegrator.initializer>`
+        for additional details).
+
+    angle_function : TransferFunction : default Angle
+        specifies function used to compute angle from position on sphere specified by coordinates in
+        `previous_value <DriftOnASphereIntegrator.previous_value>`.
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -2661,8 +2664,10 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
     ----------
 
     variable : float or array
-        current input value (can be thought of as implementing the stimulus component of the drift rate);  if it is an
-        array, each element represents an independently integrated decision variable.
+        current input value that determines rate of drift on the sphere.  If it is a scalar, it is applied equally
+        to all coordinates (subject to `noise <DriftOnASphereIntegrator.noise>`; if it is an array, each element
+        determines rate of drift over a given dimension;  coordinate values are integrated over each execution, with
+        the previous set stored in `previous_value <DriftOnASphereIntegrator.previous_value>`.
 
     rate : float or 1d array
         applied multiplicatively to `variable <DriftOnASphereIntegrator.variable>` (can be thought of as implementing
@@ -2692,6 +2697,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         the corresponding elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for
         `modulation <ModulatorySignal_Modulation>` of `function <DriftOnASphereIntegrator.function>`.
 
+    # FIX: MAY NEED TO BE REDEFINED (HERE AND FOR DriftDiffusionIntegratorFunction?)
     starting_point : float or 1d array
         determines the starting value for the integration process; if it is a list or array, it must be the
         same length as `variable <DriftOnASphereIntegrator.variable>`. If `variable <DriftOnASphereIntegrator.variable>`
@@ -2717,22 +2723,27 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         <DriftOnASphereIntegrator.noise>` parameter according to the standard DDM probability distribution.
 
     dimension : int
-        determines dimensionality of sphere over which drift occurs.
+        determines dimensionality of sphere on which drift occurs.
 
-    initializer : float or 1d array
-        determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
-        <DriftDiffusionIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
+    # initializer : float or 1d array
+    #     determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
+    #     <DriftDiffusionIntegrator.previous_value>` is set (see `initializer <Integrator_Initializer>` for details).
 
-    initial_angle : 1d array
-        determines the starting point on the sphere from which angle is derived;  its length must be equal to `dimension
-        <DriftOnASphereIntegrator.dimension>`.
+    initializer : 1d array
+        determines the starting point on the sphere from which angle is derived;  its length must be equal to
+        `dimension <DriftOnASphereIntegrator.dimension>`.
+
+    angle_function : TransferFunction
+        determines the function used to compute angle (reproted as result) from coordinates on sphere specified by
+        coordinates in `previous_value <DriftOnASphereIntegrator.previous_value>` displace by `variable
+        <DriftOnASphereIntegrator.variable>` and possibly `noise <DriftOnASphereIntegrator.noise>`.
 
     previous_time : float
         stores previous time at which the function was executed and accumulates with each execution according to
         `time_step_size <DriftOnASphereIntegrator.default_time_step_size>`.
 
     previous_value : 1d array : default class_defaults.variable
-        stores previous value with which `variable <DriftOnASphereIntegrator.variable>` is integrated.
+        stores previous set of coordinates on sphere over which drift is occuring.
 
     owner : Component
         `component <Component>` to which the Function has been assigned.
@@ -2754,12 +2765,17 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
             Attributes
             ----------
 
+                angle_function
+                    see `angle_function <DriftOnASphereIntegrator.angle_function>`
+
+                    :default value: Angle
+                    :type: ``Function``
+
                 dimension
                     see `dimension <DriftOnASphereIntegrator.dimension>`
 
                     :default value: 2
                     :type: ``int``
-
 
                 enable_output_type_conversion
                     see `enable_output_type_conversion <DriftOnASphereIntegrator.enable_output_type_conversion>`
@@ -2768,8 +2784,8 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                     :type: ``bool``
                     :read only: True
 
-                initial_angle
-                    see `initial_angle <DriftOnASphereIntegrator.initial_angle>`
+                initializer
+                    see `initializer <DriftOnASphereIntegrator.initializer>`
 
                     :default value: np.zeros(dimension)
                     :type: ``numpy.ndarray``
@@ -2830,8 +2846,8 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(None, initializer='starting_point', pnl_internal=True)
         dimension = Parameter(2, stateful=False, read_only=True)
-        initial_angle = Parameter(None, stateful=True)
-        # initializer = Parameter(None, initalizer='variable', stateful=True)
+        initializer = Parameter([0], initalizer='variable', stateful=True)
+        angle_function = Parameter(None, stateful=False, loggable=False)
         seed = Parameter(None, read_only=True)
         random_state = Parameter(None, stateful=True, loggable=False)
         enable_output_type_conversion = Parameter(
@@ -2843,15 +2859,19 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         )
 
         def _validate_dimension(self, dimension):
-            if dimension < 2:
+            if not isinstance(dimension, int) or dimension < 2:
                 return 'dimension must be an integer >= 2'
 
+        # FIX: THIS SEEMS DUPLICATIVE OF DriftOnASphereIntegrator._validate_params() (THOUGH THAT GETS CAUGHT EARLIER)
         def _validate_initializer(self, initializer):
+            initializer_len = self.dimension.default_value-1
             if (self.initializer._user_specified
-                    and (initializer.ndim != 1 or len(initializer) != self.dimension.default_value-1)):
-                return 'the length of initializer must be the value of the \'dimension\' parameter minus 1'
+                    and (initializer.ndim != 1 or len(initializer) != initializer_len)):
+                return f"'initializer' must be a list or 1d array of length {initializer_len} " \
+                       f"(the value of the \'dimension\' parameter minus 1)"
 
         def _parse_initializer(self, initializer):
+            """Assign initial value as array of random values of length dimension-1"""
             initializer_dim = self.dimension.default_value-1
             if initializer.ndim != 1 or len(initializer) != initializer_dim:
                 initializer = np.random.random(initializer_dim)
@@ -2868,8 +2888,8 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                  threshold=None,
                  time_step_size=None,
                  dimension=None,
-                 initial_angle=None,
                  initializer=None,
+                 angle_function=None,
                  seed=None,
                  params: tc.optional(tc.optional(dict)) = None,
                  owner=None,
@@ -2888,16 +2908,29 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
             time_step_size=time_step_size,
             starting_point=starting_point,
             initializer=initializer,
+            angle_function=angle_function,
             threshold=threshold,
             noise=noise,
             offset=offset,
             dimension=dimension,
-            initial_angle=initial_angle,
             random_state=random_state,
             params=params,
             owner=owner,
             prefs=prefs,
         )
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        # FIX: THIS SEEMS DUPLICATIVE OF Parameters._validate_initializer (THOUGHT THIS GETS CAUGHT EARLIER)
+        if INITIALIZER in request_set and request_set[INITIALIZER] is not None:
+            initializer = np.array(request_set[INITIALIZER])
+            initializer_len = self.parameters.dimension.default_value-1
+            if (self.parameters.initializer._user_specified
+                    and (initializer.ndim != 1 or len(initializer) != initializer_len)):
+                raise FunctionError(f"'initializer' must be a list or 1d array of length {initializer_len} " \
+                                    f"(the value of the \'dimension\' parameter minus 1)")
+
+        super()._validate_params(request_set=request_set, target_set=target_set,context=context)
 
     def _validate_noise(self, noise):
         if (noise is not None and not isinstance(noise, float)
@@ -2922,7 +2955,42 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         self._instantiate_stateful_attributes(self.stateful_attributes, initializers, context)
 
         from psyneulink.core.components.functions.transferfunctions import Angle
-        self._angle_function = Angle(self.parameters.initializer.default_value)
+        angle_function = self.parameters.angle_function.default_value or Angle
+        dimension = self.parameters.dimension.default_value
+
+        if isinstance(angle_function, type):
+            self.parameters.angle_function._set_default_value(angle_function(np.ones(dimension-1)))
+        else:
+            angle_function.defaults.variable = np.ones(dimension-1)
+            angle_function._instantiate_value(context)
+
+    # FIX: FROM MemoryFunctions -- USE AS TEMPLATE TO ABSORB MUCH OF THE ABOVE?
+    #                              (e.g., CAN BE USED TO OVERRIDE VALIDATION OF INITIALIZER??)
+    def _validate(self, context=None):
+        """Validate angle_function"""
+
+        angle_function = self.parameters.angle_function.default_value
+        dimension = self.parameters.dimension.default_value
+
+        if self.get_previous_value(context) is not None:
+            test_var = self.get_previous_value(context)
+        else:
+            test_var = self.defaults.variable
+
+        if isinstance(angle_function, type):
+            fct_msg = 'Function type'
+        else:
+            fct_msg = 'Function'
+
+        try:
+            angle_result = angle_function(test_var)
+            if angle_result.ndim != 1 and len(angle_result) != dimension:
+                raise FunctionError(f"{fct_msg} specified for 'angle_function' arg of "
+                                    f"{self.__class__.__name__} ({angle_function}) must accept a list or 1d array "
+                                    f"of length {dimension-1} and return a 1d array of length {dimension}.")
+        except:
+            raise FunctionError(f"Problem with {fct_msg} specified for 'angle_function' arg of "
+                                f"{self.__class__.__name__} ({angle_function}).")
 
     def _function(self,
                  variable=None,
@@ -2956,7 +3024,8 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         time_step_size = self._get_current_parameter_value(TIME_STEP_SIZE, context)
         random_state = self._get_current_parameter_value("random_state", context)
 
-        dimension = self.parameters.dimension.get(context)
+        angle_function = self.parameters.angle_function.default_value
+        dimension = self.parameters.dimension.get()
 
         previous_value = self.parameters.previous_value._get(context)
 
@@ -2968,7 +3037,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                                 # f"1 or one less than its 'dimension' parameter ({dimension}-1={dimension-1}).")
                                 f"1 or {dimension-1} (one less than its 'dimension' parameter: {dimension}).")
 
-        random_draw = np.array([random_state.normal() for _ in list(variable)])
+        random_draw = np.array([random_state.normal() for i in range(dimension-1)])
         value = previous_value + rate * drift * time_step_size \
                 + np.sqrt(time_step_size * noise) * random_draw
 
@@ -2985,7 +3054,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
 
         self.parameters.previous_value._set(value, context)
 
-        return self._angle_function(value)
+        return angle_function(value)
 
     # def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
     #     # Get parameter pointers
