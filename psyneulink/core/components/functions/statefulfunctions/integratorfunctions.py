@@ -2950,19 +2950,27 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
 
     def _validate_noise(self, noise):
-        if (noise is not None and not isinstance(noise, float)
-                and not(isinstance(noise, np.ndarray) and np.issubdtype(noise.dtype, np.floating))):
-            raise FunctionError(
-                f"Invalid noise parameter for {self.name}: {type(noise)}. "
-                f"DriftOnASphereIntegrator requires noise parameter to be a float or float array.")
+        if noise is not None:
+            if (not isinstance(noise, float)
+                    and not(isinstance(noise, np.ndarray) and np.issubdtype(noise.dtype, np.floating))):
+                raise FunctionError(
+                    f"Invalid noise parameter for {self.name}: {type(noise)}. "
+                    f"DriftOnASphereIntegrator requires noise parameter to be a float or float array.")
+            if isinstance(noise, np.ndarray):
+                initializer_len = self.parameters.dimension.default_value-1
+                if noise.ndim !=1 or len(noise) != initializer_len:
+                    owner_str = f"'of '{self.owner.name}" if self.owner else ""
+                    raise FunctionError(f"'noise' parameter for {self.name}{owner_str} must be a list or 1d array of "
+                                        f"length {initializer_len} (the value of the \'dimension\' parameter minus 1)")
 
     def _validate_initializers(self, default_variable, context=None):
         """Need to override this to manage mismatch in dimensionality of initializer vs. variable"""
         pass
 
     def _parse_angle_function_variable(self, variable):
-        from psyneulink.core.components.functions.transferfunctions import Angle
-        return Angle.parameters.variable.default_value
+        # from psyneulink.core.components.functions.transferfunctions import Angle
+        # return Angle.parameters.variable.default_value
+        return np.ones(self.parameters.dimension.default_value-1)
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         """Need to override this to manage mismatch in dimensionality of initializer vs. variable"""
