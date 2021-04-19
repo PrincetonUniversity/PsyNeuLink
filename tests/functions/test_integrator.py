@@ -226,30 +226,7 @@ def test_integrator_function_with_default_variable_and_params_of_different_lengt
     assert error_msg_a in str(error_text.value)
     assert error_msg_b in str(error_text.value)
 
-# err_msg_a = "'initializer' must be a list or 1d array of length 3 (the value of the 'dimension' parameter minus 1)"
-# @pytest.mark.parametrize("params, error_msg",
-#                          [({'initializer': 0.1}, err_msg_a),
-#                           ({'initializer': [0.1,0.1]}, err_msg_a),
-#                           ({'initializer': [0.1,0.1,0.1]}, None)],
-#                          ids=["INITIALIZER_SCALAR", "INITIALIZER_2", "INITIALIZER_3"])
-# def test_drift_on_a_sphere_initializer_errors(params, error_msg):
-#     if error_msg:
-#         with pytest.raises(FunctionError) as error_text:
-#             Functions.DriftOnASphereIntegrator(dimension=4, params=params)
-#         assert error_msg in str(error_text.value)
-#     else:
-#         Functions.DriftOnASphereIntegrator(dimension=4, params=params)
-
 err_msg_initializer = "'initializer' must be a list or 1d array of length 3 (the value of the 'dimension' parameter minus 1)"
-
-# err_msg_angle_func = "{Variable shape incompatibility between " \
-#                      "(DriftOnASphereIntegrator DriftOnASphereIntegrator Function-0) " \
-#                      "and its angle_function Parameter\n" \
-#                      "(DriftOnASphereIntegrator DriftOnASphereIntegrator Function-0).variable: [1. 1. 1.]" \
-#                      "    (numpy.array shape: (3,))\n" \
-#                      "(DriftOnASphereIntegrator DriftOnASphereIntegrator Function-0).angle_function.variable: [1 1]" \
-#                      "    (numpy.array shape: (2,))"
-# err_msg_angle_func = "Variable shape incompatibility between"
 err_msg_angle_func = 'Variable shape incompatibility between (DriftOnASphereIntegrator DriftOnASphereIntegrator'
 err_msg_noise = "DriftOnASphereIntegrator requires noise parameter to be a float or float array."
 

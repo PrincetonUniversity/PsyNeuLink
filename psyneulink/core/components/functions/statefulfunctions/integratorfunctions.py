@@ -2891,6 +2891,12 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                 self.initializer._set_default_value(initializer)
             return initializer
 
+        def _parse_noise(self, noise):
+            """Assign initial value as array of random values of length dimension-1"""
+            if isinstance(noise, list):
+                noise = np.array(noise)
+            return noise
+
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
@@ -2946,6 +2952,8 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
 
     def _validate_noise(self, noise):
+        if isinstance(noise, list):
+            noise = np.array(noise)
         if noise is not None:
             if (not isinstance(noise, float)
                     and not(isinstance(noise, np.ndarray) and np.issubdtype(noise.dtype, np.floating))):
