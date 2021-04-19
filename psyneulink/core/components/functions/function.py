@@ -578,6 +578,7 @@ class Function_Base(Function):
                  params=None,
                  target_set=None,
                  **kwargs):
+        assert True
         # Validate variable and assign to variable, and validate params
         variable = self._check_args(variable=variable,
                                     context=context,

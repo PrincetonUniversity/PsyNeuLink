@@ -752,11 +752,35 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                     :default value: [[0], [0]]
                     :type: ``list``
 
-                distance_function
+                distance_field_weights
+                    see `distance_field_weights <ContentAddressableMemory.distance_field_weights>`
+
+                    :default value: [1]
+                    :type: ``numpy.ndarray``
+
+                distance
+                    see `distance <ContentAddressableMemory.distance>`
+
+                    :default value: 0
+                    :type: ``float``
+
+                 distance_function
                     see `distance_function <ContentAddressableMemory.distance_function>`
 
-                    :default value: Cosine
-                    :type: ``str``
+                    :default value: Distance(metric=COSINE)
+                    :type: ``Function``
+
+                distances_by_field
+                    see `distances_by_field <ContentAddressableMemory.distances_by_field>`
+
+                    :default value: [0]
+                    :type: ``numpy.ndarray``
+
+                distances_to_entries
+                    see `distances_to_entries <ContentAddressableMemory.distances_to_entries>`
+
+                    :default value: [0]
+                    :type: ``numpy.ndarray``
 
                 duplicate_entries_allowed
                     see `duplicate_entries_allowed <ContentAddressableMemory.duplicate_entries_allowed>`
@@ -788,31 +812,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                     :default value: [1]
                     :type: ``numpy.ndarray``
 
-                distance_field_weights
-                    see `distance_field_weights <ContentAddressableMemory.distance_field_weights>`
-
-                    :default value: [1]
-                    :type: ``numpy.ndarray``
-
-                distance
-                    see `distance <ContentAddressableMemory.distance>`
-
-                    :default value: 0
-                    :type: ``float``
-
-                distances_by_field
-                    see `distances_by_field <ContentAddressableMemory.distances_by_field>`
-
-                    :default value: [0]
-                    :type: ``numpy.ndarray``
-
-                distances_to_entries
-                    see `distances_to_entries <ContentAddressableMemory.distances_to_entries>`
-
-                    :default value: [0]
-                    :type: ``numpy.ndarray``
-
-                initializer
+               initializer
                     see `initializer <ContentAddressableMemory.initializer>`
 
                     :default value: None
@@ -1552,14 +1552,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         """Parse passing of single vs. multiple memories, validate memories, and return ndarray
         Used by add_to_memory and delete_from_memory
         """
-        # memories = convert_to_np_array(entries)
-        # if memories.ndim != 0:  # Will handle ndim==0 below
-        #     # FIX: GET RID OF THIS IF/WHEN convert_to_np_array IS CHANGED TO ENFORCE ARRAYS EVEN IN dtype=Object
-        #     memories = [np.array(m) for m in memories]
-        #     if any(len(m) != len(memories[0]) for m in memories):
-        #         memories = np.array([np.array(m) for m in memories], dtype=object)
-        #     else:
-        #         memories = np.array([np.array(m) for m in memories])
         memories = convert_all_elements_to_np_array(entries)
         if not 1 <= memories.ndim <= 3:
             was_str = f'(was {memories.ndim}d)' if memories.ndim else '(was scalar)'
