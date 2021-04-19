@@ -88,6 +88,23 @@ def DriftIntFun(init, value, iterations, noise, **kwargs):
                      2.36535325, 2.3125881 , 1.94195457, 3.4923464 , 2.73809322],
                     [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
 
+def DriftSphereFun(init, value, iterations, noise, **kwargs):
+    assert iterations == 3
+    if np.isscalar(noise):
+        if "initializer" not in kwargs:
+            return ([ 0.61237972, -0.00123971, -0.03658525,  0.06254701, -0.0946239,
+                      0.29805191,  0.49116849,  0.5427334, 0.57919715,  0.15871794,  0.02219184])
+        else:
+            return ([-.132269048,  .0000435051787,  .0000387398441, -.00000395620568,  .000127324586,
+                     -.000501625256, -.000837794371,  .125048720,  .747570336, -.652303943, -.0000657270465])
+    else:
+        if "initializer" not in kwargs:
+            return ([ 0.70894136,  0.00176493,  0.10988845, -0.16462855, -0.17717841,  0.55087821,
+                      0.39641091,  0.67452852,  0.09826617,  0.06205703, -0.01794999])
+        else:
+            return ([-.00372900858, -.000338148799, -.000643154678,  .0000436274120,  .000667038983,
+                     -.00287440868, -.00208163440, .441976901, .531162110, -.722848147, .000466808385])
+
 def LeakyFun(init, value, iterations, noise, **kwargs):
     assert iterations == 3
 
@@ -122,6 +139,7 @@ GROUP_PREFIX="IntegratorFunction "
     (Functions.AdaptiveIntegrator, AdaptiveIntFun),
     (Functions.SimpleIntegrator, SimpleIntFun),
     (Functions.DriftDiffusionIntegrator, DriftIntFun),
+    (Functions.DriftOnASphereIntegrator, DriftSphereFun),
     (Functions.LeakyCompetingIntegrator, LeakyFun),
     ], ids=lambda x: x[0])
 @pytest.mark.benchmark
@@ -134,8 +152,16 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
             raise e from None
     else:
         assert isinstance(noise, pnl.DistributionFunction)
-        if func[1] == DriftIntFun:
+        if func[1] == DriftIntFun or func[1] == DriftSphereFun:
             pytest.skip("DriftDiffusionIntegrator doesn't support functional noise")
+
+    if 'DriftOnASphereIntegrator' in func[0].componentName:
+        if func_mode != 'Python':
+            pytest.skip("DriftDiffusionIntegrator not yet compiled")
+        params.update({'dimension':len(variable) + 1})
+    else:
+        if 'dimension' in params:
+            params.pop('dimension')
 
     f = func[0](default_variable=variable, noise=noise, **params)
 

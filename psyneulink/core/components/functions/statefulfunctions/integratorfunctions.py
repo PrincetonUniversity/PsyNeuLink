@@ -39,7 +39,7 @@ from psyneulink.core.components.functions.statefulfunctions.statefulfunction imp
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ADDITIVE_PARAM, \
-    DECAY, DEFAULT_VARIABLE, DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION, \
+    DECAY, DEFAULT_VARIABLE, DRIFT_DIFFUSION_INTEGRATOR_FUNCTION, DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION, \
     DUAL_ADAPTIVE_INTEGRATOR_FUNCTION, FITZHUGHNAGUMO_INTEGRATOR_FUNCTION, FUNCTION, \
     INCREMENT, INITIALIZER, INPUT_PORTS, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
     INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, \
@@ -2295,7 +2295,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         for details).
     """
 
-    componentName = DRIFT_ON_A_SPHERE_INTEGRATOR_FUNCTION
+    componentName = DRIFT_DIFFUSION_INTEGRATOR_FUNCTION
 
     class Parameters(IntegratorFunction.Parameters):
         """
