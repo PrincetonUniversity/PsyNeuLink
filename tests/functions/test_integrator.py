@@ -228,7 +228,7 @@ def test_integrator_function_with_default_variable_and_params_of_different_lengt
 
 err_msg_initializer = "'initializer' must be a list or 1d array of length 3 (the value of the 'dimension' parameter minus 1)"
 err_msg_angle_func = 'Variable shape incompatibility between (DriftOnASphereIntegrator DriftOnASphereIntegrator'
-err_msg_noise = "DriftOnASphereIntegrator requires noise parameter to be a float or float array."
+err_msg_noise = "must be a list or 1d array of length 3 (the value of the 'dimension' parameter minus 1)"
 
 test_vars = [
     ({'initializer': 0.1}, err_msg_initializer, FunctionError),
@@ -240,7 +240,7 @@ test_vars = [
     ({'angle_function': Angle([1,1,1])}, None, None),
     ({'noise': .01}, None, None),
     ({'noise': [.01, .5]}, err_msg_noise, FunctionError),
-    ({'noise': [.01, .5, .99]}, err_msg_noise, FunctionError),
+    ({'noise': [.01, .5, .99]}, None, None),
     ({'noise': [.01, .5, .99, .1]}, err_msg_noise, FunctionError)
 ]
 
