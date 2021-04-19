@@ -380,6 +380,7 @@ class Scheduler(JSONDumpable):
                 self.nodes = [vert.component for vert in graph.vertices]
                 self._init_consideration_queue_from_graph(graph)
             except AttributeError:
+                self.dependency_dict = graph
                 self.consideration_queue = list(toposort(graph))
                 self.nodes = []
                 for consideration_set in self.consideration_queue:
