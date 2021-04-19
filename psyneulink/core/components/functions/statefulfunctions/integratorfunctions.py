@@ -2877,7 +2877,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
 
         # FIX: THIS SEEMS DUPLICATIVE OF DriftOnASphereIntegrator._validate_params() (THOUGH THAT GETS CAUGHT EARLIER)
         def _validate_initializer(self, initializer):
-            initializer_len = self.dimension.default_value-1
+            initializer_len = self.dimension.default_value - 1
             if (self.initializer._user_specified
                     and (initializer.ndim != 1 or len(initializer) != initializer_len)):
                 return f"'initializer' must be a list or 1d array of length {initializer_len} " \
@@ -2885,7 +2885,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
 
         def _parse_initializer(self, initializer):
             """Assign initial value as array of random values of length dimension-1"""
-            initializer_dim = self.dimension.default_value-1
+            initializer_dim = self.dimension.default_value - 1
             if initializer.ndim != 1 or len(initializer) != initializer_dim:
                 initializer = np.random.random(initializer_dim)
                 self.initializer._set_default_value(initializer)
@@ -2937,7 +2937,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         # FIX: THIS SEEMS DUPLICATIVE OF Parameters._validate_initializer (THOUGHT THIS GETS CAUGHT EARLIER)
         if INITIALIZER in request_set and request_set[INITIALIZER] is not None:
             initializer = np.array(request_set[INITIALIZER])
-            initializer_len = self.parameters.dimension.default_value-1
+            initializer_len = self.parameters.dimension.default_value - 1
             if (self.parameters.initializer._user_specified
                     and (initializer.ndim != 1 or len(initializer) != initializer_len)):
                 raise FunctionError(f"'initializer' must be a list or 1d array of length {initializer_len} " \
@@ -2953,7 +2953,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                     f"Invalid noise parameter for {self.name}: {type(noise)}. "
                     f"DriftOnASphereIntegrator requires noise parameter to be a float or float array.")
             if isinstance(noise, np.ndarray):
-                initializer_len = self.parameters.dimension.default_value-1
+                initializer_len = self.parameters.dimension.default_value - 1
                 if noise.ndim !=1 or len(noise) != initializer_len:
                     owner_str = f"'of '{self.owner.name}" if self.owner else ""
                     raise FunctionError(f"'noise' parameter for {self.name}{owner_str} must be a list or 1d array of "
@@ -2964,7 +2964,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         pass
 
     def _parse_angle_function_variable(self, variable):
-        return np.ones(self.parameters.dimension.default_value-1)
+        return np.ones(self.parameters.dimension.default_value - 1)
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         """Need to override this to manage mismatch in dimensionality of initializer vs. variable"""
@@ -2982,9 +2982,9 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         dimension = self.parameters.dimension.default_value
 
         if isinstance(angle_function, type):
-            self.parameters.angle_function._set_default_value(angle_function(np.ones(dimension-1)))
+            self.parameters.angle_function._set_default_value(angle_function(np.ones(dimension - 1)))
         else:
-            angle_function.defaults.variable = np.ones(dimension-1)
+            angle_function.defaults.variable = np.ones(dimension - 1)
             angle_function._instantiate_value(context)
 
     # FIX: IS THIS STILL NECESSARY?
@@ -3055,14 +3055,14 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         previous_value = self.parameters.previous_value._get(context)
 
         try:
-            drift = np.full(dimension-1, variable)
+            drift = np.full(dimension - 1, variable)
         except ValueError:
             owner_str = f"'of '{self.owner.name}" if self.owner else ""
             raise FunctionError(f"Length of 'variable' for {self.name}{owner_str} ({len(variable)}) must be "
                                 # f"1 or one less than its 'dimension' parameter ({dimension}-1={dimension-1}).")
                                 f"1 or {dimension-1} (one less than its 'dimension' parameter: {dimension}).")
 
-        random_draw = np.array([random_state.normal() for i in range(dimension-1)])
+        random_draw = np.array([random_state.normal() for i in range(dimension - 1)])
         value = previous_value + rate * drift * time_step_size \
                 + np.sqrt(time_step_size * noise) * random_draw
 
