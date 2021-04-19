@@ -66,6 +66,15 @@
                         "args": [
                             {
                                 "args": [
+                                    "TransferMechanism-1",
+                                    1
+                                ],
+                                "function": null,
+                                "kwargs": {},
+                                "type": "EveryNCalls"
+                            },
+                            {
+                                "args": [
                                     "TransferMechanism-2",
                                     1
                                 ],
@@ -76,15 +85,6 @@
                             {
                                 "args": [
                                     "Comparator",
-                                    1
-                                ],
-                                "function": null,
-                                "kwargs": {},
-                                "type": "EveryNCalls"
-                            },
-                            {
-                                "args": [
-                                    "TransferMechanism-1",
                                     1
                                 ],
                                 "function": null,
@@ -2794,7 +2794,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-2",
+                                    "name": "Linear Function-1",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -2846,7 +2846,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-1",
+                                    "name": "Linear Function-2",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -3286,7 +3286,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-11",
+                                    "name": "Linear Function-10",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -3338,7 +3338,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-10",
+                                    "name": "Linear Function-11",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -3778,7 +3778,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-20",
+                                    "name": "Linear Function-19",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -3830,7 +3830,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-19",
+                                    "name": "Linear Function-20",
                                     "type": {
                                         "generic": "Linear"
                                     }
