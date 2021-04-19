@@ -184,7 +184,7 @@ def run_stab_flex(taskTrain, stimulusTrain, cueTrain,
                                           name='Scaled DDM Input')
 
     # Decision Module
-    decisionMaker = pnl.DDM(function=pnl.DriftDiffusionIntegrator(starting_point=STARTING_POINT,
+    decisionMaker = pnl.DDM(function=pnl.DriftDiffusionIntegrator(starting_value=STARTING_POINT,
                                                                   threshold=THRESHOLD,
                                                                   noise=NOISE,
                                                                   time_step_size=ddm_time_step_size),
@@ -252,16 +252,16 @@ def run_stab_flex(taskTrain, stimulusTrain, cueTrain,
               stimulusInfo: stimulusTrain,
               cueInterval: cueTrain}
 
-    stabilityFlexibility.run(inputs, bin_execute=False)
+    stabilityFlexibility.run(inputs, execution_mode=pnl.ExecutionMode.LLVMRun)
 
     return stabilityFlexibility
 
 
 tasks, stimuli, CSI, correctResponse = generateTrialSequence(256, 0.5)
 
-comp = run_stab_flex(taskTrain=tasks, stimulusTrain=stimuli, CSI=CSI)
+comp = run_stab_flex(taskTrain=tasks, stimulusTrain=stimuli, cueTrain=CSI)
 
-
+#comp.show_graph()
 
 # taskLayer.log.print_entries()
 # stimulusInfo.log.print_entries()

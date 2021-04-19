@@ -108,24 +108,3 @@ jit_ddm_model.save("ddm.pt")
 #%%
 # import seaborn as sns
 # sns.kdeplot(rts)
-
-#%%
-graph = jit_ddm_model.graph
-nodes = list(graph.nodes())
-
-#%%
-parsed_graph = {}
-graph_nodes = []
-for node in graph.nodes():
-    op = node.kind();
-    outputs = [o.unique() for o in node.outputs()]
-    inputs  = [i.unique() for i in node.inputs()]
-    graph_node = # Create a node for current AST Node
-    parsed_graph[graph_node.id] = graph_node
-    # Reference:
-    # https://github.com/waleedka/hiddenlayer/blob/master/hiddenlayer/pytorch_builder.py
-    for to in graph.nodes():
-        to_inputs = [i.unique() for i in to.inputs()]
-        edges = set(outputs) & set(to_inputs)
-        if edges:
-            graph_node.edges.append(Edge(to, edges))

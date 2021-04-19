@@ -559,7 +559,7 @@ class LCAMechanism(RecurrentTransferMechanism):
         if threshold is not None:
             if termination_threshold is not None:
                 raise LCAError(f"The {repr('threshold')} and {repr(TERMINATION_THRESHOLD)} "
-                               f"args of {self.__name__} can't both be specified.")
+                               f"args of {self.__class__} can't both be specified.")
             else:
                 termination_threshold = threshold
         else:
