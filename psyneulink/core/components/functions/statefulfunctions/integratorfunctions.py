@@ -2946,7 +2946,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
             initializer_len = self.parameters.dimension.default_value - 1
             if (self.parameters.initializer._user_specified
                     and (initializer.ndim != 1 or len(initializer) != initializer_len)):
-                raise FunctionError(f"'initializer' must be a list or 1d array of length {initializer_len} " \
+                raise FunctionError(f"'initializer' must be a list or 1d array of length {initializer_len} "
                                     f"(the value of the \'dimension\' parameter minus 1)")
 
         super()._validate_params(request_set=request_set, target_set=target_set,context=context)
