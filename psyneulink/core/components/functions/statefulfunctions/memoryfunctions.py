@@ -385,7 +385,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     <ContentAddressableMemory.retrieval_prob>`.
 
     *Entries and Fields*. The **default_variable** argument specifies the shape of an entry in `memory
-    <ContentAddressableMemory.storage_prob>`, each of which is a list or array of fields are themselves lists or
+    <ContentAddressableMemory.storage_prob>`, each of which is a list or array of fields that are themselves lists or
     1d arrays (see `EpisodicMemoryMechanism_Memory_Fields`). An entry can have an arbitrary number of fields, and
     each field can have an arbitrary length.  However, all entries must have the same number of fields, and the
     corresponding fields must all have the same length across entries.
@@ -644,8 +644,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         `memory <ContentAddressableMemory.memory>`.
 
     initializer : ndarray
-        initial set of entries for `memory <ContentAddressableMemory.memory>`; it must be of the same form as
-        `memory <ContentAddresableMemory.memory>.
+        initial set of entries for `memory <ContentAddressableMemory.memory>`.  It should be either a 3d regular
+        array or a 2d ragged array (if the fields of an entry have different lengths), but it can be specified
+        in the **initializer** argument of the contructor using some simpler forms for convenience.  Specifically,
+        scalars, 1d and regular 2d arrays are allowed, which are interpreted as a single entry with a single
+        field that is converted to a 3d array to initialize `memory <ContentAddressableMemory.memory>`.
 
     memory : list
         list of entries in ContentAddressableMemory, each of which is an array of fields containing stored items;
@@ -1060,14 +1063,18 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         - use to set previous_value (and return previous_value)
             (must be done here rather than in validate_params as it is needed to initialize previous_value
         """
-        if initializer is None or np.array(initializer).size == 0:
-        #     return None
-        # if initializer is None or np.array(initializer).size == 0 or not self.parameters.initializer._user_specified:
-        #     if self.parameters.variable._user_specified:
-            return None
-            # initializer = [self.parameters.variable.default_value]
 
+        if initializer is None or np.array(initializer, dtype=object).size == 0:
+            return None
+
+        # Enforce initializer to be shape of memory (2d for ragged fields or 3d for regular ones)
+        # - note: this also allows initializer to be specified with a single entry
+        #         (i.e., without enclosing it in an outer list or array)
+        initializer = convert_all_elements_to_np_array(initializer)
         initializer = np.atleast_2d(initializer)
+        if initializer.dtype != object and initializer.ndim==2:
+            initializer = np.expand_dims(initializer, axis=0)
+
         # FIX: HOW DOES THIS RELATE TO WHAT IS DONE IN __init__()?
         # Set memory fields shapes if this is the first entry
         self.parameters.memory_num_fields.set(initializer.shape[1],
@@ -1214,9 +1221,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         #     raise FunctionError(f"Attempt to store and/or retrieve an entry in {self.__class__.__name__} that has one "
         #                         f"or more fields with an incorrect shape (shapes should be {field_shapes}):\n{entry}.")
 
-        owner_name = ''
-        if self.owner:
-            owner_name = f'of {self.owner.name}'
+        owner_name = f'of {self.owner.name}' if self.owner else ''
         for i, field in enumerate(entry):
             field = np.array(field)
             # IMPLEMENTATION NOTE:  Remove requirement field.ndim==1  if/when >2d arrays are supported more generally
@@ -1309,11 +1314,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         Arguments
         ---------
         entry : list or 2d array
-            must be a list or 2d array containing items (fields) each of which must be list or at least a 1d array;
-            if any entries already exist in `memory <ContentAddressableMemory.memory>`, then both the number of fields
-            and their shapes must match exiting entries (contained in the `memory_num_fields
-            <ContentAddressableMemory.memory_num_fields>` and `memory_field_shapes
-            <ContentAddressableMemory.memory_field_shapes>` attributes, respectively).
+            should be a list or 2d array containing 1d arrays (fields) each of which should be list or at least a 1d
+            array; scalars, 1d and simple 2d arrays are allowed, and are interpreted as a single entry with a single
+            field, which is converted to a 3d array. If any entries already exist in `memory
+            <ContentAddressableMemory.memory>`, then both the number of fields and their shapes must match existing
+            entries (contained in the `memory_num_fields <ContentAddressableMemory.memory_num_fields>` and
+            `memory_field_shapes <ContentAddressableMemory.memory_field_shapes>` attributes, respectively).  All
+            elements of all entries are converted to np.arrays.
 
             .. technical_note::
                this method supports adding entries with items in each field that are greater than 1d for potential
