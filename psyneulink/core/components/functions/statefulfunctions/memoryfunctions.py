@@ -385,7 +385,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     <ContentAddressableMemory.retrieval_prob>`.
 
     *Entries and Fields*. The **default_variable** argument specifies the shape of an entry in `memory
-    <ContentAddressableMemory.storage_prob>`, each of which is a list or array of fields are themselves lists or
+    <ContentAddressableMemory.storage_prob>`, each of which is a list or array of fields that are themselves lists or
     1d arrays (see `EpisodicMemoryMechanism_Memory_Fields`). An entry can have an arbitrary number of fields, and
     each field can have an arbitrary length.  However, all entries must have the same number of fields, and the
     corresponding fields must all have the same length across entries.
@@ -644,8 +644,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         `memory <ContentAddressableMemory.memory>`.
 
     initializer : ndarray
-        initial set of entries for `memory <ContentAddressableMemory.memory>`; it must be of the same form as
-        `memory <ContentAddresableMemory.memory>.
+        initial set of entries for `memory <ContentAddressableMemory.memory>`.  It should be either a 3d regular
+        array or a 2d ragged array (if the fields of an entry have different lengths), but it can be specified
+        in the **initializer** argument of the contructor using some simpler forms for convenience.  Specifically,
+        scalars, 1d and regular 2d arrays are allowed, which are interpreted as a single entry with a single
+        field that is converted to a 3d array to initialize `memory <ContentAddressableMemory.memory>`.
 
     memory : list
         list of entries in ContentAddressableMemory, each of which is an array of fields containing stored items;
@@ -1317,11 +1320,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         Arguments
         ---------
         entry : list or 2d array
-            must be a list or 2d array containing items (fields) each of which must be list or at least a 1d array;
-            if any entries already exist in `memory <ContentAddressableMemory.memory>`, then both the number of fields
-            and their shapes must match exiting entries (contained in the `memory_num_fields
-            <ContentAddressableMemory.memory_num_fields>` and `memory_field_shapes
-            <ContentAddressableMemory.memory_field_shapes>` attributes, respectively).
+            should be a list or 2d array containing 1d arrays (fields) each of which should be list or at least a 1d
+            array; scalars, 1d and simple 2d arrays are allowed, and are interpreted as a single entry with a single
+            field, which is converted to a 3d array. If any entries already exist in `memory
+            <ContentAddressableMemory.memory>`, then both the number of fields and their shapes must match existing
+            entries (contained in the `memory_num_fields <ContentAddressableMemory.memory_num_fields>` and
+            `memory_field_shapes <ContentAddressableMemory.memory_field_shapes>` attributes, respectively).  All
+            elements of all entries are converted to np.arrays.
 
             .. technical_note::
                this method supports adding entries with items in each field that are greater than 1d for potential
