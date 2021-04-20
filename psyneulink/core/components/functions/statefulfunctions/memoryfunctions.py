@@ -880,9 +880,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         previous_value = Parameter(None, initializer='initializer', pnl_internal=True)
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        # FIX: MAKE THESE ATTRIBUTES RATHER THAN PARAMETERS:
         memory_num_fields = Parameter(None, stateful=True, read_only=True)
         memory_field_shapes = Parameter(None, stateful=True, read_only=True)
-        distance_field_weights = Parameter([1], stateful=True, modulable=True)
+        # FIX: --------------------
+        distance_field_weights = Parameter([1], stateful=True, modulable=True, dependencies='initializer')
         duplicate_entries_allowed = Parameter(False, stateful=True)
         duplicate_threshold = Parameter(0, stateful=False, modulable=True)
         equidistant_entries_select = Parameter(RANDOM)
@@ -899,20 +901,30 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         def _validate_retrieval_prob(self, retrieval_prob):
             retrieval_prob = float(retrieval_prob)
             if not all_within_range(retrieval_prob, 0, 1):
-                return f"{RETRIEVAL_PROB} must be a float in the interval [0,1]."
+                return f"must be a float in the interval [0,1]."
 
         def _validate_storage_prob(self, storage_prob):
             storage_prob = float(storage_prob)
             if not all_within_range(storage_prob, 0, 1):
-                return f"{STORAGE_PROB} must be a float in the interval [0,1]."
+                return f"must be a float in the interval [0,1]."
+
+        def _validate_distance_field_weights(self, field_weights):
+            if self.distance_field_weights._user_specified is True and self.initializer.default_value is not None:
+                field_weights = np.array(field_weights)
+                if not np.isscalar(field_weights) and field_weights.ndim != 1:
+                    return f"must be a scalar or list or 1d array of scalars"
+                fw_len = len(field_weights)
+                num_fields = self.initializer.default_value.shape[1]
+                if len(field_weights) not in {1, num_fields}:
+                    return f"length ({fw_len}) must be same number of fields in entries of initializer ({num_fields})"
 
         def _validate_equidistant_entries_select(self, equidistant_entries_select):
             if equidistant_entries_select not in equidistant_entries_select_keywords:
-                return f"'equidistant_entries_select' must be {' or '.join(equidistant_entries_select_keywords)}."
+                return f"must be {' or '.join(equidistant_entries_select_keywords)}."
 
         def _validate_duplicate_entries_allowed(self, duplicate_entries_allowed):
             if not isinstance(duplicate_entries_allowed, bool) and duplicate_entries_allowed != OVERWRITE:
-                return f"'duplicate_entries_allowed' must be a bool or 'OVERWRITE'."
+                return f"must be a bool or 'OVERWRITE'."
 
     def __init__(self,
                  default_variable=None,
@@ -1161,24 +1173,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         value of entry that best matches `variable <ContentAddressableMemory.variable>`  : 1d array
         """
 
-        # # MODIFIED 4/20/21 OLD:
-        # variable = convert_all_elements_to_np_array(variable)
-        # # MODIFIED 4/20/21 NEW:
-        # # Enforce initializer to be shape of memory (2d for ragged fields or 3d for regular ones)
-        # # - note: this also allows initializer to be specified with a single entry
-        # #         (i.e., without enclosing it in an outer list or array)
-        # variable = convert_all_elements_to_np_array(variable)
-        # variable = np.atleast_2d(variable)
-        # if variable.dtype != object and variable.ndim==1:
-        #     variable = np.expand_dims(variable, axis=0)
-        # MODIFIED 4/20/21 NEWER:
-        # Enforce initializer to be shape of memory (2d for ragged fields or 3d for regular ones)
-        # - note: this also allows initializer to be specified with a single entry
-        #         (i.e., without enclosing it in an outer list or array)
         variable = convert_all_elements_to_np_array(variable)
         if variable.dtype != object and variable.ndim==1:
             variable = np.expand_dims(variable, axis=0)
-        # MODIFIED 4/20/21 END
 
         retrieval_prob = np.array(self._get_current_parameter_value(RETRIEVAL_PROB, context)).astype(float)
         storage_prob = np.array(self._get_current_parameter_value(STORAGE_PROB, context)).astype(float)
