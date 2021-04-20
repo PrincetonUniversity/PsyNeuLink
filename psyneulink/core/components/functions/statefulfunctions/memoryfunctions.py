@@ -1063,16 +1063,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         - use to set previous_value (and return previous_value)
             (must be done here rather than in validate_params as it is needed to initialize previous_value
         """
-        if initializer is None or np.array(initializer).size == 0:
-        #     return None
-        # if initializer is None or np.array(initializer).size == 0 or not self.parameters.initializer._user_specified:
-        #     if self.parameters.variable._user_specified:
-            return None
-            # initializer = [self.parameters.variable.default_value]
 
-        # # MODIFIED 4/19/21 OLD:
-        # initializer = np.atleast_2d(initializer)
-        # MODIFIED 4/19/21 NEW:
+        if initializer is None or np.array(initializer, dtype=object).size == 0:
+            return None
+
         # Enforce initializer to be shape of memory (2d for ragged fields or 3d for regular ones)
         # - note: this also allows initializer to be specified with a single entry
         #         (i.e., without enclosing it in an outer list or array)
@@ -1080,7 +1074,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         initializer = np.atleast_2d(initializer)
         if initializer.dtype != object and initializer.ndim==2:
             initializer = np.expand_dims(initializer, axis=0)
-        # MODIFIED 4/19/21 END
+
         # FIX: HOW DOES THIS RELATE TO WHAT IS DONE IN __init__()?
         # Set memory fields shapes if this is the first entry
         self.parameters.memory_num_fields.set(initializer.shape[1],
