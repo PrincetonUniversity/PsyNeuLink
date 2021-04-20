@@ -1067,7 +1067,17 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             return None
             # initializer = [self.parameters.variable.default_value]
 
+        # # MODIFIED 4/19/21 OLD:
+        # initializer = np.atleast_2d(initializer)
+        # MODIFIED 4/19/21 NEW:
+        # Enforce initializer to be shape of memory (2d for ragged fields or 3d for regular ones)
+        # - note: this also allows initializer to be specified with a single entry
+        #         (i.e., without enclosing it in an outer list or array)
+        initializer = convert_all_elements_to_np_array(initializer)
         initializer = np.atleast_2d(initializer)
+        if initializer.dtype != object and initializer.ndim==2:
+            initializer = np.expand_dims(initializer, axis=0)
+        # MODIFIED 4/19/21 END
         # FIX: HOW DOES THIS RELATE TO WHAT IS DONE IN __init__()?
         # Set memory fields shapes if this is the first entry
         self.parameters.memory_num_fields.set(initializer.shape[1],
@@ -1214,9 +1224,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         #     raise FunctionError(f"Attempt to store and/or retrieve an entry in {self.__class__.__name__} that has one "
         #                         f"or more fields with an incorrect shape (shapes should be {field_shapes}):\n{entry}.")
 
-        owner_name = ''
-        if self.owner:
-            owner_name = f'of {self.owner.name}'
+        owner_name = f'of {self.owner.name}' if self.owner else ''
         for i, field in enumerate(entry):
             field = np.array(field)
             # IMPLEMENTATION NOTE:  Remove requirement field.ndim==1  if/when >2d arrays are supported more generally
