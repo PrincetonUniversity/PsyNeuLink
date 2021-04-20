@@ -1145,12 +1145,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         # otherwise, set previous_value to initializer
         else:
-            # MODIFIED 4/20/21 OLD:
-            # value = self._initialize_previous_value(previous_value, context=context)
-            # MODIFIED 4/20/21 NEW:
             value = self._initialize_previous_value(ContentAddressableMemory._enforce_memory_shape(previous_value),
                                                     context=context)
-            # MODIFIED 4/20/21 END
 
         self.parameters.value.set(value, context, override=True)
         return value
