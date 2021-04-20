@@ -1163,12 +1163,19 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         # # MODIFIED 4/20/21 OLD:
         # variable = convert_all_elements_to_np_array(variable)
-        # MODIFIED 4/20/21 NEW:
+        # # MODIFIED 4/20/21 NEW:
+        # # Enforce initializer to be shape of memory (2d for ragged fields or 3d for regular ones)
+        # # - note: this also allows initializer to be specified with a single entry
+        # #         (i.e., without enclosing it in an outer list or array)
+        # variable = convert_all_elements_to_np_array(variable)
+        # variable = np.atleast_2d(variable)
+        # if variable.dtype != object and variable.ndim==1:
+        #     variable = np.expand_dims(variable, axis=0)
+        # MODIFIED 4/20/21 NEWER:
         # Enforce initializer to be shape of memory (2d for ragged fields or 3d for regular ones)
         # - note: this also allows initializer to be specified with a single entry
         #         (i.e., without enclosing it in an outer list or array)
         variable = convert_all_elements_to_np_array(variable)
-        variable = np.atleast_2d(variable)
         if variable.dtype != object and variable.ndim==1:
             variable = np.expand_dims(variable, axis=0)
         # MODIFIED 4/20/21 END
