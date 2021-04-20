@@ -574,30 +574,28 @@ def retrieve_label_helper(retrieved, stimuli):
 
 #region
 class TestContentAddressableMemory:
-
-    def test_ContentAddressableMemory_allowable_initializer_shapes(self):
-
-        # MOVE TO ERROR CHECKS FOR WARNING
-        c = ContentAddressableMemory(initializer=np.array(1))
-        assert c.memory == [[[1.]]]
-
-        c = ContentAddressableMemory(initializer=np.array([1]))
-        assert c.memory == [[[1.]]]
-
-        c = ContentAddressableMemory(initializer=np.array([1,1]))
-        assert c.memory == [[[1., 1.]]]
-
-        c = ContentAddressableMemory(initializer=np.array([[1,1]]))
-        assert c.memory == [[[1., 1.]]]
-
-        c = ContentAddressableMemory(initializer=np.array([[[1,1]]]))
-        assert c.memory == [[[1., 1.]]]
-
-        c = ContentAddressableMemory(initializer=np.array([[1,1],[2,2,2]]))
-        assert c.memory == [[[1., 1.],[2., 2., 2.]]]
-
-        c = ContentAddressableMemory(initializer=np.array([[[1,1],[2,2,2]]]))
-        assert c.memory == [[[1., 1.],[2., 2., 2.]]]
+    # Note:  this warning is issued because the default distance_function is Distance(metric=COSINE)
+    #        if the default is changed, this warning may not occur
+    distance_warning_msg = "and has at least one memory field that is a scalar"
+    test_vars = [
+        # initializer:      expected_result (as list):
+        (1,                 [[[1.]]], distance_warning_msg),
+        ([1],               [[[1.]]], distance_warning_msg),
+        ([1,1],             [[[1., 1.]]], None),
+        ([[1,1]],           [[[1., 1.]]], None),
+        ([[[1,1]]],         [[[1., 1.]]], None),
+        ([[1,1],[2,2,2]],   [[[1., 1.],[2., 2., 2.]]], None),
+        ([[[1,1],[2,2,2]]], [[[1., 1.],[2., 2., 2.]]], None)
+    ]
+    @pytest.mark.parametrize('initializer, expected_memory, warning_msg', test_vars)
+    def test_ContentAddressableMemory_allowable_initializer_shapes(self, initializer, expected_memory, warning_msg):
+        if warning_msg:
+            with pytest.warns(UserWarning, match=warning_msg):
+                c = ContentAddressableMemory(initializer=initializer)
+                np.all(c.memory==convert_all_elements_to_np_array(expected_memory))
+        else:
+            c = ContentAddressableMemory(initializer=initializer)
+            np.all(c.memory==convert_all_elements_to_np_array(expected_memory))
 
     def test_ContentAddressableMemory_simple_distances(self):
 
