@@ -1064,7 +1064,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             (must be done here rather than in validate_params as it is needed to initialize previous_value
         """
 
-        if initializer is None or np.array(initializer, dtype=object).size == 0:
+        if initializer is None or convert_all_elements_to_np_array(initializer).size == 0:
             return None
 
         # Enforce initializer to be shape of memory (2d for ragged fields or 3d for regular ones)
@@ -1161,7 +1161,17 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         value of entry that best matches `variable <ContentAddressableMemory.variable>`  : 1d array
         """
 
+        # # MODIFIED 4/20/21 OLD:
+        # variable = convert_all_elements_to_np_array(variable)
+        # MODIFIED 4/20/21 NEW:
+        # Enforce initializer to be shape of memory (2d for ragged fields or 3d for regular ones)
+        # - note: this also allows initializer to be specified with a single entry
+        #         (i.e., without enclosing it in an outer list or array)
         variable = convert_all_elements_to_np_array(variable)
+        variable = np.atleast_2d(variable)
+        if variable.dtype != object and variable.ndim==1:
+            variable = np.expand_dims(variable, axis=0)
+        # MODIFIED 4/20/21 END
 
         retrieval_prob = np.array(self._get_current_parameter_value(RETRIEVAL_PROB, context)).astype(float)
         storage_prob = np.array(self._get_current_parameter_value(STORAGE_PROB, context)).astype(float)
