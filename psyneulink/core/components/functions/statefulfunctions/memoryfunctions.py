@@ -1012,13 +1012,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 raise FunctionError(f"{fct_msg} specified for {repr(DISTANCE_FUNCTION)} arg of "
                                     f"{self.__class__.__name__} ({distance_function}) must accept an array "
                                     f"with two lists or 1d arrays, or a 2d array, as its argument.")
-            if granularity is 'full_entry' and not np.isscalar(distance_result):
+            if granularity == 'full_entry' and not np.isscalar(distance_result):
                 raise FunctionError(f"Value returned by {repr(DISTANCE_FUNCTION)} "
                                     f"({distance_function.__class__.__name__}) specified for "
                                     f"{self.__class__.__name__} must return a scalar if "
                                     f"{repr(DISTANCE_FIELD_WEIGHTS)} is not specified or is homogenous "
                                     f"(i.e., all elements are the same.")
-            if granularity is 'per_field' and not len(distance_result)==len(field_weights):
+            if granularity == 'per_field' and not len(distance_result)==len(field_weights):
                 raise FunctionError(f"Value returned by {repr(DISTANCE_FUNCTION)} "
                                     f"({distance_function.__class__.__name__}) specified for "
                                     f"{self.__class__.__name__} must return an array "
@@ -1454,7 +1454,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             field_weights = self._get_current_parameter_value('distance_field_weights', context)
         field_weights = np.atleast_1d(field_weights)
 
-        if granularity is 'per_field':
+        if granularity == 'per_field':
             # Note: this is just used for reporting, and not determining storage or retrieval
 
             # Replace None's with 0 to allow multiplication
@@ -1469,7 +1469,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                                            if f is not None else None for i,f in enumerate(field_weights)])
             return distances_by_field
 
-        elif granularity is 'full_entry':
+        elif granularity == 'full_entry':
             # Use first element as scalar if it is a homogenous array (i.e., all elements are the same)
             # field_weights = np.array(field_weights)
             field_weights = field_weights[0] if np.all(field_weights[0]==field_weights) else field_weights
