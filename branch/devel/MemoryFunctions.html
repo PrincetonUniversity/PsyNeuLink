@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MemoryFunctions &mdash; PsyNeuLink 0.8.7.1+40.gc0d2ddd36d documentation</title>
+  <title>MemoryFunctions &mdash; PsyNeuLink 0.8.7.1+41.g7f0d4af414 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+40
+                  0.8.7.1+41
                 </div>
               
             
@@ -752,7 +752,7 @@ delete only memories that have the same key <em>and</em> value as those listed i
 <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">memory</span></code></a>. Storage is determined by <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">storage_prob</span></code></a>, and retrieval of entries is determined by
 <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.distance_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">distance_function</span></code></a>,
 <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.selection_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">selection_function</span></code></a>, and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.retrieval_prob" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.retrieval_prob"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">retrieval_prob</span></code></a>.</p>
-<p><em>Entries and Fields</em>. The <strong>default_variable</strong> argument specifies the shape of an entry in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>, each of which is a list or array of fields are themselves lists or
+<p><em>Entries and Fields</em>. The <strong>default_variable</strong> argument specifies the shape of an entry in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.storage_prob"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">memory</span></code></a>, each of which is a list or array of fields that are themselves lists or
 1d arrays (see <a class="reference internal" href="EpisodicMemoryMechanism.html#episodicmemorymechanism-memory-fields"><span class="std std-ref">Memory Fields</span></a>). An entry can have an arbitrary number of fields, and
 each field can have an arbitrary length.  However, all entries must have the same number of fields, and the
 corresponding fields must all have the same length across entries.</p>
@@ -982,8 +982,11 @@ can be added Hadamard style to <a class="reference internal" href="#psyneulink.c
 <dl class="py attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.initializer">
 <code class="sig-name descname">initializer</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.initializer" title="Permalink to this definition">¶</a></dt>
-<dd><p>initial set of entries for <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">memory</span></code></a>; it must be of the same form as
-<a href="#id9"><span class="problematic" id="id10">`</span></a>memory &lt;ContentAddresableMemory.memory&gt;.</p>
+<dd><p>initial set of entries for <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">memory</span></code></a>.  It should be either a 3d regular
+array or a 2d ragged array (if the fields of an entry have different lengths), but it can be specified
+in the <strong>initializer</strong> argument of the contructor using some simpler forms for convenience.  Specifically,
+scalars, 1d and regular 2d arrays are allowed, which are interpreted as a single entry with a single
+field that is converted to a 3d array to initialize <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">memory</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>ndarray</p>
@@ -1001,8 +1004,8 @@ fields of all entries must have the same shape;  for example:</p>
 <div><p>[[[field1],[field2],[field3]…], [[field1],[field2],[field3]…]…]</p>
 </div></blockquote>
 <dl class="simple">
-<dt>could be:</dt><dd><p><a href="#id13"><span class="problematic" id="id14">|---------------- entry 1 ---------------|</span></a>—————- entry 2 —————|
-<a href="#id15"><span class="problematic" id="id16">|-- field1 --|</span></a>– field2 –<a href="#id17"><span class="problematic" id="id18">|--- field3 ---|</span></a>– field1 –<a href="#id19"><span class="problematic" id="id20">|-- field2 --|</span></a>— field3 —|
+<dt>could be:</dt><dd><p><a href="#id11"><span class="problematic" id="id12">|---------------- entry 1 ---------------|</span></a>—————- entry 2 —————|
+<a href="#id13"><span class="problematic" id="id14">|-- field1 --|</span></a>– field2 –<a href="#id15"><span class="problematic" id="id16">|--- field3 ---|</span></a>– field1 –<a href="#id17"><span class="problematic" id="id18">|-- field2 --|</span></a>— field3 —|
 [[   [a],      [b,c,d],      [[e],[f]]  ],[    [u],      [v,w,x],     [[y],[z]]  ]]</p>
 </dd>
 </dl>
@@ -1216,7 +1219,7 @@ for details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><ul class="simple">
-<li><p>entry from <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">memory</span></code></a> that best matches <a href="#id11"><span class="problematic" id="id12">`</span></a>variable</p></li>
+<li><p>entry from <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">memory</span></code></a> that best matches <a href="#id9"><span class="problematic" id="id10">`</span></a>variable</p></li>
 <li><p><strong>&lt;ContentAddressableMemory.variable&gt;`</strong> (<em>2d array</em>) – if no retrieval occurs, an appropriately shaped zero-valued array is returned.</p></li>
 </ul>
 </p>
