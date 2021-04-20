@@ -1173,6 +1173,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         value of entry that best matches `variable <ContentAddressableMemory.variable>`  : 1d array
         """
 
+        # Enforce variable to be shape of an entry (1d for ragged fields or 2d for regular ones)
+        # - note: this allows entries with a single field to be specified as a 1d regular array
+        #         (i.e., without enclosing it in an outer list or array), which are converted to a 2d array
         variable = convert_all_elements_to_np_array(variable)
         if variable.dtype != object and variable.ndim==1:
             variable = np.expand_dims(variable, axis=0)
@@ -1229,11 +1232,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if not len(entry) == num_fields:
             raise FunctionError(f"Attempt to store and/or retrieve entry in {self.__class__.__name__} ({entry}) "
                                 f"that has an incorrect number of fields ({len(entry)}; should be {num_fields}).")
-
-        # if not all((np.array(item).ndim == 1 and np.array(item).shape == field_shapes[i][0]
-        #             for i, item in enumerate(entry))):
-        #     raise FunctionError(f"Attempt to store and/or retrieve an entry in {self.__class__.__name__} that has one "
-        #                         f"or more fields with an incorrect shape (shapes should be {field_shapes}):\n{entry}.")
 
         owner_name = f'of {self.owner.name}' if self.owner else ''
         for i, field in enumerate(entry):
