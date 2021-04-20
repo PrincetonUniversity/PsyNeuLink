@@ -574,9 +574,11 @@ def retrieve_label_helper(retrieved, stimuli):
 
 #region
 class TestContentAddressableMemory:
+
     # Note:  this warning is issued because the default distance_function is Distance(metric=COSINE)
     #        if the default is changed, this warning may not occur
     distance_warning_msg = "and has at least one memory field that is a scalar"
+
     test_vars = [
         # initializer:      expected_result (as list):
         (1,                 [[[1.]]], distance_warning_msg),
@@ -587,6 +589,7 @@ class TestContentAddressableMemory:
         ([[1,1],[2,2,2]],   [[[1., 1.],[2., 2., 2.]]], None),
         ([[[1,1],[2,2,2]]], [[[1., 1.],[2., 2., 2.]]], None)
     ]
+
     @pytest.mark.parametrize('initializer, expected_memory, warning_msg', test_vars)
     def test_ContentAddressableMemory_allowable_initializer_shapes(self, initializer, expected_memory, warning_msg):
         if warning_msg:
