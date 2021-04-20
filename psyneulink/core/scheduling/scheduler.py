@@ -289,6 +289,11 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
+default_termination_conds = {
+    TimeScale.RUN: Never(),
+    TimeScale.TRIAL: AllHaveRun(),
+}
+
 
 class SchedulerError(Exception):
 
@@ -349,10 +354,7 @@ class Scheduler(JSONDumpable):
         composition=None,
         graph=None,
         conditions=None,
-        termination_conds={
-            TimeScale.RUN: Never(),
-            TimeScale.TRIAL: AllHaveRun(),
-        },
+        termination_conds=default_termination_conds,
         default_execution_id=None,
         **kwargs
     ):
@@ -365,8 +367,9 @@ class Scheduler(JSONDumpable):
 
         # stores the in order list of self.run's yielded outputs
         self.consideration_queue = []
+        termination_conds = {**default_termination_conds, **termination_conds}
         self.default_termination_conds = Scheduler._parse_termination_conditions(termination_conds)
-        self._termination_conds = termination_conds.copy()
+        self._termination_conds = self.default_termination_conds.copy()
 
         self.cycle_nodes = set()
 
