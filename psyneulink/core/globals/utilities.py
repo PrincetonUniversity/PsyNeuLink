@@ -20,6 +20,8 @@
 CONTENTS
 --------
 
+* `deprecation_warning`
+
 *TYPE CHECKING VALUE COMPARISON*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -144,6 +146,34 @@ class UtilitiesError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
+
+
+
+def deprecation_warning(component, kwargs:dict, deprecated_args:dict) -> dict:
+    """Identify and warn about any deprecated args, and return their values for reassignment
+    Format of deprecated_args dict:  {'deprecated_arg_name':'real_arg"name')}
+    Format of returned dict:  {'real_arg_name':<value assigned to deprecated arg>)}
+    """
+    value_assignments = dict()
+    for deprecated_arg in deprecated_args:
+        if deprecated_arg in kwargs:
+            real_arg = deprecated_args[deprecated_arg]
+            arg_value = kwargs.pop(deprecated_arg)
+            if arg_value:
+                # Value for real arg was also specified:
+                warnings.warn(f"Both '{deprecated_arg}' and '{real_arg}' "
+                              f"were specified in the constructor for a(n) {component.__class__.__name__}; "
+                              f"{deprecated_arg} ({arg_value}) will be used,"
+                              f"but note that it is deprecated  and may be removed in the future.")
+            else:
+                # Only deprecated arg was specified:
+                warnings.warn(f"'{deprecated_arg}' was specified in the constructor for a(n)"
+                              f" {component.__class__.__name__}; note that this has been deprecated "
+                              f"and may be removed in the future; '{real_arg}' "
+                              f"should be used instead.")
+            value_assignments.update({real_arg:arg_value})
+        continue
+    return value_assignments
 
 
 MODULATION_OVERRIDE = 'Modulation.OVERRIDE'

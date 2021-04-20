@@ -13,6 +13,6 @@ toposort<1.7
 torch<1.8.0; sys_platform != 'win32' and platform_machine == 'x86_64' and platform_python_implementation == 'CPython'
 typecheck-decorator<=1.2
 leabra-psyneulink<=0.3.2
+rich>=10.1, <10.2
 pandas<=1.0.5
 fastkde==1.0.19
-rich>=9.11, <9.13

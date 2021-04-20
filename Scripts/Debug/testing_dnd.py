@@ -53,8 +53,8 @@ w_ho = pnl.MappingProjection(
 )
 
 
-# ContentAddressableMemory
-ContentAddressableMemory = pnl.EpisodicMemoryMechanism(
+# DictionaryMemory
+EM = pnl.EpisodicMemoryMechanism(
     key_size, val_size,
     name='episodic memory'
 )
@@ -63,30 +63,30 @@ w_hd = pnl.MappingProjection(
     name='hidden_to_em',
     matrix=np.random.randn(n_hidden, n_hidden) * wts_init_scale,
     sender=hidden,
-    receiver=ContentAddressableMemory
+    receiver=EM
 )
 
 w_dh = pnl.MappingProjection(
     name='em_to_hidden',
     matrix=np.random.randn(n_hidden, n_hidden) * wts_init_scale,
-    sender=ContentAddressableMemory,
+    sender=EM,
     receiver=hidden
 )
 
 comp = pnl.Composition(name='xor')
 # add all nodes
-all_nodes = [input, hidden, output, ContentAddressableMemory]
+all_nodes = [input, hidden, output, EM]
 for node in all_nodes:
     comp.add_node(node)
 # input-hidden-output pathway
 comp.add_projection(sender=input, projection=w_ih, receiver=hidden)
 comp.add_projection(sender=hidden, projection=w_ho, receiver=output)
-# conneciton, ContentAddressableMemory
-comp.add_projection(sender=hidden, projection=w_hd, receiver=ContentAddressableMemory)
-comp.add_projection(sender=ContentAddressableMemory, projection=w_dh, receiver=hidden)
+# conneciton, DictionaryMemory
+comp.add_projection(sender=hidden, projection=w_hd, receiver=EM)
+comp.add_projection(sender=EM, projection=w_dh, receiver=hidden)
 
 # comp.show_graph()
 
-print(ContentAddressableMemory.input_ports.names)
-print(ContentAddressableMemory.input_ports[pnl.CUE_INPUT].path_afferents[0].sender.owner.name)
+print(EM.input_ports.names)
+print(EM.input_ports[pnl.CUE_INPUT].path_afferents[0].sender.owner.name)
 print(hidden.input_ports[0].path_afferents[0].sender.owner.name)

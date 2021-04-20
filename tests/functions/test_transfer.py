@@ -40,6 +40,10 @@ test_data = [
     (Functions.Logistic, test_var, {'gain':RAND1, 'x_0':RAND2, 'offset':RAND3, 'scale':RAND4}, None, RAND4 / (1 + np.exp(-(RAND1 * (test_var - RAND2)) + RAND3))),
     (Functions.Tanh, test_var, {'gain':RAND1, 'bias':RAND2, 'x_0':RAND3, 'offset':RAND4}, None, tanh_helper),
     (Functions.ReLU, test_var, {'gain':RAND1, 'bias':RAND2, 'leak':RAND3}, None, np.maximum(RAND1 * (test_var - RAND2), RAND3 * RAND1 *(test_var - RAND2))),
+    (Functions.Angle, [0.5488135,  0.71518937, 0.60276338, 0.54488318, 0.4236548,
+                       0.64589411, 0.43758721, 0.891773, 0.96366276, 0.38344152], {}, None,
+     [0.85314409, 0.00556188, 0.01070476, 0.0214405,  0.05559454,
+      0.08091079, 0.21657281, 0.19296643, 0.21343805, 0.92738261, 0.00483101]),
     (Functions.Gaussian, test_var, {'standard_deviation':RAND1, 'bias':RAND2, 'scale':RAND3, 'offset':RAND4}, None, gaussian_helper),
     (Functions.GaussianDistort, test_var.tolist(), {'bias': RAND1, 'variance':RAND2, 'offset':RAND3, 'scale':RAND4 }, None, gaussian_distort_helper(0)),
     (Functions.GaussianDistort, test_var.tolist(), {'bias': RAND1, 'variance':RAND2, 'offset':RAND3, 'scale':RAND4, 'seed':0 }, None, gaussian_distort_helper(0)),
@@ -70,6 +74,7 @@ names = [
     "LOGISTIC",
     "TANH",
     "RELU",
+    "ANGLE",
     "GAUSIAN",
     "GAUSSIAN DISTORT GLOBAL SEED",
     "GAUSSIAN DISTORT",
@@ -94,6 +99,8 @@ derivative_names = [
 @pytest.mark.benchmark
 @pytest.mark.parametrize("func, variable, params, fail, expected", test_data, ids=names)
 def test_execute(func, variable, params, fail, expected, benchmark, func_mode):
+    if 'Angle' in func.componentName and func_mode != 'Python':
+        pytest.skip('Angle not yet supported by LLV or PTX')
     f = func(default_variable=variable, **params)
     benchmark.group = "TransferFunction " + func.componentName
     if func_mode == 'Python':

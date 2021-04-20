@@ -941,7 +941,7 @@ class Report:
 
             self.report_output(caller, **kwargs)
 
-            if content is 'trial_end':
+            if content == 'trial_end':
                 self._execution_stack.pop()
 
         # Call report_progress
@@ -1505,7 +1505,7 @@ class Report:
                     """
                     try:
                         # Restrict to looking for VALUE parameter on nodes (i.e., not functions)
-                        if name in VALUE and isinstance(node, Mechanism) and param_type is 'node':
+                        if name in VALUE and isinstance(node, Mechanism) and param_type == 'node':
                             monitor_names = []
                             for output_port in node.output_ports:
                                 monitors = []

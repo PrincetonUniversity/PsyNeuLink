@@ -32,7 +32,7 @@ jobs:
         echo ::set-output name=on_master::$ON_MASTER
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2.2.1
+      uses: actions/setup-python@v2.2.2
       with:
         python-version: ${{ matrix.python-version }}
         architecture: ${{ matrix.python-architecture }}
@@ -46,7 +46,7 @@ jobs:
         echo ::set-output name=pip_cache_dir::$(python -m pip cache dir)
 
     - name: Wheels cache
-      uses: actions/cache@v2.1.4
+      uses: actions/cache@v2.1.5
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-v2-${{ github.sha }}

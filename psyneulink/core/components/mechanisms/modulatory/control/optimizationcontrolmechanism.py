@@ -444,7 +444,7 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, \
-    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMS
+    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMS, PROJECTIONS
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
@@ -1429,6 +1429,7 @@ class OptimizationControlMechanism(ControlMechanism):
         for spec in input_ports:
             spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)    # returns InputPort dict
             spec[PARAMS][INTERNAL_ONLY] = True
+            spec[PARAMS][PROJECTIONS] = None
             if feature_function:
                 if isinstance(feature_function, Function):
                     feat_fct = copy.deepcopy(feature_function)

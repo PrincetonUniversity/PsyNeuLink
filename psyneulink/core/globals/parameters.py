@@ -177,6 +177,23 @@ To create new Parameters, reference this example of a new class *B*
         ControlSignal's function is always a `TransferWithCosts` and is
         not user-specifiable.
 
+.. technical_note::
+    _user_specified
+    ---------------
+        Currently, default argument values for __init__ methods of
+        Components are all None to allow distinguishing between a
+        default value a user actually passed in during construction and
+        a default automatically assigned. Consider
+
+            1. `pnl.TransferMechanism(noise=[[0, 0]])`
+            2. `pnl.TransferMechanism(default_variable=[[0]], noise=[[0, 0]])`
+
+        In case 1, the default variable is not specified by the user,
+        and is `flexible <DefaultsFlexibility.FLEXIBLE>` as a result.
+        Since noise indicates a shape, `[[0, 0]]` is implicitly assigned
+        as the Mechanism's default variable. This is intended as a
+        convenience specification. In case 2, the variable and noise are
+        incompatible, and an error is raised.
 
 Using Parameters
 ^^^^^^^^^^^^^^^^

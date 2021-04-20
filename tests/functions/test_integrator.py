@@ -137,6 +137,14 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
         if func[1] == DriftIntFun:
             pytest.skip("DriftDiffusionIntegrator doesn't support functional noise")
 
+    if 'DriftOnASphereIntegrator' in func[0].componentName:
+        if func_mode != 'Python':
+            pytest.skip("DriftDiffusionIntegrator not yet compiled")
+        params.update({'dimension':len(variable) + 1})
+    else:
+        if 'dimension' in params:
+            params.pop('dimension')
+
     # If we are dealing with a DriftDiffusionIntegrator, noise and time_step_size defaults
     # have changed since this test was created. Hard code their old values.
     if 'DriftDiffusionIntegrator' in str(func[0]):
