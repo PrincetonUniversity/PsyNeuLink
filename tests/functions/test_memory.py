@@ -565,7 +565,7 @@ class TestDictionaryMemory:
 # TEST ContentAddressableMemory ****************************************************************************************
 # **********************************************************************************************************************
 
-def retrieve_label(retrieved, stimuli):
+def retrieve_label_helper(retrieved, stimuli):
     return [k for k,v in stimuli.items()
             if all(np.alltrue(a)
                    for a in np.equal(np.array(retrieved, dtype=object),
@@ -574,6 +574,30 @@ def retrieve_label(retrieved, stimuli):
 
 #region
 class TestContentAddressableMemory:
+
+    def test_ContentAddressableMemory_allowable_initializer_shapes(self):
+
+        # MOVE TO ERROR CHECKS FOR WARNING
+        c = ContentAddressableMemory(initializer=np.array(1))
+        assert c.memory == [[[1.]]]
+
+        c = ContentAddressableMemory(initializer=np.array([1]))
+        assert c.memory == [[[1.]]]
+
+        c = ContentAddressableMemory(initializer=np.array([1,1]))
+        assert c.memory == [[[1., 1.]]]
+
+        c = ContentAddressableMemory(initializer=np.array([[1,1]]))
+        assert c.memory == [[[1., 1.]]]
+
+        c = ContentAddressableMemory(initializer=np.array([[[1,1]]]))
+        assert c.memory == [[[1., 1.]]]
+
+        c = ContentAddressableMemory(initializer=np.array([[1,1],[2,2,2]]))
+        assert c.memory == [[[1., 1.],[2., 2., 2.]]]
+
+        c = ContentAddressableMemory(initializer=np.array([[[1,1],[2,2,2]]]))
+        assert c.memory == [[[1., 1.],[2., 2., 2.]]]
 
     def test_ContentAddressableMemory_simple_distances(self):
 
@@ -711,7 +735,7 @@ class TestContentAddressableMemory:
         for label in sorted_labels:
             retrieved = [i for i in c(stimuli[label])]
             # Get label of retrieved item
-            retrieved_label = retrieve_label(retrieved, stimuli)
+            retrieved_label = retrieve_label_helper(retrieved, stimuli)
             # Get distances of retrieved entry to all other entries and assert it has the minimum distance
             distances = [Distance(metric=COSINE)([retrieved,stimuli[k]]) for k in sorted_labels]
             min_idx = distances.index(min(distances))
@@ -724,7 +748,7 @@ class TestContentAddressableMemory:
         retrieved_labels=[]
         for label in sorted(stimuli.keys()):
             retrieved = [i for i in c(stimuli[label])]
-            retrieved_label = retrieve_label(retrieved, stimuli)
+            retrieved_label = retrieve_label_helper(retrieved, stimuli)
             # Get distances of retrieved entry to all other entries and assert it has the minimum distance
             distances = [Distance(metric=COSINE)([retrieved,stimuli[k]]) for k in sorted_labels]
             min_idx = distances.index(min(distances))
@@ -745,7 +769,7 @@ class TestContentAddressableMemory:
 
         c.equidistant_entries_select = NEWEST  # Should return D
         retrieved = c.get_memory(stimuli[stim])
-        retrieved_label = retrieve_label(retrieved, stimuli)
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
         assert retrieved_label == ['D']
 
         # Test that after allowing dups and now disallowing them, warning is issued and memory with zeros is returned
@@ -754,7 +778,7 @@ class TestContentAddressableMemory:
         text = "More than one entry matched cue"
         with pytest.warns(UserWarning, match=text):
             retrieved = c(stimuli[stim])
-        retrieved_label = retrieve_label(retrieved, stimuli)
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
         assert retrieved_label == [None]
         expected = np.array([[0,0,0],[0,0,0]])
         assert np.all(expected==retrieved)
@@ -779,7 +803,7 @@ class TestContentAddressableMemory:
         retrieved_labels=[]
         for key in sorted(stimuli.keys()):
             retrieved = c(stimuli[key])
-            retrieved_label = retrieve_label(retrieved, stimuli)
+            retrieved_label = retrieve_label_helper(retrieved, stimuli)
             retrieved_labels.append(retrieved_label)
         assert retrieved_labels == [['A'], ['A'], ['F'], ['C'], ['B'], ['F']]
 
@@ -787,13 +811,13 @@ class TestContentAddressableMemory:
         stim = 'C'
         c.equidistant_entries_select = OLDEST
         retrieved = c.get_memory(stimuli[stim])
-        retrieved_label = retrieve_label(retrieved, stimuli)
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
         retrieved_labels.append(retrieved_label)
         assert retrieved_label == ['A']
 
         c.equidistant_entries_select = NEWEST
         retrieved = c.get_memory(stimuli[stim])
-        retrieved_label = retrieve_label(retrieved, stimuli)
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
         assert retrieved_label == ['D']
 
         # Test that after allowing dups, warning is issued and memory with zeros is returned
@@ -804,7 +828,7 @@ class TestContentAddressableMemory:
         with pytest.warns(UserWarning, match=text):
             retrieved = c(stimuli[stim])
 
-        retrieved_label = retrieve_label(retrieved, stimuli)
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
         assert retrieved_label == [None]
         expected = np.array([np.array([0,0,0]),np.array([0,0,0,0])], dtype=object)
         retrieved = np.array(retrieved, dtype=object)
@@ -830,7 +854,7 @@ class TestContentAddressableMemory:
         sorted_labels = sorted(stimuli.keys())
         for label in sorted_labels:
             retrieved = [i for i in c(stimuli[label])]
-            retrieved_label = retrieve_label(retrieved, stimuli)
+            retrieved_label = retrieve_label_helper(retrieved, stimuli)
             retrieved_labels.append(retrieved_label)
         assert retrieved_labels == [[None], ['A'], ['A'], ['C'], ['B'], ['A']]
 
@@ -838,12 +862,12 @@ class TestContentAddressableMemory:
         c.distance_field_weights = [1,0]
         c.equidistant_entries_select = OLDEST
         retrieved = [i for i in c.get_memory(stimuli[stim])]
-        retrieved_label = retrieve_label(retrieved, stimuli)
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
         assert retrieved_label == ['A']
 
         c.equidistant_entries_select = NEWEST
         retrieved = [i for i in c.get_memory(stimuli[stim])]
-        retrieved_label = retrieve_label(retrieved, stimuli)
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
         assert retrieved_label == ['D']
 
         # Test that after allowing dups, warning is issued and memory with zeros is returned
@@ -854,7 +878,7 @@ class TestContentAddressableMemory:
         with pytest.warns(UserWarning, match=text):
             retrieved = c.execute(stimuli[stim])
 
-        retrieved_label = retrieve_label(retrieved, stimuli)
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
         assert retrieved_label == [None]
         expected = np.array([np.array([0,0,0]),np.array([0,0,0])])
         assert all(np.alltrue(x) for x in np.equal(expected,retrieved, dtype=object))
@@ -878,19 +902,19 @@ class TestContentAddressableMemory:
         retrieved_labels=[]
         for key in sorted(stimuli.keys()):
             retrieved = c(stimuli[key])
-            retrieved_label = retrieve_label(retrieved, stimuli)
+            retrieved_label = retrieve_label_helper(retrieved, stimuli)
             retrieved_labels.append(retrieved_label)
         assert retrieved_labels == [[None], ['A'], ['A'], ['C'], ['B'], ['D']]
 
         stim = 'C'
         c.equidistant_entries_select = OLDEST
         retrieved = c.get_memory(stimuli[stim])
-        retrieved_label = retrieve_label(retrieved, stimuli)
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
         assert retrieved_label == ['A']
 
         c.equidistant_entries_select = NEWEST
         retrieved = c.get_memory(stimuli[stim])
-        retrieved_label = retrieve_label(retrieved, stimuli)
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
         assert retrieved_label == ['D']
 
         # Test that after allowing dups, warning is issued and memory with zeros is returned
@@ -901,7 +925,7 @@ class TestContentAddressableMemory:
         with pytest.warns(UserWarning, match=text):
             retrieved = c(stimuli[stim])
 
-        retrieved_label = retrieve_label(retrieved, stimuli)
+        retrieved_label = retrieve_label_helper(retrieved, stimuli)
         assert retrieved_label == [None]
         expected = np.array([np.array([0,0,0]),np.array([0,0,0,0])], dtype=object)
         retrieved = np.array(retrieved, dtype=object)
