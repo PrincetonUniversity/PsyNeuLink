@@ -513,10 +513,31 @@ class Scheduler(JSONDumpable):
 
     @staticmethod
     def _parse_termination_conditions(termination_conds):
+        # parse string representation of TimeScale
+        parsed_conds = {}
+        delkeys = set()
+        for scale in termination_conds:
+            try:
+                parsed_conds[getattr(TimeScale, scale.upper())] = termination_conds[scale]
+                delkeys.add(scale)
+            except (AttributeError, TypeError):
+                pass
+
+        termination_conds.update(parsed_conds)
+
         try:
-            return {k: termination_conds[k] for k in termination_conds if isinstance(k, TimeScale) and isinstance(termination_conds[k], Condition)}
+            termination_conds = {
+                k: termination_conds[k] for k in termination_conds
+                if (
+                    isinstance(k, TimeScale)
+                    and isinstance(termination_conds[k], Condition)
+                    and k not in delkeys
+                )
+            }
         except TypeError:
             raise TypeError('termination_conditions must be a dictionary of the form {TimeScale: Condition, ...}')
+        else:
+            return termination_conds
 
     ################################################################################
     # Wrapper methods
