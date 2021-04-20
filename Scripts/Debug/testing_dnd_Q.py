@@ -48,73 +48,73 @@ w_ho = pnl.MappingProjection(
     receiver=output
 )
 
-# ContentAddressableMemory
-ContentAddressableMemory = pnl.EpisodicMemoryMechanism(
+# DictionaryMemory
+EM = pnl.EpisodicMemoryMechanism(
     cue_size=n_hidden, assoc_size=n_hidden,
-    name='ContentAddressableMemory'
+    name='EM'
 )
 
 w_hdc = pnl.MappingProjection(
     name='hidden_to_cue',
     matrix=np.random.randn(n_hidden, n_hidden) * wts_init_scale,
     sender=hidden,
-    receiver=ContentAddressableMemory.input_ports[pnl.CUE_INPUT]
+    receiver=EM.input_ports[pnl.CUE_INPUT]
 )
 
 w_hda = pnl.MappingProjection(
     name='hidden_to_assoc',
     matrix=np.random.randn(n_hidden, n_hidden) * wts_init_scale,
     sender=hidden,
-    receiver=ContentAddressableMemory.input_ports[pnl.ASSOC_INPUT]
+    receiver=EM.input_ports[pnl.VALUE_INPUT]
 )
 
 
 w_dh = pnl.MappingProjection(
     name='em_to_hidden',
     matrix=np.random.randn(n_hidden, n_hidden) * wts_init_scale,
-    sender=ContentAddressableMemory,
+    sender=EM,
     receiver=hidden
 )
 
 comp = pnl.Composition(name='xor')
 
 # add all nodes
-all_nodes = [input, hidden, output, ContentAddressableMemory]
+all_nodes = [input, hidden, output, EM]
 for node in all_nodes:
     comp.add_node(node)
 # input-hidden-output pathway
 comp.add_projection(sender=input, projection=w_ih, receiver=hidden)
 comp.add_projection(sender=hidden, projection=w_ho, receiver=output)
-# conneciton, ContentAddressableMemory
-comp.add_projection(sender=ContentAddressableMemory, projection=w_dh, receiver=hidden)
+# conneciton, DictionaryMemory
+comp.add_projection(sender=EM, projection=w_dh, receiver=hidden)
 comp.add_projection(
     sender=hidden,
     projection=w_hdc,
-    receiver=ContentAddressableMemory.input_ports[pnl.CUE_INPUT]
+    receiver=EM.input_ports[pnl.CUE_INPUT]
 )
 comp.add_projection(
     sender=hidden,
     projection=w_hda,
-    receiver=ContentAddressableMemory.input_ports[pnl.ASSOC_INPUT]
+    receiver=EM.input_ports[pnl.VALUE_INPUT]
 )
 # show graph
 comp.show_graph()
 
 # # comp.show()
-# # the required inputs for ContentAddressableMemory
-# print('ContentAddressableMemory input_ports: ', ContentAddressableMemory.input_ports.names)
+# # the required inputs for DictionaryMemory
+# print('DictionaryMemory input_ports: ', DictionaryMemory.input_ports.names)
 #
-# # currently, ContentAddressableMemory receive info from the following node
-# print('ContentAddressableMemory receive: ')
-# for ContentAddressableMemory_input in ContentAddressableMemory.input_ports.names:
-#     afferents = ContentAddressableMemory.input_ports[ContentAddressableMemory_input].path_afferents
+# # currently, DictionaryMemory receive info from the following node
+# print('DictionaryMemory receive: ')
+# for EM_input in DictionaryMemory.input_ports.names:
+#     afferents = DictionaryMemory.input_ports[EM_input].path_afferents
 #     if len(afferents) == 0:
-#         print(f'- {ContentAddressableMemory_input}: NA')
+#         print(f'- {EM_input}: NA')
 #     else:
 #         sending_node_name = afferents[0].sender.owner.name
-#         print(f'- {ContentAddressableMemory_input}: {sending_node_name}')
+#         print(f'- {EM_input}: {sending_node_name}')
 #
-# print('ContentAddressableMemory cue input: ', ContentAddressableMemory.input_ports.names)
+# print('DictionaryMemory cue input: ', DictionaryMemory.input_ports.names)
 #
 # print('hidden receive: ')
 # for hidden_afferent in hidden.input_ports[0].path_afferents:

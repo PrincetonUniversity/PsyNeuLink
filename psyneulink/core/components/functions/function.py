@@ -578,6 +578,7 @@ class Function_Base(Function):
                  params=None,
                  target_set=None,
                  **kwargs):
+        assert True
         # Validate variable and assign to variable, and validate params
         variable = self._check_args(variable=variable,
                                     context=context,
@@ -590,7 +591,8 @@ class Function_Base(Function):
                                    params=params,
                                    **kwargs)
         except ValueError as err:
-            raise FunctionError(f"Problem with '{self}' in '{self.owner.name}': {err}")
+            err_msg = f"Problem with '{self}' in '{self.owner.name if self.owner else self.__class__.__name__}': {err}"
+            raise FunctionError(err_msg)
         self.most_recent_context = context
         self.parameters.value._set(value, context=context)
         return value

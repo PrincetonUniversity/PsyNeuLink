@@ -314,9 +314,10 @@ class Scheduler(JSONDumpable):
         set of `Conditions <Condition>` that specify when individual `Components` <Component>` in **composition**
         execute and any dependencies among them.
 
-    graph : Dict[Component: set(Component)]
-        a graph specification dictionary - each entry of the dictionary must be a `Component`,
-        and the value of each entry must be a set of zero or more Components that project directly to the key.
+    graph : Dict[object: set(object)], Graph
+        a graph specification dictionary - each entry of the dictionary must be an object,
+        and the value of each entry must be a set of zero or more objects that project directly to the key.
+        or, a `Graph`
 
     Attributes
     ----------

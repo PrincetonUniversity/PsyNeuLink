@@ -33,7 +33,7 @@ jobs:
         ref: ${{ github.base_ref }}
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2.2.1
+      uses: actions/setup-python@v2.2.2
       with:
         python-version: ${{ matrix.python-version }}
         architecture: ${{ matrix.python-architecture }}
@@ -54,7 +54,7 @@ jobs:
       run: sphinx-build -b html -aE docs/source pnl-html
 
     - name: Upload generated docs
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v2.2.3
       with:
         name: docs-${{ matrix.pnl-version }}-${{ matrix.os }}-${{ matrix.python-version }}
         path: pnl-html

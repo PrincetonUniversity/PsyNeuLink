@@ -390,10 +390,13 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     def _instantiate_attributes_before_function(self, function=None, context=None):
         if not self.parameters.initializer._user_specified:
             self._initialize_previous_value(np.zeros_like(self.defaults.variable), context)
+        self._instantiate_stateful_attributes(self.stateful_attributes, self.initializers, context)
+        super()._instantiate_attributes_before_function(function=function, context=context)
 
+    def _instantiate_stateful_attributes(self, stateful_attributes:list, initializers:list, context) -> None:
         # use np.broadcast_to to guarantee that all initializer type attributes take on the same shape as variable
         if not np.isscalar(self.defaults.variable):
-            for attr in self.initializers:
+            for attr in initializers:
                 param = getattr(self.parameters, attr)
                 param._set(
                     np.broadcast_to(
@@ -405,11 +408,9 @@ class StatefulFunction(Function_Base): #  --------------------------------------
 
         # create all stateful attributes and initialize their values to the current values of their
         # corresponding initializer attributes
-        for attr_name in self.stateful_attributes:
+        for attr_name in stateful_attributes:
             initializer_value = getattr(self.parameters, getattr(self.parameters, attr_name).initializer)._get(context).copy()
             getattr(self.parameters, attr_name)._set(initializer_value, context)
-
-        super()._instantiate_attributes_before_function(function=function, context=context)
 
     def _initialize_previous_value(self, initializer, context=None):
         initializer = convert_to_np_array(initializer, dimension=1)

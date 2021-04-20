@@ -400,11 +400,14 @@ These receive, potentially combine, and represent the input to a Mechanism, and 
 identified in its `input_port <Mechanism_Base.input_port>` attribute. However some Mechanisms have more than one
 InputPort. For example, a `ComparatorMechanism` has one InputPort for its **SAMPLE** and another for its **TARGET**
 input. All of the Mechanism's InputPorts (including its primary InputPort <InputPort_Primary>` are listed in its
-`input_ports <Mechanism_Base.input_ports>` attribute (note the plural).  The `input_ports
-<Mechanism_Base.input_ports>` attribute is a ContentAddressableList -- a PsyNeuLink-defined subclass of the Python
-class `UserList <https://docs.python.org/3.6/library/collections.html?highlight=userlist#collections.UserList>`_ --
-that allows a specific InputPort in the list to be accessed using its name as the index for the list (e.g.,
-``my_mechanism['InputPort name']``).
+`input_ports <Mechanism_Base.input_ports>` attribute (note the plural).
+
+.. technical_note::
+   The `input_ports <Mechanism_Base.input_ports>` attribute is a ContentAddressableList
+   -- a PsyNeuLink-defined subclass of the Python class `UserList
+   <https://docs.python.org/3.6/library/collections.html?highlight=userlist#collections.UserList>`_ --
+   that allows a specific InputPort in the list to be accessed using its name as the index for the list
+   (e.g., ``my_mechanism['InputPort name']``).
 
 .. _Mechanism_Variable_and_InputPorts:
 
