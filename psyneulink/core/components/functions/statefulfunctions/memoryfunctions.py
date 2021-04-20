@@ -914,9 +914,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 if not np.isscalar(field_weights) and field_weights.ndim != 1:
                     return f"must be a scalar or list or 1d array of scalars"
                 fw_len = len(field_weights)
-                num_fields = self.initializer.default_value.shape[1]
+                num_fields = convert_all_elements_to_np_array(self.initializer.default_value).shape[1]
                 if len(field_weights) not in {1, num_fields}:
-                    return f"length ({fw_len}) must be same number of fields in entries of initializer ({num_fields})"
+                    return f"length ({fw_len}) must be same as number of fields " \
+                           f"in entries of initializer ({num_fields})."
 
         def _validate_equidistant_entries_select(self, equidistant_entries_select):
             if equidistant_entries_select not in equidistant_entries_select_keywords:
@@ -925,6 +926,17 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         def _validate_duplicate_entries_allowed(self, duplicate_entries_allowed):
             if not isinstance(duplicate_entries_allowed, bool) and duplicate_entries_allowed != OVERWRITE:
                 return f"must be a bool or 'OVERWRITE'."
+
+        def _parse_initializer(self, initializer):
+            # Enforce initializer to be shape of memory (2d for ragged fields or 3d for regular ones)
+            # - note: this also allows initializer to be specified with a single entry
+            #         (i.e., without enclosing it in an outer list or array)
+            if initializer is not None:
+                initializer = convert_all_elements_to_np_array(initializer)
+                initializer = np.atleast_2d(initializer)
+                if initializer.dtype != object and initializer.ndim==2:
+                    initializer = np.expand_dims(initializer, axis=0)
+            return initializer
 
     def __init__(self,
                  default_variable=None,
@@ -1078,14 +1090,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         if initializer is None or convert_all_elements_to_np_array(initializer).size == 0:
             return None
-
-        # Enforce initializer to be shape of memory (2d for ragged fields or 3d for regular ones)
-        # - note: this also allows initializer to be specified with a single entry
-        #         (i.e., without enclosing it in an outer list or array)
-        initializer = convert_all_elements_to_np_array(initializer)
-        initializer = np.atleast_2d(initializer)
-        if initializer.dtype != object and initializer.ndim==2:
-            initializer = np.expand_dims(initializer, axis=0)
 
         # FIX: HOW DOES THIS RELATE TO WHAT IS DONE IN __init__()?
         # Set memory fields shapes if this is the first entry
