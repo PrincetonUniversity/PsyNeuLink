@@ -12,6 +12,8 @@
 Welcome to PsyNeuLink |logo|
 ============================
 
+*(pronounced: /sīnyoolingk - sigh-new-link)*
+
 * `Purpose`
 * `What PsyNeuLink IS <What_PsyNeuLink_IS>`
 * `What PsyNeuLink is NOT <What_PsyNeuLink_is_NOT>`
@@ -240,6 +242,7 @@ Contributors
 * **Abigail Hoskin**, Department of Psychology, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
 * **Justin Junge**, Department of Psychology, Princeton University
+* **Jeremy Lee**, Princeton Neuroscience Institute, Princeton University
 * **Qihong Lu**, Department of Psychology, Princeton University
 * **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
 * **Katherine Mantel**, Princeton Neuroscience Institute, Princeton University
@@ -264,6 +267,11 @@ With substantial and greatly appreciated assistance from:
 * **Ben Singer**, Princeton Neuroscience Institute, Princeton University
 * **Ted Willke**, Intel Labs, Intel Corporation
 
+Support for the development of PsyNeuLink has been provided by:
+
+* `The National Institute of Mental Health (R21-MH117548) <https://www.nimh.nih.gov/about/organization/dtr/adult-psychopathology-and-psychosocial-interventions-research-branch/computational-psychiatry-program.shtml>`_
+* `The John Templeton Foundation <https://www.templeton.org/funding-areas/science-big-questions>`_
+* `The Templeton World Charitable Foundation <https://www.templetonworldcharity.org/our-priorities/diverse-intelligences>`_
 
 Table of Contents
 -----------------
