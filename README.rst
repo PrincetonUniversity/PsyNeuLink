@@ -10,6 +10,7 @@ Welcome to PsyNeuLink
 =====================
 
 Documentation is available at https://princetonuniversity.github.io/PsyNeuLink/
+Pronounced: /sīnyoolingk (sigh-new-link)
 
 Purpose
 -------
