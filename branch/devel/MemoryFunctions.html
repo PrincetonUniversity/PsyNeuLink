@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MemoryFunctions &mdash; PsyNeuLink 0.8.7.1+45.g674a71de20 documentation</title>
+  <title>MemoryFunctions &mdash; PsyNeuLink 0.8.7.1+48.g4e23fd9f65 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.7.1+45
+                  0.8.7.1+48
                 </div>
               
             
@@ -984,9 +984,9 @@ can be added Hadamard style to <a class="reference internal" href="#psyneulink.c
 <code class="sig-name descname">initializer</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.initializer" title="Permalink to this definition">¶</a></dt>
 <dd><p>initial set of entries for <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">memory</span></code></a>.  It should be either a 3d regular
 array or a 2d ragged array (if the fields of an entry have different lengths), but it can be specified
-in the <strong>initializer</strong> argument of the contructor using some simpler forms for convenience.  Specifically,
-scalars, 1d and regular 2d arrays are allowed, which are interpreted as a single entry with a single
-field that is converted to a 3d array to initialize <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">memory</span></code></a>.</p>
+in the <strong>initializer</strong> argument of the constructor using some simpler forms for convenience.  Specifically,
+scalars, 1d and regular 2d arrays are allowed, which are interpreted as a single entry that is converted to
+a 3d array to initialize <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">memory</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>ndarray</p>
@@ -1235,7 +1235,7 @@ for details).</p>
 <dt id="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.reset">
 <code class="sig-name descname">reset</code><span class="sig-paren">(</span><em class="sig-param">&lt;new_dictionary&gt; default={}</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clears the memory in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>.</p>
-<p>If an argument is passed into reset or if the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.initializer" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.initializer"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializer</span></code></a>
+<p>If <strong>new_value</strong> is passed into reset or if the <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.initializer" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.initializer"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializer</span></code></a>
 attribute contains a value besides [], then that value is used to start the new memory in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>. Otherwise, the new <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> memory starts out as None.</p>
 <p><code class="xref any docutils literal notranslate"><span class="pre">value</span></code> takes on the same value as
 <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>.</p>
