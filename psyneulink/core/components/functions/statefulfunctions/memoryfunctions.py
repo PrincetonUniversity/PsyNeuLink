@@ -918,6 +918,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 if len(field_weights) not in {1, num_fields}:
                     return f"length ({fw_len}) must be same as number of fields " \
                            f"in entries of initializer ({num_fields})."
+                if not np.any(field_weights):
+                    warnings.warn(f"All weights in the 'distance_fields_weights' Parameter of {self._owner.name} "
+                                  f"are set to '0', so all entries of its memory will be treated as duplicates.")
 
         def _validate_equidistant_entries_select(self, equidistant_entries_select):
             if equidistant_entries_select not in equidistant_entries_select_keywords:
