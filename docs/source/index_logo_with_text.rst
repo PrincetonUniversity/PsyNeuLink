@@ -12,6 +12,9 @@
 Welcome to       |logo|
 =======================
 
+.. *(pronunciation:* **sī**//*nyoo/lingk)*
+*(pronunciation:* \\ **\'sī**\ *-nü-liŋk\\ )*
+
 * `Purpose`
 * `What PsyNeuLink IS <What_PsyNeuLink_IS>`
 * `What PsyNeuLink is NOT <What_PsyNeuLink_is_NOT>`
@@ -19,7 +22,7 @@ Welcome to       |logo|
 * `Installation`
 * `Tutorial`
 * `Help and Issues <Help_and_Issues>`
-* `Contributors`
+* `Acknowledgements`
 * `Indices_and_Tables`
 
 
@@ -54,21 +57,21 @@ What PsyNeuLink **IS**
 
 It is:
 
- - *open source*, freeing users of the costs or restrictions associated with proprietary software.
+ - *Open source*, freeing users of the costs or restrictions associated with proprietary software;
 
  ..
 
- - *computationally general* -- it can be used to implement, seamlessly integrate, and simulate interactions among
+ - *Computationally general* -- it can be used to implement, seamlessly integrate, and simulate interactions among
    disparate components that vary in their granularity of representation and function (from individual neurons or
    neural populations to functional subsystems and abstract cognitive functions) and at any time scale of execution.
 
  ..
 
- - *integrative* -- it provides a standard and accessible environment for model comparison, sharing, and documentation;
+ - *Integrative* -- it provides a standard and accessible environment for model comparison, sharing, and documentation.
 
  ..
 
- - *extensible* -- it has an interface (API) that allows it to be used with other powerful tools for implementing
+ - *Extensible* -- it has an interface (API) that allows it to be used with other powerful tools for implementing
    individual components, such as:
 
     * Neuron and Nengo (biophysically realistic models of neuronal function)
@@ -225,10 +228,13 @@ Help is available at psyneulinkhelp@princeton.edu.
 Issues can be reported at https://github.com/PrincetonUniversity/PsyNeuLink/issues.
 
 
-.. _Contributors:
+.. _Acknowledgements:
 
-Contributors
-------------
+Acknowledgements
+----------------
+
+*Contributors*
+~~~~~~~~~~~~~~
 
 *(in alphabetical order)*
 
@@ -239,6 +245,7 @@ Contributors
 * **Abigail Hoskin**, Department of Psychology, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
 * **Justin Junge**, Department of Psychology, Princeton University
+* **Jeremy Lee**, Princeton Neuroscience Institute, Princeton University
 * **Qihong Lu**, Department of Psychology, Princeton University
 * **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
 * **Katherine Mantel**, Princeton Neuroscience Institute, Princeton University
@@ -263,6 +270,14 @@ With substantial and greatly appreciated assistance from:
 * **Ben Singer**, Princeton Neuroscience Institute, Princeton University
 * **Ted Willke**, Intel Labs, Intel Corporation
 
+*Support*
+~~~~~~~~~
+
+The development of PsyNeuLink has benefited by generous support from the following agencies:
+
+* `The National Institute of Mental Health (R21-MH117548) <https://www.nimh.nih.gov/about/organization/dtr/adult-psychopathology-and-psychosocial-interventions-research-branch/computational-psychiatry-program.shtml>`_
+* `The John Templeton Foundation <https://www.templeton.org/funding-areas/science-big-questions>`_
+* `The Templeton World Charitable Foundation <https://www.templetonworldcharity.org/our-priorities/diverse-intelligences>`_
 
 Table of Contents
 -----------------
