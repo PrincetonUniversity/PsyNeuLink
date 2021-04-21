@@ -646,9 +646,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     initializer : ndarray
         initial set of entries for `memory <ContentAddressableMemory.memory>`.  It should be either a 3d regular
         array or a 2d ragged array (if the fields of an entry have different lengths), but it can be specified
-        in the **initializer** argument of the contructor using some simpler forms for convenience.  Specifically,
-        scalars, 1d and regular 2d arrays are allowed, which are interpreted as a single entry with a single
-        field that is converted to a 3d array to initialize `memory <ContentAddressableMemory.memory>`.
+        in the **initializer** argument of the constructor using some simpler forms for convenience.  Specifically,
+        scalars, 1d and regular 2d arrays are allowed, which are interpreted as a single entry that is converted to
+        a 3d array to initialize `memory <ContentAddressableMemory.memory>`.
 
     memory : list
         list of entries in ContentAddressableMemory, each of which is an array of fields containing stored items;
