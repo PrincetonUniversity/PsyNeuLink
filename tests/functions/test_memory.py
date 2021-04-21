@@ -1134,7 +1134,7 @@ class TestContentAddressableMemory:
                "must return a scalar if 'distance_field_weights' is not specified or is homogenous " \
                "(i.e., all elements are the same." in str(error_text.value)
 
-        # Test parameter assignment Parameter errors
+        # Test parameter assignment Parameter errors and warnings
 
         with pytest.raises(ParameterError) as error_text:
             clear_registry(FunctionRegistry)
@@ -1157,7 +1157,14 @@ class TestContentAddressableMemory:
                "ContentAddressableMemory Function-0).parameters is not valid: " \
                "must be a float in the interval [0,1]." in str(error_text.value)
 
-        # Test storage and retrieval Function errorsn
+        text = "All weights in the 'distance_fields_weights' Parameter of ContentAddressableMemory Function-0 " \
+               "are set to '0', so all entries of its memory will be treated as duplicates."
+        with pytest.warns(UserWarning, match=text):
+            clear_registry(FunctionRegistry)
+            c = ContentAddressableMemory(initializer=[[1,2],[1,2]],
+                                         distance_field_weights=[0,0])
+
+        # Test storage and retrieval Function errors
 
         with pytest.raises(FunctionError) as error_text:
             clear_registry(FunctionRegistry)
