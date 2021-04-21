@@ -931,9 +931,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             pass
 
         def _parse_initializer(self, initializer):
-            # Enforce initializer to be shape of memory (2d for ragged fields or 3d for regular ones)
-            # - note: this also allows initializer to be specified with a single entry
-            #         (i.e., without enclosing it in an outer list or array)
             if initializer is not None:
                 initializer = ContentAddressableMemory._enforce_memory_shape(initializer)
             return initializer
@@ -1119,13 +1116,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             self.selection_function = self.selection_function(context=context)
 
     @handle_external_context(fallback_most_recent=True)
-    def reset(self, previous_value=None, context=None):
+    def reset(self, new_value=None, context=None):
         """
         reset(<new_dictionary> default={})
 
         Clears the memory in `previous_value <ContentAddressableMemory.previous_value>`.
 
-        If an argument is passed into reset or if the `initializer <ContentAddressableMemory.initializer>`
+        If **new_value** is passed into reset or if the `initializer <ContentAddressableMemory.initializer>`
         attribute contains a value besides [], then that value is used to start the new memory in `previous_value
         <ContentAddressableMemory.previous_value>`. Otherwise, the new `previous_value
         <ContentAddressableMemory.previous_value>` memory starts out as None.
@@ -1134,8 +1131,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         `previous_value <ContentAddressableMemory.previous_value>`.
         """
 
-        if previous_value is not None:
-            value = self._initialize_previous_value(ContentAddressableMemory._enforce_memory_shape(previous_value),
+        if new_value is not None:
+            value = self._initialize_previous_value(ContentAddressableMemory._enforce_memory_shape(new_value),
                                                     context=context)
 
         else:
@@ -1143,8 +1140,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             initializer = self._get_current_parameter_value("initializer", context)
             if initializer is not None:
                 # set previous_value to initializer and get value
-                value = self._initialize_previous_value(ContentAddressableMemory._enforce_memory_shape(initializer),
-                                                        context=context)
+                value = self._initialize_previous_value(initializer, context=context)
             else:
                 # no initializer, so clear previous_value and set value to None
                 self.parameters.previous_value._get(context).clear()
@@ -1501,6 +1497,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     @classmethod
     def _enforce_memory_shape(cls, memory):
+        # Enforce memory to be 2d for ragged fields or 3d for regular ones
+        # - note: this also allows memory (e.g., via initializer or reset) to be specified with a single entry
+        #         (i.e., without enclosing it in an outer list or array)
         memory = convert_all_elements_to_np_array(memory)
         memory = np.atleast_2d(memory)
         if memory.dtype != object and memory.ndim==2:
