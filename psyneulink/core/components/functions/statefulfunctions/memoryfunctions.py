@@ -646,9 +646,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     initializer : ndarray
         initial set of entries for `memory <ContentAddressableMemory.memory>`.  It should be either a 3d regular
         array or a 2d ragged array (if the fields of an entry have different lengths), but it can be specified
-        in the **initializer** argument of the contructor using some simpler forms for convenience.  Specifically,
-        scalars, 1d and regular 2d arrays are allowed, which are interpreted as a single entry with a single
-        field that is converted to a 3d array to initialize `memory <ContentAddressableMemory.memory>`.
+        in the **initializer** argument of the constructor using some simpler forms for convenience.  Specifically,
+        scalars, 1d and regular 2d arrays are allowed, which are interpreted as a single entry that is converted to
+        a 3d array to initialize `memory <ContentAddressableMemory.memory>`.
 
     memory : list
         list of entries in ContentAddressableMemory, each of which is an array of fields containing stored items;
@@ -880,9 +880,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         previous_value = Parameter(None, initializer='initializer', pnl_internal=True)
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        # FIX: MAKE THESE ATTRIBUTES RATHER THAN PARAMETERS:
         memory_num_fields = Parameter(None, stateful=True, read_only=True)
         memory_field_shapes = Parameter(None, stateful=True, read_only=True)
-        distance_field_weights = Parameter([1], stateful=True, modulable=True)
+        # FIX: --------------------
+        distance_field_weights = Parameter([1], stateful=True, modulable=True, dependencies='initializer')
         duplicate_entries_allowed = Parameter(False, stateful=True)
         duplicate_threshold = Parameter(0, stateful=False, modulable=True)
         equidistant_entries_select = Parameter(RANDOM)
@@ -899,20 +901,39 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         def _validate_retrieval_prob(self, retrieval_prob):
             retrieval_prob = float(retrieval_prob)
             if not all_within_range(retrieval_prob, 0, 1):
-                return f"{RETRIEVAL_PROB} must be a float in the interval [0,1]."
+                return f"must be a float in the interval [0,1]."
 
         def _validate_storage_prob(self, storage_prob):
             storage_prob = float(storage_prob)
             if not all_within_range(storage_prob, 0, 1):
-                return f"{STORAGE_PROB} must be a float in the interval [0,1]."
+                return f"must be a float in the interval [0,1]."
+
+        def _validate_distance_field_weights(self, field_weights):
+            if self.distance_field_weights._user_specified is True and self.initializer.default_value is not None:
+                field_weights = np.array(field_weights)
+                if not np.isscalar(field_weights) and field_weights.ndim != 1:
+                    return f"must be a scalar or list or 1d array of scalars"
+                fw_len = len(field_weights)
+                num_fields = convert_all_elements_to_np_array(self.initializer.default_value).shape[1]
+                if len(field_weights) not in {1, num_fields}:
+                    return f"length ({fw_len}) must be same as number of fields " \
+                           f"in entries of initializer ({num_fields})."
 
         def _validate_equidistant_entries_select(self, equidistant_entries_select):
             if equidistant_entries_select not in equidistant_entries_select_keywords:
-                return f"'equidistant_entries_select' must be {' or '.join(equidistant_entries_select_keywords)}."
+                return f"must be {' or '.join(equidistant_entries_select_keywords)}."
 
         def _validate_duplicate_entries_allowed(self, duplicate_entries_allowed):
             if not isinstance(duplicate_entries_allowed, bool) and duplicate_entries_allowed != OVERWRITE:
-                return f"'duplicate_entries_allowed' must be a bool or 'OVERWRITE'."
+                return f"must be a bool or 'OVERWRITE'."
+
+        def _validate_initializer(self, initializer):
+            pass
+
+        def _parse_initializer(self, initializer):
+            if initializer is not None:
+                initializer = ContentAddressableMemory._enforce_memory_shape(initializer)
+            return initializer
 
     def __init__(self,
                  default_variable=None,
@@ -1064,33 +1085,24 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             (must be done here rather than in validate_params as it is needed to initialize previous_value
         """
 
-        if initializer is None or np.array(initializer, dtype=object).size == 0:
+        if initializer is None or convert_all_elements_to_np_array(initializer).size == 0:
             return None
-
-        # Enforce initializer to be shape of memory (2d for ragged fields or 3d for regular ones)
-        # - note: this also allows initializer to be specified with a single entry
-        #         (i.e., without enclosing it in an outer list or array)
-        initializer = convert_all_elements_to_np_array(initializer)
-        initializer = np.atleast_2d(initializer)
-        if initializer.dtype != object and initializer.ndim==2:
-            initializer = np.expand_dims(initializer, axis=0)
 
         # FIX: HOW DOES THIS RELATE TO WHAT IS DONE IN __init__()?
         # Set memory fields shapes if this is the first entry
         self.parameters.memory_num_fields.set(initializer.shape[1],
                                               context=context, override=True)
-        self.parameters.memory_field_shapes.set([np.array(item).shape for item in initializer[0]],
+        self.parameters.memory_field_shapes.set([item.shape for item in initializer[0]],
                                                context=context, override=True)
-        # "pre-initialize" previous_value for use by _store_memory below:
         self.parameters.previous_value.set(None, context, override=True)
 
         for entry in initializer:
             # Store each item, which also validates it by call to _validate_entry()
-            if not self._store_memory(np.array(entry), context):
+            if not self._store_memory(entry, context):
                 warnings.warn(f"Attempt to initialize memory of {self.__class__.__name__} with an entry ({entry}) "
                               f"that has the same key as a previous one, while 'duplicate_entries_allowed'==False; "
                               f"that entry has been skipped")
-        previous_value = convert_to_np_array(self._memory)
+        previous_value = self._memory
         self.parameters.previous_value.set(previous_value, context, override=True)
         return previous_value
 
@@ -1104,13 +1116,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             self.selection_function = self.selection_function(context=context)
 
     @handle_external_context(fallback_most_recent=True)
-    def reset(self, previous_value=None, context=None):
+    def reset(self, new_value=None, context=None):
         """
         reset(<new_dictionary> default={})
 
         Clears the memory in `previous_value <ContentAddressableMemory.previous_value>`.
 
-        If an argument is passed into reset or if the `initializer <ContentAddressableMemory.initializer>`
+        If **new_value** is passed into reset or if the `initializer <ContentAddressableMemory.initializer>`
         attribute contains a value besides [], then that value is used to start the new memory in `previous_value
         <ContentAddressableMemory.previous_value>`. Otherwise, the new `previous_value
         <ContentAddressableMemory.previous_value>` memory starts out as None.
@@ -1118,18 +1130,21 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         `value <ContentAddressableMemory.value>` takes on the same value as
         `previous_value <ContentAddressableMemory.previous_value>`.
         """
-        # no arguments were passed in -- use current values of initializer attributes
-        if previous_value is None:
-            previous_value = self._get_current_parameter_value("initializer", context)
 
-        # if previous_value == []:
-        if previous_value is None:
-            self.parameters.previous_value._get(context).clear()
-            # value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
-            value = None
+        if new_value is not None:
+            value = self._initialize_previous_value(ContentAddressableMemory._enforce_memory_shape(new_value),
+                                                    context=context)
 
         else:
-            value = self._initialize_previous_value(previous_value, context=context)
+            # no arguments were passed in -- use current values of initializer attributes
+            initializer = self._get_current_parameter_value("initializer", context)
+            if initializer is not None:
+                # set previous_value to initializer and get value
+                value = self._initialize_previous_value(initializer, context=context)
+            else:
+                # no initializer, so clear previous_value and set value to None
+                self.parameters.previous_value._get(context).clear()
+                value = None
 
         self.parameters.value.set(value, context, override=True)
         return value
@@ -1161,7 +1176,12 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         value of entry that best matches `variable <ContentAddressableMemory.variable>`  : 1d array
         """
 
+        # Enforce variable to be shape of an entry (1d for ragged fields or 2d for regular ones)
+        # - note: this allows entries with a single field to be specified as a 1d regular array
+        #         (i.e., without enclosing it in an outer list or array), which are converted to a 2d array
         variable = convert_all_elements_to_np_array(variable)
+        if variable.dtype != object and variable.ndim==1:
+            variable = np.expand_dims(variable, axis=0)
 
         retrieval_prob = np.array(self._get_current_parameter_value(RETRIEVAL_PROB, context)).astype(float)
         storage_prob = np.array(self._get_current_parameter_value(STORAGE_PROB, context)).astype(float)
@@ -1216,11 +1236,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             raise FunctionError(f"Attempt to store and/or retrieve entry in {self.__class__.__name__} ({entry}) "
                                 f"that has an incorrect number of fields ({len(entry)}; should be {num_fields}).")
 
-        # if not all((np.array(item).ndim == 1 and np.array(item).shape == field_shapes[i][0]
-        #             for i, item in enumerate(entry))):
-        #     raise FunctionError(f"Attempt to store and/or retrieve an entry in {self.__class__.__name__} that has one "
-        #                         f"or more fields with an incorrect shape (shapes should be {field_shapes}):\n{entry}.")
-
         owner_name = f'of {self.owner.name}' if self.owner else ''
         for i, field in enumerate(entry):
             field = np.array(field)
@@ -1261,7 +1276,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if _memory is None:
             return self.uniform_entry(0, context)
 
-        cue = np.array(cue)
+        cue = convert_all_elements_to_np_array(cue)
         self._validate_entry(cue, context)
 
         # Get mean of field-wise distances between cue each entry in memory
@@ -1330,18 +1345,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         self._validate_entry(entry, context)
         # convert all fields and entry itself to arrays
-        # FIX: USE utilities.convert_to_nparray() HERE ONCE THAT CAN HANDLE LISTS (INCLUDING NESTED ONES)
-        def convert_all_nested_items_in_entry_to_nparray(entry):
-            for i, item in enumerate(entry.copy()):
-                if isinstance(item, list):
-                    if all(isinstance(i, (int, float)) for i in item ):
-                        pass
-                    else:
-                        item = convert_all_nested_items_in_entry_to_nparray(item)
-                entry[i] = np.array(item)
-            return entry
-        # entry = np.array([np.array(m) for m in entry])
-        entry = convert_all_nested_items_in_entry_to_nparray(entry)
+        entry = convert_all_elements_to_np_array(entry)
 
         num_fields = self.parameters.memory_num_fields._get(context)
         field_weights = self.parameters.distance_field_weights._get(context)
@@ -1396,10 +1400,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 try:
                     index = existing_entries.index(entry)
                 except AttributeError:
-                    # index = existing_entries.tolist().index(entry)
                     index = [i for i,e in enumerate(existing_entries) if np.all(e == matches[0])][0]
                 except ValueError:
-                    index = np.array(existing_entries).tolist().index(entry)
+                    index = existing_entries.tolist().index(entry)
                 existing_entries[index] = entry
                 storage_succeeded = True
             else:
@@ -1471,7 +1474,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         elif granularity == 'full_entry':
             # Use first element as scalar if it is a homogenous array (i.e., all elements are the same)
-            # field_weights = np.array(field_weights)
             field_weights = field_weights[0] if np.all(field_weights[0]==field_weights) else field_weights
             distance_by_fields = not np.isscalar(field_weights)
             if distance_by_fields:
@@ -1493,12 +1495,22 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     def _parse_distance_function_variable(self, variable):
         return convert_to_np_array([variable[0], variable[0]])
 
+    @classmethod
+    def _enforce_memory_shape(cls, memory):
+        # Enforce memory to be 2d for ragged fields or 3d for regular ones
+        # - note: this also allows memory (e.g., via initializer or reset) to be specified with a single entry
+        #         (i.e., without enclosing it in an outer list or array)
+        memory = convert_all_elements_to_np_array(memory)
+        memory = np.atleast_2d(memory)
+        if memory.dtype != object and memory.ndim==2:
+            memory = np.expand_dims(memory, axis=0)
+        return memory
+
     def _is_duplicate(self, entry1:np.ndarray, entry2:np.ndarray, field_weights:np.ndarray, context) -> bool:
         """Determines whether two entries are duplicates
          Duplicates are treated as ones with a distance within the tolerance specified by duplicate_threshold.
          Distances are computed using distance_field_weights.
          """
-        # if all(np.array_equal(i,j) for i,j in zip(entry1, entry2)):
         if (self._get_distance(entry1, entry2, field_weights, 'full_entry', context)
                 <= self.parameters.duplicate_threshold.get(context)):
             return True
@@ -1552,7 +1564,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             if (np.all(entry == memory)
                     or fields and all(entry[f] == memory[f] for f in fields)):
                 pruned_memory = np.delete(pruned_memory, pruned_memory.tolist().index(memory.tolist()), axis=0)
-        self._memory = np.array(pruned_memory)
+        self._memory = convert_all_elements_to_np_array(pruned_memory)
         self.parameters.previous_value._set(self._memory, context)
 
     def _parse_memories(self, entries, method, context=None):
@@ -1570,7 +1582,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             memories = np.expand_dims(memories,axis=0)
 
         for entry in memories:
-            self._validate_entry(np.array(entry), context)
+            self._validate_entry(entry, context)
 
         return memories
 
@@ -1580,7 +1592,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
            use np.array for multi-line printout
        """
         try:
-            # return np.array([list([list(f) for f in m]) for m in self._memory])
             return self._memory
         except:
             return np.array([])
