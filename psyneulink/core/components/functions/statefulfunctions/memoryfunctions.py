@@ -1133,20 +1133,22 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         `value <ContentAddressableMemory.value>` takes on the same value as
         `previous_value <ContentAddressableMemory.previous_value>`.
         """
-        # no arguments were passed in -- use current values of initializer attributes
-        if previous_value is None:
-            previous_value = self._get_current_parameter_value("initializer", context)
 
-        # no initializer, so clear previous_value and set value to None
-        if previous_value is None:
-            self.parameters.previous_value._get(context).clear()
-            # value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
-            value = None
-
-        # otherwise, set previous_value to initializer
-        else:
+        if previous_value is not None:
             value = self._initialize_previous_value(ContentAddressableMemory._enforce_memory_shape(previous_value),
                                                     context=context)
+
+        else:
+            # no arguments were passed in -- use current values of initializer attributes
+            initializer = self._get_current_parameter_value("initializer", context)
+            if initializer is not None:
+                # set previous_value to initializer and get value
+                value = self._initialize_previous_value(ContentAddressableMemory._enforce_memory_shape(initializer),
+                                                        context=context)
+            else:
+                # no initializer, so clear previous_value and set value to None
+                self.parameters.previous_value._get(context).clear()
+                value = None
 
         self.parameters.value.set(value, context, override=True)
         return value
