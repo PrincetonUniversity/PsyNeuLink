@@ -51,13 +51,13 @@ jobs:
       run: git tag 'v999.999.999.999'
 
     - name: Build docs
-      run: sphinx-build -b html -aE docs/source pnl-html
+      run: make -C docs html
 
     - name: Upload generated docs
       uses: actions/upload-artifact@v2.2.3
       with:
         name: docs-${{ matrix.pnl-version }}-${{ matrix.os }}-${{ matrix.python-version }}
-        path: pnl-html
+        path: docs/build/html
         retention-days: 1
 
   docs-compare:
