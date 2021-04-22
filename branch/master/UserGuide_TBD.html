@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>User’s Guide &mdash; PsyNeuLink 0.8.7.1+60.g4c60958 documentation</title>
+  <title>User’s Guide &mdash; PsyNeuLink 0.8.7.1+60.g4c60958520 documentation</title>
   
 
   
@@ -27,6 +28,7 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -193,22 +195,22 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="user-s-guide">
+  <section id="user-s-guide">
 <h1>User’s Guide<a class="headerlink" href="#user-s-guide" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
-<li><a class="reference internal" href="#user-guide-organization-and-principles"><span class="std std-ref">Organization and Basic Principles</span></a></li>
-<li><a class="reference internal" href="#user-guide-components"><span class="std std-ref">Components</span></a></li>
-<li><a class="reference internal" href="#user-guide-compositions"><span class="std std-ref">Compositions</span></a></li>
-<li><a class="reference internal" href="#user-guide-processing"><span class="std std-ref">Processing</span></a></li>
-<li><span class="xref std std-ref">User_Guid_Modulation</span></li>
+<li><p><a class="reference internal" href="#user-guide-organization-and-principles"><span class="std std-ref">Organization and Basic Principles</span></a></p></li>
+<li><p><a class="reference internal" href="#user-guide-components"><span class="std std-ref">Components</span></a></p></li>
+<li><p><a class="reference internal" href="#user-guide-compositions"><span class="std std-ref">Compositions</span></a></p></li>
+<li><p><a class="reference internal" href="#user-guide-processing"><span class="std std-ref">Processing</span></a></p></li>
+<li><p><span class="xref std std-ref">User_Guid_Modulation</span></p></li>
 </ul>
-<div class="section" id="organization-and-basic-principles">
+<section id="organization-and-basic-principles">
 <span id="user-guide-organization-and-principles"></span><h2>Organization and Basic Principles<a class="headerlink" href="#organization-and-basic-principles" title="Permalink to this headline">¶</a></h2>
 <p>This section provides a overview of the basic objects in PsyNeuLink, and how they are used to construct and run models.
 There are two primary kinds of objects in PsyNeuLink:  <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> and <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a>.
 Components are objects that perform a specific function, and Compositions are objects
 that combine Components into a runnable model.</p>
-<div class="section" id="components">
+<section id="components">
 <h3>Components<a class="headerlink" href="#components" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><p>There are two primary types of Components:  <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>.
@@ -228,81 +230,76 @@ inputs), and ObjectiveMechanisms (that evaluate and/or compare different sources
 <p>, as well as two other fundamental types of Components
 (<a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> and <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a>), that are described in the section below on
 <a class="reference internal" href="#user-guide-components"><span class="std std-ref">Components</span></a>.  The other primary type of object, <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, has two primary types:
-<code class="xref any docutils literal"><span class="pre">Processes</span></code> and <code class="xref any docutils literal"><span class="pre">Systems</span></code> that allow Compositions of different degrees of size and complexity to
+<code class="xref any docutils literal notranslate"><span class="pre">Processes</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">Systems</span></code> that allow Compositions of different degrees of size and complexity to
 be created.  These are described in the section below on <a class="reference internal" href="#user-guide-components"><span class="std std-ref">Compositions</span></a>.  In each case,
 examples are provided that illustrate how these objects are implemented, and that parallel those used in the
-interactive <code class="xref any docutils literal"><span class="pre">Tutorial</span></code>.</p>
-<dl class="docutils">
-<dt>Organization:</dt>
-<dd><dl class="first last docutils">
-<dt>Two main types:</dt>
-<dd><blockquote class="first">
-<div><dl class="docutils">
-<dt>Components</dt>
-<dd><dl class="first last docutils">
-<dt>objects that actually do computation;</dt>
-<dd><dl class="first last docutils">
-<dt>two main types, of which there two types of each:</dt>
-<dd><dl class="first last docutils">
-<dt>mechanisms:</dt>
-<dd>processing
-adaptive</dd>
-<dt>projections:</dt>
-<dd>pathway
-modulatory</dd>
+interactive <code class="xref any docutils literal notranslate"><span class="pre">Tutorial</span></code>.</p>
+<dl>
+<dt>Organization:</dt><dd><dl>
+<dt>Two main types:</dt><dd><blockquote>
+<div><dl class="simple">
+<dt>Components</dt><dd><dl class="simple">
+<dt>objects that actually do computation;</dt><dd><dl class="simple">
+<dt>two main types, of which there two types of each:</dt><dd><dl class="simple">
+<dt>mechanisms:</dt><dd><p>processing
+adaptive</p>
+</dd>
+<dt>projections:</dt><dd><p>pathway
+modulatory</p>
+</dd>
 </dl>
 </dd>
-<dt>two constituent types (i.e. parts of other types)</dt>
-<dd>ports (mechanisms and projections)
-functions (all PNL objects)</dd>
+<dt>two constituent types (i.e. parts of other types)</dt><dd><p>ports (mechanisms and projections)
+functions (all PNL objects)</p>
+</dd>
 </dl>
 </dd>
 </dl>
 </dd>
 </dl>
 </div></blockquote>
-<dl class="last docutils">
-<dt>Compositions:</dt>
-<dd>configure components into functioning processes and systems</dd>
-</dl>
+<dl class="simple">
+<dt>Compositions:</dt><dd><p>configure components into functioning processes and systems</p>
 </dd>
 </dl>
 </dd>
-<dt>Basic principles:</dt>
-<dd><blockquote class="first">
+</dl>
+</dd>
+<dt>Basic principles:</dt><dd><blockquote>
 <div><p>Composition
 Processing
 Modulation</p>
 <blockquote>
-<div>Learning (most common but most complicated)
+<div><p>Learning (most common but most complicated)
 Control
-Gating</div></blockquote>
+Gating</p>
+</div></blockquote>
 </div></blockquote>
 <ul class="simple">
-<li>list item 1</li>
+<li><p>list item 1</p></li>
 </ul>
-<ul class="last simple">
-<li>list item 2</li>
+<ul class="simple">
+<li><p>list item 2</p></li>
 </ul>
 </dd>
 </dl>
-</div>
-</div>
-<div class="section" id="user-guide-components">
+</section>
+</section>
+<section id="user-guide-components">
 <span id="id1"></span><h2>Components<a class="headerlink" href="#user-guide-components" title="Permalink to this headline">¶</a></h2>
 <p>Other packages that are much better for such applications are:
 <a class="reference external" href="https://URL">Text description</a></p>
-</div>
-<div class="section" id="compositions">
+</section>
+<section id="compositions">
 <span id="user-guide-compositions"></span><h2>Compositions<a class="headerlink" href="#compositions" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="processing">
+</section>
+<section id="processing">
 <span id="user-guide-processing"></span><h2>Processing<a class="headerlink" href="#processing" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="modulation">
+</section>
+<section id="modulation">
 <span id="user-guide-modulation"></span><h2>Modulation<a class="headerlink" href="#modulation" title="Permalink to this headline">¶</a></h2>
-</div>
-</div>
+</section>
+</section>
 
 
              </article>
@@ -363,21 +360,12 @@ Gating</div></blockquote>
   
 
      
-       <script type="text/javascript">
-           var DOCUMENTATION_OPTIONS = {
-               URL_ROOT:'./',
-               VERSION:'0.8.7.1+60.g4c60958',
-               LANGUAGE:'None',
-               COLLAPSE_INDEX:false,
-               FILE_SUFFIX:'.html',
-               HAS_SOURCE:  true,
-               SOURCELINK_SUFFIX: '.txt'
-           };
-       </script>
-         <script type="text/javascript" src="_static/jquery.js"></script>
-         <script type="text/javascript" src="_static/underscore.js"></script>
-         <script type="text/javascript" src="_static/doctools.js"></script>
-         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/doctools.js"></script>
+         <script src="_static/language_data.js"></script>
+         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

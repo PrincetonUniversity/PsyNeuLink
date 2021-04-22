@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Dopamine and Temporal Differences Learning (Montague, Dayan &amp; Sejnowski, 1996) &mdash; PsyNeuLink 0.8.7.1+60.g4c60958 documentation</title>
+  <title>Dopamine and Temporal Differences Learning (Montague, Dayan &amp; Sejnowski, 1996) &mdash; PsyNeuLink 0.8.7.1+60.g4c60958520 documentation</title>
   
 
   
@@ -27,6 +28,7 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -193,10 +195,10 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="dopamine-and-temporal-differences-learning-montague-dayan-sejnowski-1996">
+  <section id="dopamine-and-temporal-differences-learning-montague-dayan-sejnowski-1996">
 <h1>Dopamine and Temporal Differences Learning (Montague, Dayan &amp; Sejnowski, 1996)<a class="headerlink" href="#dopamine-and-temporal-differences-learning-montague-dayan-sejnowski-1996" title="Permalink to this headline">¶</a></h1>
 <p><a class="reference external" href="http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf">“A framework for mesencephalic dopamine systems based on predictive Hebbian learning.”</a></p>
-<div class="section" id="overview">
+<section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>This model implements the comparison of a theory of mesencephalic dopamine system
 function based on predictive Hebbian learning to physiological monkey data as
@@ -212,20 +214,26 @@ training. The second plot shows ∂(t) over all 100 trials of the model response
 with training beginning at trial 10. In these plots, the reward was withheld
 every 15 trials to simulate mistakes. The third plot demonstrates extinction of
 response to the stimulus due to non-delivery of the reward after trial 70.</p>
-<div class="figure" id="id1">
+<figure class="align-default" id="id1">
 <a class="reference internal image-reference" href="_images/Montague_5A.png"><img alt="Montague Figure 5A" src="_images/Montague_5A.png" style="width: 800.0px; height: 550.0px;" /></a>
-<p class="caption"><span class="caption-text">Figure 5A</span></p>
-</div>
-<div class="figure" id="id2">
+<figcaption>
+<p><span class="caption-text">Figure 5A</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<figure class="align-default" id="id2">
 <a class="reference internal image-reference" href="_images/Montague_Figure5B.png"><img alt="Montague Figure 5B" src="_images/Montague_Figure5B.png" style="width: 800.0px; height: 550.0px;" /></a>
-<p class="caption"><span class="caption-text">Figure 5B</span></p>
-</div>
-<div class="figure" id="id3">
+<figcaption>
+<p><span class="caption-text">Figure 5B</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<figure class="align-default" id="id3">
 <a class="reference internal image-reference" href="_images/Montague_Figure5C.png"><img alt="Montague Figure 5C" src="_images/Montague_Figure5C.png" style="width: 800.0px; height: 550.0px;" /></a>
-<p class="caption"><span class="caption-text">Figure 5C</span></p>
-</div>
-</div>
-<div class="section" id="the-model">
+<figcaption>
+<p><span class="caption-text">Figure 5C</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="the-model">
 <h2>The Model<a class="headerlink" href="#the-model" title="Permalink to this headline">¶</a></h2>
 <p>The basic setup for the model requires a <a class="reference internal" href="TransferMechanism.html"><span class="doc">Transfer Mechanism</span></a>
 for sample delivery, a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> for action
@@ -235,20 +243,22 @@ the learning aspect of the model.</p>
 <p>The <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> represents the weights; thus, the
 projection’s matrix is initialized to all zeros. The
 <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> is initialized with
-<a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.TDLearning" title="psyneulink.core.components.functions.learningfunctions.TDLearning"><code class="xref any py py-class docutils literal"><span class="pre">TDLearning</span></code></a> as its <a class="reference internal" href="KohonenMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_function"><code class="xref any py py-attr docutils literal"><span class="pre">learning_function</span></code></a>; this directs the process
+<a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.TDLearning" title="psyneulink.core.components.functions.learningfunctions.TDLearning"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TDLearning</span></code></a> as its <a class="reference internal" href="KohonenMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_function" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learning_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_function</span></code></a>; this directs the process
 containing this LearningProjection to initialize a
 <a class="reference internal" href="PredictionErrorMechanism.html"><span class="doc">PredictionErrorMechanism</span></a> instead of a regular
 <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a>. All of the functions in the script
 use the same basic setup with adaptations made to the samples and targets
 provided to correspond to the aspect of the experiment that they are modeling.
 The model can be visualized as shown below.</p>
-<div class="figure" id="id4">
+<figure class="align-default" id="id4">
 <a class="reference internal image-reference" href="_images/MontagueModel.png"><img alt="Montague System graph" src="_images/MontagueModel.png" style="width: 1241.0px; height: 375.0px;" /></a>
-<p class="caption"><span class="caption-text">System graph</span></p>
-</div>
-<p>Script: <a class="reference download internal" href="_downloads/MontagueDayanSejnowski96.py" download=""><code class="xref download docutils literal"><span class="pre">Download</span> <span class="pre">MontagueModel.py</span></code></a></p>
-</div>
-</div>
+<figcaption>
+<p><span class="caption-text">System graph</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>Script: <a class="reference download internal" download="" href="_downloads/a4d0d527489dd865a0d84206f08d9c31/MontagueDayanSejnowski96.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">MontagueModel.py</span></code></a></p>
+</section>
+</section>
 
 
              </article>
@@ -303,21 +313,12 @@ The model can be visualized as shown below.</p>
   
 
      
-       <script type="text/javascript">
-           var DOCUMENTATION_OPTIONS = {
-               URL_ROOT:'./',
-               VERSION:'0.8.7.1+60.g4c60958',
-               LANGUAGE:'None',
-               COLLAPSE_INDEX:false,
-               FILE_SUFFIX:'.html',
-               HAS_SOURCE:  true,
-               SOURCELINK_SUFFIX: '.txt'
-           };
-       </script>
-         <script type="text/javascript" src="_static/jquery.js"></script>
-         <script type="text/javascript" src="_static/underscore.js"></script>
-         <script type="text/javascript" src="_static/doctools.js"></script>
-         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/doctools.js"></script>
+         <script src="_static/language_data.js"></script>
+         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

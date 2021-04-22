@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>StatefulFunction &mdash; PsyNeuLink 0.8.7.1+60.g4c60958 documentation</title>
+  <title>StatefulFunction &mdash; PsyNeuLink 0.8.7.1+60.g4c60958520 documentation</title>
   
 
   
@@ -27,6 +28,7 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -193,171 +195,247 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="statefulfunction">
+  <section id="statefulfunction">
 <h1>StatefulFunction<a class="headerlink" href="#statefulfunction" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
 </div>
 <span class="target" id="module-psyneulink.core.components.functions.statefulfunctions.statefulfunction"></span><ul class="simple">
-<li><a class="reference internal" href="#"><span class="doc">StatefulFunction</span></a></li>
-<li><a class="reference internal" href="IntegratorFunctions.html"><span class="doc">IntegratorFunctions</span></a></li>
-<li><a class="reference internal" href="MemoryFunctions.html"><span class="doc">MemoryFunctions</span></a></li>
+<li><p><a class="reference internal" href="#"><span class="doc">StatefulFunction</span></a></p></li>
+<li><p><a class="reference internal" href="IntegratorFunctions.html"><span class="doc">IntegratorFunctions</span></a></p></li>
+<li><p><a class="reference internal" href="MemoryFunctions.html"><span class="doc">MemoryFunctions</span></a></p></li>
 </ul>
-<dl class="class">
+<dl class="py class">
 <dt id="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction">
-<em class="property">class </em><code class="descclassname">psyneulink.core.components.functions.statefulfunctions.statefulfunction.</code><code class="descname">StatefulFunction</code><span class="sig-paren">(</span><em>default_variable=None</em>, <em>rate=None</em>, <em>noise=None</em>, <em>initializer=None</em>, <em>params=None</em>, <em>owner=None</em>, <em>prefs=None</em>, <em>context=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction" title="Permalink to this definition">¶</a></dt>
-<dd><p id="id1">Abstract base class for Functions the result of which depend on their <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> attribute.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default class_defaults.variable</em>) – specifies a template for <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</li>
-<li><strong>initializer</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies initial value for <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>.  If it is a list or array,
-it must be the same length as <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> (see <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a> for details).</li>
-<li><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies value used as a scaling parameter in a subclass-dependent way (see <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.rate" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.rate"><code class="xref any py py-attr docutils literal"><span class="pre">rate</span></code></a> for
-details); if it is a list or array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code>.</li>
-<li><strong>noise</strong> (<em>float</em><em>, </em><a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><em>function</em></a><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies random value added in each call to <code class="xref any docutils literal"><span class="pre">function</span></code>; if it is a list or
-array, it must be the same length as <code class="xref any docutils literal"><span class="pre">variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.noise" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.noise"><code class="xref any py py-attr docutils literal"><span class="pre">noise</span></code></a> for details).</li>
-<li><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
+<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.statefulfunctions.statefulfunction.</code><code class="sig-name descname">StatefulFunction</code><span class="sig-paren">(</span><em class="sig-param">default_variable=None</em>, <em class="sig-param">initializer</em>, <em class="sig-param">rate=1.0</em>, <em class="sig-param">noise=0.0</em>, <em class="sig-param">params=None</em>, <em class="sig-param">owner=None</em>, <em class="sig-param">prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction" title="Permalink to this definition">¶</a></dt>
+<dd><p id="id1">Abstract base class for Functions the result of which depend on their <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default class_defaults.variable</em>) – specifies a template for <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p></li>
+<li><p><strong>initializer</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies initial value for <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>.  If it is a list or array,
+it must be the same length as <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> (see <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializer</span></code></a> for details).</p></li>
+<li><p><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies value used as a scaling parameter in a subclass-dependent way (see <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.rate" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> for
+details); if it is a list or array, it must be the same length as <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code>.</p></li>
+<li><p><strong>noise</strong> (<em>float</em><em>, </em><em>function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies random value added in each call to <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>; if it is a list or
+array, it must be the same length as <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code> (see <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.noise" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> for details).</p></li>
+<li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
-arguments of the constructor.</li>
-<li><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</li>
-<li><strong>name</strong> (str : default see <code class="xref any docutils literal"><span class="pre">name</span></code>) – specifies the name of the Function.</li>
-<li><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal"><span class="pre">prefs</span></code></a> for details).</li>
+arguments of the constructor.</p></li>
+<li><p><strong>owner</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p></li>
+<li><p><strong>name</strong> (str : default see <code class="xref any docutils literal notranslate"><span class="pre">name</span></code>) – specifies the name of the Function.</p></li>
+<li><p><strong>prefs</strong> (<em>PreferenceSet</em><em> or </em><em>specification dict : default Function.classPreferences</em>) – specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
+</dd>
+</dl>
+<dl class="py attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable">
-<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>number or array</em> – current input value.</p>
+<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>current input value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>number or array</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer">
-<code class="descname">initializer</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d array</em> – determines initial value assigned to <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>. If <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list or array, and initializer is a float or has a single element, it is
-applied to each element of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>. If initializer is a list or
-array,each element is applied to the corresponding element of <code class="xref any docutils literal"><span class="pre">previous_value</span></code>.</p>
+<code class="sig-name descname">initializer</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines initial value assigned to <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>. If <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is a list or array, and initializer is a float or has a single element, it is
+applied to each element of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>. If initializer is a list or
+array,each element is applied to the corresponding element of <code class="xref any docutils literal notranslate"><span class="pre">previous_value</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float or 1d array</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value">
-<code class="descname">previous_value</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>1d array</em> – last value returned (i.e., for which state is being maintained).</p>
+<code class="sig-name descname">previous_value</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>last value returned (i.e., for which state is being maintained).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>1d array</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers">
-<code class="descname">initializers</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list</em> – stores the names of the initialization attributes for each of the stateful attributes of the function. The
-index i item in initializers provides the initialization value for the index i item in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes"><code class="xref any py py-attr docutils literal"><span class="pre">stateful_attributes</span></code></a>.</p>
+<code class="sig-name descname">initializers</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers" title="Permalink to this definition">¶</a></dt>
+<dd><p>stores the names of the initialization attributes for each of the stateful attributes of the function. The
+index i item in initializers provides the initialization value for the index i item in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">stateful_attributes</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes">
-<code class="descname">stateful_attributes</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>list</em> – stores the names of each of the stateful attributes of the function. The index i item in stateful_attributes is
-initialized by the value of the initialization attribute whose name is stored in index i of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers"><code class="xref any py py-attr docutils literal"><span class="pre">initializers</span></code></a>. In most cases, the stateful_attributes, in that order, are the return values
+<code class="sig-name descname">stateful_attributes</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes" title="Permalink to this definition">¶</a></dt>
+<dd><p>stores the names of each of the stateful attributes of the function. The index i item in stateful_attributes is
+initialized by the value of the initialization attribute whose name is stored in index i of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializers</span></code></a>. In most cases, the stateful_attributes, in that order, are the return values
 of the function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt>
-<code class="descname">.. _Stateful_Rate</code></dt>
+<code class="sig-name descname">.. _Stateful_Rate</code></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.rate">
-<code class="descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.rate" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float or 1d array</em> – on each call to <code class="xref any docutils literal"><span class="pre">function</span></code>, applied to <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>,
-<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>, neither, or both, depending on implementation by
+<code class="sig-name descname">rate</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>on each call to <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>, applied to <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>,
+<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>, neither, or both, depending on implementation by
 subclass.  If it is a float or has a single value, it is applied to all elements of its target(s);  if it has
 more than one element, each element is applied to the corresponding element of its target(s).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float or 1d array</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt>
-<code class="descname">.. _Stateful_Noise</code></dt>
+<code class="sig-name descname">.. _Stateful_Noise</code></dt>
 <dd></dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.noise">
-<code class="descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>float, function, list, or 1d array</em> – random value added on each call to <code class="xref any docutils literal"><span class="pre">function</span></code>. If <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is a list or array, and noise is a float or function, it is applied
-for each element of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>. If noise is a function, it is executed and applied
-separately for each element of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.  If noise is a list or array,
+<code class="sig-name descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.noise" title="Permalink to this definition">¶</a></dt>
+<dd><p>random value added on each call to <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>. If <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is a list or array, and noise is a float or function, it is applied
+for each element of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>. If noise is a function, it is executed and applied
+separately for each element of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.  If noise is a list or array,
 it is applied elementwise (i.e., in Hadamard form).</p>
 <div class="admonition hint">
-<p class="first admonition-title">Hint</p>
-<p class="last">To generate random noise that varies for every execution, a probability distribution function should be
-used (see <code class="xref any docutils literal"><span class="pre">Distribution</span> <span class="pre">Functions</span></code> for details), that generates a new noise value
+<p class="admonition-title">Hint</p>
+<p>To generate random noise that varies for every execution, a probability distribution function should be
+used (see <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DistributionFunction" title="psyneulink.core.components.functions.distributionfunctions.DistributionFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Distribution</span> <span class="pre">Functions</span></code></a> for details), that generates a new noise value
 from its distribution on each execution. If noise is specified as a float, a function with a fixed
 output, or a list or array of either of these, then noise is simply an offset that remains the same
 across all executions.</p>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float, function, list, or 1d array</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.owner">
-<code class="descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.owner" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>Component</em> – <a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+<code class="sig-name descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.owner" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which the Function has been assigned.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component">Component</a></p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.name">
-<code class="descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.name" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>str</em> – the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
+<code class="sig-name descname">name</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>the name of the Function; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
 assigned by FunctionRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.prefs">
-<code class="descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.prefs" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>PreferenceSet or specification dict</em> – the <code class="xref any docutils literal"><span class="pre">PreferenceSet</span></code> for the Function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
-constructor, a default is assigned using <code class="xref any docutils literal"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
+<code class="sig-name descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.prefs" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function; if it is not specified in the <strong>prefs</strong> argument of the Function’s
+constructor, a default is assigned using <code class="xref any docutils literal notranslate"><span class="pre">classPreferences</span></code> defined in __init__.py (see <a class="reference internal" href="Preferences.html"><span class="doc">Preferences</span></a>
 for details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>PreferenceSet or specification dict</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
+<dt id="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction._validate">
+<code class="sig-name descname">_validate</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction._validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Eventually should contain all validation methods, occurs at end of Component.__init__</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction._validate_params">
+<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction._validate_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate params and assign validated values to targets,</p>
+<p>This performs top-level type validation of params</p>
+<p>This can be overridden by a subclass to perform more detailed checking (e.g., range, recursive, etc.)
+It is called only if the parameter_validation attribute is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code> (which it is by default)</p>
+<dl class="simple">
+<dt>IMPLEMENTATION NOTES:</dt><dd><ul class="simple">
+<li><p>future versions should add recursive and content (e.g., range) checking</p></li>
+<li><p>should method return validated param set?</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>(</strong><strong>request_set</strong><strong>) </strong><strong>- set of params to be validated</strong> (<em>dict</em>) – </p></li>
+<li><p><strong>(</strong><strong>target_set</strong><strong>) </strong><strong>- repository of params that have been validated</strong> (<em>dict</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Return none</dt>
+<dd class="field-even"><p></p></dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction._parse_value_order">
-<code class="descname">_parse_value_order</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction._parse_value_order" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the values of the keyword arguments in the order
-in which they appear in this Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a></td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">tuple</td>
-</tr>
-</tbody>
-</table>
+<code class="sig-name descname">_parse_value_order</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction._parse_value_order" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>the values of the keyword arguments in the order
+in which they appear in this Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.reset">
-<code class="descname">reset</code><span class="sig-paren">(</span><em>*args</em>, <em>context=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.reset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Resets <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>  and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a>
+<code class="sig-name descname">reset</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.reset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>  and <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>
 to the specified value(s).</p>
 <p>If arguments are passed into the reset method, then reset sets each of the attributes in
-<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes"><code class="xref any py py-attr docutils literal"><span class="pre">stateful_attributes</span></code></a> to the value of the corresponding argument.
-Next, it sets the <code class="xref any docutils literal"><span class="pre">value</span></code> to a list containing each of the argument values.</p>
-<p>If reset is called without arguments, then it sets each of the attributes in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes"><code class="xref any py py-attr docutils literal"><span class="pre">stateful_attributes</span></code></a> to the value of the corresponding attribute in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers"><code class="xref any py py-attr docutils literal"><span class="pre">initializers</span></code></a>. Next, it sets the <code class="xref any docutils literal"><span class="pre">value</span></code> to a list containing
-the values of each of the attributes in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers"><code class="xref any py py-attr docutils literal"><span class="pre">initializers</span></code></a>.</p>
-<p>Often, the only attribute in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes"><code class="xref any py py-attr docutils literal"><span class="pre">stateful_attributes</span></code></a> is
-<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> and the only attribute in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers"><code class="xref any py py-attr docutils literal"><span class="pre">initializers</span></code></a> is <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a>, in which case
-the reset method sets <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal"><span class="pre">previous_value</span></code></a> and <code class="xref any docutils literal"><span class="pre">value</span></code> to either the value of the argument (if an argument was passed into
-reset) or the current value of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer"><code class="xref any py py-attr docutils literal"><span class="pre">initializer</span></code></a>.</p>
+<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">stateful_attributes</span></code></a> to the value of the corresponding argument.
+Next, it sets the <code class="xref any docutils literal notranslate"><span class="pre">value</span></code> to a list containing each of the argument values.</p>
+<p>If reset is called without arguments, then it sets each of the attributes in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">stateful_attributes</span></code></a> to the value of the corresponding attribute in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializers</span></code></a>. Next, it sets the <code class="xref any docutils literal notranslate"><span class="pre">value</span></code> to a list containing
+the values of each of the attributes in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializers</span></code></a>.</p>
+<p>Often, the only attribute in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.stateful_attributes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">stateful_attributes</span></code></a> is
+<a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> and the only attribute in <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializers</span></code></a> is <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializer</span></code></a>, in which case
+the reset method sets <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> and <code class="xref any docutils literal notranslate"><span class="pre">value</span></code> to either the value of the argument (if an argument was passed into
+reset) or the current value of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializer"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializer</span></code></a>.</p>
 <p>For specific types of StatefulFunction functions, the reset method may carry out other
 reinitialization steps.</p>
 </dd></dl>
 
 </dd></dl>
 
-</div>
+</section>
 
 
              </article>
@@ -408,21 +486,12 @@ reinitialization steps.</p>
   
 
      
-       <script type="text/javascript">
-           var DOCUMENTATION_OPTIONS = {
-               URL_ROOT:'./',
-               VERSION:'0.8.7.1+60.g4c60958',
-               LANGUAGE:'None',
-               COLLAPSE_INDEX:false,
-               FILE_SUFFIX:'.html',
-               HAS_SOURCE:  true,
-               SOURCELINK_SUFFIX: '.txt'
-           };
-       </script>
-         <script type="text/javascript" src="_static/jquery.js"></script>
-         <script type="text/javascript" src="_static/underscore.js"></script>
-         <script type="text/javascript" src="_static/doctools.js"></script>
-         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/doctools.js"></script>
+         <script src="_static/language_data.js"></script>
+         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

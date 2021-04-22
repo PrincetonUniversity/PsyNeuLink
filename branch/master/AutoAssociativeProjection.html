@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutoAssociativeProjection &mdash; PsyNeuLink 0.8.7.1+60.g4c60958 documentation</title>
+  <title>AutoAssociativeProjection &mdash; PsyNeuLink 0.8.7.1+60.g4c60958520 documentation</title>
   
 
   
@@ -27,6 +28,7 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -193,135 +195,157 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.library.components.projections.pathway.autoassociativeprojection">
+  <section id="module-psyneulink.library.components.projections.pathway.autoassociativeprojection">
 <span id="autoassociativeprojection"></span><h1>AutoAssociativeProjection<a class="headerlink" href="#module-psyneulink.library.components.projections.pathway.autoassociativeprojection" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="contents">
+<section id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
-<li><a class="reference internal" href="#autoassociative-overview"><span class="std std-ref">Overview</span></a></li>
-<li><a class="reference internal" href="#autoassociative-creation"><span class="std std-ref">Creating an AutoAssociativeProjection</span></a></li>
-<li><dl class="first docutils">
-<dt><a class="reference internal" href="#autoassociative-structure"><span class="std std-ref">Auto Associative Structure</span></a></dt>
-<dd><ul class="first last">
-<li><a class="reference internal" href="#autoassociative-configurable-attributes"><span class="std std-ref">Configurable Attributes</span></a></li>
+<li><p><a class="reference internal" href="#autoassociative-overview"><span class="std std-ref">Overview</span></a></p></li>
+<li><p><a class="reference internal" href="#autoassociative-creation"><span class="std std-ref">Creating an AutoAssociativeProjection</span></a></p></li>
+<li><dl class="simple">
+<dt><a class="reference internal" href="#autoassociative-structure"><span class="std std-ref">Auto Associative Structure</span></a></dt><dd><ul>
+<li><p><a class="reference internal" href="#autoassociative-configurable-attributes"><span class="std std-ref">Configurable Attributes</span></a></p></li>
 </ul>
 </dd>
 </dl>
 </li>
-<li><a class="reference internal" href="#autoassociative-execution"><span class="std std-ref">Execution</span></a></li>
-<li><a class="reference internal" href="#autoassociative-class-reference"><span class="std std-ref">Class Reference</span></a></li>
+<li><p><a class="reference internal" href="#autoassociative-execution"><span class="std std-ref">Execution</span></a></p></li>
+<li><p><a class="reference internal" href="#autoassociative-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
 </ul>
 </div></blockquote>
-</div>
-<div class="section" id="overview">
+</section>
+<section id="overview">
 <span id="autoassociative-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An AutoAssociativeProjection is a subclass of <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that acts as the recurrent projection for a
 <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>. The primary difference between an AutoAssociativeProjection and a basic MappingProjection
-is that an AutoAssociativeProjection uses the <code class="xref any docutils literal"><span class="pre">auto</span></code> and
-<code class="xref any docutils literal"><span class="pre">hetero</span></code> parameters <em>on the RecurrentTransferMechanism</em> to help update its matrix:
-this allows for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> to control the <code class="xref any docutils literal"><span class="pre">auto</span></code> and
-<code class="xref any docutils literal"><span class="pre">hetero</span></code> parameters and thereby control the matrix.</p>
+is that an AutoAssociativeProjection uses the <code class="xref any docutils literal notranslate"><span class="pre">auto</span></code> and
+<code class="xref any docutils literal notranslate"><span class="pre">hetero</span></code> parameters <em>on the RecurrentTransferMechanism</em> to help update its matrix:
+this allows for a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> to control the <code class="xref any docutils literal notranslate"><span class="pre">auto</span></code> and
+<code class="xref any docutils literal notranslate"><span class="pre">hetero</span></code> parameters and thereby control the matrix.</p>
 <p>AutoAssociativeProjection represents connections between nodes in a single-layer recurrent network. It multiplies
 the output of the <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> by a matrix, then presents the product as input to the
 <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>.</p>
-</div>
-<div class="section" id="creating-an-autoassociativeprojection">
+</section>
+<section id="creating-an-autoassociativeprojection">
 <span id="autoassociative-creation"></span><h2>Creating an AutoAssociativeProjection<a class="headerlink" href="#creating-an-autoassociativeprojection" title="Permalink to this headline">¶</a></h2>
 <p>An AutoAssociativeProjection is created automatically by a RecurrentTransferMechanism (or its subclasses), and is
-stored as the <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal"><span class="pre">recurrent_projection</span></code></a> parameter of the
+stored as the <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">recurrent_projection</span></code></a> parameter of the
 RecurrentTransferMechanism. It is not recommended to create an AutoAssociativeProjection on its own, because during
 execution an AutoAssociativeProjection references parameters owned by its RecurrentTransferMechanism (see
 <a class="reference internal" href="#autoassociative-execution"><span class="std std-ref">Execution</span></a> below).</p>
-</div>
-<div class="section" id="auto-associative-structure">
+</section>
+<section id="auto-associative-structure">
 <span id="autoassociative-structure"></span><h2>Auto Associative Structure<a class="headerlink" href="#auto-associative-structure" title="Permalink to this headline">¶</a></h2>
 <p>In structure, the AutoAssociativeProjection is almost identical to a MappingProjection: the only additional attributes
-are <code class="xref any docutils literal"><span class="pre">auto</span></code> and <code class="xref any docutils literal"><span class="pre">hetero</span></code>.</p>
-<div class="section" id="configurable-attributes">
+are <code class="xref any docutils literal notranslate"><span class="pre">auto</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">hetero</span></code>.</p>
+<section id="configurable-attributes">
 <span id="autoassociative-configurable-attributes"></span><h3><em>Configurable Attributes</em><a class="headerlink" href="#configurable-attributes" title="Permalink to this headline">¶</a></h3>
-<p>Due to its specialized nature, most parameters of the AutoAssociativeProjection are not configurable: the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> is
-determined by the format of the output of the RecurrentTransferMechanism, the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> is always LinearMatrix, and so
+<p>Due to its specialized nature, most parameters of the AutoAssociativeProjection are not configurable: the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is
+determined by the format of the output of the RecurrentTransferMechanism, the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is always LinearMatrix, and so
 on. The only configurable parameter is the matrix, configured through the <strong>matrix</strong>, <strong>auto</strong>, and/or <strong>hetero</strong>
 arguments for a RecurrentTransferMechanism:</p>
 <ul class="simple" id="autoassociative-matrix">
-<li><strong>matrix</strong> - multiplied by the input to the AutoAssociativeProjection in order to produce the output. Specification of
+<li><p><strong>matrix</strong> - multiplied by the input to the AutoAssociativeProjection in order to produce the output. Specification of
 the <strong>matrix</strong>, <strong>auto</strong>, and/or <strong>hetero</strong> arguments determines the values of the matrix; <strong>auto</strong> determines the
 diagonal entries (representing the strength of the connection from each node to itself) and <strong>hetero</strong> determines
-the off-diagonal entries (representing connections between nodes).</li>
+the off-diagonal entries (representing connections between nodes).</p></li>
 </ul>
-</div>
-</div>
-<div class="section" id="execution">
+</section>
+</section>
+<section id="execution">
 <span id="autoassociative-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
-<p>An AutoAssociativeProjection uses its <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter to transform the value of
-its <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a>, and provide the result as input for its
-<a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>, the primary InputPort of the RecurrentTransferMechanism.</p>
+<p>An AutoAssociativeProjection uses its <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter to transform the value of
+its <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a>, and provide the result as input for its
+<a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a>, the primary InputPort of the RecurrentTransferMechanism.</p>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">During execution the AutoAssociativeProjection updates its <code class="xref any docutils literal"><span class="pre">matrix</span></code> and <code class="xref any docutils literal"><span class="pre">hetero</span></code> parameters
-<em>on the `RecurrentTransferMechanism`</em>. (The <code class="xref any docutils literal"><span class="pre">auto</span></code> and
-<code class="xref any docutils literal"><span class="pre">hetero</span></code> parameters of the AutoAssociativeProjection simply refer to their
-counterparts on the RecurrentTransferMechanism as well.) The reason for putting the <code class="xref any docutils literal"><span class="pre">auto</span></code> and <code class="xref any docutils literal"><span class="pre">hetero</span></code> parameters on the
+<p class="admonition-title">Note</p>
+<p>During execution the AutoAssociativeProjection updates its <code class="xref any docutils literal notranslate"><span class="pre">matrix</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">hetero</span></code> parameters
+<em>on the `RecurrentTransferMechanism`</em>. (The <code class="xref any docutils literal notranslate"><span class="pre">auto</span></code> and
+<code class="xref any docutils literal notranslate"><span class="pre">hetero</span></code> parameters of the AutoAssociativeProjection simply refer to their
+counterparts on the RecurrentTransferMechanism as well.) The reason for putting the <code class="xref any docutils literal notranslate"><span class="pre">auto</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">hetero</span></code> parameters on the
 RecurrentTransferMechanism is that this allows them to be modified by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>.</p>
 </div>
-</div>
-<div class="section" id="class-reference">
+</section>
+<section id="class-reference">
 <span id="autoassociative-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
-<dl class="class">
+<dl class="py exception">
+<dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeError">
+<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.library.components.projections.pathway.autoassociativeprojection.</code><code class="sig-name descname">AutoAssociativeError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py class">
 <dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection">
-<em class="property">class </em><code class="descclassname">psyneulink.library.components.projections.pathway.autoassociativeprojection.</code><code class="descname">AutoAssociativeProjection</code><span class="sig-paren">(</span><em>owner=None</em>, <em>sender=None</em>, <em>receiver=None</em>, <em>matrix=None</em>, <em>function=None</em>, <em>params=None</em>, <em>name=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>AutoAssociativeProjection(</dt>
-<dd>)</dd>
+<em class="property">class </em><code class="sig-prename descclassname">psyneulink.library.components.projections.pathway.autoassociativeprojection.</code><code class="sig-name descname">AutoAssociativeProjection</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>AutoAssociativeProjection(</dt><dd><p>)</p>
+</dd>
 </dl>
 <p>Subclass of <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that is self-recurrent on a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>.
 See <a class="reference internal" href="MappingProjection.html#mappingprojection-class-reference"><span class="std std-ref">MappingProjection</span></a> and <a class="reference internal" href="Projection.html#projection-class-reference"><span class="std std-ref">Projection</span></a>
 for additional arguments and attributes.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>sender</strong> (<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em> or </em><em>Mechanism : default None</em>) – specifies the source of the Projection’s input; must be (or belong to) the same Mechanism as <strong>receiver</strong>,
-and the length of its <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> must match that of the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of
-the <strong>receiver</strong>.</li>
-<li><strong>receiver</strong> (<a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort"><em>InputPort</em></a><em> or </em><em>Mechanism : default None</em>) – specifies the destination of the Projection’s output; must be (or belong to) the same Mechanism as <strong>sender</strong>,
-and the length of its <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> must match the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of <strong>sender</strong>.</li>
-<li><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><em>function</em></a><em> or </em><em>keyword : default DEFAULT_MATRIX</em>) – specifies the matrix used by <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.function" title="psyneulink.core.components.projections.projection.Projection_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> (default: <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal"><span class="pre">LinearCombination</span></code></a>) to
-transform the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> into a value
-provided to the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> of the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>;
-must be a square matrix (i.e., have the same number of rows and columns).</li>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sender</strong> (<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em> or </em><em>Mechanism : default None</em>) – specifies the source of the Projection’s input; must be (or belong to) the same Mechanism as <strong>receiver</strong>,
+and the length of its <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> must match that of the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> of
+the <strong>receiver</strong>.</p></li>
+<li><p><strong>receiver</strong> (<a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort"><em>InputPort</em></a><em> or </em><em>Mechanism : default None</em>) – specifies the destination of the Projection’s output; must be (or belong to) the same Mechanism as <strong>sender</strong>,
+and the length of its <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> must match the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of <strong>sender</strong>.</p></li>
+<li><p><strong>matrix</strong> (<em>list</em><em>, </em><em>np.ndarray</em><em>, </em><em>np.matrix</em><em>, </em><em>function</em><em> or </em><em>keyword : default DEFAULT_MATRIX</em>) – specifies the matrix used by <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.function" title="psyneulink.core.components.projections.projection.Projection_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> (default: <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearCombination</span></code></a>) to
+transform the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> into a value
+provided to the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> of the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a> <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>;
+must be a square matrix (i.e., have the same number of rows and columns).</p></li>
 </ul>
-</td>
-</tr>
-</tbody>
-</table>
-<dl class="attribute">
+</dd>
+</dl>
+<dl class="py attribute">
 <dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender">
-<code class="descname">sender</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>OutputPort</em> – the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that is the source of the Projection’s input; in the case of
-an AutoAssociativeProjection, it is an OutputPort of the same Mechanism to which the <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> belongs.</p>
+<code class="sig-name descname">sender</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that is the source of the Projection’s input; in the case of
+an AutoAssociativeProjection, it is an OutputPort of the same Mechanism to which the <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a> belongs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort">OutputPort</a></p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver">
-<code class="descname">receiver</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>InputPort</em> – the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that is the destination of the Projection’s output; in the case
-of an AutoAssociativeProjection, it is an InputPort of the same Mechanism to which the <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> belongs.</p>
+<code class="sig-name descname">receiver</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that is the destination of the Projection’s output; in the case
+of an AutoAssociativeProjection, it is an InputPort of the same Mechanism to which the <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> belongs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort">InputPort</a></p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix">
-<code class="descname">matrix</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>2d np.ndarray</em> – square matrix used by <code class="xref any docutils literal"><span class="pre">function</span></code> to transform input from the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal"><span class="pre">sender</span></code></a> to the value provided to the <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>;
+<code class="sig-name descname">matrix</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>square matrix used by <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> to transform input from the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> to the value provided to the <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a>;
 in the case of an AutoAssociativeProjection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>2d np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection._instantiate_parameter_classes">
+<code class="sig-name descname">_instantiate_parameter_classes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection._instantiate_parameter_classes" title="Permalink to this definition">¶</a></dt>
+<dd><p>An optional method that will take any Parameter values in
+<strong>context</strong> that are classes/types, and instantiate them.</p>
 </dd></dl>
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
              </article>
@@ -383,21 +407,12 @@ in the case of an AutoAssociativeProjection.</p>
   
 
      
-       <script type="text/javascript">
-           var DOCUMENTATION_OPTIONS = {
-               URL_ROOT:'./',
-               VERSION:'0.8.7.1+60.g4c60958',
-               LANGUAGE:'None',
-               COLLAPSE_INDEX:false,
-               FILE_SUFFIX:'.html',
-               HAS_SOURCE:  true,
-               SOURCELINK_SUFFIX: '.txt'
-           };
-       </script>
-         <script type="text/javascript" src="_static/jquery.js"></script>
-         <script type="text/javascript" src="_static/underscore.js"></script>
-         <script type="text/javascript" src="_static/doctools.js"></script>
-         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/doctools.js"></script>
+         <script src="_static/language_data.js"></script>
+         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   
