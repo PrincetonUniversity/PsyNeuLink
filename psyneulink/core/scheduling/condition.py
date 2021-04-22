@@ -649,7 +649,8 @@ class All(Condition):
            composite_condition = All(*conditions)
 
     """
-    def __init__(self, *args):
+    def __init__(self, *args, **dependencies):
+        args += tuple(*[v for k, v in dependencies.items()])
         super().__init__(self.satis, *args)
 
     @Condition.owner.setter
@@ -688,7 +689,8 @@ class Any(Condition):
            composite_condition = Any(*conditions)
 
     """
-    def __init__(self, *args):
+    def __init__(self, *args, **dependencies):
+        args += tuple(*[v for k, v in dependencies.items()])
         super().__init__(self.satis, *args)
 
     @Condition.owner.setter
