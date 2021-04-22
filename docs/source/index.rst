@@ -140,7 +140,8 @@ construction of models using PsyNeuLink.  `Core` contains the fundamental object
 Installation
 ------------
 
-PsyNeuLink is compatible with python versions >= 3.5, and is available through `PyPI <https://pypi.python.org/pypi/PsyNeuLink>`__:
+PsyNeuLink is compatible with python versions >= 3.6, and is available through
+`PyPI <https://pypi.python.org/pypi/PsyNeuLink>`__:
 
 ::
 
@@ -194,7 +195,7 @@ The tutorial can be run in a browser by clicking the badge below, or `this link 
 .. image:: https://mybinder.org/badge.svg
     :target: https://mybinder.org/v2/gh/PrincetonUniversity/PsyNeuLink/master
 
-To run the tutorial locally, you must run python 3.5 and install additional packages:
+To run the tutorial locally, you must run python 3.6 and install additional packages:
 
 ::
 
