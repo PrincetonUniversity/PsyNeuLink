@@ -289,6 +289,11 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
+default_termination_conds = {
+    TimeScale.RUN: Never(),
+    TimeScale.TRIAL: AllHaveRun(),
+}
+
 
 class SchedulerError(Exception):
 
@@ -349,10 +354,7 @@ class Scheduler(JSONDumpable):
         composition=None,
         graph=None,
         conditions=None,
-        termination_conds={
-            TimeScale.RUN: Never(),
-            TimeScale.TRIAL: AllHaveRun(),
-        },
+        termination_conds=default_termination_conds,
         default_execution_id=None,
         **kwargs
     ):
@@ -365,8 +367,9 @@ class Scheduler(JSONDumpable):
 
         # stores the in order list of self.run's yielded outputs
         self.consideration_queue = []
+        termination_conds = {**default_termination_conds, **termination_conds}
         self.default_termination_conds = Scheduler._parse_termination_conditions(termination_conds)
-        self._termination_conds = termination_conds.copy()
+        self._termination_conds = self.default_termination_conds.copy()
 
         self.cycle_nodes = set()
 
@@ -380,6 +383,7 @@ class Scheduler(JSONDumpable):
                 self.nodes = [vert.component for vert in graph.vertices]
                 self._init_consideration_queue_from_graph(graph)
             except AttributeError:
+                self.dependency_dict = graph
                 self.consideration_queue = list(toposort(graph))
                 self.nodes = []
                 for consideration_set in self.consideration_queue:
@@ -509,10 +513,31 @@ class Scheduler(JSONDumpable):
 
     @staticmethod
     def _parse_termination_conditions(termination_conds):
+        # parse string representation of TimeScale
+        parsed_conds = {}
+        delkeys = set()
+        for scale in termination_conds:
+            try:
+                parsed_conds[getattr(TimeScale, scale.upper())] = termination_conds[scale]
+                delkeys.add(scale)
+            except (AttributeError, TypeError):
+                pass
+
+        termination_conds.update(parsed_conds)
+
         try:
-            return {k: termination_conds[k] for k in termination_conds if isinstance(k, TimeScale) and isinstance(termination_conds[k], Condition)}
+            termination_conds = {
+                k: termination_conds[k] for k in termination_conds
+                if (
+                    isinstance(k, TimeScale)
+                    and isinstance(termination_conds[k], Condition)
+                    and k not in delkeys
+                )
+            }
         except TypeError:
             raise TypeError('termination_conditions must be a dictionary of the form {TimeScale: Condition, ...}')
+        else:
+            return termination_conds
 
     ################################################################################
     # Wrapper methods
