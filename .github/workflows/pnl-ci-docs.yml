@@ -94,14 +94,14 @@ jobs:
       run: git tag 'v999.999.999.999'
 
     - name: Build Documentation
-      run: sphinx-build -b html -aE -j auto docs/source pnl-html
+      run: make -C docs/ html -e SPHINXOPTS="-aE -j auto"
 
     - name: Upload Documentation
       uses: actions/upload-artifact@v2.2.4
       with:
         name: Documentation-${{matrix.pnl-version}}-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         retention-days: 1
-        path: pnl-html
+        path: docs/build/html
 
   docs-deploy:
     strategy:
