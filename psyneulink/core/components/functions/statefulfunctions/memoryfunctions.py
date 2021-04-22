@@ -682,6 +682,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         contains array of distances between last cue retrieved in a given `context <Context>` an all entries at that
         time.
 
+    memory_num_entries : int
+        contains the number of entries in `memory <ContentAddressableMemory.memory>`.
+
     memory_num_fields : int
         contains the number of `memory fields <EpisodicMemoryMechanism_Memory_Fields>` in each entry of `memory
         <ContentAddressableMemory.memory>`.
