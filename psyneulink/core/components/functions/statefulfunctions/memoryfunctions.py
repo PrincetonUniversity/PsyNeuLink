@@ -1599,6 +1599,12 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         except:
             return np.array([])
 
+    @property
+    def memory_num_entries(self):
+        """Return number of entries in self._memory.
+       """
+        return len(self._memory)
+
 
 KEYS = 0
 VALS = 1
