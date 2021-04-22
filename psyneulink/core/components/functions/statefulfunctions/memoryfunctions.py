@@ -426,7 +426,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     <ContentAddressableMemory.memory>` by providing it in the **initializer** argument of the ContentAddressableMemory's
     constructor, or in a call to its  `reset  <ContentAddressableMemory.reset>` method.  The current contents of `memory
     <ContentAddressableMemory.memory>` can be inspected using the `memory <ContentAddressableMemory.memory>` attribute,
-    which returns a list containing the current entries, each as a list containing all fields for that entry.
+    which returns a list containing the current entries, each as a list containing all fields for that entry.  The
+    `memory_num_fields <ContentAddressableMemory.memory_num_fields>` contains the number of fields expected for each
+    entry, `memory_field_shapes <ContentAddressableMemory.memory_field_shapes>` their shapes, and `memory_num_entries
+    <ContentAddressableMemory.memory_num_entries>` the total number of entries in `memory
+    <ContentAddressableMemory.memory>`.
 
     .. _ContentAddressableMemory_Shapes:
 
@@ -537,7 +541,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         applied to `variable <ContentAddressableMemory.variable>` before storage as :math:`variable * rate + noise`;
 
       * finally, if the number of entries in `memory <ContentAddressableMemory.memory>` exceeds `max_entries
-        <ContentAddressableMemory.max_entries>`, the first (oldest) entry is deleted.
+        <ContentAddressableMemory.max_entries>`, the first (oldest) entry is deleted.  The current number of entries
+        in memory is contained in the `memory_num_entries <ContentAddressableMemory.memory_num_entries>` attribute.
 
     Arguments
     ---------
