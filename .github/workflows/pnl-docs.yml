@@ -92,7 +92,7 @@ jobs:
         (diff -r docs-base docs-merge && echo 'No differences!' || true) | tee result.diff
 
     - name: Post comment
-      uses: actions/github-script@v3
+      uses: actions/github-script@v4.0.1
       # Post comment only if not PR across repos
 #      if: ${{ github.event.base.full_name }} == ${{ github.event.head.repo.full_name }}
       with:
