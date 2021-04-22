@@ -220,7 +220,7 @@ from psyneulink.core.components.functions.statefulfunctions.memoryfunctions impo
     DictionaryMemory, ContentAddressableMemory
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
-from psyneulink.core.globals.keywords import NAME, OWNER_VALUE, VARIABLE
+from psyneulink.core.globals.keywords import EPISODIC_MEMORY_MECHANISM, NAME, OWNER_VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import deprecation_warning, convert_to_np_array
@@ -279,6 +279,8 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         number and value of OutputPorts can be customized (see `EpisodicMemoryMechanism_Output` and Mechanism
         `output_ports <Mechanism_Base.output_ports>` for additional information).
     """
+
+    componentType = EPISODIC_MEMORY_MECHANISM
 
     class Parameters(ProcessingMechanism_Base.Parameters):
         """
