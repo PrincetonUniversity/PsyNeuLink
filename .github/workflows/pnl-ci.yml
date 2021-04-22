@@ -32,7 +32,7 @@ jobs:
         fetch-depth: 10
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2.2.1
+      uses: actions/setup-python@v2.2.2
       with:
         python-version: ${{ matrix.python-version }}
         architecture: ${{ matrix.python-architecture }}
@@ -46,7 +46,7 @@ jobs:
         echo ::set-output name=pip_cache_dir::$(python -m pip cache dir)
 
     - name: Wheels cache
-      uses: actions/cache@v2.1.4
+      uses: actions/cache@v2.1.5
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-v2-${{ github.sha }}
@@ -94,7 +94,7 @@ jobs:
       run: pytest --junit-xml=tests_out.xml --verbosity=0 -n auto --maxprocesses=2
 
     - name: Upload test results
-      uses: actions/upload-artifact@v2.2.2
+      uses: actions/upload-artifact@v2.2.3
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         path: tests_out.xml
@@ -108,7 +108,7 @@ jobs:
       if: contains(github.ref, 'tags')
 
     - name: Upload dist packages
-      uses: actions/upload-artifact@v2.2.2
+      uses: actions/upload-artifact@v2.2.3
       with:
         name: dist-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         path: dist/

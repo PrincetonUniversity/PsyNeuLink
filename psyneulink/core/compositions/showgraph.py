@@ -42,7 +42,7 @@ a Composition's `controller <Composition_Controller>`;  and **show_learning** de
 `learning compnents <Composition_Learning_Components>`.  These are listed as the arguments for the show_graph
 <ShowGraph.show_graph>` method below.
 
-*Display attributes* -- features (such as the colors and shapes) in which different types of nodes are displayed can
+*Display attributes* -- state_features (such as the colors and shapes) in which different types of nodes are displayed can
 be modified by assigning a dictionary of attribute:values pairs to the **show_graph_configuration** argument of the
 Composition's constructor.  These are listed as the arguments for the ShowGraph object (used to display the graph)
 in the `class reference <ShowGraph_Class_Reference>` below.
@@ -194,6 +194,7 @@ Class Reference
 
 import inspect
 import warnings
+from typing import Union
 
 import numpy as np
 import typecheck as tc
@@ -205,6 +206,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontro
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.ports.outputport import OutputPort
+from psyneulink.core.components.ports.port import Port
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.shellclasses import Mechanism, Projection
@@ -1989,6 +1991,135 @@ class ShowGraph():
                 senders.update(cims)
             # HACK: FIX 6/13/20 - ADD USER-SPECIFIED TARGET NODE FOR INNER COMOSITION (NOT IN processing_graph)
 
+        def assign_sender_edge(sndr:Union[Mechanism, Composition],
+                               proj_color:str, proj_arrowhead:str
+                               ) -> None:
+            """Assign edge from sender to rcvr"""
+
+            # Set sndr info
+            sndr_label = self._get_graph_node_label(composition, sndr, show_types, show_dimensions)
+
+            # Skip any projections to ObjectiveMechanism for controller
+            #   (those are handled in _assign_controller_components)
+            # FIX 6/2/20 MOVE TO BELOW FOLLOWING IF STATEMENT AND REPLACE proj.receiver.owner WITH rcvr?
+            # FIX 7/19/20 Can't exclude projections to composition.controller because that skips shadow projections
+            # to controller's input ports
+            if (composition.controller and
+                    proj.receiver.owner in {composition.controller.objective_mechanism}):
+                return
+
+            # FIX 6/6/20: ADD HANDLING OF parameter_CIM HERE??
+            # Only consider Projections to the rcvr (or its CIM if rcvr is a Composition)
+            if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
+                    or (isinstance(rcvr, Composition)
+                        and proj.receiver.owner in {rcvr.input_CIM,
+                                                    # MODIFIED 6/6/20 NEW:
+                                                    rcvr.parameter_CIM
+                                                    # MODIFIED 6/6/20 END
+                                                    })):
+                if show_node_structure and isinstance(sndr, Mechanism):
+                    sndr_port = proj.sender if show_cim else sndr.output_port
+                    sndr_port_owner = sndr_port.owner
+                    if isinstance(sndr_port_owner, CompositionInterfaceMechanism) and rcvr is not composition.controller:
+                        # Sender is input_CIM or parameter_CIM
+                        if sndr_port_owner in {sndr_port_owner.composition.input_CIM,
+                                               # MODIFIED 6/6/20 NEW:
+                                               sndr_port_owner.composition.parameter_CIM
+                                               # MODIFIED 6/6/20 END
+                                               }:
+                            # Get port for node of outer Composition that projects to it
+                            sndr_port = [v[0] for k,v in sender.port_map.items()
+                                         if k is proj.receiver][0].path_afferents[0].sender
+                        # Sender is output_CIM
+                        else:
+                            # Get port for node of inner Composition that projects to it
+                            sndr_port = [k for k,v in sender.port_map.items() if v[1] is proj.sender][0]
+                    sndr_proj_label = f'{sndr_label}:{sndr._get_port_name(sndr_port)}'
+                else:
+                    sndr_proj_label = sndr_label
+                if show_node_structure and isinstance(rcvr, Mechanism):
+                    proc_mech_rcvr_label = f'{rcvr_label}:{rcvr._get_port_name(proj.receiver)}'
+                else:
+                    proc_mech_rcvr_label = rcvr_label
+
+                try:
+                    has_learning = proj.has_learning_projection is not None
+                except AttributeError:
+                    has_learning = None
+
+                edge_label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
+                is_learning_component = (rcvr in composition.learning_components
+                                         or sndr in composition.learning_components)
+                if isinstance(sender, ControlMechanism):
+                    proj_color = self.control_color
+                    if (not isinstance(rcvr, Composition)
+                            or (not show_cim and
+                                (show_nested is not NESTED)
+                                or (show_nested is False))):
+                        proj_arrowhead = self.control_projection_arrow
+                # Check if Projection or its receiver is active
+                if any(item in active_items for item in {proj, proj.receiver.owner}):
+                    if self.active_color == BOLD:
+                        # if (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
+                        if is_learning_component:
+                            proj_color = self.learning_color
+                        else:
+                            pass
+                    else:
+                        proj_color = self.active_color
+                    proj_width = str(self.default_width + self.active_thicker_by)
+                    composition.active_item_rendered = True
+
+                # Projection to or from a LearningMechanism
+                elif (NodeRole.LEARNING in composition.nodes_to_roles[rcvr]):
+                    proj_color = self.learning_color
+                    proj_width = str(self.default_width)
+
+                else:
+                    proj_width = str(self.default_width)
+                proc_mech_label = edge_label
+
+                # RENDER PROJECTION AS EDGE
+
+                if show_learning and has_learning:
+                    # Render Projection as Node
+                    #    (do it here rather than in _assign_learning_components,
+                    #     as it needs afferent and efferent edges to other nodes)
+                    # IMPLEMENTATION NOTE: Projections can't yet use structured nodes:
+                    deferred = not self._render_projection_as_node(g,
+                                                                   active_items,
+                                                                   show_node_structure,
+                                                                   show_types,
+                                                                   show_dimensions,
+                                                                   show_projection_labels,
+                                                                   proj,
+                                                                   label=proc_mech_label,
+                                                                   rcvr_label=proc_mech_rcvr_label,
+                                                                   sndr_label=sndr_proj_label,
+                                                                   proj_color=proj_color,
+                                                                   proj_width=proj_width)
+                    # Deferred if it is the last Mechanism in a learning Pathway
+                    # (see _render_projection_as_node)
+                    if deferred:
+                        return
+
+                else:
+                    # Render Projection as edge
+                    if show_projection_labels:
+                        label = proc_mech_label
+                    else:
+                        label = ''
+
+                    if assign_proj_to_enclosing_comp:
+                        graph = enclosing_g
+                    else:
+                        graph = g
+                    graph.edge(sndr_proj_label, proc_mech_rcvr_label,
+                               label=label,
+                               color=proj_color,
+                               penwidth=proj_width,
+                               arrowhead=proj_arrowhead)
+
         # Sorted to insure consistency of ordering in g for testing
         for sender in sorted(senders):
 
@@ -2017,6 +2148,8 @@ class ShowGraph():
                         continue
 
                     if isinstance(sender, CompositionInterfaceMechanism):
+
+                        # sender is input_CIM or parameter_CIM
                         if sender in {composition.input_CIM, composition.parameter_CIM}:
                             # FIX 6/2/20:
                             #     DELETE ONCE FILTERED BASED ON nesting_level IS IMPLEMENTED BEFORE CALL TO METHOD
@@ -2024,29 +2157,57 @@ class ShowGraph():
                             #     and therefore is not passing an afferent Projection from that Composition
                             if not sender.afferents and rcvr is not composition.controller:
                                 continue
-                            # Get node from enclosing Comopsition that is source of sender
-                            sndr_spec = self._trace_senders_for_original_sender_mechanism(proj, nesting_level)
-                            if not sndr_spec:
+                            # # MODIFIED 4/5/21 OLD:
+                            # # Get node(s) from enclosing Comopsition that is/are source(s) of sender(s)
+                            # sndr_spec = self._trace_senders_for_original_sender_mechanism(proj, nesting_level)
+                            # if not sndr_spec:
+                            #     continue
+                            # sndr, sndr_port, sndr_nesting_level = sndr_spec
+                            # # if original sender is more than one level above receiver, replace enclosing_g with
+                            # # the g of the original sender composition
+                            # enclosing_comp = comp_hierarchy[sndr_nesting_level]
+                            # enclosing_g = enclosing_comp._show_graph.G
+                            # # Skip:
+                            # # - cims as sources (handled in _assign_cim_componoents)
+                            # # - controller (handled in _assign_controller_components)
+                            # if (isinstance(sndr, CompositionInterfaceMechanism) and
+                            #         rcvr is not enclosing_comp.controller
+                            #         and rcvr is not composition.controller
+                            #         or self._is_composition_controller(sndr, enclosing_comp)):
+                            #     continue
+                            # if sender is composition.parameter_CIM:
+                            #     proj_color = self.control_color
+                            #     proj_arrowhead = self.control_projection_arrow
+                            # assign_proj_to_enclosing_comp = True
+                            # MODIFIED 4/5/21 NEW:
+                            # FIX: LOOP HERE OVER sndr_spec IF THERE ARE SEVERAL
+                            # Get node(s) from enclosing Comopsition that is/are source(s) of sender(s)
+                            sndrs_specs = self._trace_senders_for_original_sender_mechanism(proj, nesting_level)
+                            if not sndrs_specs:
                                 continue
-                            sndr, sndr_port, sndr_nesting_level = sndr_spec
-                            # if original sender is more than one level above receiver, replace enclosing_g with
-                            # the g of the original sender composition
-                            enclosing_comp = comp_hierarchy[sndr_nesting_level]
-                            enclosing_g = enclosing_comp._show_graph.G
-                            # Skip:
-                            # - cims as sources (handled in _assign_cim_componoents)
-                            # - controller (handled in _assign_controller_components)
-                            if (isinstance(sndr, CompositionInterfaceMechanism) and
-                                    rcvr is not enclosing_comp.controller
-                                    and rcvr is not composition.controller
-                                    or self._is_composition_controller(sndr, enclosing_comp)):
-                                continue
-                            if sender is composition.parameter_CIM:
-                                proj_color = self.control_color
-                                proj_arrowhead = self.control_projection_arrow
-                            assign_proj_to_enclosing_comp = True
+                            for sndr_spec in sorted(sndrs_specs):
+                                sndr, sndr_port, sndr_nesting_level = sndr_spec
+                                # if original sender is more than one level above receiver, replace enclosing_g with
+                                # the g of the original sender composition
+                                enclosing_comp = comp_hierarchy[sndr_nesting_level]
+                                enclosing_g = enclosing_comp._show_graph.G
+                                # Skip:
+                                # - cims as sources (handled in _assign_cim_componoents)
+                                # - controller (handled in _assign_controller_components)
+                                if (isinstance(sndr, CompositionInterfaceMechanism) and
+                                        rcvr is not enclosing_comp.controller
+                                        and rcvr is not composition.controller
+                                        or self._is_composition_controller(sndr, enclosing_comp)):
+                                    continue
+                                if sender is composition.parameter_CIM:
+                                    proj_color = self.control_color
+                                    proj_arrowhead = self.control_projection_arrow
+                                assign_proj_to_enclosing_comp = True
+                                assign_sender_edge(sndr, proj_color, proj_arrowhead)
+                            continue
 
                         # sender is output_CIM
+                        # FIX: 4/5/21 IMPLEMENT LOOP HERE COMPARABLE TO ONE FOR input_CIM ABOVE
                         else:
                             # FIX 6/2/20:
                             #     DELETE ONCE FILTERED BASED ON nesting_level IS IMPLEMENTED BEFORE CALL TO METHOD
@@ -2069,130 +2230,7 @@ class ShowGraph():
                     else:
                         sndr = sender
 
-                    # Set sndr info
-                    sndr_label = self._get_graph_node_label(composition, sndr, show_types, show_dimensions)
-
-
-                    # Skip any projections to ObjectiveMechanism for controller
-                    #   (those are handled in _assign_controller_components)
-                    # FIX 6/2/20 MOVE TO BELOW FOLLOWING IF STATEMENT AND REPLACE proj.receiver.owner WITH rcvr?
-                    # FIX 7/19/20 Can't exclude projections to composition.controller because that skips shadow projections
-                    # to controller's input ports
-                    if (composition.controller and
-                            proj.receiver.owner in {composition.controller.objective_mechanism}):
-                        continue
-
-                    # FIX 6/6/20: ADD HANDLING OF parameter_CIM HERE??
-                    # Only consider Projections to the rcvr (or its CIM if rcvr is a Composition)
-                    if ((isinstance(rcvr, (Mechanism, Projection)) and proj.receiver.owner == rcvr)
-                            or (isinstance(rcvr, Composition)
-                                and proj.receiver.owner in {rcvr.input_CIM,
-                                                            # MODIFIED 6/6/20 NEW:
-                                                            rcvr.parameter_CIM
-                                                            # MODIFIED 6/6/20 END
-                                                            })):
-                        if show_node_structure and isinstance(sndr, Mechanism):
-                            sndr_port = proj.sender if show_cim else sndr.output_port
-                            sndr_port_owner = sndr_port.owner
-                            if isinstance(sndr_port_owner, CompositionInterfaceMechanism) and rcvr is not composition.controller:
-                                # Sender is input_CIM or parameter_CIM
-                                if sndr_port_owner in {sndr_port_owner.composition.input_CIM,
-                                                       # MODIFIED 6/6/20 NEW:
-                                                       sndr_port_owner.composition.parameter_CIM
-                                                       # MODIFIED 6/6/20 END
-                                                       }:
-                                    # Get port for node of outer Composition that projects to it
-                                    sndr_port = [v[0] for k,v in sender.port_map.items()
-                                                 if k is proj.receiver][0].path_afferents[0].sender
-                                # Sender is output_CIM
-                                else:
-                                    # Get port for node of inner Composition that projects to it
-                                    sndr_port = [k for k,v in sender.port_map.items() if v[1] is proj.sender][0]
-                            sndr_proj_label = f'{sndr_label}:{sndr._get_port_name(sndr_port)}'
-                        else:
-                            sndr_proj_label = sndr_label
-                        if show_node_structure and isinstance(rcvr, Mechanism):
-                            proc_mech_rcvr_label = f'{rcvr_label}:{rcvr._get_port_name(proj.receiver)}'
-                        else:
-                            proc_mech_rcvr_label = rcvr_label
-
-                        try:
-                            has_learning = proj.has_learning_projection is not None
-                        except AttributeError:
-                            has_learning = None
-
-                        edge_label = self._get_graph_node_label(composition, proj, show_types, show_dimensions)
-                        is_learning_component = (rcvr in composition.learning_components
-                                                 or sndr in composition.learning_components)
-                        if isinstance(sender, ControlMechanism):
-                            proj_color = self.control_color
-                            if (not isinstance(rcvr, Composition)
-                                    or (not show_cim and
-                                        (show_nested is not NESTED)
-                                        or (show_nested is False))):
-                                proj_arrowhead = self.control_projection_arrow
-                        # Check if Projection or its receiver is active
-                        if any(item in active_items for item in {proj, proj.receiver.owner}):
-                            if self.active_color == BOLD:
-                                # if (isinstance(rcvr, LearningMechanism) or isinstance(sndr, LearningMechanism)):
-                                if is_learning_component:
-                                    proj_color = self.learning_color
-                                else:
-                                    pass
-                            else:
-                                proj_color = self.active_color
-                            proj_width = str(self.default_width + self.active_thicker_by)
-                            composition.active_item_rendered = True
-
-                        # Projection to or from a LearningMechanism
-                        elif (NodeRole.LEARNING in composition.nodes_to_roles[rcvr]):
-                            proj_color = self.learning_color
-                            proj_width = str(self.default_width)
-
-                        else:
-                            proj_width = str(self.default_width)
-                        proc_mech_label = edge_label
-
-                        # RENDER PROJECTION AS EDGE
-
-                        if show_learning and has_learning:
-                            # Render Projection as Node
-                            #    (do it here rather than in _assign_learning_components,
-                            #     as it needs afferent and efferent edges to other nodes)
-                            # IMPLEMENTATION NOTE: Projections can't yet use structured nodes:
-                            deferred = not self._render_projection_as_node(g,
-                                                                           active_items,
-                                                                           show_node_structure,
-                                                                           show_types,
-                                                                           show_dimensions,
-                                                                           show_projection_labels,
-                                                                           proj,
-                                                                           label=proc_mech_label,
-                                                                           rcvr_label=proc_mech_rcvr_label,
-                                                                           sndr_label=sndr_proj_label,
-                                                                           proj_color=proj_color,
-                                                                           proj_width=proj_width)
-                            # Deferred if it is the last Mechanism in a learning Pathway
-                            # (see _render_projection_as_node)
-                            if deferred:
-                                continue
-
-                        else:
-                            # Render Projection as edge
-                            if show_projection_labels:
-                                label = proc_mech_label
-                            else:
-                                label = ''
-
-                            if assign_proj_to_enclosing_comp:
-                                graph = enclosing_g
-                            else:
-                                graph = g
-                            graph.edge(sndr_proj_label, proc_mech_rcvr_label,
-                                       label=label,
-                                       color=proj_color,
-                                       penwidth=proj_width,
-                                       arrowhead=proj_arrowhead)
+                    assign_sender_edge(sndr, proj_color, proj_arrowhead)
 
     def _generate_output(self,
                          G,
@@ -2329,7 +2367,11 @@ class ShowGraph():
             return self._trace_senders_for_controller(sender_proj, comp)
         return False
 
-    def _trace_senders_for_original_sender_mechanism(self, proj, nesting_level, comp=None):
+    def _trace_senders_for_original_sender_mechanism(self,
+                                                     proj:Projection,
+                                                     nesting_level:int,
+                                                     comp=None
+                                                     ) -> [(Mechanism, Port, int)]:
         """
         Find the original sender of a projection that is routed through n-levels of cims.
         If there is no outer root Mechanism, as in the case of a nested input Mechanism that is not projected to,
@@ -2343,12 +2385,22 @@ class ShowGraph():
             num_afferents = len(owner.port_map[proj.receiver][0].path_afferents)
             if num_afferents == 0:
                 return None
-            # assert num_afferents == 1, f"PROGRAM ERROR: {sender} of {comp.name} " \
-            #                            f"doesn't have exactly one afferent Projection."
-            outer_proj = owner.port_map[proj.receiver][0].path_afferents[0]
-            enclosing_showgraph = owner.composition._show_graph
-            return enclosing_showgraph._trace_senders_for_original_sender_mechanism(outer_proj, nesting_level)
-        return owner, sender, nesting_level
+            # # FIX: ITERATE OVER ALL AFFERENTS TO relevant InputPort of cim:
+            # # MODIFIED 4/5/21 OLD:
+            # outer_proj = owner.port_map[proj.receiver][0].path_afferents[0]
+            # enclosing_showgraph = owner.composition._show_graph
+            # return enclosing_showgraph._trace_senders_for_original_sender_mechanism(outer_proj, nesting_level)
+            # MODIFIED 4/5/21 NEW:
+            senders = []
+            for outer_proj in owner.port_map[proj.receiver][0].path_afferents:
+                enclosing_showgraph = owner.composition._show_graph
+                sndrs = enclosing_showgraph._trace_senders_for_original_sender_mechanism(outer_proj, nesting_level)
+                if sndrs is not None:
+                    senders.extend(sndrs)
+            return senders
+            # MODIFIED 4/5/21 END
+        # FIX: RECEIVERS OF THIS RETURN NEED TO HANDLE LIST
+        return [(owner, sender, nesting_level)]
 
     def _trace_receivers_for_terminal_receiver(self, receiver, comp=None):
         """Find the terminal ParameterPort for a given intermediary input port of a parameter CIM"""

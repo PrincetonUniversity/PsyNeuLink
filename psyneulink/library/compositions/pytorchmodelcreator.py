@@ -1,7 +1,7 @@
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.compositions.composition import NodeRole
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core import llvm as pnlvm
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer
 from psyneulink.library.compositions.compiledloss import MSELoss
@@ -61,13 +61,18 @@ class PytorchModelCreator(torch.nn.Module):
                 self.projections.append(new_proj)
                 self.params.append(new_proj.matrix)
 
+        c = Context()
+        composition.scheduler._init_counts(execution_id=c.execution_id, base_execution_id=context.execution_id)
+
         # Setup execution sets
         # 1) Remove all learning-specific nodes
-        self.execution_sets = [x - set(composition.get_nodes_by_role(NodeRole.LEARNING)) for x in composition.scheduler.run(context=context)]
+        self.execution_sets = [x - set(composition.get_nodes_by_role(NodeRole.LEARNING)) for x in composition.scheduler.run(context=c)]
         # 2) Convert to pytorchcomponent representation
         self.execution_sets = [{self.component_map[comp] for comp in s if comp in self.component_map} for s in self.execution_sets]
         # 3) Remove empty execution sets
         self.execution_sets = [x for x in self.execution_sets if len(x) > 0]
+
+        composition.scheduler._delete_counts(c.execution_id)
 
     __deepcopy__ = get_deepcopy_with_shared(shared_types=(Component, ComponentsMeta))
 

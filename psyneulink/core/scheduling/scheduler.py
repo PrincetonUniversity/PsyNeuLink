@@ -289,6 +289,11 @@ __all__ = [
 
 logger = logging.getLogger(__name__)
 
+default_termination_conds = {
+    TimeScale.RUN: Never(),
+    TimeScale.TRIAL: AllHaveRun(),
+}
+
 
 class SchedulerError(Exception):
 
@@ -314,9 +319,10 @@ class Scheduler(JSONDumpable):
         set of `Conditions <Condition>` that specify when individual `Components` <Component>` in **composition**
         execute and any dependencies among them.
 
-    graph : Dict[Component: set(Component)]
-        a graph specification dictionary - each entry of the dictionary must be a `Component`,
-        and the value of each entry must be a set of zero or more Components that project directly to the key.
+    graph : Dict[object: set(object)], Graph
+        a graph specification dictionary - each entry of the dictionary must be an object,
+        and the value of each entry must be a set of zero or more objects that project directly to the key.
+        or, a `Graph`
 
     Attributes
     ----------
@@ -348,10 +354,7 @@ class Scheduler(JSONDumpable):
         composition=None,
         graph=None,
         conditions=None,
-        termination_conds={
-            TimeScale.RUN: Never(),
-            TimeScale.TRIAL: AllHaveRun(),
-        },
+        termination_conds=default_termination_conds,
         default_execution_id=None,
         **kwargs
     ):
@@ -364,8 +367,9 @@ class Scheduler(JSONDumpable):
 
         # stores the in order list of self.run's yielded outputs
         self.consideration_queue = []
+        termination_conds = {**default_termination_conds, **termination_conds}
         self.default_termination_conds = Scheduler._parse_termination_conditions(termination_conds)
-        self._termination_conds = termination_conds.copy()
+        self._termination_conds = self.default_termination_conds.copy()
 
         self.cycle_nodes = set()
 
@@ -379,6 +383,7 @@ class Scheduler(JSONDumpable):
                 self.nodes = [vert.component for vert in graph.vertices]
                 self._init_consideration_queue_from_graph(graph)
             except AttributeError:
+                self.dependency_dict = graph
                 self.consideration_queue = list(toposort(graph))
                 self.nodes = []
                 for consideration_set in self.consideration_queue:
@@ -479,6 +484,13 @@ class Scheduler(JSONDumpable):
             else:
                 self.clocks[execution_id] = Clock()
 
+    def _delete_counts(self, execution_id=None):
+        for obj in [self.counts_useable, self.counts_total, self.clocks, self.execution_list]:
+            try:
+                del obj[execution_id]
+            except KeyError:
+                pass
+
     def _reset_counts_total(self, time_scale, execution_id=None):
         for ts in TimeScale:
             # only reset the values underneath the current scope
@@ -501,10 +513,31 @@ class Scheduler(JSONDumpable):
 
     @staticmethod
     def _parse_termination_conditions(termination_conds):
+        # parse string representation of TimeScale
+        parsed_conds = {}
+        delkeys = set()
+        for scale in termination_conds:
+            try:
+                parsed_conds[getattr(TimeScale, scale.upper())] = termination_conds[scale]
+                delkeys.add(scale)
+            except (AttributeError, TypeError):
+                pass
+
+        termination_conds.update(parsed_conds)
+
         try:
-            return {k: termination_conds[k] for k in termination_conds if isinstance(k, TimeScale) and isinstance(termination_conds[k], Condition)}
+            termination_conds = {
+                k: termination_conds[k] for k in termination_conds
+                if (
+                    isinstance(k, TimeScale)
+                    and isinstance(termination_conds[k], Condition)
+                    and k not in delkeys
+                )
+            }
         except TypeError:
             raise TypeError('termination_conditions must be a dictionary of the form {TimeScale: Condition, ...}')
+        else:
+            return termination_conds
 
     ################################################################################
     # Wrapper methods

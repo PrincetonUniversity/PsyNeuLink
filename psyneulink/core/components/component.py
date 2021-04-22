@@ -93,7 +93,7 @@ user once the component is constructed, with the one exception of `prefs <Compon
 * **variable** - used as the input to its `function <Component_Function>`.  Specification of the **default_variable**
   argument in the constructor for a Component determines both its format (e.g., whether its value is numeric, its
   dimensionality and shape if it is an array, etc.) as well as its `default value <Component.defaults>` (the value
-  used when the Componentis executed and no input is provided), and takes precedence over the specification of `size
+  used when the Component is executed and no input is provided), and takes precedence over the specification of `size
   <Component_Size>`.
 
   .. note::
@@ -782,7 +782,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     size : int, list or np.ndarray of ints : default None
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
-        if **default_variable** is specified, it takes precedence over the specification of **size**.
+        if **default_variable** is specified, it takes precedence over the specification of **size** (see
+        `size <Component_Size>` for additonal details).
 
     COMMENT:
     param_defaults :   :  default None,
@@ -1339,7 +1340,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "variable", "value", "saved_values", "saved_samples",
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
-                     "monitor_for_control", "feature_values", "simulation_ids",
+                     "monitor_for_control", "state_feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict",
                      "modulated_mechanisms", "grid",
                      "activation_derivative_fct", "input_specification",

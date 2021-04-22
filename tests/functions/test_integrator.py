@@ -3,9 +3,11 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-import psyneulink.core.components.functions.statefulfunctions.integratorfunctions as Functions
 import psyneulink.core.llvm as pnlvm
+import psyneulink.core.components.functions.statefulfunctions.integratorfunctions as Functions
 from psyneulink.core.components.functions.function import FunctionError
+from psyneulink.core.components.functions.transferfunctions import Angle
+from psyneulink.core.globals.parameters import ParameterError
 from psyneulink.core.globals.keywords import LEAK, RATE
 
 np.random.seed(0)
@@ -88,24 +90,47 @@ def DriftIntFun(init, value, iterations, noise, **kwargs):
                      2.36535325, 2.3125881 , 1.94195457, 3.4923464 , 2.73809322],
                     [3., 3., 3., 3., 3., 3., 3., 3., 3., 3.])
 
+def DriftSphereFun(init, value, iterations, noise, **kwargs):
+    assert iterations == 3
+    if np.isscalar(noise):
+        if "initializer" not in kwargs:
+            return ([ 0.61237972, -0.00123971, -0.03658525,  0.06254701, -0.0946239,
+                      0.29805191,  0.49116849,  0.5427334, 0.57919715,  0.15871794,  0.02219184])
+        else:
+            return ([-.132269048,  .0000435051787,  .0000387398441, -.00000395620568,  .000127324586,
+                     -.000501625256, -.000837794371,  .125048720,  .747570336, -.652303943, -.0000657270465])
+    else:
+        if "initializer" not in kwargs:
+            return ([ 0.70894136,  0.00176493,  0.10988845, -0.16462855, -0.17717841,  0.55087821,
+                      0.39641091,  0.67452852,  0.09826617,  0.06205703, -0.01794999])
+        else:
+            return ([-.00372900858, -.000338148799, -.000643154678,  .0000436274120,  .000667038983,
+                     -.00287440868, -.00208163440, .441976901, .531162110, -.722848147, .000466808385])
+
 def LeakyFun(init, value, iterations, noise, **kwargs):
     assert iterations == 3
 
     if np.isscalar(noise):
         if "initializer" not in kwargs:
-            return [2.20813608, 2.25674001, 2.22389663, 2.2069879,  2.17157305, 2.23649656, 2.17564317, 2.30832598, 2.32932737, 2.15982541]
+            return [2.20813608, 2.25674001, 2.22389663, 2.2069879,  2.17157305,
+                    2.23649656, 2.17564317, 2.30832598, 2.32932737, 2.15982541]
         else:
-            return [2.93867224, 2.74475902, 2.74803958, 3.06104933, 2.23711905, 2.31689203, 2.19429898, 3.07659637, 3.04734388, 2.96259823]
+            return [2.93867224, 2.74475902, 2.74803958, 3.06104933, 2.23711905,
+                    2.31689203, 2.19429898, 3.07659637, 3.04734388, 2.96259823]
     elif isinstance(noise, pnl.DistributionFunction):
         if "initializer" not in kwargs:
-            return [2.55912037, 1.24455938, 1.43417309, 1.638423, 1.91298882, 1.22700281, 1.71226825, 1.67794471, 1.20395947, 1.48326449]
+            return [2.55912037, 1.24455938, 1.43417309, 1.638423, 1.91298882,
+                    1.22700281, 1.71226825, 1.67794471, 1.20395947, 1.48326449]
         else:
-            return [3.28965653, 1.73257839, 1.95831604, 2.49248443, 1.97853482, 1.30739828, 1.73092406, 2.4462151, 1.92197598, 2.28603731]
+            return [3.28965653, 1.73257839, 1.95831604, 2.49248443, 1.97853482,
+                    1.30739828, 1.73092406, 2.4462151, 1.92197598, 2.28603731]
     else:
         if "initializer" not in kwargs:
-            return [2.39694798, 2.27976578, 1.9349721, 2.21280371, 1.5655935, 2.11241762, 1.59283164, 2.46577518, 2.09617208, 1.82765063]
+            return [2.39694798, 2.27976578, 1.9349721, 2.21280371, 1.5655935,
+                    2.11241762, 1.59283164, 2.46577518, 2.09617208, 1.82765063]
         else:
-            return [3.12748415, 2.76778478, 2.45911505, 3.06686514, 1.6311395, 2.19281309, 1.61148745, 3.23404557, 2.81418859, 2.63042344]
+            return [3.12748415, 2.76778478, 2.45911505, 3.06686514, 1.6311395,
+                    2.19281309, 1.61148745, 3.23404557, 2.81418859, 2.63042344]
 
 GROUP_PREFIX="IntegratorFunction "
 
@@ -122,6 +147,7 @@ GROUP_PREFIX="IntegratorFunction "
     (Functions.AdaptiveIntegrator, AdaptiveIntFun),
     (Functions.SimpleIntegrator, SimpleIntFun),
     (Functions.DriftDiffusionIntegrator, DriftIntFun),
+    (Functions.DriftOnASphereIntegrator, DriftSphereFun),
     (Functions.LeakyCompetingIntegrator, LeakyFun),
     ], ids=lambda x: x[0])
 @pytest.mark.benchmark
@@ -134,8 +160,16 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
             raise e from None
     else:
         assert isinstance(noise, pnl.DistributionFunction)
-        if func[1] == DriftIntFun:
+        if func[1] == DriftIntFun or func[1] == DriftSphereFun:
             pytest.skip("DriftDiffusionIntegrator doesn't support functional noise")
+
+    if 'DriftOnASphereIntegrator' in func[0].componentName:
+        if func_mode != 'Python':
+            pytest.skip("DriftDiffusionIntegrator not yet compiled")
+        params.update({'dimension':len(variable) + 1})
+    else:
+        if 'dimension' in params:
+            params.pop('dimension')
 
     f = func[0](default_variable=variable, noise=noise, **params)
 
@@ -191,3 +225,37 @@ def test_integrator_function_with_default_variable_and_params_of_different_lengt
     error_msg_b = "don't have the same length as its 'default_variable' (3): ['offset']."
     assert error_msg_a in str(error_text.value)
     assert error_msg_b in str(error_text.value)
+
+err_msg_initializer = "'initializer' must be a list or 1d array of length 3 (the value of the 'dimension' parameter minus 1)"
+err_msg_angle_func = 'Variable shape incompatibility between (DriftOnASphereIntegrator DriftOnASphereIntegrator'
+err_msg_noise = "must be a list or 1d array of length 3 (the value of the 'dimension' parameter minus 1)"
+
+test_vars = [
+    ({'initializer': 0.1}, err_msg_initializer, FunctionError),
+    ({'initializer': [0.1,0.1]}, err_msg_initializer, FunctionError),
+    ({'initializer': [0.1,0.1,0.1]}, None, None),
+    ({'angle_function': Angle}, None, None),
+    ({'angle_function': Angle()}, None, None),
+    ({'angle_function': Angle([1,1])}, err_msg_angle_func, ParameterError),
+    ({'angle_function': Angle([1,1,1])}, None, None),
+    ({'noise': .01}, None, None),
+    ({'noise': [.01, .5]}, err_msg_noise, FunctionError),
+    ({'noise': [.01, .5, .99]}, None, None),
+    ({'noise': [.01, .5, .99, .1]}, err_msg_noise, FunctionError)
+]
+
+names = [
+    "INITIALIZER_SCALAR", "INITIALIZER_2", "INITIALIZER_3",
+    "ANGLE_CLASS", "ANGLE_NONE", "ANGLE_2", "ANGLE_3",
+    "NOISE_SCALAR", "NOISE_2", "NOISE_3", "NOISE_4"
+]
+
+# FIX: CROSS WITH INITIALIZER SIZE:
+@pytest.mark.parametrize("params, error_msg, error_type", test_vars, ids=names)
+def test_drift_on_a_sphere_errors(params, error_msg, error_type):
+    if error_type:
+        with pytest.raises(error_type) as error_text:
+            Functions.DriftOnASphereIntegrator(dimension=4, params=params)
+        assert error_msg in str(error_text.value)
+    else:
+        Functions.DriftOnASphereIntegrator(dimension=4, params=params)

@@ -23,12 +23,6 @@ import logging as _logging
 
 import numpy as _numpy
 
-# We need to import rich here so we can monkey patch console._is_jupyter to work on
-# google colab. This fix to rich is up as a pull request. See:
-# https://github.com/willmcgugan/rich/pull/1085
-# If accepted then this import and the monkey patch below can be removed.
-import rich.console
-
 # starred imports to allow user imports from top level
 from . import core
 from . import library
@@ -36,26 +30,6 @@ from . import library
 from ._version import get_versions
 from .core import *
 from .library import *
-
-
-# Monkey patch rich
-def _is_jupyter() -> bool:  # pragma: no cover
-    """Check if we're running in a Jupyter notebook."""
-    try:
-        get_ipython  # type: ignore
-    except NameError:
-        return False
-    shell = get_ipython().__class__.__name__  # type: ignore
-    full_class = str(get_ipython().__class__)  # type: ignore
-    if shell == "ZMQInteractiveShell":
-        return True  # Jupyter notebook or qtconsole
-    elif shell == "TerminalInteractiveShell":
-        return False  # Terminal running IPython
-    elif "google.colab" in full_class:  # IPython in Google Colab
-        return True
-    else:
-        return False  # Other type (?)
-rich.console._is_jupyter = _is_jupyter
 
 
 _pnl_global_names = [

@@ -306,11 +306,11 @@ from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
     'AfterCall', 'AfterNCalls', 'AfterNCallsCombined', 'AfterNPasses', 'AfterNTimeSteps', 'AfterNTrials', 'AfterPass',
-    'AtRun', 'AfterRun', 'AfterNRuns', 'AfterTimeStep', 'AfterTrial', 'All', 'AllHaveRun', 'Always', 'Any',
+    'AtRun', 'AfterRun', 'AfterNRuns', 'AfterTimeStep', 'AfterTrial', 'All', 'AllHaveRun', 'Always', 'And', 'Any',
     'AtNCalls','AtPass', 'AtRunStart', 'AtRunNStart', 'AtTimeStep', 'AtTrial',
     'AtTrialStart', 'AtTrialNStart', 'BeforeNCalls', 'BeforePass', 'BeforeTimeStep', 'BeforeTrial',
     'Condition','ConditionError', 'ConditionSet', 'EveryNCalls', 'EveryNPasses',
-    'JustRan', 'Never', 'Not', 'NWhen', 'WhenFinished', 'WhenFinishedAll', 'WhenFinishedAny', 'While', 'WhileNot'
+    'JustRan', 'Never', 'Not', 'NWhen', 'Or', 'WhenFinished', 'WhenFinishedAll', 'WhenFinishedAny', 'While', 'WhileNot'
 ]
 
 logger = logging.getLogger(__name__)
@@ -649,7 +649,8 @@ class All(Condition):
            composite_condition = All(*conditions)
 
     """
-    def __init__(self, *args):
+    def __init__(self, *args, **dependencies):
+        args += tuple(*[v for k, v in dependencies.items()])
         super().__init__(self.satis, *args)
 
     @Condition.owner.setter
@@ -685,10 +686,11 @@ class Any(Condition):
 
           unpack the list to supply its members as args::
 
-           composite_condition = All(*conditions)
+           composite_condition = Any(*conditions)
 
     """
-    def __init__(self, *args):
+    def __init__(self, *args, **dependencies):
+        args += tuple(*[v for k, v in dependencies.items()])
         super().__init__(self.satis, *args)
 
     @Condition.owner.setter
@@ -703,6 +705,10 @@ class Any(Condition):
             if cond.is_satisfied(**kwargs):
                 return True
         return False
+
+
+And = All
+Or = Any
 
 
 class Not(Condition):

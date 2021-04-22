@@ -63,9 +63,9 @@ Stroop_model.scheduler.add_condition(word_hidden, EveryNCalls(task, settling_tim
 control_signal_search_range = SampleSpec(start=1.0, stop=1.8, step=0.2)
 evc = OptimizationControlMechanism(name='EVC',
                                    agent_rep=Stroop_model,
-                                   features=[color_input.input_port, word_input.input_port, reward.input_port],
-                                   feature_function=AdaptiveIntegrator(rate=1.0),
-                                   # feature_function=AdaptiveIntegrator,
+                                   state_features=[color_input.input_port, word_input.input_port, reward.input_port],
+                                   state_feature_function=AdaptiveIntegrator(rate=1.0),
+                                   # state_feature_function=AdaptiveIntegrator,
                                    objective_mechanism= \
                                        ObjectiveMechanism(
                                                name='EVC Objective Mechanism',

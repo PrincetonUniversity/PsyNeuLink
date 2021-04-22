@@ -62,14 +62,14 @@ objective_mech = pnl.ObjectiveMechanism(function=pnl.LinearCombination(operation
                                                                       pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)])
 # Model Based OCM (formerly controller)
 evc_gratton.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep=evc_gratton,
-                                                                                 features=[target_stim.input_port,
-                                                                                           flanker_stim.input_port,
-                                                                                           reward.input_port],
-                                                                                 feature_function=pnl.AdaptiveIntegrator(
+                                                                       state_features=[target_stim.input_port,
+                                                                                       flanker_stim.input_port,
+                                                                                       reward.input_port],
+                                                                       state_feature_function=pnl.AdaptiveIntegrator(
                                                                                      rate=1.0),
-                                                                                 objective_mechanism=objective_mech,
-                                                                                 function=pnl.GridSearch(),
-                                                                                 control_signals=[
+                                                                       objective_mechanism=objective_mech,
+                                                                       function=pnl.GridSearch(),
+                                                                       control_signals=[
                                                                                      target_rep_control_signal,
                                                                                      flanker_rep_control_signal]))
 
