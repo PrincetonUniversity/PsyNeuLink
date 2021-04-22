@@ -881,8 +881,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         # FIX: MAKE THESE ATTRIBUTES RATHER THAN PARAMETERS:
-        memory_num_fields = Parameter(None, stateful=True, read_only=True)
-        memory_field_shapes = Parameter(None, stateful=True, read_only=True)
+        memory_num_fields = Parameter(None, stateful=False, read_only=True)
+        memory_field_shapes = Parameter(None, stateful=False, read_only=True)
         # FIX: --------------------
         distance_field_weights = Parameter([1], stateful=True, modulable=True, dependencies='initializer')
         duplicate_entries_allowed = Parameter(False, stateful=True)

@@ -12,7 +12,9 @@
 Welcome to PsyNeuLink |logo|
 ============================
 
-*(pronounced: /sīnyoolingk - sigh-new-link)*
+.. *(pronunciation:* **sī**//*nyoo/lingk)*
+*(pronunciation:* \\ **\'sī**\ *-nü-liŋk\\ )*
+
 
 * `Purpose`
 * `What PsyNeuLink IS <What_PsyNeuLink_IS>`
@@ -21,7 +23,7 @@ Welcome to PsyNeuLink |logo|
 * `Installation`
 * `Tutorial`
 * `Help and Issues <Help_and_Issues>`
-* `Contributors`
+* `Acknowledgements`
 * `Indices_and_Tables`
 
 
@@ -228,10 +230,13 @@ Help is available at psyneulinkhelp@princeton.edu.
 Issues can be reported at https://github.com/PrincetonUniversity/PsyNeuLink/issues.
 
 
-.. _Contributors:
+.. _Acknowledgements:
 
-Contributors
-------------
+Acknowledgements
+----------------
+
+*Contributors*
+~~~~~~~~~~~~~~
 
 *(in alphabetical order)*
 
@@ -267,7 +272,10 @@ With substantial and greatly appreciated assistance from:
 * **Ben Singer**, Princeton Neuroscience Institute, Princeton University
 * **Ted Willke**, Intel Labs, Intel Corporation
 
-Support for the development of PsyNeuLink has been provided by:
+*Support*
+~~~~~~~~~
+
+The development of PsyNeuLink has benefited by generous support from the following agencies:
 
 * `The National Institute of Mental Health (R21-MH117548) <https://www.nimh.nih.gov/about/organization/dtr/adult-psychopathology-and-psychosocial-interventions-research-branch/computational-psychiatry-program.shtml>`_
 * `The John Templeton Foundation <https://www.templeton.org/funding-areas/science-big-questions>`_
