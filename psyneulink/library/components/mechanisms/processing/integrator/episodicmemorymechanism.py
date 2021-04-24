@@ -23,6 +23,10 @@ Contents
       - `EpisodicMemoryMechanism_Function`
       - `EpisodicMemoryMechanism_Output`
   * `EpisodicMemoryMechanism_Execution`
+  * `EpisodicMemoryMechanism_Examples`
+      - `Formatting entries in memory <EpisodicMemoryMechanism_Examples_Default>`
+      - `Initializing memory <EpisodicMemoryMechanism_Examples_Memory_Init>`
+      - `Naming InputPorts and OutputPorts EpisodicMemoryMechanism_Examples_Port_Naming>`
   * `EpisodicMemoryMechanism_Class_Reference`
 
 .. _EpisodicMemoryMechanism_Overview:
@@ -237,6 +241,7 @@ Examples
 .. _EpisodicMemoryMechanism_Examples_Default:
 
 *Default EpisodicMemoryMechanism*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following example creates a default EpisodicMemoryMechanism (with no initial memory)::
 
@@ -255,7 +260,8 @@ that is what is returned.
 
 .. _EpisodicMemoryMechanism_Examples_Default_Variable:
 
-*Format entries using* **default_variable*
+*Format entries using* **default_variable**
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In this example, the **default_variable** argument is used to format the entries of `memory
 <EpisodicMemoryMechanism.memory>` to have two fields, one with two elements and the other with three::
@@ -272,6 +278,7 @@ also that even though a list is specified for **default_variable**, the entry re
 .. _EpisodicMemoryMechanism_Examples_Size:
 
 *Format entries using* **size**
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The **size** argument can also be used to format entries::
 
@@ -282,6 +289,7 @@ The **size** argument can also be used to format entries::
 .. _EpisodicMemoryMechanism_Examples_Memory_Init:
 
 *Initialize memory*
+~~~~~~~~~~~~~~~~~~~
 
 Here, the **memory** argument is used to initialize `memory <EpisodicMemoryMechanism.memory>`::
 
@@ -292,12 +300,12 @@ Here, the **memory** argument is used to initialize `memory <EpisodicMemoryMecha
     >>> my_em.execute([[1,2],[3,4,6]])
     array([array([1., 2.]), array([3., 4., 6.])], dtype=object)
 
-Note that there was no need to use **default_variable** to format entries here, since those are specified by the
-entries in the **memory** argument.  If  **default_variable** is specified, its shape must be the same as the entries
-specified in **memory**.  In this example, since `memory <EpisodicMemoryMechanism.memory>` was initialized, the first
-execution returns the closest value to the input, which is used as the retrieval cue.  In the second execution, the
-input from the first execution is returned, since it was stored after the first retrieval. The current contents of
-memory can be inspected using the `memory <EpisodicMemoryMechanism.memory>` attribute::
+Note that there was no need to use **default_variable** or **size** to format entries here, since that is determined
+by the entries in the **memory** argument.  If  **default_variable** or **size** is specified, its shape must be the
+same as the entries specified in **memory**.  In this example, since `memory <EpisodicMemoryMechanism.memory>` was
+initialized, the first execution returns the closest value to the input, which is used as the retrieval cue.  In the
+second execution, the input from the first execution is returned, since it was stored after the first retrieval. The
+current contents of memory can be inspected using the `memory <EpisodicMemoryMechanism.memory>` attribute::
 
     >>> my_em.memory
     array([[array([1., 2.]), array([3., 4., 5.])],
@@ -314,6 +322,7 @@ of different sizes).
 .. _EpisodicMemoryMechanism_Examples_Memory_Init_Function:
 
 *Initialize memory in function*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The contents of `memory <EpisodicMemoryMechanism.memory>` can also be initialized using the **initializer** argument
 in the constructor for the EpisodicMemoryMechanism's `function <EpisodicMemoryMechanism.function>`::
@@ -329,7 +338,21 @@ in the constructor for the EpisodicMemoryMechanism's `function <EpisodicMemoryMe
            [array([10.,  9.]), array([8., 7., 6.])]], dtype=object)
 
 Notice `memory <EpisodicMemoryMechanism.memory>` actually refers to the contents of the `function
-<EpisodicMemoryMechanism.function>`//s `memory <ContentAddressableMemory.memory>` attribute.
+<EpisodicMemoryMechanism.function>`'s `memory <ContentAddressableMemory.memory>` attribute.
+
+COMMENT:
+.. _EpisodicMemoryMechanism_Examples_Port_Naming:
+
+FIX: InputPort and OutputPort noming (defaults and custom)
+     retrieved values (in OutputPorts)
+
+*Name InputPorts*
+~~~~~~~~~~~~~~~~~
+
+*Name OutputPorts*
+~~~~~~~~~~~~~~~~~
+
+COMMENT
 
 .. _EpisodicMemoryMechanism_Class_Reference:
 
