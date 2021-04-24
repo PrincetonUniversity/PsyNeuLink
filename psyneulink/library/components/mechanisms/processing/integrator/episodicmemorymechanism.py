@@ -255,7 +255,7 @@ that is what is returned.
 
 .. _EpisodicMemoryMechanism_Examples_Default_Variable:
 
-*Format entries using* **default_variable**
+*Format entries using* **default_variable*
 
 In this example, the **default_variable** argument is used to format the entries of `memory
 <EpisodicMemoryMechanism.memory>` to have two fields, one with two elements and the other with three::
@@ -271,31 +271,55 @@ also that even though a list is specified for **default_variable**, the entry re
 
 .. _EpisodicMemoryMechanism_Examples_Memory_Init:
 
-*Initialize memory**
+*Initialize memory*
 
 Here, the **memory** argument is used to initialize `memory <EpisodicMemoryMechanism.memory>`::
 
-    >>> my_em = EpisodicMemoryMechanism(memory=[[[1,2],[3,4,5]], [[10,9],[8,7,6]]])
+    >>> my_em = EpisodicMemoryMechanism(memory=[[[1,2],[3,4,5]],
+    ...                                         [[10,9],[8,7,6]]])
     >>> my_em.execute([[1,2],[3,4,6]])
     array([array([1., 2.]), array([3., 4., 5.])], dtype=object)
     >>> my_em.execute([[1,2],[3,4,6]])
     array([array([1., 2.]), array([3., 4., 6.])], dtype=object)
 
-In this case, since `memory <EpisodicMemoryMechanism.memory>` was initialized, the first execution returns the closest
-value to the input, which is used as the retrieval cue.  In the second execution, the input from the first execution
-is returned, since it was stored after the retrieval in that call. The current contents of memory can be inspected
-using the `memory <EpisodicMemoryMechanism.memory>` attribute::
+Note that there was no need to use **default_variable** to format entries here, since those are specified by the
+entries in the **memory** argument.  If  **default_variable** is specified, its shape must be the same as the entries
+specified in **memory**.  In this example, since `memory <EpisodicMemoryMechanism.memory>` was initialized, the first
+execution returns the closest value to the input, which is used as the retrieval cue.  In the second execution, the
+input from the first execution is returned, since it was stored after the first retrieval. The current contents of
+memory can be inspected using the `memory <EpisodicMemoryMechanism.memory>` attribute::
 
     >>> my_em.memory
     array([[array([1., 2.]), array([3., 4., 5.])],
            [array([10.,  9.]), array([8., 7., 6.])],
-           [array([1., 2.]), array([3., 4., 6.])],
            [array([1., 2.]), array([3., 4., 6.])]], dtype=object)
 
-Notice also that there is no need to use **default_variable** to format entries;  it can be specified, but if it is,
-its shape must be the same as the entries specified in **memory**.
+Notice that there is only one entry for [array([1., 2.]), array([3., 4., 6.])], even though it was provided as input
+to execute twice.  This is because the default `function <EpisodicMemoryMechanism.function>` is
+`ContentAddressableMemory`, and the default value of its `duplicate_entries_allowed
+<ContentAddressableMemory.duplicate_entries_allowed>` attribute is False. Notice also that that the dtype of the
+`memory <EpisodicMemoryMechanism.memory>` array is object, since its entries are ragged arrays (i.e., ones with fields
+of different sizes).
 
+.. _EpisodicMemoryMechanism_Examples_Memory_Init_Function:
 
+*Initialize memory in function*
+
+The contents of `memory <EpisodicMemoryMechanism.memory>` can also be initialized using the **initializer** argument
+in the constructor for the EpisodicMemoryMechanism's `function <EpisodicMemoryMechanism.function>`::
+
+    >>> my_em = EpisodicMemoryMechanism(
+    ...                        function=ContentAddressableMemory(initializer=[[[1,2],[3,4,5]],
+    ...                                                                      [[10,9],[8,7,6]]]))
+    >>> my_em.function.memory
+    array([[array([1., 2.]), array([3., 4., 5.])],
+           [array([10.,  9.]), array([8., 7., 6.])]], dtype=object)
+    >>> my_em.memory
+    array([[array([1., 2.]), array([3., 4., 5.])],
+           [array([10.,  9.]), array([8., 7., 6.])]], dtype=object)
+
+Notice `memory <EpisodicMemoryMechanism.memory>` actually refers to the contents of the `function
+<EpisodicMemoryMechanism.function>`//s `memory <ContentAddressableMemory.memory>` attribute.
 
 .. _EpisodicMemoryMechanism_Class_Reference:
 
