@@ -101,8 +101,8 @@ the constructor; the number of these must equal the number of fields specified i
 
 .. _EpisodicMemoryMechanism_Creation_Function_Parameters:
 
-*Function Parameters
-~~~~~~~~~~~~~~~~~~~~
+*Function Parameters*
+~~~~~~~~~~~~~~~~~~~~~
 
 Parameters that govern the storage and retrieval process are specified as arguments to the `MemoryFunction` specified
 in the **function** of the constructor (for example, see `ContentAddressableMemory` for parameters of the default
@@ -219,7 +219,7 @@ the following operations:
       shaped zero-valued array is returned.
     ..
     * store the `value <InputPort.value>` of its `input_ports <EpisodicMemoryMechanism.input_ports>` as an entry in
-      <EpisodicMemoryMechanism.function>` memory.
+      `memory <EpisodicMemoryMechanism.function>`.
     ..
     * assign the value of the entry retrieved to its `output_ports <EpisodicMemoryMechanism.output_ports>`,
       based on how the latter are configured (see `EpisodicMemoryMechanism_Creation_OutputPorts`).
@@ -304,7 +304,8 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         additional information).
 
     memory : 3d array
-        contains entries stored in the `function <EpisodicMemoryMechanism.function>'\\s `memory` attribute.
+        contains entries stored in the `function <EpisodicMemoryMechanism.function>`\\s ``memory`` attribute
+        (for example, `memory <ContentAddressableMemory.memory>`).
 
     output_ports : ContentAddressableList[str, OutputPort]
         a list of the Mechanism's `OutputPorts <Mechanism_OutputPorts>`, the number of which is, by default, equal to
