@@ -1003,6 +1003,56 @@ class TestContentAddressableMemory:
         assert "Field 1 of entry ([array([1, 2, 3]) array([200, 201, 202, 203])]) has incorrect shape ((4,)) " \
                "for memory of 'ContentAddressableMemory Function-0';  should be: (3,)." in str(error_text.value)
 
+    def test_ContentAddressableMemory_duplicate_entries(self):
+
+        c = ContentAddressableMemory(
+            initializer=[[[1,2,3], [4,5,6]],
+                         [[7,8,9], [10,11,12]],
+                         [[7,8,9], [10,11,12]]],
+            duplicate_entries_allowed=False,
+        )
+
+        expected_memory = [[[ 1,  2,  3],[ 4,  5,  6]],
+                           [[ 7,  8,  9],[10, 11, 12]]]
+        assert np.allclose(c.memory, expected_memory)
+
+        c.add_to_memory([[ 1,  2,  3],[ 4,  5,  6]])
+        assert np.allclose(c.memory, expected_memory)
+
+        c.execute([[ 1,  2,  3],[ 4,  5,  6]])
+        assert np.allclose(c.memory, expected_memory)
+
+        c.duplicate_threshold = 0
+        c.add_to_memory([[ 1,  2,  3],[ 4,  5,  7]])
+        expected_memory = [[[ 1,  2,  3],[ 4,  5,  6]],
+                           [[ 7,  8,  9],[10, 11, 12]],
+                           [[ 1,  2,  3],[ 4,  5,  7]]]
+        assert np.allclose(c.memory, expected_memory)
+
+        c.duplicate_threshold = .1
+        c.add_to_memory([[ 1,  2,  3],[ 4,  5,  8]])
+        expected_memory = [[[ 1,  2,  3],[ 4,  5,  6]],
+                           [[ 7,  8,  9],[10, 11, 12]],
+                           [[ 1,  2,  3],[ 4,  5,  7]]]
+        assert np.allclose(c.memory, expected_memory)
+
+        c = ContentAddressableMemory(
+            initializer=[[[1,2,3], [4,5,6]],
+                         [[7,8,9], [10,11,12]],
+                         [[7,8,9], [10,11,12]]],
+            duplicate_entries_allowed=True,
+        )
+        expected_memory = [[[ 1,  2,  3],[ 4,  5,  6]],
+                           [[ 7,  8,  9],[10, 11, 12]],
+                           [[7,8,9], [10,11,12]]],
+        assert np.allclose(c.memory, expected_memory)
+        c.add_to_memory([[ 1,  2,  3],[ 4,  5,  6]])
+        expected_memory = [[[ 1,  2,  3],[ 4,  5,  6]],
+                           [[ 7,  8,  9],[10, 11, 12]],
+                           [[7,8,9], [10,11,12]],
+                           [[ 1,  2,  3],[ 4,  5,  6]]],
+        assert np.allclose(c.memory, expected_memory)
+
     def test_ContentAddressableMemory_overwrite_mode(self):
 
         c = ContentAddressableMemory(
