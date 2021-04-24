@@ -343,14 +343,40 @@ Notice `memory <EpisodicMemoryMechanism.memory>` actually refers to the contents
 COMMENT:
 .. _EpisodicMemoryMechanism_Examples_Port_Naming:
 
-FIX: InputPort and OutputPort noming (defaults and custom)
-     retrieved values (in OutputPorts)
+The `input_ports <EpisodicMemoryMechanism.input_ports>` of an EpisodicMemoryMechanims correspond to fields of entries
+in `memory <ContentAddressableMemory.memory>` (see `EpisodicMemoryMechanism_Input`), that by default are named
+``FIELD_n_INPUT``::
 
-*Name InputPorts*
-~~~~~~~~~~~~~~~~~
+    >>> my_em.input_ports.names
+    ['FIELD_0_INPUT', 'FIELD_1_INPUT']
 
-*Name OutputPorts*
-~~~~~~~~~~~~~~~~~
+By default, an EpisodicMemoryMechanims also has the same number of `output_ports <EpisodicMemoryMechanism.output_ports>`
+as `input_ports <EpisodicMemoryMechanism.input_ports>`, named correspondingly ``RETRIEVED_FIELD_n``::
+
+    >>> my_em.input_ports.names
+    ['RETRIEVED_FIELD_0', 'RETRIEVED_FIELD_1']
+
+These are assigned the values of the fields of the entry retrieved from `memory <ContentAddressableMemory.memory>`.
+
+The names of `input_ports <EpisodicMemoryMechanism.input_ports>` can be customized by specifying a list of names in
+the **input_ports** argument of the Mechanism's constructor::
+
+    >>> my_em = EpisodicMemoryMechanism(size=[3,2],
+    ...                                 input_ports=['KEY', 'VALUE', 'LABEL'])
+    >>> my_em.input_ports.names
+    ['KEY', 'VALUE', 'LABEL']
+
+The number of names must be equal to the number of fields in an entry (in this case, 3).  Similarly, the `output_ports
+<EpisodicMemoryMechanism.output_ports>` can names in the **output_ports** argument of the constructor.  In this case,
+there can be fewer items specified, in which the number of fields reported will be limited by the number of items
+in the argument (see `OutputPort_Customization` for additional information about customizing OutputPorts)::
+
+    >>> my_em = EpisodicMemoryMechanism(size=[3,2],
+    ...                                 input_ports=['KEY', 'VALUE', 'LABEL'],
+    ...                                 output_ports=['VALUE_RETRIEVED', 'LABEL_RETRIEVED')
+    >>> my_em.output_ports.names
+    ['VALUE_RETRIEVED', 'LABEL_RETRIEVED']
+
 
 COMMENT
 
@@ -361,9 +387,9 @@ Class Reference
 
 
 """
+import warnings
 from typing import Optional, Union
 
-import warnings
 import numpy as np
 
 from psyneulink.core.components.functions.function import Function
