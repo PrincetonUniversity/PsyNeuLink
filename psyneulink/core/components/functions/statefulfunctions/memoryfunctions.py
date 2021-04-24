@@ -571,33 +571,33 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     **Examples**
 
-    *Initialize memory with **default_variable**
+    *Initialize memory with **default_variable*
 
     The format for entries in `memory <ContentAddressableMemory.memory` can be specified using either the
     **default_variable** or **initializer** arguments of the Function's constructor.  **default_variable** specifies
     the shape of entries, without creating any entries::
 
-    >>> c = ContentAddressableMemory(default_variable=[[0,0],[0,0,0]])
-    >>> c([[1,2]])
-    [array([0, 0])]
+        >>> c = ContentAddressableMemory(default_variable=[[0,0],[0,0,0]])
+        >>> c([[1,2]])
+        [array([0, 0])]
 
     Since `memory <ContentAddressableMemory.memory` was not intialized, the first call to the Function returns an
     array of zeros, formatted as specified in **defaul_variable**.  However, the input in the call to the Function
     (``[[1,2]]``) is stored as an entry in `memory <EpisodicMemoryMechanism.memory>`::
 
-    >>> c.memory
-    array([[[1., 2.]]])
+        >>> c.memory
+        array([[[1., 2.]]])
 
     and is returned on the next call::
 
-    >>> c([[2,5]])
-    array([[1., 2.]])
+        >>> c([[2,5]])
+        array([[1., 2.]])
 
     Note that even though **default_variable** and the inputs to the Function are specified as lists, the entries
     returned are arrays; `memory <ContentAddressableMemory.memory>` and all of its entries are always formated as
     arrays.
 
-    *Initialize memory with **initializer**
+    *Initialize memory with **initializer*
 
     The **initializer** argument of a ContentAddressableMemory's constructor can be used to initialize its `memory
     <ContentAddressableMemory.memory>`::
@@ -610,6 +610,35 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         array([array([1., 2.]), array([3., 4., 6.])], dtype=object)
 
     Note that there was no need to use **default_variable**, and in fact it would overidden if specified.
+
+    .. _ContentAddressableMemory_Examples_Weighting_Fields:
+
+    *Weighting fields*
+
+    The **distance_field_weights** argument can be used to differentially weight memory fields to modify their
+    influence on retrieval (see `ContentAddressableMemory_Distance_Field_Weights`).  For example, this can be
+    used to configure the Function as dictionary, using the first field for keys (on which retrieval is based)
+    and the second for values (that are retrieved with a matching key), as follows:
+
+        >>> c = ContentAddressableMemory(initializer=[[[1,2],[3,4]],
+        ...                                            [[1,5],[10,11]]],
+        ...                              distance_field_weights=[1,0])
+        >>> c([[1,2.5],[10,11]])
+        array([[1., 2.],
+               [3., 4.]])
+
+    Note that the first entry ``[[1,2],[3,4]]`` in `memory <ContentAddressableMemory.memory>` was retrieved,
+    even though the cue used in the call (``[[1,2.5],[10,11]]``) was an exact match to the second field of the
+    second entry (``[[1,5],[10,11]]``).  However, since that field was assigned 0 in **distance_field_weights**,
+    it was ignored and, using only the first entry, the cue was closer to the first entry. This is confirmed by
+    repeating the example without specifying **distance_field_weights**::
+
+        >>> c = ContentAddressableMemory(initializer=[[[1,2],[3,4]],
+        ...                                            [[1,5],[10,11]]])
+        >>> c([[1,2.5],[10,11]])
+        array([[ 1.,  5.],
+               [10., 11.]])
+
 
     .. _ContentAddressableMemory_Class_Reference:
 

@@ -240,6 +240,10 @@ the following operations:
 Examples
 --------
 
+(See `ContentAddressableMemory <ContentAddressableMemory_Examples>` for additional examples of how to use that
+Function, including how it can be configured to implement a `key-value dictionary
+<ContentAddressableMemory_Examples_Weighting_Fields>`.)
+
 .. _EpisodicMemoryMechanism_Examples_Default:
 
 *Default EpisodicMemoryMechanism*
