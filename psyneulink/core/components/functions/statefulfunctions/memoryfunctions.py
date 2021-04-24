@@ -35,7 +35,7 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import \
-    FunctionError, is_function_type
+    FunctionError, is_function_type, EPSILON
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import StatefulFunction
@@ -894,7 +894,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         # FIX: --------------------
         distance_field_weights = Parameter([1], stateful=True, modulable=True, dependencies='initializer')
         duplicate_entries_allowed = Parameter(False, stateful=True)
-        duplicate_threshold = Parameter(0, stateful=False, modulable=True)
+        duplicate_threshold = Parameter(EPSILON, stateful=False, modulable=True)
         equidistant_entries_select = Parameter(RANDOM)
         rate = Parameter(1.0, modulable=True)
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])

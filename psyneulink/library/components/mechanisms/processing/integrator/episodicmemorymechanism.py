@@ -229,15 +229,73 @@ the following operations:
          however, the order of storage and retrieval is determined by the EpisodicMemoryMechanism's
          `function <EpisodicMemoryMechanism.function>`.
 
+.. _EpisodicMemoryMechanism_Examples:
+
 Examples
 --------
 
-.. _EpisodicMemoryMechanism_Examples:
+.. _EpisodicMemoryMechanism_Examples_Default:
 
-The following example creates a default EpisodicMemoryMechanism with no initial memory::
+*Default EpisodicMemoryMechanism*
+
+The following example creates a default EpisodicMemoryMechanism (with no initial memory)::
 
     >>> my_em = EpisodicMemoryMechanism()
-    >>> my_em.execute([[1,2,3]])
+    >>> my_em.execute([[1,2]])
+    [array([0, 0])]
+    >>> my_em.execute([[2,5]])
+    array([[1., 2.]])
+
+The `default_variable <EpisodicMemoryMechanism_Default_Variable>` for an EpisodicMemoryMechanism is [[0,0]], so the
+format of an entry in `memory <EpisodicMemoryMechanism.memory>` is a single field with two elements. Note that, since
+it was not assigned any initial memory, the first execution returns an entry comprised of zeros.  However, the input
+to the Mechanism in that execution (``[[1,2]]``) is stored as an entry in `memory <EpisodicMemoryMechanism.memory>`,
+and on the second execution, since that is now the only entry in `memory <EpisodicMemoryMechanism.memory>`,
+that is what is returned.
+
+.. _EpisodicMemoryMechanism_Examples_Default_Variable:
+
+*Format entries using* **default_variable**
+
+In this example, the **default_variable** argument is used to format the entries of `memory
+<EpisodicMemoryMechanism.memory>` to have two fields, one with two elements and the other with three::
+
+    >>> my_em = EpisodicMemoryMechanism(default_variable=[[0,0],[0,0,0]])
+    >>> my_em.execute([[1,2],[3,4,5]])
+    [array([0, 0]), array([0, 0, 0])]
+
+As in the previous example, the first execution returns zeros since `memory <EpisodicMemoryMechanism.memory>` as not
+been initialized;  however, notice that in this case they are formated as specified in **default_variable**.  Note
+also that even though a list is specified for **default_variable**, the entry returned is an array; `memory
+<EpisodicMemoryMechanism.memory>` and all of its entries are always formated at arrays.
+
+.. _EpisodicMemoryMechanism_Examples_Memory_Init:
+
+*Initialize memory**
+
+Here, the **memory** argument is used to initialize `memory <EpisodicMemoryMechanism.memory>`::
+
+    >>> my_em = EpisodicMemoryMechanism(memory=[[[1,2],[3,4,5]], [[10,9],[8,7,6]]])
+    >>> my_em.execute([[1,2],[3,4,6]])
+    array([array([1., 2.]), array([3., 4., 5.])], dtype=object)
+    >>> my_em.execute([[1,2],[3,4,6]])
+    array([array([1., 2.]), array([3., 4., 6.])], dtype=object)
+
+In this case, since `memory <EpisodicMemoryMechanism.memory>` was initialized, the first execution returns the closest
+value to the input, which is used as the retrieval cue.  In the second execution, the input from the first execution
+is returned, since it was stored after the retrieval in that call. The current contents of memory can be inspected
+using the `memory <EpisodicMemoryMechanism.memory>` attribute::
+
+    >>> my_em.memory
+    array([[array([1., 2.]), array([3., 4., 5.])],
+           [array([10.,  9.]), array([8., 7., 6.])],
+           [array([1., 2.]), array([3., 4., 6.])],
+           [array([1., 2.]), array([3., 4., 6.])]], dtype=object)
+
+Notice also that there is no need to use **default_variable** to format entries;  it can be specified, but if it is,
+its shape must be the same as the entries specified in **memory**.
+
+
 
 .. _EpisodicMemoryMechanism_Class_Reference:
 
@@ -289,6 +347,11 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
     Arguments
     ---------
+
+    .. _EpisodicMemoryMechanism_Default_Variable:
+
+    default_variable : list or ndarray
+        specifies the format used for entries in `memory <EpisodicMemoryMechanism.memory>`.
 
     memory : list or ndarray
         initial set of entries for `memory <EpisodicMemory.memory>`.  It should be either a 3d regular
