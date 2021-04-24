@@ -75,6 +75,8 @@ An EpisodicMemoryMechanism is created by calling its constructor with specificat
 is determined by the number of `fields <EpisodicMemoryMechanism_Memory_Fields>` and shape of each in an entry.
 These can be specified using any of the following arguments:
 
+  .. __EpisodicMemoryMechanism_Creation_Default_Variable_and_Size:
+
   * **default_variable** or **size** -- these are specified in the standard way that the `variable
     <Mechanism_Base.variable>` is specified for any  `Component` (see `default_variable <Component_Variable>`,
     `size <Component_Size>`, respectively);  the specified value is passed to the constructor for the
@@ -286,12 +288,16 @@ The **size** argument can also be used to format entries::
     >>> my_em.execute([[1,2],[3,4,5]])
     [array([0, 0]), array([0, 0, 0])]
 
+Note that each element of **size** specifies the length of a field
+(see `EpisodicMemoryMechanism_Creation_Default_Variable_and_Size` for additional details).
+
 .. _EpisodicMemoryMechanism_Examples_Memory_Init:
 
 *Initialize memory*
 ~~~~~~~~~~~~~~~~~~~
 
-Here, the **memory** argument is used to initialize `memory <EpisodicMemoryMechanism.memory>`::
+The **memory** argument of an EpisodicMemoryMechanism's constructor can be used to initialize its `memory
+<EpisodicMemoryMechanism.memory>`::
 
     >>> my_em = EpisodicMemoryMechanism(memory=[[[1,2],[3,4,5]],
     ...                                         [[10,9],[8,7,6]]])
@@ -353,15 +359,15 @@ in `memory <ContentAddressableMemory.memory>` (see `EpisodicMemoryMechanism_Inpu
 By default, an EpisodicMemoryMechanims also has the same number of `output_ports <EpisodicMemoryMechanism.output_ports>`
 as `input_ports <EpisodicMemoryMechanism.input_ports>`, named correspondingly ``RETRIEVED_FIELD_n``::
 
-    >>> my_em.input_ports.names
-    ['RETRIEVED_FIELD_0', 'RETRIEVED_FIELD_1']
+    >>> my_em.output_ports.names
+    ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1']
 
 These are assigned the values of the fields of the entry retrieved from `memory <ContentAddressableMemory.memory>`.
 
 The names of `input_ports <EpisodicMemoryMechanism.input_ports>` can be customized by specifying a list of names in
 the **input_ports** argument of the Mechanism's constructor::
 
-    >>> my_em = EpisodicMemoryMechanism(size=[3,2],
+    >>> my_em = EpisodicMemoryMechanism(size=[2,2,2],
     ...                                 input_ports=['KEY', 'VALUE', 'LABEL'])
     >>> my_em.input_ports.names
     ['KEY', 'VALUE', 'LABEL']
@@ -371,9 +377,9 @@ The number of names must be equal to the number of fields in an entry (in this c
 there can be fewer items specified, in which the number of fields reported will be limited by the number of items
 in the argument (see `OutputPort_Customization` for additional information about customizing OutputPorts)::
 
-    >>> my_em = EpisodicMemoryMechanism(size=[3,2],
+    >>> my_em = EpisodicMemoryMechanism(size=[2,2,2],
     ...                                 input_ports=['KEY', 'VALUE', 'LABEL'],
-    ...                                 output_ports=['VALUE_RETRIEVED', 'LABEL_RETRIEVED')
+    ...                                 output_ports=['VALUE_RETRIEVED', 'LABEL_RETRIEVED'])
     >>> my_em.output_ports.names
     ['VALUE_RETRIEVED', 'LABEL_RETRIEVED']
 
