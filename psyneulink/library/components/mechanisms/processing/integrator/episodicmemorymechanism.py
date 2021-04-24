@@ -372,15 +372,24 @@ the **input_ports** argument of the Mechanism's constructor::
     ['KEY', 'VALUE', 'LABEL']
 
 The number of names must be equal to the number of fields in an entry (in this case, 3).  Similarly, the `output_ports
-<EpisodicMemoryMechanism.output_ports>` can names in the **output_ports** argument of the constructor.  In this case,
-there can be fewer items specified, in which the number of fields reported will be limited by the number of items
-in the argument (see `OutputPort_Customization` for additional information about customizing OutputPorts)::
+<EpisodicMemoryMechanism.output_ports>` can be named in the **output_ports** argument of the constructor.  In this case,
+there can be fewer items specified, in which case the number of fields assigned to OutputPorts will be limited by the
+number of OutputPorts specified in the argument::
 
-    >>> my_em = EpisodicMemoryMechanism(size=[2,2,2],
+    >>> my_em = EpisodicMemoryMechanism(memory=[[[1,2],[3,4,5],[6,7]],
+    ...                                         [[7,6],[5,4,3],[2,1]]],
     ...                                 input_ports=['KEY', 'VALUE', 'LABEL'],
     ...                                 output_ports=['VALUE_RETRIEVED', 'LABEL_RETRIEVED'])
-    >>> my_em.output_ports.names
-    ['VALUE_RETRIEVED', 'LABEL_RETRIEVED']
+    >>> my_em.execute([[1,2],[3,4,5],[6,7]])
+    array([array([1., 2.]), array([3., 4., 5.]), array([6., 7.])],
+          dtype=object)
+    >>> my_em.output_ports
+    [(OutputPort VALUE_RETRIEVED), (OutputPort LABEL_RETRIEVED)]
+    >>> my_em.output_ports.values
+    [array([1., 2.]), array([3., 4., 5.])]
+
+Notice that the first two fields of the retrieved entry are assigned to the two OutputPorts, and the third is not
+assigned to an OutputPort (see `OutputPort_Customization` for additional information about customizing OutputPorts).
 
 .. _EpisodicMemoryMechanism_Class_Reference:
 
