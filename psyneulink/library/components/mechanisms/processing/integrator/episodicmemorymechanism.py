@@ -229,6 +229,16 @@ the following operations:
          however, the order of storage and retrieval is determined by the EpisodicMemoryMechanism's
          `function <EpisodicMemoryMechanism.function>`.
 
+Examples
+--------
+
+.. _EpisodicMemoryMechanism_Examples:
+
+The following example creates a default EpisodicMemoryMechanism with no initial memory::
+
+    >>> my_em = EpisodicMemoryMechanism()
+    >>> my_em.execute([[1,2,3]])
+
 .. _EpisodicMemoryMechanism_Class_Reference:
 
 Class Reference
@@ -326,7 +336,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                 variable
                     see `variable <EpisodicMemoryMechanism.variable>`
 
-                    :default value: [[0]]
+                    :default value: [[0,0]]
                     :type: ``list``
 
                 function
@@ -336,7 +346,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                     :type: `Function`
 
         """
-        variable = Parameter([[0]], pnl_internal=True, constructor_argument='default_variable')
+        variable = Parameter([[0,0]], pnl_internal=True, constructor_argument='default_variable')
         function = Parameter(ContentAddressableMemory, stateful=False, loggable=False)
 
     def __init__(self,
