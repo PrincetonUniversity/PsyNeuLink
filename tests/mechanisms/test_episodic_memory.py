@@ -6,7 +6,7 @@ from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import DictionaryMemory, \
     ContentAddressableMemory
 from psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism import \
-    EpisodicMemoryMechanism
+    EpisodicMemoryMechanism, EpisodicMemoryMechanismError
 
 np.random.seed(0)
 
@@ -144,6 +144,29 @@ test_data = [
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
         ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1', 'RETREIVED_FIELD_2'],
         [[10,20], [30,40], [50, 60]],
+    ),
+    (
+        "ContentAddressableMemory Func Mech default_variable Init",
+        ContentAddressableMemory,
+        {},
+        {'default_variable':[[10,20], [30,40]],
+         'input_ports':['FIRST','SECOND']},
+        [[10,20], [30,40]],
+        ['FIRST', 'SECOND'],
+        ['RETREIVED_FIRST', 'RETREIVED_SECOND'],
+        [[10,20], [30,40]],
+    ),
+    (
+        "ContentAddressableMemory Func Mech Memory Init",
+        ContentAddressableMemory,
+        {},
+        {'memory':[[[10,20],[30,40]],
+                   [[11,12],[22, 23]]],
+         'input_ports':['FIRST','SECOND']},
+        [[10,20], [30,40]],
+        ['FIRST', 'SECOND'],
+        ['RETREIVED_FIRST', 'RETREIVED_SECOND'],
+        [[10,20], [30,40]],
     )
 ]
 
@@ -178,7 +201,24 @@ def test_with_contentaddressablememory(name, func, func_params, mech_params, tes
     for i,j in zip(actual_output,expected_output):
         np.testing.assert_allclose(i, j, atol=1e-08)
 
-def test_failures_with_contentaddressable_memory():
+def test_contentaddressable_memory_warnings_and_errors():
+
+    # both memory arg of Mechanism and initializer for its function are specified
+    text = "The 'memory' argument specified for EpisodicMemoryMechanism-0 will override the specification " \
+            "for the 'initializer' argument of its function"
+    with pytest.warns(UserWarning, match=text):
+        em = EpisodicMemoryMechanism(
+            memory = [[[1,2,3],[4,5,6]]],
+            function=ContentAddressableMemory(initializer=[[[10,10,10],[4,5,6]]])
+        )
+
+    # default_value doesn't match shape of initializer for function
+    with pytest.raises(EpisodicMemoryMechanismError) as error_text:
+        em = EpisodicMemoryMechanism(default_variable = [[1,2,3],[4,5,6],[7,8,9]],
+                                     function=ContentAddressableMemory(initializer=[[[10,10,10],[4,5,6]]])
+                                     )
+    assert "Shape of 'variable' for EpisodicMemoryMechanism-1 ((3, 3)) does not match " \
+           "the shape of entries ((2, 3)) in the memory of its function" in str(error_text.value)
 
     # Initializer with >2d regular array
     with pytest.raises(FunctionError) as error_text:

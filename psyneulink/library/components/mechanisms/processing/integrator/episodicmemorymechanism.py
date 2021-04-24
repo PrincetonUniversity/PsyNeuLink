@@ -73,10 +73,14 @@ These can be specified using any of the following arguments:
 
   * **default_variable** or **size** -- these are specified in the standard way that the `variable
     <Mechanism_Base.variable>` is specified for any  `Component` (see `default_variable <Component_Variable>`,
-    `size <Component_Size>`, respectively);  the speified values are passed to the constructor for the
-    EpisodicMemoryMechanism's `function <EpisodicMemoryMechanism.function>`) which determines the shape of an entry
+    `size <Component_Size>`, respectively);  the specified value is passed to the constructor for the
+    EpisodicMemoryMechanism's `function <EpisodicMemoryMechanism.function>`), which determines the shape of an entry
     in `memory <EpisodicMemoryMechanism.memory>`;  the `memory <EpisodicMemoryMechanism.memory>` itself remains
     empty until the Mechanism is executed and an item is stored.
+
+  * **memory** -- specifies a set of entries to be stored in `memory <EpisodicMemoryMechanism.memory>`;  it is passed
+    to the constructor for the EpisodicMemoryMechanism's `function <EpisodicMemoryMechanism.function>`) as its
+    **initializer** argument (see `initializer <ContentAddressableMemory.initializer>` for an example).
 
   * **function** -- this can be used to specify a constructor for the `function <EpisodicMemoryMechanism.function>`,
     in which the **default_variable** or **initializer** arguments are used to specify the shape of entries in `memory
@@ -86,7 +90,7 @@ These can be specified using any of the following arguments:
     execution of the Mechanism (see `initializer <ContentAddressableMemory.initializer>` for an example).
 
 The above specifications are also used to to create the `input_ports <Mechanism_Base.input_ports>` for the Mechanism
-in the same way that the `variable <Mechanism_Base.variable>` of any Mechanism is used (see `Mechanism Variable
+in the same way that the `variable <Mechanism_Base.variable>` is used for any Mechanism (see `Mechanism Variable
 <Mechanism_Variable_and_InputPorts>` for additional information), with the number of InputPorts created equal to the
 number of fields in an entry of `memory <EpisodicMemoryMechanism.memory>`.  Each `input_port
 <EpisodicMemoryMechanism.input_ports>` provides the value assigned to a corresponding field
@@ -229,6 +233,7 @@ Class Reference
 """
 from typing import Optional, Union
 
+import warnings
 import numpy as np
 
 from psyneulink.core.components.functions.function import Function
@@ -236,7 +241,7 @@ from psyneulink.core.components.functions.statefulfunctions.memoryfunctions impo
     DictionaryMemory, ContentAddressableMemory
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
-from psyneulink.core.globals.keywords import EPISODIC_MEMORY_MECHANISM, NAME, OWNER_VALUE, VARIABLE
+from psyneulink.core.globals.keywords import EPISODIC_MEMORY_MECHANISM, INITIALIZER, NAME, OWNER_VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import deprecation_warning, convert_to_np_array, convert_all_elements_to_np_array
@@ -266,6 +271,15 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
     Subclass of `ProcessingMechanism <ProcessingMechanism>` that implements a content addressable dictionary.
     See `Mechanism <Mechanism_Class_Reference>` for arguments and attributes.
+
+    Arguments
+    ---------
+
+    memory : list or ndarray
+        initial set of entries for `memory <EpisodicMemory.memory>`.  It should be either a 3d regular
+        array or a 2d ragged array if the fields of an entry have different lengths; assigned as the
+        **initializer** argument of the constructor for the `MemoryFunction` specified in **function**
+        (see `initializer <ContentAddressableMemory.initializer>` for default assignment).
 
     Attributes
     ----------
@@ -322,6 +336,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable:Union[int, list, np.ndarray]=None,
                  size:Optional[Union[int, list, np.ndarray]]=None,
+                 memory:Optional[Union[list, np.ndarray]]=None,
                  function:Optional[Function]=None,
                  params=None,
                  name=None,
@@ -346,6 +361,8 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                     size += kwargs['assoc_size']
                 kwargs.pop('assoc_size')
 
+        self._memory_init = memory
+
         super().__init__(
             default_variable=default_variable,
             size=size,
@@ -358,21 +375,36 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
     def _handle_default_variable(self, default_variable=None, size=None, input_ports=None, function=None, params=None):
         """Override to check/specify default_variable with respect to shape of function.memory:
-            - if function.memory is specified and default_variable is not, use to the former to specify the latter;
+            - if memory argument for Mechanism is specified and default_variable is not, use former to specify latter;
             - if both are specified, validate that they are the same shape;
-            - if default_variable is specified and function.memory is not, former will be used to specify the latter.
+            - if function.memory is specified and default_variable is not, use former to specify latter;
+            - if both are specified, validate that they are the same shape;
+            - if default_variable is specified and neither memory arg of Mechanism nor function.memory is specified,
+                 use default_variable to specify function.memory.
         Note: handling this here insures that input_ports are specified/validated using correct default_variable
         """
-        if isinstance(self.function, Function) and len(self.function.memory):
+        if self._memory_init:
             if default_variable is None:
-                default_variable = self.function.memory[0]
+                default_variable = self._memory_init[0]
             else:
-                entry_shape = self.function.memory[0].shape
-                variable_shape= convert_all_elements_to_np_array(default_variable).shape
+                variable_shape = convert_all_elements_to_np_array(default_variable).shape
+                entry_shape = convert_all_elements_to_np_array(self._memory).shape
                 if entry_shape != variable_shape:
                     raise EpisodicMemoryMechanismError(f"Shape of 'variable' for {self.name} ({variable_shape}) "
                                                        f"does not match the shape of entries ({entry_shape}) in "
-                                                       f"the memory of its function ({self.function.name})")
+                                                       f"specificaition of its 'memory' argument.")
+
+        elif isinstance(self.function, Function) and len(self.function.memory):
+            if default_variable is None:
+                default_variable = self.function.memory[0]
+            else:
+                variable_shape= convert_all_elements_to_np_array(default_variable).shape
+                entry_shape = self.function.memory[0].shape
+                if entry_shape != variable_shape:
+                    raise EpisodicMemoryMechanismError(f"Shape of 'variable' for {self.name} ({variable_shape}) "
+                                                       f"does not match the shape of entries ({entry_shape}) in "
+                                                       f"the memory of its function ({self.function.name}).")
+
         return super()._handle_default_variable(default_variable, size, input_ports, function, params)
 
     def _instantiate_input_ports(self, context=None):
@@ -388,6 +420,18 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                                                for i in range(len(self.parameters.variable.default_value))]
 
         super()._instantiate_input_ports(input_ports=input_ports, context=context)
+
+    def _instantiate_function(self, function, function_params, context):
+        """Assign memory to function if specified in Mechanism's constructor"""
+        if self._memory_init:
+            if isinstance(function, type):
+                function_params.update({INITIALIZER:self._memory_init})
+            else:
+                if len(function.memory):
+                    warnings.warn(f"The 'memory' argument specified for {self.name} will override the specification "
+                                  f"for the {repr(INITIALIZER)} argument of its function ({self.function.name}).")
+                function.reset(self._memory_init)
+        super()._instantiate_function(function, function_params, context)
 
     def _instantiate_output_ports(self, context=None):
         """Generate OutputPorts with names specified and values with shapes equal to corresponding InputPorts
