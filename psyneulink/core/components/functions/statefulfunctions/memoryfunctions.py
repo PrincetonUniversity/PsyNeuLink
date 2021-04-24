@@ -1111,7 +1111,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             # Store each item, which also validates it by call to _validate_entry()
             if not self._store_memory(entry, context):
                 warnings.warn(f"Attempt to initialize memory of {self.__class__.__name__} with an entry ({entry}) "
-                              f"that has the same key as a previous one, while 'duplicate_entries_allowed'==False; "
+                              f"that is identical to an existing one while 'duplicate_entries_allowed'==False; "
                               f"that entry has been skipped")
         previous_value = self._memory
         self.parameters.previous_value.set(previous_value, context, override=True)
@@ -1350,7 +1350,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
             .. technical_note::
                this method supports adding entries with items in each field that are greater than 1d for potential
-               future use (see format_for_storage() below); however they are currently rejected in _validate_memory
+               future use (see format_for_storage() below); however they are currently rejected in _validate_entry
                as currently they may produce unexpected results (by returning entries that are greater than 2d).
         """
 

@@ -185,6 +185,11 @@ meets the following requirements:
     * it must implement a ``memory`` attribute, that can be accessed by the EpisodicMemoryMechanism's `memory
       <EpisodicMemoryMechanism.memory>` attribute.
 
+    .. technical_note::
+       if the function is classed, and has a classmethod _enforce_memory_shape(), this is used to ensure that
+       any specification of the **memory** argument in the EpisodicMemoryMechanism's constructor conforms to the
+       format required for the memory attribute of the function.
+
 .. _EpisodicMemoryMechanism_Output:
 
 *Output*
@@ -374,7 +379,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         )
 
     def _handle_default_variable(self, default_variable=None, size=None, input_ports=None, function=None, params=None):
-        """Override to check/specify default_variable with respect to shape of function.memory:
+        """Override to initialize or validate default_variable based on _memory_init or function.memory
             - if memory argument for Mechanism is specified and default_variable is not, use former to specify latter;
             - if both are specified, validate that they are the same shape;
             - if function.memory is specified and default_variable is not, use former to specify latter;
@@ -383,22 +388,32 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                  use default_variable to specify function.memory.
         Note: handling this here insures that input_ports are specified/validated using correct default_variable
         """
+
+        variable_shape = convert_all_elements_to_np_array(default_variable).shape \
+                             if default_variable is not None else None
+        function_instance = self.function if isinstance(self.function, Function) else None
+        function_type = self.function if isinstance(self.function, type) else self.function.__class__
+
+        # **memory** arg is specified in constructor, so use that to initialize or validate default_variable
         if self._memory_init:
+            try:
+                self._memory_init = function_type._enforce_memory_shape(self._memory_init)
+            except:
+                pass
             if default_variable is None:
                 default_variable = self._memory_init[0]
             else:
-                variable_shape = convert_all_elements_to_np_array(default_variable).shape
                 entry_shape = convert_all_elements_to_np_array(self._memory_init[0]).shape
                 if entry_shape != variable_shape:
                     raise EpisodicMemoryMechanismError(f"Shape of 'variable' for {self.name} ({variable_shape}) "
                                                        f"does not match the shape of entries ({entry_shape}) in "
-                                                       f"specificaition of its 'memory' argument.")
+                                                       f"specification of its 'memory' argument.")
 
-        elif isinstance(self.function, Function) and len(self.function.memory):
+        # otherwise, if function.memory is specified, use that to initialize or validate default_variable
+        elif function_instance and len(self.function.memory):
             if default_variable is None:
                 default_variable = self.function.memory[0]
             else:
-                variable_shape= convert_all_elements_to_np_array(default_variable).shape
                 entry_shape = self.function.memory[0].shape
                 if entry_shape != variable_shape:
                     raise EpisodicMemoryMechanismError(f"Shape of 'variable' for {self.name} ({variable_shape}) "
@@ -423,7 +438,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
 
     def _instantiate_function(self, function, function_params, context):
         """Assign memory to function if specified in Mechanism's constructor"""
-        if self._memory_init:
+        if self._memory_init is not None:
             if isinstance(function, type):
                 function_params.update({INITIALIZER:self._memory_init})
             else:

@@ -75,17 +75,17 @@ test_data = [
         # func
         ContentAddressableMemory,
         # func_params
-        {'default_variable': [[0],[0,0],[0,0,0]]},
+        {'default_variable': [[0,0],[0,0],[0,0,0]]},
         # mech_params
-        {'size':[1,2,3]},
+        {'size':[2,2,3]},
         # test_var
-        [[10.],[20., 30.],[40., 50., 60.]],
+        [[10.,10.],[20., 30.],[40., 50., 60.]],
         # expected input_port names
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
         # expected output_port names
         ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1', 'RETREIVED_FIELD_2'],
         # expected output
-        [[10.],[20., 30.],[40., 50., 60.]]
+        [[0,0],[0,0],[0,0,0]]
     ),
     (
         "ContentAddressableMemory Func Default Variable Mech Default Var Init",
@@ -95,7 +95,7 @@ test_data = [
         [[10.],[20., 30.],[40., 50., 60.]],
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
         ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1', 'RETREIVED_FIELD_2'],
-        [[10.],[20., 30.],[40., 50., 60.]]
+        [[0],[0,0],[0,0,0]]
     ),
     (
         "ContentAddressableMemory Func Initializer (ragged) Mech Size Init",
@@ -107,19 +107,20 @@ test_data = [
         [[10.],[20., 30.],[40., 50., 60.]],
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
         ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1', 'RETREIVED_FIELD_2'],
-        [[10.],[20., 30.],[40., 50., 60.]]
+        # [[10.],[20., 30.],[40., 50., 60.]]
+        [[1], [2,3], [4,5,6]] # <- distance = 0 to [[10.],[20., 30.],[40., 50., 60.]]
     ),
     (
         "ContentAddressableMemory Func Initializer (ragged) Mech Default Variable Init",
         ContentAddressableMemory,
         {'initializer':np.array([[np.array([1]), np.array([2, 3]), np.array([4, 5, 6])],
-                                 [[10], [20, 30], [40, 50, 60]],
-                                 [np.array([11]), np.array([22, 33]), np.array([44, 55, 66])]], dtype=object)},
+                                 [[12], [20, 55], [40, 50, 60]],
+                                 [np.array([15]), np.array([22, 37]), np.array([44, 55, 66])]], dtype=object)},
         {'default_variable': [[0],[0,0],[0,0,0]], 'input_ports':['hello','world','goodbye']},
         [[10.],[20., 30.],[40., 50., 60.]],
         ['hello', 'world', 'goodbye'],
         ['RETREIVED_hello', 'RETREIVED_world', 'RETREIVED_goodbye'],
-        [[10.],[20., 30.],[40., 50., 60.]]
+        [[1.],[2., 3.],[4., 5., 6.]]
     ),
     (
         "ContentAddressableMemory Func Initializer (regular 2d) Mech Size Init",
@@ -128,17 +129,20 @@ test_data = [
                                  [[10,20], [30,40], [50,60]],
                                  [np.array([11,12]), np.array([22, 23]), np.array([34, 35])]])},
         {'size':[2,2,2]},
-        [[10,20], [30,40], [50, 60]],
+        [[11,13], [22,23], [34, 35]],
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
         ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1', 'RETREIVED_FIELD_2'],
-        [[10,20], [30,40], [50, 60]],
+        [[11,12], [22,23], [34, 35]],
     ),
     (
         "ContentAddressableMemory Func Initializer (regular 2d) Mech Default Variable Init",
         ContentAddressableMemory,
         {'initializer':np.array([[np.array([1,2]), np.array([3,4]), np.array([5, 6])],
                                  [[10,20], [30,40], [50,60]],
-                                 [np.array([11,12]), np.array([22, 23]), np.array([34, 35])]])},
+                                 [np.array([11,12]), np.array([22, 23]), np.array([34, 35])]]),
+         'equidistant_entries_select':'newest',
+         'duplicate_entries_allowed':True
+         },
         {'default_variable':[[0,0],[0,0],[0,0]]},
         [[10,20], [30,40], [50, 60]],
         ['FIELD_0_INPUT', 'FIELD_1_INPUT', 'FIELD_2_INPUT'],
@@ -154,7 +158,7 @@ test_data = [
         [[10,20], [30,40]],
         ['FIRST', 'SECOND'],
         ['RETREIVED_FIRST', 'RETREIVED_SECOND'],
-        [[10,20], [30,40]],
+        [[0,0], [0,0]],
     ),
     (
         "ContentAddressableMemory Func Mech Memory Init",
@@ -167,6 +171,17 @@ test_data = [
         ['FIRST', 'SECOND'],
         ['RETREIVED_FIRST', 'RETREIVED_SECOND'],
         [[10,20], [30,40]],
+    ),
+    (
+        "ContentAddressableMemory Func Mech Memory Init Enforce Shape",
+        ContentAddressableMemory,
+        {},
+        {'memory':[[11,12],[22, 23]], # <- memory incorrect shape, but should be cast by function._enforce_memory_shape
+         'input_ports':['FIRST','SECOND']},
+        [[10,20], [30,40]],
+        ['FIRST', 'SECOND'],
+        ['RETREIVED_FIRST', 'RETREIVED_SECOND'],
+        [[11,12],[22, 23]],
     )
 ]
 
@@ -178,8 +193,8 @@ names = [test_data[i][0] for i in range(len(test_data))]
 def test_with_contentaddressablememory(name, func, func_params, mech_params, test_var,
                                        input_port_names, output_port_names, expected_output, mech_mode):
     f = func(seed=0, **func_params)
-    EpisodicMemoryMechanism(function=f, **mech_params)
-    em = EpisodicMemoryMechanism(**mech_params)
+    # EpisodicMemoryMechanism(function=f, **mech_params)
+    em = EpisodicMemoryMechanism(function=f, **mech_params)
     assert em.input_ports.names == input_port_names
     assert em.output_ports.names == output_port_names
 
@@ -188,15 +203,11 @@ def test_with_contentaddressablememory(name, func, func_params, mech_params, tes
             em.execute(variable)
             return em.output_values
     elif mech_mode == 'LLVM':
-        def EX(variable):
-            # DUMMY UNTIL LLVM IMPLEMENTED
-            return variable
+        pytest.skip("LLVM not yet implemented for ContentAddressableMemory")
     elif mech_mode == 'PTX':
-        def EX(variable):
-            # DUMMY UNTIL PTX IMPLEMENTED
-            return variable
+        pytest.skip("PTX not yet implemented for ContentAddressableMemory")
 
-    EX(test_var)
+    # EX(test_var)
     actual_output = EX(test_var)
     for i,j in zip(actual_output,expected_output):
         np.testing.assert_allclose(i, j, atol=1e-08)
@@ -209,7 +220,7 @@ def test_contentaddressable_memory_warnings_and_errors():
     with pytest.warns(UserWarning, match=text):
         em = EpisodicMemoryMechanism(
             memory = [[[1,2,3],[4,5,6]]],
-            function=ContentAddressableMemory(initializer=[[[10,10,10],[4,5,6]]])
+            function=ContentAddressableMemory(initializer = [[[10,10,10],[4,5,6]]])
         )
 
     # default_value doesn't match shape of initializer for function
@@ -223,11 +234,11 @@ def test_contentaddressable_memory_warnings_and_errors():
     # default_value doesn't match shape of entry in memory arg
     with pytest.raises(EpisodicMemoryMechanismError) as error_text:
         em = EpisodicMemoryMechanism(default_variable = [[1,2,3],[4,5,6]],
-                                     memory =  [[[1,2,3],[4,5,6],[7,8,9]]],
+                                     memory = [[[1,2,3],[4,5,6],[7,8,9]]],
                                      function=ContentAddressableMemory(initializer=[[[10,10,10],[4,5,6]]])
                                      )
     assert "Shape of 'variable' for EpisodicMemoryMechanism-2 ((2, 3)) does not match the " \
-           "shape of entries ((3, 3)) in specificaition of its 'memory' argument" in str(error_text.value)
+           "shape of entries ((3, 3)) in specification of its 'memory' argument" in str(error_text.value)
 
     # Initializer with >2d regular array
     with pytest.raises(FunctionError) as error_text:
