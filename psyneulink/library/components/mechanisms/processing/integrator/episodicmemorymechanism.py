@@ -275,7 +275,7 @@ In this example, the **default_variable** argument is used to format the entries
 As in the previous example, the first execution returns zeros since `memory <EpisodicMemoryMechanism.memory>` as not
 been initialized;  however, notice that in this case they are formated as specified in **default_variable**.  Note
 also that even though a list is specified for **default_variable**, the entry returned is an array; `memory
-<EpisodicMemoryMechanism.memory>` and all of its entries are always formated at arrays.
+<EpisodicMemoryMechanism.memory>` and all of its entries are always formated as arrays.
 
 .. _EpisodicMemoryMechanism_Examples_Size:
 
