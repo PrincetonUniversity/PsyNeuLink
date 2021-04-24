@@ -388,7 +388,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                 default_variable = self._memory_init[0]
             else:
                 variable_shape = convert_all_elements_to_np_array(default_variable).shape
-                entry_shape = convert_all_elements_to_np_array(self._memory).shape
+                entry_shape = convert_all_elements_to_np_array(self._memory_init[0]).shape
                 if entry_shape != variable_shape:
                     raise EpisodicMemoryMechanismError(f"Shape of 'variable' for {self.name} ({variable_shape}) "
                                                        f"does not match the shape of entries ({entry_shape}) in "

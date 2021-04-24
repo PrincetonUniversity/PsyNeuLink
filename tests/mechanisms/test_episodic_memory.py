@@ -217,8 +217,17 @@ def test_contentaddressable_memory_warnings_and_errors():
         em = EpisodicMemoryMechanism(default_variable = [[1,2,3],[4,5,6],[7,8,9]],
                                      function=ContentAddressableMemory(initializer=[[[10,10,10],[4,5,6]]])
                                      )
-    assert "Shape of 'variable' for EpisodicMemoryMechanism-1 ((3, 3)) does not match " \
-           "the shape of entries ((2, 3)) in the memory of its function" in str(error_text.value)
+    assert "Shape of 'variable' for EpisodicMemoryMechanism-1 ((3, 3)) does not match the shape of entries ((2, 3)) " \
+           "in the memory of its function" in str(error_text.value)
+
+    # default_value doesn't match shape of entry in memory arg
+    with pytest.raises(EpisodicMemoryMechanismError) as error_text:
+        em = EpisodicMemoryMechanism(default_variable = [[1,2,3],[4,5,6]],
+                                     memory =  [[[1,2,3],[4,5,6],[7,8,9]]],
+                                     function=ContentAddressableMemory(initializer=[[[10,10,10],[4,5,6]]])
+                                     )
+    assert "Shape of 'variable' for EpisodicMemoryMechanism-2 ((2, 3)) does not match the " \
+           "shape of entries ((3, 3)) in specificaition of its 'memory' argument" in str(error_text.value)
 
     # Initializer with >2d regular array
     with pytest.raises(FunctionError) as error_text:
