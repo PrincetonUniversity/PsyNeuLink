@@ -269,6 +269,16 @@ been initialized;  however, notice that in this case they are formated as specif
 also that even though a list is specified for **default_variable**, the entry returned is an array; `memory
 <EpisodicMemoryMechanism.memory>` and all of its entries are always formated at arrays.
 
+.. _EpisodicMemoryMechanism_Examples_Size:
+
+*Format entries using* **size**
+
+The **size** argument can also be used to format entries::
+
+    >>> my_em = EpisodicMemoryMechanism(size=[2,3])
+    >>> my_em.execute([[1,2],[3,4,5]])
+    [array([0, 0]), array([0, 0, 0])]
+
 .. _EpisodicMemoryMechanism_Examples_Memory_Init:
 
 *Initialize memory*
