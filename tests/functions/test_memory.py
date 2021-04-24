@@ -1022,14 +1022,14 @@ class TestContentAddressableMemory:
         c.execute([[ 1,  2,  3],[ 4,  5,  6]])
         assert np.allclose(c.memory, expected_memory)
 
-        c.duplicate_threshold = 0
+        c.duplicate_threshold = 0  # <- Low threshold allows new entry to be considered distinct
         c.add_to_memory([[ 1,  2,  3],[ 4,  5,  7]])
         expected_memory = [[[ 1,  2,  3],[ 4,  5,  6]],
                            [[ 7,  8,  9],[10, 11, 12]],
                            [[ 1,  2,  3],[ 4,  5,  7]]]
         assert np.allclose(c.memory, expected_memory)
 
-        c.duplicate_threshold = .1
+        c.duplicate_threshold = .1  # <- Higher threshold means new entry is considered duplicate
         c.add_to_memory([[ 1,  2,  3],[ 4,  5,  8]])
         expected_memory = [[[ 1,  2,  3],[ 4,  5,  6]],
                            [[ 7,  8,  9],[10, 11, 12]],
