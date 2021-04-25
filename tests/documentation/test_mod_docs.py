@@ -17,8 +17,10 @@ import psyneulink as pnl
                                  pnl.core.components.mechanisms.processing.integratormechanism,
                                  pnl.core.components.mechanisms.processing.objectivemechanism,
                                  pnl.core.components.mechanisms.modulatory.control.controlmechanism,
-                                 # Function
+                                 # Functions
                                  pnl.core.components.functions.function,
+                                 pnl.core.components.functions.statefulfunctions.memoryfunctions
+
                                 ])
 def test_core_docs(mod, capsys):
     fail, total = doctest.testmod(mod)
@@ -30,6 +32,7 @@ def test_core_docs(mod, capsys):
 @pytest.mark.parametrize("mod", [# Mechanisms
                                  pnl.library.components.mechanisms.processing.integrator.ddm,
                                  pnl.library.components.mechanisms.processing.objective.comparatormechanism,
+                                 pnl.library.components.mechanisms.processing.integrator.episodicmemorymechanism,
                                  # Scheduling
                                  pnl.core.scheduling.scheduler,
                                  # Logs

@@ -23,6 +23,10 @@ Contents
       - `EpisodicMemoryMechanism_Function`
       - `EpisodicMemoryMechanism_Output`
   * `EpisodicMemoryMechanism_Execution`
+  * `EpisodicMemoryMechanism_Examples`
+      - `Formatting entries in memory <EpisodicMemoryMechanism_Examples_Default>`
+      - `Initializing memory <EpisodicMemoryMechanism_Examples_Memory_Init>`
+      - `Naming InputPorts and OutputPorts <EpisodicMemoryMechanism_Examples_Port_Naming>`
   * `EpisodicMemoryMechanism_Class_Reference`
 
 .. _EpisodicMemoryMechanism_Overview:
@@ -71,6 +75,8 @@ An EpisodicMemoryMechanism is created by calling its constructor with specificat
 is determined by the number of `fields <EpisodicMemoryMechanism_Memory_Fields>` and shape of each in an entry.
 These can be specified using any of the following arguments:
 
+  .. _EpisodicMemoryMechanism_Creation_Default_Variable_and_Size:
+
   * **default_variable** or **size** -- these are specified in the standard way that the `variable
     <Mechanism_Base.variable>` is specified for any  `Component` (see `default_variable <Component_Variable>`,
     `size <Component_Size>`, respectively);  the specified value is passed to the constructor for the
@@ -101,8 +107,8 @@ the constructor; the number of these must equal the number of fields specified i
 
 .. _EpisodicMemoryMechanism_Creation_Function_Parameters:
 
-*Function Parameters
-~~~~~~~~~~~~~~~~~~~~
+*Function Parameters*
+~~~~~~~~~~~~~~~~~~~~~
 
 Parameters that govern the storage and retrieval process are specified as arguments to the `MemoryFunction` specified
 in the **function** of the constructor (for example, see `ContentAddressableMemory` for parameters of the default
@@ -219,7 +225,7 @@ the following operations:
       shaped zero-valued array is returned.
     ..
     * store the `value <InputPort.value>` of its `input_ports <EpisodicMemoryMechanism.input_ports>` as an entry in
-      <EpisodicMemoryMechanism.function>` memory.
+      `memory <EpisodicMemoryMechanism.function>`.
     ..
     * assign the value of the entry retrieved to its `output_ports <EpisodicMemoryMechanism.output_ports>`,
       based on how the latter are configured (see `EpisodicMemoryMechanism_Creation_OutputPorts`).
@@ -229,6 +235,166 @@ the following operations:
          however, the order of storage and retrieval is determined by the EpisodicMemoryMechanism's
          `function <EpisodicMemoryMechanism.function>`.
 
+.. _EpisodicMemoryMechanism_Examples:
+
+Examples
+--------
+
+(See `ContentAddressableMemory <ContentAddressableMemory_Examples>` for additional examples of how to use that
+Function, including how it can be configured to implement a `key-value dictionary
+<ContentAddressableMemory_Examples_Weighting_Fields>`.)
+
+.. _EpisodicMemoryMechanism_Examples_Default:
+
+*Default EpisodicMemoryMechanism*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The following example creates a default EpisodicMemoryMechanism (with no initial memory)::
+
+    >>> my_em = EpisodicMemoryMechanism()
+    >>> my_em.execute([[1,2]])
+    [array([0, 0])]
+    >>> my_em.execute([[2,5]])
+    array([[1., 2.]])
+
+The `default_variable <EpisodicMemoryMechanism_Default_Variable>` for an EpisodicMemoryMechanism is ``[[0,0]]``, so the
+format of an entry in `memory <EpisodicMemoryMechanism.memory>` is a single field with two elements. Note that, since
+it was not assigned any initial memory, the first execution returns an entry comprised of zeros.  However, the input to
+the Mechanism in that execution (``[[1,2]]``) is stored as an entry in `memory <EpisodicMemoryMechanism.memory>`, and on
+the second execution, since that is now the only entry in `memory <EpisodicMemoryMechanism.memory>`, that is what is
+returned.
+
+.. _EpisodicMemoryMechanism_Examples_Default_Variable:
+
+*Format entries using* **default_variable**
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In this example, the **default_variable** argument is used to format the entries of `memory
+<EpisodicMemoryMechanism.memory>` to have two fields, one with two elements and the other with three::
+
+    >>> my_em = EpisodicMemoryMechanism(default_variable=[[0,0],[0,0,0]])
+    >>> my_em.execute([[1,2],[3,4,5]])
+    [array([0, 0]), array([0, 0, 0])]
+
+As in the previous example, the first execution returns zeros since `memory <EpisodicMemoryMechanism.memory>` as not
+been initialized;  however, notice that in this case they are formated as specified in **default_variable**.  Note
+also that even though a list is specified for **default_variable**, the entry returned is an array; `memory
+<EpisodicMemoryMechanism.memory>` and all of its entries are always formated as arrays.
+
+.. _EpisodicMemoryMechanism_Examples_Size:
+
+*Format entries using* **size**
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The **size** argument can also be used to format entries::
+
+    >>> my_em = EpisodicMemoryMechanism(size=[2,3])
+    >>> my_em.execute([[1,2],[3,4,5]])
+    [array([0, 0]), array([0, 0, 0])]
+
+Note that each element of **size** specifies the length of a field
+(see `EpisodicMemoryMechanism_Creation_Default_Variable_and_Size` for additional details).
+
+.. _EpisodicMemoryMechanism_Examples_Memory_Init:
+
+*Initialize memory*
+~~~~~~~~~~~~~~~~~~~
+
+The **memory** argument of an EpisodicMemoryMechanism's constructor can be used to initialize its `memory
+<EpisodicMemoryMechanism.memory>`::
+
+    >>> my_em = EpisodicMemoryMechanism(memory=[[[1,2],[3,4,5]],
+    ...                                         [[10,9],[8,7,6]]])
+    >>> my_em.execute([[1,2],[3,4,6]])
+    array([array([1., 2.]), array([3., 4., 5.])], dtype=object)
+    >>> my_em.execute([[1,2],[3,4,6]])
+    array([array([1., 2.]), array([3., 4., 6.])], dtype=object)
+
+Note that there was no need to use **default_variable** or **size** to format entries here, since that is determined
+by the entries in the **memory** argument.  If  **default_variable** or **size** is specified, its shape must be the
+same as the entries specified in **memory**.  In this example, since `memory <EpisodicMemoryMechanism.memory>` was
+initialized, the first execution returns the closest value to the input, which is used as the retrieval cue.  In the
+second execution, the input from the first execution is returned, since it was stored after the first retrieval. The
+current contents of memory can be inspected using the `memory <EpisodicMemoryMechanism.memory>` attribute::
+
+    >>> my_em.memory
+    array([[array([1., 2.]), array([3., 4., 5.])],
+           [array([10.,  9.]), array([8., 7., 6.])],
+           [array([1., 2.]), array([3., 4., 6.])]], dtype=object)
+
+Notice that there is only one entry for ``[array([1., 2.]), array([3., 4., 6.])]``, even though it was provided
+as input to execute twice.  This is because the default `function <EpisodicMemoryMechanism.function>` is
+`ContentAddressableMemory`, and the default value of its `duplicate_entries_allowed
+<ContentAddressableMemory.duplicate_entries_allowed>` attribute is False. Notice also that that the dtype of the
+`memory <EpisodicMemoryMechanism.memory>` array is object, since its entries are ragged arrays (i.e., ones with fields
+of different sizes).
+
+.. _EpisodicMemoryMechanism_Examples_Memory_Init_Function:
+
+*Initialize memory in function*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The contents of `memory <EpisodicMemoryMechanism.memory>` can also be initialized using the **initializer** argument
+in the constructor for the EpisodicMemoryMechanism's `function <EpisodicMemoryMechanism.function>`::
+
+    >>> my_em = EpisodicMemoryMechanism(
+    ...                        function=ContentAddressableMemory(initializer=[[[1,2],[3,4,5]],
+    ...                                                                      [[10,9],[8,7,6]]]))
+    >>> my_em.function.memory
+    array([[array([1., 2.]), array([3., 4., 5.])],
+           [array([10.,  9.]), array([8., 7., 6.])]], dtype=object)
+    >>> my_em.memory
+    array([[array([1., 2.]), array([3., 4., 5.])],
+           [array([10.,  9.]), array([8., 7., 6.])]], dtype=object)
+
+Notice `memory <EpisodicMemoryMechanism.memory>` actually refers to the contents of the `function
+<EpisodicMemoryMechanism.function>`'s `memory <ContentAddressableMemory.memory>` attribute.
+
+.. _EpisodicMemoryMechanism_Examples_Port_Naming:
+
+The `input_ports <EpisodicMemoryMechanism.input_ports>` of an EpisodicMemoryMechanims correspond to fields of entries
+in `memory <ContentAddressableMemory.memory>` (see `EpisodicMemoryMechanism_Input`), that by default are named
+``FIELD_n_INPUT``::
+
+    >>> my_em.input_ports.names
+    ['FIELD_0_INPUT', 'FIELD_1_INPUT']
+
+By default, an EpisodicMemoryMechanims also has the same number of `output_ports <EpisodicMemoryMechanism.output_ports>`
+as `input_ports <EpisodicMemoryMechanism.input_ports>`, named correspondingly ``RETRIEVED_FIELD_n``::
+
+    >>> my_em.output_ports.names
+    ['RETREIVED_FIELD_0', 'RETREIVED_FIELD_1']
+
+These are assigned the values of the fields of the entry retrieved from `memory <ContentAddressableMemory.memory>`.
+
+The names of `input_ports <EpisodicMemoryMechanism.input_ports>` can be customized by specifying a list of names in
+the **input_ports** argument of the Mechanism's constructor::
+
+    >>> my_em = EpisodicMemoryMechanism(size=[2,2,2],
+    ...                                 input_ports=['KEY', 'VALUE', 'LABEL'])
+    >>> my_em.input_ports.names
+    ['KEY', 'VALUE', 'LABEL']
+
+The number of names must be equal to the number of fields in an entry (in this case, 3).  Similarly, the `output_ports
+<EpisodicMemoryMechanism.output_ports>` can be named in the **output_ports** argument of the constructor.  In this case,
+there can be fewer items specified, in which case the number of fields assigned to OutputPorts will be limited by the
+number of OutputPorts specified in the argument::
+
+    >>> my_em = EpisodicMemoryMechanism(memory=[[[1,2],[3,4,5],[6,7]],
+    ...                                         [[7,6],[5,4,3],[2,1]]],
+    ...                                 input_ports=['KEY', 'VALUE', 'LABEL'],
+    ...                                 output_ports=['VALUE_RETRIEVED', 'LABEL_RETRIEVED'])
+    >>> my_em.execute([[1,2],[3,4,5],[6,7]])
+    array([array([1., 2.]), array([3., 4., 5.]), array([6., 7.])],
+          dtype=object)
+    >>> my_em.output_ports
+    [(OutputPort VALUE_RETRIEVED), (OutputPort LABEL_RETRIEVED)]
+    >>> my_em.output_ports.values
+    [array([1., 2.]), array([3., 4., 5.])]
+
+Notice that the first two fields of the retrieved entry are assigned to the two OutputPorts, and the third is not
+assigned to an OutputPort (see `OutputPort_Customization` for additional information about customizing OutputPorts).
+
 .. _EpisodicMemoryMechanism_Class_Reference:
 
 Class Reference
@@ -236,9 +402,9 @@ Class Reference
 
 
 """
+import warnings
 from typing import Optional, Union
 
-import warnings
 import numpy as np
 
 from psyneulink.core.components.functions.function import Function
@@ -280,6 +446,11 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
     Arguments
     ---------
 
+    .. _EpisodicMemoryMechanism_Default_Variable:
+
+    default_variable : list or ndarray
+        specifies the format used for entries in `memory <EpisodicMemoryMechanism.memory>`.
+
     memory : list or ndarray
         initial set of entries for `memory <EpisodicMemory.memory>`.  It should be either a 3d regular
         array or a 2d ragged array if the fields of an entry have different lengths; assigned as the
@@ -304,7 +475,8 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
         additional information).
 
     memory : 3d array
-        contains entries stored in the `function <EpisodicMemoryMechanism.function>'\\s `memory` attribute.
+        contains entries stored in the `function <EpisodicMemoryMechanism.function>`\\s ``memory`` attribute
+        (for example, `memory <ContentAddressableMemory.memory>`).
 
     output_ports : ContentAddressableList[str, OutputPort]
         a list of the Mechanism's `OutputPorts <Mechanism_OutputPorts>`, the number of which is, by default, equal to
@@ -325,7 +497,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                 variable
                     see `variable <EpisodicMemoryMechanism.variable>`
 
-                    :default value: [[0]]
+                    :default value: [[0,0]]
                     :type: ``list``
 
                 function
@@ -335,7 +507,7 @@ class EpisodicMemoryMechanism(ProcessingMechanism_Base):
                     :type: `Function`
 
         """
-        variable = Parameter([[0]], pnl_internal=True, constructor_argument='default_variable')
+        variable = Parameter([[0,0]], pnl_internal=True, constructor_argument='default_variable')
         function = Parameter(ContentAddressableMemory, stateful=False, loggable=False)
 
     def __init__(self,

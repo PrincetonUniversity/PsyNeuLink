@@ -71,6 +71,24 @@ def test_with_dictionary_memory(variable, func, params, expected, benchmark, mec
 test_data = [
     (
         # name
+        "ContentAddressableMemory Default",
+        # func
+        ContentAddressableMemory,
+        # func_params
+        {},
+        # mech_params
+        {},
+        # test_var
+        [[10.,10.]],
+        # expected input_port names
+        ['FIELD_0_INPUT'],
+        # expected output_port names
+        ['RETREIVED_FIELD_0'],
+        # expected output
+        [[0,0]]
+    ),
+    (
+        # name
         "ContentAddressableMemory Func Default Variable Mech Size Init",
         # func
         ContentAddressableMemory,

@@ -491,7 +491,7 @@ dependents can be scheduled to execute).
 Examples
 --------
 
-The examples below focus on the specificaiton of the `objective_mechanism <ControlMechanism.objective_mechanism>`
+The examples below focus on the specification of the `objective_mechanism <ControlMechanism.objective_mechanism>`
 for a ControlMechanism.  See `Control Signal Examples <ControlSignal_Examples>` for examples of how to specify the
 ControlSignals for a ControlMechanism.
 
