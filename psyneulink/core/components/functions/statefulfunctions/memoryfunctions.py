@@ -617,7 +617,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     The **distance_field_weights** argument can be used to differentially weight memory fields to modify their
     influence on retrieval (see `distance_field_weights <ContentAddressableMemory_Distance_Field_Weights>`).  For
-    example, this can be used to configure the Function as dictionary, using the first field for keys (on which
+    example, this can be used to configure the Function as a dictionary, using the first field for keys (on which
     retrieval is based) and the second for values (that are retrieved with a matching key), as follows:
 
         >>> c = ContentAddressableMemory(initializer=[[[1,2],[3,4]],

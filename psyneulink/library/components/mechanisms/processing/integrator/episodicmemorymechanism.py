@@ -142,7 +142,8 @@ and fields can be of arbitrary length.  However, all entries must have the same 
 of corresponding fields across entries). One InputPort of the EpisodicMemoryMechanism is assigned to each field. Thus,
 fields can be used to store different types of information in each field, and to retrieve entries from memory based on
 all fields, or a weighted combination of them (as determined by the `MemoryFunction` assigned to `function
-<EpisodicMemoryMechanism.function>`).
+<EpisodicMemoryMechanism.function>`;  for example, this can be used to configure the default function,
+`ContentAddressableMemory`, as a form of `key-value dictionary <ContentAddressableMemory_Examples_Weighting_Fields>`).
 
 .. _EpisodicMemoryMechanism_Shape:
 
@@ -179,9 +180,10 @@ fields are ignored.
 ~~~~~~~~~~
 
 The default function is `ContentAddressableMemory` that can store entries with an arbitrary number of fields and
-shapes, and retrieve them based on a weighted similarity to any combination of those fields.  A `DictionaryMemory`
-can also be be assigned, that implements a more specific form of memory in which entries are made of up key-value
-pairs, and retrieved based on similarity only to the key.  A custom function can also be specified, so long as it
+shapes, and retrieve them based on a weighted similarity to any combination of those fields.  This can be configured
+as a `key-value dictionary <ContentAddressableMemory_Examples_Weighting_Fields>`, or a more specific function dedicated
+to that purpose -- `DictionaryMemory` -- can be assigned, in which entries are restricted to be key-value pairs,
+and retrieved based on similarity only to the key.  A custom function can also be specified, so long as it
 meets the following requirements:
 
     * it must accept a list or array as its first argument, the items of which are lists or arrays;
