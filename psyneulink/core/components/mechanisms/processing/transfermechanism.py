@@ -281,7 +281,7 @@ as in the following example::
     >>> my_mech.execute([0.5, 1])
     array([[0.4375, 0.875 ]])
 
-Notice that every call to the ``my_execute`` produces a single step of integration (at the default `rate
+Notice that every call to ``my_mech.execute`` produces a single step of integration (at the default `rate
 <TransferMechanism.rate>` of 0.5), by executing its `integrator_function <TransferMechanism.integrator_function>`
 once.  A single step is also executed if the Mechanism's `execute_until_finished <Component.execute_until_finished>`
 attribute is set to False, even if **termination_threshold** is specified. In both cases, the
