@@ -210,7 +210,7 @@ Execution
 ---------
 
 COMMENT:
-DESCRIBE AS TWO MODES (AKIN TO DDM):  INSTANTANEOUS AND TIME-AVERAGED
+OVERVIEW THAT DESCRIBES TWO MODES (AKIN TO DDM):  INSTANTANEOUS AND TIME-AVERAGED
 INSTANTANEOUS:
 input transformed in a single `execution <TransferMechanism_Execution>` of the Mechanism)
 TIME-AVERAGED:
@@ -229,7 +229,7 @@ the following parameters (in addition to any specified for the `function <Mechan
       <TransferMechanism.integrator_function>` is ignored, and time-averaging does not occur.
 
     * `integration_rate <TransferMechanism.integration_rate>`: if the `integrator_mode
-    <TransferMechanism.integrator_mode>`
+      <TransferMechanism.integrator_mode>`
       attribute is set to True, the `integration_rate <TransferMechanism.integration_rate>` attribute is the rate of
       integration (a higher value specifies a faster rate); if `integrator_mode <TransferMechanism.integrator_mode>`
       is False,
