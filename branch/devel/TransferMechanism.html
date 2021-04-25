@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0.8.8.0+1.g6892d888e9 documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0.8.8.0+2.g36ae308743 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.0+1
+                  0.8.8.0+2
                 </div>
               
             
@@ -419,7 +419,7 @@ as in the following example:</p>
 <span class="go">array([[0.4375, 0.875 ]])</span>
 </pre></div>
 </div>
-<p>Notice that every call to the <code class="docutils literal notranslate"><span class="pre">my_execute</span></code> produces a single step of integration (at the default <code class="xref any docutils literal notranslate"><span class="pre">rate</span></code> of 0.5), by executing its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>
+<p>Notice that every call to <code class="docutils literal notranslate"><span class="pre">my_mech.execute</span></code> produces a single step of integration (at the default <code class="xref any docutils literal notranslate"><span class="pre">rate</span></code> of 0.5), by executing its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>
 once.  A single step is also executed if the Mechanism’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execute_until_finished</span></code></a>
 attribute is set to False, even if <strong>termination_threshold</strong> is specified. In both cases, the
 <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.num_executions_before_finished" title="psyneulink.core.components.component.Component.num_executions_before_finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">num_executions_before_finished</span></code></a> attribute remains equal to 1,
@@ -573,12 +573,11 @@ for that to execute first. When <code class="docutils literal notranslate"><span
 <code class="docutils literal notranslate"><span class="pre">stim_percept``executes,</span> <span class="pre">followed</span> <span class="pre">by</span> <span class="pre">``decision</span></code>.  However, the latter carries out only one step of integration,
 since its <strong>execute_until_finished</strong> is set to False.  If its output does not meet its termination condition after
 that one step of integration, then <code class="docutils literal notranslate"><span class="pre">response</span></code> does not execute, since it has been assigned a condition that
-requires <code class="docutils literal notranslate"><span class="pre">deciions</span></code> to terminate before it does so. As a result, since <code class="docutils literal notranslate"><span class="pre">response</span></code> has not executed, the trial
-continues (see XXX for a full description of XXX). On the next pass, <code class="docutils literal notranslate"><span class="pre">attention</span></code> carries out only one step of
-integration, since its termination condition has already been met, as does <code class="docutils literal notranslate"><span class="pre">decision</span></code> since its termination
-condition has <em>not</em> yet been met.  If it is met, then <code class="docutils literal notranslate"><span class="pre">response</span></code> executes and the trial ends (since all
-Mechanisms have now had an opportunity to execute). The value of the <code class="docutils literal notranslate"><span class="pre">attention</span></code> and <code class="docutils literal notranslate"><span class="pre">decision</span></code> Mechanisms
-after each execution are shown below:</p>
+requires <code class="docutils literal notranslate"><span class="pre">decision</span></code> to terminate before it does so. As a result, since <code class="docutils literal notranslate"><span class="pre">response</span></code> has not executed, the trial
+continues. On the next pass, <code class="docutils literal notranslate"><span class="pre">attention</span></code> carries out only one step of integration, since its termination
+condition has already been met, as does <code class="docutils literal notranslate"><span class="pre">decision</span></code> since its termination condition has <em>not</em> yet been met.  If
+it is met, then <code class="docutils literal notranslate"><span class="pre">response</span></code> executes and the trial ends (since all Mechanisms have now had an opportunity to
+execute). The value of the <code class="docutils literal notranslate"><span class="pre">attention</span></code> and <code class="docutils literal notranslate"><span class="pre">decision</span></code> Mechanisms after each execution are shown below:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">attention</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">print_entries</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">TIME</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">VALUE</span><span class="p">])</span> 
 <span class="go">Log for Attention:</span>
 <span class="go">Logged Item:   Time          Value</span>
