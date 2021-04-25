@@ -716,8 +716,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         >>> c.duplicate_entries_allowed=OVERWRITE
         >>> c([[1, 2.1], [3, 4]])
-        array([[[1., 2.],
-                [3., 4.]]])
+        array([[1., 2.],
+               [3., 4.]])
         >>> c.memory
         array([[[1. , 2.1],
                 [3. , 4. ]]])
