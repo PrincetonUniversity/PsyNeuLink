@@ -581,7 +581,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         >>> c([[1,2]])
         [array([0, 0])]
 
-    Since `memory <ContentAddressableMemory.memory` was not intialized, the first call to the Function returns an
+    Since `memory <ContentAddressableMemory.memory>` was not intialized, the first call to the Function returns an
     array of zeros, formatted as specified in **defaul_variable**.  However, the input in the call to the Function
     (``[[1,2]]``) is stored as an entry in `memory <EpisodicMemoryMechanism.memory>`::
 
@@ -616,9 +616,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     *Weighting fields*
 
     The **distance_field_weights** argument can be used to differentially weight memory fields to modify their
-    influence on retrieval (see `ContentAddressableMemory_Distance_Field_Weights`).  For example, this can be
-    used to configure the Function as dictionary, using the first field for keys (on which retrieval is based)
-    and the second for values (that are retrieved with a matching key), as follows:
+    influence on retrieval (see `distance_field_weights <ContentAddressableMemory_Distance_Field_Weights>`).  For
+    example, this can be used to configure the Function as dictionary, using the first field for keys (on which
+    retrieval is based) and the second for values (that are retrieved with a matching key), as follows:
 
         >>> c = ContentAddressableMemory(initializer=[[[1,2],[3,4]],
         ...                                            [[1,5],[10,11]]],
@@ -639,12 +639,14 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         array([[ 1.,  5.],
                [10., 11.]])
 
+    COMMENT:
     # FIX: ADD EXAMPLES FOR ENTRIES WITH DIFFERENT SHAPES
-    # FIX: ADD EXAMPLES FOR DUPLICATE ENTRIES
+    COMMENT
+
     *Duplicate entries*
 
-    By default, duplicate entries are precluded from a ContentAddressableMechanism's `memory
-    <ContentAddressableMechanism.memory>`.  So, for an initializer with identical entries, only one copy of
+    By default, duplicate entries are precluded from a ContentAddressableMemory's `memory
+    <ContentAddressableMemory.memory>`.  So, for an initializer with identical entries, only one copy of
     the duplicates will be stored::
 
         >>> c = ContentAddressableMemory(initializer=[[[1,2],[3,4]],
@@ -662,7 +664,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         array([[[1., 2.],
                 [3., 4.]]])
 
-    Only fields with non-zero weights in `distance_field_weights <ContentAddressableMechanism.distance_field_weights>`
+    Only fields with non-zero weights in `distance_field_weights <ContentAddressableMemory.distance_field_weights>`
     are considered when evaluating whether entries are duplicates. So, in the following example, where the weight
     for the second field is 0, the two entries are considered duplicates and only the first is stored::
 
@@ -674,7 +676,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 [3., 4.]]])
 
     Duplicates can be allowed by setting the **duplicate_entries_allowed** argument to True or *OVERWRITE*.  Setting
-    it to True allows duplicate entries to accumulate in `memory <ContentAddressableMechanism.memory>`, as shown
+    it to True allows duplicate entries to accumulate in `memory <ContentAddressableMemory.memory>`, as shown
     here::
 
         >>> c = ContentAddressableMemory(initializer=[[[1,2],[3,4]],
@@ -694,10 +696,10 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 [ 3.,  4.]]])
 
     Duplicates are determined by comparing entries using the functions `distance_function
-    <ContentAddressableMechanism.distance_function>`;  if the `distance <ContentAddressableMechanism.distance>`
-    is less than `duplicate_threshold <ContentAddressableMechanism.duplicate_threshold>`, they are considered to be
+    <ContentAddressableMemory.distance_function>`;  if the `distance <ContentAddressableMemory.distance>`
+    is less than `duplicate_threshold <ContentAddressableMemory.duplicate_threshold>`, they are considered to be
     duplicates;  otherwise they are treated a distinct entries.  By default, `duplicate_threshold
-    <ContentAddressableMechanism.duplicate_threshold>` is 0.  In the folloiwng example it is increased, so that
+    <ContentAddressableMemory.duplicate_threshold>` is 0.  In the folloiwng example it is increased, so that
     two very similar, but non-identical entries, are nonetheless treated as duplicates::
 
         >>> c = ContentAddressableMemory(initializer=[[[1, 2.0], [3, 4]],
@@ -721,13 +723,15 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 [3. , 4. ]]])
 
     Note that the entry considered to be the duplicate (``[[1, 2.1], [3, 4]]``) is returned, and then replaced in
-    `memory <ContentAddressableMechanism.memory>`.  Finally, if `duplicate_entries_allowed
-    <ContentAddressableMechanism.duplicate_entries_allowed>` is True, and duplicates have accumulated, the
+    `memory <ContentAddressableMemory.memory>`.  Finally, if `duplicate_entries_allowed
+    <ContentAddressableMemory.duplicate_entries_allowed>` is True, and duplicates have accumulated, the
     `equidistant_entries_select <ContentAddressableMemory.equidistant_entries_select>` attribute can be used to
     specify how to select among them for retrieval, either by chosing randomly (*RANDOM*) or selecting either the
     first one (*OLDEST*) or last one (*NEWEST*) stored.
 
     .. _ContentAddressableMemory_Class_Reference:
+
+    **Class Reference**
 
     Arguments
     ---------
