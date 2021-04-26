@@ -160,7 +160,7 @@ a RecurrentTransferMechanism can be configured to integrate its input, by settin
 <TransferMechanism.integration_mode>` to True  (see `TransferMechanism_Execution_With_Integration`), and to do so for a
 single step of integration or until it reaches some termination condition each time it is executed (see
 `TransferMechanism_Execution_Integration_Termination`). Finally, it can be reset using its `reset
-<TransferMechanism.reset>` method (see `TransferMechanism_Reinitialization`).
+<TransferMechanism.reset>` method (see `TransferMechanism_Execution_Integration_Reinitialization`).
 
 .. _RecurrentTransferMechanism_Execution_Learning:
 
