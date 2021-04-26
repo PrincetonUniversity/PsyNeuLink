@@ -103,14 +103,15 @@ using the **default_variable** or **size** arguments of its constructor (see `Me
 
 .. _TransferMechanism_Function:
 
-*Function*
-~~~~~~~~~~
+*Functions*
+~~~~~~~~~~~
 
-*Function*.  The default function for a TransferMechanism is `Linear`.  A custom function can be specified in the
-**function** argument of the constructor. The result of the `function <Mechanism_Base.function>` applied to the
-`value <InputPort.value>` of each InputPort is:
-    - appended to an array that represents the TransferMechanism's `value <Mechanism_Base.value>`
-    - assigned as the `value <OutputPort.value>` of the TransferMechanism's corresponding `OutputPort <OutputPort>`
+A TransferMechanism has two functions:  its primary `function <TransferMechanism.function>` that transforms its
+input, and an `integrator_function <TransferMechanism.integrator_function>` that is used to integrate the input
+before passing it to the primary `function <TransferMechanism.function>` when `integrator_mode
+<TransferMechanism.integrator_mode>` is set to True. The default function for a TransferMechanism is `Linear`,
+and the defult for its `integrator_function <TransferMechanism.integrator_function>` is `AdaptiveIntegrator`,
+how custom functions can be assigned, as described under `TransferMechanism_Creation`.
 
 .. _TransferMechanism_OutputPorts:
 
@@ -119,25 +120,24 @@ using the **default_variable** or **size** arguments of its constructor (see `Me
 
 By default, or if the **output_ports** argument is specified using the keyword *RESULTS*, a TransferMechanism generates
 one `OutputPort` for each item in the outer dimension (axis 0) of its `value <Mechanism_Base.value>` (each of which is
-the result of the Mechanism's `function <Mechanism_Base.function>` applied to the `value <InputPort.value>` of the
-corresponding `InputPort`).  If there is only one OutputPort (i.e., the case in which there is only one InputPort and
+the result of the Mechanism's `function <Mechanism_Base.function>` (and possibly its `integrator_function
+<TransferMechanism.integrator_function>`) applied to the `value <InputPort.value>` of the corresponding `InputPort`).
+If there is only one OutputPort (i.e., the case in which there is only one InputPort and
 therefore only one item in Mechanism's `value <Mechanism_Base.value>`), the OutputPort is named *RESULT*.  If there is
 more than one item in `value <Mechanism_Base.value>`, then an OuputPort is assigned for each;  the name of the first
 is *RESULT-0*, and the names of the subsequent ones are suffixed with an integer that is incremented for each successive
 one (e.g., *RESULT-1*, *RESULT-2*, etc.).  Additional OutputPorts can be assigned using the TransferMechanism's
 `standard_output_ports <TransferMechanism.standard_output_ports>` (see `OutputPort_Standard`) or by creating `custom
-OutputPorts <OutputPort_Customization>` (but see note below).   Like any OutputPorts, the `value <OutputPort.value>` of
-any or all of these can be modulated by one or more `ControlSignals <ControlSignal_Modulation>` or `GatingSignals
-<GatingSignal_Modulation>`.
+OutputPorts <OutputPort_Customization>` (but see note below).
 
-    .. _TransferMechanism_OutputPorts_Note:
+.. _TransferMechanism_OutputPorts_Note:
 
-    .. note::
-       If any OutputPorts are specified in the **output_ports** argument of the TransferMechanism's constructor,
-       then, `as with any Mechanism <Mechanism_Default_Port_Suppression_Note>`, its default OutputPorts are not
-       automatically generated.  Therefore, an OutputPort with the appropriate `index <OutputPort.index>` must be
-       explicitly specified for each and every item of the Mechanism's `value <Mechanism_Base.value>` (corresponding
-       to each InputPort) for which an OutputPort is needed.
+.. note::
+   If any OutputPorts are specified in the **output_ports** argument of the TransferMechanism's constructor,
+   then, `as with any Mechanism <Mechanism_Default_Port_Suppression_Note>`, its default OutputPorts are not
+   automatically generated.  Therefore, an OutputPort with the appropriate `index <OutputPort.index>` must be
+   explicitly specified for each and every item of the Mechanism's `value <Mechanism_Base.value>` (corresponding
+   to each InputPort) for which an OutputPort is needed.
 
 .. _TransferMechanism_Execution:
 
@@ -656,27 +656,27 @@ Class Reference
 """
 import copy
 import inspect
-import numbers
-import warnings
 import logging
+import numbers
 import types
+import warnings
 from collections.abc import Iterable
 
 import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
+from psyneulink.core.components.functions.combinationfunctions import LinearCombination, SUM
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 from psyneulink.core.components.functions.function import Function, is_function_type
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.selectionfunctions import SelectionFunction
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
+from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
 from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, TransferFunction
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination, SUM
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -692,7 +692,6 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
     all_within_range, append_type_to_name, iscompatible, is_comparison_operator, convert_to_np_array, safe_equals
 from psyneulink.core.scheduling.condition import TimeScale
-from psyneulink.core.globals.registry import remove_instance_from_registry, register_instance
 
 __all__ = [
     'INITIAL_VALUE', 'CLIP',  'INTEGRATOR_FUNCTION', 'INTEGRATION_RATE',
@@ -1276,7 +1275,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                 # extra conditions temporary until universal initializer
                 # validation is developed
                 and initial_value.shape != self.integrator_function.defaults.variable.shape
-                and self._get_parsed_variable(self.parameters.integrator_function, initial_value).shape != self.integrator_function.defaults.variable.shape
+                and self._get_parsed_variable(self.parameters.integrator_function,
+                                              initial_value).shape != self.integrator_function.defaults.variable.shape
             ):
                 raise TransferError(
                         "The format of the initial_value parameter for {} ({}) must match its variable ({})".
@@ -1284,7 +1284,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                     )
                 )
 
-        # FIX: SHOULD THIS (AND INTEGRATION_RATE) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES??
+        # FIX: SHOULD THIS (AND INTEGRATION_RATE) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES?
         # Validate NOISE:
         if NOISE in target_set:
             noise = target_set[NOISE]
@@ -1458,7 +1458,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             expected = np.empty_like([self.defaults.value[0], self.defaults.value[0]])
             got = np.empty_like(self.termination_measure.defaults.variable)
             if expected.shape != got.shape:
-                warnings.warn("Shape mismatch: Termination measure input: {} should be {}".format(self.termination_measure.defaults.variable, expected.shape))
+                warnings.warn("Shape mismatch: Termination measure input: "
+                              "{self.termination_measure.defaults.variable} should be {expected.shape}.")
                 # FIXME: HACK the distance function is not initialized
                 self.termination_measure.defaults.variable = expected
 
@@ -1478,7 +1479,8 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             builder.call(func, [func_params, func_state, func_in, cmp_val_ptr])
         elif isinstance(self.termination_measure, TimeScale):
-            ptr = builder.gep(pnlvm.helpers.get_state_ptr(builder, self, state, "num_executions"), [ctx.int32_ty(0), ctx.int32_ty(self.termination_measure.value)])
+            ptr = builder.gep(pnlvm.helpers.get_state_ptr(builder, self, state, "num_executions"),
+                              [ctx.int32_ty(0), ctx.int32_ty(self.termination_measure.value)])
             ptr_val = builder.sitofp(builder.load(ptr), threshold.type)
             pnlvm.helpers.printf(builder, f"TERM MEASURE {self.termination_measure} %d %d\n",ptr_val, threshold)
             builder.store(ptr_val, cmp_val_ptr)
@@ -1511,7 +1513,8 @@ class TransferMechanism(ProcessingMechanism_Base):
         mf_params, builder = self._gen_llvm_param_ports_for_obj(
                 self.function, mf_param_ptr, ctx, builder, params, state, arg_in)
 
-        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder, self.function, mf_params, mf_state, mf_in, tags=tags)
+        mf_out, builder = self._gen_llvm_invoke_function(ctx, builder,
+                                                         self.function, mf_params, mf_state, mf_in, tags=tags)
 
         clip_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "clip")
         if len(clip_ptr.type.pointee) != 0:
@@ -1683,7 +1686,8 @@ class TransferMechanism(ProcessingMechanism_Base):
             # return True
             return self.parameters.is_finished_flag._get(context)
 
-        assert self.parameters.value.history_min_length + 1 >= self._termination_measure_num_items_expected, "History of 'value' is not guaranteed enough entries for termination_mesasure"
+        assert self.parameters.value.history_min_length + 1 >= self._termination_measure_num_items_expected,\
+            "History of 'value' is not guaranteed enough entries for termination_mesasure"
         measure = self.termination_measure
         value = self.parameters.value._get(context)
 
