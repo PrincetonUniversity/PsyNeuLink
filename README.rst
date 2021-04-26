@@ -9,6 +9,7 @@
 Welcome to PsyNeuLink
 =====================
 
+(pronounced: /sīnyoolingk - sigh-new-link)
 Documentation is available at https://princetonuniversity.github.io/PsyNeuLink/
 
 Purpose
@@ -225,6 +226,12 @@ With substantial and greatly appreciated assistance from:
 * **Michael Shvartsman**, Princeton Neuroscience Institute, Princeton University
 * **Ben Singer**, Princeton Neuroscience Institute, Princeton University
 * **Ted Willke**, Intel Labs, Intel Corporation
+
+Support for the development of PsyNeuLink has been provided by:
+
+* The National Institute of Mental Health (R21-MH117548)
+* The John Templeton Foundation
+* The Templeton World Charitable Foundation
 
 License
 -------

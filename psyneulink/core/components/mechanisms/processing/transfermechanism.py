@@ -281,7 +281,7 @@ as in the following example::
     >>> my_mech.execute([0.5, 1])
     array([[0.4375, 0.875 ]])
 
-Notice that every call to the ``my_execute`` produces a single step of integration (at the default `rate
+Notice that every call to ``my_mech.execute`` produces a single step of integration (at the default `rate
 <TransferMechanism.rate>` of 0.5), by executing its `integrator_function <TransferMechanism.integrator_function>`
 once.  A single step is also executed if the Mechanism's `execute_until_finished <Component.execute_until_finished>`
 attribute is set to False, even if **termination_threshold** is specified. In both cases, the
@@ -449,12 +449,11 @@ accepts a single argument that is a 2d array with two entries.
     ``stim_percept``executes, followed by ``decision``.  However, the latter carries out only one step of integration,
     since its **execute_until_finished** is set to False.  If its output does not meet its termination condition after
     that one step of integration, then ``response`` does not execute, since it has been assigned a condition that
-    requires ``deciions`` to terminate before it does so. As a result, since ``response`` has not executed, the trial
-    continues (see XXX for a full description of XXX). On the next pass, ``attention`` carries out only one step of
-    integration, since its termination condition has already been met, as does ``decision`` since its termination
-    condition has *not* yet been met.  If it is met, then ``response`` executes and the trial ends (since all
-    Mechanisms have now had an opportunity to execute). The value of the ``attention`` and ``decision`` Mechanisms
-    after each execution are shown below::
+    requires ``decision`` to terminate before it does so. As a result, since ``response`` has not executed, the trial
+    continues. On the next pass, ``attention`` carries out only one step of integration, since its termination
+    condition has already been met, as does ``decision`` since its termination condition has *not* yet been met.  If
+    it is met, then ``response`` executes and the trial ends (since all Mechanisms have now had an opportunity to
+    execute). The value of the ``attention`` and ``decision`` Mechanisms after each execution are shown below::
 
         >>> attention.log.print_entries(display=[pnl.TIME, pnl.VALUE]) #doctest: +SKIP
         Log for Attention:

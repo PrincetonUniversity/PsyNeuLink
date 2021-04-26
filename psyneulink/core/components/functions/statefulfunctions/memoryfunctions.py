@@ -35,7 +35,7 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import \
-    FunctionError, is_function_type
+    FunctionError, is_function_type, EPSILON
 from psyneulink.core.components.functions.objectivefunctions import Distance
 from psyneulink.core.components.functions.selectionfunctions import OneHot
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import StatefulFunction
@@ -357,16 +357,17 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     """
     ContentAddressableMemory(                        \
         default_variable=None,                       \
-        retrieval_prob=1.0                           \
-        storage_prob=1.0                             \
+        retrieval_prob=1.0,                          \
+        storage_prob=1.0,                            \
         rate=None,                                   \
         noise=0.0,                                   \
         initializer=None,                            \
         distance_field_weights=None,                 \
         distance_function=Distance(metric=COSINE),   \
         selection_function=OneHot(mode=MIN_VAL),     \
-        equidistant_entries_select=RANDOM,           \
         duplicate_entries_allowed=False,             \
+        duplicate_threshold=0,                       \
+        equidistant_entries_select=RANDOM,           \
         max_entries=None,                            \
         params=None,                                 \
         owner=None,                                  \
@@ -375,22 +376,50 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     .. _ContentAddressableMemory:
 
+    **Sections**
+
+    - `Overview <ContentAddressableMemory_Overview>` \n
+        `Entries and Fields <ContentAddressableMemory_Entries_and_Fields>` \n
+        `Content-based Retrieval <ContentAddressableMemory_Retrieval>` \n
+        `Duplicate entries <ContentAddressableMemory_Duplicate_Entries>` \n
+    - `Structure <ContentAddressableMemory_Structure>`
+    - `Execution <ContentAddressableMemory_Execution>` \n
+        `Retrieval <ContentAddressableMemory_Execution_Retrieval>` \n
+        `Storage <ContentAddressableMemory_Execution_Storage>` \n
+    - `Examples <ContentAddressableMemory_Examples>`
+    - `Class Reference <ContentAddressableMemory_Class_Reference>`
+
+    .. _ContentAddressableMemory_Overview:
+
     **Overview**
 
-    Implement configurable, content-addressable storage and retrieval of entries from
-    `memory <ContentAddressableMemory.memory>`. Storage is determined by `storage_prob
+    The ContentAddressableMemory `Function` implements a configurable, content-addressable storage and retrieval of
+    entries from `memory <ContentAddressableMemory.memory>`. Storage is determined by `storage_prob
     <ContentAddressableMemory.storage_prob>`, and retrieval of entries is determined by
     `distance_function <ContentAddressableMemory.distance_function>`,
     `selection_function <ContentAddressableMemory.selection_function>`, and `retrieval_prob
     <ContentAddressableMemory.retrieval_prob>`.
 
-    *Entries and Fields*. The **default_variable** argument specifies the shape of an entry in `memory
+    .. _ContentAddressableMemory_Entries_and_Fields:
+
+    **Entries and Fields**. The **default_variable** argument specifies the shape of an entry in `memory
     <ContentAddressableMemory.storage_prob>`, each of which is a list or array of fields that are themselves lists or
     1d arrays (see `EpisodicMemoryMechanism_Memory_Fields`). An entry can have an arbitrary number of fields, and
     each field can have an arbitrary length.  However, all entries must have the same number of fields, and the
-    corresponding fields must all have the same length across entries.
+    corresponding fields must all have the same length across entries.  Fields can be weighted to determine the
+    influence they have on retrieval, using the `distance_field_weights <ContentAddressableMemory.memory>` `Parameter`
+    (see `retrieval <ContentAddressableMemory_Retrieval>` below).
 
-    *Retrieval*. Entries are retrieved from `memory <ContentAddressableMemory.memory>` based on their distance from
+    .. hint::
+        Entries in `memory <ContentAddressableMemory.memory>` can be assigned "labels" -- i.e., values
+        that are not used in the calculation of distance -- by assigning them a weight of 0 or None in
+        `distance_field_weights <ContentAddressableMemory.memory>`); either can be used for labels that
+        are numeric values; however, if non-numeric values are assigned to a field as labels, then None
+        must be specified for that field in `distance_field_weights <ContentAddressableMemory.memory>`.
+
+    .. _ContentAddressableMemory_Retrieval:
+
+    **Retrieval**. Entries are retrieved from `memory <ContentAddressableMemory.memory>` based on their distance from
     `variable <ContentAddressableMemory.variable>`, used as the cue for retrieval. The distance is computed using the
     `distance_function <ContentAddressableMemory.distance_function>`, which compares `variable
     <ContentAddressableMemory.variable>` with each entry in `memory <ContentAddressableMemory.storage_prob>` as full
@@ -406,7 +435,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     <ContentAddressableMemory.distance>` and `distances_by_field <ContentAddressableMemory.distances_by_field>`, and
     `distances_to_entries <ContentAddressableMemory.distances_to_entries>` respectively.
 
-    *Duplicate Entries*. These can be allowed, disallowed, or overwritten during storage using
+    .. _ContentAddressableMemory_Duplicate_Entries:
+
+    **Duplicate Entries**. These can be allowed, disallowed, or overwritten during storage using
     `duplicate_entries_allowed <ContentAddressableMemory.duplicate_entries_allowed>`),
     and how selection is made among duplicate entries or ones indistinguishable by the
     `distance_function <ContentAddressableMemory.distance_function>` can be specified
@@ -426,7 +457,11 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     <ContentAddressableMemory.memory>` by providing it in the **initializer** argument of the ContentAddressableMemory's
     constructor, or in a call to its  `reset  <ContentAddressableMemory.reset>` method.  The current contents of `memory
     <ContentAddressableMemory.memory>` can be inspected using the `memory <ContentAddressableMemory.memory>` attribute,
-    which returns a list containing the current entries, each as a list containing all fields for that entry.
+    which returns a list containing the current entries, each as a list containing all fields for that entry.  The
+    `memory_num_fields <ContentAddressableMemory.memory_num_fields>` contains the number of fields expected for each
+    entry, `memory_field_shapes <ContentAddressableMemory.memory_field_shapes>` their shapes, and `memory_num_entries
+    <ContentAddressableMemory.memory_num_entries>` the total number of entries in `memory
+    <ContentAddressableMemory.memory>`.
 
     .. _ContentAddressableMemory_Shapes:
 
@@ -451,7 +486,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     .. _ContentAddressableMemory_Execution_Retrieval:
 
-    * *Retrieval:* first, with probability `retrieval_prob <ContentAddressableMemory.retrieval_prob>`,
+    * **Retrieval:** first, with probability `retrieval_prob <ContentAddressableMemory.retrieval_prob>`,
       the entry closest to `variable <ContentAddressableMemory.variable>` is retrieved from is retrieved from `memory
       <ContentAddressableMemory.memory>`.  The entry is chosen by calling, in order:
 
@@ -482,13 +517,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                between `variable <ContentAddressableMemory.variable>` and entries for those fields are not included
                in the averaging of distances by field.
 
-            .. hint::
-               Entries in `memory <ContentAddressableMemory.memory>` can be assigned "labels" -- i.e., values
-               that are not used in the calculation of distance -- by assigning them a weight of 0 or None in
-               `distance_field_weights <ContentAddressableMemory.memory>`); either can be used for labels that
-               are numeric values; however, if non-numeric values are assigned to a field as labels, then None
-               must be specified for that field in `distance_field_weights <ContentAddressableMemory.memory>`.
-
         * `selection_function <ContentAddressableMemory.selection_function>`\: called with the list of distances
           to determine which entries to select for consideration. If more than on entry from `memory
           <ContentAddressableMemory.memory>` is identified, `equidistant_entries_select
@@ -501,13 +529,12 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         `distances_by_field <ContentAddressableMemory.distances_by_field>`, and the distances of `variable
         <ContentAddressableMemory.variable>` to all entries in `memory <ContentAddressableMemory.memory>` is assigned
         to `distances_to_entries <ContentAddressableMemory.distances_to_entries>`.
+
     .. _ContentAddressableMemory_Execution_Storage:
 
-    * *Storage:* after retrieval, an attempt is made to store `variable <ContentAddressableMemory.variable>` in `memory
-      memory <ContentAddressableMemory.memory>` with probability `storage_prob<ContentAddressableMemory.storage_prob>`;
-      if the attempt is made:
-
-      .. _ContentAddressableMemory_Duplicate_Entries:
+    * **Storage:** after retrieval, an attempt is made to store `variable <ContentAddressableMemory.variable>`
+      in `memory memory <ContentAddressableMemory.memory>` with probability `storage_prob
+      <ContentAddressableMemory.storage_prob>`;  if the attempt is made:
 
       * if `variable <ContentAddressableMemory.variable>` is identical to an entry already in `memory
         <ContentAddressableMemory.memory>`, as evaluated by
@@ -537,7 +564,174 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         applied to `variable <ContentAddressableMemory.variable>` before storage as :math:`variable * rate + noise`;
 
       * finally, if the number of entries in `memory <ContentAddressableMemory.memory>` exceeds `max_entries
-        <ContentAddressableMemory.max_entries>`, the first (oldest) entry is deleted.
+        <ContentAddressableMemory.max_entries>`, the first (oldest) entry is deleted.  The current number of entries
+        in memory is contained in the `memory_num_entries <ContentAddressableMemory.memory_num_entries>` attribute.
+
+    .. _ContentAddressableMemory_Examples:
+
+    **Examples**
+
+    *Initialize memory with **default_variable*
+
+    The format for entries in `memory <ContentAddressableMemory.memory` can be specified using either the
+    **default_variable** or **initializer** arguments of the Function's constructor.  **default_variable** specifies
+    the shape of entries, without creating any entries::
+
+        >>> c = ContentAddressableMemory(default_variable=[[0,0],[0,0,0]])
+        >>> c([[1,2]])
+        [array([0, 0])]
+
+    Since `memory <ContentAddressableMemory.memory>` was not intialized, the first call to the Function returns an
+    array of zeros, formatted as specified in **defaul_variable**.  However, the input in the call to the Function
+    (``[[1,2]]``) is stored as an entry in `memory <EpisodicMemoryMechanism.memory>`::
+
+        >>> c.memory
+        array([[[1., 2.]]])
+
+    and is returned on the next call::
+
+        >>> c([[2,5]])
+        array([[1., 2.]])
+
+    Note that even though **default_variable** and the inputs to the Function are specified as lists, the entries
+    returned are arrays; `memory <ContentAddressableMemory.memory>` and all of its entries are always formated as
+    arrays.
+
+    *Initialize memory with **initializer*
+
+    The **initializer** argument of a ContentAddressableMemory's constructor can be used to initialize its `memory
+    <ContentAddressableMemory.memory>`::
+
+        >>> c = ContentAddressableMemory(initializer=[[[1,2],[3,4,5]],
+        ...                                            [[10,9],[8,7,6]]])
+        >>> c([[1,2],[3,4,6]])
+        array([array([1., 2.]), array([3., 4., 5.])], dtype=object)
+        >>> c([[1,2],[3,4,6]])
+        array([array([1., 2.]), array([3., 4., 6.])], dtype=object)
+
+    Note that there was no need to use **default_variable**, and in fact it would overidden if specified.
+
+    .. _ContentAddressableMemory_Examples_Weighting_Fields:
+
+    *Weighting fields*
+
+    The **distance_field_weights** argument can be used to differentially weight memory fields to modify their
+    influence on retrieval (see `distance_field_weights <ContentAddressableMemory_Distance_Field_Weights>`).  For
+    example, this can be used to configure the Function as dictionary, using the first field for keys (on which
+    retrieval is based) and the second for values (that are retrieved with a matching key), as follows:
+
+        >>> c = ContentAddressableMemory(initializer=[[[1,2],[3,4]],
+        ...                                            [[1,5],[10,11]]],
+        ...                              distance_field_weights=[1,0])
+        >>> c([[1,2.5],[10,11]])
+        array([[1., 2.],
+               [3., 4.]])
+
+    Note that the first entry ``[[1,2],[3,4]]`` in `memory <ContentAddressableMemory.memory>` was retrieved,
+    even though the cue used in the call (``[[1,2.5],[10,11]]``) was an exact match to the second field of the
+    second entry (``[[1,5],[10,11]]``).  However, since that field was assigned 0 in **distance_field_weights**,
+    it was ignored and, using only the first entry, the cue was closer to the first entry. This is confirmed by
+    repeating the example without specifying **distance_field_weights**::
+
+        >>> c = ContentAddressableMemory(initializer=[[[1,2],[3,4]],
+        ...                                            [[1,5],[10,11]]])
+        >>> c([[1,2.5],[10,11]])
+        array([[ 1.,  5.],
+               [10., 11.]])
+
+    COMMENT:
+    # FIX: ADD EXAMPLES FOR ENTRIES WITH DIFFERENT SHAPES
+    COMMENT
+
+    *Duplicate entries*
+
+    By default, duplicate entries are precluded from a ContentAddressableMemory's `memory
+    <ContentAddressableMemory.memory>`.  So, for an initializer with identical entries, only one copy of
+    the duplicates will be stored::
+
+        >>> c = ContentAddressableMemory(initializer=[[[1,2],[3,4]],
+        ...                                           [[1,2],[3,4]]])
+        >>> c.memory
+        array([[[1., 2.],
+                [3., 4.]]])
+
+    and using the same array as input to the function will retrieve that array but not store another copy::
+
+        >>> c([[1,2],[3,4]])
+        array([[1., 2.],
+               [3., 4.]])
+        >>> c.memory
+        array([[[1., 2.],
+                [3., 4.]]])
+
+    Only fields with non-zero weights in `distance_field_weights <ContentAddressableMemory.distance_field_weights>`
+    are considered when evaluating whether entries are duplicates. So, in the following example, where the weight
+    for the second field is 0, the two entries are considered duplicates and only the first is stored::
+
+        >>> c = ContentAddressableMemory(initializer=[[[1,2],[3,4]],
+        ...                                           [[1,2],[5,6]]],
+        ...                              distance_field_weights=[1,0])
+        >>> c.memory
+        array([[[1., 2.],
+                [3., 4.]]])
+
+    Duplicates can be allowed by setting the **duplicate_entries_allowed** argument to True or *OVERWRITE*.  Setting
+    it to True allows duplicate entries to accumulate in `memory <ContentAddressableMemory.memory>`, as shown
+    here::
+
+        >>> c = ContentAddressableMemory(initializer=[[[1,2],[3,4]],
+        ...                                            [[1,5],[10,11]]],
+        ...                              duplicate_entries_allowed=True)
+        >>> c([[1,2],[3,4]])
+        array([[1., 2.],
+               [3., 4.]])
+        >>> c.memory
+        array([[[ 1.,  2.],
+                [ 3.,  4.]],
+        <BLANKLINE>
+               [[ 1.,  5.],
+                [10., 11.]],
+        <BLANKLINE>
+               [[ 1.,  2.],
+                [ 3.,  4.]]])
+
+    Duplicates are determined by comparing entries using the functions `distance_function
+    <ContentAddressableMemory.distance_function>`;  if the `distance <ContentAddressableMemory.distance>`
+    is less than `duplicate_threshold <ContentAddressableMemory.duplicate_threshold>`, they are considered to be
+    duplicates;  otherwise they are treated a distinct entries.  By default, `duplicate_threshold
+    <ContentAddressableMemory.duplicate_threshold>` is 0.  In the folloiwng example it is increased, so that
+    two very similar, but non-identical entries, are nonetheless treated as duplicates::
+
+        >>> c = ContentAddressableMemory(initializer=[[[1, 2.0], [3, 4]],
+        ...                                           [[1, 2.5], [3, 4]]],
+        ...                              duplicate_entries_allowed=False,
+        ...                              duplicate_threshold=0.2)
+
+        >>> c.memory
+        array([[[1., 2.],
+                [3., 4.]]])
+
+    Setting **duplicate_entries_allowed** argument to *OVERWRITE* allows an entry to replace one that is considered
+    duplicate, even if it is not identical, as in the following example::
+
+        >>> c.duplicate_entries_allowed=OVERWRITE
+        >>> c([[1, 2.1], [3, 4]])
+        array([[1., 2.],
+               [3., 4.]])
+        >>> c.memory
+        array([[[1. , 2.1],
+                [3. , 4. ]]])
+
+    Note that the entry considered to be the duplicate (``[[1, 2.1], [3, 4]]``) is returned, and then replaced in
+    `memory <ContentAddressableMemory.memory>`.  Finally, if `duplicate_entries_allowed
+    <ContentAddressableMemory.duplicate_entries_allowed>` is True, and duplicates have accumulated, the
+    `equidistant_entries_select <ContentAddressableMemory.equidistant_entries_select>` attribute can be used to
+    specify how to select among them for retrieval, either by chosing randomly (*RANDOM*) or selecting either the
+    first one (*OLDEST*) or last one (*NEWEST*) stored.
+
+    .. _ContentAddressableMemory_Class_Reference:
+
+    **Class Reference**
 
     Arguments
     ---------
@@ -567,15 +761,15 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         specifies an initial set of entries for `memory <ContentAddressableMemory.memory>` (see
         `initializer <ContentAddressableMemory.initializer>` for additional details).
 
-    distance_function : Distance or function : default Distance(metric=COSINE)
-        specifies the function used during retrieval to compare `variable <ContentAddressableMemory.variable>` with
-        entries in `memory <ContentAddressableMemory.memory>`.
-
     distance_field_weights : 1d array : default None
         specifies the weight to use in computing the distance between each item of `variable
         <ContentAddressableMemory.variable>` and the corresponding `memory_field
         <EpisodicMemoryMechanism_Memory_Fields>` of each item in `memory <ContentAddressableMemory.memory>` (see
         `distance_field_weights <ContentAddressableMemory.distance_field_weights>` for additional details).
+
+    distance_function : Distance or function : default Distance(metric=COSINE)
+        specifies the function used during retrieval to compare `variable <ContentAddressableMemory.variable>` with
+        entries in `memory <ContentAddressableMemory.memory>`.
 
     selection_function : OneHot or function : default OneHot(mode=MIN_VAL)
         specifies the function used during retrieval to evaluate the distances returned by `distance_function
@@ -591,7 +785,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         be considered a duplicate (see `duplicate entries <ContentAddressableMemory_Duplicate_Entries>`
         for additional details).
 
-    equidistant_entries_select:  RANDOM | OLDEST | NEWEST : default RANDOM
+    equidistant_entries_select :  RANDOM | OLDEST | NEWEST : default RANDOM
         specifies which entry in `memory <ContentAddressableMemory.memory>` is chosen for retrieval if two or more
         have the same distance from `variable <ContentAddressableMemory.variable>`.
 
@@ -646,30 +840,34 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     initializer : ndarray
         initial set of entries for `memory <ContentAddressableMemory.memory>`.  It should be either a 3d regular
         array or a 2d ragged array (if the fields of an entry have different lengths), but it can be specified
-        in the **initializer** argument of the contructor using some simpler forms for convenience.  Specifically,
-        scalars, 1d and regular 2d arrays are allowed, which are interpreted as a single entry with a single
-        field that is converted to a 3d array to initialize `memory <ContentAddressableMemory.memory>`.
+        in the **initializer** argument of the constructor using some simpler forms for convenience.  Specifically,
+        scalars, 1d and regular 2d arrays are allowed, which are interpreted as a single entry that is converted to
+        a 3d array to initialize `memory <ContentAddressableMemory.memory>`.
 
     memory : list
         list of entries in ContentAddressableMemory, each of which is an array of fields containing stored items;
         the fields of an entry must be lists or arrays, each of which can be different shapes, but the corresponding
-        fields of all entries must have the same shape;  for example:
-            [[[field1],[field2],[field3]...], [[field1],[field2],[field3]...]...]
-        could be:
-            |---------------- entry 1 ---------------|---------------- entry 2 ---------------|
-            |-- field1 --|-- field2 --|--- field3 ---|-- field1 --|-- field2 --|--- field3 ---|
-            [[   [a],      [b,c,d],      [[e],[f]]  ],[    [u],      [v,w,x],     [[y],[z]]  ]]
+        fields of all entries must have the same shape;  for example, the following could be a pair of entries in
+        memory:
 
-    distance_function : Distance or function : default Distance(metric=COSINE)
-        function used during retrieval to compare `variable <ContentAddressableMemory.variable>` with entries in
-        `memory <ContentAddressableMemory.memory>`.
+        +-------------+------------------------------+--------------------------------------------+
+        |                entry 1                     |                  entry 2                   |
+        +-------------+--------------+---------------+-----------+--------------+-----------------+
+        |    field1   |    field2    |     field3    |   field1  |    field2    |    field3       |
+        +-------------+--------------+---------------+-----------+--------------+-----------------+
+        |  [[ [a],    |  [b,c,d],    |  [[e],[f]] ], | [  [u],   |   [v,w,x],   |  [[y],[z]]  ]]  |
+        +-------------+--------------+---------------+-----------+--------------+-----------------+
 
     distance_field_weights : 1d array : default None
         determines the weight used in computing the distance between each item of `variable
         <ContentAddressableMemory.variable>` and the corresponding `memory_field
-        <EpisodicMemoryMechanism_Memory_Fields>` of each entry in `memory <ContentAddressableMemory.memory>`;
-        if all elements are identical, it is treated as a scalar coefficient on `distance
-        <ContentAddressableMemory.distance>` (see `ContentAddressableMemory_Field_Weights` for additional details).
+        <EpisodicMemoryMechanism_Memory_Fields>` of each entry in `memory <ContentAddressableMemory.memory>`; if all
+        elements are identical, it is treated as a scalar coefficient on `distance <ContentAddressableMemory.distance>`
+        (see `ContentAddressableMemory_Distance_Field_Weights` for additional details).
+
+    distance_function : Distance or function : default Distance(metric=COSINE)
+        function used during retrieval to compare `variable <ContentAddressableMemory.variable>` with entries in
+        `memory <ContentAddressableMemory.memory>`.
 
     distance : float : default 0
         contains distance used for retrieval last cue to last entry returned in a given `context <Context>`.
@@ -681,6 +879,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     distances_to_entries : array : default [0]
         contains array of distances between last cue retrieved in a given `context <Context>` an all entries at that
         time.
+
+    memory_num_entries : int
+        contains the number of entries in `memory <ContentAddressableMemory.memory>`.
 
     memory_num_fields : int
         contains the number of `memory fields <EpisodicMemoryMechanism_Memory_Fields>` in each entry of `memory
@@ -755,17 +956,17 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                     :default value: [[0], [0]]
                     :type: ``list``
 
-                distance_field_weights
-                    see `distance_field_weights <ContentAddressableMemory.distance_field_weights>`
-
-                    :default value: [1]
-                    :type: ``numpy.ndarray``
-
                 distance
                     see `distance <ContentAddressableMemory.distance>`
 
                     :default value: 0
                     :type: ``float``
+
+                distance_field_weights
+                    see `distance_field_weights <ContentAddressableMemory.distance_field_weights>`
+
+                    :default value: [1]
+                    :type: ``numpy.ndarray``
 
                  distance_function
                     see `distance_function <ContentAddressableMemory.distance_function>`
@@ -880,11 +1081,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         previous_value = Parameter(None, initializer='initializer', pnl_internal=True)
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        memory_num_fields = Parameter(None, stateful=True, read_only=True)
-        memory_field_shapes = Parameter(None, stateful=True, read_only=True)
-        distance_field_weights = Parameter([1], stateful=True, modulable=True)
+        # FIX: MAKE THESE ATTRIBUTES RATHER THAN PARAMETERS:
+        memory_num_fields = Parameter(None, stateful=False, read_only=True)
+        memory_field_shapes = Parameter(None, stateful=False, read_only=True)
+        # FIX: --------------------
+        distance_field_weights = Parameter([1], stateful=True, modulable=True, dependencies='initializer')
         duplicate_entries_allowed = Parameter(False, stateful=True)
-        duplicate_threshold = Parameter(0, stateful=False, modulable=True)
+        duplicate_threshold = Parameter(EPSILON, stateful=False, modulable=True)
         equidistant_entries_select = Parameter(RANDOM)
         rate = Parameter(1.0, modulable=True)
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -899,44 +1102,80 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         def _validate_retrieval_prob(self, retrieval_prob):
             retrieval_prob = float(retrieval_prob)
             if not all_within_range(retrieval_prob, 0, 1):
-                return f"{RETRIEVAL_PROB} must be a float in the interval [0,1]."
+                return f"must be a float in the interval [0,1]."
 
         def _validate_storage_prob(self, storage_prob):
             storage_prob = float(storage_prob)
             if not all_within_range(storage_prob, 0, 1):
-                return f"{STORAGE_PROB} must be a float in the interval [0,1]."
+                return f"must be a float in the interval [0,1]."
+
+        def _validate_distance_field_weights(self, field_weights):
+            if self.distance_field_weights._user_specified is True and self.initializer.default_value is not None:
+                field_weights = np.array(field_weights)
+                if not np.isscalar(field_weights) and field_weights.ndim != 1:
+                    return f"must be a scalar or list or 1d array of scalars"
+                fw_len = len(field_weights)
+                num_fields = convert_all_elements_to_np_array(self.initializer.default_value).shape[1]
+                if len(field_weights) not in {1, num_fields}:
+                    return f"length ({fw_len}) must be same as number of fields " \
+                           f"in entries of initializer ({num_fields})."
+                if not np.any(field_weights):
+                    warnings.warn(f"All weights in the 'distance_fields_weights' Parameter of {self._owner.name} "
+                                  f"are set to '0', so all entries of its memory will be treated as duplicates.")
 
         def _validate_equidistant_entries_select(self, equidistant_entries_select):
             if equidistant_entries_select not in equidistant_entries_select_keywords:
-                return f"'equidistant_entries_select' must be {' or '.join(equidistant_entries_select_keywords)}."
+                return f"must be {' or '.join(equidistant_entries_select_keywords)}."
 
         def _validate_duplicate_entries_allowed(self, duplicate_entries_allowed):
             if not isinstance(duplicate_entries_allowed, bool) and duplicate_entries_allowed != OVERWRITE:
-                return f"'duplicate_entries_allowed' must be a bool or 'OVERWRITE'."
+                return f"must be a bool or 'OVERWRITE'."
 
+        def _validate_initializer(self, initializer):
+            pass
+
+        def _parse_initializer(self, initializer):
+            if initializer is not None:
+                initializer = ContentAddressableMemory._enforce_memory_shape(initializer)
+            return initializer
+
+    @tc.typecheck
     def __init__(self,
-                 default_variable=None,
-                 retrieval_prob: Optional[Union[int, float]]=None,
-                 storage_prob: Optional[Union[int, float]]=None,
-                 noise: Optional[Union[int, float, list, np.ndarray, callable]]=None,
-                 rate: Optional[Union[int, float, list, np.ndarray]]=None,
-                 initializer:Optional[Union[list, np.ndarray]]=None,
-                 distance_field_weights:Optional[Union[list, np.ndarray]]=None,
-                 distance_function:Optional[Union[Distance, is_function_type]]=None,
-                 selection_function:Optional[Union[OneHot, is_function_type]]=None,
-                 duplicate_entries_allowed=None,
+                 # FIX: REINSTATE WHEN 3.6 IS RETIRED:
+                 # default_variable=None,
+                 # retrieval_prob: Optional[Union[int, float]]=None,
+                 # storage_prob: Optional[Union[int, float]]=None,
+                 # rate: Optional[Union[int, float, list, np.ndarray]]=None,
+                 # noise: Optional[Union[int, float, list, np.ndarray, callable]]=None,
+                 # initializer:Optional[Union[list, np.ndarray]]=None,
+                 # distance_field_weights:Optional[Union[list, np.ndarray]]=None,
+                 # distance_function:Optional[Union[Distance, is_function_type]]=None,
+                 # selection_function:Optional[Union[OneHot, is_function_type]]=None,
                  # duplicate_entries_allowed:Optional[Union[(bool, Literal[OVERWRITE]]]=None,
-                 duplicate_threshold:Optional[int]=None,
+                 # duplicate_threshold:Optional[int]=None,
                  # equidistant_entries_select:Optional[Literal[Union[RANDOM, OLDEST, NEWEST]]]=None,
+                 # max_entries:Optional[int]=None,
+                 # seed:Optional[int]=None,
+                 # params:Optional[Union[list, np.ndarray]]=None,
+                 # owner=None,
+                 # prefs:tc.optional(is_pref_set)=None):
+                 default_variable=None,
+                 retrieval_prob=None,
+                 storage_prob=None,
+                 rate=None,
+                 noise=None,
+                 initializer=None,
+                 distance_field_weights=None,
+                 distance_function=None,
+                 selection_function=None,
+                 duplicate_entries_allowed=None,
+                 duplicate_threshold=None,
                  equidistant_entries_select=None,
-                 max_entries:Optional[int]=None,
-                 seed:Optional[int]=None,
-                 params:Optional[Union[list, np.ndarray]] = None,
+                 max_entries=None,
+                 seed=None,
+                 params=None,
                  owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
-
-        # if initializer is None:
-        #     initializer = []
+                 prefs:tc.optional(is_pref_set)=None):
 
         if seed is None:
             seed = get_global_seed()
@@ -1064,33 +1303,24 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             (must be done here rather than in validate_params as it is needed to initialize previous_value
         """
 
-        if initializer is None or np.array(initializer, dtype=object).size == 0:
+        if initializer is None or convert_all_elements_to_np_array(initializer).size == 0:
             return None
-
-        # Enforce initializer to be shape of memory (2d for ragged fields or 3d for regular ones)
-        # - note: this also allows initializer to be specified with a single entry
-        #         (i.e., without enclosing it in an outer list or array)
-        initializer = convert_all_elements_to_np_array(initializer)
-        initializer = np.atleast_2d(initializer)
-        if initializer.dtype != object and initializer.ndim==2:
-            initializer = np.expand_dims(initializer, axis=0)
 
         # FIX: HOW DOES THIS RELATE TO WHAT IS DONE IN __init__()?
         # Set memory fields shapes if this is the first entry
         self.parameters.memory_num_fields.set(initializer.shape[1],
                                               context=context, override=True)
-        self.parameters.memory_field_shapes.set([np.array(item).shape for item in initializer[0]],
+        self.parameters.memory_field_shapes.set([item.shape for item in initializer[0]],
                                                context=context, override=True)
-        # "pre-initialize" previous_value for use by _store_memory below:
         self.parameters.previous_value.set(None, context, override=True)
 
         for entry in initializer:
             # Store each item, which also validates it by call to _validate_entry()
-            if not self._store_memory(np.array(entry), context):
+            if not self._store_memory(entry, context):
                 warnings.warn(f"Attempt to initialize memory of {self.__class__.__name__} with an entry ({entry}) "
-                              f"that has the same key as a previous one, while 'duplicate_entries_allowed'==False; "
+                              f"that is identical to an existing one while 'duplicate_entries_allowed'==False; "
                               f"that entry has been skipped")
-        previous_value = convert_to_np_array(self._memory)
+        previous_value = self._memory
         self.parameters.previous_value.set(previous_value, context, override=True)
         return previous_value
 
@@ -1104,13 +1334,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             self.selection_function = self.selection_function(context=context)
 
     @handle_external_context(fallback_most_recent=True)
-    def reset(self, previous_value=None, context=None):
+    def reset(self, new_value=None, context=None):
         """
         reset(<new_dictionary> default={})
 
         Clears the memory in `previous_value <ContentAddressableMemory.previous_value>`.
 
-        If an argument is passed into reset or if the `initializer <ContentAddressableMemory.initializer>`
+        If **new_value** is passed into reset or if the `initializer <ContentAddressableMemory.initializer>`
         attribute contains a value besides [], then that value is used to start the new memory in `previous_value
         <ContentAddressableMemory.previous_value>`. Otherwise, the new `previous_value
         <ContentAddressableMemory.previous_value>` memory starts out as None.
@@ -1118,18 +1348,21 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         `value <ContentAddressableMemory.value>` takes on the same value as
         `previous_value <ContentAddressableMemory.previous_value>`.
         """
-        # no arguments were passed in -- use current values of initializer attributes
-        if previous_value is None:
-            previous_value = self._get_current_parameter_value("initializer", context)
 
-        # if previous_value == []:
-        if previous_value is None:
-            self.parameters.previous_value._get(context).clear()
-            # value = np.ndarray(shape=(2, 0, len(self.defaults.variable[0])))
-            value = None
+        if new_value is not None:
+            value = self._initialize_previous_value(ContentAddressableMemory._enforce_memory_shape(new_value),
+                                                    context=context)
 
         else:
-            value = self._initialize_previous_value(previous_value, context=context)
+            # no arguments were passed in -- use current values of initializer attributes
+            initializer = self._get_current_parameter_value("initializer", context)
+            if initializer is not None:
+                # set previous_value to initializer and get value
+                value = self._initialize_previous_value(initializer, context=context)
+            else:
+                # no initializer, so clear previous_value and set value to None
+                self.parameters.previous_value._get(context).clear()
+                value = None
 
         self.parameters.value.set(value, context, override=True)
         return value
@@ -1161,7 +1394,12 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         value of entry that best matches `variable <ContentAddressableMemory.variable>`  : 1d array
         """
 
+        # Enforce variable to be shape of an entry (1d for ragged fields or 2d for regular ones)
+        # - note: this allows entries with a single field to be specified as a 1d regular array
+        #         (i.e., without enclosing it in an outer list or array), which are converted to a 2d array
         variable = convert_all_elements_to_np_array(variable)
+        if variable.dtype != object and variable.ndim==1:
+            variable = np.expand_dims(variable, axis=0)
 
         retrieval_prob = np.array(self._get_current_parameter_value(RETRIEVAL_PROB, context)).astype(float)
         storage_prob = np.array(self._get_current_parameter_value(STORAGE_PROB, context)).astype(float)
@@ -1216,11 +1454,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             raise FunctionError(f"Attempt to store and/or retrieve entry in {self.__class__.__name__} ({entry}) "
                                 f"that has an incorrect number of fields ({len(entry)}; should be {num_fields}).")
 
-        # if not all((np.array(item).ndim == 1 and np.array(item).shape == field_shapes[i][0]
-        #             for i, item in enumerate(entry))):
-        #     raise FunctionError(f"Attempt to store and/or retrieve an entry in {self.__class__.__name__} that has one "
-        #                         f"or more fields with an incorrect shape (shapes should be {field_shapes}):\n{entry}.")
-
         owner_name = f'of {self.owner.name}' if self.owner else ''
         for i, field in enumerate(entry):
             field = np.array(field)
@@ -1261,7 +1494,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         if _memory is None:
             return self.uniform_entry(0, context)
 
-        cue = np.array(cue)
+        cue = convert_all_elements_to_np_array(cue)
         self._validate_entry(cue, context)
 
         # Get mean of field-wise distances between cue each entry in memory
@@ -1324,24 +1557,13 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
             .. technical_note::
                this method supports adding entries with items in each field that are greater than 1d for potential
-               future use (see format_for_storage() below); however they are currently rejected in _validate_memory
+               future use (see format_for_storage() below); however they are currently rejected in _validate_entry
                as currently they may produce unexpected results (by returning entries that are greater than 2d).
         """
 
         self._validate_entry(entry, context)
         # convert all fields and entry itself to arrays
-        # FIX: USE utilities.convert_to_nparray() HERE ONCE THAT CAN HANDLE LISTS (INCLUDING NESTED ONES)
-        def convert_all_nested_items_in_entry_to_nparray(entry):
-            for i, item in enumerate(entry.copy()):
-                if isinstance(item, list):
-                    if all(isinstance(i, (int, float)) for i in item ):
-                        pass
-                    else:
-                        item = convert_all_nested_items_in_entry_to_nparray(item)
-                entry[i] = np.array(item)
-            return entry
-        # entry = np.array([np.array(m) for m in entry])
-        entry = convert_all_nested_items_in_entry_to_nparray(entry)
+        entry = convert_all_elements_to_np_array(entry)
 
         num_fields = self.parameters.memory_num_fields._get(context)
         field_weights = self.parameters.distance_field_weights._get(context)
@@ -1396,10 +1618,9 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                 try:
                     index = existing_entries.index(entry)
                 except AttributeError:
-                    # index = existing_entries.tolist().index(entry)
                     index = [i for i,e in enumerate(existing_entries) if np.all(e == matches[0])][0]
                 except ValueError:
-                    index = np.array(existing_entries).tolist().index(entry)
+                    index = existing_entries.tolist().index(entry)
                 existing_entries[index] = entry
                 storage_succeeded = True
             else:
@@ -1471,7 +1692,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
         elif granularity == 'full_entry':
             # Use first element as scalar if it is a homogenous array (i.e., all elements are the same)
-            # field_weights = np.array(field_weights)
             field_weights = field_weights[0] if np.all(field_weights[0]==field_weights) else field_weights
             distance_by_fields = not np.isscalar(field_weights)
             if distance_by_fields:
@@ -1493,12 +1713,22 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     def _parse_distance_function_variable(self, variable):
         return convert_to_np_array([variable[0], variable[0]])
 
+    @classmethod
+    def _enforce_memory_shape(cls, memory):
+        # Enforce memory to be 2d for ragged fields or 3d for regular ones
+        # - note: this also allows memory (e.g., via initializer or reset) to be specified with a single entry
+        #         (i.e., without enclosing it in an outer list or array)
+        memory = convert_all_elements_to_np_array(memory)
+        memory = np.atleast_2d(memory)
+        if memory.dtype != object and memory.ndim==2:
+            memory = np.expand_dims(memory, axis=0)
+        return memory
+
     def _is_duplicate(self, entry1:np.ndarray, entry2:np.ndarray, field_weights:np.ndarray, context) -> bool:
         """Determines whether two entries are duplicates
          Duplicates are treated as ones with a distance within the tolerance specified by duplicate_threshold.
          Distances are computed using distance_field_weights.
          """
-        # if all(np.array_equal(i,j) for i,j in zip(entry1, entry2)):
         if (self._get_distance(entry1, entry2, field_weights, 'full_entry', context)
                 <= self.parameters.duplicate_threshold.get(context)):
             return True
@@ -1552,7 +1782,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             if (np.all(entry == memory)
                     or fields and all(entry[f] == memory[f] for f in fields)):
                 pruned_memory = np.delete(pruned_memory, pruned_memory.tolist().index(memory.tolist()), axis=0)
-        self._memory = np.array(pruned_memory)
+        self._memory = convert_all_elements_to_np_array(pruned_memory)
         self.parameters.previous_value._set(self._memory, context)
 
     def _parse_memories(self, entries, method, context=None):
@@ -1570,7 +1800,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             memories = np.expand_dims(memories,axis=0)
 
         for entry in memories:
-            self._validate_entry(np.array(entry), context)
+            self._validate_entry(entry, context)
 
         return memories
 
@@ -1580,10 +1810,15 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
            use np.array for multi-line printout
        """
         try:
-            # return np.array([list([list(f) for f in m]) for m in self._memory])
             return self._memory
         except:
             return np.array([])
+
+    @property
+    def memory_num_entries(self):
+        """Return number of entries in self._memory.
+       """
+        return len(self._memory)
 
 
 KEYS = 0
@@ -1592,7 +1827,7 @@ VALS = 1
 
 class DictionaryMemory(MemoryFunction):  # ---------------------------------------------------------------------
     """
-    DictionaryMemory(                        \
+    DictionaryMemory(                                \
         default_variable=None,                       \
         retrieval_prob=1.0                           \
         storage_prob=1.0                             \
@@ -1661,12 +1896,12 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
       `function <DictionaryMemory.function>`.
     ..
     * After retrieval, the key-value pair in the call (`variable <DictionaryMemory.variable>`) is stored in
-     `memory <DictionaryMemory.memory>` with probability `storage_prob <DictionaryMemory.storage_prob>`.
+      `memory <DictionaryMemory.memory>` with probability `storage_prob <DictionaryMemory.storage_prob>`.
       If the key (`variable <DictionaryMemory.variable>`\\[0]) is identical to one already in `memory
       <DictionaryMemory.memory>` and `duplicate_keys <DictionaryMemory.duplicate_keys>`
       is set to False, storage is skipped; if it is set to *OVERWRITE*, the value of the key in memory is replaced
       with the one in the call.  If **rate** and/or **noise** arguments are specified in the
-      construtor, it is applied to the key before storing, as follows:
+      constructor, it is applied to the key before storing, as follows:
 
     .. math::
         variable[1] * rate + noise
