@@ -407,7 +407,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     1d arrays (see `EpisodicMemoryMechanism_Memory_Fields`). An entry can have an arbitrary number of fields, and
     each field can have an arbitrary length.  However, all entries must have the same number of fields, and the
     corresponding fields must all have the same length across entries.  Fields can be weighted to determine the
-    influence they have on retrieval, using the `distance_field_weights <ContentAddressableMemory.memory>` `Parameter`
+    influence they have on retrieval, using the `distance_field_weights <ContentAddressableMemory.memory>` parameter
     (see `retrieval <ContentAddressableMemory_Retrieval>` below).
 
     .. hint::

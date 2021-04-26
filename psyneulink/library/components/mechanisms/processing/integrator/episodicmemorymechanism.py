@@ -46,9 +46,9 @@ field of a memory to be stored and used for retrieval.  By default, each `Output
 of the last retrieved memory although, as with any Mechanism, OutputPorts can be `configured in other ways
 <OutputPort_Customization>`. The full set of stored memories can be accessed from the Mechanism's `memory
 <EpisodicMemoryMechanism.memory>` attribute, which references its `function's <EpisodicMemoryMechanism.function>`
-memory `Parameter`. Other Parameters of its function (e.g., that regulate the probability of storage and/or retrieval
--- see `ContentAddressableMemory`) can be accessed and/or `modulated <ModulatorySignal_Modulation>` in the standard way
-for a Mechanism's `function <EpisodicMemoryMechanism.function>`.
+memory `Parameter <Parameters>`. Other Parameters of its function (e.g., that regulate the probability of storage
+and/or retrieval -- see `ContentAddressableMemory`) can be accessed and/or `modulated <ModulatorySignal_Modulation>`
+in the standard way for a Mechanism's `function <EpisodicMemoryMechanism.function>`.
 
 At present, EpisodicMemoryMechanism supports the following two MemoryFunctions:
 

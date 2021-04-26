@@ -37,48 +37,53 @@ Overview
 
 A TransferMechanism is a subclass of `ProcessingMechanism` that adds the ability to integrate its input.
 
-Like a ProcessingMechanism, it transforms its input using a simple mathematical function, that maintains the form
+As a ProcessingMechanism, it transforms its input using a simple mathematical function, that maintains the form
 (dimensionality) of its input.  The input can be a single scalar value, a multidimensional array (list or numpy
-array), or several independent ones. The function used to carry out the transformation can be selected from the
-following PsyNeuLink `Functions <Function>`: `Linear`, `Exponential`, `Logistic`, or `SoftMax`.
-
-Its **integrator_mode** argument can switch the transformation from an "instantaneous"  to a "time averaged"
-(integrated) manner of execution. When `integrator_mode <TransferMechanism.integrator_mode>` is set to True, the
-mechanism's input is first transformed by its `integrator_function <TransferMechanism.integrator_function>` (
-`AdaptiveIntegrator`). That result is then transformed by the mechanism's `function <Mechanism_Base.function>`.
+array), or several independent ones. The function used to carry out the transformation can be a `TransferFunction`
+or a `custom one <UserDefineFunction>` that can accept any of these forms of input and generate one of similar form.
+A TransferMechanism can be configured to execute either a full ("instanteous") transformation of its input, or to do
+so by integrating "time-averaging" the input on each execution using its `integrator_function
+<TransferMechanism.integrator_function>`, as described below.  This is specified using the **integrator_mode**
+argument of its constructor.  By default, this is False, and only the TransferMechanism's primary `function
+<Mechanism_Base.function>` is executed (akin to the standard practice in feedforward neural networks).  If
+**integrator_mode** is set to True, then the TranserMechanism's input is first passed to its `integrator_function
+<TransferMechanism.integrator_function>`, which `integrates <TransferMechanism_Integration>` its current input with
+its `previous_value <TransferMechanism.previous_value>`, the result of which is then passed to the Mechanism's
+primary `function <Mechanism_Base.function>` (akin to time-averaging the net input to a unit in a neural network
+before passing that to its activation function).  When a TransferMechanism executes with `integrator_mode
+<TransferMechanism.integrator_mode>` as True, other parameters can be set to determine the conditions under which
+its execution `terminates <TransferMechanism_Termination>`.
 
 .. _TransferMechanism_Creation:
 
 Creating a TransferMechanism
 -----------------------------
 
-A TransferMechanism is created by calling its constructor.
+The primary arguments that determine the operation of a TransferMechanism are its **function* argument and, if
+**integrator** mode is set to True, a set of arguments that specify how `integration <TransferMechanism_Integration>`
+occurs.  The **function** argument can be specified as a subclass or instance of a `TransferFunction`, or as a `user
+defined <UserDefinedFunction>` python function, so long as it can take a scalar, list or array as input and produce a
+result that is of the same shape.  A TransferMechanism's **integrator_function** can be an `IntegratorFunction` or
+`user defined <UserDefinedFunction>` python function that takes an input and returns a result that has the same shape
+as the input to the TransferMechanism's primary `function <TransferMechanisms.function>`.
 
-Its `function <Mechanism_Base.function>` is specified in the **function** argument, which can be the name of a
-`Function <Function>` class:
+integrator_mode
+integrator_function
+integration_rate
+initial_value
+termination_measure
+termination_threshold
+termination_comparison_op
+execute_until_finished
 
-    >>> import psyneulink as pnl
-    >>> my_linear_transfer_mechanism = pnl.TransferMechanism(function=pnl.Linear)
 
-in which case all of the function's parameters will be set to their default values. Alternatively, the **function**
-argument can be a call to a Function constructor, in which case values may be specified for the Function's parameters:
-
-    >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4))
-
-.. _TransferMechanism_Integrator_Mode:
-
-Next, the **integrator_mode** argument allows the TransferMechanism to operate in either an "instantaneous" or
-"time averaged" manner. By default, `integrator_mode <TransferMechanism.integrator_mode>` is set to False, meaning
-execution is instantaneous. In order to switch to time averaging, the **integrator_mode** argument of the constructor
-must be set to True.
-
-    >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4),
-    ...                                                        integrator_mode=True)
-
+MOVE TO EXECUTION:
 When `integrator_mode <TransferMechanism.integrator_mode>` is True, the TransferMechanism uses its `integrator_function
 <TransferMechanism.integrator_function>` to integrate its variable on each execution. The output of the
 `integrator_function  <TransferMechanism.integrator_function>` is then used as the input to `function
 <Mechanism_Base.function>`.
+
+--------------
 
 By default, the `integrator_function <TransferMechanism.integrator_function>` of a TransferMechanism is
 `AdaptiveIntegrator`.  However, any `IntegratorFunction` can be assigned. A TransferMechanism has three
@@ -594,7 +599,38 @@ COMMENT:
 Examples
 --------
 
-EXAMPLES HERE
+.. _TransferMechanism_Examples_Creation:
+
+*Creating a TransferMechanism*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+*Function Specification*
+
+The **function** of a TransferMechanism can be specified as the name of a `Function <Function>` class::
+
+    >>> import psyneulink as pnl
+    >>> my_linear_transfer_mechanism = pnl.TransferMechanism(function=pnl.Linear)
+
+or using the constructor for a `TransferFunction`, in which case its `Parameters` can also be specified::
+
+    >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4))
+
+*Integrator Mode**
+
+The **integrator_mode** argument allows the TransferMechanism to operate in either an "instantaneous" or
+"time averaged" manner. By default, `integrator_mode <TransferMechanism.integrator_mode>` is set to False, meaning
+execution is instantaneous. In order to switch to time averaging, the **integrator_mode** argument of the constructor
+must be set to True.
+
+    >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4),
+    ...                                                        integrator_mode=True)
+
+When `integrator_mode <TransferMechanism.integrator_mode>` is True, the TransferMechanism uses its `integrator_function
+<TransferMechanism.integrator_function>` to integrate its variable on each execution. The output of the
+`integrator_function  <TransferMechanism.integrator_function>` is then used as the input to `function
+<Mechanism_Base.function>`.
+
+
 COMMENT
 
 .. _TransferMechanism_Class_Reference:
