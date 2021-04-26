@@ -1554,7 +1554,8 @@ Compilation is supported for most CPUs (including x86, arm64, and powerpc64le). 
 that tradeoff power (i.e., degree of speed-up) against level of support (i.e., likelihood of success).  Most PsyNeuLink
 `Components <Component>` and methods are supported for compilation;  however, Python native functions and methods
 (e.g., used to specify the `function <Component.function>` of a Component) are not supported at present. Users who wish
-to compile custom functions should refer to `compiled User Defined Functions <UserDefinedFunction>` for more information.  Users are strongly urged to report any other compilation failures to
+to compile custom functions should refer to `compiled User Defined Functions <UserDefinedFunction>` for more
+information.  Users are strongly urged to report any other compilation failures to
 psyneulinkhelp@princeton.edu, or as an issue `here <https://github.com/PrincetonUniversity/PsyNeuLink/issues>`_.
 Known failure conditions are listed `here <https://github.com/PrincetonUniversity/PsyNeuLink/milestone/2>`_.
 
