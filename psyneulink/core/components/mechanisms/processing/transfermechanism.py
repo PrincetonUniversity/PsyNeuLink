@@ -24,9 +24,10 @@ Contents
         - `TransferMechanism_Function`
         - `TransferMechanism_OutputPorts`
   * `TransferMechanism_Execution`
-        - `TransferMechanism_Integration`
-        - `TransferMechanism_Termination`
-        - `TransferMechanism_Reinitialization`
+        - `TransferMechanism_Execution_Without_Integration`
+        - `TransferMechanism_Execution_With_Integration`
+             • `TransferMechanism_Execution_Integration_Termination`
+             • `TransferMechanism_Reinitialization`
   * `TransferMechanism_Class_Reference`
 
 
@@ -49,7 +50,8 @@ the result to its primary `function <Mechanism_Base.function>` (akin to time-ave
 neural network before passing that to its activation function)). This is specified using the **integrator_mode**
 argument of its constructor.  When executing with `integrator_mode <TransferMechanism.integrator_mode>` as True,
 other parameters can be used to configure how integration occurs, including when it `terminates
-<TransferMechanism_Termination>`, as described under `TransferMechanism_Integration`.
+<TransferMechanism_Execution_Integration_Termination>`, as described under
+`TransferMechanism_Execution_With_Integration`.
 
 .. _TransferMechanism_Creation:
 
@@ -58,7 +60,7 @@ Creating a TransferMechanism
 
 The primary arguments that determine the operation of a TransferMechanism are its **function* argument, that specifies
 the `function <Mechanism_Base.function>' used to transform its input; and, if **integrator** mode is set to True, then
-its *integrator_function** argument and associated ones that specify how `integration <TransferMechanism_Integration>`
+its *integrator_function** argument and associated ones that specify how `integration <TransferMechanism_Execution_With_Integration>`
 occurs.
 
 *Primary Function*
@@ -83,7 +85,7 @@ itself has arguments that can be used to confifure its `integrator_function <Tra
 **initial_value**, **integration_rate**, and **noise**.  If any of these are specified in the TransferMechanism's
 constructor, their value is used to specify the corresponding parameter of its `integrator_function
 <TransferMechanism.integrator_function>`. Additonal parameters that govern how integration occurs are described under
-`TransferMechanism_Integration`.
+`TransferMechanism_Execution_With_Integration`.
 
 
 .. _TransferMechanism_Structure:
@@ -152,9 +154,65 @@ TIME-AVERAGED:
 input transformed using `step-wise` integration, in which each execution returns the result of a subsequent step of the
 integration process).
 
-INTEGRATE THE FOLLOWING WITH BELOW:
+FIX: ADD REFERENCES TO EXAMPLES
+
+COMMENT
+
+*Execution Without Integration*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When a TransferMechanism is executed, it transforms its input using its `function <Mechanism_Base.function>`.
+
+# FIX: EDIT
+Finally, the TransferMechanism has two arguments that can adjust the final result of the mechanism: **clip** and
+**noise**. If `integrator_mode <TransferMechanism.integrator_mode>` is False, `clip <TransferMechanism.clip>` and
+`noise <TransferMechanism.noise>` modify the value returned by the mechanism's `function <Mechanism_Base.function>`
+before setting it as the mechanism's value. If `integrator_mode <TransferMechanism.integrator_mode>` is True,
+**noise** is assigned to the TransferMechanism's `integrator_function <TransferMechanism.integrator_function>`
+(as its `noise <IntegratorFunction.noise>` parameter -- in the same manner as `integration_rate
+<TransferMechanism.integration_rate>` and `initial_value <TransferMechanism.intial_value>`), whereas `clip
+<TransferMechanism.clip>` modifies the value returned by the mechanism's `function <Mechanism_Base.function>`
+before setting it as the TransferMechanism's `value <Mechanism_Base.value>`.
 
 
+
+
+ and
+the following parameters (in addition to any specified for the `function <Mechanism_Base.function>`):
+
+    * `integrator_mode <TransferMechanism.integrator_mode>`: determines whether the input is time-averaged before
+      passing through the function of the mechanism. When `integrator_mode <TransferMechanism.integrator_mode>` is set
+      to True, the TransferMechanism integrates its input, by executing its `integrator_function
+      <TransferMechanism.integrator_function>`, before executing its `function <Mechanism_Base.function>`. When
+      `integrator_mode <TransferMechanism.integrator_mode>` is False, the `integrator_function
+      <TransferMechanism.integrator_function>` is ignored, and time-averaging does not occur.
+
+    * `integration_rate <TransferMechanism.integration_rate>`: if the `integrator_mode
+      <TransferMechanism.integrator_mode>`
+      attribute is set to True, the `integration_rate <TransferMechanism.integration_rate>` attribute is the rate of
+      integration (a higher value specifies a faster rate); if `integrator_mode <TransferMechanism.integrator_mode>`
+      is False,
+      `integration_rate <TransferMechanism.integration_rate>` is ignored and time-averaging does not occur.
+
+    * `noise <TransferMechanism.noise>`: applied element-wise to the output of its `integrator_function
+      <TransferMechanism.integrator_function>` or its `function <Mechanism_Base.function>`, depending on whether
+      `integrator_mode <TransferMechanism.integrator_mode>` is True or False.
+
+    * `clip <TransferMechanism.clip>`: caps all elements of the `function <Mechanism_Base.function>` result by the
+      lower and upper values specified by clip.
+
+After each execution, the TransferMechanism's `function <Mechanism_Base.function>` -- applied to the `value
+<InputPort.value>` of each of its `input_ports <Mechanism_Base.input_ports>` -- generates a corresponding set of
+values, each of which is assigned as an item of the Mechanism's `value <Mechanism_Base.value>` attribute, and the
+`value <OutputPort.value>` of the corresponding `OutputPort` in its `ouput_ports <Mechanism_Base.output_ports>`.
+
+.. _TransferMechanism_Execution_With_Integration:
+
+*Execution With Integration*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+COMMENT:
+FIX: INTEGRATE WITH BELOW
 MOVE TO EXECUTION:
 When `integrator_mode <TransferMechanism.integrator_mode>` is True, the TransferMechanism uses its `integrator_function
 <TransferMechanism.integrator_function>` to integrate its variable on each execution. The output of the
@@ -189,62 +247,11 @@ When switching between `integrator_mode <TransferMechanism.integrator_mode>` = T
     * *RESET* - call the `integrator_function <TransferMechanism.integrator_function>`\\s
       `reset <AdaptiveIntegrator.reset>` method, so that accumulation begins at
       `initial_value <TransferMechanism.initial_value>`
-
-Finally, the TransferMechanism has two arguments that can adjust the final result of the mechanism: **clip** and
-**noise**. If `integrator_mode <TransferMechanism.integrator_mode>` is False, `clip <TransferMechanism.clip>` and
-`noise <TransferMechanism.noise>` modify the value returned by the mechanism's `function <Mechanism_Base.function>`
-before setting it as the mechanism's value. If `integrator_mode <TransferMechanism.integrator_mode>` is True,
-**noise** is assigned to the TransferMechanism's `integrator_function <TransferMechanism.integrator_function>`
-(as its `noise <IntegratorFunction.noise>` parameter -- in the same manner as `integration_rate
-<TransferMechanism.integration_rate>` and `initial_value <TransferMechanism.intial_value>`), whereas `clip
-<TransferMechanism.clip>` modifies the value returned by the mechanism's `function <Mechanism_Base.function>`
-before setting it as the TransferMechanism's `value <Mechanism_Base.value>`.
-
 COMMENT
-
-When a TransferMechanism is executed, it transforms its input using its `function <Mechanism_Base.function>` and
-the following parameters (in addition to any specified for the `function <Mechanism_Base.function>`):
-
-    * `integrator_mode <TransferMechanism.integrator_mode>`: determines whether the input is time-averaged before
-      passing through the function of the mechanism. When `integrator_mode <TransferMechanism.integrator_mode>` is set
-      to True, the TransferMechanism integrates its input, by executing its `integrator_function
-      <TransferMechanism.integrator_function>`, before executing its `function <Mechanism_Base.function>`. When
-      `integrator_mode <TransferMechanism.integrator_mode>` is False, the `integrator_function
-      <TransferMechanism.integrator_function>` is ignored, and time-averaging does not occur.
-
-    * `integration_rate <TransferMechanism.integration_rate>`: if the `integrator_mode
-      <TransferMechanism.integrator_mode>`
-      attribute is set to True, the `integration_rate <TransferMechanism.integration_rate>` attribute is the rate of
-      integration (a higher value specifies a faster rate); if `integrator_mode <TransferMechanism.integrator_mode>`
-      is False,
-      `integration_rate <TransferMechanism.integration_rate>` is ignored and time-averaging does not occur.
-
-    * `noise <TransferMechanism.noise>`: applied element-wise to the output of its `integrator_function
-      <TransferMechanism.integrator_function>` or its `function <Mechanism_Base.function>`, depending on whether
-      `integrator_mode <TransferMechanism.integrator_mode>` is True or False.
-
-    * `clip <TransferMechanism.clip>`: caps all elements of the `function <Mechanism_Base.function>` result by the
-      lower and upper values specified by clip.
-
-After each execution, the TransferMechanism's `function <Mechanism_Base.function>` -- applied to the `value
-<InputPort.value>` of each of its `input_ports <Mechanism_Base.input_ports>` -- generates a corresponding set of
-values, each of which is assigned as an item of the Mechanism's `value <Mechanism_Base.value>` attribute, and the
-`value <OutputPort.value>` of the corresponding `OutputPort` in its `ouput_ports <Mechanism_Base.output_ports>`.
-
-.. _TransferMechanism_Integration:
-
-*Integration*
-~~~~~~~~~~~~~
 
 If `integrator_mode <TransferMechanism.integrator_mode>` is False (the default), then the TransferMechanism updates its
 `value <Mechanism_Base.value>` and the `value <OutputPort.value>` of its `output_ports <Mechanism_Base.output_ports>`
-without using its `integrator_function <TransferMechanism.integrator_function>`, as in the following example::
-
-    >>> my_mech = pnl.TransferMechanism(size=2)
-    >>> my_mech.execute([0.5, 1])
-    array([[0.5, 1. ]])
-
-Notice that the result is the full linear transfer of the input (i.e., no integration occured).
+without using its `integrator_function <TransferMechanism.integrator_function>`.
 
 If `integrator_mode <TransferMechanism.integrator_mode>` is True, then it can be configured to conduct a single
 step of integration per execution, or to continue to integrate until its termination condition is met, as specified
@@ -273,10 +280,10 @@ attribute is set to False, even if **termination_threshold** is specified. In bo
 since the `integrator_function <TransferMechanism.integrator_function>` is executed exactly once per call to the
 `execute method <Component_Execution>` (and no termination condition has been specified).
 
-.. _TransferMechanism_Termination:
+.. _TransferMechanism_Execution_Integration_Termination:
 
-*Termination*
-~~~~~~~~~~~~~
+Termination
+^^^^^^^^^^^
 
 If `integrator_mode <TransferMechanism.integrator_mode>` is True, and a **termination_threshold** is specified, then the
 TransferMechanism continues to execute, integrating its current input until its termination condition is met, or the
@@ -485,8 +492,8 @@ accepts a single argument that is a 2d array with two entries.
 
 .. _TransferMechanism_Reinitialization:
 
-*Reinitialization*
-~~~~~~~~~~~~~~~~~~
+Reinitialization
+^^^^^^^^^^^^^^^^
 
 In some cases, it may be useful to reset the accumulation of a Mechanism back to its original starting point, or a new
 starting point. This is done using the `reset <AdaptiveIntegrator.reset>` method on the
@@ -609,7 +616,28 @@ When `integrator_mode <TransferMechanism.integrator_mode>` is True, the Transfer
 `integrator_function  <TransferMechanism.integrator_function>` is then used as the input to `function
 <Mechanism_Base.function>`.
 
-*Integration*
+.. _TransferMechanism_Examples_Execution:
+
+*Execution*
+~~~~~~~~~~~
+
+.. _TransferMechanism_Examples_Execution_Without_Integration:
+
+*Without Integration*
+
+If `integrator_mode <TransferMechanism.integrator_mode>` is False (the default), then the TransferMechanism updates its
+`value <Mechanism_Base.value>` and the `value <OutputPort.value>` of its `output_ports <Mechanism_Base.output_ports>`
+without using its `integrator_function <TransferMechanism.integrator_function>`, as in the following example::
+
+    >>> my_mech = pnl.TransferMechanism(size=2)
+    >>> my_mech.execute([0.5, 1])
+    array([[0.5, 1. ]])
+
+Notice that the result is the full linear transfer of the input (i.e., no integration occured).
+
+.. _TransferMechanism_Examples_Execution_With_Integration:
+
+*With Integration*
 
 By default, the `integrator_function <TransferMechanism.integrator_function>` of a TransferMechanism is
 `AdaptiveIntegrator`.  However, any `IntegratorFunction` can be assigned. A TransferMechanism has three
