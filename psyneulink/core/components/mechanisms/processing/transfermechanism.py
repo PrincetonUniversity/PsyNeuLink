@@ -1172,6 +1172,14 @@ class TransferMechanism(ProcessingMechanism_Base):
             if 'U' in str(variable.dtype):
                 return 'may not contain non-numeric entries'
 
+        def _validate_clip(self, clip):
+            if clip:
+                if (not (isinstance(clip, (list,tuple)) and len(clip)==2
+                         and all(isinstance(i, numbers.Number)) for i in clip)):
+                    return 'must be a tuple with two numbers.'
+                if not clip[0] < clip[1]:
+                    return 'first item must be less than the second.'
+
         def _validate_integrator_mode(self, integrator_mode):
             if not isinstance(integrator_mode, bool):
                 return 'may only be True or False.'
@@ -1307,6 +1315,11 @@ class TransferMechanism(ProcessingMechanism_Base):
                                         f"method, or UDF specified as the {repr(FUNCTION)} param of {self.name} "
                                         f"must be the same shape ({var_shape}) as its {repr(VARIABLE)}.")
 
+        # IMPLEMENTATION NOTE:
+        #  Need to validate initial_value and integration_rate here (vs. in Parameters._validate_XXX)
+        #  as they must be compared against default_variable if it was user-specified
+        #  which is not available in Parameters _validation.
+
         # Validate INITIAL_VALUE
         if INITIAL_VALUE in target_set and target_set[INITIAL_VALUE] is not None:
             initial_value = np.array(target_set[INITIAL_VALUE])
@@ -1321,13 +1334,17 @@ class TransferMechanism(ProcessingMechanism_Base):
                 raise TransferError(f"The format of the initial_value parameter for {append_type_to_name(self)} "
                                     f"({initial_value}) must match its variable ({self.defaults.variable}).")
 
-        # FIX: SHOULD THIS (AND INTEGRATION_RATE) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES?
+        # Validate INTEGRATION_RATE:
+        if INTEGRATION_RATE in target_set and target_set[INTEGRATION_RATE] is not None:
+            integration_rate = np.array(target_set[INTEGRATION_RATE])
+            if (not np.isscalar(integration_rate.tolist())
+                    and integration_rate.shape != self.defaults.variable.squeeze().shape):
+                raise TransferError(f"{repr(INTEGRATION_RATE)} arg for {self.name} ({integration_rate}) "
+                                    f"must be either an int or float, or have the same shape "
+                                    f"as its {VARIABLE} ({self.defaults.variable}).")
+
         # Validate NOISE:
         if NOISE in target_set:
-            noise = target_set[NOISE]
-            # If assigned as a Function, set TransferMechanism as its owner, and assign its actual function to noise
-            if isinstance(noise, DistributionFunction):
-                target_set[NOISE] = noise.execute
             self._validate_noise(target_set[NOISE])
 
         # Validate INTEGRATOR_FUNCTION:
@@ -1338,29 +1355,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                 raise TransferError(f"The function specified for the {repr(INTEGRATOR_FUNCTION)} arg of {self.name} "
                                     f"({integtr_fct}) must be an {IntegratorFunction.__class__.__name__}.")
 
-        # Validate INTEGRATION_RATE:
-        if INTEGRATION_RATE in target_set and target_set[INTEGRATION_RATE] is not None:
-            integration_rate = np.array(target_set[INTEGRATION_RATE])
-            if (not np.isscalar(integration_rate.tolist())
-                    and integration_rate.shape != self.defaults.variable.squeeze().shape):
-                raise TransferError(f"{repr(INTEGRATION_RATE)} arg for {self.name} ({integration_rate}) "
-                                    f"must be either an int or float, or have the same shape "
-                                    f"as its {VARIABLE} ({self.defaults.variable}).")
-
-        # Validate CLIP:
-        if CLIP in target_set and target_set[CLIP] is not None:
-            clip = target_set[CLIP]
-            if clip:
-                if not (isinstance(clip, (list,tuple)) and len(clip)==2 and all(isinstance(i, numbers.Number)
-                                                                                for i in clip)):
-                    raise TransferError(f"clip parameter ({clip}) for {self.name} must be a tuple with two numbers.")
-                if not clip[0] < clip[1]:
-                    raise TransferError(f"The first item of the clip parameter ({clip}) must be less than the second.")
-            target_set[CLIP] = list(clip)
-
-    # FIX: MAKE THIS A CALL TO METHOD ON function
+    # FIX: CONSOLIDATE THIS WITH StatefulFunction._validate_noise
     def _validate_noise(self, noise):
         # Noise is a scalar, list, array or DistributionFunction
+
+        if isinstance(noise, DistributionFunction):
+            noise = noise.execute
 
         if isinstance(noise, (np.ndarray, list)):
             if len(noise) == 1:

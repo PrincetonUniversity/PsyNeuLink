@@ -335,7 +335,10 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
     # need to be executed
     def _validate_noise(self, noise):
-        # Noise is a scalar, list or array
+        # Noise must be a scalar, list, array or Distribution Function
+
+        if isinstance(noise, DistributionFunction):
+            noise = noise.execute
 
         if isinstance(noise, (np.ndarray, list)):
             if len(noise) == 1:
