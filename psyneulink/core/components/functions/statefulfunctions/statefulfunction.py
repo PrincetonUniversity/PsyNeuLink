@@ -18,21 +18,21 @@
 
 import abc
 import collections
-import typecheck as tc
-import warnings
 import numbers
+import warnings
 
 import numpy as np
+import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, _has_initializers_setter, ComponentsMeta
-from psyneulink.core.components.functions.function import Function_Base, FunctionError
 from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
+from psyneulink.core.components.functions.function import Function_Base, FunctionError
+from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.utilities import parameter_spec, iscompatible, convert_to_np_array, contains_type
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.utilities import iscompatible, convert_to_np_array, contains_type
 
 __all__ = ['StatefulFunction']
 
@@ -352,8 +352,9 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 for i in range(len(noise)):
                     if isinstance(noise[i], DistributionFunction):
                         noise[i] = noise[i].execute
-                    # if not isinstance(noise[i], (float, int)) and not callable(noise[i]):
-                    if not np.isscalar(noise[i]) and not callable(noise[i]):
+                    if (not np.isscalar(noise[i]) and not callable(noise[i])
+                            and not iscompatible(np.atleast_2d(noise[i]), self.defaults.variable[i])
+                            and not iscompatible(np.atleast_1d(noise[i]), self.defaults.variable[i])):
                         raise FunctionError(f"The element '{noise[i]}' specified in 'noise' for {self.name} "
                                              f"is not valid; noise must be list or array must be floats or functions.")
 

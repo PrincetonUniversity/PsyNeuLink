@@ -1358,9 +1358,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                     raise TransferError(f"The first item of the clip parameter ({clip}) must be less than the second.")
             target_set[CLIP] = list(clip)
 
-    # FIX: MAKE THIS A CALL TO METHOD ON StatefulFunction (or TransferMechanism's function)
+    # FIX: MAKE THIS A CALL TO METHOD ON function
     def _validate_noise(self, noise):
-        # Noise is a scalar, list or array
+        # Noise is a scalar, list, array or DistributionFunction
 
         if isinstance(noise, (np.ndarray, list)):
             if len(noise) == 1:
@@ -1376,7 +1376,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                 for i in range(len(noise)):
                     if isinstance(noise[i], DistributionFunction):
                         noise[i] = noise[i].execute
-                    if not np.isscalar(noise[i]) and not callable(noise[i]):
+                    if (not np.isscalar(noise[i]) and not callable(noise[i])
+                            and not iscompatible(np.atleast_2d(noise[i]), self.defaults.variable[i])
+                            and not iscompatible(np.atleast_1d(noise[i]), self.defaults.variable[i])):
                         raise MechanismError(f"The element '{noise[i]}' specified in 'noise' for {self.name} "
                                              f"is not valid; noise must be list or array must be floats or functions.")
 
