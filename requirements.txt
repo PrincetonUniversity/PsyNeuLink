@@ -3,7 +3,7 @@ dill<=0.32
 elfi<0.8.1
 graphviz<0.17.0
 grpcio<1.35.0
-grpcio-tools<1.35.0
+grpcio-tools<1.38.0
 llvmlite<0.37
 matplotlib<3.3.4
 networkx<2.6
