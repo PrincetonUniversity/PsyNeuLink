@@ -22,23 +22,23 @@ Functions that parameterize a function.
 
 """
 
+import types
 from collections import namedtuple
 
 import numpy as np
 import typecheck as tc
-import types
 
-from psyneulink.core.components.functions.function import Function_Base, FunctionError, is_function_type
-from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.component import ComponentError
+from psyneulink.core.components.functions.function import Function_Base, FunctionError, is_function_type
+from psyneulink.core.components.functions.transferfunctions import Logistic, SoftMax
+from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_FUNCTION, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \
     KOHONEN_FUNCTION, GAUSSIAN, LINEAR, EXPONENTIAL, HEBBIAN_FUNCTION, RL_FUNCTION, BACKPROPAGATION_FUNCTION, MATRIX, \
     MSE, SSE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.utilities import is_numeric, scalar_distance, get_global_seed, convert_to_np_array
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
+from psyneulink.core.globals.utilities import is_numeric, scalar_distance, get_global_seed, convert_to_np_array
 
 __all__ = ['LearningFunction', 'Kohonen', 'Hebbian', 'ContrastiveHebbian',
            'Reinforcement', 'BayesGLM', 'BackPropagation', 'TDLearning',
@@ -132,8 +132,12 @@ class LearningFunction(Function_Base):
                     :default value: 0.05
                     :type: ``float``
         """
-        variable = Parameter(np.array([0, 0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
-        learning_rate = Parameter(0.05, modulable=True)
+        variable = Parameter(np.array([0, 0, 0]),
+                             read_only=True,
+                             pnl_internal=True,
+                             constructor_argument='default_variable')
+        learning_rate = Parameter(0.05,
+                                  modulable=True)
 
     def _validate_learning_rate(self, learning_rate, type=None):
 
@@ -412,8 +416,15 @@ class BayesGLM(LearningFunction):
                     :type: ``int``
         """
         random_state = Parameter(None, stateful=True, loggable=False)
-        variable = Parameter([np.array([0, 0, 0]), np.array([0])], read_only=True, pnl_internal=True, constructor_argument='default_variable')
-        value = Parameter(np.array([0]), read_only=True, aliases=['sample_weights'], pnl_internal=True)
+        variable = Parameter([np.array([0, 0, 0]),
+                              np.array([0])],
+                             read_only=True,
+                             pnl_internal=True,
+                             constructor_argument='default_variable')
+        value = Parameter(np.array([0]),
+                          read_only=True,
+                          aliases=['sample_weights'],
+                          pnl_internal=True)
 
         Lambda_0 = 0
         Lambda_prior = 0
@@ -747,7 +758,10 @@ class Kohonen(LearningFunction):  # --------------------------------------------
                     :default value: `GAUSSIAN`
                     :type: ``str``
         """
-        variable = Parameter([[0, 0], [0, 0], np.array([[0, 0], [0, 0]])], read_only=True, pnl_internal=True, constructor_argument='default_variable')
+        variable = Parameter([[0, 0], [0, 0], np.array([[0, 0], [0, 0]])],
+                             read_only=True,
+                             pnl_internal=True,
+                             constructor_argument='default_variable')
         distance_function = Parameter(GAUSSIAN, stateful=False)
 
         def _validate_distance_function(self, distance_function):
@@ -1024,8 +1038,12 @@ class Hebbian(LearningFunction):  # --------------------------------------------
                     :default value: 0.05
                     :type: ``float``
         """
-        variable = Parameter(np.array([0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
-        learning_rate = Parameter(0.05, modulable=True)
+        variable = Parameter(np.array([0, 0]),
+                             read_only=True,
+                             pnl_internal=True,
+                             constructor_argument='default_variable')
+        learning_rate = Parameter(0.05,
+                                  modulable=True)
     default_learning_rate = 0.05
 
     def __init__(self,
@@ -1254,7 +1272,10 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
                     :type: ``numpy.ndarray``
                     :read only: True
         """
-        variable = Parameter(np.array([0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
+        variable = Parameter(np.array([0, 0]),
+                             read_only=True,
+                             pnl_internal=True,
+                             constructor_argument='default_variable')
 
     default_learning_rate = 0.05
 
@@ -1541,7 +1562,10 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                     :type: ``list``
                     :read only: True
         """
-        variable = Parameter(np.array([[0], [0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
+        variable = Parameter(np.array([[0], [0], [0]]),
+                             read_only=True,
+                             pnl_internal=True,
+                             constructor_argument='default_variable')
         activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)
         activation_output = Parameter([0], read_only=True, getter=_activation_output_getter)
         error_signal = Parameter([0], read_only=True, getter=_error_signal_getter)
@@ -1580,15 +1604,13 @@ class Reinforcement(LearningFunction):  # --------------------------------------
                                  "single element for {}".
                                  format(self.name, variable[LEARNING_ERROR_OUTPUT]))
 
-        # Allow initialization with zero but not during a run (i.e., when called from check_args())
-        if not self.is_initializing:
-            if np.count_nonzero(variable[LEARNING_ACTIVATION_OUTPUT]) != 1:
-                raise ComponentError(
-                    "Second item ({}) of variable for {} must be an array with only one non-zero value "
-                    "(if output Mechanism being trained uses softmax,"
-                    " its \'output\' arg may need to be set to to PROB)".
-                    format(variable[LEARNING_ACTIVATION_OUTPUT], self.componentName))
-
+        # Must have only one (or no) non-zero entries in LEARNING_ACTIVATION_OUTPUT
+        if np.count_nonzero(variable[LEARNING_ACTIVATION_OUTPUT]) > 1:
+            owner_str = f" of {self.owner.name}" if self.owner else ""
+            raise ComponentError(f"Second item ({variable[LEARNING_ACTIVATION_OUTPUT]}) of variable for "
+                                 f"{self.componentName}{owner_str} must be an array with no more than one non-zero "
+                                 f"value; if output Mechanism being trained uses {SoftMax.componentName},"
+                                 f" that function's \'output\' arg may need to be set to to 'PROB').")
         return variable
 
     def _validate_params(self, request_set, target_set=None, context=None):
@@ -1890,16 +1912,16 @@ class BackPropagation(LearningFunction):
                     :type:
                     :read only: True
         """
-        variable = Parameter(np.array([[0], [0], [0]]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
+        variable = Parameter(np.array([[0], [0], [0]]),
+                             read_only=True,
+                             pnl_internal=True,
+                             constructor_argument='default_variable')
         learning_rate = Parameter(1.0, modulable=True)
         loss_function = Parameter(None, read_only=True)
-
         activation_input = Parameter([0], read_only=True, getter=_activation_input_getter)
         activation_output = Parameter([0], read_only=True, getter=_activation_output_getter)
         error_signal = Parameter([0], read_only=True, getter=_error_signal_getter)
-
         error_matrix = Parameter(None, read_only=True)
-
         activation_derivative_fct = Parameter(Logistic.derivative, stateful=False, loggable=False)
 
     default_learning_rate = 1.0
@@ -1907,7 +1929,7 @@ class BackPropagation(LearningFunction):
     @tc.typecheck
     def __init__(self,
                  default_variable=None,
-                 activation_derivative_fct: tc.optional(tc.optional(tc.any(types.FunctionType, types.MethodType))) = None,
+                 activation_derivative_fct: tc.optional(tc.optional(tc.any(types.FunctionType, types.MethodType)))=None,
                  # learning_rate: tc.optional(tc.optional(parameter_spec)) = None,
                  learning_rate=None,
                  loss_function=None,
