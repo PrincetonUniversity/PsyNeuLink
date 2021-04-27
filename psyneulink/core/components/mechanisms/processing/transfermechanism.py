@@ -1287,12 +1287,12 @@ class TransferMechanism(ProcessingMechanism_Base):
 
             if issubclass(transfer_function_class, Function):
                 if not issubclass(transfer_function_class, (TransferFunction, SelectionFunction, UserDefinedFunction)):
-                    raise TransferError("Function specified as {} param of {} ({}) must be a {}".
-                                        format(repr(FUNCTION), self.name, transfer_function_class.__name__,
-                                               " or ".join([TRANSFER_FUNCTION_TYPE, SELECTION_FUNCTION_TYPE])))
+                    raise TransferError(f"Function specified as {repr(FUNCTION)} param of {self.name} "
+                                        f"({transfer_function_class.__name__}) must be a "
+                                        f"{' or '.join([TRANSFER_FUNCTION_TYPE, SELECTION_FUNCTION_TYPE])}.")
             elif not isinstance(transfer_function, (types.FunctionType, types.MethodType)):
-                raise TransferError("Unrecognized specification for {} param of {} ({})".
-                                    format(repr(FUNCTION), self.name, transfer_function))
+                raise TransferError(f"Unrecognized specification for {repr(FUNCTION)} param "
+                                    f"of {self.name} ({transfer_function}).")
 
             # FUNCTION is a function or method, so test that shape of output = shape of input
             if isinstance(transfer_function, (types.FunctionType, types.MethodType, UserDefinedFunction)):
@@ -1303,9 +1303,9 @@ class TransferMechanism(ProcessingMechanism_Base):
                     val_shape = np.array(transfer_function(self.defaults.variable, context=context)).shape
 
                 if val_shape != var_shape:
-                    raise TransferError("The shape ({}) of the value returned by the Python function, method, or UDF "
-                                        "specified as the {} param of {} must be the same shape ({}) as its {}".
-                                        format(val_shape, repr(FUNCTION), self.name, var_shape, repr(VARIABLE)))
+                    raise TransferError(f"The shape ({val_shape}) of the value returned by the Python function, "
+                                        f"method, or UDF specified as the {repr(FUNCTION)} param of {self.name} "
+                                        f"must be the same shape ({var_shape}) as its {repr(VARIABLE)}.")
 
         # Validate INITIAL_VALUE
         if INITIAL_VALUE in target_set and target_set[INITIAL_VALUE] is not None:
@@ -1318,11 +1318,8 @@ class TransferMechanism(ProcessingMechanism_Base):
                 and self._get_parsed_variable(self.parameters.integrator_function,
                                               initial_value).shape != self.integrator_function.defaults.variable.shape
             ):
-                raise TransferError(
-                        "The format of the initial_value parameter for {} ({}) must match its variable ({})".
-                        format(append_type_to_name(self), initial_value, self.defaults.variable,
-                    )
-                )
+                raise TransferError(f"The format of the initial_value parameter for {append_type_to_name(self)} "
+                                    f"({initial_value}) must match its variable ({self.defaults.variable}).")
 
         # FIX: SHOULD THIS (AND INTEGRATION_RATE) JUST BE VALIDATED BY INTEGRATOR FUNCTION NOW THAT THEY ARE PROPERTIES?
         # Validate NOISE:
@@ -1338,19 +1335,17 @@ class TransferMechanism(ProcessingMechanism_Base):
             integtr_fct = target_set[INTEGRATOR_FUNCTION]
             if not (isinstance(integtr_fct, IntegratorFunction)
                     or (isinstance(integtr_fct, type) and issubclass(integtr_fct, IntegratorFunction))):
-                raise TransferError("The function specified for the {} arg of {} ({}) must be an {}".
-                                    format(repr(INTEGRATOR_FUNCTION), self.name, integtr_fct),
-                                    IntegratorFunction.__class__.__name__)
+                raise TransferError(f"The function specified for the {repr(INTEGRATOR_FUNCTION)} arg of {self.name} "
+                                    f"({integtr_fct}) must be an {IntegratorFunction.__class__.__name__}.")
 
         # Validate INTEGRATION_RATE:
         if INTEGRATION_RATE in target_set and target_set[INTEGRATION_RATE] is not None:
             integration_rate = np.array(target_set[INTEGRATION_RATE])
             if (not np.isscalar(integration_rate.tolist())
                     and integration_rate.shape != self.defaults.variable.squeeze().shape):
-                raise TransferError("{} arg for {} ({}) must be either an int or float, "
-                                    "or have the same shape as its {} ({})".
-                                    format(repr(INTEGRATION_RATE), self.name, integration_rate,
-                                           VARIABLE, self.defaults.variable))
+                raise TransferError(f"{repr(INTEGRATION_RATE)} arg for {self.name} ({integration_rate}) "
+                                    f"must be either an int or float, or have the same shape "
+                                    f"as its {VARIABLE} ({self.defaults.variable}).")
 
         # Validate CLIP:
         if CLIP in target_set and target_set[CLIP] is not None:
@@ -1358,41 +1353,40 @@ class TransferMechanism(ProcessingMechanism_Base):
             if clip:
                 if not (isinstance(clip, (list,tuple)) and len(clip)==2 and all(isinstance(i, numbers.Number)
                                                                                 for i in clip)):
-                    raise TransferError("clip parameter ({}) for {} must be a tuple with two numbers".
-                                        format(clip, self.name))
+                    raise TransferError(f"clip parameter ({clip}) for {self.name} must be a tuple with two numbers.")
                 if not clip[0] < clip[1]:
-                    raise TransferError("The first item of the clip parameter ({}) must be less than the second".
-                                        format(clip, self.name))
+                    raise TransferError(f"The first item of the clip parameter ({clip}) must be less than the second.")
             target_set[CLIP] = list(clip)
 
+    # FIX: MAKE THIS A CALL TO METHOD ON StatefulFunction (or TransferMechanism's function)
     def _validate_noise(self, noise):
-        # Noise is a list or array
+        # Noise is a scalar, list or array
 
         if isinstance(noise, (np.ndarray, list)):
             if len(noise) == 1:
                 pass
             # Variable is a list/array
-            elif not iscompatible(np.atleast_2d(noise), self.defaults.variable) and len(noise) > 1:
-                raise MechanismError(
-                    "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} must be specified"
-                    " as a float, a function, or an array of the appropriate shape ({})."
-                    .format(noise, self.defaults.variable, self.name, np.shape(np.array(self.defaults.variable))))
+            elif (not iscompatible(np.atleast_2d(noise), self.defaults.variable)
+                  and not iscompatible(np.atleast_1d(noise), self.defaults.variable) and len(noise) > 1):
+                raise MechanismError(f"Noise parameter ({noise}) for '{self.name}' does not match default variable "
+                                     f"({self.defaults.variable}); it must be specified as a float, a function, "
+                                     f"or an array of the appropriate shape "
+                                     f"({np.shape(np.array(self.defaults.variable))}).")
             else:
                 for i in range(len(noise)):
                     if isinstance(noise[i], DistributionFunction):
                         noise[i] = noise[i].execute
-                    if not isinstance(noise[i], (float, int)) and not callable(noise[i]):
-                        raise MechanismError("The elements of a noise list or array must be floats or functions. "
-                            "{} is not a valid noise element for {}".format(noise[i], self.name))
+                    if not np.isscalar(noise[i]) and not callable(noise[i]):
+                        raise MechanismError(f"The element '{noise[i]}' specified in 'noise' for {self.name} "
+                                             f"is not valid; noise must be list or array must be floats or functions.")
 
         elif _is_control_spec(noise):
             pass
 
         # Otherwise, must be a float, int or function
         elif noise is not None and not isinstance(noise, (float, int)) and not callable(noise):
-            raise MechanismError("Noise parameter ({}) for {} must be a float, "
-                                 "function, or array/list of these.".format(noise,
-                                                                            self.name))
+            raise MechanismError(f"Noise parameter ({noise}) for {self.name} must be a float, "
+                                 f"function, or array/list of these.")
 
     def _instantiate_parameter_ports(self, function=None, context=None):
 
@@ -1525,7 +1519,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             pnlvm.helpers.printf(builder, f"TERM MEASURE {self.termination_measure} %d %d\n",ptr_val, threshold)
             builder.store(ptr_val, cmp_val_ptr)
         else:
-            assert False, "Not Supported: {}".format(self.termination_measure)
+            assert False, f"Not Supported: {self.termination_measure}."
 
         cmp_val = builder.load(cmp_val_ptr)
         cmp_str = self.parameters.termination_comparison_op.get(None)

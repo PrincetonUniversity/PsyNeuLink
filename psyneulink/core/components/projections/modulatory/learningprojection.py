@@ -646,8 +646,8 @@ class LearningProjection(ModulatoryProjection_Base):
             # Convert 1d array into 2d array to match format of a Projection.matrix
             learning_signal = np.expand_dims(learning_signal, axis=1)
             if learning_signal.shape != matrix.shape:
-                raise LearningProjectionError("Problem modifying learning_signal from {} ({}) "
-                                              "to match the matrix of {} it is attempting to modify ({})".
+                raise LearningProjectionError("Problem modifying learning_signal from '{}' ({}) "
+                                              "to match the matrix of '{}' it is attempting to modify ({})".
                                               format(self.sender.owner.name, learning_signal,
                                                      self.receiver.owner.name, matrix))
 

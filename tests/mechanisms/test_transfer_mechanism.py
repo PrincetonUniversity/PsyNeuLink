@@ -975,8 +975,9 @@ class TestTransferMechanismIntegratorFunctionParams:
             )
         assert (
             "Noise parameter ([0.0, 0.1, 0.2, 0.3, 0.4])" in str(error_text.value) and
-            "does not match default variable ([[0 0 0 0]])." in str(error_text.value) and
-            "must be specified as a float, a function, or an array of the appropriate shape ((1, 4))." in str(error_text.value)
+            "does not match default variable ([[0 0 0 0]]);" in str(error_text.value) and
+            "must be specified as a float, a function, or an array of the appropriate shape ((1, 4))."
+            in str(error_text.value)
         )
 
     # def test_transfer_mech_array_assignments_wrong_size_fct_noise(self, benchmark, mode):
