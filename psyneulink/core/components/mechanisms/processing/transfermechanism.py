@@ -29,8 +29,14 @@ Contents
              • `TransferMechanism_Execution_Integration_Initialization`
              • `TransferMechanism_Execution_Integration`
              • `TransferMechanism_Execution_Integration_Termination`
+  * `TransferMechanism_Examples`
+        - `TransferMechanism_Examples_Creation`
+        - `TransferMechanism_Examples_Execution`
+            • `TransferMechanism_Examples_Execution_Without_Integration`
+            • `TransferMechanism_Examples_Execution_With_Integration`
+        - `TransferMechanism_Examples_Initialization_and_Resetting`
+        - `TransferMechanism_Examples_Termination`
   * `TransferMechanism_Class_Reference`
-
 
 .. _TransferMechanism_Overview:
 
@@ -44,15 +50,18 @@ As a ProcessingMechanism, it transforms its input using a simple mathematical fu
 array), or several independent ones. The function used to carry out the transformation can be a `TransferFunction`
 or a `custom one <UserDefinedFunction>` that can accept any of these forms of input and generate one of similar form.
 
-By default, a TransferMechanism executes either a full ("instanteous") transformation of its input (akin to
-the standard practice in feedforward neural networks).  However, it can be configure to integrate ("time-average")
-its input on each execution using its `integrator_function <TransferMechanism.integrator_function>`, before passing
-the result to its primary `function <Mechanism_Base.function>` (akin to time-averaging the net input to a unit in a
-neural network before passing that to its activation function)). This is specified using the **integrator_mode**
-argument of its constructor.  When executing with `integrator_mode <TransferMechanism.integrator_mode>` as True,
-other parameters can be used to configure how integration occurs, including when it `terminates
-<TransferMechanism_Execution_Integration_Termination>`, as described under
-`TransferMechanism_Execution_With_Integration`.
+A TransferMechanism has two modes of operation: `without integration
+<TransferMechanism_Execution_Without_Integration>` and `with integration
+<TransferMechanism_Execution_With_Integration>`.
+It uses the former by default, using its `function <Mechanism_Base.function>` to execute a full ("instantaneous")
+transformation of its input (akin to the standard practice in feedforward neural networks).  However,
+it can be configured to use its `integrator_function <TransferMechanism.integrator_function>` to integrate its input
+on each execution, before passing the result on to its `function <Mechanism_Base.function>`
+for transformation (akin to time-averaging the net input to a unit in a neural network before passing that to its
+activation function). When executing in `integrator_mode <TransferMechanism.integrator_mode>`, other parameters can
+be used to configure how integration is operates, including how it is   `initialized
+<TransferMechanism_Execution_Integration_Initialization` and when it `terminates
+<TransferMechanism_Execution_Integration_Termination>`.
 
 .. _TransferMechanism_Creation:
 
@@ -87,7 +96,6 @@ itself has arguments that can be used to confifure its `integrator_function <Tra
 constructor, their value is used to specify the corresponding parameter of its `integrator_function
 <TransferMechanism.integrator_function>`. Additonal parameters that govern how integration occurs are described under
 `TransferMechanism_Execution_With_Integration`.
-
 
 .. _TransferMechanism_Structure:
 
@@ -153,20 +161,22 @@ COMMENT
 
 A TransferMechanism has two modes of execution, determined by its `intergrator_mode
 <TransferMechanism.intergrator_mode>` parameter.  By default (`intergrator_mode
-<TransferMechanism.intergrator_mode>`=False), it simply transforms its input using its `function
-<Mechanism_Base.function>`, possibly adding noise <TransferMechanism.noise>` and/or `clipping <TransferMechanism.clip>`
-the result.  However, if `intergrator_mode <TransferMechanism.intergrator_mode>`=True, it integrates its input
-before transforming it.  Each of these is described in more detail below.
+<TransferMechanism.intergrator_mode>`=False) it `executes without integration
+<TransferMechanism_Execution_Without_Integration>`, directly transforming its input using its `function
+<Mechanism_Base.function>`, and possibly adding noise <TransferMechanism.noise>` to and/or `clipping
+<TransferMechanism.clip>` the result.  If `intergrator_mode <TransferMechanism.intergrator_mode>`=True,
+it `executes with integration <TransferMechanism_Execution_With_Integration>`, by integrating its input before
+transforming it.  Each of these is described in more detail below.
 
 .. _TransferMechanism_Execution_Without_Integration:
 
 *Execution Without Integration*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If `intergrator_mode <TransferMechanism.intergrator_mode>` is False (the default), the input received over its
-`input_ports <Mechanism_Base.input_ports>`, assigned as its `variable <Mechanism_Base.variable>`), is passed
-directly to its `function <TransferMechanism.function>`.  Two `Parameters` can be used to adjust the result before
-assigning it as the Mechanism's `value <Mechanism_Base.value>`:
+If `intergrator_mode <TransferMechanism.intergrator_mode>` is False (the default), the input received over
+`input_ports <Mechanism_Base.input_ports>` (assigned as `variable <Mechanism_Base.variable>`) is passed
+directly to `function <TransferMechanism.function>`.  The result may then be modified, as determined by two
+`Parameters`, before assigning it as the Mechanism's `value <Mechanism_Base.value>`:
 
     * `noise <TransferMechanism.noise>`: applied element-wise to the result returned by `function
       <Mechanism_Base.function>`.
@@ -186,18 +196,23 @@ each `OutputPort` represents the transformed value of the corresponding `input_p
 If `integrator_mode <TransferMechanism.integrator_mode>` is True, the TransferMechanism's input (`variable
 <Mechanism_Base.variable>`) is first passed to its `integrator_function <TransferMechanism.integrator_function>`,
 the result of which is then passed to its primary `function <Mechanism_Base.function>`.  The TransferMechanis has
-several `Parameters`, in addition to those of its `integrator_function <TransferMechanism.integrator_function>`,
-that determine various factors governing integration, as described in the following sections.
+several `Parameters` that, in addition to those of its `integrator_function <TransferMechanism.integrator_function>`,
+can be used to configure the integration process, as described in the following subsections.
 
 .. _TransferMechanism_Execution_Integration_Initialization:
 
 **Initialization, Resuming and Resetting**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-initial_value
+*Initialization.*  By default, the the starting point for integration is the Mechanism's `default_variable
+<Component_Variable>`, and is usually an appropriately shaped array of 0's.  However, the starting point can be
+specified using the `initializer <IntegratorFunction.initializer>` `Parameter <Parameters>` of the Mechanism's
+`integrator_function <TransferMechanism.integrator_function>`, that can also be assigned using the **initializer**
+argument of its constructor.  For convenience, these can also be specified using the `<TransferMechanism.initial_value>`
+Parameter of the Mechanism itself, and the **initial_value** argument of its constructor.
 
-*Reset*.  In some cases, it may be useful to reset the accumulation of a Mechanism back to its original starting point,
-or a new starting point. This is done using the `reset <AdaptiveIntegrator.reset>` method on the mechanism's
+*Resetting*.  In some cases, it may be useful to reset the accumulation of a Mechanism to its original starting
+point, or a new starting point. This is done using the `reset <AdaptiveIntegrator.reset>` of the Mechanism's
 `integrator_function <TransferMechanism.integrator_function>`, or the mechanisms's own `reset
 <Mechanism_Base.reset>` method.
 
@@ -232,6 +247,9 @@ responsible for `modulating <ModulatorySignal_Modulation` other components, or i
 the mechanism's activity.)
 
 
+
+`on_resume_integrator_mode <TransferMechanism.on_resume_integrator_mode>`
+
 When switching between `integrator_mode <TransferMechanism.integrator_mode>` = True and `integrator_mode
 <TransferMechanism.integrator_mode>` = False, the behavior of the `integrator_function
 <TransferMechanism.integrator_function>` is determined by `on_resume_integrator_mode
@@ -257,8 +275,9 @@ When switching between `integrator_mode <TransferMechanism.integrator_mode>` = T
 **Integration**
 ^^^^^^^^^^^^^^^
 
-integrator_function
-integration_rate
+`integrator_function <TransferMechanism.integrator_function>`
+`integration_rate <TransferMechanism.integration_rate>`
+`noise <TransferMechanism.noise>`
 
 
 If `integrator_mode <TransferMechanism.integrator_mode>` is True,
@@ -294,16 +313,15 @@ the following parameters (in addition to any specified for the `function <Mechan
       lower and upper values specified by clip.
 
 
-
 .. _TransferMechanism_Execution_Integration_Termination:
 
 **Termination**
 ^^^^^^^^^^^^^^^
 
-termination_measure
-termination_threshold
-termination_comparison_op
-execute_until_finished
+`termination_measure <TransferMechanism.termination_measure>`
+`termination_threshold <TransferMechanism.termination_threshold>`
+`termination_comparison_op <TransferMechanism.termination_comparison_op>`
+`execute_until_finished <TransferMechanism.execute_until_finished>`
 
 If `integrator_mode <TransferMechanism.integrator_mode>` is True, then it can be configured to conduct a single
 step of integration per execution, or to continue to integrate until its termination condition is met, as specified
@@ -313,33 +331,18 @@ assigned to the TransferMechanism's `termination_threshold <TransferMechanism.te
 <TransferMechanism.termination_comparison_op>` attributes, respectively.
 
 A single step of integration is executed if no **termination_threshold** is specified (i.e., it is None, the default),
-as in the following example::
-
-    >>> my_mech = pnl.TransferMechanism(size=2,
-    ...                                 integrator_mode=True)
-    >>> my_mech.execute([0.5, 1])
-    array([[0.25, 0.5 ]])
-    >>> my_mech.execute([0.5, 1])
-    array([[0.375, 0.75 ]])
-    >>> my_mech.execute([0.5, 1])
-    array([[0.4375, 0.875 ]])
-
-Notice that every call to ``my_mech.execute`` produces a single step of integration (at the default `rate
-<TransferMechanism.rate>` of 0.5), by executing its `integrator_function <TransferMechanism.integrator_function>`
-once.  A single step is also executed if the Mechanism's `execute_until_finished <Component.execute_until_finished>`
+A single step is also executed if the Mechanism's `execute_until_finished <Component.execute_until_finished>`
 attribute is set to False, even if **termination_threshold** is specified. In both cases, the
 `num_executions_before_finished <Component.num_executions_before_finished>` attribute remains equal to 1,
 since the `integrator_function <TransferMechanism.integrator_function>` is executed exactly once per call to the
 `execute method <Component_Execution>` (and no termination condition has been specified).
 
------------
-
-If `integrator_mode <TransferMechanism.integrator_mode>` is True, and a **termination_threshold** is specified, then the
-TransferMechanism continues to execute, integrating its current input until its termination condition is met, or the
-number of executions reaches `max_executions_before_finished <Component.max_executions_before_finished>`.  The numer of
-executions that have taken place since the last time the termination condition was met is contained in
-`num_executions_before_finished <Component.num_executions_before_finished>`; this is set to 0 each time the termination
-condition is met.
+If `integrator_mode <TransferMechanism.integrator_mode>` is True, and a **termination_threshold** is specified, then
+the TransferMechanism continues to execute, integrating its current input until its termination condition is met, or
+the number of executions reaches `max_executions_before_finished <Component.max_executions_before_finished>`.  The
+numer of executions that have taken place since the last time the termination condition was met is contained in
+`num_executions_before_finished <Component.num_executions_before_finished>`; this is set to 0 each time the
+termination condition is met.
 
    .. _TransferMechanism_Continued_Execution:
 
@@ -348,39 +351,27 @@ condition is met.
      carrying out one step of integration each time it is called. This can be useful in cases where the initial
      execution of the Mechanism is meant to bring it to some state (e.g., as an initial "settling process"), after
      which subsequent executions are meant to occur in step with the execution of other Mechanisms in a Composition
-     (see `example <TransferMechanism_Termination_By_Time>` below).
+     (see `example <TransferMechanism_Examples_Termination_By_Time>` below).
 
-By default, `execute_until_finished <Component.execute_until_finished>` is True, and a convergence criterion is used to
-terminate integration, as in the following example::
-
-    >>> my_mech = pnl.TransferMechanism(size=2,
-    ...                                 integrator_mode=True,
-    ...                                 termination_threshold=0.1)
-    >>> my_mech.execute([0.5, 1])
-    array([[0.46875, 0.9375 ]])
-    >>> my_mech.num_executions_before_finished
-    4
-
-In this case, the single call to ``my_mech.execute`` caused the Mechanism to integrate for 4 steps, until the
-difference between its current `value <Mechanism_Base.value>` and its `previous value
-<Mechanism_Base.previous_value>` is less than the specified **termination_threshold**.  However,
-the **termination_measure** and **termination_comparison_op** arguments can be used to congifure other termination
-conditions.  There are two broad types of termination condition:  convergence and boundary terination.
+By default, `execute_until_finished <Component.execute_until_finished>` is True, and a convergence criterion is used
+to terminate integration. However, the **termination_measure** and **termination_comparison_op** arguments can be used
+to congifure other termination conditions.  There are two broad types of termination condition:  convergence and
+boundary terination.
 
 *Convergence termination* -- execution terminates based on the difference between the TransferMechanism's current
-`value <Mechanism_Base.value>` and its `previous_value <Mechanism_Base.previous_value>` (as in the example above).
+`value <Mechanism_Base.value>` and its `previous_value <Mechanism_Base.previous_value>`.
 This is implemented by specifying **termination_measure** with a function that accepts a 2d array with *two items*
 (1d arrays) as its argument, and returns a scalar (the default for a TransferMechanism is the `Distance` Function with
 `MAX_ABS_DIFF` as its metric).  After each execution, the function is passed the Mechanism's current `value
 <Mechanism_Base.value>` as well as its `previous_value <Mechanism_Base.previous_value>`, and the scalar returned is
 compared to **termination_threshold** using the comparison operator specified by **termination_comparison_op** (which
-is *LESS_THAN_OR_EQUAL* by default).  Execution continues until this returns True.  Thus, in the example above,
-execution continued until the difference between the Mechanism's current `value <Mechanism_Base.value>` and
-`previous_value <Mechanism_Base.previous_value>` was less than or equal to 0.1.  A `Distance` Function with other
+is *LESS_THAN_OR_EQUAL* by default).  Execution continues until this returns True. A `Distance` Function with other
 metrics (e.g., *ENERGY* or *ENTROPY*) can be specified as the **termination_measure**, as can any other function that
 accepts a single argument that is a 2d array with two entries.
 
 *Boundary termination* -- Two types of boundaries can be specified:  value or time.
+
+    .. _TransferMechanism_Termination_By_Value:
 
     *Termination by value*.  This terminates execution when the Mechanism's `value <Mechanism_Base.value>` reaches the
     the value specified by the **threshold** argument.  This implemented by specifying **termination_measure** with
@@ -389,22 +380,6 @@ accepts a single argument that is a 2d array with two entries.
     <Mechanism_Base.previous_value>` is ignored). After each execution, the function is passed the Mechanism's
     current `value <Mechanism_Base.value>`, and the scalar returned is compared to **termination_threshold** using
     the comparison operator specified by **termination_comparison_op**. Execution continues until this returns True,
-    as in the following example::
-
-        >>> my_mech = pnl.TransferMechanism(size=2,
-        ...                                 integrator_mode=True,
-        ...                                 termination_measure=max,
-        ...                                 termination_threshold=0.9,
-        ...                                 termination_comparison_op=pnl.GREATER_THAN_OR_EQUAL)
-        >>> my_mech.execute([0.5, 1])
-        array([[0.46875, 0.9375 ]])
-        >>> my_mech.num_executions_before_finished
-        4
-
-    Here, ``my_mech`` continued to execute for ``5`` times, until the element of the Mechanism's `value
-    <Mechanism_Base.value>` with the greatest value exceeded ``0.9``.  Note that GREATER_THAN_EQUAL is a keyword for
-    the string ">=", which is a key in the `comparison_operators` dict for the Python ``operator.ge``; any of these
-    can be used to specify **termination_comparison_op**).
 
     .. _TransferMechanism_Termination_By_Time:
 
@@ -413,130 +388,7 @@ accepts a single argument that is a 2d array with two entries.
     specified by assigning a `TimeScale` to **termination_measure**;  execution terminates when the number of
     executions at that TimeScale equals the **termination_threshold**.  Note that, in this case,
     the **termination_comparison_op** argument is ignored (the `termination_comparison_op
-    <TransferMechanism.termination_comparison_op>` is automatically set to *GREATER_THAN_OR_EQUAL*).  For example,
-    ``my_mech`` is configured below to execute at least twice per trial::
-
-        >>> my_mech = pnl.TransferMechanism(size=2,
-        ...                                 integrator_mode=True,
-        ...                                 termination_measure=TimeScale.TRIAL,
-        ...                                 termination_threshold=2)
-        >>> my_mech.execute([0.5, 1])
-        array([[0.375, 0.75 ]])
-        >>> my_mech.num_executions_before_finished
-        2
-
-    As noted `above <TransferMechanism_Continued_Execution>`, it will continue to execute if it is called again,
-    but only once per call::
-
-        >>> my_mech.execute([0.5, 1])
-        array([[0.4375, 0.875 ]])
-        >>> my_mech.num_executions_before_finished
-        1
-        >>> my_mech.execute([0.5, 1])
-        array([[0.46875, 0.9375 ]])
-        >>> my_mech.num_executions_before_finished
-        1
-
-    In the following example, this behavior is exploited to allow a recurrent form of TransferMechanism (``attention``)
-    to integrate for a fixed number of steps (e.g., to simulate the time taken to encode an instruction regarding the
-    which feature of the stimulus should be attended) before a stimulus is presented, and then allowing that
-    Mechanism to continue to integrate the instruction and impact stimulus processing once the stimulus is presented::
-
-        >>> stim_input = pnl.ProcessingMechanism(size=2)
-        >>> stim_percept = pnl.TransferMechanism(size=2, function=pnl.Logistic)
-        >>> decision = pnl.TransferMechanism(name='Decision', size=2,
-        ...                                  integrator_mode=True,
-        ...                                  execute_until_finished=False,
-        ...                                  termination_threshold=0.65,
-        ...                                  termination_measure=max,
-        ...                                  termination_comparison_op=pnl.GREATER_THAN)
-        >>> instruction_input = pnl.ProcessingMechanism(size=2, function=pnl.Linear(slope=10))
-        >>> attention = pnl.LCAMechanism(name='Attention', size=2, function=pnl.Logistic,
-        ...                              leak=8, competition=8, self_excitation=0, time_step_size=.1,
-        ...                              termination_threshold=3,
-        ...                              termination_measure = pnl.TimeScale.TRIAL)
-        >>> response = pnl.ProcessingMechanism(name='Response', size=2)
-        ...
-        >>> comp = pnl.Composition()
-        >>> comp.add_linear_processing_pathway([stim_input, [[1,-1],[-1,1]], stim_percept, decision, response]) #doctest: +SKIP
-        >>> comp.add_linear_processing_pathway([instruction_input, attention, stim_percept]) #doctest: +SKIP
-        >>> comp.scheduler.add_condition(response, pnl.WhenFinished(decision)) #doctest: +SKIP
-        ...
-        >>> stim_percept.set_log_conditions([pnl.RESULT])
-        >>> attention.set_log_conditions([pnl.RESULT])
-        >>> decision.set_log_conditions([pnl.RESULT])
-        >>> response.set_log_conditions(['OutputPort-0'])
-        ...
-        >>> inputs = {stim_input:        [[1, 1], [1, 1]],
-        ...           instruction_input: [[1, -1], [-1, 1]]}
-        >>> comp.run(inputs=inputs) # doctest: +SKIP
-
-    This example implements a simple model of attentional selection in perceptual decision making. In the model,
-    ``stim_input`` represents the stimulus input, which is passed to ``stim_percept``, which also receives input
-    from the ``attention`` Mechanism.  ``stim_percpt passes its output to ``decision``, which integrates its input
-    until one of the state_features of the input (the first or second) reaches the threshold of 0.65, at which point
-    ``response`` executes (specified by the condition ``(reponse, WhenFinished(decision)``).  In addition to the
-    ``stim_input``, the model an instruction on each trial in ``instruction_input`` that specifies which feature of
-    the stimulus (i.e., the first or second element) should be "attended".  This is passed to the ``attention``
-    Mechanism, which uses it to select which feature of ``stim_percept`` should be passed to ``decision``, and thereby
-    determine the response.  Like the ``decision`` Mechanism, the ``attention`` Mechanism integrates its input.
-    However, its **threshold_measure** is specified as ``TimeScale.TRIAL`` and its **threshold** as ``3``, so it
-    carries out 3 steps of integration the first time it is executed in each trial.  Thus, when the input is presented
-    at the beginning of each trial, first ``stim_input`` and ``instruction_input`` execute.  Then ``attention``
-    executes, but ``stim_percept`` does not yet do so, since it receives input from ``attention`` and thus must wait
-    for that to execute first. When ``attention`` executes, it carries out its three steps of integration,
-    (giving it a chance to "encode" the instruction before the stimulus is processed by ``stim_percept``).  Then
-    ``stim_percept``executes, followed by ``decision``.  However, the latter carries out only one step of integration,
-    since its **execute_until_finished** is set to False.  If its output does not meet its termination condition after
-    that one step of integration, then ``response`` does not execute, since it has been assigned a condition that
-    requires ``decision`` to terminate before it does so. As a result, since ``response`` has not executed, the trial
-    continues. On the next pass, ``attention`` carries out only one step of integration, since its termination
-    condition has already been met, as does ``decision`` since its termination condition has *not* yet been met.  If
-    it is met, then ``response`` executes and the trial ends (since all Mechanisms have now had an opportunity to
-    execute). The value of the ``attention`` and ``decision`` Mechanisms after each execution are shown below::
-
-        >>> attention.log.print_entries(display=[pnl.TIME, pnl.VALUE]) #doctest: +SKIP
-        Log for Attention:
-        Logged Item:   Time          Value
-        'RESULT'       0:0:0:1      [0.64565631 0.19781611]  # Trial 0
-        'RESULT'       0:0:0:1      [0.72347147 0.1422746 ]
-        'RESULT'       0:0:0:1      [0.74621565 0.1258587 ]
-        'RESULT'       0:0:1:1      [0.75306362 0.1208305 ]
-        'RESULT'       0:0:2:1      [0.75516272 0.11926922]
-        'RESULT'       0:0:3:1      [0.75581168 0.11878318]
-        'RESULT'       0:0:4:1      [0.75601306 0.11863188]
-        'RESULT'       0:1:0:1      [0.2955214  0.49852489]  # Trial 1
-        'RESULT'       0:1:0:1      [0.17185129 0.68187518]
-        'RESULT'       0:1:0:1      [0.13470156 0.73399742]
-        'RESULT'       0:1:1:1      [0.1235536  0.74936691]
-        'RESULT'       0:1:2:1      [0.12011584 0.75402671]
-
-        >>> decision.log.print_entries(display=[pnl.TIME, pnl.VALUE]) #doctest: +SKIP
-        Log for Decision:
-        Logged Item:   Time          Value
-        'RESULT'       0:0:0:3      [0.33917677 0.2657116 ]  # Trial 0
-        'RESULT'       0:0:1:3      [0.50951133 0.39794126]
-        'RESULT'       0:0:2:3      [0.59490696 0.46386164]
-        'RESULT'       0:0:3:3      [0.63767534 0.49676128]
-        'RESULT'       0:0:4:3      [0.65908142 0.51319226]
-        'RESULT'       0:1:0:3      [0.59635299 0.59443706]  # Trial 1
-        'RESULT'       0:1:1:3      [0.56360108 0.6367389 ]
-        'RESULT'       0:1:2:3      [0.54679699 0.65839718]
-
-        >>> response.log.print_entries(display=[pnl.TIME, pnl.VALUE]) #doctest: +SKIP
-        Log for Response:
-        Logged Item:   Time          Value
-        'OutputPort-0' 0:0:4:4      [0.65908142 0.51319226]  # Trial 0
-        'OutputPort-0' 0:1:2:4      [0.54679699 0.65839718]  # Trial 1
-
-    The `Time` signatures are ``run:trial:pass:time_step``.  Note that ``attention`` always executes in `time_step` 1
-    (after ``stim_input`` and ``instruction_input`` which execute in time_step 0).  In trial 0, ``attention``
-    executes three times in pass 0 (to reach its specified threshold), and then again in passes 1, 2 and 3 and 4
-    along with ``decision`` (which executes in time_step 3, after ``stim_percept`` in time_step 2),
-    as the trial continues and ``decision`` executes until reaching its threshold.  Note that ``response`` executed
-    only executed in pass 4, since it depends on the termination of ``decision``.  Note also that in trial 1
-    ``attention`` executes 3 times in pass 0 as it did in trial 0;  however, ``decision`` executes only 3 times
-    since it begins closer to its threshold in that trial.
+    <TransferMechanism.termination_comparison_op>` is automatically set to *GREATER_THAN_OR_EQUAL*).
 
 
 COMMENT:
@@ -634,10 +486,10 @@ the specified value of ``0.1``.
     **initial_value** are ignored, as its `integrator_function <TransferMechanism.integrator_function>` is not executed.
 
 
-.. _TransferMechanism_Examples_Resetting:
+.. _TransferMechanism_Examples_Initialization_and_Resetting:
 
-*Resetting*
-~~~~~~~~~~~
+*Initialization and Resetting*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A use case for `reset <AdaptiveIntegrator.reset>` is demonstrated in the following example:
 
@@ -688,6 +540,167 @@ Because `reset <AdaptiveIntegrator.reset>` was set to 0.2 (its original initial_
 my_time_averaged_transfer_mechanism's integrator_function effectively started RUN 3 in the same state as it began RUN 1.
 As a result, it arrived at the exact same value after 5 trials (with identical inputs).
 
+
+.. _TransferMechanism_Examples_Termination:
+
+*Termination*
+~~~~~~~~~~~~~
+
+*Termination by value*.  This terminates execution when the Mechanism's `value <Mechanism_Base.value>` reaches the
+the value specified by the **threshold** argument.  This implemented by specifying **termination_measure** with
+a function that accepts a 2d array with a *single entry* as its argument and returns a scalar.  The single
+entry is the TransferMechanism's current `value <Mechanism_Base.value>` (that is, `previous_value
+<Mechanism_Base.previous_value>` is ignored). After each execution, the function is passed the Mechanism's
+current `value <Mechanism_Base.value>`, and the scalar returned is compared to **termination_threshold** using
+the comparison operator specified by **termination_comparison_op**. Execution continues until this returns True,
+as in the following example::
+
+    >>> my_mech = pnl.TransferMechanism(size=2,
+    ...                                 integrator_mode=True,
+    ...                                 termination_measure=max,
+    ...                                 termination_threshold=0.9,
+    ...                                 termination_comparison_op=pnl.GREATER_THAN_OR_EQUAL)
+    >>> my_mech.execute([0.5, 1])
+    array([[0.46875, 0.9375 ]])
+    >>> my_mech.num_executions_before_finished
+    4
+
+Here, ``my_mech`` continued to execute for ``5`` times, until the element of the Mechanism's `value
+<Mechanism_Base.value>` with the greatest value exceeded ``0.9``.  Note that GREATER_THAN_EQUAL is a keyword for
+the string ">=", which is a key in the `comparison_operators` dict for the Python ``operator.ge``; any of these
+can be used to specify **termination_comparison_op**).
+
+.. _TransferMechanism_Examples_Termination_By_Time:
+
+*Termination by time*.  This terminates execution when the Mechanism has executed at least a number of times equal
+to the **threshold** at a particular TimeScale (e.g., within a `RUN` or a `TRIAL <TimeScale.TRIAL>`). This is
+specified by assigning a `TimeScale` to **termination_measure**;  execution terminates when the number of
+executions at that TimeScale equals the **termination_threshold**.  Note that, in this case,
+the **termination_comparison_op** argument is ignored (the `termination_comparison_op
+<TransferMechanism.termination_comparison_op>` is automatically set to *GREATER_THAN_OR_EQUAL*).  For example,
+``my_mech`` is configured below to execute at least twice per trial::
+
+    >>> my_mech = pnl.TransferMechanism(size=2,
+    ...                                 integrator_mode=True,
+    ...                                 termination_measure=TimeScale.TRIAL,
+    ...                                 termination_threshold=2)
+    >>> my_mech.execute([0.5, 1])
+    array([[0.375, 0.75 ]])
+    >>> my_mech.num_executions_before_finished
+    2
+
+As noted `above <TransferMechanism_Continued_Execution>`, it will continue to execute if it is called again,
+but only once per call::
+
+    >>> my_mech.execute([0.5, 1])
+    array([[0.4375, 0.875 ]])
+    >>> my_mech.num_executions_before_finished
+    1
+    >>> my_mech.execute([0.5, 1])
+    array([[0.46875, 0.9375 ]])
+    >>> my_mech.num_executions_before_finished
+    1
+
+In the following example, this behavior is exploited to allow a recurrent form of TransferMechanism (``attention``)
+to integrate for a fixed number of steps (e.g., to simulate the time taken to encode an instruction regarding the
+which feature of the stimulus should be attended) before a stimulus is presented, and then allowing that
+Mechanism to continue to integrate the instruction and impact stimulus processing once the stimulus is presented::
+
+    >>> stim_input = pnl.ProcessingMechanism(size=2)
+    >>> stim_percept = pnl.TransferMechanism(size=2, function=pnl.Logistic)
+    >>> decision = pnl.TransferMechanism(name='Decision', size=2,
+    ...                                  integrator_mode=True,
+    ...                                  execute_until_finished=False,
+    ...                                  termination_threshold=0.65,
+    ...                                  termination_measure=max,
+    ...                                  termination_comparison_op=pnl.GREATER_THAN)
+    >>> instruction_input = pnl.ProcessingMechanism(size=2, function=pnl.Linear(slope=10))
+    >>> attention = pnl.LCAMechanism(name='Attention', size=2, function=pnl.Logistic,
+    ...                              leak=8, competition=8, self_excitation=0, time_step_size=.1,
+    ...                              termination_threshold=3,
+    ...                              termination_measure = pnl.TimeScale.TRIAL)
+    >>> response = pnl.ProcessingMechanism(name='Response', size=2)
+    ...
+    >>> comp = pnl.Composition()
+    >>> comp.add_linear_processing_pathway([stim_input, [[1,-1],[-1,1]], stim_percept, decision, response]) #doctest: +SKIP
+    >>> comp.add_linear_processing_pathway([instruction_input, attention, stim_percept]) #doctest: +SKIP
+    >>> comp.scheduler.add_condition(response, pnl.WhenFinished(decision)) #doctest: +SKIP
+    ...
+    >>> stim_percept.set_log_conditions([pnl.RESULT])
+    >>> attention.set_log_conditions([pnl.RESULT])
+    >>> decision.set_log_conditions([pnl.RESULT])
+    >>> response.set_log_conditions(['OutputPort-0'])
+    ...
+    >>> inputs = {stim_input:        [[1, 1], [1, 1]],
+    ...           instruction_input: [[1, -1], [-1, 1]]}
+    >>> comp.run(inputs=inputs) # doctest: +SKIP
+
+This example implements a simple model of attentional selection in perceptual decision making. In the model,
+``stim_input`` represents the stimulus input, which is passed to ``stim_percept``, which also receives input
+from the ``attention`` Mechanism.  ``stim_percpt passes its output to ``decision``, which integrates its input
+until one of the state_features of the input (the first or second) reaches the threshold of 0.65, at which point
+``response`` executes (specified by the condition ``(reponse, WhenFinished(decision)``).  In addition to the
+``stim_input``, the model an instruction on each trial in ``instruction_input`` that specifies which feature of
+the stimulus (i.e., the first or second element) should be "attended".  This is passed to the ``attention``
+Mechanism, which uses it to select which feature of ``stim_percept`` should be passed to ``decision``, and thereby
+determine the response.  Like the ``decision`` Mechanism, the ``attention`` Mechanism integrates its input.
+However, its **threshold_measure** is specified as ``TimeScale.TRIAL`` and its **threshold** as ``3``, so it
+carries out 3 steps of integration the first time it is executed in each trial.  Thus, when the input is presented
+at the beginning of each trial, first ``stim_input`` and ``instruction_input`` execute.  Then ``attention``
+executes, but ``stim_percept`` does not yet do so, since it receives input from ``attention`` and thus must wait
+for that to execute first. When ``attention`` executes, it carries out its three steps of integration,
+(giving it a chance to "encode" the instruction before the stimulus is processed by ``stim_percept``).  Then
+``stim_percept``executes, followed by ``decision``.  However, the latter carries out only one step of integration,
+since its **execute_until_finished** is set to False.  If its output does not meet its termination condition after
+that one step of integration, then ``response`` does not execute, since it has been assigned a condition that
+requires ``decision`` to terminate before it does so. As a result, since ``response`` has not executed, the trial
+continues. On the next pass, ``attention`` carries out only one step of integration, since its termination
+condition has already been met, as does ``decision`` since its termination condition has *not* yet been met.  If
+it is met, then ``response`` executes and the trial ends (since all Mechanisms have now had an opportunity to
+execute). The value of the ``attention`` and ``decision`` Mechanisms after each execution are shown below::
+
+    >>> attention.log.print_entries(display=[pnl.TIME, pnl.VALUE]) #doctest: +SKIP
+    Log for Attention:
+    Logged Item:   Time          Value
+    'RESULT'       0:0:0:1      [0.64565631 0.19781611]  # Trial 0
+    'RESULT'       0:0:0:1      [0.72347147 0.1422746 ]
+    'RESULT'       0:0:0:1      [0.74621565 0.1258587 ]
+    'RESULT'       0:0:1:1      [0.75306362 0.1208305 ]
+    'RESULT'       0:0:2:1      [0.75516272 0.11926922]
+    'RESULT'       0:0:3:1      [0.75581168 0.11878318]
+    'RESULT'       0:0:4:1      [0.75601306 0.11863188]
+    'RESULT'       0:1:0:1      [0.2955214  0.49852489]  # Trial 1
+    'RESULT'       0:1:0:1      [0.17185129 0.68187518]
+    'RESULT'       0:1:0:1      [0.13470156 0.73399742]
+    'RESULT'       0:1:1:1      [0.1235536  0.74936691]
+    'RESULT'       0:1:2:1      [0.12011584 0.75402671]
+
+    >>> decision.log.print_entries(display=[pnl.TIME, pnl.VALUE]) #doctest: +SKIP
+    Log for Decision:
+    Logged Item:   Time          Value
+    'RESULT'       0:0:0:3      [0.33917677 0.2657116 ]  # Trial 0
+    'RESULT'       0:0:1:3      [0.50951133 0.39794126]
+    'RESULT'       0:0:2:3      [0.59490696 0.46386164]
+    'RESULT'       0:0:3:3      [0.63767534 0.49676128]
+    'RESULT'       0:0:4:3      [0.65908142 0.51319226]
+    'RESULT'       0:1:0:3      [0.59635299 0.59443706]  # Trial 1
+    'RESULT'       0:1:1:3      [0.56360108 0.6367389 ]
+    'RESULT'       0:1:2:3      [0.54679699 0.65839718]
+
+    >>> response.log.print_entries(display=[pnl.TIME, pnl.VALUE]) #doctest: +SKIP
+    Log for Response:
+    Logged Item:   Time          Value
+    'OutputPort-0' 0:0:4:4      [0.65908142 0.51319226]  # Trial 0
+    'OutputPort-0' 0:1:2:4      [0.54679699 0.65839718]  # Trial 1
+
+The `Time` signatures are ``run:trial:pass:time_step``.  Note that ``attention`` always executes in `time_step` 1
+(after ``stim_input`` and ``instruction_input`` which execute in time_step 0).  In trial 0, ``attention``
+executes three times in pass 0 (to reach its specified threshold), and then again in passes 1, 2 and 3 and 4
+along with ``decision`` (which executes in time_step 3, after ``stim_percept`` in time_step 2),
+as the trial continues and ``decision`` executes until reaching its threshold.  Note that ``response`` executed
+only executed in pass 4, since it depends on the termination of ``decision``.  Note also that in trial 1
+``attention`` executes 3 times in pass 0 as it did in trial 0;  however, ``decision`` executes only 3 times
+since it begins closer to its threshold in that trial.
 
 COMMENT
 

@@ -96,7 +96,7 @@ user once the component is constructed, with the one exception of `prefs <Compon
   used when the Component is executed and no input is provided), and takes precedence over the specification of `size
   <Component_Size>`.
 
-  .. note::
+  .. technical_note::
     Internally, the attribute **variable** is not directly used as input to functions, to allow for parallelization.
     The attribute is maintained as a way for the user to monitor variable along the execution chain.
     During parallelization however, the attribute may not accurately represent the most current value of variable
@@ -486,7 +486,6 @@ COMMENT
 import base64
 import collections
 import copy
-import dill
 import functools
 import inspect
 import itertools
@@ -494,11 +493,11 @@ import logging
 import numbers
 import types
 import warnings
-
 from abc import ABCMeta
 from collections.abc import Iterable
 from enum import Enum, IntEnum
 
+import dill
 import numpy as np
 
 from psyneulink.core import llvm as pnlvm
@@ -514,19 +513,19 @@ from psyneulink.core.globals.keywords import \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, OWNER, PARAMS, PREFS_ARG, \
     RESET_STATEFUL_FUNCTION_WHEN, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
-from psyneulink.core.scheduling.time import Time, TimeScale
-from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.parameters import \
     Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
-    PreferenceEntry, PreferenceLevel, PreferenceSet, _assign_prefs
+    PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.registry import register_category
+from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared,\
+    ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, \
     is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, \
     get_all_explicit_arguments, call_with_pruned_args, safe_equals, safe_len
 from psyneulink.core.scheduling.condition import Never
+from psyneulink.core.scheduling.time import Time, TimeScale
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog',
@@ -3277,7 +3276,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     # MODIFIED 9/22/19 END
 
     def _get_current_execution_time(self, context):
-        from psyneulink.core.globals.context import _get_context
         return _get_time(self, context=context)
 
     def _update_current_execution_time(self, context):
