@@ -3,14 +3,17 @@ from psyneulink import *
 # TODO:
 #   Nback::
 #     - separate out stim/context external inputs from those from EM into FFN
-#     - figure out how to specify feedback from DDM to EM
+#     - figure out how to specify feedback from DDM to EM:
 #     - figure out how to execute EM twice:
 #       > first, at beginning of trial, to retrieve item based on current stimulus & context
 #             (with prob retrieval = 1, prob storage = 0)
 #       > second time, at end of trial (under influence of ControlMechanism) to encode current stimulus & context
 #             (with prob storage = 1;  prob of retrieval = 0)
+#         scheduler.add_condition(A, pnl.AfterNCalls(CM, 1))
+#         scheduler.add_condition(CM, pnl.Always())
+#         composition.run(...termination_conds={pnl.TimeScale.TRIAL: pnl.And(pnl.AfterNCalls(CM, 2), pnl.JustRan(CM))})
 #     - implement circular drift as function for an input mechanism
-#     - BUG:  should be able to use InputPort as spec for a pathway (if there is nothing after it);
+#     - ADD PNL FEATURE:  should be able to use InputPort as spec for a pathway (if there is nothing after it);
 #             same for OutputPort (if there is nothing before it)
 
 

@@ -57,8 +57,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
     COMMENT:
     NARRATIVE HERE THAT EXPLAINS:
     A) initializers and stateful_attributes
-    B) initializer (note singular) is a prespecified member of initializers
-       that contains the value with which to initiailzer previous_value
+    B) initializer (note singular) is a pre-specified member of initializers
+       that contains the value with which to initialize previous_value
     COMMENT
 
 
