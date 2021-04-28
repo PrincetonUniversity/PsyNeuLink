@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Time &mdash; PsyNeuLink 0.8.8.0+13.gb7816cb documentation</title>
+  <title>Time &mdash; PsyNeuLink 0.8.8.0+13.gb7816cb642 documentation</title>
   
 
   
@@ -27,6 +28,7 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -193,245 +195,271 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="module-psyneulink.core.scheduling.time">
+  <section id="module-psyneulink.core.scheduling.time">
 <span id="time"></span><h1>Time<a class="headerlink" href="#module-psyneulink.core.scheduling.time" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="overview">
+<section id="overview">
 <span id="time-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p><a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a>s maintain <a class="reference internal" href="#psyneulink.core.scheduling.time.Clock" title="psyneulink.core.scheduling.time.Clock"><code class="xref any py py-class docutils literal"><span class="pre">Clock</span></code></a> objects to track time. The current time in relation to a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> is stored in <a class="reference internal" href="#psyneulink.core.scheduling.time.Time" title="psyneulink.core.scheduling.time.Time"><code class="xref py py-class docutils literal"><span class="pre">Scheduler.clock.time</span></code></a> or <a class="reference internal" href="#psyneulink.core.scheduling.time.SimpleTime" title="psyneulink.core.scheduling.time.SimpleTime"><code class="xref py py-class docutils literal"><span class="pre">Scheduler.clock.simple_time</span></code></a></p>
-<dl class="class">
+<p><a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a>s maintain <a class="reference internal" href="#psyneulink.core.scheduling.time.Clock" title="psyneulink.core.scheduling.time.Clock"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Clock</span></code></a> objects to track time. The current time in relation to a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> is stored in <a class="reference internal" href="#psyneulink.core.scheduling.time.Time" title="psyneulink.core.scheduling.time.Time"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scheduler.clock.time</span></code></a> or <a class="reference internal" href="#psyneulink.core.scheduling.time.SimpleTime" title="psyneulink.core.scheduling.time.SimpleTime"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scheduler.clock.simple_time</span></code></a></p>
+<dl class="py class">
+<dt id="psyneulink.core.scheduling.time.Clock">
+<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.time.</code><code class="sig-name descname">Clock</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores a history of <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>s that have occurred, and keep track of a     current <a class="reference internal" href="#"><span class="doc">Time</span></a>. Used in relation to a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a></p>
+<dl class="py attribute">
+<dt id="psyneulink.core.scheduling.time.Clock.history">
+<code class="sig-name descname">history</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock.history" title="Permalink to this definition">¶</a></dt>
+<dd><p>a root <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeHistoryTree" title="psyneulink.core.scheduling.time.TimeHistoryTree"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeHistoryTree</span></code></a> associated with this Clock</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#psyneulink.core.scheduling.time.TimeHistoryTree" title="psyneulink.core.scheduling.time.TimeHistoryTree"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeHistoryTree</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="psyneulink.core.scheduling.time.Clock._increment_time">
+<code class="sig-name descname">_increment_time</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_scale</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock._increment_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calls <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeHistoryTree.increment_time" title="psyneulink.core.scheduling.time.TimeHistoryTree.increment_time"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">self.history.increment_time</span></code></a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="psyneulink.core.scheduling.time.Clock.get_total_times_relative">
+<code class="sig-name descname">get_total_times_relative</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">query_time_scale</span></em>, <em class="sig-param"><span class="n">base_time_scale</span></em>, <em class="sig-param"><span class="n">base_index</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock.get_total_times_relative" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience simplified wrapper for <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeHistoryTree.get_total_times_relative" title="psyneulink.core.scheduling.time.TimeHistoryTree.get_total_times_relative"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">TimeHistoryTree.get_total_times_relative</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query_time_scale</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>) – the unit of time whose number of ticks to be returned</p></li>
+<li><p><strong>base_time_scale</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>) – the unit of time over which the number of <strong>query_time_scale</strong> ticks
+should be returned</p></li>
+<li><p><strong>base_index</strong> (<em>int</em>) – the <strong>base_index</strong>th <strong>base_time_scale</strong> over which the number of
+<strong>query_time_scale</strong> ticks should be returned</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>the number of query_time_scale s that have occurred during the scope             of the base_index th base_time_scale</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="psyneulink.core.scheduling.time.Clock.get_time_by_time_scale">
+<code class="sig-name descname">get_time_by_time_scale</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_scale</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock.get_time_by_time_scale" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>time_scale</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>the current value of the time unit corresponding to time_scale             for this Clock</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="psyneulink.core.scheduling.time.Clock.time">
+<em class="property">property </em><code class="sig-name descname">time</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock.time" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#"><span class="doc">Time</span></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>the current time</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="psyneulink.core.scheduling.time.Clock.simple_time">
+<em class="property">property </em><code class="sig-name descname">simple_time</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock.simple_time" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#psyneulink.core.scheduling.time.SimpleTime" title="psyneulink.core.scheduling.time.SimpleTime"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SimpleTime</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>the current time in simple format</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="psyneulink.core.scheduling.time.Clock.previous_time">
+<em class="property">property </em><code class="sig-name descname">previous_time</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock.previous_time" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="#"><span class="doc">Time</span></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>the time that has occurred last</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt id="psyneulink.core.scheduling.time.TimeScale">
-<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.time.</code><code class="descname">TimeScale</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.time.</code><code class="sig-name descname">TimeScale</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents divisions of time used by the <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a>, <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>, and the <strong>time_scale</strong>
-argument of a Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method.</p>
+argument of a Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method.</p>
 <p>The values of TimeScale are defined as follows (in order of increasingly coarse granularity):</p>
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.TimeScale.TIME_STEP">
-<code class="descname">TIME_STEP</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">TIME_STEP</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="Permalink to this definition">¶</a></dt>
 <dd><p>the nuclear unit of time, corresponding to the execution of all <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>s allowed to execute
 from a single <a class="reference internal" href="Scheduler.html#consideration-set"><span class="std std-ref">consideration_set</span></a> of a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a>, and which are considered to have
 executed simultaneously.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.TimeScale.PASS">
-<code class="descname">PASS</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale.PASS" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">PASS</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale.PASS" title="Permalink to this definition">¶</a></dt>
 <dd><p>a full iteration through all of the <a class="reference internal" href="Scheduler.html#consideration-set"><span class="std std-ref">consideration_sets</span></a> in a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler's</span></a>
-<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler.consideration_queue" title="psyneulink.core.scheduling.scheduler.Scheduler.consideration_queue"><code class="xref any py py-attr docutils literal"><span class="pre">consideration_queue</span></code></a>, consisting of one or more <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TIME_STEPs</span></code></a>, over which every <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> <a class="reference internal" href="Scheduler.html#scheduler-creation"><span class="std std-ref">specified to a Scheduler</span></a> is considered for execution at least once.</p>
+<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler.consideration_queue" title="psyneulink.core.scheduling.scheduler.Scheduler.consideration_queue"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">consideration_queue</span></code></a>, consisting of one or more <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEPs</span></code></a>, over which every <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> <a class="reference internal" href="Scheduler.html#scheduler-creation"><span class="std std-ref">specified to a Scheduler</span></a> is considered for execution at least once.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.TimeScale.TRIAL">
-<code class="descname">TRIAL</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">TRIAL</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="Permalink to this definition">¶</a></dt>
 <dd><p>an open-ended unit of time consisting of all actions that occurs within the scope of a single input to a
 <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.TimeScale.RUN">
-<code class="descname">RUN</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale.RUN" title="Permalink to this definition">¶</a></dt>
-<dd><p>the scope of a call to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>,
-consisting of one or more <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIALs</span></code></a>.</p>
+<code class="sig-name descname">RUN</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale.RUN" title="Permalink to this definition">¶</a></dt>
+<dd><p>the scope of a call to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>,
+consisting of one or more <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIALs</span></code></a>.</p>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.TimeScale.LIFE">
-<code class="descname">LIFE</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale.LIFE" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">LIFE</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale.LIFE" title="Permalink to this definition">¶</a></dt>
 <dd><p>the scope of time since the creation of an object.</p>
 </dd></dl>
 
-<dl class="classmethod">
+<dl class="py method">
 <dt id="psyneulink.core.scheduling.time.TimeScale.get_parent">
-<em class="property">classmethod </em><code class="descname">get_parent</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale.get_parent" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>the TimeScale one level wider in scope than time_scale</strong></td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a></td>
-</tr>
-</tbody>
-</table>
+<em class="property">classmethod </em><code class="sig-name descname">get_parent</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_scale</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale.get_parent" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>the TimeScale one level wider in scope than time_scale</strong></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a></p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="classmethod">
+<dl class="py method">
 <dt id="psyneulink.core.scheduling.time.TimeScale.get_child">
-<em class="property">classmethod </em><code class="descname">get_child</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale.get_child" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>the TimeScale one level smaller in scope than time_scale</strong></td>
-</tr>
-<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.scheduling.time.TimeScale._member_type_">
-<code class="descname">_member_type_</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale._member_type_" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<em class="property">classmethod </em><code class="sig-name descname">get_child</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_scale</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScale.get_child" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><strong>the TimeScale one level smaller in scope than time_scale</strong></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a></p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
 
-<dl class="class">
-<dt id="psyneulink.core.scheduling.time.Clock">
-<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.time.</code><code class="descname">Clock</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock" title="Permalink to this definition">¶</a></dt>
-<dd><p>Stores a history of <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a>s that have occurred, and keep track of a     current <a class="reference internal" href="#"><span class="doc">Time</span></a>. Used in relation to a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a></p>
-<dl class="attribute">
-<dt id="psyneulink.core.scheduling.time.Clock.history">
-<code class="descname">history</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock.history" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="#psyneulink.core.scheduling.time.TimeHistoryTree" title="psyneulink.core.scheduling.time.TimeHistoryTree"><code class="xref any py py-class docutils literal"><span class="pre">TimeHistoryTree</span></code></a> – a root <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeHistoryTree" title="psyneulink.core.scheduling.time.TimeHistoryTree"><code class="xref any py py-class docutils literal"><span class="pre">TimeHistoryTree</span></code></a> associated with this Clock</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="psyneulink.core.scheduling.time.Clock._increment_time">
-<code class="descname">_increment_time</code><span class="sig-paren">(</span><em>time_scale</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock._increment_time" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calls <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeHistoryTree.increment_time" title="psyneulink.core.scheduling.time.TimeHistoryTree.increment_time"><code class="xref any py py-meth docutils literal"><span class="pre">self.history.increment_time</span></code></a></p>
-</dd></dl>
-
-<dl class="method">
-<dt id="psyneulink.core.scheduling.time.Clock.get_total_times_relative">
-<code class="descname">get_total_times_relative</code><span class="sig-paren">(</span><em>query_time_scale</em>, <em>base_time_scale</em>, <em>base_index=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock.get_total_times_relative" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convenience simplified wrapper for <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeHistoryTree.get_total_times_relative" title="psyneulink.core.scheduling.time.TimeHistoryTree.get_total_times_relative"><code class="xref any py py-meth docutils literal"><span class="pre">TimeHistoryTree.get_total_times_relative</span></code></a></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>query_time_scale</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a>) – the unit of time whose number of ticks to be returned</li>
-<li><strong>base_time_scale</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a>) – the unit of time over which the number of <strong>query_time_scale</strong> ticks
-should be returned</li>
-<li><strong>base_index</strong> (<em>int</em>) – the <strong>base_index</strong>th <strong>base_time_scale</strong> over which the number of
-<strong>query_time_scale</strong> ticks should be returned</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>the number of query_time_scale s that have occurred during the scope             of the base_index th base_time_scale</strong></p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="method">
-<dt id="psyneulink.core.scheduling.time.Clock.get_time_by_time_scale">
-<code class="descname">get_time_by_time_scale</code><span class="sig-paren">(</span><em>time_scale</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock.get_time_by_time_scale" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_scale</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a>) – </td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>the current value of the time unit corresponding to time_scale             for this Clock</strong></td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.scheduling.time.Clock.time">
-<code class="descname">time</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock.time" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>the current time</em> – <a class="reference internal" href="#"><span class="doc">Time</span></a></p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.scheduling.time.Clock.simple_time">
-<code class="descname">simple_time</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock.simple_time" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>the current time in simple format</em> – <a class="reference internal" href="#psyneulink.core.scheduling.time.SimpleTime" title="psyneulink.core.scheduling.time.SimpleTime"><code class="xref any py py-class docutils literal"><span class="pre">SimpleTime</span></code></a></p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="psyneulink.core.scheduling.time.Clock.previous_time">
-<code class="descname">previous_time</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock.previous_time" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>the time that has occurred last</em> – <a class="reference internal" href="#"><span class="doc">Time</span></a></p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
+<dl class="py class">
 <dt id="psyneulink.core.scheduling.time.Time">
-<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.time.</code><code class="descname">Time</code><span class="sig-paren">(</span><em>time_step=0</em>, <em>pass_=0</em>, <em>trial=0</em>, <em>run=0</em>, <em>life=0</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Time" title="Permalink to this definition">¶</a></dt>
-<dd><p>Represents an instance of time, having values for each <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a></p>
-<dl class="attribute">
+<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.time.</code><code class="sig-name descname">Time</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_step</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">pass_</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">trial</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">run</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">life</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Time" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents an instance of time, having values for each <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a></p>
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.Time.life">
-<code class="descname">life</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Time.life" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int : 0</em> – the <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.LIFE" title="psyneulink.core.scheduling.time.TimeScale.LIFE"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.LIFE</span></code></a> value</p>
+<code class="sig-name descname">life</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Time.life" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.LIFE" title="psyneulink.core.scheduling.time.TimeScale.LIFE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TimeScale.LIFE</span></code></a> value</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int : 0</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.Time.run">
-<code class="descname">run</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Time.run" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int : 0</em> – the <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.RUN</span></code></a> value</p>
+<code class="sig-name descname">run</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Time.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TimeScale.RUN</span></code></a> value</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int : 0</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.Time.trial">
-<code class="descname">trial</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Time.trial" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int : 0</em> – the <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TRIAL</span></code></a> value</p>
+<code class="sig-name descname">trial</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Time.trial" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TimeScale.TRIAL</span></code></a> value</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int : 0</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.Time.pass_">
-<code class="descname">pass_</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Time.pass_" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int : 0</em> – the <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.PASS</span></code></a> value</p>
+<code class="sig-name descname">pass_</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Time.pass_" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TimeScale.PASS</span></code></a> value</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int : 0</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.Time.time_step">
-<code class="descname">time_step</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Time.time_step" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int : 0</em> – the <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a> value</p>
+<code class="sig-name descname">time_step</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Time.time_step" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TimeScale.TIME_STEP</span></code></a> value</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int : 0</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="psyneulink.core.scheduling.time.Time._get_by_time_scale">
-<code class="descname">_get_by_time_scale</code><span class="sig-paren">(</span><em>time_scale</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Time._get_by_time_scale" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_scale</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a>) – </td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>this Time’s value of a TimeScale by the TimeScale enum, rather             than by attribute</strong></td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">int</td>
-</tr>
-</tbody>
-</table>
+<code class="sig-name descname">_get_by_time_scale</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_scale</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Time._get_by_time_scale" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>time_scale</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>this Time’s value of a TimeScale by the TimeScale enum, rather             than by attribute</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="psyneulink.core.scheduling.time.Time._set_by_time_scale">
-<code class="descname">_set_by_time_scale</code><span class="sig-paren">(</span><em>time_scale</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Time._set_by_time_scale" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_scale</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a>) – </td>
-</tr>
-</tbody>
-</table>
+<code class="sig-name descname">_set_by_time_scale</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_scale</span></em>, <em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Time._set_by_time_scale" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>time_scale</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>) – </p>
+</dd>
+</dl>
 <p>Sets this Time’s value of a <strong>time_scale</strong> by the TimeScale enum,
 rather than by attribute</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="psyneulink.core.scheduling.time.Time._increment_by_time_scale">
-<code class="descname">_increment_by_time_scale</code><span class="sig-paren">(</span><em>time_scale</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Time._increment_by_time_scale" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_increment_by_time_scale</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_scale</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Time._increment_by_time_scale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Increments the value of <strong>time_scale</strong> in this Time by one</p>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="psyneulink.core.scheduling.time.Time._reset_by_time_scale">
-<code class="descname">_reset_by_time_scale</code><span class="sig-paren">(</span><em>time_scale</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Time._reset_by_time_scale" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_reset_by_time_scale</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_scale</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Time._reset_by_time_scale" title="Permalink to this definition">¶</a></dt>
 <dd><p>Resets all the times for the time scale scope up to <strong>time_scale</strong>
 e.g. _reset_by_time_scale(TimeScale.TRIAL) will set the values for
 TimeScale.PASS and TimeScale.TIME_STEP to 0</p>
@@ -439,130 +467,171 @@ TimeScale.PASS and TimeScale.TIME_STEP to 0</p>
 
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="psyneulink.core.scheduling.time.SimpleTime">
-<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.time.</code><code class="descname">SimpleTime</code><span class="sig-paren">(</span><em>run=0</em>, <em>trial=0</em>, <em>time_step=0</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.SimpleTime" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.time.</code><code class="sig-name descname">SimpleTime</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">run</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">trial</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">time_step</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.SimpleTime" title="Permalink to this definition">¶</a></dt>
 <dd><p>A subset class of <a class="reference internal" href="#"><span class="doc">Time</span></a>, used to provide simple access to only
-<a class="reference internal" href="#psyneulink.core.scheduling.time.Time.run" title="psyneulink.core.scheduling.time.Time.run"><code class="xref any py py-attr docutils literal"><span class="pre">run</span></code></a>, <a class="reference internal" href="#psyneulink.core.scheduling.time.Time.trial" title="psyneulink.core.scheduling.time.Time.trial"><code class="xref any py py-attr docutils literal"><span class="pre">trial</span></code></a>, and <a class="reference internal" href="#psyneulink.core.scheduling.time.Time.time_step" title="psyneulink.core.scheduling.time.Time.time_step"><code class="xref any py py-attr docutils literal"><span class="pre">time_step</span></code></a></p>
+<a class="reference internal" href="#psyneulink.core.scheduling.time.Time.run" title="psyneulink.core.scheduling.time.Time.run"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">run</span></code></a>, <a class="reference internal" href="#psyneulink.core.scheduling.time.Time.trial" title="psyneulink.core.scheduling.time.Time.trial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trial</span></code></a>, and <a class="reference internal" href="#psyneulink.core.scheduling.time.Time.time_step" title="psyneulink.core.scheduling.time.Time.time_step"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">time_step</span></code></a></p>
 </dd></dl>
 
-<dl class="class">
+<dl class="py class">
 <dt id="psyneulink.core.scheduling.time.TimeHistoryTree">
-<em class="property">class </em><code class="descclassname">psyneulink.core.scheduling.time.</code><code class="descname">TimeHistoryTree</code><span class="sig-paren">(</span><em>time_scale=&lt;TimeScale.LIFE: 4&gt;</em>, <em>max_depth=&lt;TimeScale.TRIAL: 2&gt;</em>, <em>index=0</em>, <em>parent=None</em>, <em>enable_current_time=True</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.time.</code><code class="sig-name descname">TimeHistoryTree</code><span class="sig-paren">(</span><em class="sig-param">time_scale=&lt;TimeScale.LIFE: 4&gt;</em>, <em class="sig-param">max_depth=&lt;TimeScale.TRIAL: 2&gt;</em>, <em class="sig-param">index=0</em>, <em class="sig-param">parent=None</em>, <em class="sig-param">enable_current_time=True</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree" title="Permalink to this definition">¶</a></dt>
 <dd><p>A tree object that stores a history of time that has occurred at various
-<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a>s, typically used in conjunction with a <a class="reference internal" href="#psyneulink.core.scheduling.time.Clock" title="psyneulink.core.scheduling.time.Clock"><code class="xref any py py-class docutils literal"><span class="pre">Clock</span></code></a></p>
-<dl class="attribute">
+<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>s, typically used in conjunction with a <a class="reference internal" href="#psyneulink.core.scheduling.time.Clock" title="psyneulink.core.scheduling.time.Clock"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Clock</span></code></a></p>
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.TimeHistoryTree.time_scale">
-<code class="descname">time_scale</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.time_scale" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a> : <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.LIFE" title="psyneulink.core.scheduling.time.TimeScale.LIFE"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.LIFE</span></code></a> – the TimeScale unit this tree/node represents</p>
+<code class="sig-name descname">time_scale</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.time_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>the TimeScale unit this tree/node represents</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> : <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.LIFE" title="psyneulink.core.scheduling.time.TimeScale.LIFE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TimeScale.LIFE</span></code></a></p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.TimeHistoryTree.child_time_scale">
-<code class="descname">child_time_scale</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.child_time_scale" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a> : <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.RUN</span></code></a> – the TimeScale unit for this tree’s children</p>
+<code class="sig-name descname">child_time_scale</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.child_time_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>the TimeScale unit for this tree’s children</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> : <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TimeScale.RUN</span></code></a></p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.TimeHistoryTree.children">
-<code class="descname">children</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.children" title="Permalink to this definition">¶</a></dt>
-<dd><p>list[<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeHistoryTree" title="psyneulink.core.scheduling.time.TimeHistoryTree"><code class="xref any py py-class docutils literal"><span class="pre">TimeHistoryTree</span></code></a>] – an ordered list of this tree’s children</p>
+<code class="sig-name descname">children</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.children" title="Permalink to this definition">¶</a></dt>
+<dd><p>an ordered list of this tree’s children</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeHistoryTree" title="psyneulink.core.scheduling.time.TimeHistoryTree"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeHistoryTree</span></code></a>]</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.TimeHistoryTree.max_depth">
-<code class="descname">max_depth</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.max_depth" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a> : <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TRIAL</span></code></a> – the finest grain TimeScale that should be created as a subtree
+<code class="sig-name descname">max_depth</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.max_depth" title="Permalink to this definition">¶</a></dt>
+<dd><p>the finest grain TimeScale that should be created as a subtree
 Setting this value lower allows for more precise measurements
 (by default, you cannot query the number of
-<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.TIME_STEP</span></code></a>s in a certain <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.PASS</span></code></a>), but
+<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TimeScale.TIME_STEP</span></code></a>s in a certain <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TimeScale.PASS</span></code></a>), but
 this may use a large amount of memory in large simulations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> : <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TimeScale.TRIAL</span></code></a></p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.TimeHistoryTree.index">
-<code class="descname">index</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.index" title="Permalink to this definition">¶</a></dt>
-<dd><p><em>int</em> – the index this tree has in its parent’s children list</p>
+<code class="sig-name descname">index</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.index" title="Permalink to this definition">¶</a></dt>
+<dd><p>the index this tree has in its parent’s children list</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.TimeHistoryTree.parent">
-<code class="descname">parent</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.parent" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="#psyneulink.core.scheduling.time.TimeHistoryTree" title="psyneulink.core.scheduling.time.TimeHistoryTree"><code class="xref any py py-class docutils literal"><span class="pre">TimeHistoryTree</span></code></a> : None – the parent node of this tree, if it exists.             None represents no parent (i.e. root node)</p>
+<code class="sig-name descname">parent</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.parent" title="Permalink to this definition">¶</a></dt>
+<dd><p>the parent node of this tree, if it exists.             None represents no parent (i.e. root node)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#psyneulink.core.scheduling.time.TimeHistoryTree" title="psyneulink.core.scheduling.time.TimeHistoryTree"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeHistoryTree</span></code></a> : None</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.TimeHistoryTree.previous_time">
-<code class="descname">previous_time</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.previous_time" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="#"><span class="doc">Time</span></a> – a <a class="reference internal" href="#"><span class="doc">Time</span></a> object that represents the last time that has occurred in the tree</p>
+<code class="sig-name descname">previous_time</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.previous_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>a <a class="reference internal" href="#"><span class="doc">Time</span></a> object that represents the last time that has occurred in the tree</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#"><span class="doc">Time</span></a></p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.TimeHistoryTree.current_time">
-<code class="descname">current_time</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.current_time" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="#"><span class="doc">Time</span></a> – a <a class="reference internal" href="#"><span class="doc">Time</span></a> object that represents the current time in the tree</p>
+<code class="sig-name descname">current_time</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.current_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>a <a class="reference internal" href="#"><span class="doc">Time</span></a> object that represents the current time in the tree</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#"><span class="doc">Time</span></a></p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="attribute">
+<dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.TimeHistoryTree.total_times">
-<code class="descname">total_times</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.total_times" title="Permalink to this definition">¶</a></dt>
-<dd><p>dict{<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a>: int} – stores the total number of units of <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a>s that have             occurred over this tree’s scope. Only contains entries for             <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a>s of finer grain than <strong>time_scale</strong></p>
+<code class="sig-name descname">total_times</code><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.total_times" title="Permalink to this definition">¶</a></dt>
+<dd><p>stores the total number of units of <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>s that have             occurred over this tree’s scope. Only contains entries for             <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>s of finer grain than <strong>time_scale</strong></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>dict{<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>: int}</p>
+</dd>
+</dl>
 </dd></dl>
 
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>enable_current_time</strong> (<em>bool : True</em>) – sets this tree to maintain a <a class="reference internal" href="#"><span class="doc">Time</span></a> object. If this tree is not
-a root (i.e. <strong>time_scale</strong> is <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.LIFE" title="psyneulink.core.scheduling.time.TimeScale.LIFE"><code class="xref any py py-attr docutils literal"><span class="pre">TimeScale.LIFE</span></code></a>)</td>
-</tr>
-</tbody>
-</table>
-<dl class="method">
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>enable_current_time</strong> (<em>bool : True</em>) – sets this tree to maintain a <a class="reference internal" href="#"><span class="doc">Time</span></a> object. If this tree is not
+a root (i.e. <strong>time_scale</strong> is <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.LIFE" title="psyneulink.core.scheduling.time.TimeScale.LIFE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TimeScale.LIFE</span></code></a>)</p>
+</dd>
+</dl>
+<dl class="py method">
 <dt id="psyneulink.core.scheduling.time.TimeHistoryTree.increment_time">
-<code class="descname">increment_time</code><span class="sig-paren">(</span><em>time_scale</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.increment_time" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">increment_time</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_scale</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.increment_time" title="Permalink to this definition">¶</a></dt>
 <dd><p>Increases this tree’s <strong>current_time</strong> by one <strong>time_scale</strong></p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time_scale</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a>) – the unit of time to increment</td>
-</tr>
-</tbody>
-</table>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>time_scale</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>) – the unit of time to increment</p>
+</dd>
+</dl>
 </dd></dl>
 
-<dl class="method">
+<dl class="py method">
 <dt id="psyneulink.core.scheduling.time.TimeHistoryTree.get_total_times_relative">
-<code class="descname">get_total_times_relative</code><span class="sig-paren">(</span><em>query_time_scale</em>, <em>base_indices=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.get_total_times_relative" title="Permalink to this definition">¶</a></dt>
-<dd><table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>query_time_scale</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a>) – the <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a> of units to be returned</li>
-<li><strong>base_indices</strong> (dict{<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a>: int}) – <p>a dictionary specifying what scope of time query_time_scale                 is over. e.g.</p>
+<code class="sig-name descname">get_total_times_relative</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">query_time_scale</span></em>, <em class="sig-param"><span class="n">base_indices</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeHistoryTree.get_total_times_relative" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>query_time_scale</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>) – the <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> of units to be returned</p></li>
+<li><p><strong>base_indices</strong> (dict{<a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>: int}) – <p>a dictionary specifying what scope of time query_time_scale                 is over. e.g.</p>
 <blockquote>
-<div>base_indices = {TimeScale.RUN: 1, TimeScale.TRIAL: 5}</div></blockquote>
-<p>gives the number of <strong>query_time_scale</strong>s that have occurred                 in the 5th <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal"><span class="pre">TRIAL</span></code></a> of the 1st <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal"><span class="pre">RUN</span></code></a>. If an entry for a <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal"><span class="pre">TimeScale</span></code></a>                 is not specified but is coarser than <strong>query_time_scale</strong>, the latest                 value for that entry will be used</p>
-</li>
+<div><p>base_indices = {TimeScale.RUN: 1, TimeScale.TRIAL: 5}</p>
+</div></blockquote>
+<p>gives the number of <strong>query_time_scale</strong>s that have occurred                 in the 5th <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> of the 1st <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>. If an entry for a <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>                 is not specified but is coarser than <strong>query_time_scale</strong>, the latest                 value for that entry will be used</p>
+</p></li>
 </ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>the number of units of query_time_scale that have occurred within             the scope of time specified by base_indices</strong></p>
-</td>
-</tr>
-<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">int</p>
-</td>
-</tr>
-</tbody>
-</table>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>the number of units of query_time_scale that have occurred within             the scope of time specified by base_indices</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
 
-</div>
-</div>
+<dl class="py exception">
+<dt id="psyneulink.core.scheduling.time.TimeScaleError">
+<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.scheduling.time.</code><code class="sig-name descname">TimeScaleError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.TimeScaleError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
 
 
              </article>
@@ -616,21 +685,12 @@ a root (i.e. <strong>time_scale</strong> is <a class="reference internal" href="
   
 
      
-       <script type="text/javascript">
-           var DOCUMENTATION_OPTIONS = {
-               URL_ROOT:'./',
-               VERSION:'0.8.8.0+13.gb7816cb',
-               LANGUAGE:'None',
-               COLLAPSE_INDEX:false,
-               FILE_SUFFIX:'.html',
-               HAS_SOURCE:  true,
-               SOURCELINK_SUFFIX: '.txt'
-           };
-       </script>
-         <script type="text/javascript" src="_static/jquery.js"></script>
-         <script type="text/javascript" src="_static/underscore.js"></script>
-         <script type="text/javascript" src="_static/doctools.js"></script>
-         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/doctools.js"></script>
+         <script src="_static/language_data.js"></script>
+         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   
