@@ -1772,8 +1772,9 @@ class TestIntegratorMode:
             T_not_integrator = TransferMechanism()
             T_not_integrator.execute(1.0)
             T_not_integrator.reset(0.0)
-        assert "not allowed because this Mechanism is not stateful;" in str(err_txt.value)
-        assert "try setting the integrator_mode argument to True." in str(err_txt.value)
+
+        assert "not allowed because its `integrator_mode` parameter" in str(err_txt.value)
+        assert "is currently set to \'False\'; try setting it to \'True\'" in str(err_txt.value)
 
     def test_switch_mode(self):
         T = TransferMechanism(integrator_mode=True,

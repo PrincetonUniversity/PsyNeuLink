@@ -51,16 +51,16 @@ array), or several independent ones. The function used to carry out the transfor
 or a `custom one <UserDefinedFunction>` that can accept any of these forms of input and generate one of similar form.
 
 A TransferMechanism has two modes of operation: `without integration
-<TransferMechanism_Execution_Without_Integration>` and `with integration
+<TransferMechanism_Execution_Without_Integration>` and `with integration enabled
 <TransferMechanism_Execution_With_Integration>`.
-It uses the former by default, using its `function <Mechanism_Base.function>` to execute a full ("instantaneous")
-transformation of its input (akin to the standard practice in feedforward neural networks).  However,
-it can be configured to use its `integrator_function <TransferMechanism.integrator_function>` to integrate its input
-on each execution, before passing the result on to its `function <Mechanism_Base.function>`
-for transformation (akin to time-averaging the net input to a unit in a neural network before passing that to its
-activation function). When executing in `integrator_mode <TransferMechanism.integrator_mode>`, other parameters can
-be used to configure how integration is operates, including how it is   `initialized
-<TransferMechanism_Execution_Integration_Initialization` and when it `terminates
+Integration is disabled by default, so that the Mechanism's `function <Mechanism_Base.function>` executes a full
+("instantaneous") transformation of its input on each execution (akin to the standard practice in feedforward neural
+networks).  However, if integration is enabled, then it uses its `integrator_function
+<TransferMechanism.integrator_function>` to integrate its input on each execution, before passing the result on to
+its `function <Mechanism_Base.function>` for transformation (akin to time-averaging the net input to a unit in a
+neural network before passing that to its activation function). When integration is enabled, using the `integrator_mode
+<TransferMechanism.integrator_mode>` Parameter, additional parameters can be used to configure the integration process,
+including how it is `initialized <TransferMechanism_Execution_Integration_Initialization` and when it `terminates
 <TransferMechanism_Execution_Integration_Termination>`.
 
 .. _TransferMechanism_Creation:
@@ -201,81 +201,66 @@ can be used to configure the integration process, as described in the following 
 
 .. _TransferMechanism_Execution_Integration_Initialization:
 
-**Initialization, Resuming and Resetting**
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Initialization, Resetting and Resuming Integration**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-*Initialization.*  By default, the the starting point for integration is the Mechanism's `default_variable
+*Initializing Integration.*  By default, the the starting point for integration is the Mechanism's `default_variable
 <Component_Variable>`, and is usually an appropriately shaped array of 0's.  However, the starting point can be
 specified using the `initializer <IntegratorFunction.initializer>` `Parameter <Parameters>` of the Mechanism's
 `integrator_function <TransferMechanism.integrator_function>`, that can also be assigned using the **initializer**
 argument of its constructor.  For convenience, these can also be specified using the `<TransferMechanism.initial_value>`
 Parameter of the Mechanism itself, and the **initial_value** argument of its constructor.
 
-*Resetting*.  In some cases, it may be useful to reset the accumulation of a Mechanism to its original starting
-point, or a new starting point. This is done using the `reset <AdaptiveIntegrator.reset>` of the Mechanism's
-`integrator_function <TransferMechanism.integrator_function>`, or the mechanisms's own `reset
-<Mechanism_Base.reset>` method.
+*Resetting Integration*.  In some cases, it may be useful to reset the integration to the original starting point,
+or to a new one. This can be done using the Mechanism's `reset <TransferMechanism.reset>` method. This first sets the
+`integrator_function <TransferMechanism.integrator_function>`'s `previous_value <IntegratorFunction.previous_value>`
+and `value <AdaptiveIntegrator.value>` attributes to the specified value.  After doing so, it sets the
+TransferMechanism's `previous_value <Mechanism_Base.previous_value>`, that is passed to the Mechanism's `function
+<Mechanism_Base.function>` which is then executed, and the result is assigned as the Mechanism current `value
+<Mechanism_Base.value>` and to its `output_ports <Mechanism_Base.output_ports>`.
 
-The `reset <AdaptiveIntegrator.reset>` method of the `integrator_function <TransferMechanism.integrator_function>` sets:
+  .. note::
+     The TransferMechanism's `reset <TransferMechanism.reset>` method actually calls the reset method on its
+     `integrator_function <TransferMechanism.integrator_function>`, which can also be called directly. The key
+     difference is that calling the Mechanism's `reset <TransferMechanism.reset>` method also executes the Mechanism's
+     `function <TransferMechanism.function>` and updates its `output_ports <TransferMechanism.output_ports>`. This is
+     useful if the Mechanism's `value <Mechanism_Base.value>` or that of any of its `output_ports
+     <TransferMechanism.output_ports>` will be used or checked *before* the Mechanism is next executed. This may be
+     true if, for example, the Mechanism is a `RecurrentTransferMechanism`, or if a `Scheduler` `Condition` depends on
+     it.
 
-    - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute and
-    - the integrator_function's `value <AdaptiveIntegrator.value>` attribute
+*Resuming Integration.*  Integration can be enabled and disabled between executions by setting `integrator_mode
+<TransferMechanism.integrator_mode>` to True and False, respectively.  When re-enabling  integration, the value used
+by the `integrator_function <TransferMechanism.integrator_function>` for resuming integration can be configured using
+the TransferMechanism's `on_resume_integrator_mode <TransferMechanism.on_resume_integrator_mode>` Parameter; there are
+three options for this:
 
-    to the specified value.
+    * *INSTANTANEOUS_MODE_VALUE* - use the current `value <Mechanism_Base.value>` of the Mechanism as the starting
+      point for resuming integration;
 
-The `reset <Mechanism_Base.reset>` method of the `TransferMechanism` first sets:
-
-    - the Mechanismn's `previous_value <Mechanism_Base.previous_value>` attribute,
-    - the integrator_function's `previous_value <AdaptiveIntegrator.previous_value>` attribute, and
-    - the integrator_function's `value <AdaptiveIntegrator.value>` attribute
-
-    to the specified value. Then:
-
-    - the specified value is passed into the mechanism's `function <Mechanism_Base.function>` and the function is
-    executed
-    - the TransferMechanism's `value <Mechanism_Base.value>` attribute is set to the output of the function
-    - the TransferMechanism updates its `output_ports <Mechanism_Base.output_ports>`
-
-
-In the examples above, `reset <AdaptiveIntegrator.reset>` was applied directly to the
-integrator function. The key difference between the `integrator_function's reset
-<AdaptiveIntegrator.reset>` and the `TransferMechanism's reset <TransferMechanism.reset>` is
-that the latter will also execute the mechanism's function and update its output ports. This is useful if the
-mechanism's value or any of its OutputPort values will be used or checked *before* the mechanism's next execution. (
-This may be true if, for example, the mechanism is `recurrent <RecurrentTransferMechanism>`, the mechanism is
-responsible for `modulating <ModulatorySignal_Modulation` other components, or if a `Scheduler` condition depends on
-the mechanism's activity.)
-
-
-
-`on_resume_integrator_mode <TransferMechanism.on_resume_integrator_mode>`
-
-When switching between `integrator_mode <TransferMechanism.integrator_mode>` = True and `integrator_mode
-<TransferMechanism.integrator_mode>` = False, the behavior of the `integrator_function
-<TransferMechanism.integrator_function>` is determined by `on_resume_integrator_mode
-<TransferMechanism.on_resume_integrator_mode>`. There are three options for how the `integrator_function
-<TransferMechanism.integrator_function>` may resume accumulating when the Mechanism returns to `integrator_mode
-<TransferMechanism.integrator_mode>` = True.
-
-    * *INSTANTANEOUS_MODE_VALUE* - reset the Mechanism with its own current value,
-      so that the value computed by the Mechanism during "Instantaneous Mode" is where the
-      `integrator_function <TransferMechanism.integrator_function>` begins accumulating.
-
-    * *INTEGRATOR_MODE_VALUE* - resume accumulation wherever the `integrator_function
-      <TransferMechanism.integrator_function>` left off the last time `integrator_mode
-      <TransferMechanism.integrator_mode>` was True.
+    * *INTEGRATOR_MODE_VALUE* - resume integration with whatever the `integrator_function
+      <TransferMechanism.integrator_function>`' `previous_value <IntegratorFunction.previous_value>` was when
+      `integrator_mode <TransferMechanism.integrator_mode>` was last True;
 
     * *RESET* - call the `integrator_function <TransferMechanism.integrator_function>`\\s
-      `reset <AdaptiveIntegrator.reset>` method, so that accumulation begins at
-      `initial_value <TransferMechanism.initial_value>`
-
+      `reset <AdaptiveIntegrator.reset>` method, so that integration resumes using
+      `initial_value<TransferMechanism.initial_value>` as its starting point.
 
 .. _TransferMechanism_Execution_Integration:
 
 **Integration**
 ^^^^^^^^^^^^^^^
 
-`integrator_function <TransferMechanism.integrator_function>`
+ On each execution of the Mechanism, it passes its `variable <Mechanism_Base.variable>` to the `integrator_function
+ <TransferMechanism.integrator_function>`, which integrates this with the function's `previous_value
+ <IntegratorFunction.previous_value>`,
+
+using the noise and rate parameters specified either in its constructor or the Mechanism's
+
+
+When the `integrator_function <TransferMechanism.integrator_function>` executes
+is influenced by two `Parameters`:
+
 `integration_rate <TransferMechanism.integration_rate>`
 `noise <TransferMechanism.noise>`
 
@@ -308,9 +293,6 @@ the following parameters (in addition to any specified for the `function <Mechan
     * `noise <TransferMechanism.noise>`: applied element-wise to the output of its `integrator_function
       <TransferMechanism.integrator_function>` or its `function <Mechanism_Base.function>`, depending on whether
       `integrator_mode <TransferMechanism.integrator_mode>` is True or False.
-
-    * `clip <TransferMechanism.clip>`: caps all elements of the `function <Mechanism_Base.function>` result by the
-      lower and upper values specified by clip.
 
 
 .. _TransferMechanism_Execution_Integration_Termination:
@@ -1598,6 +1580,30 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     @handle_external_context(fallback_most_recent=True)
     def reset(self, *args, force=False, context=None, **kwargs):
+
+        # # FIX: UNCOMMENT ONCE REMOVED FROM Mechanism_Base.reset()
+        # # (1) reset it, (2) run the primary function with the new "previous_value" as input
+        # # (3) update value, (4) update output ports
+        # if not isinstance(self.integrator_function, IntegratorFunction):
+        #     raise TransferError(
+        #         f"Resetting '{self.name}' is not allowed because its integrator_function "
+        #         f"is not an IntegratorFunction type function, therefore the Mechanism "
+        #         f"does not have an integrator to reset."
+        #     )
+        #
+        # if self.parameters.integrator_mode._get(context) or force:
+        #     new_input = self.integrator_function.reset(*args, **kwargs, context=context)[0]
+        #     self.parameters.value._set(
+        #         self.function.execute(variable=new_input, context=context),
+        #         context=context,
+        #         override=True
+        #     )
+        #     self._update_output_ports(context=context)
+        #
+        # else:
+        #     raise TransferError(f"Resetting '{self.name}' is not allowed because its `integrator_mode` parameter "
+        #                         f"is currently set to 'False'; try setting it to 'True'.")
+
         super().reset(*args, force=force, context=context, **kwargs)
         self.parameters.value.clear_history(context)
 

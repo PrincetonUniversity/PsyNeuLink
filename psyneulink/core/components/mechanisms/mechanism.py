@@ -2220,8 +2220,7 @@ class Mechanism_Base(Mechanism):
         If the mechanism's `function <Mechanism.function>` is an `IntegratorFunction`, or if the mechanism has and
         `integrator_function <TransferMechanism.integrator_function>` (see `TransferMechanism`), this method
         effectively begins the function's accumulation over again at the specified value, and updates related
-        attributes on the mechanism.  It also clears the
-        `value <Mechanism.value>` `history <Parameter.history`, thus
+        attributes on the mechanism.  It also clears the `value <Mechanism.value>` `history <Parameter.history`, thus
         effectively setting the previous value to ``None``.
 
         If the mechanism's `function <Mechanism_Base.function>` is an `IntegratorFunction`, its `reset
@@ -2272,6 +2271,7 @@ class Mechanism_Base(Mechanism):
             self.parameters.value._set(convert_to_np_array(new_value, dimension=2), context=context)
             self._update_output_ports(context=context)
 
+        # FIX: SHOULD MOVE ALL OF THIS TO TransferMechanism SINCE NO OTHER MECH TYPES HAVE integrator_funtions/modes
         # If the mechanism has an auxiliary integrator function:
         # (1) reset it, (2) run the primary function with the new "previous_value" as input
         # (3) update value, (4) update output ports
@@ -2293,9 +2293,12 @@ class Mechanism_Base(Mechanism):
                 self._update_output_ports(context=context)
 
             elif hasattr(self, "integrator_mode"):
-                    raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
-                                         f"is not stateful; it does not have an integrator to reset. "
-                                         f"If it should be stateful, try setting the integrator_mode argument to True.")
+                # raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
+                #                      f"is not stateful; it does not have an integrator to reset. "
+                #                      f"If it should be stateful, try setting the integrator_mode argument to True.")
+                raise MechanismError(f"Resetting '{self.name}' is not allowed because its `integrator_mode` parameter "
+                                    f"is currently set to 'False'; try setting it to 'True'.")
+
             else:
                 raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
                                      f"is not stateful; it does not have an integrator to reset.")
