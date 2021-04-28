@@ -6,11 +6,10 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ParameterPort &mdash; PsyNeuLink 0.8.8.0 documentation</title>
+  <title>ParameterPort &mdash; PsyNeuLink 0.8.8.0+13.gb7816cb documentation</title>
   
 
   
@@ -28,7 +27,6 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -97,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.8.0
+                  0.8.8.0+13
                 </div>
               
             
@@ -195,35 +193,36 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <section id="module-psyneulink.core.components.ports.parameterport">
+  <div class="section" id="module-psyneulink.core.components.ports.parameterport">
 <span id="parameterport"></span><h1>ParameterPort<a class="headerlink" href="#module-psyneulink.core.components.ports.parameterport" title="Permalink to this headline">¶</a></h1>
-<section id="contents">
+<div class="section" id="contents">
 <h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
 <blockquote>
 <div><ul class="simple">
-<li><p><a class="reference internal" href="#parameterport-overview"><span class="std std-ref">Overview</span></a></p></li>
-<li><dl class="simple">
-<dt><a class="reference internal" href="#parameterport-creation"><span class="std std-ref">Creating a ParameterPort</span></a></dt><dd><ul>
-<li><p><a class="reference internal" href="#parameterport-specification"><span class="std std-ref">Specifying Parameters</span></a></p></li>
+<li><a class="reference internal" href="#parameterport-overview"><span class="std std-ref">Overview</span></a></li>
+<li><dl class="first docutils">
+<dt><a class="reference internal" href="#parameterport-creation"><span class="std std-ref">Creating a ParameterPort</span></a></dt>
+<dd><ul class="first last">
+<li><a class="reference internal" href="#parameterport-specification"><span class="std std-ref">Specifying Parameters</span></a></li>
 </ul>
 </dd>
 </dl>
 </li>
-<li><p><a class="reference internal" href="#parameterport-structure"><span class="std std-ref">Structure</span></a></p></li>
-<li><p><a class="reference internal" href="#parameterport-execution"><span class="std std-ref">Execution</span></a></p></li>
-<li><p><a class="reference internal" href="#parameterport-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
+<li><a class="reference internal" href="#parameterport-structure"><span class="std std-ref">Structure</span></a></li>
+<li><a class="reference internal" href="#parameterport-execution"><span class="std std-ref">Execution</span></a></li>
+<li><a class="reference internal" href="#parameterport-class-reference"><span class="std std-ref">Class Reference</span></a></li>
 </ul>
 </div></blockquote>
-</section>
-<section id="overview">
+</div>
+<div class="section" id="overview">
 <span id="parameterport-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>ParameterPorts belong to either a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>. A ParameterPort is created
 to represent each <a class="reference internal" href="#parameterport-modulable-parameters"><span class="std std-ref">modulatable parameter</span></a> of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, as well as those of the component’s <a class="reference internal" href="Component.html#component-function"><span class="std std-ref">function</span></a> and
-any of its secondary functions (e.g. <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TransferMechanism.integrator_function</span></code></a>). A
+any of its secondary functions (e.g. <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal"><span class="pre">TransferMechanism.integrator_function</span></code></a>). A
 ParameterPort provides the current value of the parameter it represents during any relevant computations, and serves as
 an interface for parameter modulation.</p>
 <p>A ParameterPort can receive one or more <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> and/or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> that modify the value returned by the ParameterPort according to the ParameterPort’s
-<a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>. The Projections received by a ParameterPort  are listed in its <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents" title="psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> attribute.</p>
+<a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>. The Projections received by a ParameterPort  are listed in its <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents" title="psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.</p>
 <p>When the Mechanism or Projection to which a ParameterPort belongs executes, that component and its function use the
 ParameterPort’s value – not the parameter attribute’s value – for any computation. A ParameterPort’s corresponding
 attribute on the Mechanism, Projection, or Function to which it belongs (i.e. MyTransferMech.function.gain),
@@ -233,112 +232,113 @@ function. The base value can be viewed or changed at any time through this attri
 or Projection to which it belongs (i.e. MyTransferMech.mod_gain would return the value of the “gain” ParameterPort
 of the MyTransferMech mechanism.)</p>
 <div class="admonition note">
-<p class="admonition-title">Note</p>
+<p class="first admonition-title">Note</p>
 <p>Either of these options for looking up the value of the ParameterPort will return the ParameterPort value that
 was used during the most recent execution. This means that if the value of MyTransferMech.function.gain (the
 base value) is updated after execution #1, the base value will change immediately, but the ParameterPort value (and
 MyTransferMech.mod_gain) will not be computed again until execution #2.</p>
-<p>As a result, if either MyTransferMech.mod_gain or MyTransferMech.parameter_ports[“gain”].value is viewed in between
+<p class="last">As a result, if either MyTransferMech.mod_gain or MyTransferMech.parameter_ports[“gain”].value is viewed in between
 execution #1 and execution #2, it will return the gain ParameterPort value that was used during execution 1.</p>
 </div>
-</section>
-<section id="creating-a-parameterport">
+</div>
+<div class="section" id="creating-a-parameterport">
 <span id="parameterport-creation"></span><h2>Creating a ParameterPort<a class="headerlink" href="#creating-a-parameterport" title="Permalink to this headline">¶</a></h2>
 <p>ParameterPorts are created automatically when the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> to which they
-belong is created.  The <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code> of a ParameterPort must be a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>
+belong is created.  The <code class="xref any docutils literal"><span class="pre">owner</span></code> of a ParameterPort must be a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>
 (the initialization of a ParameterPort cannot be <a class="reference internal" href="Port.html#port-deferred-initialization"><span class="std std-ref">deferred</span></a>). One ParameterPort is
 created for each modulable Parameter of its owner, as well as for each modulable Parameter of the owner’s
-<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> or secondary functions (modulable
+<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> or secondary functions (modulable
 Parameters of a Component
 are listed in its <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> class, and have the attribute
-<a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.modulable" title="psyneulink.core.globals.parameters.Parameter.modulable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulable</span></code></a> set to True.)
+<a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.modulable" title="psyneulink.core.globals.parameters.Parameter.modulable"><code class="xref any py py-attr docutils literal"><span class="pre">modulable</span></code></a> set to True.)
 Each ParameterPort is created using the value specified for the corresponding parameter, as described below.  The
-ParameterPorts for the parameters of a Mechanism or Projection are listed in its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter_ports</span></code></a> attribute.</p>
-<section id="specifying-parameters">
+ParameterPorts for the parameters of a Mechanism or Projection are listed in its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_ports"><code class="xref any py py-attr docutils literal"><span class="pre">parameter_ports</span></code></a> attribute.</p>
+<div class="section" id="specifying-parameters">
 <span id="parameterport-specification"></span><h3><em>Specifying Parameters</em><a class="headerlink" href="#specifying-parameters" title="Permalink to this headline">¶</a></h3>
 <p>Parameters can be specified in one of several places:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>In the <strong>argument</strong> of the constructor for the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> to which the parameter belongs
-(see <a class="reference internal" href="Component.html#component-structural-attributes"><span class="std std-ref">Core Structural Attributes</span></a> for additional details).</p></li>
+<li>In the <strong>argument</strong> of the constructor for the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> to which the parameter belongs
+(see <a class="reference internal" href="Component.html#component-structural-attributes"><span class="std std-ref">Core Structural Attributes</span></a> for additional details).</li>
 </ul>
 <ul class="simple">
-<li><p>In a <em>parameter specification dictionary</em> assigned to the <strong>params</strong> argument in the constructor for the
+<li>In a <em>parameter specification dictionary</em> assigned to the <strong>params</strong> argument in the constructor for the
 Component to which the parameter belongs, or any place else the value of a parameter can be specified.
 The entry for each parameter must use the name of the parameter (or a corresponding keyword) as its key,
 and the parameter’s specification as its value (see <a class="reference internal" href="#parameterport-specification-examples"><span class="std std-ref">examples</span></a> below).
-Parameters for a Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> can be specified in an entry with the key
+Parameters for a Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> can be specified in an entry with the key
 <em>FUNCTION_PARAMS</em>, and a value that is itself a parameter specification dictionary containing an entry for
 each of the function’s parameters to be specified.  When a value is assigned to a parameter in a specification
-dictionary, it overrides any value assigned to the argument for the parameter in the Component’s constructor.</p></li>
+dictionary, it overrides any value assigned to the argument for the parameter in the Component’s constructor.</li>
 </ul>
 <ul class="simple">
-<li><p>By direct assignment to the Component’s attribute for the parameter
-(see <a class="reference internal" href="#parameterport-modulable-parameters"><span class="std std-ref">below</span></a>).</p></li>
+<li>By direct assignment to the Component’s attribute for the parameter
+(see <a class="reference internal" href="#parameterport-modulable-parameters"><span class="std std-ref">below</span></a>).</li>
 </ul>
 <ul class="simple">
-<li><p>In the <strong>runtime_params</strong> argument of a call to a Composition’s <code class="xref any docutils literal notranslate"><span class="pre">Run</span></code> method</p></li>
+<li>In the <strong>runtime_params</strong> argument of a call to a Composition’s <code class="xref any docutils literal"><span class="pre">Run</span></code> method</li>
 </ul>
 </div></blockquote>
 <p id="parameterport-value-specification">The specification of the initial value of a parameter can take any of the following forms:</p>
 <blockquote>
 <div><ul id="parameterport-value-assignment">
-<li><p><strong>Value</strong> – this must be a valid value for the parameter. It creates a default ParameterPort,
-assigns the parameter’s default value as the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>,
-and assigns the parameter’s name as the name of the ParameterPort.</p></li>
-<li><p><strong>ParameterPort reference</strong> – this must refer to an existing <strong>ParameterPort</strong> object; its name must be the
-name of a parameter of the owner or of the owner’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, and its value must be a valid
+<li><p class="first"><strong>Value</strong> – this must be a valid value for the parameter. It creates a default ParameterPort,
+assigns the parameter’s default value as the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>,
+and assigns the parameter’s name as the name of the ParameterPort.</p>
+</li>
+<li><p class="first"><strong>ParameterPort reference</strong> – this must refer to an existing <strong>ParameterPort</strong> object; its name must be the
+name of a parameter of the owner or of the owner’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and its value must be a valid
 one for the parameter.</p>
 <div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This capability is provided for generality and potential
+<p class="first admonition-title">Note</p>
+<p class="last">This capability is provided for generality and potential
 future use, but its current use is not advised.</p>
 </div>
 </li>
 </ul>
 <ul class="simple" id="parameterport-modulatory-specification">
-<li><p><strong>Modulatory specification</strong> – this can be an existing <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> or <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>,
+<li><strong>Modulatory specification</strong> – this can be an existing <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> or <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a>,
 a <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a>, a constructor or the class name for any of these, or the
 keywords <em>CONTROL</em>, <em>CONTROL_PROJECTION</em>, <em>LEARNING</em>, or <em>LEARNING_PROJECTION</em>.  Any of these create a default
-ParameterPort, assign the parameter’s default value as the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>,
+ParameterPort, assign the parameter’s default value as the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>,
 and assign the parameter’s name as the name of the ParameterPort.  They also create and/or assign the
 corresponding ModulatorySignal and ModulatoryProjection, and assign the ParameterPort as the
-ModulatoryProjection’s <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a>. If the ModulatorySignal and/or
+ModulatoryProjection’s <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>. If the ModulatorySignal and/or
 ModulatoryProjection already exist, their value(s) must be valid one(s) for the parameter.  Note that only
 Control and Learning Modulatory components can be assigned to a ParameterPort (Gating components cannot be
-used – they can only be assigned to <a class="reference internal" href="InputPort.html"><span class="doc">InputPorts</span></a> and <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>).</p></li>
+used – they can only be assigned to <a class="reference internal" href="InputPort.html"><span class="doc">InputPorts</span></a> and <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>).</li>
 </ul>
 <ul id="parameterport-tuple-specification">
-<li><p><strong>2-item tuple:</strong> <em>(&lt;value&gt;, &lt;Modulatory specification&gt;)</em> – this creates a default ParameterPort, uses the value
+<li><p class="first"><strong>2-item tuple:</strong> <em>(&lt;value&gt;, &lt;Modulatory specification&gt;)</em> – this creates a default ParameterPort, uses the value
 specification (1st item) as parameter’s <a class="reference internal" href="#parameterport-value-assignment"><span class="std std-ref">value assignment</span></a>, and assigns the
 parameter’s name as the name of the ParameterPort.  The Modulatory specification (2nd item) is used as the
 ParameterPort’s <a class="reference internal" href="#parameterport-modulatory-specification"><span class="std std-ref">modulatory assignment</span></a>, and the ParameterPort
-is assigned as the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a> for the corresponding <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>.</p>
+is assigned as the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a> for the corresponding <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a>.</p>
 <div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Currently, the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a Component, although it can be specified as a parameter
+<p class="first admonition-title">Note</p>
+<p class="last">Currently, the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a Component, although it can be specified as a parameter
 value, cannot be assigned a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> or modified in the <strong>runtime_params</strong>
-argument of a call to a Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method. This may change in the future.</p>
+argument of a call to a Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method. This may change in the future.</p>
 </div>
 </li>
 </ul>
 </div></blockquote>
 <p>The value specified for a parameter (either explicitly or by default) is assigned to an attribute of the Component or
-of the Component’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to which the parameter belongs.  The attribute has the same
+of the Component’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to which the parameter belongs.  The attribute has the same
 name as the parameter, and can be referenced using standard Python attribute (“dot”) notation;  for example, the value
-of a parameter named <em>param</em> is assigned to an attribute named <code class="docutils literal notranslate"><span class="pre">param</span></code> that can be referenced as
-<code class="docutils literal notranslate"><span class="pre">my_component.param</span></code>). The parameter’s value is assigned as the <strong>default value</strong> for the ParameterPort.</p>
+of a parameter named <em>param</em> is assigned to an attribute named <code class="docutils literal"><span class="pre">param</span></code> that can be referenced as
+<code class="docutils literal"><span class="pre">my_component.param</span></code>). The parameter’s value is assigned as the <strong>default value</strong> for the ParameterPort.</p>
 <div class="admonition note" id="parameterports-suppression">
-<p class="admonition-title">Note</p>
-<p>If the value of a parameter is specified as <code class="xref any docutils literal notranslate"><span class="pre">NotImplemented</span></code>, or any non-numeric value that is not one of those
-listed above, then no ParameterPort is created and the parameter cannot be modified by a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> or in the <strong>runtime_params</strong> argument of a call to a Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method.</p>
+<p class="first admonition-title">Note</p>
+<p class="last">If the value of a parameter is specified as <code class="xref any docutils literal"><span class="pre">NotImplemented</span></code>, or any non-numeric value that is not one of those
+listed above, then no ParameterPort is created and the parameter cannot be modified by a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> or in the <strong>runtime_params</strong> argument of a call to a Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal"><span class="pre">execute</span></code></a> method.</p>
 </div>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <span id="parameterport-specification-examples"></span><h3><em>Examples</em><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h3>
 <p>In the following example, a Mechanism is created by specifying two of its parameters, as well as its
-<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> and two of that function’s parameters, each using a different specification format:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and two of that function’s parameters, each using a different specification format:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">RecurrentTransferMechanism</span><span class="p">(</span>
 <span class="gp">... </span>                        <span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
 <span class="gp">... </span>                        <span class="n">noise</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ControlSignal</span><span class="p">(),</span>
@@ -347,19 +347,19 @@ listed above, then no ParameterPort is created and the parameter cannot be modif
 <span class="gp">... </span>                                        <span class="n">bias</span><span class="o">=</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ControlSignal</span><span class="p">(</span><span class="n">modulation</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">ADDITIVE</span><span class="p">))))</span>
 </pre></div>
 </div>
-<p>The first argument of the constructor for the Mechanism specifies its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.size" title="psyneulink.core.components.component.Component.size"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">size</span></code></a> parameter by
-directly assigning a value to it.  The second specifies the <code class="xref any docutils literal notranslate"><span class="pre">noise</span></code> parameter
+<p>The first argument of the constructor for the Mechanism specifies its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.size" title="psyneulink.core.components.component.Component.size"><code class="xref any py py-attr docutils literal"><span class="pre">size</span></code></a> parameter by
+directly assigning a value to it.  The second specifies the <code class="xref any docutils literal"><span class="pre">noise</span></code> parameter
 by assigning a default <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>;  this will use the default value of the
-<code class="xref any docutils literal notranslate"><span class="pre">noise</span></code> attribute.  The <strong>function</strong> argument is specified using the constructor for
-a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function, that specifies two of its parameters.  The <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> parameter
+<code class="xref any docutils literal"><span class="pre">noise</span></code> attribute.  The <strong>function</strong> argument is specified using the constructor for
+a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> function, that specifies two of its parameters.  The <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter
 is specified using a tuple, the first item of which is the value to be assigned, and the second specifies
-a default <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>.  The <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.bias" title="psyneulink.core.components.functions.transferfunctions.Logistic.bias"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias</span></code></a> parameter is also specified using a tuple,
-in this case with a constructor for the ControlSignal that specifies its <a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation" title="psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulation</span></code></a>
+a default <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>.  The <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.bias" title="psyneulink.core.components.functions.transferfunctions.Logistic.bias"><code class="xref any py py-attr docutils literal"><span class="pre">bias</span></code></a> parameter is also specified using a tuple,
+in this case with a constructor for the ControlSignal that specifies its <a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation" title="psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal"><span class="pre">modulation</span></code></a>
 parameter.</p>
 <p>In the following example, a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> is created, and its
-<code class="xref any docutils literal notranslate"><span class="pre">matrix</span></code> parameter is assigned a random weight matrix (using a
+<code class="xref any docutils literal"><span class="pre">matrix</span></code> parameter is assigned a random weight matrix (using a
 <a class="reference internal" href="MappingProjection.html#matrix-keywords"><span class="std std-ref">matrix keyword</span></a>) and <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_input_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_input_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_output_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_mapping_projection</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">MappingProjection</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">my_input_mechanism</span><span class="p">,</span>
 <span class="gp">... </span>                                              <span class="n">receiver</span><span class="o">=</span><span class="n">my_output_mechanism</span><span class="p">,</span>
@@ -368,12 +368,12 @@ parameter.</p>
 </pre></div>
 </div>
 <div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The <code class="xref any docutils literal notranslate"><span class="pre">matrix</span></code> parameter belongs to the MappingProjection’s <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.function" title="psyneulink.core.components.projections.projection.Projection_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>;  however, since it has only one standard function, its arguments are available in the
+<p class="first admonition-title">Note</p>
+<p class="last">The <code class="xref any docutils literal"><span class="pre">matrix</span></code> parameter belongs to the MappingProjection’s <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.function" title="psyneulink.core.components.projections.projection.Projection_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>;  however, since it has only one standard function, its arguments are available in the
 constructor for the Projection (see <a class="reference internal" href="Component.html#user-modifiable-parameters"><span class="std std-ref">here</span></a> for a more detailed explanation).</p>
 </div>
 <p>The example below shows how to specify the parameters in the first example using a parameter specification dictionary:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">RecurrentTransferMechanism</span><span class="p">(</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">RecurrentTransferMechanism</span><span class="p">(</span>
 <span class="gp">... </span>                     <span class="n">noise</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
 <span class="gp">... </span>                     <span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NOISE</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">CONTROL</span><span class="p">,</span>
 <span class="gp">... </span>                             <span class="n">pnl</span><span class="o">.</span><span class="n">FUNCTION</span><span class="p">:</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">,</span>
@@ -393,10 +393,10 @@ parameter specification dictionary – can be used within the same constructor.<
 <p>If a particular parameter is specified in both ways (as is the case for <strong>noise</strong> in the example), the value in the
 parameter specification dictionary takes priority (i.e., it is the value that will be assigned to the parameter).</p>
 <p>Finally, the keyword <em>FUNCTION_PARAMS</em> can be used in a parameter specification dictionary to specify
-parameters of the Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, as shown for the <strong>gain</strong> and <strong>bias</strong> parameters of
+parameters of the Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, as shown for the <strong>gain</strong> and <strong>bias</strong> parameters of
 the Logistic function in the example.</p>
 <p>The example below shows how to access ParameterPort values vs base values, and demonstrates their differences:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span>
 <span class="gp">... </span>                     <span class="n">noise</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span>
 <span class="gp">... </span>                     <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">slope</span><span class="o">=</span><span class="mf">2.0</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">noise</span><span class="o">.</span><span class="n">base</span> <span class="o">==</span> <span class="mf">5.0</span>
@@ -409,7 +409,7 @@ the Logistic function in the example.</p>
 on my_transfer_mechanism, while the slope attribute, which stores the base value for the slope ParameterPort of
 my_transfer_mechanism, is on my_transfer_mechanism’s function. However, mod_noise and mod_slope are both properties on
 my_transfer_mechanism.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">noise</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="mf">4.0</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">noise</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="mf">4.0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="mf">1.0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">noise</span><span class="o">.</span><span class="n">base</span> <span class="o">==</span> <span class="mf">4.0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_noise</span> <span class="o">==</span> <span class="p">[</span><span class="mf">5.0</span><span class="p">]</span>
@@ -420,7 +420,7 @@ my_transfer_mechanism.</p>
 <p>When the base values of noise and slope are updated, we can inspect these attributes immediately and observe that they
 have changed. We do not observe a change in mod_noise or mod_slope because the ParameterPort value will not update
 until the mechanism executes.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">10.0</span><span class="p">])</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">10.0</span><span class="p">])</span>
 <span class="go">array([[14.]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">noise</span><span class="o">.</span><span class="n">base</span> <span class="o">==</span> <span class="mf">4.0</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">my_transfer_mechanism</span><span class="o">.</span><span class="n">mod_noise</span> <span class="o">==</span> <span class="p">[</span><span class="mf">4.0</span><span class="p">]</span>
@@ -431,205 +431,184 @@ until the mechanism executes.</p>
 <p>Now that the mechanism has executed, we can see that each ParameterPort evaluated its function with the base value,
 producing a modulated noise value of 4.0 and a modulated slope value of 1.0. These values were used by
 my_transfer_mechanism and its Linear function when the mechanism executed.</p>
-</section>
-</section>
-<section id="structure">
+</div>
+</div>
+<div class="section" id="structure">
 <span id="parameterport-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
 <p>Every ParameterPort is owned by a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>. It can receive one or more
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a>, that are listed in its
-<a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents" title="psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> attribute.  A ParameterPort cannot receive
+<a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents" title="psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.  A ParameterPort cannot receive
 <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a> or <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a>.  When the ParameterPort is
 updated (i.e., its owner is executed), it uses the values of its ControlProjections and LearningProjections to
 determine whether and how to modify its parameter’s attribute value, which is then assigned as the ParameterPort’s
-<a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> (see <a class="reference internal" href="#parameterport-execution"><span class="std std-ref">Execution</span></a> for addition details). ParameterPorts have the
+<a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> (see <a class="reference internal" href="#parameterport-execution"><span class="std std-ref">Execution</span></a> for addition details). ParameterPorts have the
 following core attributes:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.variable" title="psyneulink.core.components.ports.parameterport.ParameterPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> - the parameter’s attribute value; that is, the value assigned to the
+<li><a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.variable" title="psyneulink.core.components.ports.parameterport.ParameterPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> - the parameter’s attribute value; that is, the value assigned to the
 attribute for the parameter of the ParameterPort’s owner;  it can be thought of as the parameter’s “base” value.
-It is used by its <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to determine the ParameterPort’s
-<a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>.  It must match the format (the number and type of elements) of the parameter’s
-attribute value.</p></li>
-<li><p><a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents" title="psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> - lists the <code class="xref any docutils literal notranslate"><span class="pre">ModulatoryProjections</span></code> received
-by the ParameterPort.  These specify either modify the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, or
-directly assign the <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the ParameterPort itself (see <code class="xref any docutils literal notranslate"><span class="pre">ModulatorySignals_Modulation</span></code>).</p></li>
-<li><p><a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> - takes the parameter’s attribute value as its input, modifies it under the
-influence of any <a class="reference internal" href="ModulatoryProjections.html"><span class="doc">Modulatory Projections</span></a> it receives (listed in <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents" title="psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a>,
-and assigns the result as the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> which is used as the parameter’s
-“actual” value.</p></li>
-<li><p><a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> - the result of <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>; used by the ParameterPort’s
-owner as the value of the parameter for which the ParameterPort is responsible.</p></li>
+It is used by its <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> to determine the ParameterPort’s
+<a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  It must match the format (the number and type of elements) of the parameter’s
+attribute value.</li>
+<li><a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents" title="psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> - lists the <code class="xref any docutils literal"><span class="pre">ModulatoryProjections</span></code> received
+by the ParameterPort.  These specify either modify the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, or
+directly assign the <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the ParameterPort itself (see <code class="xref any docutils literal"><span class="pre">ModulatorySignals_Modulation</span></code>).</li>
+<li><a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> - takes the parameter’s attribute value as its input, modifies it under the
+influence of any <a class="reference internal" href="ModulatoryProjections.html"><span class="doc">Modulatory Projections</span></a> it receives (listed in <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents" title="psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a>,
+and assigns the result as the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> which is used as the parameter’s
+“actual” value.</li>
+<li><a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> - the result of <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>; used by the ParameterPort’s
+owner as the value of the parameter for which the ParameterPort is responsible.</li>
 </ul>
 <p id="parameterport-modulable-parameters">All of the modulable parameters of a Component – that is, for which it has ParameterPorts –
 are listed in its <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> class, and have the attribute
-<a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.modulable" title="psyneulink.core.globals.parameters.Parameter.modulable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulable</span></code></a> set to True.  The
-ParameterPorts for a Mechanism or Projection are listed in its <code class="xref std std-keyword docutils literal notranslate"><span class="pre">parameter_ports</span></code> attribute, which is also
+<a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.modulable" title="psyneulink.core.globals.parameters.Parameter.modulable"><code class="xref any py py-attr docutils literal"><span class="pre">modulable</span></code></a> set to True.  The
+ParameterPorts for a Mechanism or Projection are listed in its <code class="xref std std-keyword docutils literal"><span class="pre">parameter_ports</span></code> attribute, which is also
 read-only.</p>
 <p>An initial value can be assigned to a parameter in the corresponding argument of the constructor for the Component
 (see <a class="reference internal" href="#parameterport-value-specification"><span class="std std-ref">above</span></a>.  Parameter values can also be modified by a assigning a value to
 the corresponding attribute.
 The parameters of a Component’s function can be modified by assigning a value to the corresponding attribute of the
-Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> attribute (e.g., <code class="docutils literal notranslate"><span class="pre">myMechanism.function.my_parameter</span></code>).
+Component’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> attribute (e.g., <code class="docutils literal"><span class="pre">myMechanism.function.my_parameter</span></code>).
 See <a class="reference internal" href="Mechanism.html#mechanism-parameterports"><span class="std std-ref">ParameterPorts and Parameters</span></a> for additional information.</p>
-</section>
-<section id="execution">
+</div>
+<div class="section" id="execution">
 <span id="parameterport-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A ParameterPort cannot be executed directly.  It is executed when the Component to which it belongs is executed.
 When this occurs, the ParameterPort executes any <a class="reference internal" href="ModulatoryProjections.html"><span class="doc">Modulatory Projections</span></a> it receives, the values of which
-modulate parameters of the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  The ParameterPort then calls
-its <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> and the result is assigned as its <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>.  The
-ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> is used as the value of the corresponding parameter by the Component,
-or by its own <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
+modulate parameters of the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.  The ParameterPort then calls
+its <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> and the result is assigned as its <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.  The
+ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> is used as the value of the corresponding parameter by the Component,
+or by its own <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>.</p>
 <div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>It is important to note the distinction between the <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a ParameterPort,
-and the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of the Component to which it belongs. The former is used to determine the
+<p class="first admonition-title">Note</p>
+<p class="last">It is important to note the distinction between the <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of a ParameterPort,
+and the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Component to which it belongs. The former is used to determine the
 value of a parameter used by the latter (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-anatomy-figure"><span class="std std-ref">figure</span></a>, and <a class="reference internal" href="Port.html#port-execution"><span class="std std-ref">Execution</span></a> for
 additional details).</p>
 </div>
-</section>
-<section id="class-reference">
+</div>
+<div class="section" id="class-reference">
 <span id="parameterport-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
+<dl class="class">
 <dt id="psyneulink.core.components.ports.parameterport.ParameterPort">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.ports.parameterport.</code><code class="sig-name descname">ParameterPort</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">owner</span></em>, <em class="sig-param"><span class="n">reference_value</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">function</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">projections</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">parameter_name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">psyneulink.core.components.ports.parameterport.</code><code class="descname">ParameterPort</code><span class="sig-paren">(</span><em>owner</em>, <em>reference_value=None</em>, <em>variable=None</em>, <em>size=None</em>, <em>function=None</em>, <em>projections=None</em>, <em>params=None</em>, <em>name=None</em>, <em>parameter_name=None</em>, <em>prefs=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort" title="Permalink to this definition">¶</a></dt>
 <dd><p>ParameterPort(                                                   owner,                                                       reference_value=None                                         function=LinearCombination(operation=PRODUCT),</p>
 <p>Subclass of <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> that represents and possibly modifies the parameter of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>,
 <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>, or its <a class="reference internal" href="Function.html"><span class="doc">Function</span></a>. See <a class="reference internal" href="Port.html#port-class-reference"><span class="std std-ref">Class Reference</span></a> for additional arguments and attributes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>owner</strong> (<em>Mechanism</em><em> or </em><a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection"><em>MappingProjection</em></a>) – the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to which to which the ParameterPort belongs; it must be
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>owner</strong> (<em>Mechanism</em><em> or </em><a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection"><em>MappingProjection</em></a>) – the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to which to which the ParameterPort belongs; it must be
 specified or determinable from the context in which the ParameterPort is created (the initialization of a
 ParameterPort cannot be <a class="reference internal" href="Port.html#port-deferred-initialization"><span class="std std-ref">deferred</span></a>. The owner of a ParameterPort
-for the parameter of a <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> should be specified as the Mechanism or Projection to
-which the function belongs.</p></li>
-<li><p><strong>reference_value</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) – specifies the default value of the parameter for which the ParameterPort is responsible.</p></li>
-<li><p><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) – specifies the parameter’s initial value and attribute value — that is, the value of the attribute of the
-ParameterPort’s owner or its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> assigned to the parameter.</p></li>
-<li><p><strong>function</strong> (<em>Function</em><em> or </em><em>method : default LinearCombination</em><em>(</em><em>operation=SUM</em><em>)</em>) – specifies the function used to convert the parameter’s attribute value (same as the ParameterPort’s
-<a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.variable" title="psyneulink.core.components.ports.parameterport.ParameterPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) to the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>.</p></li>
+for the parameter of a <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> should be specified as the Mechanism or Projection to
+which the function belongs.</li>
+<li><strong>reference_value</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) – specifies the default value of the parameter for which the ParameterPort is responsible.</li>
+<li><strong>variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>np.ndarray</em>) – specifies the parameter’s initial value and attribute value —&nbsp;that is, the value of the attribute of the
+ParameterPort’s owner or its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> assigned to the parameter.</li>
+<li><strong>function</strong> (<em>Function</em><em> or </em><em>method : default LinearCombination</em><em>(</em><em>operation=SUM</em><em>)</em>) – specifies the function used to convert the parameter’s attribute value (same as the ParameterPort’s
+<a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.variable" title="psyneulink.core.components.ports.parameterport.ParameterPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>) to the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>.</li>
 </ul>
-</dd>
-</dl>
-<dl class="py attribute">
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
 <dt id="psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents">
-<code class="sig-name descname">mod_afferents</code><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents" title="Permalink to this definition">¶</a></dt>
-<dd><p>a list of the <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that project to the ParameterPort (i.e.,
-for which it is a <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a>); these can be <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> and/or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection(s)</span></a>, but not <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>.  The <code class="xref any docutils literal notranslate"><span class="pre">value</span></code> of each must match the format
-(number and types of elements) of the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.variable" title="psyneulink.core.components.ports.parameterport.ParameterPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Optional[List[Projection]]</p>
-</dd>
-</dl>
+<code class="descname">mod_afferents</code><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Optional[List[Projection]]</em> – a list of the <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that project to the ParameterPort (i.e.,
+for which it is a <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.receiver" title="psyneulink.core.components.projections.projection.Projection_Base.receiver"><code class="xref any py py-attr docutils literal"><span class="pre">receiver</span></code></a>); these can be <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection(s)</span></a> and/or <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection(s)</span></a>, but not <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a>.  The <code class="xref any docutils literal"><span class="pre">value</span></code> of each must match the format
+(number and types of elements) of the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.variable" title="psyneulink.core.components.ports.parameterport.ParameterPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.ports.parameterport.ParameterPort.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort.variable" title="Permalink to this definition">¶</a></dt>
-<dd><p>the parameter’s attribute value — that is, the value of the attribute of the
-ParameterPort’s owner or its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> assigned to the parameter.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>number, list or np.ndarray</p>
-</dd>
-</dl>
+<code class="descname">variable</code><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number, list or np.ndarray</em> – the parameter’s attribute value —&nbsp;that is, the value of the attribute of the
+ParameterPort’s owner or its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> assigned to the parameter.</p>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.ports.parameterport.ParameterPort.function">
-<code class="sig-name descname">function</code><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>converts the parameter’s attribute value (same as the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.variable" title="psyneulink.core.components.ports.parameterport.ParameterPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>)
-to the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>, under the influence of any
+<code class="descname">function</code><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>Function : default Linear</em> – converts the parameter’s attribute value (same as the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.variable" title="psyneulink.core.components.ports.parameterport.ParameterPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a>)
+to the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a>, under the influence of any
 <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjections</span></a> received by the ParameterPort (and listed in its
-<a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents" title="psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a> attribute.  The result is assigned as the ParameterPort’s
+<a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents" title="psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a> attribute.  The result is assigned as the ParameterPort’s
 <a class="reference internal" href="#"><span class="doc">value</span></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>Function : default Linear</p>
-</dd>
-</dl>
 </dd></dl>
 
-<dl class="py attribute">
+<dl class="attribute">
 <dt id="psyneulink.core.components.ports.parameterport.ParameterPort.value">
-<code class="sig-name descname">value</code><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="Permalink to this definition">¶</a></dt>
-<dd><p>the result returned by the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, and used by the
-ParameterPort’s owner or its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> as the value of the parameter for which the
+<code class="descname">value</code><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="Permalink to this definition">¶</a></dt>
+<dd><p><em>number, List[number] or np.ndarray</em> – the result returned by the ParameterPort’s <a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and used by the
+ParameterPort’s owner or its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> as the value of the parameter for which the
 ParmeterPort is responsible.  Note that this is not necessarily the same as the parameter’s attribute value
 (that is, the value of the owner’s attribute for the parameter), since the ParameterPort’s
-<a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> may modify the latter under the influence of its
-<a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents" title="psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>number, List[number] or np.ndarray</p>
-</dd>
-</dl>
+<a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> may modify the latter under the influence of its
+<a class="reference internal" href="#psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents" title="psyneulink.core.components.ports.parameterport.ParameterPort.mod_afferents"><code class="xref any py py-attr docutils literal"><span class="pre">mod_afferents</span></code></a>.</p>
 </dd></dl>
 
-<dl class="py attribute">
-<dt id="psyneulink.core.components.ports.parameterport.ParameterPort.projection_type">
-<code class="sig-name descname">projection_type</code><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort.projection_type" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection</span></code></a></p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="psyneulink.core.components.ports.parameterport.ParameterPort._validate_against_reference_value">
-<code class="sig-name descname">_validate_against_reference_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort._validate_against_reference_value" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validate that value of the Port is compatible with the reference_value</p>
-<p>reference_value is the value of the parameter to which the ParameterPort is assigned</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="psyneulink.core.components.ports.parameterport.ParameterPort._instantiate_projections">
-<code class="sig-name descname">_instantiate_projections</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">projections</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort._instantiate_projections" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiate Projections specified in PROJECTIONS entry of params arg of Port’s constructor</p>
-<p>Disallow any PathwayProjections
-Call _instantiate_projections_to_port to assign ModulatoryProjections to .mod_afferents</p>
-</dd></dl>
-
-<dl class="py method">
+<dl class="method">
 <dt id="psyneulink.core.components.ports.parameterport.ParameterPort._check_for_duplicate_projections">
-<code class="sig-name descname">_check_for_duplicate_projections</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">projection</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort._check_for_duplicate_projections" title="Permalink to this definition">¶</a></dt>
+<code class="descname">_check_for_duplicate_projections</code><span class="sig-paren">(</span><em>projection</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort._check_for_duplicate_projections" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check if projection is redundant with one in mod_afferents of ParameterPort</p>
 <p>Check for any instantiated projection in mod_afferents with the same sender as projection
 or one in deferred_init status with sender specification that is the same type as projection.</p>
 <p>Returns redundant Projection if found, otherwise False.</p>
 </dd></dl>
 
-<dl class="py method">
+<dl class="staticmethod">
+<dt id="psyneulink.core.components.ports.parameterport.ParameterPort._get_port_function_value">
+<em class="property">static </em><code class="descname">_get_port_function_value</code><span class="sig-paren">(</span><em>function</em>, <em>variable</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort._get_port_function_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return parameter variable (since ParameterPort’s function never changes the form of its variable</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.parameterport.ParameterPort._get_variable_from_projections">
+<code class="descname">_get_variable_from_projections</code><span class="sig-paren">(</span><em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort._get_variable_from_projections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get backingfield (“base”) value of param of function of Mechanism to which the ParameterPort belongs.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="psyneulink.core.components.ports.parameterport.ParameterPort._instantiate_projections">
+<code class="descname">_instantiate_projections</code><span class="sig-paren">(</span><em>projections</em>, <em>context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort._instantiate_projections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate Projections specified in PROJECTIONS entry of params arg of Port’s constructor</p>
+<p>Disallow any PathwayProjections
+Call _instantiate_projections_to_port to assign ModulatoryProjections to .mod_afferents</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="psyneulink.core.components.ports.parameterport.ParameterPort._parse_port_specific_specs">
-<code class="sig-name descname">_parse_port_specific_specs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">owner</span></em>, <em class="sig-param"><span class="n">port_dict</span></em>, <em class="sig-param"><span class="n">port_specific_spec</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort._parse_port_specific_specs" title="Permalink to this definition">¶</a></dt>
+<code class="descname">_parse_port_specific_specs</code><span class="sig-paren">(</span><em>owner</em>, <em>port_dict</em>, <em>port_specific_spec</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort._parse_port_specific_specs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get connections specified in a ParameterPort specification tuple</p>
-<dl class="simple">
-<dt>Tuple specification can be:</dt><dd><p>(port_spec, projections)</p>
-</dd>
+<dl class="docutils">
+<dt>Tuple specification can be:</dt>
+<dd>(port_spec, projections)</dd>
 </dl>
 <p>Assumes that port_spec has already been extracted and used by _parse_port_spec</p>
 <p>Returns params dict with PROJECTIONS entries if any of these was specified.</p>
 </dd></dl>
 
-<dl class="py method">
-<dt id="psyneulink.core.components.ports.parameterport.ParameterPort._get_port_function_value">
-<em class="property">static </em><code class="sig-name descname">_get_port_function_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">owner</span></em>, <em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="n">variable</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort._get_port_function_value" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return parameter variable (since ParameterPort’s function never changes the form of its variable</p>
+<dl class="method">
+<dt id="psyneulink.core.components.ports.parameterport.ParameterPort._validate_against_reference_value">
+<code class="descname">_validate_against_reference_value</code><span class="sig-paren">(</span><em>reference_value</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort._validate_against_reference_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate that value of the Port is compatible with the reference_value</p>
+<p>reference_value is the value of the parameter to which the ParameterPort is assigned</p>
 </dd></dl>
 
-<dl class="py method">
-<dt id="psyneulink.core.components.ports.parameterport.ParameterPort._get_variable_from_projections">
-<code class="sig-name descname">_get_variable_from_projections</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort._get_variable_from_projections" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get backingfield (“base”) value of param of function of Mechanism to which the ParameterPort belongs.</p>
+<dl class="attribute">
+<dt id="psyneulink.core.components.ports.parameterport.ParameterPort.projection_type">
+<code class="descname">projection_type</code><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPort.projection_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">ControlProjection</span></code></p>
 </dd></dl>
 
 </dd></dl>
 
-<dl class="py exception">
-<dt id="psyneulink.core.components.ports.parameterport.ParameterPortError">
-<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.components.ports.parameterport.</code><code class="sig-name descname">ParameterPortError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.parameterport.ParameterPortError" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</section>
-</section>
+</div>
+</div>
 
 
              </article>
@@ -692,12 +671,21 @@ or one in deferred_init status with sender specification that is the same type a
   
 
      
-       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript">
+           var DOCUMENTATION_OPTIONS = {
+               URL_ROOT:'./',
+               VERSION:'0.8.8.0+13.gb7816cb',
+               LANGUAGE:'None',
+               COLLAPSE_INDEX:false,
+               FILE_SUFFIX:'.html',
+               HAS_SOURCE:  true,
+               SOURCELINK_SUFFIX: '.txt'
+           };
+       </script>
+         <script type="text/javascript" src="_static/jquery.js"></script>
+         <script type="text/javascript" src="_static/underscore.js"></script>
+         <script type="text/javascript" src="_static/doctools.js"></script>
+         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

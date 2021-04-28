@@ -6,11 +6,10 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Visualization &mdash; PsyNeuLink 0.8.8.0 documentation</title>
+  <title>Visualization &mdash; PsyNeuLink 0.8.8.0+13.gb7816cb documentation</title>
   
 
   
@@ -28,7 +27,6 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
-  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -97,7 +95,7 @@
               
               
                 <div class="version">
-                  0.8.8.0
+                  0.8.8.0+13
                 </div>
               
             
@@ -195,39 +193,38 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <section id="visualization">
+  <div class="section" id="visualization">
 <h1>Visualization<a class="headerlink" href="#visualization" title="Permalink to this headline">¶</a></h1>
-<p>There are three ways to visualize models composed in PsyNeuLink: statically, using the <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>; using the <strong>animate</strong> argument of a Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method to output a gif showing the sequence with which its <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a>
+<p>There are three ways to visualize models composed in PsyNeuLink: statically, using the <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>; using the <strong>animate</strong> argument of a Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method to output a gif showing the sequence with which its <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a>
 are executed (see <a class="reference internal" href="BasicsAndPrimer.html#basicsandprimer-stroop-example-animation-figure"><span class="std std-ref">example</span></a>); or interactively to configure
-the display and plot Component <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">values</span></code></a> using
+the display and plot Component <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">values</span></code></a> using
 <a class="reference external" href="http://www.psyneuln.deptcpanel.princeton.edu/psyneulink-view-2/">PsyNeuLinkView</a> –
 a standalone application that interacts closely with the Python script in which a PsyNeuLink model is composed.</p>
 <div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The <a class="reference external" href="http://www.psyneuln.deptcpanel.princeton.edu/psyneulink-view-2/">PsyNeuLinkView</a> application is still under
+<p class="first admonition-title">Note</p>
+<p class="last">The <a class="reference external" href="http://www.psyneuln.deptcpanel.princeton.edu/psyneulink-view-2/">PsyNeuLinkView</a> application is still under
 development;  at present, it can be used to display a Composition and arrange its Components.  Its functionality is
 being actively expanded, and it should soon be able to display animated plots of Component values as a Composition
 executes.  It can be accessed <a class="reference external" href="https://github.com/dillontsmith/PsyNeuLinkView">here</a>.</p>
 </div>
-<p>At present, use of the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method and the <strong>animate</strong> argument of its
-<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method are the primary ways to visualize a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.  The former is described below,
+<p>At present, use of the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method and the <strong>animate</strong> argument of its
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal"><span class="pre">run</span></code></a> method are the primary ways to visualize a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.  The former is described below,
 including <a class="reference internal" href="#showgraph-examples-visualization"><span class="std std-ref">examples</span></a> of its use.</p>
-<span class="target" id="module-psyneulink.core.compositions.showgraph"></span><section id="use-of-the-show-graph-method">
+<span class="target" id="module-psyneulink.core.compositions.showgraph"></span><div class="section" id="use-of-the-show-graph-method">
 <span id="showgraph-show-graph-method"></span><h2><em>Use of the show_graph Method</em><a class="headerlink" href="#use-of-the-show-graph-method" title="Permalink to this headline">¶</a></h2>
-<p>Every <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> has a <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method that can be used to generate a graphical display
+<p>Every <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> has a <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method that can be used to generate a graphical display
 of the Composition and, optionally, any <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Compositions</span></a> within it.  Each <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> of the Composition is represented as a node in the graph, and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> between
 them as edges.</p>
 <div class="technical-note docutils container">
-<p>Every Composition is assigned a <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph" title="psyneulink.core.compositions.showgraph.ShowGraph"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ShowGraph</span></code></a> object, that is implemented in the free-standing showgraph.py module.
-The <code class="xref any docutils literal notranslate"><span class="pre">show_graph</span></code> method of a Composition directly calls the <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method of its <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph" title="psyneulink.core.compositions.showgraph.ShowGraph"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ShowGraph</span></code></a> object, as do all links to documentation concerning
-<a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a>.</p>
-</div>
+Every Composition is assigned a <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph" title="psyneulink.core.compositions.showgraph.ShowGraph"><code class="xref any py py-class docutils literal"><span class="pre">ShowGraph</span></code></a> object, that is implemented in the free-standing showgraph.py module.
+The <code class="xref any docutils literal"><span class="pre">show_graph</span></code> method of a Composition directly calls the <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method of its <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph" title="psyneulink.core.compositions.showgraph.ShowGraph"><code class="xref any py py-class docutils literal"><span class="pre">ShowGraph</span></code></a> object, as do all links to documentation concerning
+<a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a>.</div>
 <p>By default, all nodes within a Composition, including any <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">Compositions nested</span></a> within it, are
 shown, each displayed as an oval (if the node is a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>) or a rectangle (if it is a nested Composition),
-and labeled by its <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">name</span></a>.  Each Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> Nodes are shown in green, its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a>
-Nodes are shown in red, and any that are both (i.e., are <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.SINGLETON" title="psyneulink.core.compositions.composition.NodeRole.SINGLETON"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">SINGLETON</span></code></a>s) are shown in brown.  Projections shown as
+and labeled by its <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">name</span></a>.  Each Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal"><span class="pre">INPUT</span></code></a> Nodes are shown in green, its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a>
+Nodes are shown in red, and any that are both (i.e., are <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.SINGLETON" title="psyneulink.core.compositions.composition.NodeRole.SINGLETON"><code class="xref any py py-attr docutils literal"><span class="pre">SINGLETON</span></code></a>s) are shown in brown.  Projections shown as
 unlabeled arrows, as illustrated for the Composition in the <a class="reference internal" href="#showgraph-examples-visualization"><span class="std std-ref">examples</span></a>. However,
-these and other attributes of the graph can be modified using arguments in the call to the <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method.</p>
+these and other attributes of the graph can be modified using arguments in the call to the <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method.</p>
 <p><em>Display structure</em> – how much information is displayed for a Composition and any nested within it can be modified
 using the <em>show_xxx</em> arguments;  for example, <strong>show_node_structure</strong> determines how much detail is shown about each
 Node; <strong>show_nested</strong> determines whether nested Compositions are shown embedded within their enclosing Compositions
@@ -239,16 +236,16 @@ a Composition’s <a class="reference internal" href="Composition.html#compositi
 be modified by assigning a dictionary of attribute:values pairs to the <strong>show_graph_configuration</strong> argument of the
 Composition’s constructor.  These are listed as the arguments for the ShowGraph object (used to display the graph)
 in the <a class="reference internal" href="#showgraph-class-reference"><span class="std std-ref">class reference</span></a> below.</p>
-</section>
-<section id="examples">
+</div>
+<div class="section" id="examples">
 <span id="showgraph-examples-visualization"></span><h2><em>Examples</em><a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h2>
-<table class="docutils align-default" id="composition-show-graph-basic-figure">
+<table border="1" class="docutils" id="composition-show-graph-basic-figure">
 <colgroup>
-<col style="width: 50%" />
-<col style="width: 50%" />
+<col width="50%" />
+<col width="50%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">psyneulink</span> <span class="kn">import</span> <span class="o">*</span>
+<tbody valign="top">
+<tr class="row-odd"><td><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">psyneulink</span> <span class="kn">import</span> <span class="o">*</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">a</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span>
 <span class="go">              name=&#39;A&#39;,</span>
 <span class="gp">... </span>          <span class="n">size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
@@ -279,38 +276,36 @@ in the <a class="reference internal" href="#showgraph-class-reference"><span cla
 </pre></div>
 </div>
 </td>
-<td><figure class="align-default">
-<img alt="_images/Composition_show_graph_basic_fig.svg" src="_images/Composition_show_graph_basic_fig.svg" /></figure>
+<td><div class="first last figure">
+<img alt="_images/Composition_show_graph_basic_fig.svg" src="_images/Composition_show_graph_basic_fig.svg" /></div>
 </td>
 </tr>
 </tbody>
 </table>
-<p>Note that the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> is not shown by default.  However this
-can be shown, along with other information, using options in the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a>
+<p>Note that the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is not shown by default.  However this
+can be shown, along with other information, using options in the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a>
 method.  The figure below shows several examples.</p>
 <p id="composition-show-graph-options-figure"><strong>Output of show_graph using different options</strong></p>
-<figure class="align-default" id="id4">
+<div class="figure" id="id4">
 <a class="reference internal image-reference" href="_images/Composition_show_graph_options_fig.svg"><img alt="Composition graph examples" src="_images/Composition_show_graph_options_fig.svg" /></a>
-<figcaption>
-<p><span class="caption-text">Displays of the Composition in the <a class="reference internal" href="#composition-show-graph-basic-figure"><span class="std std-ref">example above</span></a>, generated using various
-options of its <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method. <strong>Panel A</strong> shows the graph with its Projections labeled
-and Component dimensions displayed.  <strong>Panel B</strong> shows the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> for the
+<p class="caption"><span class="caption-text">Displays of the Composition in the <a class="reference internal" href="#composition-show-graph-basic-figure"><span class="std std-ref">example above</span></a>, generated using various
+options of its <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method. <strong>Panel A</strong> shows the graph with its Projections labeled
+and Component dimensions displayed.  <strong>Panel B</strong> shows the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> for the
 Composition and its associated <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> using the <strong>show_controller</strong> option (controller-related
 Components are displayed in blue by default).  <strong>Panel C</strong> adds the Composition’s <a class="reference internal" href="CompositionInterfaceMechanism.html"><span class="doc">CompositionInterfaceMechanisms</span></a> using the <strong>show_cim</strong> option. <strong>Panel D</strong> shows a detailed view of the Mechanisms
-using the <strong>show_node_structure</strong> option, that includes their <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> and their <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">roles</span></code></a> in the
-Composition. <strong>Panel E</strong> shows an even more detailed view using <strong>show_node_structure</strong> as well as <strong>show_cim</strong>.</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
-</figcaption>
-</figure>
+using the <strong>show_node_structure</strong> option, that includes their <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> and their <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">roles</span></code></a> in the
+Composition. <strong>Panel E</strong> shows an even more detailed view using <strong>show_node_structure</strong> as well as <strong>show_cim</strong>.</span></p>
+</div>
 <p>If a Composition has one ore more Compositions nested as Nodes within it, these can be shown using the
 <strong>show_nested</strong> option. For example, the pathway in the script below contains a sequence of Mechanisms
-and nested Compositions in an outer Composition, <code class="docutils literal notranslate"><span class="pre">comp</span></code>:</p>
-<table class="docutils align-default" id="composition-show-graph-show-nested-figure">
+and nested Compositions in an outer Composition, <code class="docutils literal"><span class="pre">comp</span></code>:</p>
+<table border="1" class="docutils" id="composition-show-graph-show-nested-figure">
 <colgroup>
-<col style="width: 46%" />
-<col style="width: 54%" />
+<col width="46%" />
+<col width="54%" />
 </colgroup>
-<tbody>
-<tr class="row-odd"><td><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mech_stim</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;STIMULUS&#39;</span><span class="p">)</span>
+<tbody valign="top">
+<tr class="row-odd"><td><div class="first last highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mech_stim</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;STIMULUS&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mech_A1</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;A1&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mech_B1</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;B1&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">comp1</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;comp1&#39;</span><span class="p">)</span>
@@ -330,156 +325,164 @@ and nested Compositions in an outer Composition, <code class="docutils literal n
 </pre></div>
 </div>
 </td>
-<td><figure class="align-default">
-<img alt="_images/Composition_show_graph_show_nested_fig.svg" src="_images/Composition_show_graph_show_nested_fig.svg" /></figure>
+<td><div class="first last figure">
+<img alt="_images/Composition_show_graph_show_nested_fig.svg" src="_images/Composition_show_graph_show_nested_fig.svg" /></div>
 </td>
 </tr>
 </tbody>
 </table>
-</section>
-<section id="class-reference">
+</div>
+<div class="section" id="class-reference">
 <span id="showgraph-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
-<dl class="py class">
+<dl class="class">
 <dt id="psyneulink.core.compositions.showgraph.ShowGraph">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.compositions.showgraph.</code><code class="sig-name descname">ShowGraph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">composition</span></em>, <em class="sig-param"><span class="n">direction</span><span class="o">=</span><span class="default_value">'BT'</span></em>, <em class="sig-param"><span class="n">mechanism_shape</span><span class="o">=</span><span class="default_value">'oval'</span></em>, <em class="sig-param"><span class="n">feedback_shape</span><span class="o">=</span><span class="default_value">'octagon'</span></em>, <em class="sig-param"><span class="n">cycle_shape</span><span class="o">=</span><span class="default_value">'doublecircle'</span></em>, <em class="sig-param"><span class="n">cim_shape</span><span class="o">=</span><span class="default_value">'rectangle'</span></em>, <em class="sig-param"><span class="n">controller_shape</span><span class="o">=</span><span class="default_value">'doubleoctagon'</span></em>, <em class="sig-param"><span class="n">composition_shape</span><span class="o">=</span><span class="default_value">'rectangle'</span></em>, <em class="sig-param"><span class="n">agent_rep_shape</span><span class="o">=</span><span class="default_value">'egg'</span></em>, <em class="sig-param"><span class="n">default_projection_arrow</span><span class="o">=</span><span class="default_value">'normal'</span></em>, <em class="sig-param"><span class="n">learning_projection_shape</span><span class="o">=</span><span class="default_value">'diamond'</span></em>, <em class="sig-param"><span class="n">control_projection_arrow</span><span class="o">=</span><span class="default_value">'box'</span></em>, <em class="sig-param"><span class="n">default_node_color</span><span class="o">=</span><span class="default_value">'black'</span></em>, <em class="sig-param"><span class="n">active_color</span><span class="o">=</span><span class="default_value">'bold'</span></em>, <em class="sig-param"><span class="n">input_color</span><span class="o">=</span><span class="default_value">'green'</span></em>, <em class="sig-param"><span class="n">output_color</span><span class="o">=</span><span class="default_value">'red'</span></em>, <em class="sig-param"><span class="n">input_and_output_color</span><span class="o">=</span><span class="default_value">'brown'</span></em>, <em class="sig-param"><span class="n">control_color</span><span class="o">=</span><span class="default_value">'blue'</span></em>, <em class="sig-param"><span class="n">controller_color</span><span class="o">=</span><span class="default_value">'purple'</span></em>, <em class="sig-param"><span class="n">learning_color</span><span class="o">=</span><span class="default_value">'orange'</span></em>, <em class="sig-param"><span class="n">composition_color</span><span class="o">=</span><span class="default_value">'pink'</span></em>, <em class="sig-param"><span class="n">default_width</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">active_thicker_by</span><span class="o">=</span><span class="default_value">2</span></em>, <em class="sig-param"><span class="n">bold_width</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">input_rank</span><span class="o">=</span><span class="default_value">'source'</span></em>, <em class="sig-param"><span class="n">control_rank</span><span class="o">=</span><span class="default_value">'min'</span></em>, <em class="sig-param"><span class="n">learning_rank</span><span class="o">=</span><span class="default_value">'min'</span></em>, <em class="sig-param"><span class="n">output_rank</span><span class="o">=</span><span class="default_value">'max'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.showgraph.ShowGraph" title="Permalink to this definition">¶</a></dt>
-<dd><p>ShowGraph object with <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method for displaying <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>direction</strong> (<em>keyword : default 'BT'</em>) – specifies the orientation of the graph (input -&gt; output):
+<em class="property">class </em><code class="descclassname">psyneulink.core.compositions.showgraph.</code><code class="descname">ShowGraph</code><span class="sig-paren">(</span><em>composition</em>, <em>direction='BT'</em>, <em>mechanism_shape='oval'</em>, <em>feedback_shape='octagon'</em>, <em>cycle_shape='doublecircle'</em>, <em>cim_shape='rectangle'</em>, <em>controller_shape='doubleoctagon'</em>, <em>composition_shape='rectangle'</em>, <em>agent_rep_shape='egg'</em>, <em>default_projection_arrow='normal'</em>, <em>learning_projection_shape='diamond'</em>, <em>control_projection_arrow='box'</em>, <em>default_node_color='black'</em>, <em>active_color='bold'</em>, <em>input_color='green'</em>, <em>output_color='red'</em>, <em>input_and_output_color='brown'</em>, <em>control_color='blue'</em>, <em>controller_color='purple'</em>, <em>learning_color='orange'</em>, <em>composition_color='pink'</em>, <em>default_width=1</em>, <em>active_thicker_by=2</em>, <em>bold_width=3</em>, <em>input_rank='source'</em>, <em>control_rank='min'</em>, <em>learning_rank='min'</em>, <em>output_rank='max'</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.showgraph.ShowGraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>ShowGraph object with <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a> method for displaying <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>direction</strong> (<em>keyword : default 'BT'</em>) – specifies the orientation of the graph (input -&gt; output):
 - ‘BT’: bottom to top;
 - ‘TB’: top to bottom;
 - ‘LR’: left to right;
-- ‘RL`: right to left.</p></li>
-<li><p><strong>mechanism_shape</strong> (<em>keyword : default 'oval'</em>) – specifies the display shape of nodes that are not assigned a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRole</span></code></a> associated with a dedicated shape.</p></li>
-<li><p><strong>feedback_shape</strong> (<em>keyword : default 'septagon'</em>) – specifies the display shape of nodes that are assigned the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRole</span></code></a> <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.FEEDBACK_SENDER" title="psyneulink.core.compositions.composition.NodeRole.FEEDBACK_SENDER"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">FEEDBACK_SENDER</span></code></a>.</p></li>
-<li><p><strong>cycle_shape</strong> (<em>keyword : default 'doublecircle'</em>) – specifies the display shape of nodes that are assigned the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRole</span></code></a> <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.CYCLE" title="psyneulink.core.compositions.composition.NodeRole.CYCLE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">CYCLE</span></code></a>.</p></li>
-<li><p><strong>cim_shape</strong> (<em>default 'square'</em>) – specifies the shape in which <a class="reference internal" href="CompositionInterfaceMechanism.html"><span class="doc">CompositionInterfaceMechanism</span></a>s are displayed.</p></li>
-<li><p><strong>controller_shape</strong> (<em>default 'doubleoctagon'</em>) – specifies the shape in which a Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> is displayed.</p></li>
-<li><p><strong>composition_shape</strong> (<em>default 'rectangle'</em>) – specifies the shape in which nodes that represent <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Compositions</span></a> are displayed
+- ‘RL`: right to left.</li>
+<li><strong>mechanism_shape</strong> (<em>keyword : default 'oval'</em>) – specifies the display shape of nodes that are not assigned a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">NodeRole</span></code></a> associated with a dedicated shape.</li>
+<li><strong>feedback_shape</strong> (<em>keyword : default 'septagon'</em>) – specifies the display shape of nodes that are assigned the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">NodeRole</span></code></a> <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.FEEDBACK_SENDER" title="psyneulink.core.compositions.composition.NodeRole.FEEDBACK_SENDER"><code class="xref any py py-attr docutils literal"><span class="pre">FEEDBACK_SENDER</span></code></a>.</li>
+<li><strong>cycle_shape</strong> (<em>keyword : default 'doublecircle'</em>) – specifies the display shape of nodes that are assigned the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">NodeRole</span></code></a> <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.CYCLE" title="psyneulink.core.compositions.composition.NodeRole.CYCLE"><code class="xref any py py-attr docutils literal"><span class="pre">CYCLE</span></code></a>.</li>
+<li><strong>cim_shape</strong> (<em>default 'square'</em>) – specifies the shape in which <a class="reference internal" href="CompositionInterfaceMechanism.html"><span class="doc">CompositionInterfaceMechanism</span></a>s are displayed.</li>
+<li><strong>controller_shape</strong> (<em>default 'doubleoctagon'</em>) – specifies the shape in which a Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is displayed.</li>
+<li><strong>composition_shape</strong> (<em>default 'rectangle'</em>) – specifies the shape in which nodes that represent <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Compositions</span></a> are displayed
 when <strong>show_nested</strong> is specified as False or a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">Composition is nested</span></a> below the
-level specified in a call to <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a>.</p></li>
-<li><p><strong>agent_rep_shape</strong> (<em>default 'egg'</em>) – specifies the shape in which the <a class="reference internal" href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">agent_rep</span></code></a> of an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a> is displayed.</p></li>
-<li><p><strong>default_projection_arrow</strong> (<em>keywrod : default 'normal'</em>) – specifies the shape of the arrow used to display <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>s.</p></li>
-<li><p><strong>learning_projection_shape</strong> (<em>default 'diamond'</em>) – specifies the shape in which <code class="xref any docutils literal notranslate"><span class="pre">LearningProjetions</span></code>s are displayed.</p></li>
-<li><p><strong>control_projection_arrow</strong> (<em>default 'box'</em>) – specifies the shape in which the head of a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> is displayed.</p></li>
-<li><p><strong>default_node_color</strong> (<em>keyword : default 'black'</em>) – specifies the color in which nodes not assigned another color are displayed.</p></li>
-<li><p><strong>active_color</strong> (<em>keyword : default BOLD</em>) – specifies how to highlight the item(s) specified in the <strong>active_items</strong> argument of a call to <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a>:  either a color recognized by GraphViz, or the keyword <em>BOLD</em>.</p></li>
-<li><p><strong>input_color</strong> (<em>keyword : default 'green'</em><em>,</em>) – specifies the color in which <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> Nodes of the Composition are displayed.</p></li>
-<li><p><strong>output_color</strong> (<em>keyword : default 'red'</em><em>,</em>) – specifies the color in which <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Nodes of the Composition are displayed.</p></li>
-<li><p><strong>input_and_output_color</strong> (<em>keyword : default 'brown'</em>) – specifies the color in which nodes that are both an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> and an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Node of the Composition are displayed.</p></li>
-<li><p><strong>control_color</strong> (<em>keyword : default 'blue'</em>) – specifies the color in which <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a> (other than a Composition’s
-<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> and <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> are displayed.</p></li>
-<li><p><strong>controller_color</strong> (<em>keyword : default 'purple'</em>) – specifies the color in which a Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> is displayed.</p></li>
-<li><p><strong>learning_color</strong> (<em>keyword : default 'orange'</em>) – specifies the color in which the <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">learning components</span></a> are displayed.</p></li>
-<li><p><strong>composition_color</strong> (<em>keyword : default 'pink'</em>) – specifies the color in which nodes that represent <code class="xref any docutils literal notranslate"><span class="pre">nested</span> <span class="pre">Compositions</span></code> below the
-level specified in a call to <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a>.</p></li>
-<li><p><strong>default_width</strong> (<em>int : default 1</em>) – specifies the width to use for the outline of nodes and the body of Projection arrows.</p></li>
-<li><p><strong>active_thicker_by</strong> (<em>int : default 2</em>) – specifies the amount by which to increase the width of the outline of Components specified in the
-<strong>active_items</strong> argument of a call to <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a>.</p></li>
-<li><p><strong>bold_width</strong> (<em>int : default 3</em><em>,</em>) – specifies the width of the outline for <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Nodes of the Composition.</p></li>
+level specified in a call to <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a>.</li>
+<li><strong>agent_rep_shape</strong> (<em>default 'egg'</em>) – specifies the shape in which the <a class="reference internal" href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep"><code class="xref any py py-attr docutils literal"><span class="pre">agent_rep</span></code></a> of an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a> is displayed.</li>
+<li><strong>default_projection_arrow</strong> (<em>keywrod : default 'normal'</em>) – specifies the shape of the arrow used to display <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>s.</li>
+<li><strong>learning_projection_shape</strong> (<em>default 'diamond'</em>) – specifies the shape in which <code class="xref any docutils literal"><span class="pre">LearningProjetions</span></code>s are displayed.</li>
+<li><strong>control_projection_arrow</strong> (<em>default 'box'</em>) – specifies the shape in which the head of a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> is displayed.</li>
+<li><strong>default_node_color</strong> (<em>keyword : default 'black'</em>) – specifies the color in which nodes not assigned another color are displayed.</li>
+<li><strong>active_color</strong> (<em>keyword : default BOLD</em>) – specifies how to highlight the item(s) specified in the <strong>active_items</strong> argument of a call to <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a>:  either a color recognized by GraphViz, or the keyword <em>BOLD</em>.</li>
+<li><strong>input_color</strong> (<em>keyword : default 'green'</em><em>,</em>) – specifies the color in which <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal"><span class="pre">INPUT</span></code></a> Nodes of the Composition are displayed.</li>
+<li><strong>output_color</strong> (<em>keyword : default 'red'</em><em>,</em>) – specifies the color in which <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> Nodes of the Composition are displayed.</li>
+<li><strong>input_and_output_color</strong> (<em>keyword : default 'brown'</em>) – specifies the color in which nodes that are both an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal"><span class="pre">INPUT</span></code></a> and an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> Node of the Composition are displayed.</li>
+<li><strong>control_color</strong> (<em>keyword : default 'blue'</em>) – specifies the color in which <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a> (other than a Composition’s
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> and <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> are displayed.</li>
+<li><strong>controller_color</strong> (<em>keyword : default 'purple'</em>) – specifies the color in which a Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> is displayed.</li>
+<li><strong>learning_color</strong> (<em>keyword : default 'orange'</em>) – specifies the color in which the <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">learning components</span></a> are displayed.</li>
+<li><strong>composition_color</strong> (<em>keyword : default 'pink'</em>) – specifies the color in which nodes that represent <code class="xref any docutils literal"><span class="pre">nested</span> <span class="pre">Compositions</span></code> below the
+level specified in a call to <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a>.</li>
+<li><strong>default_width</strong> (<em>int : default 1</em>) – specifies the width to use for the outline of nodes and the body of Projection arrows.</li>
+<li><strong>active_thicker_by</strong> (<em>int : default 2</em>) – specifies the amount by which to increase the width of the outline of Components specified in the
+<strong>active_items</strong> argument of a call to <a class="reference internal" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal"><span class="pre">show_graph</span></code></a>.</li>
+<li><strong>bold_width</strong> (<em>int : default 3</em><em>,</em>) – specifies the width of the outline for <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal"><span class="pre">INPUT</span></code></a> and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal"><span class="pre">OUTPUT</span></code></a> Nodes of the Composition.</li>
 </ul>
-</dd>
-</dl>
-<dl class="py method">
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
 <dt id="psyneulink.core.compositions.showgraph.ShowGraph.show_graph">
-<code class="sig-name descname">show_graph</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">show_node_structure</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">show_nested</span><span class="o">=</span><span class="default_value">'nested'</span></em>, <em class="sig-param"><span class="n">show_nested_args</span><span class="o">=</span><span class="default_value">'all'</span></em>, <em class="sig-param"><span class="n">show_cim</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">show_controller</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">show_learning</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">show_headers</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">show_types</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">show_dimensions</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">show_projection_labels</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">active_items</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">output_fmt</span><span class="o">=</span><span class="default_value">'pdf'</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="Permalink to this definition">¶</a></dt>
+<code class="descname">show_graph</code><span class="sig-paren">(</span><em>show_node_structure=False</em>, <em>show_nested='nested'</em>, <em>show_nested_args='all'</em>, <em>show_cim=False</em>, <em>show_controller=True</em>, <em>show_learning=False</em>, <em>show_headers=True</em>, <em>show_types=False</em>, <em>show_dimensions=False</em>, <em>show_projection_labels=False</em>, <em>active_items=None</em>, <em>output_fmt='pdf'</em>, <em>context=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="Permalink to this definition">¶</a></dt>
 <dd><p>Show graphical display of Components in a Composition’s graph.</p>
 <div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method relies on <a class="reference external" href="http://www.graphviz.org">graphviz</a>, which must be installed and imported
+<p class="first admonition-title">Note</p>
+<p class="last">This method relies on <a class="reference external" href="http://www.graphviz.org">graphviz</a>, which must be installed and imported
 (standard with PsyNeuLink pip install)</p>
 </div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>show_node_structure</strong> (<em>bool</em><em>, </em><em>VALUES</em><em>, </em><em>LABELS</em><em>, </em><em>FUNCTIONS</em><em>, </em><em>MECH_FUNCTION_PARAMS</em><em>, </em><em>PORT_FUNCTION_PARAMS</em><em>, </em><em>ROLES</em><em>,         or </em><em>ALL : default False</em>) – <p>show a detailed representation of each <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> in the graph, including its <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a>;
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>show_node_structure</strong> (<em>bool</em><em>, </em><em>VALUES</em><em>, </em><em>LABELS</em><em>, </em><em>FUNCTIONS</em><em>, </em><em>MECH_FUNCTION_PARAMS</em><em>, </em><em>PORT_FUNCTION_PARAMS</em><em>, </em><em>ROLES</em><em>,         or </em><em>ALL : default False</em>) – <p>show a detailed representation of each <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> in the graph, including its <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a>;
 can have any of the following settings alone or in a list:</p>
 <ul>
-<li><p><code class="xref any docutils literal notranslate"><span class="pre">True</span></code> – show Ports of Mechanism, but not information about the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> or <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of the Mechanism or its Ports.</p></li>
-<li><p><em>VALUES</em> – show the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the Mechanism and the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of each of its Ports.</p></li>
-<li><p><em>LABELS</em> – show the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the Mechanism and the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of each of its Ports, using any labels for the values of InputPorts and
-OutputPorts specified in the Mechanism’s <code class="xref any docutils literal notranslate"><span class="pre">input_labels_dict</span></code> and
-<code class="xref any docutils literal notranslate"><span class="pre">output_labels_dict</span></code>, respectively.</p></li>
-<li><p><em>FUNCTIONS</em> – show the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of the Mechanism and the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of its InputPorts and OutputPorts.</p></li>
-<li><p><em>MECH_FUNCTION_PARAMS_</em> – show the parameters of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> for each
-Mechanism in the Composition (only applies if <em>FUNCTIONS</em> is True).</p></li>
-<li><p><em>PORT_FUNCTION_PARAMS_</em> – show the parameters of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> for each
-Port of each Mechanism in the Composition (only applies if <em>FUNCTIONS</em> is True).</p></li>
-<li><p><em>ROLES</em> – show the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">role</span></code></a> of the Mechanism in the Composition
-(but not any of the other information;  use <em>ALL</em> to show ROLES with other information).</p></li>
-<li><p><em>ALL</em> – shows the role, <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, and <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the
+<li><code class="xref any docutils literal"><span class="pre">True</span></code> – show Ports of Mechanism, but not information about the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> or <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism or its Ports.</li>
+<li><em>VALUES</em> – show the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of its Ports.</li>
+<li><em>LABELS</em> – show the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the Mechanism and the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each of its Ports, using any labels for the values of InputPorts and
+OutputPorts specified in the Mechanism’s <code class="xref any docutils literal"><span class="pre">input_labels_dict</span></code> and
+<code class="xref any docutils literal"><span class="pre">output_labels_dict</span></code>, respectively.</li>
+<li><em>FUNCTIONS</em> – show the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of the Mechanism and the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> of its InputPorts and OutputPorts.</li>
+<li><em>MECH_FUNCTION_PARAMS_</em> – show the parameters of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for each
+Mechanism in the Composition (only applies if <em>FUNCTIONS</em> is True).</li>
+<li><em>PORT_FUNCTION_PARAMS_</em> – show the parameters of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a> for each
+Port of each Mechanism in the Composition (only applies if <em>FUNCTIONS</em> is True).</li>
+<li><em>ROLES</em> – show the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal"><span class="pre">role</span></code></a> of the Mechanism in the Composition
+(but not any of the other information;  use <em>ALL</em> to show ROLES with other information).</li>
+<li><em>ALL</em> – shows the role, <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal"><span class="pre">function</span></code></a>, and <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of the
 Mechanisms in the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> and their <a class="reference internal" href="Port.html"><span class="doc">Ports</span></a> (using labels for
-the values, if specified – see above), including parameters for all functions.</p></li>
+the values, if specified – see above), including parameters for all functions.</li>
 </ul>
-</p></li>
-<li><p><strong>show_nested</strong> (<em>bool | int | NESTED | INSET : default NESTED</em>) – specifies whether or not to show <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Compositions</span></a> and, if so, how many
+</li>
+<li><strong>show_nested</strong> (<em>bool | int | NESTED | INSET : default NESTED</em>) – specifies whether or not to show <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Compositions</span></a> and, if so, how many
 levels of nesting to show (<em>NESTED</em>, True or int) – with Projections shown directly from Components
 in an enclosing Composition to and from ones in the nested Composition; or each nested Composition as
 a separate inset (<em>INSET</em>).  <em>NESTED</em> specifies all levels of nesting shown; 0 specifies none (same as
 False), and a non-zero integer species that number of nested levels to shown.  Compsitions nested at the
 specified level are shown as a node (pink box by default). and ones below the specified level are not
-shown at all.</p></li>
-<li><p><strong>show_nested_args</strong> (<em>bool | dict : default ALL</em>) – specifies arguments in call to show_graph passed to <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Composition(s)</span></a> if
+shown at all.</li>
+<li><strong>show_nested_args</strong> (<em>bool | dict : default ALL</em>) – specifies arguments in call to show_graph passed to <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Composition(s)</span></a> if
 <strong>show_nested</strong> is specified.  A dict can be used to specify any of the arguments allowed for
 show_graph to be used for the nested Composition(s);  <em>ALL</em> passes all arguments specified for the main
 Composition to the nested one(s);  True uses the default values of show_graph args for the nested
-Composition(s).</p></li>
-<li><p><strong>show_cim</strong> (<em>bool : default False</em>) – specifies whether or not to show the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.input_CIM" title="psyneulink.core.compositions.composition.Composition.input_CIM"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_CIM</span></code></a>, <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.parameter_CIM" title="psyneulink.core.compositions.composition.Composition.parameter_CIM"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter_CIM</span></code></a>, and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.output_CIM" title="psyneulink.core.compositions.composition.Composition.output_CIM"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_CIM</span></code></a> <a class="reference internal" href="CompositionInterfaceMechanism.html"><span class="doc">CompositionInterfaceMechanisms</span></a> (CIMs).</p></li>
-<li><p><strong>show_controller</strong> (<em>bool</em><em> or </em><em>AGENT_REP : default True</em>) – specifies whether or not to show the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> and associated
-<a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_mechanism</span></code></a> if it has one.  If the controller is an
+Composition(s).</li>
+<li><strong>show_cim</strong> (<em>bool : default False</em>) – specifies whether or not to show the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.input_CIM" title="psyneulink.core.compositions.composition.Composition.input_CIM"><code class="xref any py py-attr docutils literal"><span class="pre">input_CIM</span></code></a>, <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.parameter_CIM" title="psyneulink.core.compositions.composition.Composition.parameter_CIM"><code class="xref any py py-attr docutils literal"><span class="pre">parameter_CIM</span></code></a>, and <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.output_CIM" title="psyneulink.core.compositions.composition.Composition.output_CIM"><code class="xref any py py-attr docutils literal"><span class="pre">output_CIM</span></code></a> <a class="reference internal" href="CompositionInterfaceMechanism.html"><span class="doc">CompositionInterfaceMechanisms</span></a> (CIMs).</li>
+<li><strong>show_controller</strong> (<em>bool</em><em> or </em><em>AGENT_REP : default True</em>) – specifies whether or not to show the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal"><span class="pre">controller</span></code></a> and associated
+<a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal"><span class="pre">objective_mechanism</span></code></a> if it has one.  If the controller is an
 OptimizationControlMechanism and it has an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">agent_rep</span></a>, then specifying
 <em>AGENT_REP</em> will also show that.  All control-related items are displayed in the color specified for
-<strong>controller_color</strong>.</p></li>
-<li><p><strong>show_learning</strong> (<em>bool</em><em> or </em><em>ALL : default False</em>) – specifies whether or not to show the <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">learning components</span></a> of the
+<strong>controller_color</strong>.</li>
+<li><strong>show_learning</strong> (<em>bool</em><em> or </em><em>ALL : default False</em>) – specifies whether or not to show the <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">learning components</span></a> of the
 <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>; they will all be displayed in the color specified for <strong>learning_color</strong>.
 Projections that receive a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> will be shown as a diamond-shaped node.
 If set to <em>ALL</em>, all Projections associated with learning will be shown:  the LearningProjections
 as well as from <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> to <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a>
-that convey error and activation information;  if set to <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, only the LearningPojections are shown.</p></li>
-<li><p><strong>show_projection_labels</strong> (<em>bool : default False</em>) – specifies whether or not to show names of projections.</p></li>
-<li><p><strong>show_headers</strong> (<em>bool : default True</em>) – specifies whether or not to show headers in the subfields of a Mechanism’s node;  only takes effect if
-<strong>show_node_structure</strong> is specified (see above).</p></li>
-<li><p><strong>show_types</strong> (<em>bool : default False</em>) – specifies whether or not to show type (class) of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> in each node label.</p></li>
-<li><p><strong>show_dimensions</strong> (<em>bool : default False</em>) – <p>specifies whether or not to show dimensions for the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.variable" title="psyneulink.core.components.component.Component.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> and <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of each Component in the graph (and/or MappingProjections when show_learning
-is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>);  can have the following settings:</p>
+that convey error and activation information;  if set to <code class="xref any docutils literal"><span class="pre">True</span></code>, only the LearningPojections are shown.</li>
+<li><strong>show_projection_labels</strong> (<em>bool : default False</em>) – specifies whether or not to show names of projections.</li>
+<li><strong>show_headers</strong> (<em>bool : default True</em>) – specifies whether or not to show headers in the subfields of a Mechanism’s node;  only takes effect if
+<strong>show_node_structure</strong> is specified (see above).</li>
+<li><strong>show_types</strong> (<em>bool : default False</em>) – specifies whether or not to show type (class) of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> in each node label.</li>
+<li><strong>show_dimensions</strong> (<em>bool : default False</em>) – <p>specifies whether or not to show dimensions for the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.variable" title="psyneulink.core.components.component.Component.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> and <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.value" title="psyneulink.core.components.component.Component.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each Component in the graph (and/or MappingProjections when show_learning
+is <code class="xref any docutils literal"><span class="pre">True</span></code>);  can have the following settings:</p>
 <ul>
-<li><p><em>MECHANISMS</em> – shows <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> input and output dimensions.  Input dimensions are shown
-in parentheses below the name of the Mechanism; each number represents the dimension of the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> for each <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of the Mechanism; Output dimensions are shown above
-the name of the Mechanism; each number represents the dimension for <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of each
-of <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of the Mechanism.</p></li>
-<li><p><em>PROJECTIONS</em> – shows <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> dimensions.  Each is
+<li><em>MECHANISMS</em> – shows <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> input and output dimensions.  Input dimensions are shown
+in parentheses below the name of the Mechanism; each number represents the dimension of the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal"><span class="pre">variable</span></code></a> for each <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of the Mechanism; Output dimensions are shown above
+the name of the Mechanism; each number represents the dimension for <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal"><span class="pre">value</span></code></a> of each
+of <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of the Mechanism.</li>
+<li><em>PROJECTIONS</em> – shows <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> dimensions.  Each is
 shown in (&lt;dim&gt;x&lt;dim&gt;…) format;  for standard 2x2 “weight” matrix, the first entry is the number of
-rows (input dimension) and the second the number of columns (output dimension).</p></li>
-<li><p><em>ALL</em> – eqivalent to <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>; shows dimensions for both Mechanisms and Projections (see above for
-formats).</p></li>
+rows (input dimension) and the second the number of columns (output dimension).</li>
+<li><em>ALL</em> – eqivalent to <code class="xref any docutils literal"><span class="pre">True</span></code>; shows dimensions for both Mechanisms and Projections (see above for
+formats).</li>
 </ul>
-</p></li>
-<li><p><strong>active_items</strong> (<em>List</em><em>[</em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>] </em><em>: default None</em>) – specifies one or more items in the graph to display in the color specified by <em>active_color*</em>.</p></li>
-<li><p><strong>output_fmt</strong> (<em>keyword</em><em> or </em><em>None : default 'pdf'</em>) – ‘pdf’: generate and open a pdf with the visualization;
+</li>
+<li><strong>active_items</strong> (<em>List</em><em>[</em><a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a><em>] </em><em>: default None</em>) – specifies one or more items in the graph to display in the color specified by <em>active_color*</em>.</li>
+<li><strong>output_fmt</strong> (<em>keyword</em><em> or </em><em>None : default 'pdf'</em>) – ‘pdf’: generate and open a pdf with the visualization;
 ‘jupyter’: return the object (for working in jupyter/ipython notebooks);
 ‘gv’: return graphviz object
 ‘gif’: return gif used for animation
-None : return None</p></li>
+None : return None</li>
 </ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>determined by <a href="#id2"><span class="problematic" id="id3">**</span></a>output_fmt:
-- <code class="docutils literal notranslate"><span class="pre">pdf</span></code> – PDF: (placed in current directory);
-- <code class="docutils literal notranslate"><span class="pre">gv</span></code> or <code class="docutils literal notranslate"><span class="pre">jupyter</span></code> – Graphviz graph object;
-- <code class="docutils literal notranslate"><span class="pre">gif</span></code> – gif
-- <code class="docutils literal notranslate"><span class="pre">source</span></code> – str with content of G.body</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref any docutils literal notranslate"><span class="pre">pdf</span></code> or Graphviz graph object</p>
-</dd>
-</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">determined by <a href="#id2"><span class="problematic" id="id3">**</span></a>output_fmt:
+- <code class="docutils literal"><span class="pre">pdf</span></code> – PDF: (placed in current directory);
+- <code class="docutils literal"><span class="pre">gv</span></code> or <code class="docutils literal"><span class="pre">jupyter</span></code> – Graphviz graph object;
+- <code class="docutils literal"><span class="pre">gif</span></code> – gif
+- <code class="docutils literal"><span class="pre">source</span></code> – str with content of G.body</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="xref any docutils literal"><span class="pre">pdf</span></code> or Graphviz graph object</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
 
-</section>
-</section>
+</div>
+</div>
 
 
              </article>
@@ -535,12 +538,21 @@ None : return None</p></li>
   
 
      
-       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
-         <script src="_static/jquery.js"></script>
-         <script src="_static/underscore.js"></script>
-         <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript">
+           var DOCUMENTATION_OPTIONS = {
+               URL_ROOT:'./',
+               VERSION:'0.8.8.0+13.gb7816cb',
+               LANGUAGE:'None',
+               COLLAPSE_INDEX:false,
+               FILE_SUFFIX:'.html',
+               HAS_SOURCE:  true,
+               SOURCELINK_SUFFIX: '.txt'
+           };
+       </script>
+         <script type="text/javascript" src="_static/jquery.js"></script>
+         <script type="text/javascript" src="_static/underscore.js"></script>
+         <script type="text/javascript" src="_static/doctools.js"></script>
+         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   
