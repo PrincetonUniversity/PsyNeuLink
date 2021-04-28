@@ -175,7 +175,7 @@ transforming it.  Each of these is described in more detail below.
 
 If `intergrator_mode <TransferMechanism.intergrator_mode>` is False (the default), the input received over
 `input_ports <Mechanism_Base.input_ports>` (assigned as `variable <Mechanism_Base.variable>`) is passed
-directly to `function <TransferMechanism.function>`.  The result may then be modified, as determined by two
+directly to `function <Mechanism_Base.function>`.  The result may then be modified, as determined by two
 `Parameters`, before assigning it as the Mechanism's `value <Mechanism_Base.value>`:
 
     * `noise <TransferMechanism.noise>`: applied element-wise to the result returned by `function
@@ -209,7 +209,8 @@ can be used to configure the integration process, as described in the following 
 specified using the `initializer <IntegratorFunction.initializer>` `Parameter <Parameters>` of the Mechanism's
 `integrator_function <TransferMechanism.integrator_function>`, that can also be assigned using the **initializer**
 argument of its constructor.  For convenience, these can also be specified using the `<TransferMechanism.initial_value>`
-Parameter of the Mechanism itself, and the **initial_value** argument of its constructor.
+Parameter of the Mechanism itself, and the **initial_value** argument of its constructor, which are simply passed to
+`integrator_function <TransferMechanism.integrator_function>` as its `initializer <IntegratorFunction.initializer>`.
 
 *Resetting Integration*.  In some cases, it may be useful to reset the integration to the original starting point,
 or to a new one. This can be done using the Mechanism's `reset <TransferMechanism.reset>` method. This first sets the
@@ -223,7 +224,7 @@ TransferMechanism's `previous_value <Mechanism_Base.previous_value>`, that is pa
      The TransferMechanism's `reset <TransferMechanism.reset>` method actually calls the reset method on its
      `integrator_function <TransferMechanism.integrator_function>`, which can also be called directly. The key
      difference is that calling the Mechanism's `reset <TransferMechanism.reset>` method also executes the Mechanism's
-     `function <TransferMechanism.function>` and updates its `output_ports <TransferMechanism.output_ports>`. This is
+     `function <Mechanism_Base.function>` and updates its `output_ports <TransferMechanism.output_ports>`. This is
      useful if the Mechanism's `value <Mechanism_Base.value>` or that of any of its `output_ports
      <TransferMechanism.output_ports>` will be used or checked *before* the Mechanism is next executed. This may be
      true if, for example, the Mechanism is a `RecurrentTransferMechanism`, or if a `Scheduler` `Condition` depends on
@@ -251,48 +252,29 @@ three options for this:
 **Integration**
 ^^^^^^^^^^^^^^^
 
- On each execution of the Mechanism, it passes its `variable <Mechanism_Base.variable>` to the `integrator_function
- <TransferMechanism.integrator_function>`, which integrates this with the function's `previous_value
- <IntegratorFunction.previous_value>`,
+On each execution of the Mechanism, its `variable <Mechanism_Base.variable>` is passed to the `integrator_function
+<TransferMechanism.integrator_function>`, which integrates this with the function's `previous_value
+<IntegratorFunction.previous_value>`, using the Mechanism's `noise <TransferMechanism.noise>` and
+`integration_rate <TransferMechanism.integration_rate>` parameters.  
 
-using the noise and rate parameters specified either in its constructor or the Mechanism's
+  .. note::
+     Like the TransferMechanism's `initial_value <TransferMechanism.initial_value>` parameter, its `noise
+     <TransferMechanism.noise>` and `integration_rate <TransferMechanism.integration_rate>` parameters are
+     passed to the `integrator_function <TransferMechanism.integrator_function>`'s `noise
+     <IntegratorFunction.noise>` and `rate <IntegratorFunction.rate>` parameters, respectively, which can also
+     be set and/or accessed directly. 
 
-
-When the `integrator_function <TransferMechanism.integrator_function>` executes
-is influenced by two `Parameters`:
-
-`integration_rate <TransferMechanism.integration_rate>`
-`noise <TransferMechanism.noise>`
-
-
-If `integrator_mode <TransferMechanism.integrator_mode>` is True,
-**noise** is assigned to the TransferMechanism's `integrator_function <TransferMechanism.integrator_function>`
-(as its `noise <IntegratorFunction.noise>` parameter -- in the same manner as `integration_rate
-<TransferMechanism.integration_rate>` and `initial_value <TransferMechanism.intial_value>`), whereas `clip
-<TransferMechanism.clip>` modifies the value returned by the mechanism's `function <Mechanism_Base.function>`
-before setting it as the TransferMechanism's `value <Mechanism_Base.value>`.
-
-
- and
-the following parameters (in addition to any specified for the `function <Mechanism_Base.function>`):
-
-    * `integrator_mode <TransferMechanism.integrator_mode>`: determines whether the input is time-averaged before
-      passing through the function of the mechanism. When `integrator_mode <TransferMechanism.integrator_mode>` is set
-      to True, the TransferMechanism integrates its input, by executing its `integrator_function
-      <TransferMechanism.integrator_function>`, before executing its `function <Mechanism_Base.function>`. When
-      `integrator_mode <TransferMechanism.integrator_mode>` is False, the `integrator_function
-      <TransferMechanism.integrator_function>` is ignored, and time-averaging does not occur.
-
-    * `integration_rate <TransferMechanism.integration_rate>`: if the `integrator_mode
-      <TransferMechanism.integrator_mode>`
+MOVE TO ATTRIBUTE DESCRIPTIONS:
       attribute is set to True, the `integration_rate <TransferMechanism.integration_rate>` attribute is the rate of
-      integration (a higher value specifies a faster rate); if `integrator_mode <TransferMechanism.integrator_mode>`
-      is False,
-      `integration_rate <TransferMechanism.integration_rate>` is ignored and time-averaging does not occur.
-
+      integration (a higher value specifies a faster rate);
     * `noise <TransferMechanism.noise>`: applied element-wise to the output of its `integrator_function
       <TransferMechanism.integrator_function>` or its `function <Mechanism_Base.function>`, depending on whether
       `integrator_mode <TransferMechanism.integrator_mode>` is True or False.
+
+After the `integrator_function <TransferMechanism.integrator_function>` executes, its result is passed to the
+Mechanism's primary `function <Mechanism_Base.function>`, and its `clip <TransferMechanism.clip>` parameter is applied
+if specified, after which it is assigned to as the TransferMechanism's `value <Mechanism_Base.value>` and that of its
+`output_ports <TransferMechanism.output_ports>`.
 
 
 .. _TransferMechanism_Execution_Integration_Termination:
