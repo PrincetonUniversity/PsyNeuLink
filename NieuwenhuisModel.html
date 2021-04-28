@@ -6,10 +6,11 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Locus Coeruleus and Attentional Blink (Nieuwenhuis, et al, 2005) &mdash; PsyNeuLink 0.8.8.0+13.gb7816cb documentation</title>
+  <title>Locus Coeruleus and Attentional Blink (Nieuwenhuis, et al, 2005) &mdash; PsyNeuLink 0.8.8.1 documentation</title>
   
 
   
@@ -27,6 +28,7 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
 
@@ -95,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.0+13
+                  0.8.8.1
                 </div>
               
             
@@ -193,10 +195,10 @@
             <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
              <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
               
-  <div class="section" id="locus-coeruleus-and-attentional-blink-nieuwenhuis-et-al-2005">
+  <section id="locus-coeruleus-and-attentional-blink-nieuwenhuis-et-al-2005">
 <h1>Locus Coeruleus and Attentional Blink (Nieuwenhuis, et al, 2005)<a class="headerlink" href="#locus-coeruleus-and-attentional-blink-nieuwenhuis-et-al-2005" title="Permalink to this headline">¶</a></h1>
 <p><a class="reference external" href="https://research.vu.nl/ws/files/2063874/Nieuwenhuis%20Journal%20of%20Experimental%20Psychology%20-%20General%20134(3)-2005%20u.pdf">“The Role of the Locus Coeruleus in Mediating the Attentional Blink: A Neurocomputational Theory”</a></p>
-<div class="section" id="overview">
+<section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>This model implements a hypothesis concerning the role of the <a class="reference external" href="http://www.scholarpedia.org/article/Locus_coeruleus">locus coeruleus (LC)</a> in mediating the <a class="reference external" href="http://www.scholarpedia.org/article/Attentional_blink">attentional blink</a>. The attentional blink refers to the temporary impairment
 in perceiving the second of two targets presented in close temporal proximity.</p>
@@ -212,35 +214,35 @@ refractoriness of the LC/NE system after a phasice response.  The model demonstr
 depends on:</p>
 <blockquote>
 <div><ul class="simple">
-<li>whether T1 was accurately identified;</li>
-<li>the lag between T1 and T2;</li>
-<li>the <code class="xref any docutils literal"><span class="pre">mode</span></code> of the LC</li>
+<li><p>whether T1 was accurately identified;</p></li>
+<li><p>the lag between T1 and T2;</p></li>
+<li><p>the <code class="xref any docutils literal notranslate"><span class="pre">mode</span></code> of the LC</p></li>
 </ul>
 <p>(phasic or tonic – see <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/8027789">https://www.ncbi.nlm.nih.gov/pubmed/8027789</a>).</p>
 </div></blockquote>
 <p>The Figure below shows the behavior of the model for a single execution of a trial with a lag of 200ms (without noise),
 corresponding to the conditions reported in Figure 3 of Nieuwenhuis et al. (2005; averaged over 1000 executions with
 noise).</p>
-<div class="figure align-left" id="nieuwenhuis2005-psyneulink-fig" style="width: 45%">
-<img alt="Nieuwenhuis et al. 2005 plot produced by PsyNeuLink" src="_images/Nieuwenhuis2005_psyneulink.svg" /></div>
-<div class="figure align-left" id="nieuwenhuis2005-matlab-fig" style="width: 45%">
-<img alt="Nieuwenhuis et al. 2005 plot produced by MATLAB" src="_images/Nieuwenhuis2005_MATLAB.svg" /></div>
-</div>
-<div class="section" id="the-model">
+<figure class="align-left" id="nieuwenhuis2005-psyneulink-fig" style="width: 45%">
+<img alt="Nieuwenhuis et al. 2005 plot produced by PsyNeuLink" src="_images/Nieuwenhuis2005_psyneulink.svg" /></figure>
+<figure class="align-left" id="nieuwenhuis2005-matlab-fig" style="width: 45%">
+<img alt="Nieuwenhuis et al. 2005 plot produced by MATLAB" src="_images/Nieuwenhuis2005_MATLAB.svg" /></figure>
+</section>
+<section id="the-model">
 <h2>The Model<a class="headerlink" href="#the-model" title="Permalink to this headline">¶</a></h2>
 <p>The model is comprised of two subsystems: a behavioral network, in which stimulus information feeds forward from an
 input layer, via a decision layer, to a response layer;  and an LC subystem that regulates the gain of the units in
 the decision and response layers.  Each of the layers in the behavioral network is implemented as a pathway of
 <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> and <a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a> Mechanisms, and the LC subystem uses an <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a> and
 associated <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, as shown in the figure below:</p>
-<div class="figure align-center" id="nieuwenhuis2005-system-graph" style="width: 75%">
-<img alt="Nieuwenhuis System Graph" src="_images/Nieuwenhuis2005_System_Graph.svg" /></div>
-<div class="section" id="behavioral-network-subsystem">
+<figure class="align-center" id="nieuwenhuis2005-system-graph" style="width: 75%">
+<img alt="Nieuwenhuis System Graph" src="_images/Nieuwenhuis2005_System_Graph.svg" /></figure>
+<section id="behavioral-network-subsystem">
 <h3>Behavioral Network Subsystem<a class="headerlink" href="#behavioral-network-subsystem" title="Permalink to this headline">¶</a></h3>
 <p><strong>INPUT LAYER</strong>:  a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> with <a href="#id1"><span class="problematic" id="id2">**</span></a>size**=3 (one element for the input to the T1, T2 and distractor units
-of the <em>DECISION LAYER</em>, respectively), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal"><span class="pre">Linear</span></code></a> function with <a href="#id3"><span class="problematic" id="id4">**</span></a>slope**=1.0 and <a href="#id5"><span class="problematic" id="id6">**</span></a>intercept**=0.0.</p>
+of the <em>DECISION LAYER</em>, respectively), and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function with <a href="#id3"><span class="problematic" id="id4">**</span></a>slope**=1.0 and <a href="#id5"><span class="problematic" id="id6">**</span></a>intercept**=0.0.</p>
 <p><strong>DECISION LAYER</strong>: an <a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a> Mechanism of <a href="#id7"><span class="problematic" id="id8">**</span></a>size**=3 (one element each for the T1, T2 and distractor units),
-and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Function with a slope=1.0 and intercept=0.0.  Each element has a self-excitatory connection
+and assigned a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> Function with a slope=1.0 and intercept=0.0.  Each element has a self-excitatory connection
 with a weight specified by <a href="#id9"><span class="problematic" id="id10">**</span></a>self_excitation**=2.5, a <a href="#id11"><span class="problematic" id="id12">**</span></a>leak**=-1.0, and every element is connected to every other
 element by mutually inhibitory connections with a weight specified by <a href="#id13"><span class="problematic" id="id14">**</span></a>competition**=1.0.  An ordinary differential
 equation describes the change in state over time, implemented in the LCAMechanism mechanism by setting
@@ -248,30 +250,30 @@ equation describes the change in state over time, implemented in the LCAMechanis
 <p><strong>RESPONSE LAYER</strong>: an <a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a> Mechanism of <a href="#id19"><span class="problematic" id="id20">**</span></a>size**=2, with one element each for the response to T1 and T2,
 respectively, <a href="#id21"><span class="problematic" id="id22">**</span></a>self_excitation**=2.0, <a href="#id23"><span class="problematic" id="id24">**</span></a>leak**=-1.0, and no mutually inhibitory weights (<a href="#id25"><span class="problematic" id="id26">**</span></a>competition**=0).</p>
 <p><strong>PROJECTIONS</strong>:  The weights of the behavioral network are implemented as <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>.
-The <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> parameter for the one from the <em>INPUT_LAYER</em> to the <em>DECISION_LAYER</em> uses a
+The <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter for the one from the <em>INPUT_LAYER</em> to the <em>DECISION_LAYER</em> uses a
 numpy array with a value of 1.5 for the diagonal elements and a value of 0.33 for the off-diagonal elements; the one
 from the <em>DECISION_LAYER</em> to the <em>RESPONSE LAYER</em> uses a numpy array with 3.5 for the diagonal elements and 0 for the
 off-diagonal elements.</p>
-</div>
-<div class="section" id="lc-subsystem">
+</section>
+<section id="lc-subsystem">
 <h3>LC Subsystem<a class="headerlink" href="#lc-subsystem" title="Permalink to this headline">¶</a></h3>
 <p><strong>LC</strong>: an <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a>, that uses the FitzHughNagumoIntegrator to implement a FitzHugh-Nagumo model as a
 simulation of the population-level activity of the LC. The LCControlMechanism outputs three values on each execution:</p>
 <blockquote id="nieuwenhuis-lc-params">
 <div><ul class="simple">
-<li><em>v</em> (excitation variable of the FitzHugh-Nagumo model) representing the state (i.e., net input) of the LC</li>
+<li><p><em>v</em> (excitation variable of the FitzHugh-Nagumo model) representing the state (i.e., net input) of the LC</p></li>
 </ul>
 <ul class="simple">
-<li><em>w</em> (relaxation variable of the FitzHugh-Nagumo model) representing noradrenergic output of the LC</li>
+<li><p><em>w</em> (relaxation variable of the FitzHugh-Nagumo model) representing noradrenergic output of the LC</p></li>
 </ul>
 <ul class="simple">
-<li><span class="math">\(gain(t)\)</span>, where <span class="math">\(g(t) = G + k w(t), G\)</span> = <strong>base_level_gain</strong>, <em>k</em> = <strong>scaling_factor</strong>, and
-<em>w(t)</em> = the current noradrenergic output</li>
+<li><p><span class="math notranslate nohighlight">\(gain(t)\)</span>, where <span class="math notranslate nohighlight">\(g(t) = G + k w(t), G\)</span> = <strong>base_level_gain</strong>, <em>k</em> = <strong>scaling_factor</strong>, and
+<em>w(t)</em> = the current noradrenergic output</p></li>
 </ul>
 </div></blockquote>
 <p>The LC sends gain(<em>t</em>) to the <em>DECISION LAYER</em> and <em>RESPONSE LAYER</em> via <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> in
-order to modulate the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal"><span class="pre">gain</span></code></a> parameter of their <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal"><span class="pre">Logistic</span></code></a> Functions.
-Overall LC activity can be computed from <em>v</em> using the function <span class="math">\(h(v) = C * v + (1 - C) * d\)</span>,
+order to modulate the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> parameter of their <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> Functions.
+Overall LC activity can be computed from <em>v</em> using the function <span class="math notranslate nohighlight">\(h(v) = C * v + (1 - C) * d\)</span>,
 where <em>C</em> =0.90 and <em>d</em> = 0.5 (see <a class="reference internal" href="#nieuwenhuis-execution"><span class="std std-ref">Execution</span></a> for additional details).</p>
 <p><strong>COMBINE VALUES</strong>: an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>, specified in the <strong>objective_mechanism</strong> argument of the
 LCControlMechanism constructor, with a <a class="reference internal" href="TransferFunctions.html#linear"><span class="std std-ref">Linear</span></a> function of <strong>slope**=1 and **intercept**=0.  Its
@@ -282,26 +284,26 @@ T1, T2 and distractor units in the <em>DECISION LAYER</em>, respectively.  This 
 and ignores the value of the distractor unit, implementing the assumption that the distractor stimulus does not
 elicit an LC response.  The <em>COMBINED VALUES</em> Mechanism conveys this combined value as the input to the LC.</p>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">Although the <em>COMBINED VALUES</em> Mechanism is not strictly needed – the same <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> and <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal"><span class="pre">matrix</span></code></a> used to combine the values of the <em>DECISION LAYER</em> and project to the <em>COMBINE VALUES</em>
+<p class="admonition-title">Note</p>
+<p>Although the <em>COMBINED VALUES</em> Mechanism is not strictly needed – the same <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> and <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> used to combine the values of the <em>DECISION LAYER</em> and project to the <em>COMBINE VALUES</em>
 Mechanism could project directly to the LC (as it does in Niewenhuis et al.,2005) – the use of <em>COMBINE VALUES</em>
 conforms to the convention that PsyNeuLink <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a> are associated with an
 <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> from which they receive their input.</p>
 </div>
-</div>
-</div>
-<div class="section" id="execution">
+</section>
+</section>
+<section id="execution">
 <span id="nieuwenhuis-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>The stimulus presentation sequence is split into 11 periods of execution, each of which is 100 time steps long. During
 each period, one of the three elements of the <em>INPUT LAYER</em> is assigned a value of 1 (activated) while the other two
 are assigned a value of 0.  For the first three time periods, the distractor element is activated.  T1 is activated
 during the fourth time period, followed in the fifther period by the distractor, and then by T2 during the sixth time
 period.  During all other time period the distraction unit is activated. To reproduce Figure 3 of the Nieuwenhuis et
-al. (2005) paper, the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal"><span class="pre">log</span></code></a> function is used to record the output values of parameters <a class="reference internal" href="#nieuwenhuis-lc-params"><span class="std std-ref">w</span></a>
+al. (2005) paper, the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a> function is used to record the output values of parameters <a class="reference internal" href="#nieuwenhuis-lc-params"><span class="std std-ref">w</span></a>
 and <a class="reference internal" href="#nieuwenhuis-lc-params"><span class="std std-ref">v</span></a> for every execution of the <a class="reference internal" href="LCControlMechanism.html"><span class="doc">LCControlMechanism</span></a>. The function <a class="reference internal" href="#nieuwenhuis-lc-params"><span class="std std-ref">h(v)</span></a> is computed for every time step, and h(v) and <em>w</em> are plotted.</p>
-<p>Script: <a class="reference download internal" href="_downloads/Nieuwenhuis2005Model.py" download=""><code class="xref download docutils literal"><span class="pre">Download</span> <span class="pre">Nieuwenhuis2005Model.py</span></code></a></p>
-</div>
-</div>
+<p>Script: <a class="reference download internal" download="" href="_downloads/1f6b59eae792376520770e109efef880/Nieuwenhuis2005Model.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Nieuwenhuis2005Model.py</span></code></a></p>
+</section>
+</section>
 
 
              </article>
@@ -361,21 +363,12 @@ and <a class="reference internal" href="#nieuwenhuis-lc-params"><span class="std
   
 
      
-       <script type="text/javascript">
-           var DOCUMENTATION_OPTIONS = {
-               URL_ROOT:'./',
-               VERSION:'0.8.8.0+13.gb7816cb',
-               LANGUAGE:'None',
-               COLLAPSE_INDEX:false,
-               FILE_SUFFIX:'.html',
-               HAS_SOURCE:  true,
-               SOURCELINK_SUFFIX: '.txt'
-           };
-       </script>
-         <script type="text/javascript" src="_static/jquery.js"></script>
-         <script type="text/javascript" src="_static/underscore.js"></script>
-         <script type="text/javascript" src="_static/doctools.js"></script>
-         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/doctools.js"></script>
+         <script src="_static/language_data.js"></script>
+         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   
