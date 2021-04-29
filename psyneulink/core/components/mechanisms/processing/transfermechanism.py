@@ -474,11 +474,6 @@ COMMENT
 *Initializing, Resetting and Resuming Integration*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-COMMENT:
-FIX: GET RID OF Composition IN THE EXAMPLES and show multiple executions
-FIX: use simple integrator rather than accumulator, or explain above that accumulator integrates to asymptote
-COMMENT
-
 When `integrator_mode <TransferMechanism.integrator_mode>` is True, the state of integration can be initialized
 by specifying its `initial_value <TransferMechanism.initial_value>` using the **initial_value** argument in the
 constructor, as shown in the following example:
