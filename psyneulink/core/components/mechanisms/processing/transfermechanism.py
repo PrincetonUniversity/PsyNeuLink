@@ -238,45 +238,15 @@ by the `integrator_function <TransferMechanism.integrator_function>` for resumin
 the TransferMechanism's `on_resume_integrator_mode <TransferMechanism.on_resume_integrator_mode>` Parameter; there are
 three options for this:
 
-    * *INSTANTANEOUS_MODE_VALUE* - use the current `value <Mechanism_Base.value>` of the Mechanism as the starting
-      point for resuming integration;
+    * *CURRENT_VALUE* - use the current `value <Mechanism_Base.value>` of the Mechanism as the starting value for
+      resuming integration;
 
-    * *INTEGRATOR_MODE_VALUE* - resume integration with whatever the `integrator_function
+    * *LAST_INTEGRATED_VALUE* - resume integration with whatever the `integrator_function
       <TransferMechanism.integrator_function>`' `previous_value <IntegratorFunction.previous_value>` was when
       `integrator_mode <TransferMechanism.integrator_mode>` was last True;
 
-    * *RESET* - call the `integrator_function <TransferMechanism.integrator_function>`\\s
-      `reset <AdaptiveIntegrator.reset>` method, so that integration resumes using
-      `initial_value<TransferMechanism.initial_value>` as its starting point.
-
-COMMENT:
-        * *INSTANTANEOUS_MODE_VALUE* - reset the Mechanism with its own current value,
-          so that the value computed by the Mechanism during "Instantaneous Mode" is where the
-          `integrator_function <TransferMechanism.integrator_function>` begins accumulating.
-
-        * *INTEGRATOR_MODE_VALUE* - resume accumulation wherever the `integrator_function
-          <TransferMechanism.integrator_function>` left off the last time `integrator_mode
-          <TransferMechanism.integrator_mode>` was True.
-
-        * *RESET* - call the `integrator_function <TransferMechanism.integrator_function>`\\s
-          `reset <AdaptiveIntegrator.reset>` method, so that accumulation begins at
-          `initial_value <TransferMechanism.initial_value>`
-
-
-        * *INSTANTANEOUS_MODE_VALUE* - reset the Mechanism with its own current value, so that the value
-                cmoputed by the Mechanism during "Instantaneous Mode" is where the `integrator_function
-                <TransferMechanism.integrator_function>` begins accumulating.
-
-        * *INTEGRATOR_MODE_VALUE* - resume accumulation wherever the `integrator_function
-                <TransferMechanism.integrator_function>` left off the last time `integrator_mode
-                <TransferMechanism.integrator_mode>` was True.
-
-        * *RESET* - call the `integrator_function's <TransferMechanism.integrator_function>` `reset
-                method <AdaptiveIntegrator.reset>` so that accumulation Mechanism begins at `initial_value
-                <TransferMechanism.initial_value>`
-
-
-COMMENT
+    * *RESET* - call the `integrator_function <TransferMechanism.integrator_function>`\\s `reset` method,
+      so that integration resumes using `initial_value <TransferMechanism.initial_value>` as its starting value.
 
 .. _TransferMechanism_Execution_Integration:
 
@@ -757,7 +727,7 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     COMBINE, comparison_operators, EXECUTION_COUNT, FUNCTION, GREATER_THAN_OR_EQUAL, \
-    INSTANTANEOUS_MODE_VALUE, LESS_THAN_OR_EQUAL, MAX_ABS_DIFF, \
+    CURRENT_VALUE, LESS_THAN_OR_EQUAL, MAX_ABS_DIFF, \
     NAME, NOISE, NUM_EXECUTIONS_BEFORE_FINISHED, OWNER_VALUE, RESET, RESULT, RESULTS, \
     SELECTION_FUNCTION_TYPE, TRANSFER_FUNCTION_TYPE, TRANSFER_MECHANISM, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, FunctionParameter
@@ -814,7 +784,7 @@ def _integrator_mode_setter(value, owning_component=None, context=None):
             ):
                 # force, because integrator_mode is currently False
                 # (will be set after exiting this method)
-                if owning_component.on_resume_integrator_mode == INSTANTANEOUS_MODE_VALUE:
+                if owning_component.on_resume_integrator_mode == CURRENT_VALUE:
                     owning_component.reset(
                         owning_component.parameters.value._get(context),
                         force=True,
@@ -838,7 +808,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         integrator_function=AdaptiveIntegrator,              \
         initial_value=None,                                  \
         integration_rate=0.5,                                \
-        on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,  \
+        on_resume_integrator_mode=CURRENT_VALUE,  \
         termination_measure=Distance(metric=MAX_ABS_DIFF),   \
         termination_threshold=None,                          \
         termination_comparison_op=LESS_THAN_OR_EQUAL,        \
@@ -880,10 +850,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         <TransferMechanism.integrator_mode>` is True (see `TransferMechanism_Execution_Integration` for additional
         details).
 
-    on_resume_integrator_mode : keyword : default INSTANTANEOUS_MODE_VALUE
-        specifies value used by the `integrator_function <TransferMechanism.integrator_function>` when integration is
-        resumed, and must be one of the following keywords: *INSTANTANEOUS_MODE_VALUE*, *INTEGRATOR_MODE_VALUE*, or
-        *RESET* (see `resuming integration <TransferMechanism_Execution_Integration_Resumption>` for additional
+    on_resume_integrator_mode : CURRENT_VALUE, LAST_INTEGRATED_VALUE, or RESET : default CURRENT_VALUE
+        specifies value used by the `integrator_function <TransferMechanism.integrator_function>` when integration
+        is resumed (see `resuming integration <TransferMechanism_Execution_Integration_Resumption>` for additional
         details).
 
     termination_measure : function or TimesScale : default Distance(metric=MAX_ABS_DIFF)
@@ -952,9 +921,9 @@ class TransferMechanism(ProcessingMechanism_Base):
         executed with `integrator_mode <TransferMechanism.integrator_mode>` set to `True`; a higher value specifies
         a faster rate (see `TransferMechanism_Execution_Integration` for additional details).
 
-    on_resume_integrator_mode : INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, or RESET
+    on_resume_integrator_mode : CURRENT_VALUE, LAST_INTEGRATED_VALUE, or RESET
         determines value used by the `integrator_function <TransferMechanism.integrator_function>` when integration is
-        resumed, and must be one of the following keywords: *INSTANTANEOUS_MODE_VALUE*, *INTEGRATOR_MODE_VALUE*, or
+        resumed, and must be one of the following keywords: *CURRENT_VALUE*, *LAST_INTEGRATED_VALUE*, or
         *RESET* (see `resuming integration <TransferMechanism_Execution_Integration_Resumption>` for additional
         details).
 
@@ -970,7 +939,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         .. note::
            A Mechanism's `previous_value` attribute is distinct from the `previous_value
-           <AdaptiveIntegrator.previous_value>` attribute of its `integrator_function
+           <IntegratorFunction.previous_value>` attribute of its `integrator_function
            <Mechanism_Base.integrator_function>`.
 
     termination_measure_value : array or scalar
@@ -1073,7 +1042,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                 on_resume_integrator_mode
                     see `on_resume_integrator_mode <TransferMechanism.on_resume_integrator_mode>`
 
-                    :default value: `INSTANTANEOUS_MODE_VALUE`
+                    :default value: `CURRENT_VALUE`
                     :type: ``str``
 
                 output_ports
@@ -1123,7 +1092,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         integrator_function = Parameter(AdaptiveIntegrator, stateful=False, loggable=False)
         function = Parameter(Linear, stateful=False, loggable=False, dependencies='integrator_function')
         integrator_function_value = Parameter([[0]], read_only=True)
-        on_resume_integrator_mode = Parameter(INSTANTANEOUS_MODE_VALUE, stateful=False, loggable=False)
+        on_resume_integrator_mode = Parameter(CURRENT_VALUE, stateful=False, loggable=False)
         clip = None
         noise = FunctionParameter(0.0, function_name='integrator_function')
         termination_measure = Parameter(

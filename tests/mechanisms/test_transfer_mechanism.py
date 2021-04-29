@@ -19,7 +19,7 @@ from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism i
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.keywords import \
-    INSTANTANEOUS_MODE_VALUE, INTEGRATOR_MODE_VALUE, RESET, COMBINE, RESULT, GREATER_THAN
+    CURRENT_VALUE, LAST_INTEGRATED_VALUE, RESET, COMBINE, RESULT, GREATER_THAN
 from psyneulink.core.globals.utilities import UtilitiesError, set_global_seed
 from psyneulink.core.globals.parameters import ParameterError
 from psyneulink.core.scheduling.condition import Never
@@ -1778,7 +1778,7 @@ class TestIntegratorMode:
 
     def test_switch_mode(self):
         T = TransferMechanism(integrator_mode=True,
-                              on_resume_integrator_mode=INTEGRATOR_MODE_VALUE)
+                              on_resume_integrator_mode=LAST_INTEGRATED_VALUE)
         C = Composition(pathways=[T])
         integrator_function = T.integrator_function
         T.reset_stateful_function_when = Never()
@@ -1844,8 +1844,8 @@ class TestIntegratorMode:
 
 class TestOnResumeIntegratorMode:
 
-    def test_integrator_mode_value_spec(self):
-        T = TransferMechanism(on_resume_integrator_mode=INTEGRATOR_MODE_VALUE,
+    def test_last_integrated_value_spec(self):
+        T = TransferMechanism(on_resume_integrator_mode=LAST_INTEGRATED_VALUE,
                               integration_rate=0.5,
                               integrator_mode=True)
         C = Composition()
@@ -1870,8 +1870,8 @@ class TestOnResumeIntegratorMode:
         # Trial 1: 0.5*1.125 + 0.5*2.0 = 1.5625 * 1.0 = 1.5625
         assert np.allclose(T.parameters.value.get(C), [[1.5625]])
 
-    def test_instantaneous_mode_value_spec(self):
-        T = TransferMechanism(on_resume_integrator_mode=INSTANTANEOUS_MODE_VALUE,
+    def test_current_value_spec(self):
+        T = TransferMechanism(on_resume_integrator_mode=CURRENT_VALUE,
                               integration_rate=0.5,
                               integrator_mode=True)
         C = Composition()
