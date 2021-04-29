@@ -383,7 +383,7 @@ The **function** of a TransferMechanism can be specified as the name of a `Funct
 
 or using the constructor for a `TransferFunction`, in which case its `Parameters` can also be specified::
 
-    >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4))
+    >>> my_logistic_tm = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4))
 
 *Integrator Mode**
 
@@ -392,7 +392,7 @@ The **integrator_mode** argument allows the TransferMechanism to operate in eith
 execution is instantaneous. In order to switch to time averaging, the **integrator_mode** argument of the constructor
 must be set to True.
 
-    >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4),
+    >>> my_logistic_tm = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4),
     ...                                                        integrator_mode=True)
 
 When `integrator_mode <TransferMechanism.integrator_mode>` is True, the TransferMechanism uses its `integrator_function
@@ -413,61 +413,126 @@ If `integrator_mode <TransferMechanism.integrator_mode>` is False (the default),
 `value <Mechanism_Base.value>` and the `value <OutputPort.value>` of its `output_ports <Mechanism_Base.output_ports>`
 without using its `integrator_function <TransferMechanism.integrator_function>`, as in the following example::
 
-    >>> my_mech = pnl.TransferMechanism(size=2)
-    >>> my_mech.execute([0.5, 1])
-    array([[0.5, 1. ]])
+    # >>> my_mech = pnl.TransferMechanism(size=2)
+    # >>> my_mech.execute([0.5, 1])
+    # array([[0.5, 1. ]])
 
-Notice that the result is the full linear transfer of the input (i.e., no integration occured).
+    >>> my_logistic_tm = pnl.TransferMechanism(function=pnl.Logistic,
+    ...                                        size=3)
+    >>> my_logistic_tm.execute([-2.0, 0, 2.0])
+    array([[0.11920292, 0.5       , 0.88079708]])
 
-COMMENT:
-FIX: EXAMPLES WITH NOISE
-COMMENT
+Notice that for the result is the full logistic transfer of the input (i.e., no integration occured).
+
+FIX: EXAMPLES WITH NOISE (SCALAR AND ARRAY) AND CLIPPING
+The transformation applied to the input can also be subject to noise and clipping.  Noise can be specified as a float,
+array, or function.
+If it is a float or array of floats,
+
+The example that follows implements a TransferMechanism using its default `function <Mechanism_Base.function>`,
+`Linear`, and assigns **noise** as a float.
+
+    >>> my_linear_tm = pnl.TransferMechanism(size=3,
+    ...                                      noise=2.0)
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[3., 3., 3.]])
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[3., 3., 3.]])
+
+Note that the value specified for **noise** (2.0) was simply added to all the
+May be usefu if yusing external mfunction
+However, can use a built in one ...
+
+    >>> my_linear_tm.noise = [1.0,1.2,.9]
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[2. , 2.2, 1.9]])
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[2. , 2.2, 1.9]])
+
+    >>> my_linear_tm = pnl.TransferMechanism(size=3,
+    ...                                      noise=pnl.NormalDist())
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[1.30284592, 0.3068229 , 2.00018003]])
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[3.5496904 , 0.28437201, 1.01034782]])
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[1.90104733, 1.95869664, 0.18237729]])
+
+FIX: IF A FUNCTION IS USED< HAS TO BE DONE AT CONSTRUCTOIN (CAN"T ADD LATER AS ABOVE);  ADD TO DOCSTRING ABOVE
+FIX: noise is executed indpendent for each element on each execution
+
+Use a different function for each element and mix with an assigned value
+    >>> my_linear_tm = pnl.TransferMechanism(size=3,
+    ...                                      noise=[pnl.NormalDist(), pnl.UniformDist(), 3.0])
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[2.3093712 , 1.39605824, 4.        ]])
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[-0.63853826,  1.15497227,  4.        ]])
+
 
 .. _TransferMechanism_Examples_Execution_With_Integration:
 
 *With Integration*
 
-By default, the `integrator_function <TransferMechanism.integrator_function>` of a TransferMechanism is
-`AdaptiveIntegrator`.  However, any `IntegratorFunction` can be assigned. A TransferMechanism has three
-parameters that are used by most IntegratorFunctions:  `initial_value <TransferMechanism.initial_value>`,
-`integration_rate <TransferMechanism.integration_rate>`, and `noise <TransferMechanism.noise>`.  If any of these are
-specified in the TransferMechanism's constructor, their value is used to specify the corresponding parameter of its
-`integrator_function <TransferMechanism.integrator_function>`.  In the following example::
+The following examples illustate the execution of a TransferMechanism with `integrator_mode
+<TransferMechanism.integrator_mode>` set to True. For convenience, a TransferMechanism has three `Parameters` that
+are used by most IntegratorFunctions, and that can be used to configure integration:`initial_value
+<TransferMechanism.initial_value>`, `integration_rate <TransferMechanism.integration_rate>`, and `noise
+<TransferMechanism.noise>`.  If any of these are specified in the TransferMechanism's constructor, their value is
+used to specify the corresponding parameter of its `integrator_function <TransferMechanism.integrator_function>`.
+In the following example, ``my_linear_tm`` is assigned `Linear` as its primary `function <TransferMechanism.function>`,
+congifured to transform arrays of ``size`` 3, with an **initial_value** of [0.1, 0.5, 0.9] and an **integration_rate**
+of 0.5, that are passed as the values for the `initializer <AdaptiveIntegrator.initializer>` and `rate
+<AdaptiveIntegrator.rate>` `Parameters` of its `integrator_function <TransferMechanism.integrator_function>`
+`Parameters`, respectively.  Since, its `integrator_function <TransferMechanism.integrator_function>` is not specified,
+the default for a TransferMechanism is used, which is `AdaptiveIntegrator`.  This integrates its input, returning
+results that begin close to its `initializer <AdaptiveIntegrator.initializer>` and asymptotically approach the value
+of the current input, which in this example is [1.0, 1.0, 1,0] for each execution::
 
-    >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4),
-    ...                                                        integrator_mode=True,
-    ...                                                        initial_value=np.array([[0.2]]),
-    ...                                                        integration_rate=0.1)
+    >>> my_linear_tm = pnl.TransferMechanism(size=3,
+    ...                                      function=pnl.Linear,
+    ...                                      integrator_mode=True,
+    ...                                      initial_value=np.array([[0.1, 0.5, 0.9]]),
+    ...                                      integration_rate=0.5)
+    >>> my_linear_tm.integrator_function.initializer
+    array([[0.1, 0.5, 0.9]])
+    >>> my_linear_tm.integrator_function.previous_value
+    array([[0.1, 0.5, 0.9]])
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[0.55, 0.75, 0.95]])
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[0.775, 0.875, 0.975]])
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[0.8875, 0.9375, 0.9875]])
 
-COMMENT:
-FIX: ADD EXECUTION AND RESULTS
-COMMENT
+Notice that specifying ``[[0.1, 0.5, 0.9]]`` as the **initial_value** for ``my_linear_tm`` assigns it both as the value
+of the `integrator_function <TransferMechanism.integrator_function>`'s `initializer <AdaptiveIntegrator.initializer>`
+Parameter, and also as its `previous_value <Mechanism_Base.previous_value>` which is used in the first step of
+integration when ``my_linear_tm`` is executed.  For an `AdaptiveIntegrator`, each step of integration returns a
+result that is its `previous_value <AdaptiveIntegrator.previous_value>` +  (`rate <AdaptiveIntegrator>` *
+`previous_value <AdaptiveIntegrator.previous_value>` - input), asymtotically approaching the input.
 
-``my_logistic_transfer_mechanism`` is assigned an `AdaptiveIntegrator` (the default) as its `integrator_function
-<TransferMechanism.integrator_function>`, with ``0.2`` as its `initializer <AdaptiveIntegrator.initializer>` parameter,
-and ``0.`` as its `rate <AdaptiveIntegrator.rate>` parameter.  However, in this example::
+In the following example, both the TransferMechanism's **integration_rate** and its `integrator_function
+<TransferMechanism.integrator_function>`'s **rate** are specified::
 
-    >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4),
-    ...                                                        integrator_mode=True,
-    ...                                                        integrator_function=AdaptiveIntegrator(rate=0.3),
-    ...                                                        initial_value=np.array([[0.2]]),
-    ...                                                        integration_rate=0.1)
+    >>> my_linear_tm = pnl.TransferMechanism(integrator_function=AdaptiveIntegrator(rate=0.3),
+    ...                                      integration_rate=0.1)
+    >>> my_linear_tm.integration_rate # doctest: +NORMALIZE_WHITESPACE
+    (TransferMechanism TransferMechanism-8):
+        integration_rate.base: 0.3
+        integration_rate.modulated: [0.3]
 
-COMMENT:
-FIX: ADD EXECUTION AND RESULTS WITH DIFFERENT STARTING POINTS
-COMMENT
-
-the AdaptiveIntegrator's `rate <AdaptiveIntegrator.rate>` parameter will be assigned ``0.3``, and this will also
-be assigned to the TransferMechanism's `integration_rate <TransferMechanism.integration_rate>` parameter, overriding
-the specified value of ``0.1``.
-
-.. note::
-    If `integrator_mode <TransferMechanism.integrator_mode>` is False, then the arguments **integration_rate** and
-    **initial_value** are ignored, as its `integrator_function <TransferMechanism.integrator_function>` is not executed.
-
-COMMENT:
-FIX: EXAMPLES WITH NOISE
-COMMENT
+Notice that the value specified for the TransferMechanism integrator `integrator_function
+<TransferMechanism.integrator_function>` (``0.3``) takes precendence, and is assigned as the value of the
+TransferMechanism's `integration_rate <TransferMechanism.integration_rate>`, overriding the specified value (``0.1``).
+The same applies for the specification of the TransferMechanism's **initial_value** argument and the **initializer**
+for its `integration_function <TransferMechanism.integrator_function>`. Notice also that two values are reported for
+the Mechanism's `integration_rate <TransferMechanism.integration_rate>`. This is because this is a `modulable Parameter
+<ParameterPort_Modulable_Parameters>`.  The ``integration_rate.base`` is the one that is assigned;
+``integration_rate.modulated`` reports the value that was actually used when the Mechanism was last executed;
+this is the same as the base value if the Parameter is not subject to modulation;  if the Parameter is subject to
+modualtion <ModulatorySignal_Modulation>`, then the modulated value will be the base value modified by any
+`modulatory signals <ModulatorySignal>` that project to the Mechanism for that Parameter.
 
 .. _TransferMechanism_Examples_Initialization_and_Resetting:
 
@@ -479,9 +544,9 @@ by specifying its `initial_value <TransferMechanism.initial_value>` using the **
 constructor, as shown in the following example:
 
     >>> my_linear_tm = pnl.TransferMechanism(function=pnl.Linear,
-    ...                                                        integrator_mode=True,
-    ...                                                        integration_rate=0.1,
-    ...                                                        initial_value=np.array([[0.2]]))
+    ...                                      integrator_mode=True,
+    ...                                      integration_rate=0.1,
+    ...                                      initial_value=np.array([[0.2]]))
     >>> my_linear_tm.integrator_function.previous_value
     array([[0.2]])
 
