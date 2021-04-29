@@ -204,7 +204,7 @@ can be used to configure the integration process, as described in the following 
 **Initialization, Resetting and Resuming Integration**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-*Initializing Integration.*  By default, the the starting point for integration is the Mechanism's `default_variable
+*Initializing integration* -- by default, the the starting point for integration is the Mechanism's `default_variable
 <Component_Variable>`, and is usually an appropriately shaped array of 0's.  However, the starting point can be
 specified using the **initializer** argument of a TransferMechanism's constructor.
 
@@ -217,7 +217,7 @@ specified using the **initializer** argument of a TransferMechanism's constructo
     <TranserMechanism.integrator_function>`, the value specified for the latter takes precedence, and that value is
     assigned as the one for the `initial_value <TransferMechanism.initial_value>` of the TransferMechanism.
 
-*Resetting Integration*.  In some cases, it may be useful to reset the integration to the original starting point,
+*Resetting integration* -- in some cases, it may be useful to reset the integration to the original starting point,
 or to a new one. This can be done using the Mechanism's `reset <TransferMechanism.reset>` method. This first sets the
 `integrator_function <TransferMechanism.integrator_function>`'s `previous_value <IntegratorFunction.previous_value>`
 and `value <AdaptiveIntegrator.value>` attributes to the specified value.  After doing so, it sets the
@@ -237,7 +237,7 @@ TransferMechanism's `previous_value <Mechanism_Base.previous_value>`, that is pa
 
 .. _TransferMechanism_Execution_Integration_Resumption:
 
-*Resuming Integration.*  Integration can be enabled and disabled between executions by setting `integrator_mode
+*Resuming integration* -- integration can be enabled and disabled between executions by setting `integrator_mode
 <TransferMechanism.integrator_mode>` to True and False, respectively.  When re-enabling  integration, the value used
 by the `integrator_function <TransferMechanism.integrator_function>` for resuming integration can be configured using
 the TransferMechanism's `on_resume_integrator_mode <TransferMechanism.on_resume_integrator_mode>` Parameter; there are
@@ -283,31 +283,28 @@ if specified, after which it is assigned to as the TransferMechanism's `value <M
 **Termination**
 ^^^^^^^^^^^^^^^
 
-`termination_measure <TransferMechanism.termination_measure>`
-`termination_threshold <TransferMechanism.termination_threshold>`
-`termination_comparison_op <TransferMechanism.termination_comparison_op>`
-`execute_until_finished <TransferMechanism.execute_until_finished>`
+If `integrator_mode <TransferMechanism.integrator_mode>` is True then, for each execution of the TrasnMechanism, it
+can be configured to conduct a single step of integration, or to continue to integrate during that execution until its
+termination condition is met.  The latter is specified by the TransferMechanism's `execute_until_finished
+<TransferMechanism.execute_until_finished>` as well as its `termination_threshold
+<TransferMechanism.termination_threshold>`, `termination_measure <TransferMechanism.termination_measure>`, and
+`termination_comparison_op <TransferMechanism.termination_comparison_op>` `Parameters`.
 
-If `integrator_mode <TransferMechanism.integrator_mode>` is True, then it can be configured to conduct a single
-step of integration per execution, or to continue to integrate until its termination condition is met, as specified
-by the **termination_threshold**, **termination_measure**, and **termination_comparison_op** arguments, which are
-assigned to the TransferMechanism's `termination_threshold <TransferMechanism.termination_threshold>`,
-`termination_measure <TransferMechanism.termination_measure>`, and `termination_comparison_op
-<TransferMechanism.termination_comparison_op>` attributes, respectively.
-
-A single step of integration is executed if no **termination_threshold** is specified (i.e., it is None, the default),
-A single step is also executed if the Mechanism's `execute_until_finished <Component.execute_until_finished>`
-attribute is set to False, even if **termination_threshold** is specified. In both cases, the
-`num_executions_before_finished <Component.num_executions_before_finished>` attribute remains equal to 1,
+*Single step execution* -- If either `execute_until_finished <Component.execute_until_finished>` is set to False,
+or no `termination_threshold <TransferMechanism.termination_threshold>` is specified (i.e., it is None, the default),
+then only a signle step of integration is carried out each time the TransferMechanism is executed.  In this case,
+the `num_executions_before_finished <Component.num_executions_before_finished>` attribute remains equal to 1,
 since the `integrator_function <TransferMechanism.integrator_function>` is executed exactly once per call to the
-`execute method <Component_Execution>` (and no termination condition has been specified).
+`execute method <Component_Execution>` (and the termination condition does not apply or has not been specified).
 
-If `integrator_mode <TransferMechanism.integrator_mode>` is True, and a **termination_threshold** is specified, then
-the TransferMechanism continues to execute, integrating its current input until its termination condition is met, or
-the number of executions reaches `max_executions_before_finished <Component.max_executions_before_finished>`.  The
-numer of executions that have taken place since the last time the termination condition was met is contained in
-`num_executions_before_finished <Component.num_executions_before_finished>`; this is set to 0 each time the
-termination condition is met.
+*Execute to termination* -- if `execute_until_finished <Component.execute_until_finished>` is True and a value is
+specified for the `termination_threshold <TransferMechanism.termination_threshold>` is specified then, during each
+execution of the TransferMechanism, it repeated calls its `integrator_function <TransferMechanism.integrator_function>`
+and primary `function <TransferMechanism.function>`, using the same input (`variable <Mechanism_Base.variable>`) until
+its `termination condition <Transfer_Mechanism_Termination_Condition>`, or the number of executions reaches
+`max_executions_before_finished <Component.max_executions_before_finished>`.  The numer of executions that have
+taken place since the last time the termination condition was met is contained in `num_executions_before_finished
+<Component.num_executions_before_finished>`, and is reset to 0 each time the termination condition is met.
 
    .. _TransferMechanism_Continued_Execution:
 
@@ -318,42 +315,54 @@ termination condition is met.
      which subsequent executions are meant to occur in step with the execution of other Mechanisms in a Composition
      (see `example <TransferMechanism_Examples_Termination_By_Time>` below).
 
-By default, `execute_until_finished <Component.execute_until_finished>` is True, and a convergence criterion is used
-to terminate integration. However, the **termination_measure** and **termination_comparison_op** arguments can be used
-to congifure other termination conditions.  There are two broad types of termination condition:  convergence and
-boundary terination.
+.. _Transfer_Mechanism_Termination_Condition:
+
+By default, `execute_until_finished <Component.execute_until_finished>` is True, so that when `integrator_mode
+<TranserMechanism.integrator_mode>` is set to True a TransferMechanism will execute until it terminates, using a
+`convergence criterion <TransferMechanism_Convergence_Termination>`.  However, the Mechanism's method of termination
+can be configured using its `termination_measure <TransferMechanism.termination_measure>` and `termination_comparison_op
+<TransferMechanism.termination_comparison_op>` `Parameters` can be used to congifure other termination conditions.
+There are two broad types of termination condition: convergence and boundary termination.
+
+.. _TransferMechanism_Convergence_Termination:
 
 *Convergence termination* -- execution terminates based on the difference between the TransferMechanism's current
-`value <Mechanism_Base.value>` and its `previous_value <Mechanism_Base.previous_value>`.
-This is implemented by specifying **termination_measure** with a function that accepts a 2d array with *two items*
-(1d arrays) as its argument, and returns a scalar (the default for a TransferMechanism is the `Distance` Function with
-`MAX_ABS_DIFF` as its metric).  After each execution, the function is passed the Mechanism's current `value
-<Mechanism_Base.value>` as well as its `previous_value <Mechanism_Base.previous_value>`, and the scalar returned is
-compared to **termination_threshold** using the comparison operator specified by **termination_comparison_op** (which
-is *LESS_THAN_OR_EQUAL* by default).  Execution continues until this returns True. A `Distance` Function with other
-metrics (e.g., *ENERGY* or *ENTROPY*) can be specified as the **termination_measure**, as can any other function that
-accepts a single argument that is a 2d array with two entries.
+`value <Mechanism_Base.value>` and its `previous_value <Mechanism_Base.previous_value>`. This is implemented by
+specifying `termination_measure <TransferMechanism.termination_measure>` with a function that accepts a 2d array with
+*two items* (1d arrays) as its argument, and returns a scalar (the default for a TransferMechanism is the `Distance`
+Function with `MAX_ABS_DIFF` as its metric).  After each execution, the function is passed the Mechanism's current
+`value <Mechanism_Base.value>` as well as its `previous_value <Mechanism_Base.previous_value>`, and the scalar
+returned is compared to `termination_threshold <TransferMechanism.termination_threshold>` using the comparison
+operator specified by  `termination_comparison_op <TransferMechanism.termination_comparison_op>` (which is
+*LESS_THAN_OR_EQUAL* by default).  Execution continues until this returns True. A `Distance` Function with other
+metrics (e.g., *ENERGY* or *ENTROPY*) can be specified as the **termination_measure**, as can any other function
+that accepts a single argument that is a 2d array with two entries.
+
+.. _TransferMechanism_Boundary_Termination:
 
 *Boundary termination* -- Two types of boundaries can be specified:  value or time.
 
     .. _TransferMechanism_Termination_By_Value:
 
     *Termination by value*.  This terminates execution when the Mechanism's `value <Mechanism_Base.value>` reaches the
-    the value specified by the **threshold** argument.  This implemented by specifying **termination_measure** with
-    a function that accepts a 2d array with a *single entry* as its argument and returns a scalar.  The single
-    entry is the TransferMechanism's current `value <Mechanism_Base.value>` (that is, `previous_value
+    the value specified by the `termination_threshold <TransferMechanism.termination_threshold>` Parameter.  This is
+    implemented by specifying `termination_measure <TransferMechanism.termination_measure>` with a function that
+    accepts a 2d array with a *single entry* as its argument and returns a scalar.  The single entry is the
+    TransferMechanism's current `value <Mechanism_Base.value>` (that is, `previous_value
     <Mechanism_Base.previous_value>` is ignored). After each execution, the function is passed the Mechanism's
-    current `value <Mechanism_Base.value>`, and the scalar returned is compared to **termination_threshold** using
-    the comparison operator specified by **termination_comparison_op**. Execution continues until this returns True,
+    current `value <Mechanism_Base.value>`, and the scalar returned is compared to `termination_threshold
+    <TransferMechanism.termination_threshold>` using the comparison operator specified by `termination_comparison_op
+    <TransferMechanism.termination_comparison_op>`. Execution continues until this returns True.
 
     .. _TransferMechanism_Termination_By_Time:
 
     *Termination by time*.  This terminates execution when the Mechanism has executed at least a number of times equal
-    to the **threshold** at a particular TimeScale (e.g., within a `RUN` or a `TRIAL <TimeScale.TRIAL>`). This is
-    specified by assigning a `TimeScale` to **termination_measure**;  execution terminates when the number of
-    executions at that TimeScale equals the **termination_threshold**.  Note that, in this case,
-    the **termination_comparison_op** argument is ignored (the `termination_comparison_op
-    <TransferMechanism.termination_comparison_op>` is automatically set to *GREATER_THAN_OR_EQUAL*).
+    to `termination_threshold <TransferMechanism.termination_threshold>` at a particular TimeScale (e.g., within a
+    `RUN` or a `TRIAL <TimeScale.TRIAL>`). This is specified by assigning a `TimeScale` to `termination_measure
+    <TransferMechanism.termination_measure>`;  execution terminates when the number of
+    executions at that TimeScale equals the `termination_threshold <TransferMechanism.termination_threshold>`.
+    Note that, in this case, `termination_comparison_op <TransferMechanism.termination_comparison_op>` is automatically
+    set to *GREATER_THAN_OR_EQUAL*.
 
 
 COMMENT:
