@@ -6,20 +6,20 @@ import psyneulink as pnl
 
 
 @pytest.mark.parametrize("mod", [# Ports
-                                 pnl.core.components.ports.parameterport,
-                                 pnl.core.components.ports.outputport,
-                                 pnl.core.components.ports.modulatorysignals.controlsignal,
-                                 pnl.core.components.ports.modulatorysignals.gatingsignal,
-                                 # Mechanisms
-                                 # FIX 5/8/20 ELIMINATE SYSTEM [JDC] -- REFERENCES TO LABELS REQUIRE REFACTORING
-                                 # pnl.core.components.mechanisms.mechanism,
+                                 # pnl.core.components.ports.parameterport,
+                                 # pnl.core.components.ports.outputport,
+                                 # pnl.core.components.ports.modulatorysignals.controlsignal,
+                                 # pnl.core.components.ports.modulatorysignals.gatingsignal,
+                                 # # Mechanisms
+                                 # # FIX 5/8/20 ELIMINATE SYSTEM [JDC] -- REFERENCES TO LABELS REQUIRE REFACTORING
+                                 # # pnl.core.components.mechanisms.mechanism,
                                  pnl.core.components.mechanisms.processing.transfermechanism,
-                                 pnl.core.components.mechanisms.processing.integratormechanism,
-                                 pnl.core.components.mechanisms.processing.objectivemechanism,
-                                 pnl.core.components.mechanisms.modulatory.control.controlmechanism,
-                                 # Functions
-                                 pnl.core.components.functions.function,
-                                 pnl.core.components.functions.statefulfunctions.memoryfunctions
+                                 # pnl.core.components.mechanisms.processing.integratormechanism,
+                                 # pnl.core.components.mechanisms.processing.objectivemechanism,
+                                 # pnl.core.components.mechanisms.modulatory.control.controlmechanism,
+                                 # # Functions
+                                 # pnl.core.components.functions.function,
+                                 # pnl.core.components.functions.statefulfunctions.memoryfunctions
                                 ])
 def test_core_docs(mod, capsys):
     fail, total = doctest.testmod(mod)

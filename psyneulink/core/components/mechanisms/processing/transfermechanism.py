@@ -175,18 +175,11 @@ transforming it.  Each of these is described in more detail below.
 
 If `intergrator_mode <TransferMechanism.intergrator_mode>` is False (the default), the input received over
 `input_ports <Mechanism_Base.input_ports>` (assigned as `variable <Mechanism_Base.variable>`) is passed
-directly to `function <Mechanism_Base.function>`.  The result may then be modified, as determined by two
-`Parameters`, before assigning it as the Mechanism's `value <Mechanism_Base.value>`:
-
-    * `noise <TransferMechanism.noise>`: applied element-wise to the result returned by `function
-      <Mechanism_Base.function>`.
-
-    * `clip <TransferMechanism.clip>`: caps all elements of the `function <Mechanism_Base.function>` result by the
-      lower and upper values specified by clip.
-
-The result, after applying these parameters if specified, is then assigned as the Mechanism's <Mechanism_Base.value>`,
-which in turn is assigned to its `output_ports <TransferMechanism.output_ports>`.  The `value <OutputPort.value>` of
-each `OutputPort` represents the transformed value of the corresponding `input_ports <Mechamism_Base.input_ports>`.
+directly to `function <Mechanism_Base.function>`.  If either the `noise <TransferMechanism.noise>` or
+`clip <TransferMechanism.clip>` `Parameters` have been specified, they are applied to the result of `function
+<Mechanism_Base.function>`. That is then assigned as the Mechanism's <Mechanism_Base.value>`, and well as the `values
+OutputPort.value>` of its `output_ports <TransferMechanism.output_ports>`, each of which represents the transformed
+value of the corresponding `input_ports <Mechamism_Base.input_ports>`.
 
 .. _TransferMechanism_Execution_With_Integration:
 
@@ -422,15 +415,10 @@ without using its `integrator_function <TransferMechanism.integrator_function>`,
     >>> my_logistic_tm.execute([-2.0, 0, 2.0])
     array([[0.11920292, 0.5       , 0.88079708]])
 
-Notice that for the result is the full logistic transfer of the input (i.e., no integration occured).
-
-FIX: EXAMPLES WITH NOISE (SCALAR AND ARRAY) AND CLIPPING
-The transformation applied to the input can also be subject to noise and clipping.  Noise can be specified as a float,
-array, or function.
-If it is a float or array of floats,
-
-The example that follows implements a TransferMechanism using its default `function <Mechanism_Base.function>`,
-`Linear`, and assigns **noise** as a float.
+Notice that the result is the full logistic transform of the input (i.e., no integration occured). Noise can also be
+added to the result. It can be specified as a float, and array, or function. If it is a float or list of floats,
+the value is simply added to the result, as shown in the example below, that uses the TransferMechanism's default
+`function <Mechanism_Base>`, `Linear`::
 
     >>> my_linear_tm = pnl.TransferMechanism(size=3,
     ...                                      noise=2.0)
@@ -439,36 +427,56 @@ The example that follows implements a TransferMechanism using its default `funct
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
     array([[3., 3., 3.]])
 
-Note that the value specified for **noise** (2.0) was simply added to all the
-May be usefu if yusing external mfunction
-However, can use a built in one ...
+Since by default `Linear` uses a `slope <Linear.slope>` of ``1`` and ``intercept <Linear.intercept>`` of ``0``,
+the result is the same as the input, plus the value specified for **noise**.  A list can also be used to specify
+**noise** (it must be the same length as the Mechanism's `variable <Mechanism_Base.variable>`), in which case each
+element is applied Hadamard (elementwise) to the result, as shown here::
 
     >>> my_linear_tm.noise = [1.0,1.2,.9]
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
     array([[2. , 2.2, 1.9]])
-    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
-    array([[2. , 2.2, 1.9]])
+
+While specifying noise as a constant (or a list of constantss) is not particularly useful, it can be replaced by any
+function that specifies a float, for example a `DisributionFunction`.  As with numerical values, if a single function
+is specified, it is applied to all elements; however, on each execution, the function is executed indpendently for
+each element.  This is shown below using the `NormalDist` function::
 
     >>> my_linear_tm = pnl.TransferMechanism(size=3,
-    ...                                      noise=pnl.NormalDist())
+    ...                                      noise=pnl.NormalDist)
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
-    array([[1.30284592, 0.3068229 , 2.00018003]])
+    array([[2.1576537 , 1.60782117, 0.75840058]])
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
-    array([[3.5496904 , 0.28437201, 1.01034782]])
+    array([[2.20656132, 2.71995896, 0.57600537]])
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
-    array([[1.90104733, 1.95869664, 0.18237729]])
+    array([[1.03826716, 0.56148871, 0.8394907 ]])
 
-FIX: IF A FUNCTION IS USED< HAS TO BE DONE AT CONSTRUCTOIN (CAN"T ADD LATER AS ABOVE);  ADD TO DOCSTRING ABOVE
-FIX: noise is executed indpendent for each element on each execution
+Notice that each element was assigned a different random value for its noise, and that these also varied across
+executions.  Notice that since only a single function was specified, it could be the name of a class.  Functions
+can also be used in a list to specify **noise**, together with other functions or with numeric values;  however,
+when used in a list, functions must be instances, as shown below::
 
-Use a different function for each element and mix with an assigned value
     >>> my_linear_tm = pnl.TransferMechanism(size=3,
     ...                                      noise=[pnl.NormalDist(), pnl.UniformDist(), 3.0])
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
-    array([[2.3093712 , 1.39605824, 4.        ]])
+    array([[-0.22503678,  1.36995517,  4.        ]])
     >>> my_linear_tm.execute([1.0, 1.0, 1.0])
-    array([[-0.63853826,  1.15497227,  4.        ]])
+    array([[2.08371805, 1.60392004, 4.        ]])
 
+Notice that since noise is a `modulable Parameter <ParameterPort_Modulable_Parameters>`, assigning it a value
+after the TransferMechanism has been constructed must be done to its base value (see `ModulatorySignal_Modulation`
+for additional information).
+
+Finally, `clipping <TransferMechanism.clip>` can also be used to cap the result to within specified bounds::
+
+    >>> my_linear_tm.clip = (.5, 1.2)
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[1.2, 1.2, 1.2]])
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[1.2       , 1.06552886, 1.2       ]])
+    >>> my_linear_tm.execute([1.0, 1.0, 1.0])
+    array([[0.5       , 1.01316799, 1.2       ]])
+
+Note that the bounds specified in **clip** apply to all elements of the result if it is an array.
 
 .. _TransferMechanism_Examples_Execution_With_Integration:
 
@@ -899,7 +907,7 @@ class TransferMechanism(ProcessingMechanism_Base):
     """
     TransferMechanism(                                       \
         noise=0.0,                                           \
-        clip=[float:min, float:max],                         \
+        clip=(float:min, float:max),                         \
         integrator_mode=False,                               \
         integrator_function=AdaptiveIntegrator,              \
         initial_value=None,                                  \
@@ -917,12 +925,14 @@ class TransferMechanism(ProcessingMechanism_Base):
     Arguments
     ---------
 
-    noise : float, list, array or function : default 0.0
+    noise : float, function, or a list or array containing either or both : default 0.0
         specifies a value to be added to the result of the TransferMechanism's `function <Mechanism_Base.function>`
         or its `integrator_function <TransferMechanism.integrator_function>`, depending on whether `integrator_mode
         <TransferMechanism.integrator_mode>` is `True` or `False` (see `noise <TransferMechanism.noise>` for details).
+        If **noise** is specified as a single function, it can be a reference to a Function class or an instance of one;
+        if a function is used in a list, it *must* be an instance.
 
-    clip : list [float, float] : default None (Optional)
+    clip : tuple(float, float) or list [float, float] : default None
         specifies the allowable range for the result of `function <Mechanism_Base.function>` (see
         `clip <TransferMechanism.clip>` for details).
 
@@ -978,13 +988,18 @@ class TransferMechanism(ProcessingMechanism_Base):
     Attributes
     ----------
 
-    noise : float, array or function
+    noise : float, function or an array containing either or both
         value is applied to the result of `integrator_function <TransferMechanism.integrator_function>` if
         `integrator_mode <TransferMechanism.integrator_mode>` is False; otherwise it is passed as the `noise
         <IntegratorFunction.noise>` Parameter to `integrator_function <TransferMechanism.integrator_function>`. If
-        noise is a float it is added to all elements of the array being transformed;  if noise is an array,
-        it is applied Hadamard (elementwise) to the array being transformed;  if it is a function, it is executed
-        separately and applied independently to each element of the array.
+        noise is a float or function, it is added to all elements of the array being transformed; if it is a function,
+        it is executed independently for each element each time the TransferMechanism is executed.  If noise is an
+        array, it is applied Hadamard (elementwise) to the array being transformed;  again, each function is executed
+        independently for each corresponding element of the array each time the Mechanism is executed.
+
+        .. note::
+            If **noise** is specified as a float or function in the constructor for the TransferMechanism, the noise
+            Parameter cannot later be specified as a list or array, and vice versa.
 
         .. hint::
             To generate random noise that varies for every execution and across all elements of an array, a
@@ -992,11 +1007,11 @@ class TransferMechanism(ProcessingMechanism_Base):
             specified as a float, a function with a fixed output, or an array of either of these, then noise
             is simply an offset that is the same across all elements and executions.
 
-    clip : list[float, float]
-        determines the allowable range for the result of `function <Mechanism_Base.function>`.  The 1st item (index
-        0) determines the minimum allowable value of the result, and the 2nd item (index 1) determines the maximum
-        allowable value; any element of the result that exceeds the specified minimum or maximum value is set to
-        the value of clip that it exceeds.
+    clip : tuple(float, float)
+        determines the allowable range for all elements of the result of `function <Mechanism_Base.function>`.
+        The 1st item (index 0) determines the minimum allowable value of the result, and the 2nd item (index 1)
+        determines the maximum allowable value; any element of the result that exceeds the specified minimum or
+        maximum value is set to the value of clip that it exceeds.
 
     integrator_mode : bool
         determines whether the TransferMechanism uses its `integrator_function <TransferMechanism.integrator_function>`
@@ -1220,6 +1235,10 @@ class TransferMechanism(ProcessingMechanism_Base):
                     return 'must be a tuple with two numbers.'
                 if not clip[0] < clip[1]:
                     return 'first item must be less than the second.'
+
+        def _parse_clip(self, clip):
+            if clip:
+                return tuple(clip)
 
         def _validate_integrator_mode(self, integrator_mode):
             if not isinstance(integrator_mode, bool):
