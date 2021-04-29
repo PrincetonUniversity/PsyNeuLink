@@ -364,8 +364,6 @@ that accepts a single argument that is a 2d array with two entries.
     Note that, in this case, `termination_comparison_op <TransferMechanism.termination_comparison_op>` is automatically
     set to *GREATER_THAN_OR_EQUAL*.
 
-
-COMMENT:
 .. _TransferMechanism_Examples:
 
 Examples
@@ -427,21 +425,18 @@ Notice that the result is the full linear transfer of the input (i.e., no integr
 
 By default, the `integrator_function <TransferMechanism.integrator_function>` of a TransferMechanism is
 `AdaptiveIntegrator`.  However, any `IntegratorFunction` can be assigned. A TransferMechanism has three
-parameters that
-are used by most IntegratorFunctions:  `initial_value <TransferMechanism.initial_value>`, `integration_rate
-<TransferMechanism.integration_rate>`, and `noise <TransferMechanism.noise>`.  If any of these are specified in the
-TransferMechanism's constructor, their value is used to specify the corresponding parameter of its `integrator_function
-<TransferMechanism.integrator_function>`.  In the following example::
+parameters that are used by most IntegratorFunctions:  `initial_value <TransferMechanism.initial_value>`,
+`integration_rate <TransferMechanism.integration_rate>`, and `noise <TransferMechanism.noise>`.  If any of these are
+specified in the TransferMechanism's constructor, their value is used to specify the corresponding parameter of its
+`integrator_function <TransferMechanism.integrator_function>`.  In the following example::
 
     >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4),
     ...                                                        integrator_mode=True,
     ...                                                        initial_value=np.array([[0.2]]),
     ...                                                        integration_rate=0.1)
 
-``my_logistic_transfer_mechanism`` will be assigned an `AdaptiveIntegrator` (the default) as its
-`integrator_function
-<TrasnferMechanism.integrator_function>`, with ``0.2`` as its `initializer <AdaptiveIntegrator.initializer>`
-parameter,
+``my_logistic_transfer_mechanism`` is assigned an `AdaptiveIntegrator` (the default) as its `integrator_function
+<TransferMechanism.integrator_function>`, with ``0.2`` as its `initializer <AdaptiveIntegrator.initializer>` parameter,
 and ``0.`` as its `rate <AdaptiveIntegrator.rate>` parameter.  However, in this example::
 
     >>> my_logistic_transfer_mechanism = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4),
@@ -450,8 +445,7 @@ and ``0.`` as its `rate <AdaptiveIntegrator.rate>` parameter.  However, in this 
     ...                                                        initial_value=np.array([[0.2]]),
     ...                                                        integration_rate=0.1)
 
-the AdaptiveIntegrator's `rate <AdaptiveIntegrator.rate>` parameter will be assigned ``0.3``,
-and this will also
+the AdaptiveIntegrator's `rate <AdaptiveIntegrator.rate>` parameter will be assigned ``0.3``, and this will also
 be assigned to the TransferMechanism's `integration_rate <TransferMechanism.integration_rate>` parameter, overriding
 the specified value of ``0.1``.
 
@@ -459,60 +453,61 @@ the specified value of ``0.1``.
     If `integrator_mode <TransferMechanism.integrator_mode>` is False, then the arguments **integration_rate** and
     **initial_value** are ignored, as its `integrator_function <TransferMechanism.integrator_function>` is not executed.
 
-
 .. _TransferMechanism_Examples_Initialization_and_Resetting:
 
 *Initialization and Resetting*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A use case for `reset <AdaptiveIntegrator.reset>` is demonstrated in the following example:
+Use of the TransferMechanism's `reset <TransferMechanism.reset>` method is demonstrated in the following example:
 
-Create a `System` with a TransferMechanism in integrator_mode:
+Create a `Composition` with a TransferMechanism in integrator_mode::
 
     >>> my_time_averaged_transfer_mechanism = pnl.TransferMechanism(function=pnl.Linear,        #doctest: +SKIP
     ...                                                        integrator_mode=True,            #doctest: +SKIP
     ...                                                        integration_rate=0.1,            #doctest: +SKIP
     ...                                                        initial_value=np.array([[0.2]])) #doctest: +SKIP
-    >>> my_process = pnl.Process(pathway=[my_time_averaged_transfer_mechanism]) #doctest: +SKIP
-    >>> my_system = pnl.System(processes=[my_process])  #doctest: +SKIP
+    >>> my_comp = pnl.Composition(pathways=[my_time_averaged_transfer_mechanism])               #doctest: +SKIP
 
-Then run the system for 5 trials:
+Then run the Composition for 5 trials::
 
     >>> # RUN 1:
-    >>> my_system.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},        #doctest: +SKIP
-    ...               num_trials=5)                                               #doctest: +SKIP
-    >>> assert np.allclose(my_time_averaged_transfer_mechanism.value,  0.527608)  #doctest: +SKIP
+    >>> my_comp.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},        #doctest: +SKIP
+    ...             num_trials=5)                                               #doctest: +SKIP
+    >>> my_time_averaged_transfer_mechanism.value                               #doctest: +SKIP
+    array(0.527608)
 
-After RUN 1, my_time_averaged_transfer_mechanism's integrator_function will preserve its state (its position along its
-path of integration).
+After RUN 1, ``my_time_averaged_transfer_mechanism``'s `integrator_function <TransferMechanism.integrator_function>` will
+preserve its state (i.e., it `previous_value <IntegratorFunction.previous_value>`).
 
-Run the system again to observe that my_time_averaged_transfer_mechanism's integrator_function continues accumulating
-where it left off:
+Run the Composition again to observe that ``my_time_averaged_transfer_mechanism``'s `integrator_function
+<TransferMechanism.integrator_function>` continues integrating where it left off::
 
     >>> # RUN 2:
-    >>> my_system.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},          #doctest: +SKIP
-    ...               num_trials=5)                                                 #doctest: +SKIP
-    >>> assert np.allclose(my_time_averaged_transfer_mechanism.value,  0.72105725)  #doctest: +SKIP
+    >>> my_comp.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},   #doctest: +SKIP
+    ...             num_trials=5)                                          #doctest: +SKIP
+    >>> my_time_averaged_transfer_mechanism.value                          #doctest: +SKIP
+    array(0.72105725)                                                      #doctest: +SKIP
 
-The integrator_function's `reset <AdaptiveIntegrator.reset>` method and the TransferMechanism's
-`reset <TransferMechanism.reset>` method are useful in cases when the integration should instead start
-over at the original initial value, or a new one.
+The `integrator_function <TransferMechanism.integrator_function>`'s `reset` method and the TransferMechanism's `reset
+<TransferMechanism.reset>` method are useful when integration should instead start over at its `initial value
+<TransferMechanism.initial_value>` or some other one.
 
-Use `reset <AdaptiveIntegrator.reset>` to re-start the integrator_function's accumulation at 0.2:
+Use `integrator_function <TransferMechanism.integrator_function>`'s `reset` to re-start integration at 0.2::
 
     >>> my_time_averaged_transfer_mechanism.integrator_function.reset(np.array([[0.2]]))  #doctest: +SKIP
 
-Run the system again to observe that my_time_averaged_transfer_mechanism's integrator_function will begin accumulating
-at 0.2, following the exact same trajectory as in RUN 1:
+Run the system again to observe that ``my_time_averaged_transfer_mechanism``'s integrator_function will begin
+integrating at 0.2, following the exact same trajectory as in RUN 1:
 
     >>> # RUN 3
-    >>> my_system.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},        #doctest: +SKIP
-    ...               num_trials=5)                                               #doctest: +SKIP
-    >>> assert np.allclose(my_time_averaged_transfer_mechanism.value,  0.527608)  #doctest: +SKIP
+    >>> my_comp.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},  #doctest: +SKIP
+    ...             num_trials=5)                                         #doctest: +SKIP
+    >>> my_time_averaged_transfer_mechanism.value                         #doctest: +SKIP
+    array(0.527608)                                                       #doctest: +SKIP
 
-Because `reset <AdaptiveIntegrator.reset>` was set to 0.2 (its original initial_value),
-my_time_averaged_transfer_mechanism's integrator_function effectively started RUN 3 in the same state as it began RUN 1.
-As a result, it arrived at the exact same value after 5 trials (with identical inputs).
+Because `reset` was set to 0.2 (its original initial_value), ``my_time_averaged_transfer_mechanism``'s
+`integrator_function <TransferMechanism.integrator_function>` effectively started RUN 3 in the same state
+as it began RUN 1. As a result, it arrived at the exact same value after 5 trials (with identical inputs).
 
 
 .. _TransferMechanism_Examples_Termination:
@@ -675,8 +670,6 @@ as the trial continues and ``decision`` executes until reaching its threshold.  
 only executed in pass 4, since it depends on the termination of ``decision``.  Note also that in trial 1
 ``attention`` executes 3 times in pass 0 as it did in trial 0;  however, ``decision`` executes only 3 times
 since it begins closer to its threshold in that trial.
-
-COMMENT
 
 .. _TransferMechanism_Class_Reference:
 
