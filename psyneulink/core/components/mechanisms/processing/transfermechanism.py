@@ -534,46 +534,38 @@ integration using the current `value <Mechanism_Base.value>` of the Mechanism, i
 <TransferMechanism.integrator_function>`'s `previous_value IntegratorFunction.previous_value` at the point at which
 integration was last suspended, as shown below::
 
-COMMENT:
-FIX: NOTE THAT HAD TO CHANGE INPUTS HERE TO AVOID CAPPING AT ASYMPTOTE;
-     MIGHT BE BETTER TO USE SimpleIntegrator FOR THE EXAMPLE
-COMMENT
-
     >>> my_linear_tm.integrator_mode = False
-    >>> my_linear_tm.execute(0.4)
-    array([[0.4]])
-    >>> my_linear_tm.execute(0.4)
-    array([[0.4]])
-    >>> my_linear_tm.on_resume_integration_mode = pnl.CURRENT_VALUE
+    >>> my_linear_tm.execute(0.2)
+    array([[0.2]])
+    >>> my_linear_tm.execute(0.2)
+    array([[0.2]])
+    >>> my_linear_tm.on_resume_integrator_mode = pnl.CURRENT_VALUE
     >>> my_linear_tm.integrator_mode = True
     >>> my_linear_tm.execute(0.5)
-    array([[0.41]])
+    array([[0.23]])
     >>> my_linear_tm.execute(0.5)
-    array([[0.419]])
+    array([[0.257]])
 
-# COMMENT:
-# In contrast, if `on_resume_integrator_mode <TransferMechanism.on_resume_integrator_mode>` is set to
-# *LAST_INTEGRATED_VALUE*, integration will resume using the `integrator_function
-# <TransferMechanism.integrator_function>`'s `previous_value IntegratorFunction.previous_value` at the point at which
-# integration was last suspended, irrespective of interverning executions::
-#
-#     >>> my_linear_tm.on_resume_integration_mode = pnl.LAST_INTEGRATED_VALUE
-#     >>> my_linear_tm.integrator_mode = False
-#     >>> my_linear_tm.execute(1.0)
-#     array([[1.]])
-#     >>> my_linear_tm.integrator_mode = True
-#     >>> my_linear_tm.execute(0.5)
-#     array([[0.4271]])
-#     >>> my_linear_tm.execute(0.5)
-#     array([[0.43439]])
-#     ACUTALLY PRODUCING:
-#     array([[0.95]])
-#     array([[0.905]])
-#      => LAST_INTEGRATED_VALUE IS BEHAVING LIKE CURRENT_VALUE
-#
-# Note that after `integrator_mode <TransferMechanism.integrator_mode>` was set back to True, integration resumed where
-# it had left off in the preceding example.
-# COMMENT
+Notice that, with `on_resume_integrator_mode <TransferMechanism.on_resume_integrator_mode>` set to *CURRENT_VALUE*,
+when `integrator_mode <TransferMechanism.integrator_mode>` is set back to True, integration proceeds from the most
+recent value of ``my_linear_tem``.  In contrast, if `on_resume_integrator_mode
+<TransferMechanism.on_resume_integrator_mode>` is set to *LAST_INTEGRATED_VALUE*, integration resumes using the
+`integrator_function <TransferMechanism.integrator_function>`'s `previous_value IntegratorFunction.previous_value` at
+the point at which integration was last suspended, irrespective of interverning executions::
+
+    >>> my_linear_tm.on_resume_integrator_mode = pnl.LAST_INTEGRATED_VALUE
+    >>> my_linear_tm.integrator_mode = False
+    >>> my_linear_tm.execute(1.0)
+    array([[1.]])
+    >>> my_linear_tm.integrator_mode = True
+    >>> my_linear_tm.execute(0.5)
+    array([[0.2813]])
+    >>> my_linear_tm.execute(0.5)
+    array([[0.30317]])
+
+Notice in this case that, even though the most recent value of ``my_linear_tm`` is ``1.0``, when `integrator_mode
+<TransferMechanism.integrator_mode>` is set back to True, integration resumes from the most recent value when it was
+last True (in this case, where it left off in the preceding example, ``0.257``).
 
 .. _TransferMechanism_Examples_Termination:
 
