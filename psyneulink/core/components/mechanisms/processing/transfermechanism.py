@@ -419,7 +419,9 @@ without using its `integrator_function <TransferMechanism.integrator_function>`,
 
 Notice that the result is the full linear transfer of the input (i.e., no integration occured).
 
-# FIX: EXAMPLES WITH NOISE
+COMMENT:
+FIX: EXAMPLES WITH NOISE
+COMMENT
 
 .. _TransferMechanism_Examples_Execution_With_Integration:
 
@@ -436,7 +438,10 @@ specified in the TransferMechanism's constructor, their value is used to specify
     ...                                                        integrator_mode=True,
     ...                                                        initial_value=np.array([[0.2]]),
     ...                                                        integration_rate=0.1)
-# FIX: ADD EXECUTION AND RESULTS
+
+COMMENT:
+FIX: ADD EXECUTION AND RESULTS
+COMMENT
 
 ``my_logistic_transfer_mechanism`` is assigned an `AdaptiveIntegrator` (the default) as its `integrator_function
 <TransferMechanism.integrator_function>`, with ``0.2`` as its `initializer <AdaptiveIntegrator.initializer>` parameter,
@@ -447,7 +452,10 @@ and ``0.`` as its `rate <AdaptiveIntegrator.rate>` parameter.  However, in this 
     ...                                                        integrator_function=AdaptiveIntegrator(rate=0.3),
     ...                                                        initial_value=np.array([[0.2]]),
     ...                                                        integration_rate=0.1)
-# FIX: ADD EXECUTION AND RESULTS WITH DIFFERENT STARTING POINTS
+
+COMMENT:
+FIX: ADD EXECUTION AND RESULTS WITH DIFFERENT STARTING POINTS
+COMMENT
 
 the AdaptiveIntegrator's `rate <AdaptiveIntegrator.rate>` parameter will be assigned ``0.3``, and this will also
 be assigned to the TransferMechanism's `integration_rate <TransferMechanism.integration_rate>` parameter, overriding
@@ -457,68 +465,65 @@ the specified value of ``0.1``.
     If `integrator_mode <TransferMechanism.integrator_mode>` is False, then the arguments **integration_rate** and
     **initial_value** are ignored, as its `integrator_function <TransferMechanism.integrator_function>` is not executed.
 
-# FIX: EXAMPLES WITH NOISE
+COMMENT:
+FIX: EXAMPLES WITH NOISE
+COMMENT
 
 .. _TransferMechanism_Examples_Initialization_and_Resetting:
 
 *Initializing, Resetting and Resuming Integration*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# FIX: GET RID OF Composition IN THE EXAMPLES, AND REPLACE my_time_averaged_transfer_mechanism with my_tm
+COMMENT:
+FIX: GET RID OF Composition IN THE EXAMPLES and show multiple executions
+FIX: use simple integrator rather than accumulator, or explain above that accumulator integrates to asymptote
+COMMENT
 
 When `integrator_mode <TransferMechanism.integrator_mode>` is True, the state of integration can be initialized
 by specifying its `initial_value <TransferMechanism.initial_value>` using the **initial_value** argument in the
 constructor, as shown in the following example:
 
-    >>> my_time_averaged_transfer_mechanism = pnl.TransferMechanism(function=pnl.Linear,
+    >>> my_linear_tm = pnl.TransferMechanism(function=pnl.Linear,
     ...                                                        integrator_mode=True,
     ...                                                        integration_rate=0.1,
     ...                                                        initial_value=np.array([[0.2]]))
-    >>> my_comp = pnl.Composition(pathways=[my_time_averaged_transfer_mechanism])
-    >>> my_time_averaged_transfer_mechanism.integrator_function.previous_value
+    >>> my_linear_tm.integrator_function.previous_value
     array([[0.2]])
 
-It will then begin integration at that point.  The result after 5 `runs <Composition.run>` of the Composition is::
+It will then begin integration at that point.  The result after each execution is the integrated value of the input and
+its `integrator_function <TransferMechanism.integrator_function>`'s `previous_value IntegratorFunction.previous_value`::
 
-    >>> # RUN 1:
-    >>> my_comp.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},
-    ...             num_trials=5)
-    >>> my_time_averaged_transfer_mechanism.value
-    array([[0.527608]])
-
-If the Composition is run again, ``my_time_averaged_transfer_mechanism``'s `integrator_function
-<TransferMechanism.integrator_function>` continues integrating where it left off:
-
-    >>> # RUN 2:
-    >>> my_comp.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},
-    ...             num_trials=5)
-    >>> my_time_averaged_transfer_mechanism.value
-    array(0.72105725)
+    >>> my_linear_tm.execute(0.5)
+    array([[0.23]])
+    >>> my_linear_tm.execute(0.5)
+    array([[0.257]])
+    >>> my_linear_tm.execute(0.5)
+    array([[0.2813]])
 
 The TransferMechanism's `reset <TransferMechanism.reset>` method can be used to restart integration from its
-`initial value <TransferMechanism.initial_value>` (if not argument is provided), or some other one.  For example,
-calling `reset <TransferMechanism.reset>` without an argument resets the starting point of integration for
-``my_time_averaged_transfer_mechanism`` back to ``0.2``, and if it is run again for 5 `trials <TimeScale.TRIAL>`
-it produes the same result as ``RUN 1``::
+`initial_value <TransferMechanism.initial_value>` or some other one.  For example, calling `reset
+<TransferMechanism.reset>` without an argument resets the starting point of integration for
+``my_linear_tm`` back to ``0.2``, and if it is executed `trials <TimeScale.TRIAL>` it produes the same results as
+the first 3 executions:
 
-    >>> my_time_averaged_transfer_mechanism.integrator_function.reset()
-    >>> my_time_averaged_transfer_mechanism.integrator_function.previous_value
-    array([[0.2]])
-    >>> # RUN 3
-    >>> my_comp.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},
-    ...             num_trials=5)
-    >>> my_time_averaged_transfer_mechanism.value
-    array([[0.527608]])
+    >>> my_linear_tm.integrator_function.reset()
+    [array([[0.2]])]
+    >>> my_linear_tm.execute(0.5)
+    array([[0.23]])
+    >>> my_linear_tm.execute(0.5)
+    array([[0.257]])
+    >>> my_linear_tm.execute(0.5)
+    array([[0.2813]])
 
 The `reset <TransferMechanism.reset>` method can also be used to start integration at a specified value, by providing
 it as an argument to the method::
 
-    >>> my_time_averaged_transfer_mechanism.integrator_function.reset([.3])
-    >>> # RUN 4
-    >>> my_comp.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},
-    ...             num_trials=5)
-    >>> my_time_averaged_transfer_mechanism.value
-    array([[0.527608]])
+    >>> my_linear_tm.integrator_function.reset([0.4])
+    [array([0.4])]
+    >>> my_linear_tm.execute(0.5)
+    array([[0.41]])
+    >>> my_linear_tm.execute(0.5)
+    array([[0.419]])
 
 If integration is suspended (by changing `integrator_mode <TransferMechanism.integrator_mode>` from True to False),
 the value it uses to resume integration (if `integrator_mode <TransferMechanism.integrator_mode>` is reassigned as
@@ -529,34 +534,46 @@ integration using the current `value <Mechanism_Base.value>` of the Mechanism, i
 <TransferMechanism.integrator_function>`'s `previous_value IntegratorFunction.previous_value` at the point at which
 integration was last suspended, as shown below::
 
-    >>> my_time_averaged_transfer_mechanism.integrator_mode = False
-    >>> my_comp.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},
-    ...             num_trials=2)
-    >>> my_time_averaged_transfer_mechanism.value
-    array([[0.527608]])
-    >>> my_time_averaged_transfer_mechanism.on_resume_integration_mode = pnl.CURRENT_VALUE
-    >>> my_time_averaged_transfer_mechanism.integrator_mode = True
-    >>> my_comp.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},
-    ...             num_trials=2)
-    >>> my_time_averaged_transfer_mechanism.value
-    array([[0.527608]])
+COMMENT:
+FIX: NOTE THAT HAD TO CHANGE INPUTS HERE TO AVOID CAPPING AT ASYMPTOTE;
+     MIGHT BE BETTER TO USE SimpleIntegrator FOR THE EXAMPLE
+COMMENT
 
-In contrast, if `on_resume_integrator_mode <TransferMechanism.on_resume_integrator_mode>` is set to
-*LAST_INTEGRATED_VALUE*, integration will resume using the `integrator_function
-<TransferMechanism.integrator_function>`'s `previous_value IntegratorFunction.previous_value` at the point at which
-integration was last suspended, irrespective if interverning executions::
+    >>> my_linear_tm.integrator_mode = False
+    >>> my_linear_tm.execute(0.4)
+    array([[0.4]])
+    >>> my_linear_tm.execute(0.4)
+    array([[0.4]])
+    >>> my_linear_tm.on_resume_integration_mode = pnl.CURRENT_VALUE
+    >>> my_linear_tm.integrator_mode = True
+    >>> my_linear_tm.execute(0.5)
+    array([[0.41]])
+    >>> my_linear_tm.execute(0.5)
+    array([[0.419]])
 
-    >>> my_time_averaged_transfer_mechanism.integrator_mode = False
-    >>> my_comp.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},
-    ...             num_trials=2)
-    >>> my_time_averaged_transfer_mechanism.value
-    array([[0.527608]])
-    >>> my_time_averaged_transfer_mechanism.on_resume_integration_mode = pnl.LAST_INTEGRATED_VALUE
-    >>> my_time_averaged_transfer_mechanism.integrator_mode = True
-    >>> my_comp.run(inputs={my_time_averaged_transfer_mechanism: [1.0]},
-    ...             num_trials=2)
-    >>> my_time_averaged_transfer_mechanism.value
-    array([[0.527608]])
+# COMMENT:
+# In contrast, if `on_resume_integrator_mode <TransferMechanism.on_resume_integrator_mode>` is set to
+# *LAST_INTEGRATED_VALUE*, integration will resume using the `integrator_function
+# <TransferMechanism.integrator_function>`'s `previous_value IntegratorFunction.previous_value` at the point at which
+# integration was last suspended, irrespective of interverning executions::
+#
+#     >>> my_linear_tm.on_resume_integration_mode = pnl.LAST_INTEGRATED_VALUE
+#     >>> my_linear_tm.integrator_mode = False
+#     >>> my_linear_tm.execute(1.0)
+#     array([[1.]])
+#     >>> my_linear_tm.integrator_mode = True
+#     >>> my_linear_tm.execute(0.5)
+#     array([[0.4271]])
+#     >>> my_linear_tm.execute(0.5)
+#     array([[0.43439]])
+#     ACUTALLY PRODUCING:
+#     array([[0.95]])
+#     array([[0.905]])
+#      => LAST_INTEGRATED_VALUE IS BEHAVING LIKE CURRENT_VALUE
+#
+# Note that after `integrator_mode <TransferMechanism.integrator_mode>` was set back to True, integration resumed where
+# it had left off in the preceding example.
+# COMMENT
 
 .. _TransferMechanism_Examples_Termination:
 
