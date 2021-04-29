@@ -912,7 +912,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         integrator_function=AdaptiveIntegrator,              \
         initial_value=None,                                  \
         integration_rate=0.5,                                \
-        on_resume_integrator_mode=CURRENT_VALUE,  \
+        on_resume_integrator_mode=CURRENT_VALUE,             \
         termination_measure=Distance(metric=MAX_ABS_DIFF),   \
         termination_threshold=None,                          \
         termination_comparison_op=LESS_THAN_OR_EQUAL,        \
@@ -944,7 +944,7 @@ class TransferMechanism(ProcessingMechanism_Base):
 
     integrator_function : IntegratorFunction : default AdaptiveIntegrator
         specifies `IntegratorFunction` to use when `integration_mode <TransferMechanism.integration_mode>` is True
-        (see `TransferMechanism_Examples_Execution_With_Integration` for additonal details).
+        (see `TransferMechanism_Examples_Execution_With_Integration` for additional details).
 
     initial_value :  value, list or np.ndarray : default Transfer_DEFAULT_BIAS
         specifies the starting value for integration when `integrator_mode <TransferMechanism.integrator_mode>` is
