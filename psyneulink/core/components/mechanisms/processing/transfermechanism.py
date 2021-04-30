@@ -30,12 +30,13 @@ Contents
              • `TransferMechanism_Execution_Integration`
              • `TransferMechanism_Execution_Integration_Termination`
   * `TransferMechanism_Examples`
-        - `TransferMechanism_Examples_Creation`
-        - `TransferMechanism_Examples_Execution`
+        - `Creation <TransferMechanism_Examples_Creation>`
+        - `Execution <TransferMechanism_Examples_Execution>`
             • `Without Integration <TransferMechanism_Examples_Execution_Without_Integration>`
             • `With Integration <TransferMechanism_Examples_Execution_With_Integration>`
-        - `TransferMechanism_Examples_Initialization_and_Resetting`
-        - `TransferMechanism_Examples_Termination`
+                - `Initializing, Resetting and Resuming Integration
+                  <TransferMechanism_Examples_Initialization_and_Resetting>`
+                - `Terminating Integration <TransferMechanism_Examples_Termination>`
   * `TransferMechanism_Class_Reference`
 
 .. _TransferMechanism_Overview:
@@ -45,17 +46,18 @@ Overview
 
 A TransferMechanism is a subclass of `ProcessingMechanism` that adds the ability to integrate its input.
 
-As a ProcessingMechanism, it transforms its input using a simple mathematical function that maintains the form
-(dimensionality) of its input.  The input can be a single scalar value, a multidimensional array (list or numpy
-array), or several independent ones. The function used to carry out the transformation can be a `TransferFunction`
-or a `custom one <UserDefinedFunction>` that can accept any of these forms of input and generate one of similar form.
+As a ProcessingMechanism, it transforms its input using a simple mathematical function that maintains the shape of its
+input.  The input can be a single scalar value, a simple list or array, or a multidimensional one (regular or ragged).
+The function used to carry out the transformation can be a `TransferFunction` or a `custom one <UserDefinedFunction>`
+that can accept any of these forms of input and generate one of similar form.  A TransferMechanism can also add `noise
+<TransferMechanism.noise>` to and/or `clip <TransferMechanism.clip>` the result of its function.
 
 A TransferMechanism has two modes of operation: `without integration
 <TransferMechanism_Execution_Without_Integration>` and `with integration enabled
 <TransferMechanism_Execution_With_Integration>`.
 Integration is disabled by default, so that the Mechanism's `function <Mechanism_Base.function>` executes a full
 ("instantaneous") transformation of its input on each execution (akin to the standard practice in feedforward neural
-networks).  However, if integration is enabled, then it uses its `integrator_function
+networks). However, if integration is enabled, then it uses its `integrator_function
 <TransferMechanism.integrator_function>` to integrate its input on each execution, before passing the result on to
 its `function <Mechanism_Base.function>` for transformation (akin to time-averaging the net input to a unit in a
 neural network before passing that to its activation function). When integration is enabled, using the `integrator_mode
@@ -71,7 +73,7 @@ Creating a TransferMechanism
 The primary arguments that determine the operation of a TransferMechanism are its **function** argument,
 that specifies the `function <Mechanism_Base.function>` used to transform its input; and, if **integrator**
 mode is set to True, then its *integrator_function** argument and associated ones that specify how `integration
-<TransferMechanism_Execution_With_Integration>` occurs.
+<TransferMechanism_Execution_With_Integration>` occurs (see `TransferMechanism_Examples`).
 
 *Primary Function*
 ~~~~~~~~~~~~~~~~~~
@@ -155,10 +157,6 @@ OutputPorts <OutputPort_Customization>` (but see note below).
 Execution
 ---------
 
-COMMENT:
-FIX: ADD REFERENCES TO EXAMPLES
-COMMENT
-
 A TransferMechanism has two modes of execution, determined by its `integrator_mode
 <TransferMechanism.integrator_mode>` parameter.  By default (`integrator_mode
 <TransferMechanism.integrator_mode>` = False) it `executes without integration
@@ -179,7 +177,8 @@ directly to `function <Mechanism_Base.function>`.  If either the `noise <Transfe
 `clip <TransferMechanism.clip>` `Parameters` have been specified, they are applied to the result of `function
 <Mechanism_Base.function>`. That is then assigned as the Mechanism's `value <Mechanism_Base.value>`, and well as the
 `values <OutputPort.value>` of its `output_ports <Mechanism_Base.output_ports>`, each of which represents the
-transformed value of the corresponding `input_ports <Mechanism_Base.input_ports>`.
+transformed value of the corresponding `input_ports <Mechanism_Base.input_ports>` (see `examples
+<TransferMechanism_Examples_Execution_Without_Integration>`).
 
 .. _TransferMechanism_Execution_With_Integration:
 
@@ -190,12 +189,16 @@ If `integrator_mode <TransferMechanism.integrator_mode>` is True, the TransferMe
 <Mechanism_Base.variable>`) is first passed to its `integrator_function <TransferMechanism.integrator_function>`,
 the result of which is then passed to its primary `function <Mechanism_Base.function>`.  The TransferMechanis has
 several `Parameters` that, in addition to those of its `integrator_function <TransferMechanism.integrator_function>`,
-can be used to configure the integration process, as described in the following subsections.
+can be used to configure the integration process, as described in the following subsections (also see `examples
+<TransferMechanism_Examples_Execution_With_Integration>`).
 
 .. _TransferMechanism_Execution_Integration_Initialization:
 
 **Initialization, Resetting and Resuming Integration**
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The staring point for integration can be initialized and reset, and also configured to resume in various ways, as
+described below (also `examples <TransferMechanism_Examples_Initialization_and_Resetting>`).
 
 *Initializing integration* -- by default, the the starting point for integration is the Mechanism's `default_variable
 <Component_Variable>`, and is usually an appropriately shaped array of 0's.  However, the starting point can be
@@ -275,12 +278,13 @@ if specified, after which it is assigned to as the TransferMechanism's `value <M
 **Termination**
 ^^^^^^^^^^^^^^^
 
-If `integrator_mode <TransferMechanism.integrator_mode>` is True then, for each execution of the TrasnMechanism, it
+If `integrator_mode <TransferMechanism.integrator_mode>` is True then, for each execution of the TransferMechanism, it
 can be configured to conduct a single step of integration, or to continue to integrate during that execution until its
 termination condition is met.  The latter is specified by the TransferMechanism's `execute_until_finished
 <Component.execute_until_finished>` as well as its `termination_threshold
 <TransferMechanism.termination_threshold>`, `termination_measure <TransferMechanism.termination_measure>`, and
-`termination_comparison_op <TransferMechanism.termination_comparison_op>` `Parameters`.
+`termination_comparison_op <TransferMechanism.termination_comparison_op>` `Parameters`.  These configurations are
+described below (also see `examples <TransferMechanism_Examples_Termination>`).
 
 *Single step execution* -- If either `execute_until_finished <Component.execute_until_finished>` is set to False,
 or no `termination_threshold <TransferMechanism.termination_threshold>` is specified (i.e., it is None, the default),
@@ -361,12 +365,19 @@ that accepts a single argument that is a 2d array with two entries.
 Examples
 --------
 
+    - `Creation <TransferMechanism_Examples_Creation>`
+    - `Execution <TransferMechanism_Examples_Execution>`
+        • `Without Integration <TransferMechanism_Examples_Execution_Without_Integration>`
+        • `With Integration <TransferMechanism_Examples_Execution_With_Integration>`
+            - `TransferMechanism_Examples_Initialization_and_Resetting`
+            - `TransferMechanism_Examples_Termination`
+
 .. _TransferMechanism_Examples_Creation:
 
-*Creating a TransferMechanism*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Examples of Creating a TransferMechanism*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-*Function Specification*
+**Function Specification**
 
 The **function** of a TransferMechanism can be specified as the name of a `Function <Function>` class::
 
@@ -377,7 +388,7 @@ or using the constructor for a `TransferFunction`, in which case its `Parameters
 
     >>> my_logistic_tm = pnl.TransferMechanism(function=pnl.Logistic(gain=1.0, bias=-4))
 
-*Integrator Mode**
+**Integrator Mode**
 
 The **integrator_mode** argument allows the TransferMechanism to operate in either an "instantaneous" or
 "time averaged" manner. By default, `integrator_mode <TransferMechanism.integrator_mode>` is set to False, meaning
@@ -394,12 +405,13 @@ When `integrator_mode <TransferMechanism.integrator_mode>` is True, the Transfer
 
 .. _TransferMechanism_Examples_Execution:
 
-*Execution*
-~~~~~~~~~~~
+*Examples of Execution*
+~~~~~~~~~~~~~~~~~~~~~~~
 
 .. _TransferMechanism_Examples_Execution_Without_Integration:
 
-*Without Integration*
+**Without Integration**
+^^^^^^^^^^^^^^^^^^^^^^^
 
 If `integrator_mode <TransferMechanism.integrator_mode>` is False (the default), then the TransferMechanism updates its
 `value <Mechanism_Base.value>` and the `value <OutputPort.value>` of its `output_ports <Mechanism_Base.output_ports>`
@@ -479,7 +491,8 @@ Note that the bounds specified in **clip** apply to all elements of the result i
 
 .. _TransferMechanism_Examples_Execution_With_Integration:
 
-*With Integration*
+**With Integration**
+^^^^^^^^^^^^^^^^^^^^
 
 The following examples illustate the execution of a TransferMechanism with `integrator_mode
 <TransferMechanism.integrator_mode>` set to True. For convenience, a TransferMechanism has three `Parameters` that
@@ -544,7 +557,7 @@ modulation <ModulatorySignal_Modulation>`, then the modulated value will be the 
 .. _TransferMechanism_Examples_Initialization_and_Resetting:
 
 *Initializing, Resetting and Resuming Integration*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**************************************************
 
 When `integrator_mode <TransferMechanism.integrator_mode>` is True, the state of integration can be initialized
 by specifying its `initial_value <TransferMechanism.initial_value>` using the **initial_value** argument in the
@@ -638,7 +651,8 @@ last True (in this case, where it left off in the preceding example, ``0.257``).
 .. _TransferMechanism_Examples_Termination:
 
 *Terminating Integration*
-~~~~~~~~~~~~~~~~~~~~~~~~~
+*************************
+
 
 *Termination by value*.  This terminates execution when the Mechanism's `value <Mechanism_Base.value>` reaches the
 the value specified by the **threshold** argument.  This is implemented by specifying **termination_measure** with
